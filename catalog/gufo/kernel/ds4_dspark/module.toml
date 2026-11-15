@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_dspark"
 kind      = "kernel"
-summary   = "DSpark sampling kernels: eight corrected logits per request without a full-vocabulary probability buffer"
+summary   = "DSpark sampling fragment for DeepSeek V4 Flash: device kernels that produce the eight corrected candidate logits a draft request needs, so a bounded proposal distribution is formed without writing a full-vocabulary probability buffer"
+why       = "DSpark is gufo's speculative mode for DSV4 (upstream README: with it, up to 26.6 tok/s for one user and 54.7 aggregated on 8 requests), and its drafts stay lossless only because the host applies exact rejection and residual correction against a small, explicit proposal; these kernels make that proposal on the device. They feed runtime.gufo.dspark's sampler bridge and compile inside kernel.gufo.ds4_backend"
 
 [provenance]
 origin    = "gufo"

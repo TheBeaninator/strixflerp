@@ -1,6 +1,7 @@
 id      = "runtime.strixite.tokenizer"
 kind    = "runtime"
-summary = "BPE tokenizer reading the checkpoint's tokenizer.json"
+summary = "Hand-written byte-level BPE for Qwen3.8-Flash-Next (248,044 tokens, 247,587 merges, 33 added tokens), loaded from tokenizer.json and checked against it: added tokens split out leftmost-longest, NFC, a hand-coded pre-tokenizer regex, then pairwise merges by rank"
+why     = "The C++ server needs the reference tokenizer's exact ids, because prompts, prompt-cache keys and grammar masks are all expressed in them. It also takes the byte spans that users, tools and schemas wrote, so a file containing <|im_end|> stays text instead of becoming a control token. The most widely required strixite runtime piece: engine, output parser, token mask, structured output, logprobs, the HTTP layer, many tools, and runtime.flerp.text_strixite behind include/flerp/text.h."
 
 [provenance]
 origin   = "strixite"

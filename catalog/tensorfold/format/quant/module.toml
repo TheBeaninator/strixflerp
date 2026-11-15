@@ -1,6 +1,7 @@
 id        = "format.tensorfold.quant"
 kind      = "format"
-summary   = "Checkpoint quant formats on the host: MLX affine, BF16, FP8, dense and expert packing, conversion, cache keys"
+summary   = "Host weight formats behind one conforms interface: MLX affine (i32 words of 2- to 8-bit codes, a scale and bias a group of K, checked geometry, exact widening to more bits or smaller groups), BF16/FP16/FP32 kept as stored, block FP8 and NVFP4 with fp64 references, canonical per-projection override keys and byte-exact tensor-parallel row, column and expert cuts."
+why       = "Every upstream HIP family reads its MLX affine or BF16 checkpoint through this module, and nothing above it names a format; the hip_quant decoders read the device views uploaded from it. For the pod it is the loader of the MLX packs upstream qualified on gfx1151, a format neither strixite nor StrixFold reads."
 
 [provenance]
 origin    = "tensorfold"

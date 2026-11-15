@@ -1,6 +1,7 @@
 id      = "format.strixite.ngram_table"
 kind    = "format"
-summary = "ngram.table: the PLE n-gram embedding table as a flat file of fixed-size rows"
+summary = "ngram.table file format: a 512-byte hashed header carrying the source checkpoint's fingerprint, then fixed-size rows from offset 4096 (BF16, FP8E4M3 with one table scale, or int8 with a BF16 absmax per row), so row r is one positioned read at 4096 + r * row_bytes"
+why     = "The PLE n-gram embedding is 51B parameters (48.3 GiB even at 8.1 bits per weight) and a token needs only 16 rows of it, so strixite keeps it on NVMe instead of in GTT and reads rows on demand; a flat fixed-stride file makes each row one pread, and the header fingerprint lets the engine refuse a table cut from another checkpoint. Its readers are runtime.strixite.ngram_table and ngram_rows plus the convert and transcode tools. The file must sit on uncompressed storage: a 320-byte read from a zstd btrfs extent decompresses up to 128 KiB"
 design  = "DESIGN.md"
 
 [provenance]

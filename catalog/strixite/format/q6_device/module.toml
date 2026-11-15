@@ -1,6 +1,7 @@
 id      = "format.strixite.q6_device"
 kind    = "format"
-summary = "Q6 weight resident on the device and the non-owning view the kernels take"
+summary = "Q6DeviceView and Q6Device: device residency for Q6 weights, each row 3K/4 bytes (low plane then 2-bit high plane) with BF16 scale and min planes, and a non-owning view carrying N, K and G"
+why     = "Role inferred from the code: provides format.device-view/strixw-q6, the handle linear_q56 and linear_wmma take for Q6 dense layers and the type strixw_loader hands out for Q6 tensors. It is bound in every strixite qwen38-flash-next recipe so a Q6 layout would load, though no served tensor is Q6"
 
 [provenance]
 origin   = "strixite"

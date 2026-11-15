@@ -92,6 +92,11 @@ class DraftRound {
   /// A new conversation (the head's KV is rewritten from position 0); resets the calibration and the stats.
   void Begin(const DraftConfig& config);
   void PromptRows(std::uint32_t start, std::size_t rows, const std::uint32_t* ids, const float* d_rows);
+  /// ORNITH-PCACHE: the prompt's edge after a chunk ended at position `positions` (the pending row, the committed ids).
+  /// The head's KV below `positions` stays where it is; RestoreEdge (after Begin) makes the next chunk, which starts at
+  /// `positions`, pair with it as it would have after the original prompt. false: no edge saved at that position.
+  void SaveEdge();
+  [[nodiscard]] bool RestoreEdge(std::uint32_t positions);
   void Frontier(std::uint32_t f, std::uint32_t token, const float* d_row);
   [[nodiscard]] const std::vector<std::uint32_t>& drafts() const noexcept { return drafts_; }
 
@@ -121,6 +126,10 @@ class DraftRound {
   DraftCalibration cal_;
   DraftStats stats_;
   float* d_pending_row_{nullptr};   // a prompt chunk's last row, until the next id
+  float* d_edge_row_{nullptr};      // SaveEdge's copy of it
+  bool edge_valid_{false};
+  std::uint32_t edge_pos_{0};       // the saved pending row's position
+  std::vector<std::uint32_t> edge_history_;
   bool has_pending_{false};
   std::uint32_t pending_pos_{0};
   std::uint32_t pending_token_{0};  // the round's frame 0 input (the target's last drawn id)

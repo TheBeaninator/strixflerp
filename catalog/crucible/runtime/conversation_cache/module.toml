@@ -1,6 +1,7 @@
 id        = "runtime.crucible.conversation_cache"
 kind      = "runtime"
-summary   = "Conversation and prefix cache: immutable entries owning KV bytes, resume, snapshots in pinned chunks, lazy saves, in-slot checkpoints, exact storage addresses, tenant keys"
+summary   = "The conversation and prefix cache: immutable entries that own their KV bytes (an edit cannot mutate an older branch), resume from the longest saved prefix, snapshots kept in pinned host chunks and written lazily, in-slot checkpoints, exact storage addresses, and a 32-byte tenant key compared on every match"
+why       = "Agent sessions resend the same long prompt with a little new text, and a cold 32K prompt costs about 18 s, so keeping earlier turns cut time to first token for a repeated prompt to 0.023 s (docs/how-it-got-fast.md idea 4 in the origin); the rule that a hit gives the bits of a miss is a Crucible gate, and docs/CRUCIBLE-VS-STRIXITE.md judges it even with strixite's base-plus-delta prompt cache, two good designs for one problem"
 
 [provenance]
 origin    = "crucible"

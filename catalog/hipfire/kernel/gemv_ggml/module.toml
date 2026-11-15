@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemv_ggml"
 kind      = "kernel"
-summary   = "Decode GEMV on GGUF blocks (Q4_K, Q6_K, Q8_0 and its wide / staged variants, Q4F16, TQ2, BQ1) and the fused QKV / gate-up forms on Q4_K and Q8_0 (19 sources, 23 gfx1151 compile units)"
+summary   = "Decode GEMV on GGUF blocks (19 sources, 23 units): Q4_K (144 bytes a 256-weight block), Q6_K, Q8_0 (f16 scale + 32 int8) with wide and staged variants, Q4F16, TQ2 and BQ1, one warp a row folding each lane's (d * q) * x with an fma and reducing lanes by shuffles, and fused QKV / gate-up forms on Q4_K and Q8_0"
+why       = "It is hipfire's path for GGUF models and the catalogue's second GGUF GEMV provider: kernel.flerp.gguf_gemv_hipfire runs its gemv_q8_0 and gemv_q4k code objects under gufo's LaunchQ8KBlockGEMV, and the gguf-gemv gate passed it within the any-order bound on 14 of 14 cases, with a CPU emulation of its order reproducing its bits, at 16.8 against gufo's 13.5 us for Q8_0 2560 x 2560. docs/PHASE5-GLM52-GAPMAP.md calls this the one weight-reading interface with two hardware-gated providers"
 
 [provenance]
 origin    = "hipfire"

@@ -1,6 +1,7 @@
 id      = "kernel.strixite.kv8"
 kind    = "kernel"
-summary = "8-bit K/V cache for the full-attention layers: quantize on group completion, shared device dequantization arithmetic"
+summary = "Optional 8-bit K/V cache for the full-attention layers: K quantized asymmetrically per channel over each completed 32-row group, V per 32-channel block of a row, each (scale, zero) packed as two fp16 in one word, the newest incomplete group kept exact in a double-buffered tail, and kv8_math giving every reader the same dequantize arithmetic"
+why     = "Selected by the executor's kv-format q8 option, it stores the attention cache at ~56% of BF16 (1 byte plus 4 bytes per 32 values), so more context or more concurrent generations fit in the memory plan. Per-channel K ranges suit keys after norm and RoPE, which carry per-channel offsets (Phase 0 in the header: 42% lower K error than symmetric blocks of 32), and the group rule makes a query see the same values whether the prompt came in one call, in chunks or token by token. The staged-dequant and F16 readers exist because unpacking inside the WMMA prefill loop made attention 2.7x slower than over BF16. Required by module id by kernel.strixite.attention."
 
 [provenance]
 origin   = "strixite"

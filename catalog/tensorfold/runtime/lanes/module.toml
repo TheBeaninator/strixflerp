@@ -1,6 +1,7 @@
 id        = "runtime.tensorfold.lanes"
 kind      = "runtime"
-summary   = "Lane core: the round loop over concurrent streams, the backend vtable, draft depth and acceptance, the engine API, stagger"
+summary   = "The lane core: one thread steps rounds while any stream lives, each round planning forced, copied or drafted window rows, verifying them as chains or trees in one target forward and keeping the accepted path; draft depth by expected tokens a millisecond from timed costs, structured output through libtfgrammar (xgrammar), staggered prompt segments and the engine API the server drives."
+why       = "Concurrent streams are cheapest when their rows share one forward, and drafts pay only while their chance of landing covers the row they cost; this is upstream's scheduler for both. The StrixFold recipes run runtime.strixfold.lanes and runtime.strixfold.sampling (27 shared paths, 5,593 changed lines), so this copy is kept to diff for scheduler and grammar fixes."
 
 [provenance]
 origin    = "tensorfold"

@@ -1,6 +1,7 @@
 id        = "tool.crucible.reference"
 kind      = "tool"
-summary   = "CPU references: NumPy EXL3 codec and matvec (bit-exact codebook and decoder states), fp64 layer oracle, prefill and vision references, YaRN RoPE table generator"
+summary   = "CPU references for Crucible's numerics: a NumPy EXL3 codec and matvec that reproduce the codebook and decoder states bit for bit, an fp64 layer oracle, prefill and vision references with fixture makers, a quality check for the codec, and the YaRN RoPE table generator whose output kernel.crucible.ops embeds"
+why       = "Crucible's gate 1 falls back to the fp64 oracle and its tables where bitwise equality with a baseline cannot apply (docs/ARCHITECTURE.md 'Gates'), so these scripts are the ground truth its kernels and tolerances are argued from; strixflerp keeps them as the definition of what the EXL3 decode and the Flash-Next forward must compute"
 
 [provenance]
 origin    = "crucible"

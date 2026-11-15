@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.coll_nccl"
 kind      = "runtime"
-summary   = "Coll over NCCL opened at run time (the CUDA transport); kept because RCCL exports the same API, not exercised on HIP"
+summary   = "The Coll implementation over NCCL loaded at run time, StrixFold's CUDA transport including the four-node 2D split's point-to-point exchange, moving bytes with no header and no mismatch check"
+why       = "It is the original transport of the CUDA engine (ADAPTER.md D11 made NCCL the CUDA side of Coll) and stays in the catalogue because the family's comm.zig imports it and RCCL exports the same API; it is not exercised on HIP, where coll_tcp and coll_rdma carry the pod's gathers"
 
 [provenance]
 origin    = "strixfold"

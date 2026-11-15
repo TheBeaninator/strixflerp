@@ -133,6 +133,7 @@ under `catalog/<origin>`. It is derived data; `ORIGIN.toml [harvest] tool` names
 id        = "kernel.strixite.linear_q4"
 kind      = "kernel"
 summary   = "Q4 group-affine GEMV for decode, split-K, BF16 or F32 activations, FP32 accumulate"
+why       = "Decode is memory-bound on gfx1151, so a split-K GEMV that streams each Q4 weight once at full bandwidth sets the token rate of every dense layer; it is strixite's reference decode path and the baseline the other origins' GEMVs are measured against"
 
 [provenance]
 origin    = "strixite"
@@ -176,6 +177,8 @@ status    = "harvested"          # harvested -> builds -> parity -> benched (a p
 # optional: compile = "standalone" | "header-only" | "via:<module id>" | "prebuilt" | "n/a" (how the compile gate
 # treats the module), reason = "..." (why it is still harvested), evidence = "gate/results/<file>"
 ```
+
+The three sentences a reader needs come first, each in the module's own words: `summary` says what the module is and how it works (one sentence: the algorithm, data layout, precision, what it equals); `why` says why it exists (the problem it solves or the bottleneck it targets, the role it plays in recipes, what it replaces or was measured against); `notes` holds the rest (card and gate, origin it was re-expressed from, compiled shapes, callers). Reading only `summary` and `why` across the catalogue should teach the catalogue's ideas, so no two modules share wording and a `why` is never invented: it comes from the module's source, its origin's docs or a recorded measurement. `tools/describe-audit.py` lists modules missing either.
 
 Other optional keys: `notes` (top level; free text the summary has no room for), `[provenance] upstream`
 (provenance behind the origin: gufo's DS4 import, the llama.cpp-derived kernels, StrixFold's Triton kernels), and

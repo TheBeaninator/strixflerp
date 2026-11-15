@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.exl3"
 kind      = "kernel"
-summary   = "EXL3 trellis-coded linears and routed experts: exact MUL1 tile decode, v_dot2_f32_f16 for decode windows, f16 WMMA for prompt chunks"
+summary   = "EXL3 trellis kernels for DeepSeek-V4.1 on gfx1151 that keep the CUDA build's parameter lists, launch geometry and epilogues but change the matrix product: each 16x16 tile is decoded exactly once a wave (MUL1: state times 0x83DCD12D, byte sum, one fused fp16 op) and applied with v_dot2_f32_f16 to every row of a decode window in the same order, or with f16 WMMA to 16 rows at a time in prompt chunks, including the decode experts' epoch / ready protocol"
+why       = "TensorFold's EXL3 kernels were written for NVIDIA mma.m16n8k16, which gfx1151 lacks; re-doing the product on dot2 and WMMA while keeping the epilogues makes the outputs meet the numerics contract (exl3.linear, exl3.experts_grouped) instead of the CUDA bits, and keeps every decode row row-invariant so drafts cannot change output; the decode is exact for all 65,536 states (RESULTS.md M1.exl3-exact), and the module provides decode linears, prompt GEMM and decode experts in every dsv41 recipe"
 notes     = "Tile format after ExLlamaV3 (MIT, Copyright (c) 2025 Turboderp). exl3.l2_prefetch is a no-output hint kernel."
 
 [provenance]

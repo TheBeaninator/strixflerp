@@ -318,6 +318,7 @@ tokenization::TokenId QwenGpuExecutor::ForwardPromptChunk(
                                      arena_.d_scratch_q8_act, batch_size,
                                      hidden_size, arena_.stream);
       }
+      flerp::qwen35moe::SetDenseInputReuse(arena_.d_normed);  // MOE-COMBINE: q, k, v share one F16 input
       gemm_weight(layer.attn_q, arena_.d_scratch_bf16, arena_.d_normed,
                   arena_.d_ssm_qkv, q_projection_size, hidden_size,
                   arena_.d_scratch_q8_act);
@@ -325,6 +326,7 @@ tokenization::TokenId QwenGpuExecutor::ForwardPromptChunk(
                   arena_.d_k, kv_size, hidden_size, arena_.d_scratch_q8_act);
       gemm_weight(layer.attn_v, arena_.d_scratch_bf16, arena_.d_normed,
                   arena_.d_v, kv_size, hidden_size, arena_.d_scratch_q8_act);
+      flerp::qwen35moe::SetDenseInputReuse(nullptr);
 
       LaunchBatchedUnpackQG(arena_.d_ssm_qkv, arena_.d_q, arena_.d_ssm_gate,
                             batch_size, config.num_attention_heads,
@@ -512,6 +514,7 @@ tokenization::TokenId QwenGpuExecutor::ForwardPromptChunk(
                                      arena_.d_scratch_q8_act, batch_size,
                                      hidden_size, arena_.stream);
       }
+      flerp::qwen35moe::SetDenseInputReuse(arena_.d_normed);  // MOE-COMBINE: qkv, gate, alpha, beta share one F16 input
       gemm_weight(layer.attn_qkv, arena_.d_scratch_bf16, arena_.d_normed,
                   arena_.d_ssm_qkv, ssm_qkv_size, hidden_size,
                   arena_.d_scratch_q8_act);
@@ -524,6 +527,7 @@ tokenization::TokenId QwenGpuExecutor::ForwardPromptChunk(
       gemm_weight(layer.ssm_beta, arena_.d_scratch_bf16, arena_.d_normed,
                   arena_.d_beta_buf, time_step_rank, hidden_size,
                   arena_.d_scratch_q8_act);
+      flerp::qwen35moe::SetDenseInputReuse(nullptr);
       if (arena_.IsSsmReplayCaptureActive()) {
         LaunchCaptureBatchedSsmReplay(
             arena_.d_ssm_qkv, arena_.d_alpha_buf, arena_.d_beta_buf,

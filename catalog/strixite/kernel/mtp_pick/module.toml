@@ -1,6 +1,7 @@
 id      = "kernel.strixite.mtp_pick"
 kind    = "kernel"
-summary = "The MTP draft's pick on the GPU: best logit, runner-up value and NaN flag in one 64-byte struct"
+summary = "One-block reduction over the draft head's logits that writes the argmax (lowest index on ties), the runner-up value and a NaN flag, packed with the forward's router, expert, attention and embedding error words into one ~64-byte struct"
+why     = "A trace of the MTP draft loop showed ~0.3 ms of each ~1.2 ms draft step idle around five device-to-host copies and a host scan of 256 KB of logits; one small copy replaces them. The runner-up value feeds the confidence gate that stops drafting when the top-2 margin is small (how-it-got-fast.md section 3). Provides draft.mtp-pick in the strixite recipes; called once per draft step by the qwen4exp executor."
 
 [provenance]
 origin   = "strixite"

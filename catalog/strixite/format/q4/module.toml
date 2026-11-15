@@ -1,6 +1,7 @@
 id      = "format.strixite.q4"
 kind    = "format"
-summary = "Q4: 4-bit asymmetric per-group weight format (two codes per byte, BF16 scale and min per group)"
+summary = "Q4 host format and reference quantizer: w = q * scale + min with q in 0..15 packed two per byte (low nibble = even k), BF16 scale and min per group of 32, 64 or 128 along K in separate planes, plus exact row append, a dequantizer and a chunk-major relayout"
+why     = "Decode time is the time to read weights and most of the model's bytes are routed experts (about 68 GB of the fleet's 69.5 GiB file), so the 4-bit format sets strixite's token rate. It is asymmetric because a symmetric 4-bit format lost accuracy at every group size tried, and G128 held accuracy against G64 for 5.6% fewer bytes and 1.9% less time per token. Exact row append is what makes merge_plan and the stacked experts lossless; q5 and q6 reuse its low plane"
 design  = "DESIGN.md"
 
 [provenance]

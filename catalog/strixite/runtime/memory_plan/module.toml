@@ -1,6 +1,7 @@
 id      = "runtime.strixite.memory_plan"
 kind    = "runtime"
-summary = "Startup memory plan: weights, K/V budget, prompt cache and margins against the machine's RAM"
+summary = "A startup RAM check run once after all GPU buffers exist: requires MemAvailable to cover the larger of the cache margin and a 4 GiB floor plus one full-capacity saved state (less one slot's paged K/V held back), and either fails with the settings that would fit or, with low-memory = adapt, turns caches down step by step (spares, RAM tier, n-gram row cache, save size limit), one warning per step"
+why     = "strixite issue #6: a 27B sidecar left MemAvailable at 0.4 GiB and the GPU's allocations from the same RAM became driver faults and a segfault instead of a clean error; since nothing on the GPU grows after startup, one check then, against what can still grow on the host (the prompt cache), turns that into a refusal or a measured, reversible downgrade. Called by serve.strixite.strix_server at startup (docs/memory.md describes the user-facing side)"
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id      = "tool.strixite.convert_qwen4exp"
 kind    = "tool"
-summary = "Converter CLI: HF checkpoint to weights.strixw (and vision.strixw with --vision)"
+summary = "Offline converter from the Qwen3.8-Flash-Next HF safetensors to weights.strixw: each weight class is quantized to the format --layout names (the served layout: 4-bit experts, 8-bit shared parts) and laid out the way the kernels read it, with --plan to print every output tensor, --layers for partial files, --mtp-from to swap the draft head, and --vision/--tower-only for an exact-BF16 vision.strixw"
+why     = "strixite ships the converter so anyone holding the 360 GB original can rebuild the exact files it serves in about fifteen minutes, check the published weights against Qwen's release, or try other bit layouts (docs/tools.md, 'Why the converters are included at all'); at load the server then only maps the file. Built in every strixite Qwen3.8 recipe beside the server"
 
 [provenance]
 origin   = "strixite"

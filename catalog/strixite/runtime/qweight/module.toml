@@ -1,6 +1,7 @@
 id      = "runtime.strixite.qweight"
 kind    = "runtime"
-summary = "A dense projection's weight in whichever Q format the layout gave it, dispatching to the matching linear kernel"
+summary = "Header-only view of one dense or expert weight that records the Q4, Q5, Q6 or Q8 row-major format the strixw file declares, whose linear_qw* functions switch on the bit width to reach the matching decode GEMV, WMMA prefill or grouped-expert kernel"
+why     = "A strixw layout can give each tensor its own precision, so the executor needs one call per projection that works whatever bits were chosen; QWeightView is that switch point, read from the file at load and never guessed, and DESIGN.md names it as the place a prefill-only tile-major layout would plug in. Required by executor.strixite.qwen4exp, format.strixite.strixw_loader and flerp's strixw_loader_p."
 design  = "DESIGN.md"
 
 [provenance]

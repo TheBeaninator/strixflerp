@@ -1,6 +1,7 @@
 id      = "runtime.strixite.json"
 kind    = "runtime"
-summary = "JSON value, parser and writer"
+summary = "A hand-rolled strict RFC 8259 JSON value, parser and two printers: objects keep key order with Python's duplicate-key rule, integers keep their literal digits, dump() is compact with repr-style floats and dump_python() reproduces json.dumps(ensure_ascii=False) exactly; errors name the path"
+why     = "The server's JSON is small and fixed, so the origin wrote its own rather than vendoring a library, and the chat template's tojson filter has to reproduce Python's printing byte for byte (order of tools as sent, integers unchanged, float repr) for prompts to match the reference tokens. It is the JSON layer of the whole strixite serving stack (http, openai, chat_template, tokenizer, schema compiler, tool grammar, capture) and of flerp's http, text and reply shims"
 
 [provenance]
 origin   = "strixite"

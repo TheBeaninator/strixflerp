@@ -1,6 +1,7 @@
 id        = "kernel.gufo.snapshot_copy"
 kind      = "kernel"
-summary   = "Device copy kernel for slot snapshots (KV and recurrent state transfer between live buffers and snapshot storage)"
+summary   = "One device byte-copy kernel and its launchers that move slot state (KV rows and recurrent DeltaNet state) between live buffers and snapshot storage, exact to the byte"
+why       = "gufo treats conversation caching as a first-class workload (README philosophy), and saving or restoring a slot is a copy of its state; the 27B log records the move to this one shared mapped byte-copy kernel for private, FP16-row and draft capture and restore. runtime.gufo.cache requires it through cache.snapshot-copy; it builds standalone"
 
 [provenance]
 origin    = "gufo"

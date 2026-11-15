@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.deepseek_v41"
 kind      = "executor"
-summary   = "DeepSeek-V4.1 upstream family: a separate rewrite from StrixFold dsv41 (CUDA and Metal; no HIP path upstream; no release binary serves it until its whole-model gate passes)"
+summary   = "Upstream TensorFold's own DeepSeek-V4.1 family in Zig, CUDA and Metal only: batched decode over several slots' row windows padded to a bucket, a fast-prefill path emitted as calls in reference order, Engram row staging, a draft target over those windows, split KV exchanges and AOT Triton variant planning from the engine's own plan."
+why       = "StrixFold's dsv41 descends from TensorFold 1.0.2; this is upstream's independent rewrite of the same model and shares no files with it past four changed basenames, so it is harvested to read ideas from, not to link. It is the source of transfer R1 in docs/TENSORFOLD.md (TF_DSV41_PF_OVERLAP: a prefill exchange cut into row pieces so one piece's all-gather hides behind the next piece's GEMM) and of #2491's one-GPU multi-rank check. Upstream serves no DeepSeek checkpoint until its whole-model gate (#827) passes."
 notes     = "fixtures/ (3.4 MB of recorded launches and checkpoint forms) left out"
 
 [provenance]

@@ -1,6 +1,7 @@
 id      = "kernel.strixite.qsa"
 kind    = "kernel"
-summary = "QSA indexer: block keys, block scores and per-query top-k block selection"
+summary = "QSA indexer for the full-attention layers: each completed 4-token block's key is RoPE(RMSNorm_zc(mean of its raw keys)) stored chunk-major, scores are sum over heads of relu(q_h . K_b) / sqrt(D) (scalar FMAs or WMMA), and a top-k picks min(512, #blocks) blocks per query by split, row, cooperative or sample-threshold filter selection"
+why     = "It is what makes the 12 full-attention layers sparse: a query attends only its best 512 blocks, at most ~2k keys, so decode speed stays flat to 492k tokens (how-it-got-fast.md section 4). At depth the indexer itself grew to a quarter of prefill; moving scores to WMMA and the one-pass filter top-k cut the pick from 99 to 44 ms per layer at 471k, +6.6% on a 490k-token conversation (section 7). Provides attn.qsa-indexer in the strixite recipes; its block list feeds attention's gathered variant."
 
 [provenance]
 origin   = "strixite"

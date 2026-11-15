@@ -1,6 +1,7 @@
 id        = "kernel.flerp.residual_add_gufo"
 kind      = "kernel"
-summary   = "Adapter: strixite's residual_add on gufo's LaunchResidualAdd (fp32, in place through out == a); BF16 stays with strixite"
+summary   = "Adapter: strixite's fp32 in-place residual_add (y += x) routed to gufo's three-buffer LaunchResidualAdd by passing out == a, one IEEE add per element; BF16 calls go to strixite's renamed kernel"
+why       = "Swap 1 of docs/INTERFACES.md, the cheapest cross-engine swap there is: one fp32 add has one right answer, so it tests the adapter mechanism (compile-time symbol rename, foreign launch count) with no numerics in the way; gufo matched strixite bit for bit at the same speed, the only wrinkle being that out == a steps outside gufo's __restrict__ promise; no recipe uses it because strixite's executor fuses its residuals into hc_inject"
 
 [provenance]
 origin    = "flerp"

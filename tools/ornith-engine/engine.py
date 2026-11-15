@@ -79,10 +79,11 @@ def plan(a, env):
     ips = [dict(zip(L, I))[x] for x in letters]
     rails = [dict(zip(L, Rl))[x] for x in letters]
     cfg = CF.override(CF.load(a.serve_config), a.set)
+    ctx = CF.context(cfg, 4096) if a.context is None else a.context
     nd = CF.drafts(cfg)
     kit = env["KIT_DIR"]
     peers = ",".join(rails) + f":{PORT}"
-    kv = {"context": a.context, "world": 4, "placement": "even", "epoch": EPOCH, "peers": peers, "single_reader": "on", "pause_ms": 0,
+    kv = {"context": ctx, "world": 4, "placement": "even", "epoch": EPOCH, "peers": peers, "single_reader": "on", "pause_ms": 0,
           "setup_deadline_ms": 3600000, "deadline_ms": 120000}
     ranks = []
     for r in range(4):
@@ -94,12 +95,16 @@ def plan(a, env):
             k["data_file"] = NODE_STAGED
         if nd and r == 0:
             k["drafts"] = nd   # rank 0's key; the last stage takes draft_head instead
+        if CF.reuse_tail(cfg) and r == 0:
+            k["reuse_tail"] = CF.reuse_tail(cfg)   # rank 0's key too: the kept prompt prefix (ORNITH-PCACHE)
+            if CF.reuse_grid(cfg):
+                k["reuse_grid"] = CF.reuse_grid(cfg)
         if nd and r == 3:
             k.update(draft_head="on", mtp_data_file=NODE_STAGED)
         ranks.append({"rank": r, "letter": letters[r], "ip": ips[r], "keys": k})
     front = [f"bin/flerp-serve", "--host", ips[0], "--port", str(HTTP_PORT), "--model-id", MODEL_ID,
              "--generation-config", f"{kit}/generation_config.json"] + (["--delivery", "tokens"] if cfg["stage"].get("reply") == "token" else []) + (["--drafts", str(nd)] if nd else []) + \
-            [f"executor.{k}={v}" for k, v in ranks[0]["keys"].items()] + [f"text.weights={ranks[0]['keys']['weights']}", f"text.context={a.context}"]
+            [f"executor.{k}={v}" for k, v in ranks[0]["keys"].items()] + [f"text.weights={ranks[0]['keys']['weights']}", f"text.context={ctx}"]
     ranks[0]["argv"] = front
     for r in (1, 2, 3):
         ranks[r]["argv"] = ["bin/flerp-qwen35moe-stage"] + [f"{k}={v}" for k, v in ranks[r]["keys"].items()] + [f"rank={r}"]
@@ -183,7 +188,7 @@ def main():
     ap.add_argument("cmd", choices=["up", "down"])
     ap.add_argument("--serve-config", default="ornith397.serve")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE")
-    ap.add_argument("--context", type=int, default=4096)
+    ap.add_argument("--context", type=int, default=None, help="positions; default the serve config's stage context (4096 when it has none)")
     ap.add_argument("--max-min", type=int, default=120, help="serve at most this long, then close (win_run's `for` is the hard bound)")
     ap.add_argument("--load-timeout-s", type=int, default=5400)
     ap.add_argument("--dry-run", action="store_true")

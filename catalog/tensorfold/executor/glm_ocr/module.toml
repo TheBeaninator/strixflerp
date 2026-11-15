@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.glm_ocr"
 kind      = "executor"
-summary   = "GLM-OCR on HIP"
+summary   = "GLM-OCR on native HIP: a CogViT vision tower and learned image connector produce mixed image/text rows and rotary coordinates for a four-norm GLM decoder with per-stream BF16 KV, its pointwise operators keeping the checkpoint's explicit BF16 rounding nodes, served by the shared lane core with copy drafts and keyed prompt snapshots."
+why       = "Upstream serves the BF16 zai-org/GLM-OCR checkpoint with no Python or libtorch in the engine, qualified on a Radeon AI PRO R9700 (docs/recipes/glm-ocr-hip.md). It is a candidate OCR service for the pod and the caller of hip_vision_ocr's PyTorch-order pointwise kernels; its only qualification is the R9700, a discrete gfx12 card."
 
 [provenance]
 origin    = "tensorfold"

@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemv_mfp4"
 kind      = "kernel"
-summary   = "Decode GEMV on MFP4-G32 / MFP3 weights (FP4 codes with per-32 scales, E8 lattice variants), including the indexed MoE gate-up and down forms for gfx1151 (21 sources, 43 gfx1151 compile units)"
+summary   = "Decode GEMV on MFP4-G32 and MFP3 weights (21 sources, 43 units): FP4 / FP3 codes with per-32 scales decoded in-kernel, E8-lattice variants including 128-wide rotation groups, and indexed MoE gate/up and down forms for gfx1151, fp32 accumulation"
+why       = "These read the MFP4 expert stacks of hipfire's Qwen4 and DSV4 models at decode; the 128-wide rotation variant exists because a 256-wide FWHT segment cannot tile Qwen4's K = 640 (QUANTIZATION.md, qt 42). No strixflerp code calls these, and the gate only compiles them"
 
 [provenance]
 origin    = "hipfire"

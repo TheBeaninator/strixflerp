@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.cuda_nemotron"
 kind      = "kernel"
-summary   = "Nemotron 3.5 hybrid CUDA kernels: Mamba mixer, latent MoE, routing, attention, keyed sampling ops"
+summary   = "Nemotron-H CUDA kernels: the Mamba-2 conv and scan with a state that lags a window and replays its kept rows first in the same loop body, 512-key attention chunks merged in absolute order, fp32 router logits in K slices, latent MoE glue summing routed pairs by share then by pick, and fp64 top-K shares for ranking MTP candidates."
+why       = "Upstream's CUDA path for the hybrid model the pod could serve through nemotron/hip; its comments show how a recurrent model's row bits are kept independent of where the window falls, the same requirement hip_recurrence meets on HIP."
 
 [provenance]
 origin    = "tensorfold"

@@ -1,6 +1,7 @@
 id        = "kernel.flerp.residual_add_hipfire"
 kind      = "kernel"
-summary   = "Adapter: strixite's residual_add on hipfire's add_inplace_f32 code object (fp32, in place); BF16 stays with strixite"
+summary   = "Adapter: strixite's fp32 in-place residual_add launching hipfire's add_inplace_f32 from an embedded code object (hipfire ships no host launcher and counts elements in an int, so n < 2^31); BF16 calls go to strixite's renamed kernel"
+why       = "The hipfire provider of swap 1: it shows that a bare code object from hipfire's kernel library, with no host code of its own, can be driven through another engine's launch API; byte-identical to strixite and gufo on all nine cases (cancellations, subnormals, NaN, a 21-million-element prefill block) and within 4 % of their speed, so it closes the question of whether hipfire's units are usable as parts"
 
 [provenance]
 origin    = "flerp"

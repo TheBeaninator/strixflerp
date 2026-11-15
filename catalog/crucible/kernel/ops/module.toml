@@ -1,6 +1,7 @@
 id        = "kernel.crucible.ops"
 kind      = "kernel"
-summary   = "Non-EXL3 operators of the Qwen3.8-Flash-Next forward: embed, norms, RoPE (incl. generated YaRN tables), router, dense fp16 rows, PLE gather and mix, MTP fuse, argmax; numerics mode switch"
+summary   = "The non-EXL3 operators of the Qwen3.8-Flash-Next forward: embedding, norms, RoPE from generated YaRN tables with one mode per sequence, the MoE router with a stable top-k, dense fp16 rows, PLE gather and mix, the MTP fuse, argmax and a non-finite probe, with numerics.h as the only reader of the numerics-mode switches"
+why       = "These small ops hold the forward together and carry Crucible's rule that row r of a multi-row call gives the one-row bits (docs/ARCHITECTURE.md layers); numerics.h exists so CRUCIBLE_EXACT=1 can turn every lossy speedup off at run time without a rebuild, and the generated YaRN tables extend context to 524,288 and 1,048,576 tokens while a sequence keeps the mode it started with (runtime/rope_mode.h, docs/CRUCIBLE.md section 3)"
 notes     = "ops.h:65 folds HC weights as ExLlamaV3 does; carries the MIT notice too."
 
 [provenance]

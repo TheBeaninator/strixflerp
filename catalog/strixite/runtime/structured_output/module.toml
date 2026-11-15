@@ -1,6 +1,7 @@
 id      = "runtime.strixite.structured_output"
 kind    = "runtime"
-summary = "Structured output state for a generation: grammar cursor and row masks"
+summary = "Per-generation state for response_format: a two-phase cursor (reasoning allows any token but end-of-turn; content allows only the grammar's tokens, plus end-of-turn where the grammar accepts) that yields one allowed-token mask per logits row, including each row of an MTP verify"
+why     = "The server constrains JSON answers token by token without touching the model's thinking (upstream docs/server.md); this is the piece that ties the grammar, the token masker and the engine's MTP drafts together, so a draft the grammar would refuse is never verified. It also feeds the tool-call grammar's real <tool_call> tokens to the grammar as sentinel bytes. Used by the engine, tool_grammar_check, and runtime.flerp.reply_strixite in the flerp-serve recipes."
 
 [provenance]
 origin   = "strixite"

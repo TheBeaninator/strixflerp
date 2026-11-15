@@ -1,6 +1,7 @@
 id        = "runtime.gufo.cache"
 kind      = "runtime"
-summary   = "Continuation and prefix caches: slot store, prefix index, checkpoints, disk catalog and ledger, retention, streaming; the serving-side continuation cache, identity and disk store; component text cache"
+summary   = "gufo's continuation and prefix caching: a slot store, a prefix index that finds the longest saved token prefix, checkpoints at conversation boundaries, a disk catalog with ledger and retention, streaming restore, and the server-side continuation cache with its identity keys, all restoring a saved opaque slot snapshot exactly for a matching prefix"
+why       = "Recomputing the prefix a new turn shares with the last one dominates multi-turn latency, so gufo keeps the runner's state alive across requests; per KV-CACHE.md the cache stores an opaque snapshot (attention KV for the 27B, also DeltaNet, indexer and sampling state for Flash-Next), which buys one retention, eviction and disk mechanism for every engine. It requires all three executors and the server, which is why every gufo recipe's closure is the whole origin"
 
 [provenance]
 origin    = "gufo"

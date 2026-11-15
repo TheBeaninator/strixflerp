@@ -1,0 +1,30 @@
+# ORNITH-CTX-RUN pass criteria (card 266647f0af), written before any hardware run; they are not loosened after it.
+# Run: gate/ornith_ctx_check.py on control-node through tools/gpu-queue.sh (gate/ornith_ctx_check_run.sh), 35B world 4 over loopback TCP,
+# serve front end (flerp-serve + 3 stage processes) at the serve config's context, one load.
+[config]
+serve_config      = "ornith397.serve"
+context           = 65536        # the serve config's stage context, read through flerplib.configs, must be this
+
+[prompt]
+# a FreeFitty-shaped thread: a long system prompt, tool definitions (JSON text in the system turn), a few user/assistant turns, a last user turn
+tokens_min        = 18000        # usage.prompt_tokens from the server's reply
+tokens_max        = 22000
+
+[http]
+status            = 200          # the chat reply through the serve front end
+completion_min    = 1            # completion tokens
+
+[identity]
+# the SAME prompt as raw text (no chat template) through /v1/completions (serve path) and through flerp-qwen35moe-generate --staged loopback
+# --context 65536 (generator path, no drafts), greedy, the first N generated ids must be equal token for token
+max_tokens        = 32
+equal             = true
+
+[prefill]
+# the serve reply's timings.prompt_ms for the chat prompt; recorded as the number the router needs. Pass only means "not the per-token path".
+seconds_max       = 300
+
+[memory]
+# GTT of each of the four stage processes (/proc/PID/fdinfo drm-memory-gtt), sampled each second through the 20K request
+stage_growth_gib_max = 4.0       # peak minus idle-after-load, per process
+exit_codes        = 0            # every process exits 0 after a normal stop

@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.glue"
 kind      = "kernel"
-summary   = "Byte-moving and widening glue: bf16/f16 to f32, rank-ordered add, row scatter/gather, strided copy, argmax"
+summary   = "Byte-moving and widening kernels ported from TensorFold's CUDA torch_ops and dsv41_ops: bf16 and f16 to f32, the rank-ordered add of two fp32 partials rounded once to bf16, row scatter and gather, 16-byte row copies, strided copy, a first-index argmax per row, and a clock read for profiling"
+why       = "TP2 reduces by all-gathering fp32 partials and adding them in rank order on every rank, so add2 is the reduction itself and its one IEEE add is what makes both ranks agree bit for bit independent of transport (tools/dsv41-hip/COLLECTIVES-DESIGN.md section 1); the rest is plumbing the family needs on any backend, tested 11 of 11 on both boxes (RESULTS.md)"
 
 [provenance]
 origin    = "strixfold"

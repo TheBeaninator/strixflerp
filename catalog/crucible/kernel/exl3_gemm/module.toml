@@ -1,6 +1,7 @@
 id        = "kernel.crucible.exl3_gemm"
 kind      = "kernel"
-summary   = "EXL3 prefill GEMM on gfx11 wave32 WMMA: trellis tiles decoded into LDS and fed to v_wmma, two column tiles share one LDS publication, a half-precision path, packed input transforms"
+summary   = "EXL3 prefill GEMM on gfx11 WMMA: weights are stored column-block-major in 16x16 trellis tiles that already match the WMMA fragment, each wave decodes a tile into LDS once and feeds it to v_wmma_f32_16x16x16_f16 for every row tile, two column tiles share one LDS publication, and a half-precision variant and packed input transforms are shared with decode"
+why       = "Cold prefill on gfx1151 is compute-bound, and Crucible runs it at 53-56% of a measured 48.2 TFLOPS WMMA ceiling; because EXL3 tiles are fragment-shaped it skips the 128 scattered row pieces per K step that strixw's row-major linear_wmma must stage, and the half-precision kernel added 4.4-4.8% a call at equal bytes (docs/CRUCIBLE.md section 2), which is why the dense-prefill row of docs/CRUCIBLE-VS-STRIXITE.md section 2 calls Crucible's the stronger recipe"
 
 [provenance]
 origin    = "crucible"

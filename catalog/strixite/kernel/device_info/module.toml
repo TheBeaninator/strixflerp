@@ -1,6 +1,7 @@
 id      = "kernel.strixite.device_info"
 kind    = "kernel"
-summary = "Wavefront size of the current device, queried once, for sizing launch grids"
+summary = "Header-only host helper that asks HIP once for the current device's wavefront size, caches it in a static, and checks that it divides the launcher's block size"
+why     = "Every strixite launcher that splits work across waves (linear, linear_q4/q8/q56, linear_wmma, hc, hc_wmma, norm) must know whether lanes come 32 or 64 to a wave before it sizes its grid; querying it per launch would cost a driver call on the decode hot path, and assuming 32 silently would break on a wave64 device. Required by module id, so it rides along in every strixite recipe."
 
 [provenance]
 origin   = "strixite"

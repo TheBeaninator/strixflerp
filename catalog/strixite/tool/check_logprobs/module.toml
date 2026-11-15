@@ -1,6 +1,7 @@
 id      = "tool.strixite.check_logprobs"
 kind    = "tool"
-summary = "Test: logprob math, the engine's capture sites and the response shape against a scripted fake backend"
+summary = "Host-only test of per-token logprobs: the log-softmax row math, the engine's capture sites driven by a scripted fake backend (greedy text, the thinking budget's fed stop, MTP-accepted and MTP-rejected tokens), which logits rows a request reads, request parsing with and without --logprobs, and the choice.logprobs body shape, needing only tokenizer.json"
+why     = "Logprobs (card 31cf21e3d1, ENG-LOGPROB) were a pod patch whose numbers must come from the very FP32 row the sampler used, with null for tokens the server fed itself; MTP drafting and the thinking budget make those capture points easy to get wrong, so this pins them without a model. A unit gate in the strixite Qwen3.8 recipes (unit-check_logprobs.txt: ok)"
 
 [provenance]
 origin   = "strixite"

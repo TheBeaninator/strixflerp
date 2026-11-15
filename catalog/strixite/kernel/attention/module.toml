@@ -1,6 +1,7 @@
 id      = "kernel.strixite.attention"
 kind    = "kernel"
-summary = "Causal softmax attention with GQA, the sigmoid output gate, fused q/k norm + RoPE jobs, the QSA-gathered variant, WMMA prefill variants and 8-bit K/V readers"
+summary = "Causal softmax attention for the 12 full-attention layers: q/k get a zero-centred RMSNorm plus partial RoPE in fused jobs that also write the K/V cache, then FP32 online softmax over the cache with GQA (query head h reads KV head h / (Hq/Hk)), times the sigmoid output gate, rounded once; variants gather only QSA-selected blocks, read the 8-bit cache, or run 16-row WMMA tiles for prefill"
+why     = "The Qwen3.8 trunk interleaves Gated DeltaNet with full-attention layers whose queries carry an output gate, so no stock attention kernel fits; this one does the whole layer body (norm, rope, cache write, gated attention) in few launches and keeps all score math in FP32, more precise than transformers' BF16 eager run. Paired with the QSA indexer it is why decode stays flat with depth: each query looks at its selected ~2k keys, not the whole context (how-it-got-fast.md section 4, 2% slower from 64k to 224k). It provides attn.softmax-gqa in qwen38-flash-next.strixite and every recipe derived from it."
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.glm"
 kind      = "executor"
-summary   = "GLM-5.3-Flash: KDA + DSA sparse attention + MoE, MTP / DFlash (CUDA TP2/TP3, paired Metal; no HIP path)"
+summary   = "GLM-5.3-Flash family: KDA (Kimi delta attention) linear layers plus MLA layers with a DSA sparse indexer, routed MoE, hyper-connections, MTP and DFlash drafting; CUDA ranks at TP2/TP3 from the NVFP4 or EXL3 checkpoints, each rank's fp32 partial gathered in rank order and added rank 0 first, and a paired-Metal path on two Macs with MLX 4-bit weights."
+why       = "It is the only implementation of GLM-5.3-Flash's KDA and DSA shapes upstream has, and none of it is HIP; docs/TENSORFOLD.md section 4 names it as the reference a HIP port would start from. The pod parked GLM-5.3-Flash on size on 2026-10-15 and nothing here changes that, so the module is kept to read."
 
 [provenance]
 origin    = "tensorfold"

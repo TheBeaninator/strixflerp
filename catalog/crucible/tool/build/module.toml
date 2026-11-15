@@ -1,6 +1,7 @@
 id        = "tool.crucible.build"
 kind      = "tool"
-summary   = "The origin build: Makefile, the checked hipcc wrapper, devsplit (parallel split device compile with the same ISA), ISA diff, release stamp and state epoch stamp"
+summary   = "Crucible's own build: the Makefile with ENGINE_FLAGS, a hipcc wrapper that fails when the compiler exits 0 without writing its output, devsplit (one device front-end pass, kernels cut into parts with llvm-extract and compiled in parallel with the original back-end options, cached per part), an ISA diff of two engine binaries, the release stamp and the state-epoch stamp"
+why       = "The one-translation-unit engine compiles its 640-odd kernels in a single clang process on one core (about 20 minutes as build/engine/crucible.mono), and devsplit gives the same ISA in parallel parts; the checked wrapper exists because hipcc reported success after an out-of-memory kill on Nov 5; the qwen38-flash-next.crucible recipe builds through this Makefile (its build root) with the plain mono target and no stamps"
 
 [provenance]
 origin    = "crucible"

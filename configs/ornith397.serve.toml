@@ -14,5 +14,16 @@ includes    = ["ornith397.decode-best", "ornith397.prefill-best"]
 # "flerp_draft_hold: 3 drafts asked, the last stage holds 1" (35B world 4, 2026-11-14, gate/results/ornith-config-check). Depth 3
 # is the generator path's (decode-best, 25.7 tok/s); raise this to 3 when the ABI path holds N drafts.
 drafts = 1
+# Positions the serving window holds (arena KV, the draft head's KV, the rendered-prompt bound). FreeFitty threads carry a system
+# prompt plus tool definitions well over the old 4096; Ornith's KV is ~7.7 KB a position a stage, so 65536 is ~0.5 GB a stage.
+context = 65536
+# Slot-resident prefix reuse (ORNITH-PCACHE): the stages keep a snapshot of their KV and recurrent state at the start of the last prompt
+# forward when at least this many ids follow it (so the chat template's generation prompt stays out of the kept prefix); the next request
+# whose first ids equal the snapshot's prefills only what follows, in the chunks a cold prefill uses, so its ids are the cold run's.
+# Any other prompt resets and prefills everything. 0 turns it off (--set reuse_tail=0).
+reuse_tail = 32
+# Prompt forwards are cut at multiples of this many positions so the kept state sits within 1,024 ids of the prompt's end (4,096-row chunks
+# alone: 3.7x warm speedup, 1,024: 10.9x, cold prefill no slower; 0 = the caller's own chunks).
+reuse_grid = 1024
 
 [env]

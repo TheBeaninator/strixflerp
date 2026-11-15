@@ -1,6 +1,7 @@
 id      = "runtime.strixite.resume_loss"
 kind    = "runtime"
-summary = "Describes what a resume point loses when an edited message forces a re-prefill"
+summary = "Turns a short resume into one log line: names the first token where the prompt left the nearest saved state and the message holding it, found by counting <|im_start|> tokens, and raises it to a warning when the loss means seconds of prefill"
+why     = "The model's GDN layers resume only on an exact prefix, so one changed token early in a conversation costs a prefill of everything after it. One day brought 8 cold prefills of 84k-180k tokens from an opencode plugin re-rendering memories into the system prompt, found only by comparing saved system-prefix sizes by hand; this makes the engine name the offending message at once. Used by runtime.strixite.engine only."
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id        = "executor.flerp.strixite_abi"
 kind      = "executor"
 summary   = "strixite behind the executor ABI: a C++ shim over LmBackend that opens Qwen4ExpBackend with the served defaults; full rows, candidates or greedy tokens; MTP draft steps; batched verify with keep / keep_prefix / drop; snapshot slots and host-byte states"
+why       = "strixite hands logits to the host while StrixFold draws on the device, and SPEC section 6 wants one C ABI both can sit behind so a single front end and test driver serve any engine; this shim is strixite's side, and its gate shows the shared decode loop through the ABI giving the native server's tokens and step records on every gated request, MTP on and off"
 notes     = "docs/EXECUTOR-ABI.md has the call-by-call mapping and what does not map (parked and small states, steering, vision prefill, lookahead of PLE rows, renew)."
 
 [provenance]

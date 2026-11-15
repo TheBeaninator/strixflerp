@@ -37,6 +37,10 @@ namespace flerp::moe {
 ///   logits[t * stride + n_experts] = w_shared_gate . x[t] when w_shared_gate is not null (stride > n_experts)
 /// w_router is F32 [n_experts, hidden], w_shared_gate F32 [hidden], x F32 [tokens, hidden]. One wave a dot,
 /// lanes take every 32nd element, FP32.
+// ROUTER-GEMM (c6473d6063): prompt chunks of >= 64 tokens take a tiled FP32 kernel with the GEMV's exact sum order
+// (bit-identical logits). -1 = FLERP_ROUTER_TILED (default off), 0 off, 1 on.
+void SetRouterTiled(int mode) noexcept;
+
 void GateLogits(const float* w_router, const float* w_shared_gate, const float* x, float* logits,
                 std::size_t tokens, std::size_t n_experts, std::size_t hidden, std::size_t stride,
                 hipStream_t stream);

@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.cuda_dsv41"
 kind      = "kernel"
-summary   = "DeepSeek-V4.1 CUDA kernels: sparse attention and split-K, hyper-connection mix (mHC) with prefetch, router GEMV, top-k, KV glue and split, Engram gate, prefill glue, L2 pacing/prefetch, sampling"
+summary   = "Upstream's DeepSeek-V4.1 CUDA kernels, mostly copies from the Python 0.6.6 engine: compressed sparse attention with a split-K cluster kernel, the hyper-connection mix (mHC) with prefetch and a parallel tail, a narrow router GEMV, SWA KV glue bit-exact with the AOT Triton ops, word-copy KV exchange splits, the Engram gate, torch-exact prefill glue and L2 prefetch and pacing."
+why       = "These are the layers StrixFold runs on HIP (sparse_attn, mhc_mix, moe_gate), written instead for GB10, so they show other work mappings for the pod's DeepSeek profile; docs/TENSORFOLD.md section 5 names mhc_pf.cu, l2pf.cu and l2pace.cu as reading for StrixFold's mhc_mix. Never compiled here."
 
 [provenance]
 origin    = "tensorfold"

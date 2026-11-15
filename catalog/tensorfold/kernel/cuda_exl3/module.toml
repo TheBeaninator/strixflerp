@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.cuda_exl3"
 kind      = "kernel"
-summary   = "EXL3 on CUDA: tile decode straight into MMA fragments, linear and grouped-expert GEMV, prefill dense (pfdense k8..k16), x3gm grouped GEMM plan/load/epilogue, segmented experts; EXLR8 codecs"
+summary   = "EXL3 matmuls on CUDA: trellis tiles decoded straight into MMA fragments, linear and grouped-expert GEMV, dense prefill variants (pfdense k8, k10, k12, k16), a 17-32-row linear feeding two row tiles from one weight pass, and x3gm grouped expert GEMM with its pass tables built on the device, where every output is one mma chain over ascending k whatever the tiling."
+why       = "Because x3gm's sum order does not depend on the tile, the tile can be picked per shape without changing bits; upstream claims grouped experts 1.5-3.6x faster than ExLlamaV3's mixed-K dispatch on GB10. That decision rule is transfer R2 in docs/TENSORFOLD.md for StrixFold's EXL3 prefill experts, 34-42 % of a DSv41 chunk. The CUDA sources are never compiled in this tree."
 
 [provenance]
 origin    = "tensorfold"

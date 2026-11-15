@@ -1,6 +1,7 @@
 id        = "kernel.flerp.moe_router_gufo"
 kind      = "kernel"
 summary   = "Adapter (router-slots): strixite's moe_router on gufo's RouterTopK, plus strixite's non-finite rule as a fix-up launch; shared-slot and BF16 calls stay with strixite"
+why       = "Swap 5 of docs/INTERFACES.md: whether gufo's softmax-then-top-k router can replace strixite's for the checkpoint's 10-of-512 routing; it picks the same expert ids slot for slot on every gated case, ties and non-finite tokens included (the latter through adapter_rt's fix-up), with weights a few fp32 steps apart, but costs 37 against 28 us a decode token and 344 against 100 us on a 2,048-row prefill chunk, and the weight rounding moves greedy text, so it is a measured alternative, not an upgrade"
 
 [provenance]
 origin    = "flerp"

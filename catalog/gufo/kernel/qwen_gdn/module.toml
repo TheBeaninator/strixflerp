@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qwen_gdn"
 kind      = "kernel"
-summary   = "Gated DeltaNet (called SSM in gufo): fused input projections, causal conv1d, token-serial DeltaNet recurrence, row-split recurrence with fused post-norm and gate, rollback capture"
+summary   = "Gated DeltaNet (gufo calls it SSM) for the Qwen family: fused q/k/v/gate/alpha/beta input projections on GGUF weights, causal conv1d, a token-serial fp32 DeltaNet recurrence whose rows are bit-identical across batch shapes, a row-split recurrence with fused post-norm and gate, and capture of the per-token values needed to replay or roll back the state"
+why       = "The hybrid Qwen models interleave DeltaNet layers with attention, and speculative decoding must discard rejected tokens from a recurrent state that cannot be truncated like a KV cache, hence the replay capture and the bit-equality across batch shapes. strixflerp changed one path here (ATTN-PROJ, gate/attn-proj.toml): the fused projections try a bit-equal wide-load Q4_K kernel first, aimed at Ornith-1.5's K = 4096 inputs; it builds in every gufo recipe"
 
 [provenance]
 origin    = "gufo"

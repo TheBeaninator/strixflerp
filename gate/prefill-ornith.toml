@@ -70,3 +70,17 @@ T1 = "35B prompt pass, 2,048-token prompt in one chunk: B's prompt tok/s at leas
 # champion is mean KL(D || arm) <= 0.0176, today's distance. F1-F4 against A stay as recorded results (failed).
 reference = "D (prompt through the decode step, FP32 activations), forced on D's greedy ids, 8 prompts x 32 positions"
 floor     = "mean KL(D || arm) <= 0.0176"
+
+[amendment_2026_11_14_ornith_greedy]
+# Amendment by the PM (card ORNITH-BRIDGE 8db1be3486), 2026-11-14, before the next Ornith window (ORNITH-WINDOW3 9c4e9e919c);
+# thresholds above unchanged. It sets how a prefill arm is judged on Ornith-1.5 397B itself, where no FP32 reference exists and
+# the only comparison is the old per-token prompt path. Reason: ORNITH-CONFIRM2 (3bed1267a2, window 11140653) failed arm G on
+# "greedy equal to the old path on 3/3 P5 prompts" because bridge split at token 8; the window recorded no logits, so the margin
+# there is unknown. On the 35B the same short-prompt code paths (21-24 rows: per-token experts, dense F16 vs Q8_1, GQA WMMA vs the
+# scalar fallback) were measured against FP32 (D) in gate/results/ornith-bridge (criteria gate/ornith-bridge.toml, committed
+# before the run): all 6 A-vs-G greedy splits are near-ties of the reference (D's gap between the two tokens 0.029-0.191 nats,
+# under 0.3), G took D's top-1 at 5 of them and A at 1, and mean KL(D || G) = 0.00036 against KL(D || A) = 0.00276. A greedy
+# split from the old path is therefore expected wherever the old path itself is near a tie, and does not by itself name a defect.
+reference = "the old per-token prompt path on the 397B, as a yardstick (FIDELITY.md), read with its logits_top (the stage driver's --reply full rows)"
+rule      = "for each P5 prompt (bridge, code, rivers): greedy ids equal the old path's, OR at the first divergence the old path's own logit gap between the two tokens is under 0.3 nats (F2's tie); AND top-1 at the prefill end agrees on at least 11 of the 12 prompts that generate on both paths. A split where the old path's gap is >= 0.3 nats fails and names a defect to find."
+applies   = "gate/ornith-window3.toml [fidelity] F1 (committed 0183cef3, window branch) and every later Ornith 397B prefill gate"

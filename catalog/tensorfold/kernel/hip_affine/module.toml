@@ -1,6 +1,8 @@
 id        = "kernel.tensorfold.hip_affine"
 kind      = "kernel"
-summary   = "Stand-alone affine projection object (affine.hip, built separately by zig/build/hip.zig for the affine tuner)"
+summary   = "A standalone HIP code object holding affine_row4_f32, an exact MLX 4-bit row projection with BF16 activations and output, FP32 sums of 16 inputs a lane in four-product chains and a 32-lane reduction, compiled with -ffp-contract=off so every row reduces the same way for any M, plus two bounded test-load kernels that write only their own scratch."
+why       = "It was upstream's first HIP kernel (#463: an opt-in HIP runtime with one exact MLX affine 4-bit projection and no model), and zig/build/hip.zig still compiles it alone for hip-affine-test, which compares its BF16 output with golden hex files bit for bit while the load kernels run on independent streams. Served models use hip_tiles; here it is the smallest compile check of upstream's HIP recipe."
+notes     = "The provides interface's -tune tag and the old summary said it serves the affine tuner; hip.zig builds it for hip-affine-test, and the tuner (runtime hip/affine_tune.zig) times the hip_tiles prompt tiles."
 
 [provenance]
 origin    = "tensorfold"

@@ -1,6 +1,7 @@
 id        = "kernel.flerp.logits_topk_gufo"
 kind      = "kernel"
 summary   = "Adapter (cands-layout): strixite's logits_topk on gufo's LaunchGPUSortLogits, plus a NaN scan and a pack kernel of its own; masks and short rows stay with strixite"
+why       = "Swap 2 of docs/INTERFACES.md and the one that proved the plumbing end to end: both providers are exact selections, so gufo's sort-based top-k could run inside strixite's server with token identity on all 18 recipe requests; the price is 5 launches a row against strixite's 2 (472 against 80 us a decode row, 0 to 3 % slower decode), which is why strixite's kernel stays the default"
 
 [provenance]
 origin    = "flerp"

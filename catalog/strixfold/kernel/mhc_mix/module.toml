@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.mhc_mix"
 kind      = "kernel"
-summary   = "mHC (hyper-connection) posted streams and mixes of a prompt chunk: 4 streams of 5120, 40 mix blocks of 512"
+summary   = "Manifold hyper-connection (mHC) mixes for a prompt chunk: optionally posts the gathered partial into the 4 streams of 5,120 with _hc_post's fma contraction, then for 40 blocks of 512 columns sums 24 mix dot products and a sum of squares per row in column order, a workgroup taking 32 rows by one 512-column chunk of all four streams so each row's kilobyte is read in one piece"
+why       = "It replaces the Triton _hc_mix_pf on the prompt path; the layout choice is the point, since 128-column steps of 32 rows read 256-byte pieces and ran at about 60% of streaming bandwidth (aux_hc.hip), while this one reaches 163 GB/s and posts streams bit-identical to Triton's, with the mixes inside hc_mix_fp32_bound (docs/PREFILL-DSV41.md section 3, INTERFACES)"
 
 [provenance]
 origin    = "strixfold"

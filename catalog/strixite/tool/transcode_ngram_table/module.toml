@@ -1,6 +1,7 @@
 id      = "tool.strixite.transcode_ngram_table"
 kind    = "tool"
-summary = "Makes the int8 n-gram table from the BF16 one"
+summary = "Streams a BF16 ngram.table and re-encodes it as int8 rows with a BF16 scale per row (q8) or as E4M3 with one table scale of absmax/448 (fp8) on every core, then verifies sampled rows bit for bit through the runtime reader and prints median, p99 and max relative row error"
+why     = "The full table is 95 GiB; the rows are small enough that 8 bits with a per-row scale lands within about 0.7% of the originals and halves the file to 48 GiB, which is the ngram.table strixite serves (docs/tools.md); fp8 is kept but unused because one scale for the whole table is less accurate"
 
 [provenance]
 origin   = "strixite"

@@ -1,7 +1,8 @@
 id        = "kernel.flerp.attn_wmma_gqa"
 kind      = "kernel"
 summary   = "Causal prefill attention on the WMMA matrix cores for GQA shapes (16 or 32 query heads over 2 or 4 KV heads of 256): gufo's WmmaCausalAttention / PackAttentionHeads with the head counts as template parameters"
-notes     = "PREFILL-ORNITH attention (gate/prefill-attn.toml). Derived from kernel.gufo.qwen_attention (gufo f070a17, MIT): kernels/attention_wmma.hip, its tile, arithmetic and order unchanged; the 27B's fixed 24 / 4 heads become template parameters. qwen35moe's attention blocks (35B 16/2, Ornith 32/2) otherwise take the scalar online-softmax fallback."
+why       = "Gufo's WMMA attention was fixed at the 27B's 24 query / 4 KV heads, so qwen35moe's attention blocks fell back to a scalar online-softmax kernel that dominated long prompts: on the 35B at 16,384 tokens the prompt ran 175 tok/s on the fallback (arm F) and 1,937 tok/s with this kernel (arm G, 11.1x, gate/results/prefill-attn), and on Ornith's 32 / 2 heads it holds 26.8-28.4 TFLOP/s from depth 4K to 128K; it is the prompt attention of the prefill champion (FLERP_ATTN_GQA=1)"
+notes     = "PREFILL-ORNITH attention (gate/prefill-attn.toml). Derived from kernel.gufo.qwen_attention (gufo f070a17, MIT): kernels/attention_wmma.hip, its tile, arithmetic and order unchanged; the 27B's fixed 24 / 4 heads become template parameters. qwen35moe's attention blocks (35B 16/2, Ornith 32/2) otherwise take the scalar online-softmax fallback. Compiled shapes: head_dim 256 with 8/2, 16/2, 32/2, 16/4 and 32/4 heads; Supported() refuses the rest and the caller keeps the origin's chain. Called by executor.flerp.qwen35moe prefill_chunk.cpp when FLERP_ATTN_GQA=1 (generate arms G and Y and the arms built on G)."
 
 [provenance]
 origin    = "flerp"

@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qfn_mmq"
 kind      = "kernel"
-summary   = "Quantized matrix kernels for Qwen3.8-Flash-Next derived from llama.cpp ggml-cuda (mmq / mmvq / mmid / quantize), built with HIP; plus the wave64 MoE kernel"
+summary   = "llama.cpp ggml-cuda quantized matmuls ported to HIP for Flash-Next behind the qfn_mmq_* C ABI: mul_mat_q on activations quantized to Q8_1 (int8 per 32-block with fp scale and sum) with integer dot products, mul_mat_vec_q decode GEMV, mul_mat_id grouping rows by expert for routed projections (Q4_K, Q5_K, Q5_1, Q8_0, a paired Q4_K gate/up), quantize_q8_1, and a wave64 MoE kernel"
+why       = "Flash-Next's routed experts and K-quant projections need indexed expert matmuls on GGUF blocks, which ggml already had; VENDOR.md keeps ggml's templates on a minimal stub runtime while gufo owns scheduling and HIP graphs. It builds standalone and no recipe binds it yet; docs/PHASE5-ORNITH-GAPMAP.md and PHASE5-GLM52-GAPMAP.md point at its mmid path as the catalogue's indexed expert GEMV on K-quants for Ornith-1.5 and a Qwen3-Coder-class MoE"
 
 [provenance]
 origin    = "gufo"

@@ -1,6 +1,7 @@
 id        = "runtime.flerp.reply_none"
 kind      = "runtime"
-summary   = "include/flerp/reply.h for a recipe whose model has no reply module yet: every call answers FLERP_E_UNSUPPORTED"
+summary   = "include/flerp/reply.h with no reply parser behind it: every call returns FLERP_E_UNSUPPORTED, so the front end returns chat text whole"
+why       = "Placeholder for models whose reply forms are not yet wrapped (StrixFold's DeepSeek recipe until FLERP-SF-REPLY): an explicit unsupported answer makes the front end return text unsplit and refuse tools, thinking budgets and structured output by name instead of guessing at a format"
 notes     = "The front end then returns chat replies whole and refuses tools, thinking budgets and structured output by name (FLERP-SF-REPLY brings StrixFold's)."
 
 [provenance]

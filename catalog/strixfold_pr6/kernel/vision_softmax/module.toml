@@ -1,6 +1,7 @@
 id        = "kernel.strixfold_pr6.vision_softmax"
 kind      = "kernel"
-summary   = "Row softmax over one tile of fp32 attention scores (kernel normalize_scores), for the optional HIP attention of the vision worker; and the script that compiles it"
+summary   = "One HIP kernel, normalize_scores, that turns a tile of fp32 attention scores (128 query rows by 16 heads, up to 9,216 keys) into softmax rows by a 256-lane tree reduction for the max and the sum, expf, and one multiply by the reciprocal, with the amdclang++ script that compiles it to a device code object"
+why       = "It is the optional GPU step of the PR's CPU vision worker: Python calls it by ctypes between two hipblasSgemmStridedBatched calls per tile so image attention, quadratic in patches, need not run on CPU threads; the PR itself says this path changes the reduction order and is not qualified (VISION.md 84-86), so it is off unless a code object and its sha256 are supplied, and strixflerp has not run it"
 notes     = "Launched from Python by ctypes (runtime.strixfold_pr6.vision_sidecar, vision_hip.py), between two hipblasSgemmStridedBatched calls a tile. build_vision_worker.sh is the origin's compile command (amdclang++ -x hip --offload-device-only -O3); it was not run here. The PR says this path changes the reduction order and is not qualified (VISION.md:84-86)."
 
 [provenance]

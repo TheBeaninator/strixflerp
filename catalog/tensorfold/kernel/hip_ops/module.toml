@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_ops"
 kind      = "kernel"
-summary   = "Model-free ops: RMS/layer norms, RoPE, elementwise, activations, MoE routing and expert GEMV (Qwen and Nemotron shapes), TP shard helpers, sampling draws, dense text rows, vision ops, VL positions"
+summary   = "Model-free HIP ops that equal torch bit for bit (round where torch rounds, no contraction): RMS and layer norms a wave a row, RoPE and fused q/k norm, elementwise ops and embedding gathers, the linear attention's conv and gates, the MoE plan and router tiles, Nemotron's sigmoid-bias pick and relu^2, TP residual and expert remaps, argmax and top-k draws, BF16 text rows, vision ops and VL positions."
+why       = "Families build a model from these plus the matrix tiles, so the glue between matmuls carries torch's bits and a family's Python reference stays a valid oracle; the decode, draft, recurrence, flashnext and vision modules all require it. For the pod it is the torch-faithful glue layer a HIP executor needs, where strixite writes its own."
 
 [provenance]
 origin    = "tensorfold"

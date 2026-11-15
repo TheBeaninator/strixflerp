@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.prompt_cache"
 kind      = "runtime"
-summary   = "Exact prompt reuse for any family: states kept at prompt-pass chunk ends, found by their tokens; states on disk (Imprint) outlive the server"
+summary   = "Exact prompt reuse for any family and backend: a family's state is copied at prompt-pass chunk ends and found again by its token prefix, and Imprint keeps such states on disk under an identity directory so they outlive the server, with eviction order and a sweep of other identities"
+why       = "Agentic clients resend long shared prefixes, and a two-node DeepSeek prefill runs at about 1,000-1,400 tok/s, so restoring a byte-equal state instead of recomputing saves seconds per turn; disk states are what the pod's StrixFold learned states (--learn) build on, and docs/TENSORFOLD.md lists upstream's NVMe session tier (a 319K-token conversation recalled in 1.2-1.4 s) as the fix worth carrying here"
 
 [provenance]
 origin    = "strixfold"

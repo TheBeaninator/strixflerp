@@ -1,6 +1,7 @@
 id      = "kernel.strixite.logits_bias"
 kind    = "kernel"
-summary = "A request's logit_bias added to its logits rows in place, ahead of logits_topk"
+summary = "One thread per (token id, value) entry adds a request's OpenAI logit_bias to that id's logit in every row of the request's run, in place on the device FP32 logits, before the top-k pick"
+why     = "Sampling reads only the GPU's top-20 candidates, so a bias applied on the host would come too late: a +100 on a token outside a row's top 20 could never be chosen. Adding it before logits_topk makes the candidate path agree with the full-row path's apply_masks. A pod patch carried in v0.7.0-pod (ORIGIN.toml); provides logits.bias in the strixite recipes."
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id      = "runtime.strixite.think_nudge"
 kind    = "runtime"
-summary = "Detector for circling thinking and the nudge text written into the think block"
+summary = "ThinkWatch: hashes each reasoning token's trailing 8-gram (FNV-1a) and, once past 3k thinking tokens a 1k window is at least 25% self-repeats, asks the engine to feed one first-person sentence at the next paragraph break, at most twice a turn and never a </think>"
+why     = "Qwen3.8-Flash-Next's thinking sometimes goes in circles; with the nudge about half of the stuck turns wrapped up 5-40x sooner, and on turns forked where it fires a quarter stopped within 2000 tokens against none without (think_nudge.hpp, upstream docs/server.md). A length backstop and an earlier 10% trigger were measured and dropped. The engine uses it and runtime.flerp.reply_strixite re-exposes it to the flerp-serve recipes; think-nudge = off allows like-for-like comparisons with engines that lack it."
 
 [provenance]
 origin   = "strixite"

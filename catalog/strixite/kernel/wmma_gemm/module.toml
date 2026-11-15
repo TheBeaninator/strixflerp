@@ -1,6 +1,7 @@
 id      = "kernel.strixite.wmma_gemm"
 kind    = "kernel"
-summary = "Device building blocks of the tiled WMMA GEMMs: LDS staging, software pipelining, scaled-code accumulation"
+summary = "Device building blocks shared by the tiled WMMA GEMMs: per 64-wide K step a weight and an activation tile staged into LDS and software-pipelined (next step's global loads in flight during this step's WMMA), with Q4/Q8 weights entering either as raw codes and per-group scale/min applied to the FP32 accumulator, or dequantized to F16 by a 1024-offset bit trick and one FMA"
+why     = "Dequantizing and rounding each weight while staging bounded these kernels; keeping codes raw (exact in BF16) and folding scale and min into the accumulator costs ~2 ops per code and leaves x as the only rounded input (header). Weights staged as scaled codes moved prefill from 652 to ~1,000 tokens/s (how-it-got-fast.md section 7). Header-only, required by module id by linear_wmma, moe_grouped and hc_wmma; provides gemm.wmma-blocks."
 
 [provenance]
 origin   = "strixite"

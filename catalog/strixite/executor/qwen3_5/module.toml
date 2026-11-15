@@ -1,6 +1,7 @@
 id      = "executor.strixite.qwen3_5"
 kind    = "executor"
-summary = "Qwen3.5 text model: 24 layers (GDN or full attention + SwiGLU MLP), BF16 weights, the stage-1 correctness baseline"
+summary = "Qwen3.5 text-model forward (embedding, 24 layers of GDN or full-attention mixer plus SwiGLU MLP, final norm, tied LM head) running the checkpoint's BF16 linears unquantized through the simple linear_bf16w kernel after load-time merges, with hyperparameters hard-coded from config.json"
+why     = "Stage 1 of strixite: a plain BF16 forward that had to be right before any tuned 4-bit path was swapped in, so it is the correctness baseline the quantized engine grew from. No served binary links it; the strixite recipes keep it under [include] so the build keeps proving it compiles"
 
 [provenance]
 origin   = "strixite"

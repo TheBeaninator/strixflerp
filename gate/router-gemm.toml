@@ -1,0 +1,29 @@
+# ROUTER-GEMM (card c6473d6063, parent PREFILL-ORNITH 8ef0a645e7): the prompt-path MoE router as a tiled FP32 kernel
+# (GateLogitsTiledKernel in kernel.flerp.moe_kquant, generate arm R = G + tiled router). Committed before any hardware
+# run. Shape: docs/EXPERIMENTS.md. Source of the numbers: PREFILL-KPROF run p2 (card 9506f4f116).
+
+[hypothesis]
+prediction = "the router of a 4,096-row 35B chunk drops from 305 ms (GateLogitsWide, 0.6 TFLOPS) to ~25 ms: 86 G FMA at ~7 T FMA/s plus loads and reductions; the chunk 2,049 -> ~1,770 ms, R/G ~1.14x at 2K and ~1.12x at 16K"
+confirmed_at = "router <= 60 ms per chunk, or the K kernel ratio tiled/wide <= 0.20 at 35B dims"
+refuted_below = "router > 120 ms per chunk, or the K kernel ratio > 0.40"
+
+[criteria]
+R1 = "K kernel identity: gate/router_bench.hip, every logit word bitwise equal (differ == 0) between the tiled and wide paths, at (hidden 2048, 256 experts) and (hidden 4096, 512 experts), 4,096 and 100 tokens"
+R2 = "K kernel speed: tiled_ms / wide_ms <= 0.15 at hidden 2048, 256 experts, 4,096 tokens (median of 7 alternating reps)"
+R3 = "model identity (gate/lever_gate.py run --arm R, one load): every recorded step's logits sha256 and the generated ids of every R rep equal G's, 8 fidelity prompts and a 16,384-id prompt"
+R4 = "model speed: R tok/s >= 1.08 x G at 2,048 and at 16,384 tokens (median of 3 interleaved reps)"
+R5 = "ISA (tools/isa-scan.py on the recipe build, rocm-7.2.4 and therock-10.1): 0 scratch in GateLogitsTiledKernel"
+champion = "flerp champion propose for the prefill area only if R1-R5 all pass; never promoted by hand"
+
+[resources]
+nodes   = "bench box K via pod-kbench (K, queue-only) for R1/R2; control-node GPU via tools/gpu-queue.sh for R3/R4, queued behind PREFILL-KPROF kport/kprof3; no idle holds"
+hold    = "~5 min of K jobs and ~6 min of queued GPU jobs, TTL 7 min each"
+weights = "0 GB on K (synthetic FP32); 21.7 GB 35B GGUF already on control-node NVMe /data/models/qwen36-35b-a3b (pod-weights), staged before the hold"
+loads   = "1 per process, every arm and rep measured inside it"
+reps    = "7 alternating on K (kernel, sub-ms spread); 3 interleaved on the model because the bar is 8 % and the per-rep spread was under 5 %"
+shares  = "other K jobs and gpu-queue lanes wait their turn; darkstudio-comfyui holds the control-node GPU until ~18:00Z and is never forced; no worker touched"
+cleanup = "pod-kbench releases bench:K at job end, gpu-queue jobs exit; control-node doctor green afterwards"
+
+[monitor]
+milestones = "K job done by T+20 min; GPU jobs after kprof3 (~18:00Z), done 15 min after start; watched every <= 15 min"
+stop_rule  = "stop at the first fault"

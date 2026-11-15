@@ -1,6 +1,7 @@
 id      = "runtime.strixite.bf16"
 kind    = "runtime"
-summary = "Host BF16 bit helpers, the memcpy twins of the device functions in kernels/rope_math.hpp"
+summary = "Header-only host BF16 conversion by bit manipulation: widening is a 16-bit shift through memcpy, narrowing rounds to nearest even and keeps NaN and infinity, exactly as the device functions of the same name in kernels/rope_math.hpp"
+why     = "Host code has to read and write the BF16 values the kernels store (the loader's widenings, the vision pixel upload, host reference computations), and a host rounding that differs from the device one in a single bit breaks bit-exact comparisons; keeping a host twin with identical semantics makes host and GPU results interchangeable. Required by executor.strixite.qwen4exp, executor.strixite.vision_tower and tool.strixite.strix_acts"
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id        = "runtime.tensorfold.fabric"
 kind      = "runtime"
-summary   = "Host fabric library: verbs ABI and queue pairs, memory registration, RDMA links, mailbox / packet / wire framing"
+summary   = "Upstream's fabric library: a mesh of ranks (pipeline x tensor, experts in blocks) with declared shards and reduction contracts, a pipeline-stage ring over TCP with keep-alive and fail-fast, and TP transports: lockstep one-sided collectives (a chunk write then a step|bytes flag, no atomics), RC and UC queue pairs over verbs striped across HCAs, MCDMA mailbox words, an NCCL hybrid, and fakes that reorder delivery."
+why       = "Multi-node serving needs ranks that agree on every step and fail together; this is that layer for upstream's CUDA and Metal clusters and the host side of cuda_roce_gather. Only 470 lines separate the 25 paths it shares with runtime.strixfold.fabric, which the StrixFold recipes run; kept to diff and for its relay and ring designs beside the pod's coll_rdma."
 
 [provenance]
 origin    = "tensorfold"

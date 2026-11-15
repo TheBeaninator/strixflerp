@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.qwen3_5"
 kind      = "executor"
-summary   = "Qwen3.5 / 3.6 / 3.8 dense and MoE with Gated DeltaNet (HIP, CUDA, Metal; HIP qualified on gfx1151 at v1.0.12 with MLX 4-bit)"
+summary   = "Qwen3.5 / 3.6 / 3.8 dense and MoE family with Gated DeltaNet layers on MLX affine weights: its HIP lane backend gives every stream its own caches and verifies each round's windows in one forward, drafts with the MTP head or a DFlash2 drafter quantised on the host to affine-4 g64, and can end in Clef's joint schema readout; CUDA and Metal back ends too."
+why       = "It is upstream's best-qualified HIP family: the v1.0.12 receipt ran Qwen3.6-35B-A3B with MTP, Qwen3.8-27B and Qwen3.5-9B (MLX 4-bit) on a gfx1151, the pod's own chip, so its numbers are the nearest outside reference for those models on Strix Halo. Most of the hip_* kernel modules exist for it, and it carried the first HIP tensor parallelism over RCCL (#655)."
 
 [provenance]
 origin    = "tensorfold"

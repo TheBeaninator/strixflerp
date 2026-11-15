@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.gpu_facade"
 kind      = "runtime"
-summary   = "Backend-neutral GPU surface checked at compile time against each backend, with the HIP backend: context, streams, memory, modules, typed kernel launch, graphs, Triton AOT launch"
+summary   = "The backend-neutral GPU surface the families call, checked at compile time against each backend, and its HIP backend backported from ashhart's TensorFold: context, streams, memory with a pinned staging ring for pageable uploads, module loading, typed kernel launch by id, HIP graphs and the Triton AOT launcher"
+why       = "The DeepSeek family was written against CUDA; a comptime-selected gpu module with u64 addresses let it compile for HIP with mechanical edits and no runtime vtable (ADAPTER.md D1-D5), on leaf modules already proven on gfx1151, and the staging ring exists because HIP does not document CUDA's 'pageable source staged before return' rule the family relied on; a launch costs about 0.024 ms here and graphs capture whole decode rounds"
 notes     = "cuda_facade.zig and zig/src/cuda are not harvested; interface.zig still names both facades."
 
 [provenance]

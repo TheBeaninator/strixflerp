@@ -1,6 +1,7 @@
 id        = "executor.strixfold.dsv41"
 kind      = "executor"
-summary   = "DeepSeek-V4.1-Flash, one TP rank: prompt chunks, decode / verify rounds, the Triton and HIP kernel launch sites, behind the lane backend vtable and the native family interface"
+summary   = "DeepSeek-V4.1-Flash on one tensor-parallel rank of a two-node split: the Zig family that loads this rank's EXL3 slices, runs 2,048-row prompt chunks (zipped in two halves, with only the last 128 rows replayed through layers 20-39) and decode / verify rounds, launches the Triton-AOT and hand-written HIP kernels by id, and ends every attention, MoE, Engram and head step with an fp32 all-gather that each rank adds in rank order, behind the lane backend vtable"
+why       = "A 2.9 bpw DeepSeek-V4.1-Flash does not fit one 128 GB Strix Halo, so the pod serves it over two (workers F and A); this is StrixFold's HIP port of TensorFold's CUDA family and the executor of the dsv41-flash.strixfold-tp2 recipes, whose pair stage gave token-identical replies to the origin deployment with drafts on and off (gate/results/dsv41-flash.strixfold-tp2), at 30.8 decode tok/s and 1,226-1,432 prefill tok/s over RDMA; docs/PREFILL-DSV41.md sizes its prefill and executor.flerp.dsv41_zip2 changes its schedule"
 notes     = "native.zig carries a pod patch (f44d736). cublas.zig / cublaslt.zig are dlopen shims the family imports unconditionally and stay; the *2d* files (the TP4 split, exercised on CUDA only) are included because round.zig, prompt.zig and draft.zig import them; model.zig imports vision.zig unconditionally, so the vision tower is its own module (executor.strixfold.dsv41_vision) that this one requires; fixtures/*.json are embedded by tri.zig."
 
 [provenance]

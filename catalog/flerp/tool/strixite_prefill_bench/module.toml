@@ -1,6 +1,7 @@
 id        = "tool.flerp.strixite_prefill_bench"
 kind      = "tool"
 summary   = "Chunked prefill of fixed token ids through strixite's Qwen4ExpSession as the server's engine runs a prompt (set_lookahead, last-chunk logits), then greedy decode; per-chunk wall times, PLE waits, logits sha256 and greedy ids per variant (chunk size, module switches) from one weights load"
+why       = "The prefill variants (chunk size, the combine reduce, module switches) had to be compared on equal footing inside the real session the server runs, not in a kernel harness; one weights load, alternating variant order and a logits hash per variant give speed and an exactness check in the same run, which is how the pf2 and pf3 gates were judged"
 notes     = "Variants alternate order per round. A variant's environment entries are set before its session is built: the switches of the prefill modules of recipes/qwen38-flash-next.strixite-pf.toml are read there."
 
 [provenance]

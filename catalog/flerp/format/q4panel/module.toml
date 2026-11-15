@@ -1,6 +1,7 @@
 id        = "format.flerp.q4panel"
 kind      = "format"
 summary   = "Q4Panel16: strixw Q4 re-laid out in panels of 16 rows (16-byte code chunks chunk-major inside a panel, then the panel's interleaved BF16 scale/min pairs), the reference relayout row-major -> panel and its inverse, and the panel geometry the strixw v5 writer plans with"
+why       = "Stage 1 of docs/STRIXW-LAYOUT-NEXT.md, the owner's 'modify the weights to mesh with the kernels': one stored copy of each Q4 tensor that decode GEMV and prefill WMMA can both read in full 128-byte lines, where a second prefill-only copy (+68 GB) does not fit; it only reorders bytes, so file size, group sizes and dequantized values are unchanged and token identity is expected, and the round trip is the proof every later stage leans on"
 design    = "DESIGN.md"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md section 2 candidate A, stage 1. Order-only: the bytes of a strix::Q4Weight moved, nothing re-quantized. The relayout is code-width agnostic (format.flerp.q8panel calls it at 8 bits)."
 

@@ -1,6 +1,7 @@
 id      = "runtime.strixite.vision_preprocess"
 kind    = "runtime"
-summary = "Image decode (PNG, JPEG, GIF, BMP, TGA, WebP) and the model's resize and patch preprocessing"
+summary = "Host image path from bytes to pixel_values: magic-sniffed decode (stb for PNG, JPEG, GIF, BMP, TGA; libwebp for WebP) to 8-bit RGB, the processor's smart_resize to multiples of 32 with an antialiased bicubic filter, per-channel mean/std normalization and merge-block-major packing"
+why     = "The vision tower expects exactly the Hugging Face processor's pixels, and its attention kernel caps an image at 8192 patches, so the resize ceiling is clamped to that cap and an oversized image such as a 4K screenshot is served downscaled rather than refused (upstream docs/images.md). Every bad input raises an exception naming the field, per the origin's no-fallback rule. Used by vision_request and tool.strixite.strix_vision; it holds no HIP and no JSON."
 
 [provenance]
 origin   = "strixite"

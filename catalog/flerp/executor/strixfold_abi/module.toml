@@ -1,6 +1,7 @@
 id        = "executor.flerp.strixfold_abi"
 kind      = "executor"
 summary   = "StrixFold's dsv41 executor behind the executor ABI: the C functions exported from Zig over the lane backend vtable and the family's kept-state functions; tokens drawn on the device, held drafts, verify windows with keep / keep_prefix / drop, states kept at prompt chunk ends"
+why       = "StrixFold's side of the executor ABI: its dsv41 engine is Zig and only draws tokens on the device, so the ABI's token delivery, held drafts and chunk-end states were shaped by it; exporting C functions over the lane backend lets the C front end and the conformance driver drive DeepSeek-V4.1 on the worker pair without editing a vendored file"
 notes     = "Rank 0 of the pair: flerp_open is the family's native.open, so rank 1 (tf-dsv41-lanes) must be started against it as for the server. flerp.build.zig adds the step flerp-abi to the origin's build graph without changing a vendored file. docs/EXECUTOR-ABI.md has the mapping and what does not map (rounds, logits rows, trees, early speculation, vision)."
 
 [provenance]

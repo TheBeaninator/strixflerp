@@ -1,6 +1,7 @@
 id      = "runtime.strixite.token_mask"
 kind    = "runtime"
-summary = "Per-row allowed-token bit masks from a grammar state"
+summary = "Computes the 1-bit-per-token allowed mask for a grammar state by walking the vocabulary sorted by bytes, reusing automaton states across shared prefixes and skipping every token behind a refused prefix, with masks cached per automaton state"
+why     = "Testing 248k tokens one at a time against the grammar for every row would redo the work their common prefixes share; the sorted walk keeps per-step masks cheap enough for structured output, and the bitmask is applied in logits_topk's first level before the GPU top-k. Special tokens and the LM head's padding rows are never allowed. Used by structured_output, the engine, tool_grammar_check and runtime.flerp.reply_strixite."
 
 [provenance]
 origin   = "strixite"

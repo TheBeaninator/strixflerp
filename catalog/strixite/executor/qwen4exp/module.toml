@@ -1,6 +1,7 @@
 id      = "executor.strixite.qwen4exp"
 kind    = "executor"
-summary = "Qwen3.8-Flash-Next (qwen4exp) text model: 4 hyper-connected streams, 36 GDN + 12 QSA full-attention layers, PLE, MoE (top-10 of 512 + shared), MTP draft head, sessions with paged K/V"
+summary = "Qwen3.8-Flash-Next (qwen4exp) engine: loads weights.strixw and the n-gram table and runs 4 hyper-connected streams through 36 GDN and 12 QSA full-attention layers with PLE and a top-10-of-512 MoE plus shared expert; chunked prefill switches to grouped experts at 6 tokens and matrix units at 12, decode uses MTP drafts, sessions keep paged K/V"
+why     = "This is strixite's model: the code that composes the catalogue's kernels and formats into a forward pass, decides which math each stage gets, prefetches PLE rows while the draft runs and builds the Q4 draft head at load. A PF-CF profile put one 8,192-token prefill chunk at 16k depth at 5.5 s of GPU time, a third of it in the experts. It provides executor.forward/qwen4exp to strix_server and the tools, and flerp's qwen4exp_p16 overlays it in the strixite-p16 recipe"
 design  = "DESIGN.md"
 
 [provenance]

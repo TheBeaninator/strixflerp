@@ -1,6 +1,7 @@
 id        = "runtime.gufo.sampling"
 kind      = "runtime"
-summary   = "Host sampling and constrained decoding: sampler state and penalties, JSON-schema constraint (lexeme and regex compilers), reasoning and session modes"
+summary   = "gufo's host sampling and constrained decoding: sampler state with penalties kept as unique-token records, a JSON-schema constraint compiled through lexeme and regex compilers into a token matcher, and reasoning and session modes"
+why       = "Structured output (a response format with a JSON schema) has to be enforced token by token against the tokenizer, which needs a compiled matcher beside the sampler; the server binds sample.next-token and the grammar to it. Its matching headers sit in kernel.gufo.core_headers because device kernels include the sampling state; strixflerp binds it only within the gufo recipes"
 notes     = "The matching .hpp files that kernel translation units include are in kernel.gufo.core_headers."
 
 [provenance]

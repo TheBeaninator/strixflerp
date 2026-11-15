@@ -1,6 +1,7 @@
 id      = "format.strixite.convert_qwen4exp"
 kind    = "format"
-summary = "Offline converter library: Qwen3.8-Flash-Next HF safetensors to weights.strixw"
+summary = "Offline converter library from Qwen3.8-Flash-Next HF safetensors to weights.strixw: applies the merge plan, quantizes each of 14 tensor classes to the format a per-class --layout string names (q4/q5/q6/q8 at G32, G64 or G128; embed BF16 or Q8), stacks the 512 routed experts and writes layout and source-fingerprint metadata"
+why     = "Quantization and relayout happen once here so the engine converts nothing at load; it is where strixite's measured bit allocation lives (8 bits for the dense parts every token reads, 4 bits for the rarely touched experts; mean KL 0.028 and 226/242 top-1 for the published layout), and it refuses any format no kernel can run. The qwen38-flash-next strixite recipes bind format.convert/strixw to it and build the convert_qwen4exp tool on it. The fleet file came from it with expert down at G32, a +3.8 GB choice whose reason is not recorded"
 design  = "DESIGN.md"
 
 [provenance]

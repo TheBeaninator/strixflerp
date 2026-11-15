@@ -1,6 +1,7 @@
 id      = "kernel.strixite.qsplit"
 kind    = "kernel"
-summary = "Row layout of Q4 and Q5 expert weights as the expert kernels read it (device helper)"
+summary = "Device header describing the expert weight row as K/2 low-plane bytes then K*HB/8 high-plane bytes, with QHigh32<HB> loading a 32-code chunk's high bits and shifting them into bit 4, compiled away entirely when HB = 0"
+why     = "It lets one expert-kernel loop in linear_q4 (and the BF16 grouped paths of moe_grouped) serve both Q4 and Q5 experts, so adding Q5 support cost Q4 nothing (DESIGN.md). The fleet has no Q5 experts, so in practice it is the Q4 row description; required by module id, it provides linear.row-layout/strixw-q4."
 design  = "DESIGN.md"
 
 [provenance]

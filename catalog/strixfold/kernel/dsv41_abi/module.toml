@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.dsv41_abi"
 kind      = "kernel"
-summary   = "The dsv41 HIP kernel ABI header: version word and every by-value argument struct, shared by hipcc and Zig (translate-c)"
+summary   = "The dsv41 HIP kernel ABI as one C header: a version word that the kit and the binary must share and every by-value argument struct, all fixed-width fields (uint64_t device addresses, no bool, enum, pointer or bitfield) with explicit padding and a static assert on each size and offset, compiled by hipcc and translated into Zig by translate-c"
+why       = "The port replaced CUDA's mangled-name and runtime-parsed launches with Zig extern structs checked against each code object's metadata (tools/dsv41-hip/ADAPTER.md D7, D8), and one shared definition is what makes a host struct and a kernel's view of it provably identical; strixflerp's prefill bench drives the kernels with these structs (gate/prefill_dsv41_bench.py), which is why the ABI is a module of its own"
 
 [provenance]
 origin    = "strixfold"

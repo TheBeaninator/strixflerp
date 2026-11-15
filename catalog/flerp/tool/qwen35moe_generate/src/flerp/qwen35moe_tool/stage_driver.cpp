@@ -22,13 +22,17 @@
 //           host buffers (hipHostMalloc, as Crucible's runtime.crucible.device_memory pinned_buffer.h), or, pageable,
 //           through a fresh std::vector each call (the P2..P5 behaviour; 1.8 ms a call on Ornith's ranks 1-3).
 //           --reply full|token (rank 0, loopback; default full): full asks the last stage for the whole logits row
-//           (the gates hash it); token asks for the token id only, which the last stage's executor already picks on
+//           (the gates hash it, and the staged event carries logits_top: each row's 8 largest logits and log-sum-exp); token asks for the token id only, which the last stage's executor already picks on
 //           the GPU (LaunchGPUArgmax / LaunchBatchedGPUArgmax: the lowest id wins a tie, as Argmax below).
-//           --prompt-subchunks S (rank 0, loopback; default 1): each prompt chunk is cut into S sub-chunks (sizes
-//           differ by at most 1) sent back to back, the replies read after the last one, so the stages of a TCP
-//           ring work on different sub-chunks at once (StrixFold stagger.zig; PHASE5-FOURNODE-DESIGN.md:120).
-//           --run-specs G:R:S[:K],.. (tcp rank 0): the runs of every prompt, each graph on|off, reply full|token,
-//           S sub-chunks, K drafts a round (0 or absent: none; N: N a round; vN: at most N, value-aware; NpL or
+//           --prompt-subchunks auto|S (rank 0, loopback; default auto): each prompt chunk is cut into sub-chunks (sizes
+//           differ by at most 1) sent back to back, so the stages of a TCP ring work on different sub-chunks at once
+//           (StrixFold stagger.zig; PHASE5-FOURNODE-DESIGN.md:120). auto = clamp(rows / 1,024, 1, 16); S = S parts.
+//           --subchunk-min-rows N (default 1024; 1 = none): no part under N rows (relay::SubchunkParts, ORNITH-SUBCHUNK
+//           6abf28258c: a 256-row Ornith sub-chunk is weight-bandwidth bound). --in-flight N (default 8; 0 = drain every
+//           call, the old flow): rank 0 leaves up to N prompt replies unread across chunk calls, so the ring does not
+//           drain between calls; the prompt's last reply, decode steps, rounds, reset and close read them all first.
+//           --run-specs G:R:S[:K[:F]],.. (tcp rank 0): the runs of every prompt, each graph on|off, reply full|token,
+//           S sub-chunks (auto or a count), F that run's --in-flight, K drafts a round (0 or absent: none; N: N a round; vN: at most N, value-aware; NpL or
 //           vNpL: prompt-lookup drafts first, at most L, else at most N MTP drafts, gate/ornith-crucible.toml [item4]);
 //           in place of --graph-modes.
 //           Speculative decoding with the file's MTP head (ORNITH-O3 step two, gate/ornith-o3-spec.toml; tcp only,
@@ -52,6 +56,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -472,6 +477,8 @@ struct CallResult {
 
 struct CallTiming {
   std::vector<double> chunk_wall_ms;
+  std::vector<std::size_t> parts;  // sub-chunks of each prompt call (ORNITH-SUBCHUNK)
+  std::size_t max_in_flight{0};    // most replies left unread at once across a prompt's calls
   std::size_t decode_calls{0};   // decode steps, or rounds with drafts
   double decode_wall_ms{0.0};
   std::size_t frames{0};         // decode frames sent (rounds: k' + 1 each)
@@ -497,10 +504,21 @@ class Pipeline {
       : rank0_(rank0), relay_(r), loop_(std::move(loop_ranks)) {}
 
   // full: the last call of a prompt and every decode step ask for the whole logits row, else the token id only.
-  // subchunks: a prompt chunk goes down the chain as that many sub-chunks, back to back (decode steps: one row).
+  // subchunks: a prompt chunk goes down the chain as relay::SubchunkParts(rows, subchunks, min_rows) sub-chunks,
+  // back to back (0 = auto; decode steps: one row).
   void SetReply(bool full, std::size_t subchunks) {
     full_ = full;
-    subchunks_ = std::max<std::size_t>(subchunks, 1);
+    subchunks_ = subchunks;
+  }
+  // ORNITH-SUBCHUNK (6abf28258c): min_rows = the sub-chunk floor (relay::SubchunkParts); in_flight = how many prompt
+  // replies rank 0 may leave unread across calls (TCP/RDMA only). 0 = the old behaviour: every call reads its replies
+  // before it returns, so the ring drains between calls. N > 0: a call that does not want the token returns as soon as
+  // its sub-chunks are sent; the oldest reply is read only when N are unread, so the stages stay busy across calls;
+  // the prompt's wanted reply, a decode step, a round, a reset and a close read everything first. N is bounded
+  // because an unread reply holds one of the receiver's RDMA slots (card 312ce8c262: 16 posted).
+  void SetFlow(std::size_t min_rows, std::size_t in_flight) {
+    min_rows_ = min_rows;
+    in_flight_ = in_flight;
   }
   // drafts: the most drafts a round the next sessions ask of the last stage (0: none); value: value-aware depth.
   void SetDrafts(std::uint32_t drafts, bool value, bool lookup = false, std::uint32_t mtp_max = 0) {
@@ -518,11 +536,16 @@ class Pipeline {
     const std::size_t rows = tokens.size();
     // Sub-chunk k has rows / parts rows, one more for k < rows % parts; only the last asks for logits. Rank 0 sends
     // each as soon as its own blocks have run it, without waiting for the reply of the one before; the replies are
-    // read in order after the last send (the last stage answers every frame, so they are as many as the sends).
-    const std::size_t parts = decode ? 1 : std::min(subchunks_, rows);
+    // read in order (the last stage answers every frame, so they are as many as the sends): after the last send, or,
+    // with an in-flight window (SetFlow), only when the window is full or the call wants its token.
+    const bool keep = relay_ != nullptr && loop_.empty() && in_flight_ > 0 && !decode;
+    if (!keep) Drain();
+    const std::size_t parts = decode ? 1 : relay::SubchunkParts(rows, subchunks_, min_rows_);
+    if (!decode) timing_.parts.push_back(parts);
     CallResult res;
     std::size_t off = 0;
     for (std::size_t k = 0; k < parts; ++k) {
+      if (keep && unread_ >= in_flight_) ReadReply(nullptr);
       const std::size_t n = rows / parts + (k < rows % parts ? 1 : 0);
       const bool last = k + 1 == parts;
       const bool w = want && last;
@@ -548,21 +571,19 @@ class Pipeline {
         const std::uint32_t flags = w ? relay::kWantLogits | (full_ ? relay::kFullLogits : 0U) : 0U;
         relay_->Send(decode ? relay::Op::kDecode : relay::Op::kPrefillChunk, pos, static_cast<std::uint32_t>(n), flags, 0, o.RowBytes());
       }
+      if (relay_ != nullptr) {
+        ++unread_;
+        timing_.max_in_flight = std::max(timing_.max_in_flight, unread_);
+      }
       off += n;
     }
     if (relay_ != nullptr) {
-      for (std::size_t k = 0; k < parts; ++k) Pump();   // loopback: each other rank serves one frame a pump
-      for (std::size_t k = 0; k < parts; ++k) {
-        relay::Frame f = relay_->Recv();
-        if (f.op() != relay::Op::kReply) {
-          relay_->Abort(std::string("expected REPLY, got ") + relay::OpName(f.op()));
-          throw relay::RelayError("rank 0: expected REPLY");
-        }
-        if (k + 1 == parts) {
-          res.token = static_cast<TokenId>(f.header.token);
-          if ((f.header.flags & relay::kSpecReply) != 0U) ParseSpec(f, &res);
-          else res.logits = Floats(f.payload);
-        }
+      if (!keep) {
+        for (std::size_t k = 0; k < parts; ++k) Pump();   // loopback: each other rank serves one frame a pump
+      }
+      if (!keep || want) {
+        while (unread_ > 1) ReadReply(nullptr);
+        ReadReply(&res);
       }
     }
     const double ms = Ms(t0, Clock::now());
@@ -579,6 +600,7 @@ class Pipeline {
   // One speculative round: ids[0] (the pending id) and the drafts at start, start + 1, .. as back-to-back
   // single-row decode frames; the last stage answers once with the ids it keeps and the next drafts.
   CallResult Round(const std::vector<TokenId>& ids, std::uint32_t start) {
+    Drain();
     const auto t0 = Clock::now();
     const auto frames = static_cast<std::uint32_t>(ids.size());
     for (std::uint32_t j = 0; j < frames; ++j) {
@@ -600,6 +622,7 @@ class Pipeline {
   }
 
   void Reset(bool graph) {
+    Drain();
     std::uint32_t flags = graph ? 0U : relay::kGraphOff;
     if (drafts_ > 0) flags |= relay::kSpecRound | (value_ ? relay::kSpecValue : 0U);
     if (lookup_) flags |= relay::kSpecLookup | ((mtp_max_ & 0xffU) << 16);
@@ -618,6 +641,7 @@ class Pipeline {
 
   void Close() {
     if (relay_ == nullptr) return;
+    Drain();
     relay_->Send(relay::Op::kClose, 0, 0, 0, 0, {});
     Pump();
     (void)relay_->Recv();
@@ -638,6 +662,27 @@ class Pipeline {
   [[nodiscard]] Stage& rank0() { return rank0_; }
   [[nodiscard]] bool full() const { return full_; }
   [[nodiscard]] std::size_t subchunks() const { return subchunks_; }
+  [[nodiscard]] std::size_t min_rows() const { return min_rows_; }
+  [[nodiscard]] std::size_t in_flight() const { return in_flight_; }
+
+  // Reads the oldest unread reply (out: the call's result, from the last one). Throws on a frame that is not a REPLY.
+  void ReadReply(CallResult* out) {
+    relay::Frame f = relay_->Recv();
+    if (f.op() != relay::Op::kReply) {
+      relay_->Abort(std::string("expected REPLY, got ") + relay::OpName(f.op()));
+      throw relay::RelayError("rank 0: expected REPLY");
+    }
+    if (unread_ > 0) --unread_;
+    if (out != nullptr) {
+      out->token = static_cast<TokenId>(f.header.token);
+      if ((f.header.flags & relay::kSpecReply) != 0U) ParseSpec(f, out);
+      else out->logits = Floats(f.payload);
+    }
+  }
+  // Every reply still unread (prompt sub-chunks sent with the in-flight window), read and dropped.
+  void Drain() {
+    while (relay_ != nullptr && unread_ > 0) ReadReply(nullptr);
+  }
   [[nodiscard]] bool rank0_pinned() const { return rank0_.pinned(); }
   [[nodiscard]] std::uint32_t drafts() const { return drafts_; }
   [[nodiscard]] bool value() const { return value_; }
@@ -651,6 +696,9 @@ class Pipeline {
   CallTiming timing_;
   bool full_{true};
   std::size_t subchunks_{1};
+  std::size_t min_rows_{1024};
+  std::size_t in_flight_{8};
+  std::size_t unread_{0};
   std::uint32_t drafts_{0};
   bool value_{false};
   bool lookup_{false};
@@ -665,9 +713,31 @@ std::uint32_t Argmax(const std::vector<float>& v) {
   return best;
 }
 
+// The k largest values of a logits row (ties to the lower id) and the row's log-sum-exp, as one JSON object.
+std::string TopJson(const std::vector<float>& v, std::size_t k) {
+  if (v.empty()) return "{}";
+  std::vector<std::uint32_t> order(v.size());
+  for (std::uint32_t i = 0; i < order.size(); ++i) order[i] = i;
+  k = std::min(k, order.size());
+  std::partial_sort(order.begin(), order.begin() + static_cast<std::ptrdiff_t>(k), order.end(),
+                    [&](std::uint32_t a, std::uint32_t b) { return v[a] > v[b] || (v[a] == v[b] && a < b); });
+  const double mx = v[order[0]];
+  double sum = 0.0;
+  for (const float x : v) sum += std::exp(static_cast<double>(x) - mx);
+  std::ostringstream o;
+  o.precision(9);
+  o << "{\"lse\":" << (mx + std::log(sum)) << ",\"top\":[";
+  for (std::size_t i = 0; i < k; ++i) o << (i ? "," : "") << "[" << order[i] << "," << v[order[i]] << "]";
+  o << "]}";
+  return o.str();
+}
+
 struct Traced {
   std::vector<TokenId> ids;
   std::vector<std::string> sha;
+  // ORNITH-BRIDGE (8db1be3486): with --reply full, each hashed row's 8 largest logits and its log-sum-exp as JSON
+  // ({"lse":x,"top":[[id,logit],..]}), so a window records the top-2 margin where two arms split.
+  std::vector<std::string> top;
   bool argmax_is_token{true};
   double prefill_s{0}, decode_s{0};
   // drafting sessions: a round's proposed drafts k' and kept drafts n, and the ids it returned (first round: the
@@ -733,6 +803,7 @@ Traced RunPrompt(Pipeline& p, const std::vector<TokenId>& prompt, std::size_t ma
   while (t.ids.size() < max_tokens) {
     if (p.full()) {   // a token-only reply has no row to hash or check
       t.sha.push_back(Sha(cur.logits.data(), cur.logits.size() * sizeof(float)));
+      t.top.push_back(TopJson(cur.logits, 8));
       t.argmax_is_token = t.argmax_is_token && !cur.logits.empty() && Argmax(cur.logits) == static_cast<std::uint32_t>(cur.token);
     }
     if (tokenizer.IsStopToken(cur.token)) break;
@@ -792,7 +863,9 @@ struct Options {
   std::vector<bool> graph_modes{true};
   RowsMode rows_mode{RowsMode::kPinned};
   bool reply_full{true};
-  std::size_t subchunks{1};
+  std::size_t subchunks{0};            // 0 = auto (relay::SubchunkParts)
+  std::size_t subchunk_min_rows{1024};  // ORNITH-SUBCHUNK floor; 1 = none (the old cut)
+  std::size_t in_flight{8};             // unread prompt replies across calls; 0 = drain every call (the old flow)
   struct RunSpec {
     bool graph{true};
     bool full{true};
@@ -801,6 +874,7 @@ struct Options {
     bool value{false};         // ... at most, value-aware
     bool lookup{false};        // ORNITH-CRUCIBLE item 4: prompt-lookup drafts first (drafts = the lookup cap)
     std::uint32_t mtp_max{0};  // ... and at most this many MTP drafts
+    long in_flight{-1};        // ORNITH-SUBCHUNK: this spec's --in-flight (-1: the process's)
   };
   std::vector<RunSpec> run_specs;   // tcp rank 0: empty = one a --graph-modes entry with --reply and --prompt-subchunks
   std::string fault;
@@ -878,6 +952,12 @@ std::string LoadedJson(const char* mode, double load_s) {
          ",\"read_gb_per_s\":" + Num(rep.fill_s > 0 ? static_cast<double>(rep.tensor_bytes) / rep.fill_s / 1e9 : 0.0) + "}}";
 }
 
+std::string JoinRaw(const std::vector<std::string>& v) {
+  std::string o = "[";
+  for (std::size_t i = 0; i < v.size(); ++i) o += (i ? "," : "") + v[i];
+  return o + "]";
+}
+
 std::string StagedJson(const char* transport, const StageConfig& c, const std::vector<std::uint32_t>& cuts, std::size_t index,
                        std::size_t prompt_tokens, const Traced& t, const Pipeline& p, const std::string& stages_json, double stages_decode_ms,
                        double stages_chunk_ms, double last_logits_ms) {
@@ -890,8 +970,11 @@ std::string StagedJson(const char* transport, const StageConfig& c, const std::v
                   ",\"world\":" + std::to_string(c.world) + ",\"cuts\":" + Ids(cuts) + ",\"graph\":" + (c.graph ? "true" : "false") +
                   ",\"prompt\":" + std::to_string(index) + ",\"prompt_tokens\":" + std::to_string(prompt_tokens) + ",\"ids\":" + Ids(t.ids) +
                   ",\"rows\":" + std::to_string(t.sha.size()) + ",\"logits_sha256\":" + Strs(t.sha) +
+                  (t.top.empty() ? std::string() : ",\"logits_top\":" + JoinRaw(t.top)) +
                   ",\"argmax_is_token\":" + (t.argmax_is_token ? "true" : "false") + ",\"reply\":" + (p.full() ? "\"full\"" : "\"token\"") +
-                  ",\"subchunks\":" + std::to_string(p.subchunks()) + ",\"rows_mode\":" + (p.rank0_pinned() ? "\"pinned\"" : "\"pageable\"") +
+                  ",\"subchunks\":" + std::to_string(p.subchunks()) + ",\"subchunk_min_rows\":" + std::to_string(p.min_rows()) +
+                  ",\"in_flight\":" + std::to_string(p.in_flight()) + ",\"parts\":" + Ids(ct.parts) +
+                  ",\"max_in_flight\":" + std::to_string(ct.max_in_flight) + ",\"rows_mode\":" + (p.rank0_pinned() ? "\"pinned\"" : "\"pageable\"") +
                   ",\"prefill_s\":" + Num(t.prefill_s) +
                   ",\"decode_s\":" + Num(t.decode_s) + ",\"calls\":{\"chunks\":" + std::to_string(ct.chunk_wall_ms.size()) +
                   ",\"chunk_wall_ms\":" + Num(chunk_wall) + ",\"decode_calls\":" + std::to_string(ct.decode_calls) +
@@ -966,6 +1049,7 @@ Pipeline MakePipeline(LoopbackSet& s, const Options& o) {
   for (std::size_t r = 1; r < s.stages.size(); ++r) loop.emplace_back(s.stages[r].get(), s.relays[r].get());
   Pipeline p(*s.stages[0], s.relays.empty() ? nullptr : s.relays[0].get(), std::move(loop));
   p.SetReply(o.reply_full, o.subchunks);
+  p.SetFlow(o.subchunk_min_rows, o.in_flight);
   return p;
 }
 
@@ -1205,6 +1289,7 @@ int TcpRank(const Options& o, const std::shared_ptr<const gufo::core::GgufReader
     }
     const auto prompts = ReadPrompts(o.id_files);
     Pipeline p(stage, r.get(), {});
+    p.SetFlow(o.subchunk_min_rows, o.in_flight);
     std::vector<Options::RunSpec> specs = o.run_specs;
     if (specs.empty()) {
       for (const bool graph : o.graph_modes) specs.push_back({graph, o.reply_full, o.subchunks});
@@ -1212,6 +1297,7 @@ int TcpRank(const Options& o, const std::shared_ptr<const gufo::core::GgufReader
     for (const auto& spec : specs) {
       const bool graph = spec.graph;
       p.SetReply(spec.full, spec.subchunks);
+      p.SetFlow(o.subchunk_min_rows, spec.in_flight >= 0 ? static_cast<std::size_t>(spec.in_flight) : o.in_flight);
       p.SetDrafts(spec.drafts, spec.value, spec.lookup, spec.mtp_max);
       StageConfig c;
       c.world = o.world;
@@ -1287,8 +1373,13 @@ int StagedMain(int argc, char** argv) {
         if (m != "full" && m != "token") throw std::invalid_argument("--reply is full or token");
         o.reply_full = m == "full";
       } else if (a == "--prompt-subchunks") {
-        o.subchunks = std::stoull(v());
-        if (o.subchunks == 0) throw std::invalid_argument("--prompt-subchunks is at least 1");
+        const std::string m = v();
+        o.subchunks = m == "auto" ? 0 : std::stoull(m);
+        if (m != "auto" && o.subchunks == 0) throw std::invalid_argument("--prompt-subchunks is auto or at least 1");
+      } else if (a == "--subchunk-min-rows") {
+        o.subchunk_min_rows = std::stoull(v());
+      } else if (a == "--in-flight") {
+        o.in_flight = std::stoull(v());
       } else if (a == "--run-specs") {
         std::istringstream in(v());
         for (std::string item; std::getline(in, item, ',');) {
@@ -1296,13 +1387,15 @@ int StagedMain(int argc, char** argv) {
           std::vector<std::string> parts;
           std::istringstream fields(item);
           for (std::string x; std::getline(fields, x, ':');) parts.push_back(x);
-          if (parts.size() != 3 && parts.size() != 4) throw std::invalid_argument("--run-specs: want GRAPH:REPLY:SUB[:DRAFTS], got " + item);
+          if (parts.size() < 3 || parts.size() > 5) throw std::invalid_argument("--run-specs: want GRAPH:REPLY:SUB[:DRAFTS[:INFLIGHT]], got " + item);
           const std::string& g = parts[0];
           const std::string& rp = parts[1];
-          const std::size_t sub = std::stoull(parts[2]);
-          if ((g != "on" && g != "off") || (rp != "full" && rp != "token") || sub == 0) throw std::invalid_argument("--run-specs: bad " + item);
+          const bool sub_auto = parts[2] == "auto" || parts[2] == "a";
+          const std::size_t sub = sub_auto ? 0 : std::stoull(parts[2]);
+          if ((g != "on" && g != "off") || (rp != "full" && rp != "token") || (sub == 0 && !sub_auto)) throw std::invalid_argument("--run-specs: bad " + item);
           Options::RunSpec spec{g == "on", rp == "full", sub};
-          if (parts.size() == 4) {
+          if (parts.size() == 5) spec.in_flight = static_cast<long>(std::stoul(parts[4]));
+          if (parts.size() >= 4) {
             std::string d = parts[3];
             spec.value = !d.empty() && d[0] == 'v';
             if (spec.value) d = d.substr(1);
@@ -1342,7 +1435,7 @@ int StagedMain(int argc, char** argv) {
                               "--chunk-pause-ms", "--data-file", "--punch-behind", "--swarm-helper", "--swarm-manifest", "--swarm-from",
                               "--swarm-conns", "--configs", "--fault-config", "--world", "--rank", "--cuts", "--port", "--host", "--epoch",
                               "--deadline-ms", "--setup-deadline-ms", "--graph-modes", "--fault", "--dump", "--dump-layers", "--dump-rows",
-                              "--rows", "--reply", "--prompt-subchunks", "--run-specs", "--mtp-probe", "--mtp-data-file",
+                              "--rows", "--reply", "--prompt-subchunks", "--subchunk-min-rows", "--in-flight", "--run-specs", "--mtp-probe", "--mtp-data-file",
                               "--draft-head", "--draft-skip", "--draft-costs", "--help"})
           std::cout << k << "\n";
         return 0;

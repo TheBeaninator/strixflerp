@@ -1,6 +1,7 @@
 id        = "format.strixfold.engram"
 kind      = "format"
-summary   = "Engram n-gram embedding shards: row ids per position (hash rule), FP8 row decode, O_DIRECT / io_uring row reads from the original FP8 tables on NVMe"
+summary   = "Engram, DeepSeek-V4.1's n-gram embedding memory, on the host: the row ids of each position by the reference engram.py hashing rule as numpy computes it, exact FP8 E4M3 row decode, and row reads from the original FP8 tables on local NVMe by a pread pool, through O_DIRECT 4 KiB-aligned bounce buffers, or as Linux AIO batches reaped by the decode round's own thread"
+why       = "Engram's tables are too large to keep in GPU memory, and every decode round needs a few random rows from them for layers 1 and 14, so the cost is one NVMe latency per step; the AIO path exists because handing reads to a woken thread cost about 0.6 ms after an idle round (engram_aio.zig), and Engram is 10.3% of a prefill chunk and 3.1% of decode on the pod, which docs/TENSORFOLD.md R4 names as a read-pattern experiment"
 
 [provenance]
 origin    = "strixfold"

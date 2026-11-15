@@ -1,6 +1,7 @@
 id        = "runtime.hipfire.kernel_abi"
 kind      = "runtime"
-summary   = "KernelAbiV1: one typed contract per kernel family (kernarg fields, operand formats and extents, admitted domain, numeric contract id, per-export arch / block / LDS / grid), validated before enqueue"
+summary   = "KernelAbiV1: one typed contract per kernel family listing kernarg fields with offsets and widths, operand formats, alignments and byte extents as expressions over the launch parameters, the admitted domain, a numeric contract id, and per-export arch, block, LDS and grid, with validate_invocation rejecting any mismatch before enqueue"
+why       = "The same kernel may come from hipcc or from PeaceMaker's generator, and both, plus the launcher and railgun nodes, must agree on its arguments; this crate is that agreement (lib.rs: PM/railgun bedrock R1), turning a bad launch into an error instead of a fault. It is the catalogue's closest relative of strixflerp's own provides/requires numeric contracts, harvested to read, not built"
 
 [provenance]
 origin    = "hipfire"

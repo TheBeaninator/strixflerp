@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.indexer_score"
 kind      = "kernel"
-summary   = "Indexer scores of a prompt chunk on WMMA: 32 index heads of dim 128 against the FP4 compressed-key cache"
+summary   = "Prompt-chunk indexer scores on WMMA: for 8 rows at a time, each 64-key tile of the FP4 compressed-key cache (E8M0 scale per 32) is decoded once into a double-buffered LDS stage and scored against 32 index heads of dimension 128 as the sum of relu(q.k) times the head weight in a fixed head order, with -inf past the visible count and optional int64 top-k keys and tile maxima"
+why       = "DeepSeek-V4.1's sparse attention picks 512 compressed keys per row by these scores, and the HIP kernel replaces the Triton _index_score_rows on the prompt path, where scoring every visible key costs 5.6 ms at 16K keys and 20 ms at 65K for a 1,024-row half (docs/PREFILL-DSV41.md section 3); it holds within the index_scores_fp32_bound of the fp64 reference rather than Triton's bits"
 
 [provenance]
 origin    = "strixfold"

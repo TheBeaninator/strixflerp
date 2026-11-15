@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.kit"
 kind      = "runtime"
-summary   = "Kernel kit loading and verification: raw gfx1151 code objects described by a manifest generated from each object AMDGPU metadata note and re-verified at load; kernel registry and the build step that makes the kit"
+summary   = "Kernel kit loading and verification: raw gfx1151 code objects (not offload bundles) described by a manifest generated from each object's AMDGPU metadata note, re-checked at load for exact arch, wave size, ABI version, per-kernel argument tables against the Zig declarations and the sha256 of every object; plus the kernel registry, the kit build step, and the numerics.json tolerance contract with its fp64 calibration points"
+why       = "With 169 objects from two compilers (hipcc and Triton) bound by id, a stale or mismatched object would compute silently wrong; the manifest check makes it a load failure (ADAPTER.md D6) and lets the strixflerp build stage prove the assembled kit equals the deployment byte for byte (gate/results/dsv41-flash.strixfold-tp2), while numerics.json is the fp64-referenced contract the non-bit-exact kernels are judged under"
 
 [provenance]
 origin    = "strixfold"

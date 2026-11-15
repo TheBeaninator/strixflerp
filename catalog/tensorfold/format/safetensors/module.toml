@@ -1,6 +1,7 @@
 id        = "format.tensorfold.safetensors"
 kind      = "format"
-summary   = "Host readers: safetensors headers and tensors, checkpoint index, O_DIRECT reads, npy"
+summary   = "Upstream's checkpoint readers: safetensors JSON headers (names, dtypes, shapes, byte ranges) with read-only maps, a model folder's shards as one namespace that refuses leftover tensors, positional O_DIRECT reads of 4 KiB-aligned spans into aligned buffers, and NumPy .npy files of versions 1 to 3."
+why       = "Every upstream backend indexes its weights through these four files. format.strixfold.safetensors, which the StrixFold recipes run, holds the same paths ten releases earlier (796 changed lines, none identical), so this copy is the one to diff when a reader fix is worth pulling."
 
 [provenance]
 origin    = "tensorfold"

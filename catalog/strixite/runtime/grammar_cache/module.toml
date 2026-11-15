@@ -1,6 +1,7 @@
 id      = "runtime.strixite.grammar_cache"
 kind    = "runtime"
-summary = "Cache of compiled grammars keyed by schema"
+summary = "A mutex-guarded LRU of up to 16 compiled grammar automata keyed by the schema's compact JSON (or by tools plus tool_choice), each entry keeping the token masks it has filled in, shared by shared_ptr across concurrent requests"
+why     = "Agents send the same response schema every session (Hermes' title schema, for example), and compiling it and rebuilding its token masks per request would be repeated work on the request path; keeping automata across requests makes a repeated schema free, and the 16-entry bound caps the worst case near 1 GiB of masks. serve.strixite.http asks it for the json_object, json_schema and tool-call grammars"
 
 [provenance]
 origin   = "strixite"

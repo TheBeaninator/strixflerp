@@ -1,6 +1,7 @@
 id        = "tool.flerp.strixw_panel_kernel_bench"
 kind      = "tool"
 summary   = "Kernel gate of the strixw panel layout: real tensors of the fleet strixw read by byte range, laid out row-major and as panels in memory, every decode / prefill / expert path run through strixite's call names both ways; byte comparison and per-kernel times (hip events, caches flushed, origin and panel alternating)"
+why       = "Panel kernels have to be judged on the fleet's real tensors, byte for byte and against the origin's kernel under the same conditions; reading only the named tensors' byte ranges and calling strixite's own names on row-major and panel views alternately gives that comparison (489 cases, 2.2 GB read a run) without loading the 74.6 GB model"
 notes     = "Criteria and run settings: gate/strixw-panel-kernels.toml, runner gate/strixw_panel_kernels.py. Built inside recipes/qwen38-flash-next.strixite-p16.toml, so the names it calls are the adapters of kernel.flerp.linear_q4p / linear_q8p / wmma_q4p / moe_grouped_p (row-major view: strixite's kernel; panel-tagged view: the panel kernel)."
 
 [provenance]

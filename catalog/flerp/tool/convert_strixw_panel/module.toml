@@ -1,6 +1,7 @@
 id        = "tool.flerp.convert_strixw_panel"
 kind      = "tool"
 summary   = "Copies a strixw v1..v4 file to a strixw v5 with chosen Q4/Q8 classes re-laid out as Q4Panel16 / Q8Panel16 (order-only, no checkpoint): streamed one tensor at a time, every component read hash-checked against OLD's index, copied components byte for byte, then the output re-read and every converted tensor inverted and compared byte for byte with OLD"
+why       = "Turning the fleet's 74.6 GB strixw into panels must not need the BF16 checkpoint or a 4-hour reconversion, and must be provably lossless; because the change is order-only it streams the old file, checks every component's hash on the way in and inverts every converted tensor on the way out; the production run on worker A took 8 minutes and every tensor inverted to the old file byte for byte"
 design    = "DESIGN.md"
 notes     = "Built with the host C++ compiler by src/flerp/convert_strixw_panel/build.sh (no HIP). docs/STRIXW-LAYOUT-NEXT.md stage 2 (the converter only; the --layout path in convert_qwen4exp is not written). Criteria gate/strixw-panel.toml; results gate/results/strixw-panel/."
 

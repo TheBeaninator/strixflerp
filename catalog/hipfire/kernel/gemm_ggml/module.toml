@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemm_ggml"
 kind      = "kernel"
-summary   = "Prefill GEMM on GGUF Q8_0 (WMMA) and the TQ2 / BQ1 low-bit formats (15 sources, 15 gfx1151 compile units)"
+summary   = "Prefill GEMM on GGUF Q8_0 blocks with WMMA (batched, wide-exact and fused gate/up forms) and on the PrismML Bonsai pass-through formats TQ2-G128 (ternary, 2.125 bpw) and BQ1-G128 (1-bit signs, 1.125 bpw) (15 sources, 15 units), fp32 accumulation"
+why       = "It lets hipfire prefill a GGUF Q8_0 model without converting it (GGUF weight input is deprecated upstream since 0.4.0) and serves the Bonsai checkpoints that arrive already ternary or 1-bit (docs/QUANTIZATION.md). Role in strixflerp inferred: the prompt-side twin of gemv_ggml, neither gated nor bound"
 
 [provenance]
 origin    = "hipfire"

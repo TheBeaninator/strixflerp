@@ -1,6 +1,7 @@
 id      = "format.strixite.merge_plan"
 kind    = "format"
-summary = "Load-time merges of linear weights that read the same input into one row-concatenated weight"
+summary = "Table of linear weights that read the same input (GDN qkv+z+b+a, attention q+k+v plus the QSA indexer projection, routed plus shared expert gate/up and down, router plus shared-expert gate), row-concatenated at quantization time and exact because quantization groups run along K and never straddle rows"
+why     = "Small projections are launch-bound on gfx1151 (512x2560 reaches under half of read bandwidth where 12288x2560 gets about 89%), so fusing same-input weights into one tensor turns several thin launches into one wide launch with no numeric change. Only the converters use it (this origin's and flerp's p16 one); the fleet file skips the shared-expert-as-expert-512 merge because its shared expert is Q8 and the routed stack Q4"
 design  = "DESIGN.md"
 
 [provenance]

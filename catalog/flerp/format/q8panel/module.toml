@@ -1,6 +1,7 @@
 id        = "format.flerp.q8panel"
 kind      = "format"
 summary   = "Q8Panel16: strixw Q8 in panels of 16 rows, format.flerp.q4panel's layout at one code per byte (16-byte chunks of 16 codes), with the typed relayout and its inverse"
+why       = "Q8 needs its own panel type because strixite's existing Q8ChunkMajor uses 32-byte chunks; keeping 16-byte chunks makes a lane load 16 B and a 16-row chunk 256 contiguous bytes at both widths, so one panel GEMV template and one WMMA tile loader serve Q4 and Q8 alike"
 design    = "DESIGN.md"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md candidate A at 8 bits (Q8P16), stage 1. 16-byte chunks, not Q8ChunkMajor's 32-byte ones, so the lane load is 16 B at both widths. Order-only."
 

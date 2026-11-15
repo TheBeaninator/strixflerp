@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_backend"
 kind      = "kernel"
-summary   = "The DeepSeek V4 Flash ROCm backend translation unit: runtime, device helpers and the include order that makes one object of every kernel.gufo.ds4_* fragment"
+summary   = "The one translation unit (backend.hip.cpp) of gufo's DeepSeek V4 Flash ROCm backend: device helpers, runtime state and the ds4_gpu_* C API, which includes 26 detail headers in a fixed order so that every ds4_* kernel fragment compiles into a single object sharing static state"
+why       = "DS4 wrote its backend as one unit with shared statics and gufo kept it that way, so the DeepSeek kernels cannot be built or linked one by one; this module is their single compile and link unit (status builds, gate/results/compile/kernel.gufo.ds4_backend.json) and the device graph executor.gufo.deepseek_v4_flash drives. The gufo recipes include it because their closure is the whole origin"
 notes     = "backend.hip.cpp includes 26 detail headers in a fixed order; they share static state, so the family modules are fragments, not separately linkable units."
 
 [provenance]

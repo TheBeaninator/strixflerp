@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.fabric"
 kind      = "runtime"
-summary   = "Host fabric library: verbs ABI and queue pairs, memory registration, RDMA links, mailbox / packet / wire framing used by the transports and the cluster layer"
+summary   = "TensorFold's host fabric library: the verbs ABI with queue pairs and memory registration, one-sided windows between ranks, RDMA and MCDMA links, producer handoff of exported pages, and mailbox, packet and wire framing, with an in-process fake for tests"
+why       = "Role inferred from the code: it is the transport layer under the cluster features and the RDMA paths (transport.verbs over RC queue pairs on RoCE), which the pod's rdma_proxy needs for its write-with-immediate; docs/TENSORFOLD.md counts 25 of its paths shared with upstream, seven unchanged, so it is kept as one block rather than cut to the parts dsv41 calls"
 
 [provenance]
 origin    = "strixfold"

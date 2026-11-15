@@ -1,6 +1,7 @@
 id        = "runtime.gufo.image"
 kind      = "runtime"
-summary   = "Image input helpers: the image and pixel types the Qwen vision headers name, decoding (PNG, JPEG, WebP), fetching by URL, resizing"
+summary   = "Host image helpers named by gufo's Qwen vision headers: image and pixel types, PNG, JPEG and WebP decoding through libpng, libjpeg and libwebp, fetching an image by URL through libcurl, and resizing"
+why       = "It is in the catalogue for a header dependency, not for images: executor.gufo.qwen names these types through the vision headers, so the header must be present, while a text-only recipe compiles none of image.cpp (qwen35-decider-2b.gufo writes a no_image.cpp stand-in) and so keeps four image and network libraries out of the build"
 notes     = "Harvested for phase 5: executor.gufo.qwen names these types through the vision headers. A text-only recipe carries the header and does not compile image.cpp."
 
 [provenance]

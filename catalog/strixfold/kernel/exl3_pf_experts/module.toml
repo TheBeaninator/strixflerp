@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.exl3_pf_experts"
 kind      = "kernel"
-summary   = "Routed experts for prompt chunks: picks grouped into jobs of 64 or 128 rows, gate/up and down on f16 WMMA, deterministic combine"
+summary   = "Routed experts for prompt chunks: count and place group a chunk's picks by expert into jobs of up to 64 or 128 rows, each wave decodes the gate and up tiles once per k step for all the job's rows on f16 WMMA, Hadamard and DeepSeek's clamped SwiGLU run in the epilogue, down follows the same way, and combine sums each row's slots in slot order as an fma chain with no split K and no atomics"
+why       = "Routed experts are 70% of an encoder layer's kernel time on a 1,024-row half (docs/PREFILL-DSV41.md section 3), so prefill speed is mostly this kernel; its pass costs about 15 ms whatever the row count because every job decodes its expert's three matrices once, which is the finding behind executor.flerp.dsv41_zip2 (one pass per 2,048 rows) and docs/TENSORFOLD.md R2, and its determinism lets one 2,048-row pass equal two halves bit for bit"
 
 [provenance]
 origin    = "strixfold"

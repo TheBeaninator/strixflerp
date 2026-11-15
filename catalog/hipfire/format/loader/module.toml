@@ -1,6 +1,7 @@
 id        = "format.hipfire.loader"
 kind      = "format"
-summary   = "Top-of-DAG model loader and carrier registry: admission, batch staging, native GGUF path, Qwen4 slab loading, speculation build"
+summary   = "hipfire's top-of-DAG loader: one load_model dispatch over carriers keyed by arch_id, memory admission, batch staging, .hfq tensors uploaded verbatim or host-decoded per the qt register, a native GGUF path, Qwen4 slab loading and speculation build; it defines the device views HFQ ([f32 scale][f32 zero][codes] a group), MQ (HFQ payload of FWHT-rotated weights, V2 with two fp16 scale/zero pairs), MFP4-G32 and GGUF blocks as stored"
+why       = "Every hipfire kernel expects one of these device layouts, so the loader is where the catalogue reads what hipfire's weights look like in memory; per map.md it is hipfire's single arch-dispatch point, with per-arch load bodies kept in the arch crates. docs/PHASE5-GLM52-GAPMAP.md cites its GGUF path as a no-transcode route; harvested Rust, not built"
 
 [provenance]
 origin    = "hipfire"

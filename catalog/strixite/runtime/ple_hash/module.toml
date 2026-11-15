@@ -1,6 +1,7 @@
 id      = "runtime.strixite.ple_hash"
 kind    = "runtime"
-summary = "PLE n-gram ids on the host: 16 integer hashes per token selecting n-gram table rows"
+summary = "Host computation of Qwen3.8-Flash-Next's PLE n-gram row ids: per token, order-2 and order-3 hashes as XORs of the last tokens times the checkpoint's multipliers (64-bit wrap-around, shifts not crossing EOS), reduced modulo each of 16 heads' prime vocab size and offset into the table"
+why     = "The ids select rows of the SSD-backed n-gram table, so they are needed on the host where the reads are issued, before the GPU forward; 16 integer hashes per token is too little work to justify a kernel. A carried two-token history makes a prompt split into chunks, and decode, give the same ids as one call, and the code was validated against HF's id code and, through the gather, HF's PLE outputs. Used by ngram_table, ngram_rows and executor.strixite.qwen4exp"
 
 [provenance]
 origin   = "strixite"

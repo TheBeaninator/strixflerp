@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemv_hfq"
 kind      = "kernel"
-summary   = "Decode GEMV on hipfire HFQ weights: flat N-bit codes with one f32 scale / zero per group (HFQ2..HFQ8, groups 64..1024), HFP4-G32 (FP4 E2M1 + UE8M0), PARO; residual, multirow, wave64 and fused QKV / gate-up forms (43 sources, 73 gfx1151 compile units)"
+summary   = "Decode GEMV on hipfire's plain HFQ weights (43 sources, 73 units): flat 2..8-bit codes with one f32 scale and zero per group of 64..1024, HFP4-G32 (E2M1 + UE8M0) and PARO pairwise-Givens AWQ weights, in residual, multirow, wave64, gfx1151 buffer-load (glc / dlc cache policy) and fused QKV / QKVZA / gate-up forms, fp32 accumulation"
+why       = "HFQ is hipfire's weight format for dense families other than Qwen 3.5+ (QUANTIZATION.md: MQ for Qwen 3.5+, HFQ for the rest), and the many variants tune memory access of a bandwidth-bound decode per shape and cache policy. docs/PHASE5-GLM52-GAPMAP.md picks gemv_hfq4g256 and gemv_hfq8g256 for GLM-5.2's int4 rows and int8 head after a load-time transcode of colibri's per-row scales (+6.25% bytes); its status is builds, with no hardware parity yet"
 
 [provenance]
 origin    = "hipfire"

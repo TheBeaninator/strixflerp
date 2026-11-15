@@ -1,6 +1,7 @@
 id        = "format.crucible.ngram16"
 kind      = "format"
-summary   = "PLE n-gram table: the EXL3 n-gram trellis row codec (device and host), and the opt-in 16-bit table built from the original BF16 weights (fetch, convert, error check)"
+summary   = "The per-layer-embedding (PLE) n-gram table in two forms: the EXL3 n-gram trellis row codec, on device and host and bit-exact with ExLlamaV3's ngram_codec.py, that decodes the pack's 6-bit ng6 rows, and an opt-in BF16 table built from the original Qwen weights by fetching the 33 shards holding ngram_embedding tensors, converting them and checking the error"
+why       = "The n-gram table is the largest object in the model (39.0 GB as ng6 at 4.05 bpw, against strixite's 48 GiB of 8-bit rows; docs/CRUCIBLE-VS-STRIXITE.md section 2), so the pack stores it low-bit and the codec reads it row by row; the 16-bit copy is Crucible's experimental, off-by-default option for running the table at the original precision (docs/NGRAM16.md in the origin), trading disk and page cache for fidelity"
 
 [provenance]
 origin    = "crucible"

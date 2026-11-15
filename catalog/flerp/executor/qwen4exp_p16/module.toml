@@ -1,6 +1,7 @@
 id        = "executor.flerp.qwen4exp_p16"
 kind      = "executor"
 summary   = "executor.strixite.qwen4exp with an LM head in Q8Panel16 / Q4Panel16: the MTP draft-head copy reads the head's panels back and turns them row-major on the host before requantizing; every other weight use already goes through the kernels' adapters"
+why       = "make_draft_head_q4 is the one place strixite's executor reads a projection's planes on the host, to requantize the LM head into its Q4 draft copy, so a panel LM head would have been misread there; overlaying just that function closes the last gap between a p16 file and an unmodified server"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 5. Derived from executor.strixite.qwen4exp (strixite 20937dc): runtime/qwen4exp.cpp copied under flerp/qwen4exp_p16/, changes marked `executor.flerp.qwen4exp_p16` (make_draft_head_q4 only: the only place the executor reads a projection's planes itself). Compiled in executor.strixite.qwen4exp's target through the recipe's [overlay] (recipes/qwen38-flash-next.strixite-p16.toml), so the server, backend and tools that require the origin link this file and nothing else changes."
 
 [provenance]

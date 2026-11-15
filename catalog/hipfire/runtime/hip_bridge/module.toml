@@ -1,6 +1,7 @@
 id        = "runtime.hipfire.hip_bridge"
 kind      = "runtime"
-summary   = "Safe Rust FFI to the AMD HIP runtime by dlopen: device, streams, memory, modules, launches"
+summary   = "Safe Rust FFI to the AMD HIP runtime that dlopens libamdhip64.so at run time instead of linking it: devices, streams, memory including VMM arenas with stable virtual addresses, modules, kernarg blobs and launches"
+why       = "hipfire loads ROCm dynamically (README) so a missing or mismatched runtime is a run-time error rather than a link dependency (map.md, modeled after rustane's ane-bridge); it is the floor of hipfire's stack. strixflerp's assemblies link HIP directly, so it is harvested for reference only"
 
 [provenance]
 origin    = "hipfire"

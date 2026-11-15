@@ -1,6 +1,7 @@
 id        = "kernel.crucible.hc"
 kind      = "kernel"
-summary   = "Hyper-connections: decode HC read (dots, mid, mix) on WMMA with fp16 or int8 weights, exact multi-row paths, prefill HC with packed operands"
+summary   = "Hyper-connection kernels: the decode HC read (dot products, mid, mix) on WMMA over fp16 weights or, behind CRUCIBLE_HC_WMMA=2, over an int8 copy in the hc8 layout, multi-row paths whose rows equal the one-row bits, and the prefill HC mixes with packed operands"
+why       = "Every layer reads and rewrites the hyper-connection streams, and at fp16 the HC weights are 1,281 of the 5,595 MB a decode token reads (engine/layers/hc_int8.h); the int8 path exists to shrink that but is registered as a quality change and stays off, and strixite's Q8 G64 HC layout is the one strixite decode idea docs/CRUCIBLE-VS-STRIXITE.md (transfer S1) says is worth testing here"
 
 [provenance]
 origin    = "crucible"

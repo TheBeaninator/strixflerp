@@ -1,6 +1,7 @@
 id      = "tool.strixite.sv9_cache_check"
 kind    = "tool"
-summary = "Test: the prompt cache keys on image content"
+summary = "Host-only test that the prompt cache keys on image content: each image_pad run becomes pseudo-id runs from a 64-bit hash of the image bytes, so two equal-size different images miss, identical bytes hit, the pre-image text still hits, image order matters, and all of it holds after a disk round trip"
+why     = "In v0.3.0 the cache keyed images by their pad tokens, so a different picture of the same size produced the same key stream and could resume the first picture's cached state (card 01b207e967, SV-9); this pins the fix without a GPU or weights and is a unit gate (unit-sv9_cache_check.txt: SV9-CACHE-CHECK PASS)"
 
 [provenance]
 origin   = "strixite"

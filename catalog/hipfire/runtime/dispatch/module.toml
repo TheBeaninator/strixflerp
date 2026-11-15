@@ -1,6 +1,7 @@
 id        = "runtime.hipfire.dispatch"
 kind      = "runtime"
-summary   = "Kernel dispatch families and pipelines: GEMV / GEMM / attention / fused QKV / MoE / rotation tables choosing a kernel by format, arch and shape; batched layer pipelines, CPU split and offload plans"
+summary   = "hipfire-dispatch: one entry point per kernel family (GEMV, GEMM, attention, fused QKV, MoE, rotation, KV tier) whose tables resolve quant format, arch capabilities and feature flags at init and then pick a kernel per launch by (format, arch, shape), plus batched layer pipelines, the sealed MoE program and CPU split / offload plans"
+why       = "hipfire supports many formats and RDNA generations, and its map.md says the point is to settle those choices once instead of matching on dtype in every call. This is the layer strixflerp replaces outright (its manifest says so): a recipe binds interfaces to modules when it is assembled, so no runtime table chooses kernels; it is harvested to read which kernel hipfire would pick for a shape"
 
 [provenance]
 origin    = "hipfire"

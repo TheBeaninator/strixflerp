@@ -1,6 +1,7 @@
 id        = "kernel.crucible.vision"
 kind      = "kernel"
-summary   = "Vision tower kernels (patchify, patch embed, attention, layer norm, GELU); EXL3 linears run through the prefill GEMM"
+summary   = "Device kernels for Qwen3.8-Flash-Next's vision tower (the HF Qwen4ExpVisionModel): patchify and patch embedding, position embedding, 2D RoPE, attention, LayerNorm, GELU and bias epilogues in fp32, with the tower's EXL3 linears sent through the prefill GEMM rather than a kernel of their own"
+why       = "Role inferred from the code and the server: Crucible's HTTP frontend accepts image parts (server/vision.py), and this module turns one image a request into the rows the language model reads, reusing kernel.crucible.exl3_gemm for the heavy matrices so the tower adds only the operators text never needs; no comparison or measurement of it is recorded in strixflerp"
 
 [provenance]
 origin    = "crucible"

@@ -1,6 +1,7 @@
 id        = "tool.flerp.convert_qwen4exp_p16"
 kind      = "tool"
 summary   = "Converter CLI from the HF BF16 checkpoint to strixw v5 with p16 panel classes (default: the fleet's layout with p16 on every Q4/Q8 class but the HC mixes); --plan [--plan-scratch DIR] for exact sizes, --check-against REF --tensors .. for byte proofs on real data"
+why       = "The CLI that builds a panel file straight from the HF checkpoint, for layouts no existing file has; its plan and check-against modes let a layout be sized exactly and proved tensor by tensor against the fleet file (18 real tensors, 0 differences) before anyone spends a worker's NVMe on the full conversion"
 design    = "DESIGN.md"
 notes     = "Adapted copy of strixite's tools/convert_qwen4exp.cpp (20937dc), changes marked `flerp`. Built with the host C++ compiler by src/flerp/convert_qwen4exp_p16/build.sh (no HIP)."
 

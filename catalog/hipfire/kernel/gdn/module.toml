@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gdn"
 kind      = "kernel"
-summary   = "Gated DeltaNet: the recurrence with F32 / Q8 / Q4 state (tiled LDS, tree and lanes variants), chunked WMMA forms for gfx1151, conv1d + SiLU front, alpha gate, gated norm (29 sources, 44 gfx1151 compile units)"
+summary   = "hipfire's Gated DeltaNet (29 sources, 44 units): the recurrence with an fp32 128 x 128 state per head tiled through LDS in 8-row chunks, or with the state quantized to Q8 or Q4, tree and lane reduction variants, chunked WMMA scans for gfx1151 prefill, and the width-4 conv1d + SiLU front, alpha gate and gated norm"
+why       = "The DeltaNet state is the per-session memory of the hybrid Qwen models, so hipfire offers quantized states to shrink it and chunked WMMA scans so prefill is not token-serial (role inferred from the code). It is the hipfire entry of docs/INTERFACES.md's mixer.gdn comparison, beside gufo's batch-shape-exact forms; its gate so far is compilation alone"
 
 [provenance]
 origin    = "hipfire"

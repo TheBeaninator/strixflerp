@@ -309,6 +309,143 @@ def cmd_judge_ref(a):
                 v["mean_kl"], v["max_kl"], v["top1"], v["greedy_equal_prompts"], len(v["first_divergence"]), v["first_divergence"]))
 
 
+SHORT_ARMS = "A,G,Z,X,D"
+SHORT_TOKENS = 48
+
+
+def short_prompts(out):
+    """gate/ornith-bridge.toml [run]: the three P5 prompts the 397B ran, plus 8 records slices of 24 ids."""
+    p5 = json.load(open(os.path.join(ROOT, "gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json")))
+    rec = open(RECORDS).read().split()
+    named = [(n, [str(x) for x in p5[n]]) for n in ("bridge", "code", "rivers")]
+    named += [("rec%d" % o, rec[o:o + 24]) for o in (0, 150, 300, 450, 600, 900, 1200, 1500)]
+    paths = []
+    for n, ids in named:
+        path = os.path.join(out, "s-%s.ids" % n)
+        open(path, "w").write(" ".join(ids) + "\n")
+        paths.append(path)
+    json.dump([n for n, _ in named], open(os.path.join(out, "names.json"), "w"))
+    return [n for n, _ in named], paths
+
+
+def cmd_short(a):
+    """ORNITH-BRIDGE (gate/ornith-bridge.toml). Phase 1, one load: greedy SHORT_TOKENS a prompt, every arm, through
+    --trace. Phase 2, one load: every arm forced on D's greedy ids and on A's greedy ids (each prompt listed twice),
+    logits top 1,000 at every generated position."""
+    out = a.out
+    os.makedirs(out, exist_ok=True)
+    names, ps = short_prompts(out)
+    ids_args = [x for p in ps for x in ("--ids-file", p)]
+    base = ["--model", MODEL, "--context", "4096"]
+    r = run(base + ids_args + ["--trace", "--trace-top", "2", "--max-tokens", str(SHORT_TOKENS), "--arms", SHORT_ARMS], {},
+            os.path.join(out, "greedy.err"))
+    json.dump(r, open(os.path.join(out, "greedy.json"), "w"))
+    arms = dict(split_arms(r["events"]))
+    g = {arm: {e["prompt"]: e["ids"] for e in ev if e.get("event") == "traced"} for arm, ev in arms.items()}
+    # A prompt whose D or A continuation stopped early (a stop token) cannot be forced to SHORT_TOKENS: leave it out
+    # of phase 2 and say so.
+    keep = [i for i in range(len(ps)) if len(g.get("D", {}).get(i, [])) >= SHORT_TOKENS and len(g.get("A", {}).get(i, [])) >= SHORT_TOKENS]
+    ids2, force2, plan = [], [], []
+    for traj in ("D", "A"):
+        for i in keep:
+            f = os.path.join(out, "force-%s-%s.ids" % (traj, names[i]))
+            open(f, "w").write(" ".join(str(t) for t in g[traj][i]) + "\n")
+            ids2 += ["--ids-file", ps[i]]
+            force2 += ["--force-file", f]
+            plan.append({"traj": traj, "prompt": i, "name": names[i]})
+    json.dump({"names": names, "phase2": plan, "left_out": [names[i] for i in range(len(ps)) if i not in keep]},
+              open(os.path.join(out, "plan.json"), "w"), indent=1)
+    trace = ["--trace", "--trace-top", str(TOP), "--record-at", ",".join(str(i) for i in range(SHORT_TOKENS))]
+    r2 = run(base + ids2 + force2 + trace + ["--arms", SHORT_ARMS], {}, os.path.join(out, "traced.err"))
+    json.dump(r2, open(os.path.join(out, "traced.json"), "w"))
+    print(out)
+
+
+def cmd_judge_short(a):
+    d = a.dir
+    plan = json.load(open(os.path.join(d, "plan.json")))
+    names = plan["names"]
+    gr = dict(split_arms(json.load(open(os.path.join(d, "greedy.json")))["events"]))
+    greedy = {arm: {e["prompt"]: e["ids"] for e in ev if e.get("event") == "traced"} for arm, ev in gr.items()}
+    tr = json.load(open(os.path.join(d, "traced.json")))
+    steps = {}   # steps[arm][traj][prompt] = [step]
+    for arm, ev in split_arms(tr["events"]):
+        for e in ev:
+            if e.get("event") == "traced":
+                p = plan["phase2"][e["prompt"]]
+                steps.setdefault(arm, {}).setdefault(p["traj"], {})[p["prompt"]] = e["steps"]
+    lp = lambda st, t: next((v - st["logsumexp"] for tt, v in st["top"] if tt == t), None)
+    margin = lambda st: st["top"][0][1] - st["top"][1][1]
+    res = {"names": names, "left_out": plan["left_out"], "arms": {}, "splits": [], "fallbacks": tr["fallbacks"]}
+    D = steps.get("D", {})
+    for arm in steps:
+        if arm == "D":
+            continue
+        kls, top, n = [], 0, 0
+        for p, sd in D.get("D", {}).items():
+            for x, y in zip(sd, steps[arm]["D"].get(p, [])):
+                kls.append(kl(x, y)[0])
+                top += x["top"][0][0] == y["top"][0][0]
+                n += 1
+        div = {}
+        for p in greedy["D"]:
+            g0, g1 = greedy["D"][p], greedy[arm].get(p, [])
+            i = next((j for j in range(min(len(g0), len(g1))) if g0[j] != g1[j]), None)
+            div[names[p]] = i
+        res["arms"][arm] = {"positions": n, "mean_kl_vs_D": sum(kls) / n if n else None, "max_kl_vs_D": max(kls) if kls else None,
+                            "top1_vs_D": top / n if n else None, "greedy_first_divergence_vs_D": div,
+                            "greedy_equal_D": sum(v is None for v in div.values())}
+    # A-vs-G (and A-vs-Z, A-vs-X) splits, judged on the reference's logits forced on A's ids (common prefix)
+    for q in ("G", "Z", "X"):
+        for p in greedy["A"]:
+            ga, gq = greedy["A"][p], greedy[q].get(p, [])
+            i = next((j for j in range(min(len(ga), len(gq))) if ga[j] != gq[j]), None)
+            if i is None:
+                continue
+            row = {"pair": "A-" + q, "prompt": names[p], "index": i, "token_A": ga[i], "token_" + q: gq[i]}
+            sD = D.get("A", {}).get(p)
+            if sD is not None and i < len(sD):
+                s = sD[i]
+                la, lq = lp(s, ga[i]), lp(s, gq[i])
+                row.update({"D_top1": s["top"][0][0], "D_margin_top2": margin(s), "D_logp_A": la, "D_logp_" + q: lq,
+                            "gap_D": abs(la - lq) if la is not None and lq is not None else None,
+                            "A_is_D_top1": ga[i] == s["top"][0][0], q + "_is_D_top1": gq[i] == s["top"][0][0]})
+                for arm in ("A", q):
+                    sa = steps.get(arm, {}).get("A", {}).get(p)
+                    if sa is not None and i < len(sa):
+                        row[arm + "_margin_top2"] = margin(sa[i])
+            else:
+                row["note"] = "no forced logits for this prompt (left out of phase 2)"
+            res["splits"].append(row)
+    ag = [s for s in res["splits"] if s["pair"] == "A-G"]
+    kA = res["arms"].get("A", {}).get("mean_kl_vs_D")
+    kG = res["arms"].get("G", {}).get("mean_kl_vs_D")
+    zg = all(greedy["Z"].get(p) == greedy["G"].get(p) for p in greedy["G"])
+    zt = all(x["top"][0][0] == y["top"][0][0] for traj in ("D", "A") for p, sg in steps.get("G", {}).get(traj, {}).items()
+             for x, y in zip(sg, steps["Z"][traj].get(p, [])))
+    gaps = [s.get("gap_D") for s in ag]
+    crit = {
+        "N1": all(g is not None and g < 0.3 for g in gaps),
+        "N2": sum(s.get("G_is_D_top1", False) for s in ag) >= sum(s.get("A_is_D_top1", False) for s in ag),
+        "N3": kA is not None and kG is not None and kG <= kA,
+        "N4": zg and zt,
+    }
+    defect = (any(s.get("gap_D") is not None and s["gap_D"] >= 1.0 and not s.get("G_is_D_top1", False) for s in ag)
+              or (kA is not None and kG is not None and kG > 2 * kA) or not crit["N4"])
+    res["criteria"] = crit
+    res["A_G_splits"] = len(ag)
+    res["verdict"] = "defect" if defect else ("near-tie" if all(crit.values()) else "inconclusive")
+    if not ag and res["verdict"] == "near-tie":
+        res["verdict_note"] = "no split on the proxy"
+    json.dump(res, open(os.path.join(d, "verdict.json"), "w"), indent=1)
+    for arm, v in res["arms"].items():
+        print(arm, "vs D: mean_kl %.5f max_kl %.4f top1 %.4f greedy_equal %d/%d" % (
+            v["mean_kl_vs_D"], v["max_kl_vs_D"], v["top1_vs_D"], v["greedy_equal_D"], len(v["greedy_first_divergence_vs_D"])))
+    for s in res["splits"]:
+        print(json.dumps(s))
+    print("criteria", crit, "verdict", res["verdict"], res.get("verdict_note", ""))
+
+
 def logp(step):
     return {t: v - step["logsumexp"] for t, v in step["top"]}
 
@@ -411,8 +548,12 @@ def main():
     bb.add_argument("--out", required=True)
     jb = sub.add_parser("judge-bulk")
     jb.add_argument("dir")
+    sh = sub.add_parser("short")
+    sh.add_argument("--out", required=True)
+    js = sub.add_parser("judge-short")
+    js.add_argument("dir")
     a = ap.parse_args()
-    {"g4": cmd_g4, "attn": cmd_attn, "bulk": cmd_bulk, "judge-bulk": cmd_judge_bulk, "run": cmd_run, "judge": cmd_judge, "ref": cmd_ref, "judge-ref": cmd_judge_ref}[a.cmd](a)
+    {"short": cmd_short, "judge-short": cmd_judge_short, "g4": cmd_g4, "attn": cmd_attn, "bulk": cmd_bulk, "judge-bulk": cmd_judge_bulk, "run": cmd_run, "judge": cmd_judge, "ref": cmd_ref, "judge-ref": cmd_judge_ref}[a.cmd](a)
 
 
 if __name__ == "__main__":

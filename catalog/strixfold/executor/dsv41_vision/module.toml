@@ -1,6 +1,7 @@
 id        = "executor.strixfold.dsv41_vision"
 kind      = "executor"
-summary   = "The DeepSeek-V4.1 vision tower on one rank: picture decode and resize as PIL does it, ViT blocks, fused multi-head attention, the image rows handed to the model"
+summary   = "The DeepSeek-V4.1 vision tower on rank 0: an image decoded to RGB as Pillow does (PNG natively, other formats through a python3 Pillow child), padded and resized to the patch grid with PIL's bicubic rules and cut into bf16 patches, then the ViT blocks, fused attention and 3x3 aligner run with torch's own cuBLAS, cuBLASLt and memory-efficient attention calls to produce the image rows the text model reads"
+why       = "Role inferred from the code: it reproduces the served Python lane's vision path op for op so images get the same bytes on the CUDA build, but its linears and attention are CUDA library calls, and on HIP the build is text-only (tools/dsv41-hip/ADAPTER.md D13); it is a module only because model.zig imports vision.zig unconditionally, and strixfold_pr6 is the pull request that supplies a CPU tower so images can reach the HIP engine"
 notes     = "Imports model.zig, cublas.zig, cublaslt.zig and exact.zig of executor.strixfold.dsv41: the two modules are one Zig import closure and are cut apart for the record only. vit_main.zig and picture_main.zig (stand-alone checkers) are not harvested."
 
 [provenance]

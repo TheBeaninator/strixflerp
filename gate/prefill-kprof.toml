@@ -1,0 +1,65 @@
+# PREFILL-KPROF (card 9506f4f116, parent PREFILL-ORNITH 8ef0a645e7): where the 35B proxy's arm-G prefill time goes, per
+# kernel class, for one 4,096-row chunk at depth 0; then the port of the top-ranked catalog idea (its criteria are an
+# amendment committed before the port's first GPU run). Committed before any hardware run. Shape: docs/EXPERIMENTS.md.
+
+[hypothesis]
+# Predictions on the card (comment of 2026-11-14T09:38Z), from FLOPs per kernel x the K microbench rates.
+prediction = "experts (routed + shared) ~44 % of the chunk (640 ms, ~14.5 TFLOPS), dense projections ~31 % (445 ms, ~23.7), GDN core ~8 % (110 ms), attention ~4 % (62 ms, ~22), norms + other ~13 % (190 ms); the bottom-up sum (~1.45 s) under-explains the measured ~2.0 s"
+confirmed_at = "experts are the largest class at 35-55 % of the chunk's GPU time"
+refuted_below = "any non-expert class takes more GPU time than the experts"
+
+[criteria.profile]
+# The profile is valid (its numbers are used for the ranking) only if all of these hold; nothing here is a speed bar.
+rc = "both processes exit 0"
+reps = "3 measured reps after one warm-up rep, each exactly one EmbeddingLookup launch (one 4,096-row chunk)"
+spread = "every class with >= 5 % share: (max - min) / median of its 3 reps <= 0.10"
+overhead = "median first_token_s under rocprofv3 <= 1.15 x the unprofiled median (else shares are reported, absolute ms flagged)"
+
+[resources]
+nodes   = "control-node GPU via tools/gpu-queue.sh (waits for a free GPU, never kills or forces over another holder); no idle holds (coordinator's decision as PM, 2026-11-14: K is not a PLACE node yet)"
+hold    = "none: queued GPU job, ~10 min expected, TTL 15 min"
+weights = "21.7 GB Qwen3.6-35B-A3B-Q4_K_M.gguf already on control-node NVMe /data/models/qwen36-35b-a3b (pod-weights; the G champion's copy), staged before the hold"
+loads   = "2 because the profiled process and the unprofiled control must be separate processes (rocprofv3 wraps the whole process); every rep is measured inside its process"
+reps    = "3 because the G champion's run-to-run spread is under 5 %, so 3 bounds the per-class share well under the 10 % ranking resolution"
+shares  = "the pod's own pod-gpu jobs and other gpu-queue lanes wait their turn; no worker, FreeFitty slot or K touched"
+cleanup = "the job's processes exit and release the GPU; no placements; control-node doctor green afterwards"
+
+[monitor]
+milestones = "started within 60 min of queueing; done 15 min after start; watched every <= 15 min"
+stop_rule  = "stop at the first fault; nothing to release beyond the process"
+
+[amendment_1]
+# 2026-11-14T10:05Z, after run p1 and before run p2. p1 (one warm-up rep) FAILED criteria.profile.spread: experts_routed
+# (max - min) / median = 0.119 (563.0 / 502.6 / 513.2 ms) and router 0.104 (317.2 / 287.0 / 291.2), both from the first
+# measured rep still warming (the warm-up rep itself took 5.8 s). Method change only: two warm-up reps before the 3
+# measured ones (arms G x 5). Every criterion above is unchanged; p1 stays recorded as a failed validity check.
+
+[amendment_2]
+# 2026-11-14, after run p2 (profile valid) and before any GPU run of the port. The ranking (report
+# /data/pod/reports/2026-11/prefill-kernel-profile.md) puts catalog idea 1 first: Crucible's live-tile items, re-expressed
+# in kernel.flerp.moe_kgrouped GroupedKernel<.., LIVE = true> (flerp::kgrouped::SetLiveTiles; generate arm L = G + live
+# tiles). The math order is unchanged, so the rule is bit identity to G.
+[port.hypothesis]
+prediction = "routed experts 527 -> ~420 ms at 4,096 rows (1.25x: tile fill at BM 128 is 0.64, live 16-row tiles 0.68 of all, and the routed kernel's 15.7 TFLOPS against the full-tile dense 23.6 is that fill); the chunk ~5 % faster"
+confirmed_at = "routed experts <= 0.85 x p2 (<= 448 ms)"
+refuted_below = "routed experts > 0.95 x p2 (> 500 ms)"
+[port.criteria]
+P1 = "identity: in one load (gate/prefill_kprof.py port), for each of the 8 fidelity prompts and the 16,384-id prompt, every recorded step's logits sha256 and the generated ids of every L rep equal G's (rep 1); any mismatch fails"
+P2 = "speed (same process, median of 3 interleaved reps): L tok/s >= 1.00 x G at 2,048 tokens and >= 1.03 x G at 16,384"
+P3 = "kernel: profile run p3 (arms L, same method as p2): experts_routed median <= 0.90 x p2's 526.7 ms"
+P4 = "ISA (tools/isa-scan.py, rocm-7.2.4 and therock 10.x): 0 scratch in every GroupedKernel<.., true> instantiation, and none needs more VGPRs than its LIVE = false twin by enough to lose a wave per SIMD"
+champion = "only if P1-P4 all pass: flerp champion propose for the prefill area; never promoted by hand"
+[port.resources]
+nodes = "control-node GPU via tools/gpu-queue.sh; two jobs (port, p3 profile); no idle holds"
+hold = "none: queued GPU jobs, ~6 min expected, TTL 10 min each"
+weights = "the same 21.7 GB NVMe copy, staged before the hold"
+loads = "1 per process (port, p3), every arm and rep inside it"
+reps = "3 interleaved because P2's smallest bar is 3 % and the per-rep spread was under 5 %"
+
+[amendment_3]
+# 2026-11-14T18:13Z, after runs p3 (18:02Z) and p3b (18:10Z), before run p3c. Both FAILED criteria.profile.spread: one
+# (p3) and two (p3b) of the 3 measured reps ran every kernel class about 3x slower at once (profiled first_token_s up to
+# 5.7 s against ~1.9 s), while control-node's 1-min loadavg sat near 9.9 from the pod's own pod-hands work. The cause is
+# not proven (shared CPU/GPU package power or memory bandwidth is the suspect). Method change only: the p3c job starts
+# when the 1-min loadavg is <= 6 (the K gates' rule), waiting at most 90 min, and records the loadavg at start and end.
+# P3 and every validity criterion are unchanged; p3 and p3b stay recorded as invalid runs.

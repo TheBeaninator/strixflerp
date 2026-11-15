@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.lighton_ocr"
 kind      = "executor"
-summary   = "LightOnOCR on HIP"
+summary   = "LightOnOCR-3 1B on native HIP: the Pixtral vision encoder with 2D rotary and the learned projector (BF16 rows, FP32 weights widened losslessly) give each image an independent projected span for a Qwen3 decoder with its own causal caches, Torch BF16 rounding points, positional KV rollback and exact pinned-host copies of a stream's KV prefix."
+why       = "The 1B size needs its own family because its checkpoint wraps a Qwen3 decoder and Pixtral encoder in the legacy Mistral3 type, while the 0.8B and 4B sizes run through qwen3_5 (docs/recipes/lighton-ocr.md; all three qualified on gfx1201 only). For the pod it is another OCR model upstream's HIP path could serve and the host side of lighton_ocr.hip."
 
 [provenance]
 origin    = "tensorfold"

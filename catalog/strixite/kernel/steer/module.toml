@@ -1,6 +1,7 @@
 id      = "kernel.strixite.steer"
 kind    = "kernel"
-summary = "Activation steering: add a scaled vector to rows of the residual streams"
+summary = "Adds scale * v to every listed row of the residual streams, FP32 add and one rounding to the activation dtype, with v one FP32 row of H * d values on the device"
+why     = "It is the GPU half of activation steering (STEER-2, a pod patch in v0.7.0-pod): runtime.strixite.steer holds a conversation's vectors and the executor calls this after the chosen layers on prompt and generated tokens alike, so the cached state of a steered conversation is the steered state and its cache key is salted to keep it apart. Provides steer.add-rows in the strixite recipes."
 
 [provenance]
 origin   = "strixite"

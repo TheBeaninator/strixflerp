@@ -1,6 +1,7 @@
 id      = "format.strixite.q5"
 kind    = "format"
-summary = "Q5: 5-bit two-plane weight format (Q4 low plane plus a 1-bit high plane)"
+summary = "Q5 host format: each row stores the Q4 low-nibble plane [K/2] followed by a 1-bit high plane [K/8], with Q4's BF16 scale and min per group; 5.25 bits per weight at G128, K a multiple of 128 so both planes stay 16-byte aligned"
+why     = "A middle step for tensor classes that want more than 4 bits but not 8; sharing Q4's packing for the low plane lets the kernels (qsplit, linear_q4's Q5 expert gather) reuse the Q4 loop and add one bit. The converter accepts Q5 for routed experts, but the fleet file holds no Q5 tensor, and Q5 experts would prefill on slower BF16 scaled-code math because the F16 handoff refuses them"
 design  = "DESIGN.md"
 
 [provenance]

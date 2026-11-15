@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_moe"
 kind      = "kernel"
-summary   = "DeepSeek V4 Flash routed MoE: router, IQ2 gate/up experts, Q2_K down projection on WMMA with row groups of 128/64, shared expert, routed sum"
+summary   = "DeepSeek V4 Flash routed mixture-of-experts fragment, 47 kernels compiled -ffast-math: a router that rounds only the final score, IQ2_XXS gate/up experts decoded through grid tables in the established scalar order, a Q2_K down projection on WMMA whose prefill groups rows by expert in 128-row groups then a 64-row tail, the Q8 shared expert, and the routed sum"
+why       = "The routed experts are most of the 80.76 GiB model and are stored near two bits (IQ2_XXS gate/up, Q2_K down) so it fits one 128 GiB host; these kernels decode that format directly. The router keeps intermediate transcendentals unrounded because their rounding varies across ROCm libraries and can change routing (its header). docs/PREFILL-DSV41.md compares its expert grouping with hipfire's and strixite's for the DSV4.1 prefill plan; it compiles inside kernel.gufo.ds4_backend and is not bound"
 
 [provenance]
 origin    = "gufo"

@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.tp"
 kind      = "kernel"
-summary   = "Tensor-parallel and plumbing kernels: 16-way peer exchange, slow-link prefill staging, railgun copy / fill, device counters (5 sources, 5 gfx1151 compile units)"
+summary   = "hipfire's tensor-parallel plumbing kernels (5 sources, 5 units): a 16-way peer exchange of partials, slow-link prefill staging, railgun copy and fill, and device counters, moving bytes only"
+why       = "Role inferred from the code and arch_qwen4's summary: the device side of hipfire's mesh tensor parallelism, with slowlink_prefill staging prefill traffic for links far slower than the GPU. strixflerp's two-node plans look at gufo's verbs communicator and StrixFold's Coll instead, so this stays unbound"
 
 [provenance]
 origin    = "hipfire"

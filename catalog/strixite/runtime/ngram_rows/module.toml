@@ -1,6 +1,7 @@
 id      = "runtime.strixite.ngram_rows"
 kind    = "runtime"
-summary = "PLE n-gram rows straight from the HF checkpoint's shards (interim source kept for tests)"
+summary = "An NgramRowSource that gathers PLE n-gram rows (16 BF16 rows of 160 per token) straight from the HF checkpoint's 128 ngram_embedding.shard_N tensors with pread, deduplicated and 32 at a time, with no cache"
+why     = "It was the PLE row source before the converted n-gram table file existed and is kept because its rows are the checkpoint's own values, so tests can compare the converted table against it; it needs the HF checkpoint beside the converted weights and does one page read per row, which is why runtime.strixite.ngram_table replaced it for serving. executor.strixite.qwen4exp can still open it"
 
 [provenance]
 origin   = "strixite"

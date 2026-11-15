@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemm_mfp4"
 kind      = "kernel"
-summary   = "Prefill GEMM on MFP4-G32 weights (f16 WMMA, E8 variants) and the MFP4 dequantizer (8 sources, 12 gfx1151 compile units)"
+summary   = "Prefill GEMM on MFP4-G32 weights (8 sources, 12 units): E2M1 codes with per-32 UE8M0 scales on f16 WMMA with fp32 accumulation, E8-lattice and structure-of-arrays grouped variants for gfx1151, and dequantizers from the MFP4 Lloyd, P and E8 encodings to f16"
+why       = "MFP4 is hipfire's RDNA-oriented FP4 (HFP4 plus an offline FWHT), meant as an AMD answer to MXFP4 / NVFP4 built on RDNA ISA levers such as v_ldexp_f32 for scale decode (docs/quant-formats/hfp4.md); these are its prompt-side kernels, used where the Qwen4 and DSV4 expert stacks are MFP4. Nothing in strixflerp calls it; it only compiles"
 
 [provenance]
 origin    = "hipfire"

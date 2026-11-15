@@ -1,6 +1,7 @@
 id        = "tool.crucible.engine_cli"
 kind      = "tool"
-summary   = "The engine binary command line: gen (one capture, --jobs), batch CLI, prefill bench, debug schedule, version"
+summary   = "The engine binary's command line: gen for one greedy or sampled capture, gen --jobs to run many captures after one load and warm-up with every piece of per-request state checked back to fresh between jobs, the greedy multi-stream batch mode, the prefill bench (pfbench), a debug schedule dump and the version print"
+why       = "Crucible's GPU gates and measurement tools drive the engine through these modes, and the strixflerp Crucible recipe gate captures its token ids with gen --n 128 (gate/results/qwen38-flash-next.crucible, crucible-fatzero); the CLI parses every option before the model allocates device memory and adds no forward path of its own, so what it measures is the serving code (docs/ARCHITECTURE.md 'cli')"
 
 [provenance]
 origin    = "crucible"

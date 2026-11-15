@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_tiles"
 kind      = "kernel"
-summary   = "Matrix tiles: dot2 streaming GEMV (fp16/bf16 dot2, column-split, fused epilogues), WMMA gemm for gfx11 and gfx12 (wmma12), k-split gemm, stream and plan tables"
+summary   = "Upstream's HIP matmul schedules: a streaming decode GEMV where a lane owns a 32-code chunk of a column (1-16 rows, no LDS, shuffle folds), column and split dot2 tiles, a 128x128 dot2 prefill GEMM, few-row K-parallel tiles, a gfx11 WMMA tile whose sums equal the dot2 chain bit for bit, a gfx12 WMMA BF16 tile, bands of four row blocks for L2 reuse and routed-expert plans."
+why       = "Decode on these GPUs is bandwidth-bound and prefill compute-bound, so the registry picks a tile per shape from per-arch tables while every tile writes the same bytes, and a row's output never depends on round size. docs/TENSORFOLD.md takes R2 (routed tile chosen by rows an expert) and R5 (a spill-free WMMA tile in 248 VGPRs and row-block bands, claimed -32 % and -12 % at 2k prompts on gfx1151) from here."
 
 [provenance]
 origin    = "tensorfold"

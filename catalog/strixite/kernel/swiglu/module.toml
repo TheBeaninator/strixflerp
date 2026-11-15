@@ -1,6 +1,7 @@
 id      = "kernel.strixite.swiglu"
 kind    = "kernel"
-summary = "SwiGLU on the merged [gate | up] projection output"
+summary = "SwiGLU h = silu(gate) * up over rows laid out [gate (I) | up (I)] by the merge plan, FP32 math with BF16 rounding where the reference rounds, bf16(bf16(silu(g)) * u)"
+why     = "The merge plan fuses each MLP's gate and up projections into one matmul, so the activation has to split that row; this kernel does it for the Qwen3.5 baseline's dense MLP and for qwen4_exp expert outputs on paths that do not use the fused gather+SwiGLU of linear_q4 or moe_grouped. Matching the reference's rounding points keeps BF16 runs within one step of transformers. Provides act.swiglu in the strixite recipes."
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id        = "tool.flerp.gufo_qwen_generate"
 kind      = "tool"
 summary   = "A greedy token generator over gufo's Qwen 3.5 executor (HIP, or gufo's CPU reference with --cpu) that prints token ids as JSON lines, and the top of gufo's CMake build graph for that one program"
+why       = "gufo's CLI links every model family, so it cannot be cut into the catalogue; this one-program generator and minimal CMake top give a recipe a gufo Qwen 3.5 binary that prints greedy ids, which is what phase 5's first step needed to gate gufo's executor on the decider-2b model before adding MoE"
 notes     = "gufo's CLI (src/cli/main.cpp, prompt.cpp) is not in the catalogue: it links every model family. generate.cpp calls QwenGpuExecutor::CreateFromGguf and ::Generate as the origin's `gufo prompt` does (prompt.cpp 1092 and 794-848 at f070a17), with no chat template and no draft backend. CMakeLists.txt stands in for the origin's root CMakeLists.txt and adds the origin's own CMake files unchanged; its header lists what it leaves out. no_image.cpp is gufo::core::DecodeImage for a build without image.cpp: it throws."
 
 [provenance]

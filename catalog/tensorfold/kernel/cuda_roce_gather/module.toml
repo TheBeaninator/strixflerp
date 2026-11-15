@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.cuda_roce_gather"
 kind      = "kernel"
-summary   = "Cross-rank gather over RoCE with GPU-side completion (roce_gather.cu) and the rank sum used by TP decode"
+summary   = "One-shot small all-gather over RoCE after b12x: one kernel stages the shard in pinned memory and rings a doorbell, a proxy thread RDMA-writes it to every peer per HCA followed by a sequence flag on the same QP, one thread a (peer, HCA) spins on that flag, and a device epoch makes it graph-replayable; plus the rank-order fp32 sum of a reduce-scatter."
+why       = "TP decode exchanges are a few KiB and latency-bound; upstream claims 10.4 us against NCCL's 12.3 us at 4 KiB on GB10 with ConnectX-7, and 22.0 against 39.4 us at world 4 behind a switch. docs/TENSORFOLD.md R6 compares it with StrixFold's coll_rdma, which already has this shape, and finds the pod's 12.6 ms gather_a is waiting on the other rank rather than on the wire; read only."
 
 [provenance]
 origin    = "tensorfold"

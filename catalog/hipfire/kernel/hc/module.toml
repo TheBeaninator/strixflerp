@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.hc"
 kind      = "kernel"
-summary   = "Hyper-connections: 4-stream mix, control compute / finalize, Sinkhorn 4x4, alpha apply, input map, stream init from the embedding; Qwen4 fused down and the gfx1151 hyper-read up kernels; stream-mix aggregate / broadcast (28 sources, 29 gfx1151 compile units)"
+summary   = "hipfire's hyper-connection kernels (28 sources, 29 units): the fp32 4-stream residual mix, control compute and finalize, Sinkhorn normalization of the 4 x 4 mixing matrix, alpha apply, input map and stream init from the embedding, Qwen4's fused down projection, gfx1151 hyper-read up kernels and stream-mix aggregate / broadcast"
+why       = "Both hipfire models with hyper-connections need them: DSV4 mixes hc_mult = 4 streams through a Sinkhorn-normalized gate every layer (arch_deepseek4's lib.rs) and Qwen4 fuses the mix into its down projection. It is the hipfire row of docs/INTERFACES.md's hc.mix table beside gufo's ds4_hc and qfn_kernels; compiled by the gate, unmeasured"
 
 [provenance]
 origin    = "hipfire"

@@ -1,6 +1,7 @@
 id        = "runtime.crucible.ablation"
 kind      = "runtime"
-summary   = "Opt-in runtime abliteration (CRUCIBLE_ABLATE): sidecar loading (Heretic ExLlamaV3 format), per-request mode, device half"
+summary   = "Opt-in run-time abliteration (CRUCIBLE_ABLATE): a Heretic-format sidecar in ExLlamaV3 layout is loaded, and for 36 sublayers (attention output of layers 30-39, MoE output of 17-42) each output y becomes y - b * dot(y, a) on the device before the hyper-connection write-back, selectable per request"
+why       = "It lets the owner run the model with its refusal behaviour removed without a second weight pack: the published sidecar is applied at run time to either the 3.05 or the 4.05 bpw pack, and it is off by default and registered as a profile switch because it changes the model on purpose (docs/ABLITERATED.md and engine/switches.h in the origin)"
 
 [provenance]
 origin    = "crucible"

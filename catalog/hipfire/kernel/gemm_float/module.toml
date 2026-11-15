@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemm_float"
 kind      = "kernel"
-summary   = "Prefill GEMM on float weights: F16 x F16 WMMA, F32, BF16 (18 sources, 18 gfx1151 compile units)"
+summary   = "Prefill GEMM on unquantized weights (18 sources, 18 units): F16 x F16 on WMMA, F32, and BF16 weights against f32 activations including a 16-row multirow form for gfx1151, all with fp32 accumulation, some with a fused bias"
+why       = "Role inferred from the code: the matrix-core path for tensors hipfire keeps in float (BF16 heads, draft and tower weights) when a batch of tokens arrives. No hipfire doc names its consumers, and no strixflerp recipe or gate uses it"
 
 [provenance]
 origin    = "hipfire"

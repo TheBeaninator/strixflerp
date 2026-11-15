@@ -1,6 +1,7 @@
 id      = "runtime.strixite.log"
 kind    = "runtime"
-summary = "Levelled one-line logging with journald priority prefixes"
+summary = "Header-only printf-style one-line logging with four syslog-valued levels filtered at the source, an optional per-thread \"[slot N]\" tag, and a <N> priority prefix only when stderr really is the journal ($JOURNAL_STREAM matched against stderr's device and inode)"
+why     = "The server runs under systemd, where a priority prefix lets journald colour errors and lets journalctl -p info hide the per-request debug rows, while hand runs should stay plain text; checking the stream's inode avoids prefixing in a terminal that merely inherited the variable, and the slot tag keeps two slots' interleaved request blocks readable. Required by serve_log, executor.strixite.qwen4exp and qwen4exp_backend"
 
 [provenance]
 origin   = "strixite"

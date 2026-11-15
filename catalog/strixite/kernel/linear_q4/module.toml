@@ -1,6 +1,7 @@
 id      = "kernel.strixite.linear_q4"
 kind    = "kernel"
-summary = "Q4 group-affine GEMV for decode (split-K, 32 codes per 16-byte load) and the per-token MoE expert gather/combine for Q4 and Q5 experts"
+summary = "Q4 group-affine GEMV for decode (split-K over 1-8 waves, 32 codes per 16-byte load, s*sum(x*q) + m*sum(x) per chunk so each weight costs one FMA) plus the per-token MoE expert gather, fused gather+SwiGLU and combine for Q4 and Q5 experts stacked as one [E*N, K] matrix"
+why     = "Decode is a weight-read problem on this machine (~226 GB/s, how-it-got-fast.md section 1), so the 4-bit routed experts, most of the 66 GiB file, have to stream at near peak; the min-fold keeps arithmetic at one FMA per weight, and the fused SwiGLU saves a launch and the [M, A, 2I] round trip. Expert ids come from the device and a bad id yields NaN plus an error word, never an out-of-bounds read. It provides linear.decode and moe.experts-decode in the strixite recipes and is the row-major reference the strixw panel kernels (kernel.flerp.linear_q4p in strixite-p16) are measured against."
 design  = "DESIGN.md"
 
 [provenance]

@@ -1,6 +1,7 @@
 id        = "kernel.gufo.core_headers"
 kind      = "kernel"
-summary   = "Header-only: the gufo core and public extension headers that kernel translation units include (HIP utilities, dispatch telemetry, model config, sampling state, JSON constraint types)"
+summary   = "Header-only layer of gufo's core and public extension API that kernel translation units include: HIP error and launch utilities, the GEMV dispatcher and dispatch telemetry, hipBLASLt plan-database and heap-placement declarations, model config, sampling state and JSON-constraint types, with no code of its own"
+why       = "SPEC.md makes headers that several modules include into a module of their own so the include check can see every dependency; all of gufo's kernels and host code include these, so every kernel.gufo.* module and the flerp modules written against gufo (qwen35moe, gguf_placed, moe_sg, moe_kquant, draft_coarse) require it, and it compiles only inside them"
 
 [provenance]
 origin    = "gufo"

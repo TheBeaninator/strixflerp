@@ -1,6 +1,7 @@
 id        = "format.gufo.gguf_kquant"
 kind      = "format"
-summary   = "GGUF reader and ggml quant layouts: K-quants (Q2_K..Q8_K), Q8_0, IQ2 grids; host dequantizers and a host quantized GEMM used as oracles"
+summary   = "gufo's GGUF container reader (mmap; tensors stay in their ggml encoding on the device) and the ggml block layouts it hands kernels: Q8_0 at 32 weights a block, K-quants Q2_K..Q8_K at 256 with packed sub-block scales, the IQ2 grid tables, plus CPU dequantizers and a host quantized GEMM that act as the numerical oracle"
+why       = "Every gufo kernel reads raw GGUF blocks and decodes them in-kernel, so this reader and its declared layouts are the one format contract the origin shares; recipes bind format.loader/gguf and format.device-view/gguf-kquant to it (qwen35-decider-2b.gufo, both qwen36-35b-a3b recipes, the gufo swap variants of qwen38-flash-next), format.flerp.gguf_placed builds per-rank placed loading on it, and docs/PHASE5-GLM52-GAPMAP.md notes that a GGUF model needs no transcode through it"
 
 [provenance]
 origin    = "gufo"

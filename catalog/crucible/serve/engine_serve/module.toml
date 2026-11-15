@@ -1,6 +1,7 @@
 id        = "serve.crucible.engine_serve"
 kind      = "serve"
-summary   = "The engine side of serving: JSON-line protocol (serial and batched), batch sessions and conversation LRU, disk tier glue, slot bases, logprobs, cache status and miss ledger"
+summary   = "The engine side of Crucible serving: the JSON-line protocol on stdin/stdout in a serial (Serve) and a batched (BatchedServe, the default) stack, batch sessions with a conversation LRU, glue to the disk tier, slot bases and handover spill, logprobs, MTP history, draft tallies, cache status and a ledger of cache misses"
+why       = "It is the seam between the Python HTTP server and the C++ engine process: every request check runs before a state reset or device work and stdout carries protocol messages only (docs/ARCHITECTURE.md 'serve'), and BatchedServe is where up to N sessions share one engine with shortest-remaining-prefill-first scheduling and packed verification while one stream still equals the serial output"
 
 [provenance]
 origin    = "crucible"

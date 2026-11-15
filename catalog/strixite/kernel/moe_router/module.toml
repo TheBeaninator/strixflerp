@@ -1,6 +1,7 @@
 id      = "kernel.strixite.moe_router"
 kind    = "kernel"
-summary = "MoE router: top-k experts per token with softmax-renormalized weights, plus the shared expert's sigmoid gate"
+summary = "MoE router in registers: per token the top-k of E logits (largest first, ties to the lower expert), weights exp(l - l_max) renormalized over the k in FP32, plus a shared-expert slot with coefficient sigmoid(gate logit), and a non-finite logit failing that token through ids -1, NaN coefficients and an error word"
+why     = "The router runs on every layer of every token and must emit exactly the ids and FP32 coefficients the expert gather and combine kernels read; computing it in registers took a call from 11.0 to 6.95 us (how-it-got-fast.md section 6). The moe-router interface gate timed it at 28 us per decode token and 100 us for a 2,048-token chunk against gufo's RouterTopK at 37 and 344 us. Provides moe.router in the strixite recipes; router-gufo and three-engines bind gufo's kernel instead to measure token agreement."
 
 [provenance]
 origin   = "strixite"

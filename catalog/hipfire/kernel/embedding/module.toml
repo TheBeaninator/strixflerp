@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.embedding"
 kind      = "kernel"
-summary   = "Embedding lookup from F32 / F16 / BF16 / Q8 / Q4_K / HFQ4 / MQ4V2 tables, single and batched, and external scatter (12 sources, 12 gfx1151 compile units)"
+summary   = "Embedding row lookup from F32, F16, BF16, Q8, Q4_K, HFQ4-G128 and MQ4V2 tables (12 sources, 12 units), dequantizing the selected row to fp32 in single and batched forms, plus a scatter of externally computed embeddings into the stream"
+why       = "hipfire stores embeddings at Q8F16 by default because Q4-grade embedding error compounds (docs/QUANTIZATION.md), while GGUF and MQ models bring other tables, hence one lookup per storage format; the scatter form lets a vision or audio tower inject its rows (role inferred from the code). docs/PHASE5-GLM52-GAPMAP.md lists it as an embedding candidate at a neighbouring format"
 
 [provenance]
 origin    = "hipfire"

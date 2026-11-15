@@ -1,6 +1,7 @@
 id      = "tool.strixite.strix_acts"
 kind    = "tool"
-summary = "Mean activations of prompt sets at layer probe points, for steering directions"
+summary = "Runs each prompt of each named set alone from an empty session (or from an imported cache entry plus a short suffix) and averages chosen token rows at per-layer probe points (residual out, attn_in, mlp_in, mixer, moe) through Qwen4ExpProbe, writing float32 [layers][cols] means per set and point"
+why     = "Steering directions are differences of mean activations between prompt sets (STEER-1), so the pod needed the engine itself, with its served precision and KV format, to produce those means; taking them from the same probe hook the golden suites read keeps them consistent with what steer_library later adds. The vector arithmetic stays in Python outside the tool"
 
 [provenance]
 origin   = "strixite"

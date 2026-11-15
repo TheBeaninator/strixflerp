@@ -1,6 +1,7 @@
 id        = "runtime.flerp.text_strixfold"
 kind      = "runtime"
 summary   = "A Hugging Face checkpoint's tokenizer and Jinja chat template behind include/flerp/text.h: the C functions exported from Zig over StrixFold's HfText (zig/src/server/hf_text.zig), the text layer its own server renders prompts with"
+why       = "The DeepSeek-V4.1 checkpoint is a Hugging Face directory rendered by a Jinja template, which StrixFold's server already handles in Zig; exporting its HfText as include/flerp/text.h gives the front end the same prompt ids as StrixFold's own server (equal prompt ids on all three requests of the pair gate)"
 notes     = "No tokenizer or template code of its own. Built by the Zig build of a recipe (flerp.serve.build.zig); it has not run."
 
 [provenance]

@@ -1,6 +1,7 @@
 id        = "format.flerp.strixw_loader_p"
 kind      = "format"
 summary   = "format.strixite.strixw_loader with the panel encodings: StrixwDevice::qw hands a Q4Panel16 / Q8Panel16 tensor out as a panel-tagged Q4 / Q8 view (runtime/panel_device.hpp), so the call sites keep their types and only the panel kernels' adapters can read it"
+why       = "StrixwDevice::qw is where strixite turns a file tensor into a device view; teaching only it the two panel encodings, and handing them out tagged, means every call site keeps its types while only the panel adapters can consume the result, which is what lets a p16 file load into the unmodified executor"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 5. Derived from format.strixite.strixw_loader (strixite 20937dc): runtime/strixw_loader.{hpp,cpp} copied under flerp/strixw_loader_p/, changes marked `format.flerp.strixw_loader_p` (qw's two panel cases, one comment). Reading v5 needs the recipe's [overlay] of format.strixite.strixw by format.flerp.strixw_v5p."
 
 [provenance]

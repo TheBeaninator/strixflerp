@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_flashnext"
 kind      = "kernel"
-summary   = "Qwen Flash Next on HIP: QSA indexer, sparse attention and its lane split, n-gram (PLE) rows, stream kernels"
+summary   = "Flash Next's own HIP kernels in one code object: the QSA indexer (block keys mean-pooled, RMS-normed and rotated; per-row block scores summing relu(q . k) over heads; top blocks with ties to the lower id), sparse attention over the listed keys in parts merged in part order, a lanes variant where a lane holds one key for several heads, PLE n-gram hashing into prime tables, and the hyper-connection streams."
+why       = "These make Flash Next's sparse attention and residual streams run on HIP at all (#814). The key-shared-across-heads mapping (#1877) is claimed to finish cold 2,048-63,728-token prompts 29-41 % sooner on gfx1151 with the same sums; that is transfer R3 in docs/TENSORFOLD.md, the most direct one for strixite's and Crucible's QSA."
 
 [provenance]
 origin    = "tensorfold"

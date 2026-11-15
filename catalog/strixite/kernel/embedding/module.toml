@@ -1,6 +1,7 @@
 id      = "kernel.strixite.embedding"
 kind    = "kernel"
-summary = "Token embedding lookup from a BF16 or Q8 table, with a device-side bad-id error slot"
+summary = "Token embedding gather out[t] = table[ids[t]] from a BF16 or Q8 table into F32 or BF16 rows, optionally written several copies side by side, with an out-of-range id zeroing its row and recording the lowest bad (position, id) in one atomicMin'd device word"
+why     = "It is the first kernel of every forward, and its copies argument broadcasts the embedding straight into the 4 hyper-connection streams in one launch. A kernel cannot throw and clamping a bad id would hide a tokenizer or request bug, so the error word is read back with the forward's single sync and turned into an exception that names the token and position. Provides embed.lookup for both table formats in the strixite recipes; the Q8 table is what the fleet file stores."
 
 [provenance]
 origin   = "strixite"

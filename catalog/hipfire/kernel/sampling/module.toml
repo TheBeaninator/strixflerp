@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.sampling"
 kind      = "kernel"
-summary   = "Device sampling: argmax (single, batched, token chain), top-k logits, top-p sampling (parallel), softmax with temperature, logit penalties and softcap, greedy accept (16 sources, 17 gfx1151 compile units)"
+summary   = "hipfire's device sampling (16 sources, 17 units): argmax single, batched and chained over draft tokens, top-k logits in which 256 threads keep 4 candidates each for a host reduction to 20, parallel top-p sampling, softmax with temperature, a logit penalty table and softcap, and greedy accept"
+why       = "Role inferred from the code: these keep token choice on the GPU so only about a thousand candidates cross to the host a step, and the chained argmax serves greedy draft verification. docs/INTERFACES.md lists it as hipfire's top-k provider beside gufo's and strixite's, and PHASE5-GLM52-GAPMAP.md as a final-head option; not gated"
 
 [provenance]
 origin    = "hipfire"

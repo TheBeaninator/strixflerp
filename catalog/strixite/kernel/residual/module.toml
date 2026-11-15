@@ -1,6 +1,7 @@
 id      = "kernel.strixite.residual"
 kind    = "kernel"
-summary = "Residual add in place"
+summary = "Element-wise in-place x += y with an FP32 add and one rounding to the activation dtype, bit-identical to transformers' add in either dtype"
+why     = "The Qwen3.5 baseline forward and the vision tower add sublayer outputs to a plain residual; qwen4_exp itself uses hyper-connections instead and never calls it. It is also one of the cross-engine interface gates: the residual-add interface gate found strixite, gufo and hipfire all bit-exact at ~2 us per decode token and ~208 GB/s on a 2,048-token chunk. Provides residual.add in the strixite recipes."
 
 [provenance]
 origin   = "strixite"

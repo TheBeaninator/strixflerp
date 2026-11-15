@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.qwen3"
 kind      = "executor"
-summary   = "Qwen3 dense (embedding / reranker readouts on HIP, CUDA)"
+summary   = "Qwen3 dense prompt-only engine: BF16 weights as stored with norms widened to fp32, a batched prompt pass with QK norm, RoPE and GQA chunks, and an embedding or reranker head (reranker label rows of lm_head read at load); on HIP over the BF16 dot2 and gfx12 WMMA tiles, on CUDA over cuBLASLt with one plan and algorithm per (n, k)."
+why       = "It answers /v1/embeddings and /v1/rerank from Qwen3-Embedding-8B and Qwen3-Reranker-8B as published (docs/recipes/qwen3-embedding-hip.md and qwen3-reranker-hip.md, qualified on gfx1201; FP16-only RDNA2 builds refuse). Retrieval heads are a model class none of the pod's engines serve; upstream's R9700 timings do not carry over to gfx1151."
 
 [provenance]
 origin    = "tensorfold"

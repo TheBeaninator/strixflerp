@@ -1,6 +1,7 @@
 id        = "kernel.crucible.device_common"
 kind      = "kernel"
-summary   = "Header-only gfx1151 wave32 device helpers: shared math and loads, WMMA primitives with fp32 high/low expansions, LDS stream ring, compute-only barriers for loader waves"
+summary   = "Header-only wave32 helpers for gfx1151 that every Crucible kernel includes: block and wave sums, Walsh-Hadamard stages, v_wmma_f32_16x16x16_f16 primitives with high/low fp16 expansions that carry fp32 operands through an f16 WMMA, an LDS stream ring for producer-consumer handoff, and compute-only barriers that let loader waves run without a block barrier"
+why       = "Crucible's bitwise rules need each helper to keep one arithmetic order whoever calls it, so the order lives in a rank-0 module with no model or format knowledge (engine/gfx1151/README.md in the origin); gfx11 has only s_barrier and no split barriers, hence the hand-made compute-only sync, and the high/low split is how GDN and HC prefill keep fp32 contractions while running at the f16 WMMA rate (the iu8 path gave no faster rate and iu4 is lossy, per the same charter)"
 
 [provenance]
 origin    = "crucible"

@@ -1,6 +1,8 @@
 id      = "runtime.strixite.engine"
 kind    = "runtime"
-summary = "The generation engine: LmBackend ABI, request loop, MTP draft and verify, slots and batched sequences (SeqBackend), thinking budget, structured output hooks"
+summary = "The serving loop: worker threads (one per slot) run requests FIFO behind the LmBackend interface, resuming from the longest reusable prefix (live state, snapshot at the last <|im_start|>, or the prompt cache), prefilling in chunks, then sampling, parsing and streaming with MTP draft-and-verify, a thinking budget, grammar masks and logprobs; SeqBackend plus a GpuArbiter multiplex several slots on one GPU stream and batch their verifies into one forward"
+why     = "This is where a request becomes tokens: everything that decides what the model sees and emits (prefix reuse, speculative decoding, structured output, thinking limits, multi-conversation batching) meets here, while the model itself stays behind LmBackend so the loop and the HTTP layer above it can be tested without a GPU. It is what serve.strixite.strix_server, http and openai drive in every qwen38-flash-next strixite recipe, and flerp's strixite_abi executor shim reuses its LmBackend contract to put strixite behind the executor ABI"
+notes   = "Batched verify across slots is why two conversations generate nearly twice what one does (docs/memory.md, slots); one slot uses the backend directly with no arbiter."
 
 [provenance]
 origin   = "strixite"

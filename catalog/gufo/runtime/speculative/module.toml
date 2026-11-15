@@ -1,6 +1,7 @@
 id        = "runtime.gufo.speculative"
 kind      = "runtime"
-summary   = "Speculation framework: draft backend interface, prompt-lookup drafts, the lossless speculative verifier, and the Qwen verifier"
+summary   = "gufo's model-independent speculation framework: the draft-backend interface, prompt-lookup drafts copied from earlier context, and the lossless verifier that accepts a window of up to 16 draft tokens by exact rejection and residual sampling so accepted tokens follow the target distribution, plus the Qwen verifier"
+why       = "Speculation is acceptable only if it never changes what would have been sampled, so DFlash and MTP both submit drafts through this one verifier, which calls the device accept kernel of kernel.gufo.qwen_sampling; docs/INTERFACES.md records it as the catalogue's lossless window verify. Bound in the gufo recipes; strixite and hipfire bring their own verifiers"
 
 [provenance]
 origin    = "gufo"

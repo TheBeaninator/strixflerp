@@ -1,0 +1,35 @@
+# MOE-COMBINE (card 2dc55e67f0, parent PREFILL-ORNITH 8ef0a645e7): the MoE combine (MoeEpilogueKernel, 279 ms = 13.6 % of
+# a 4,096-row 35B chunk at ~43 GB/s) and the 230 ToF16 launches (69 ms). Committed before any hardware run.
+# Shape: docs/EXPERIMENTS.md. Numbers: PREFILL-KPROF run p2 (card 9506f4f116).
+
+[hypothesis]
+prediction = "the combine is a memory pass of 335 MB a block that should run at 150-200 GB/s: ~80 ms a chunk after the fix; one ToF16 per distinct input ~35 ms; chunk 2,049 -> ~1,815 ms, C/G ~1.11x"
+confirmed_at = "combine + ToF16 <= 150 ms per chunk (from 348)"
+refuted_below = "combine + ToF16 > 250 ms per chunk"
+
+[criteria.cause]
+# gate/combine_bench.hip on K (35B dims 4,096 x 8 x 2,048 and Ornith dims 4,096 x 10 x 4,096); the verdict names the
+# first rule that holds. It decides the fix; it is not a pass/fail bar.
+kernel_shape = "isolated orig < 100 GB/s and isolated vec4o or probe >= 1.5 x orig: the kernel's launch shape (one float a thread, 32,768 small blocks)"
+in_context   = "isolated orig >= 100 GB/s and after_writer orig < 0.6 x isolated orig: the writer's dirty lines are paid by the combine"
+memory       = "isolated probe < 100 GB/s: the buffers' memory itself (placement / type)"
+
+[criteria.fix]
+C0 = "K kernel identity: the fix kernel's output words equal MoeEpilogueKernel's (differ == 0) on the bench's random inputs, both dims"
+C2 = "model identity (gate/lever_gate.py run --arm C, one load): every recorded step's logits sha256 and the generated ids of every C rep equal G's, 8 fidelity prompts and a 16,384-id prompt"
+C3 = "model speed: C tok/s >= 1.05 x G at 2,048 and at 16,384 tokens (median of 3 interleaved reps)"
+C4 = "ISA (tools/isa-scan.py, rocm-7.2.4 and therock-10.1): 0 scratch in the new kernels"
+champion = "flerp champion propose for the prefill area only if C0, C2, C3, C4 all pass; never promoted by hand"
+
+[resources]
+nodes   = "bench box K via pod-kbench (K, queue-only) for the cause bench and C0; control-node GPU via tools/gpu-queue.sh for C2/C3, queued behind PREFILL-KPROF kport/kprof3; no idle holds"
+hold    = "~5 min of K jobs and ~6 min of queued GPU jobs, TTL 7 min each"
+weights = "0 GB on K (synthetic); 21.7 GB 35B GGUF already on control-node NVMe /data/models/qwen36-35b-a3b (pod-weights), staged before the hold"
+loads   = "1 per process, every arm and rep measured inside it"
+reps    = "7 on K (each from flushed caches); 3 interleaved on the model because the bar is 5 % and the per-rep spread was under 5 %"
+shares  = "other K jobs and gpu-queue lanes wait their turn; darkstudio-comfyui holds the control-node GPU until ~18:00Z and is never forced; no worker touched"
+cleanup = "pod-kbench releases bench:K at job end, gpu-queue jobs exit; control-node doctor green afterwards"
+
+[monitor]
+milestones = "K job done by T+20 min; GPU jobs after kprof3 (~18:00Z), done 15 min after start; watched every <= 15 min"
+stop_rule  = "stop at the first fault"

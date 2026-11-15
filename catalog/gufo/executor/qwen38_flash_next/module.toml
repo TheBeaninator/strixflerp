@@ -1,6 +1,7 @@
 id        = "executor.gufo.qwen38_flash_next"
 kind      = "executor"
-summary   = "Qwen3.8-Flash-Next engine: config, weights, device model, ROCm executor and batch paths, continuation layout and adapter, RoPE scaling, CPU reference"
+summary   = "gufo's Qwen3.8-Flash-Next engine: config, weights and a device model for the hyper-connected recurrent/QSA mixture-of-experts on UD-Q4_K_XL GGUF shards, a ROCm executor and batch paths over the qfn_kernels and qfn_mmq launch APIs, a continuation layout and adapter for history reuse, RoPE scaling, a CPU reference, and a TP2 split whose partials add in rank order"
+why       = "gufo wrote it to serve Flash-Next on one Strix Halo (upstream README: 1,801 tok/s prefill, up to 117 tok/s decode with MTP) and, on the neuhaus rdma branch harvested here, across two hosts over RDMA, which TP2.md offers for faster decode and for checkpoints one host cannot hold. strixflerp keeps it harvested and unbuilt: the Flash-Next recipes run strixite's executor, and gufo's Flash-Next contribution to them is a kernel (RouterTopK of kernel.gufo.qfn_kernels) swapped in through an adapter"
 
 [provenance]
 origin    = "gufo"

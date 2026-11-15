@@ -1,6 +1,7 @@
 id        = "format.flerp.convert_qwen4exp_p16"
 kind      = "format"
 summary   = "Converter library from the HF BF16 checkpoint: format.strixite.convert_qwen4exp with layout classes that may carry the p16 suffix (Q4Panel16 / Q8Panel16, strixw v5), plus a check mode that quantizes chosen tensors and compares them with a reference strixw"
+why       = "convert_strixw_panel can only re-lay an existing v4 file; a fresh build from the ark's BF16 checkpoint with a new layout (another group size, a class moved to panels) needs the converter itself to emit panels, so this is strixite's converter with p16 classes, its quantization line for line, plus a check mode that proves chosen tensors against a reference file without writing 74.6 GB"
 design    = "DESIGN.md"
 notes     = "Adapted copy of strixite's formats/convert_qwen4exp.{cpp,hpp} (20937dc); every change is marked `flerp`. Quantization is the origin's code; p16 classes are then re-laid out by format.flerp.q4panel / q8panel and written through format.flerp.strixw_v5. docs/STRIXW-LAYOUT-NEXT.md stage 2, the `--layout` path."
 

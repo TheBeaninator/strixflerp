@@ -1,0 +1,374 @@
+{
+ "tokens": 4096,
+ "reps_measured": 3,
+ "embedding_launches": 5,
+ "gpu_ms_median": 2307.6782970000004,
+ "span_ms_median": 2327.228706,
+ "classes": {
+  "attention": {
+   "ms": 118.43582900000001,
+   "share": 0.051322504160986174,
+   "runs_ms": [
+    118.43582900000001,
+    252.61326100000002,
+    93.330816
+   ],
+   "tflops": 11.607341212936499,
+   "pct_peak": 0.19673459682943217
+  },
+  "convert_group": {
+   "ms": 86.66998600000002,
+   "share": 0.03755722195449499,
+   "runs_ms": [
+    86.66998600000002,
+    210.18307699999968,
+    69.09124700000002
+   ]
+  },
+  "dense_proj": {
+   "ms": 498.6067220000002,
+   "share": 0.2160642246573939,
+   "runs_ms": [
+    498.6067220000002,
+    1141.6888309999997,
+    406.5214700000002
+   ],
+   "tflops": 21.082612795099852,
+   "pct_peak": 0.3573324202559297
+  },
+  "embed_head_misc": {
+   "ms": 4.691864000000002,
+   "share": 0.0020331534105509684,
+   "runs_ms": [
+    11.067699000000001,
+    4.691864000000002,
+    3.164216
+   ]
+  },
+  "experts_routed": {
+   "ms": 510.4512170000001,
+   "share": 0.22119687031922544,
+   "runs_ms": [
+    510.4512170000001,
+    1073.4864610000002,
+    413.936504
+   ],
+   "tflops": 16.154995685552453,
+   "pct_peak": 0.2738134861958043
+  },
+  "experts_shared": {
+   "ms": 68.67743099999998,
+   "share": 0.02976040078432127,
+   "runs_ms": [
+    68.67743099999998,
+    143.64962799999998,
+    54.72687699999999
+   ],
+   "tflops": 15.00918330856028,
+   "pct_peak": 0.25439293743322505
+  },
+  "gdn_core": {
+   "ms": 222.31013699999994,
+   "share": 0.09633497757854934,
+   "runs_ms": [
+    222.31013699999994,
+    511.51172500000007,
+    188.59811900000005
+   ],
+   "tflops": 2.0285695117897395,
+   "pct_peak": 0.034382534098131176
+  },
+  "moe_combine": {
+   "ms": 370.63528499999995,
+   "share": 0.160609598609056,
+   "runs_ms": [
+    370.63528499999995,
+    811.6144000000002,
+    277.423553
+   ]
+  },
+  "norms_residual": {
+   "ms": 90.99956399999999,
+   "share": 0.03943338381190313,
+   "runs_ms": [
+    90.99956399999999,
+    212.96128800000005,
+    71.90434499999999
+   ]
+  },
+  "router": {
+   "ms": 329.82442699999996,
+   "share": 0.14292478610592052,
+   "runs_ms": [
+    329.82442699999996,
+    706.5686819999999,
+    279.44835799999987
+   ],
+   "tflops": 0.5208792247519011,
+   "pct_peak": 0.008828461436472899
+  }
+ },
+ "sub": {
+  "dense_proj:linear": 498.6067220000002,
+  "experts_routed:down": 220.19899799999996,
+  "experts_routed:gate_up": 290.2522189999999,
+  "experts_shared:down": 19.586502999999997,
+  "experts_shared:gate_up": 49.090928000000005
+ },
+ "top_kernels_rep1": [
+  {
+   "name": "void flerp::kgrouped::(anonymous namespace)::GroupedKernel<128, (flerp::kgrouped::WType)12, false, true>(unsigned char const*, unsigned char const*, unsigned lo",
+   "calls": 210,
+   "ms": 454.917
+  },
+  {
+   "name": "gufo::models::qwen38_flash_next::rocm::(anonymous namespace)::MoeEpilogueKernel(float const*, float const*, float const*, float const*, unsigned int, float*, un",
+   "calls": 40,
+   "ms": 370.635
+  },
+  {
+   "name": "void flerp::kgrouped::(anonymous namespace)::GroupedKernel<128, (flerp::kgrouped::WType)12, true, true>(unsigned char const*, unsigned char const*, unsigned lon",
+   "calls": 80,
+   "ms": 339.343
+  },
+  {
+   "name": "flerp::moe::(anonymous namespace)::GateLogitsWideKernel(float const*, float const*, float const*, float*, unsigned long, unsigned long, unsigned long)",
+   "calls": 40,
+   "ms": 324.061
+  },
+  {
+   "name": "void flerp::kgrouped::(anonymous namespace)::GroupedKernel<128, (flerp::kgrouped::WType)14, false, true>(unsigned char const*, unsigned char const*, unsigned lo",
+   "calls": 60,
+   "ms": 283.475
+  },
+  {
+   "name": "_ZN4gufo3hip29BatchedDeltaNetRowSplitKernelITkNS0_6detail25QwenRecurrentStateElementEfLi32ELi2ELb1ELb0EEEvPKfS4_S4_PT_PfjiiiiiPKS5_",
+   "calls": 30,
+   "ms": 121.197
+  },
+  {
+   "name": "void flerp::attn::GqaWmmaCausalAttention<16u, 2u, 32u, 16u, true>(float const*, float const*, __half const*, __half const*, float*, unsigned int, unsigned long,",
+   "calls": 10,
+   "ms": 85.937
+  },
+  {
+   "name": "flerp::kgrouped::(anonymous namespace)::ToF16Kernel(float const*, unsigned short*, unsigned long, unsigned int*)",
+   "calls": 230,
+   "ms": 85.633
+  },
+  {
+   "name": "gufo::hip::BatchedSSMConvKernel(float const*, float const*, float const*, float*, unsigned long, unsigned long)",
+   "calls": 30,
+   "ms": 50.783
+  },
+  {
+   "name": "void gufo::hip::BatchedRMSNormKernel<0ul>(float const*, float const*, float*, hip_bfloat16*, unsigned long, unsigned long, float)",
+   "calls": 80,
+   "ms": 46.627
+  },
+  {
+   "name": "gufo::hip::BatchedResidualAddKernel(float const*, float const*, float*, unsigned long)",
+   "calls": 80,
+   "ms": 44.353
+  },
+  {
+   "name": "gufo::hip::BatchedSSMPostNormGateKernel(float const*, float const*, float const*, float*, unsigned long, unsigned long, unsigned int, unsigned int)",
+   "calls": 30,
+   "ms": 35.161
+  },
+  {
+   "name": "gufo::hip::BatchedUnpackQGKernel(float const*, float*, float*, unsigned long, unsigned int, unsigned int)",
+   "calls": 10,
+   "ms": 16.961
+  },
+  {
+   "name": "gufo::hip::BatchedDeltaNetPrepKqKernel(float const*, float*, unsigned long, unsigned int)",
+   "calls": 30,
+   "ms": 14.859
+  },
+  {
+   "name": "gufo::hip::BatchedFusedQKNormRoPEKvWriteKernel(float const*, float const*, float const*, float const*, float const*, float*, float*, float*, float*, __half*, __",
+   "calls": 10,
+   "ms": 14.11
+  },
+  {
+   "name": "void gufo::hip::Q8KBlockGEMVKernel_2Rows<4u, (gufo::core::GgmlType)0>(void const*, gufo::core::GgmlType, float const*, float*, unsigned long, unsigned long)",
+   "calls": 1,
+   "ms": 9.189
+  },
+  {
+   "name": "void gufo::models::qwen38_flash_next::rocm::(anonymous namespace)::RouterTopKKernel<512u>(float const*, unsigned int, int*, float*, unsigned int, unsigned int)",
+   "calls": 40,
+   "ms": 5.763
+  },
+  {
+   "name": "void flerp::attn::GqaPackAttentionHeads<2u>(__half const*, __half const*, __half*, __half*, unsigned int)",
+   "calls": 10,
+   "ms": 1.428
+  },
+  {
+   "name": "gufo::hip::ArgmaxKernel(float const*, unsigned int*, unsigned long)",
+   "calls": 1,
+   "ms": 0.981
+  },
+  {
+   "name": "flerp::kgrouped::(anonymous namespace)::IdentityKernel(unsigned long, int, int*, int*, int*, HIP_vector_type<int, 2u>*, int*)",
+   "calls": 230,
+   "ms": 0.436
+  },
+  {
+   "name": "__amd_rocclr_copyBuffer",
+   "calls": 122,
+   "ms": 0.417
+  },
+  {
+   "name": "gufo::hip::BatchedEmbeddingLookupKernel(void const*, gufo::core::GgmlType, unsigned int const*, float*, unsigned long, unsigned long)",
+   "calls": 1,
+   "ms": 0.311
+  },
+  {
+   "name": "gufo::hip::BatchedDeltaNetPrepAlphaBetaKernel(float const*, float const*, float const*, float const*, float*, unsigned long, unsigned int, float const*, float c",
+   "calls": 30,
+   "ms": 0.31
+  },
+  {
+   "name": "flerp::kgrouped::(anonymous namespace)::PlaceKernel(int const*, unsigned long, int, int const*, int*, int*)",
+   "calls": 40,
+   "ms": 0.266
+  },
+  {
+   "name": "flerp::kgrouped::(anonymous namespace)::CountKernel(int const*, unsigned long, int, int*)",
+   "calls": 40,
+   "ms": 0.199
+  },
+  {
+   "name": "__amd_rocclr_fillBufferUnAligned",
+   "calls": 80,
+   "ms": 0.17
+  },
+  {
+   "name": "flerp::kgrouped::(anonymous namespace)::ScanKernel(int const*, int, int, int*, int*, HIP_vector_type<int, 2u>*, int*)",
+   "calls": 40,
+   "ms": 0.137
+  },
+  {
+   "name": "void gufo::hip::RMSNormKernel<0ul>(float const*, float const*, float*, unsigned long, float)",
+   "calls": 1,
+   "ms": 0.02
+  }
+ ],
+ "rows_per_expert": {
+  "blocks": 40,
+  "experts": 256,
+  "mean": 128.0,
+  "zero": 1421,
+  "p10": 0,
+  "p25": 4,
+  "p50": 42,
+  "p75": 154,
+  "p90": 334,
+  "p99": 1188,
+  "max": 3785,
+  "lt32": 0.45400390625,
+  "lt64": 0.56435546875,
+  "tile_fill_bm128": 0.6408010012515645,
+  "per_block_max": [
+   1072,
+   944,
+   785,
+   1692,
+   1235,
+   1525,
+   1209,
+   1789,
+   3235,
+   1536,
+   2409,
+   1207,
+   1855,
+   2482,
+   1732,
+   1362,
+   2181,
+   2324,
+   2075,
+   1817,
+   1874,
+   2116,
+   2084,
+   1015,
+   1314,
+   1569,
+   1796,
+   1804,
+   2119,
+   2637,
+   2196,
+   1542,
+   3178,
+   2211,
+   2878,
+   1098,
+   1933,
+   2099,
+   3785,
+   1501
+  ],
+  "per_block_min": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "first_token_s_plain": [
+  2.03588,
+  3.96519,
+  3.40711,
+  1.82016,
+  1.78878
+ ],
+ "first_token_s_prof": [
+  4.1084,
+  1.85453,
+  2.32745,
+  5.10364,
+  1.87519
+ ]
+}

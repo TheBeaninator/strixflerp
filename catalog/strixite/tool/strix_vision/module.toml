@@ -1,6 +1,7 @@
 id      = "tool.strixite.strix_vision"
 kind    = "tool"
-summary = "One image through preprocess, the vision tower and the merger; HF-golden per-stage gate and encode bench"
+summary = "Runs one image through the engine's own vision path (decode, smart_resize, normalize, patchify, the GPU vision tower, the merger) and writes the [N, 2560] BF16 embeddings an image prefill splices in; --golden compares every stage with HF dumps, passing a stage at <= 1.5x the HF BF16-vs-FP32 gap, and --bench times encoding across image sizes"
+why     = "Vision was added in strixite v0.3.0 and a mismatch could sit in preprocessing, position-embedding interpolation or the tower's precision; the per-stage gate against HF (never against the engine) names which stage drifted, and pixel_values is checked apart so preprocessing errors are not blamed on rounding. Built in the strixite Qwen3.8 recipes"
 
 [provenance]
 origin   = "strixite"

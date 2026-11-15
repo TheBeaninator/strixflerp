@@ -1,6 +1,7 @@
 id        = "tool.strixfold.zig_build"
 kind      = "tool"
-summary   = "The origin build graph: root build.zig, the HIP half (code objects by hipcc, the kit by tf-hip-kit scan, the native-hip step), the CUDA and dist halves build.zig imports, the pinned Zig version, the build wrapper"
+summary   = "StrixFold's build graph: the root build.zig, the HIP half (each .hip source to a raw gfx1151 code object by hipcc with the kit's IEEE flags, the kit manifest by tf-hip-kit scan, and the native-hip step with no CUDA module in its graph), the CUDA and dist halves build.zig imports, the pinned Zig version and a build wrapper"
+why       = "The HIP port needed a build that produces an x86 host binary plus a verified gfx1151 kit with nothing NVIDIA in it (ADAPTER.md D14); every dsv41 recipe uses this graph as its build root, and the strixflerp build stage reproduces the deployment's kit from it byte for byte (gate/results/dsv41-flash.strixfold-tp2)"
 notes     = "zig/build/*.zig were missing from the laptop reference copy (it excluded directories named build) and come from the pod tree by way of ~/Code/strixflerp-upstream-supplement. cuda.zig and dist.zig are needed because build.zig imports them; their targets name files that are not harvested and are never made by the native-hip step."
 
 [provenance]

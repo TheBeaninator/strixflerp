@@ -1,6 +1,7 @@
 id        = "runtime.gufo.hip_host"
 kind      = "runtime"
-summary   = "HIP host services: host allocations, managed allocation, heap placement, weight upload, snapshot transfer, hipBLASLt plan database, bandwidth probe"
+summary   = "gufo's HIP host services: host and managed allocations, heap placement on unified memory, weight upload from mapped files, snapshot transfer between device and host, the hipBLASLt plan database and a bandwidth probe"
+why       = "On gfx1151's unified memory, where weights are placed and how they are mapped decides both capacity and bandwidth, so gufo keeps allocation and upload in one place (role inferred from the code). format.flerp.gguf_placed builds per-rank placed loading on its allocators (docs/PHASE5-FOURNODE-DESIGN.md), and the gufo recipes bind device.memory/hip to it"
 
 [provenance]
 origin    = "gufo"

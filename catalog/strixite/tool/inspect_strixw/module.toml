@@ -1,6 +1,7 @@
 id      = "tool.strixite.inspect_strixw"
 kind    = "tool"
-summary = "Prints a strixw file's header, components and tensors"
+summary = "Prints a strixw file's header (format version, model, per-class layout, converter and date) and one line per tensor; --verify re-reads the file across --threads N and recomputes every component's hash"
+why     = "A 115 GiB weights file is easy to truncate or corrupt in transit, and its layout is otherwise opaque, so the origin gives users a way to see what quant they hold and check it is intact (docs/tools.md); docs/weights.md's numbers are read from it. Built in each strixite Qwen3.8 recipe"
 
 [provenance]
 origin   = "strixite"

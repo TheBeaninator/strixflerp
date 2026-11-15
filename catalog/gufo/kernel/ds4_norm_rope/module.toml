@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_norm_rope"
 kind      = "kernel"
-summary   = "DeepSeek V4 Flash RMS norm with the row held in registers, and the fused head RMS norm plus rotated tail"
+summary   = "DeepSeek V4 Flash norm fragment: an fp32 RMS norm that holds the whole row in registers, and a fused per-head RMS norm plus RoPE on only the rotated tail dims of each head that scales the full row exactly as the standalone norm does"
+why       = "DSV4 rotates only the tail of each head, so the norm and the rotation can share one pass over the head, and because the fused form promises the standalone norm's bits the fusion cannot move outputs (role inferred from the code). It compiles inside kernel.gufo.ds4_backend and nothing in strixflerp binds it; hipfire's rope_tail kernels are the catalogue's other tail rotation"
 
 [provenance]
 origin    = "gufo"

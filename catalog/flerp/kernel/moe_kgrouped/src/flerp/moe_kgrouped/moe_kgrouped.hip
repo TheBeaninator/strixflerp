@@ -156,7 +156,24 @@ __device__ inline void DecodeW(const WRaw& r, int kb, uint16_t* dst, int u) {
 //                    (a_by_pos, Down) or the pair's token (Linear); FP32 out at the pair's row.
 // Waves: wm = wave & 1 takes row tiles wm, wm + 2, ..; wn = wave >> 1 takes B tiles (SWIGLU: gate 16wn and up
 // 64 + 16wn - the same 16 columns, so h forms in registers; else 32wn and 32wn + 16).
-template <int BM, WType WT, bool SWIGLU>
+// PREFILL-KPROF (9506f4f116), Crucible's live-tile items (catalog/crucible/kernel/moe_prefill prefill_moe_pair.h:
+// "one body per live row-tile count and no skip test in the k loop"), re-expressed for this kernel's work mapping:
+// with LIVE, a wave runs the WMMAs of only those of its TM 16-row tiles that hold rows of the item, through a
+// compile-time body per live count chosen once per block (a scalar branch per 64-K step). Dead tiles were all-zero A
+// rows whose results were never stored, and every live element's accumulation (same fragments, same K order) is
+// unchanged, so outputs are bit-identical to LIVE = false.
+template <int L, class F>
+__device__ __forceinline__ void DispatchLive(int lt, F& f) {
+  if constexpr (L > 0) {
+    if (lt >= L) {
+      f.template operator()<L>();
+    } else {
+      DispatchLive<L - 1>(lt, f);
+    }
+  }
+}
+
+template <int BM, WType WT, bool SWIGLU, bool LIVE = false>
 __global__ void __launch_bounds__(kThreads)
     GroupedKernel(const uint8_t* __restrict__ w0, const uint8_t* __restrict__ w1, std::size_t expert_bytes,
                   std::size_t row_bytes, const uint16_t* __restrict__ a_in, int a_by_pos, int x_share,
@@ -224,6 +241,25 @@ __global__ void __launch_bounds__(kThreads)
 #pragma unroll
   for (int i = 0; i < TM; ++i) acc[i][0] = acc[i][1] = f32x8{};
 
+  // The matrix work of one 64-K step over the wave's first LT row tiles (LT = TM: every tile, the LIVE = false body).
+  const auto mma = [&]<int LT>() {
+#pragma unroll
+    for (int kk = 0; kk < kBK; kk += 16) {
+      f16x16 a[LT];
+#pragma unroll
+      for (int i = 0; i < LT; ++i) a[i] = LoadFrag(xs + (16 * (2 * i + wm)) * kLd + kk);
+      const f16x16 fb0 = LoadFrag(ws + b0 * kLd + kk);
+      const f16x16 fb1 = LoadFrag(ws + b1 * kLd + kk);
+#pragma unroll
+      for (int i = 0; i < LT; ++i) {
+        acc[i][0] = __builtin_amdgcn_wmma_f32_16x16x16_f16_w32(a[i], fb0, acc[i][0]);
+        acc[i][1] = __builtin_amdgcn_wmma_f32_16x16x16_f16_w32(a[i], fb1, acc[i][1]);
+      }
+    }
+  };
+  // Live row tiles of this wave: tiles wm, wm + 2, .. below ceil(rows / 16); wave-uniform, fixed for the item.
+  const int lt = LIVE ? min(TM, max(0, ((rows + 15) / 16 - wm + 1) / 2)) : TM;
+
   fetch(0);
   for (int kb = 0; kb < nk; ++kb) {
     __syncthreads();  // the previous step's fragments are read
@@ -240,18 +276,10 @@ __global__ void __launch_bounds__(kThreads)
     }
     __syncthreads();
     if (kb + 1 < nk) fetch(kb + 1);  // in flight during this step's matrix work
-#pragma unroll
-    for (int kk = 0; kk < kBK; kk += 16) {
-      f16x16 a[TM];
-#pragma unroll
-      for (int i = 0; i < TM; ++i) a[i] = LoadFrag(xs + (16 * (2 * i + wm)) * kLd + kk);
-      const f16x16 fb0 = LoadFrag(ws + b0 * kLd + kk);
-      const f16x16 fb1 = LoadFrag(ws + b1 * kLd + kk);
-#pragma unroll
-      for (int i = 0; i < TM; ++i) {
-        acc[i][0] = __builtin_amdgcn_wmma_f32_16x16x16_f16_w32(a[i], fb0, acc[i][0]);
-        acc[i][1] = __builtin_amdgcn_wmma_f32_16x16x16_f16_w32(a[i], fb1, acc[i][1]);
-      }
+    if constexpr (LIVE) {
+      DispatchLive<TM>(lt, mma);
+    } else {
+      mma.template operator()<TM>();
     }
   }
 
@@ -658,6 +686,13 @@ void Check(const char* what) {
   }
 }
 
+int g_live_override = -1;  // SetLiveTiles: -1 = FLERP_KG_LIVE (default 0), 0 off, 1 on
+bool LiveTiles() {
+  if (g_live_override >= 0) return g_live_override != 0;
+  static const bool env = [] { const char* v = std::getenv("FLERP_KG_LIVE"); return v != nullptr && v[0] == '1'; }();
+  return env;
+}
+
 template <WType WT, bool SWIGLU>
 void Launch(const void* w0, const void* w1, std::size_t expert_rows, const uint16_t* a_in, int a_by_pos,
             std::size_t x_share, const Plan& plan, void* out, std::size_t n, std::size_t k, unsigned* overflow,
@@ -679,10 +714,14 @@ void Launch(const void* w0, const void* w1, std::size_t expert_rows, const uint1
                              : dim3(static_cast<unsigned>(plan.max_tiles), ncb);
   const auto* p0 = static_cast<const uint8_t*>(w0);
   const auto* p1 = static_cast<const uint8_t*>(w1);
-#define FLERP_KG_LAUNCH(BMV)                                                                                         \
-  GroupedKernel<BMV, WT, SWIGLU><<<grid, dim3(kThreads), 0, stream>>>(                                               \
+#define FLERP_KG_LAUNCH_L(BMV, LV)                                                                                   \
+  GroupedKernel<BMV, WT, SWIGLU, LV><<<grid, dim3(kThreads), 0, stream>>>(                                           \
       p0, p1, eb, rb, a_in, a_by_pos, static_cast<int>(x_share), plan.sorted, plan.offsets, plan.counts, plan.tiles, \
       plan.n_tiles, out, static_cast<int>(n), static_cast<int>(k), overflow, col_fast)
+#define FLERP_KG_LAUNCH(BMV)                                                                                         \
+  do {                                                                                                               \
+    if (LiveTiles()) FLERP_KG_LAUNCH_L(BMV, true); else FLERP_KG_LAUNCH_L(BMV, false);                               \
+  } while (0)
   switch (plan.bm) {
     case 32: FLERP_KG_LAUNCH(32); break;
     case 64: FLERP_KG_LAUNCH(64); break;
@@ -692,6 +731,7 @@ void Launch(const void* w0, const void* w1, std::size_t expert_rows, const uint1
       std::abort();
   }
 #undef FLERP_KG_LAUNCH
+#undef FLERP_KG_LAUNCH_L
   Check(SWIGLU ? "GateUp" : "Down/Linear");
 }
 
@@ -796,6 +836,8 @@ void ToF16(const float* x, std::uint16_t* xh, std::size_t n, unsigned* overflow,
   ToF16Kernel<<<static_cast<unsigned>((n / 4 + 255) / 256 + 1), 256, 0, stream>>>(x, xh, n, overflow);
   Check("ToF16");
 }
+
+void SetLiveTiles(int mode) noexcept { g_live_override = mode; }
 
 void GateUp(WType type, const void* w_gate, const void* w_up, const std::uint16_t* xh, std::size_t x_share,
             const Plan& plan, std::uint16_t* h, std::size_t n, std::size_t k, unsigned* overflow, hipStream_t stream) {

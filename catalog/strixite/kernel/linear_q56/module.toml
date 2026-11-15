@@ -1,6 +1,7 @@
 id      = "kernel.strixite.linear_q56"
 kind    = "kernel"
-summary = "Q5 and Q6 GEMV for decode: a 4-bit low plane plus a high-bit plane per row, one kernel template"
+summary = "Decode GEMV for Q5 and Q6 weights from one template: each row is a Q4 low plane (K/2 bytes) followed by a 1- or 2-bit high plane, read with linear_q4's 16-byte loads, per-group scale/min and min-fold, with the high bits OR-ed into each code"
+why     = "It completes the strixw format ladder so a tensor class can be given 5 or 6 bits when 4 lose accuracy and 8 cost too many bytes, without writing a second GEMV loop. The fleet file has no Q5 or Q6 tensor, so it is off the served path (DESIGN.md); it still provides linear.decode for strixw-q5 and strixw-q6 in qwen38-flash-next.strixite so the format stays usable."
 design  = "DESIGN.md"
 
 [provenance]

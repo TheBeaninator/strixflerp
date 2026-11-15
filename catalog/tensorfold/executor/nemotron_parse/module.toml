@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.nemotron_parse"
 kind      = "executor"
-summary   = "Nemotron Parse on HIP"
+summary   = "Nemotron 3.5 Parse on one HIP rank: all 510 tensors of the FP32 checkpoint validated and the floating ones held as BF16 device copies, an image tower and horizontal neck feeding a causal mBART decoder (biased pre-norm GQA, exact GELU, tied BF16 logits, no text RoPE) and a trained one-step proposal head, with BF16 activations and KV and FP32 sums."
+why       = "Upstream ported nvidia/Nemotron-3.5-Parse so document parsing runs entirely in native HIP kernels, Python only producing development references (docs/recipes/nemotron-parse.md); it is a separate family because it shares no architecture with Nemotron-H or Super VL. For the pod it is a parse service upstream's HIP path offers, not yet run on a gfx1151."
 
 [provenance]
 origin    = "tensorfold"

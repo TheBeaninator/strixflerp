@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.sampling"
 kind      = "runtime"
-summary   = "The keyed exact sampler: Gumbel draws keyed by (seed, position, token id) so a verify row draws exactly as the serial run; top-k / top-p / min-p in float64 as numpy computes them"
+summary   = "The keyed exact sampler: temperature 0 takes the first maximal logit; otherwise the top_k plus a margin of candidates are ordered by value then id, each scored by its logit over the temperature plus a Gumbel draw keyed by (seed, position, token id) through a splitmix64 chain, with top-p and min-p in float64 using libm exp and log and numpy's pairwise sum order"
+why       = "Keying each draw by position and token means a verify row draws exactly what the serial run would at that position, so speculation is output-invariant even when sampling, and matching exact_sampling.py bit for bit makes the HIP engine reproduce the served CUDA lane: 6,000 rows token-identical to the pinned contract and 12 of 12 distributions passing chi-square (RESULTS.md)"
 
 [provenance]
 origin    = "strixfold"

@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.lanes"
 kind      = "runtime"
-summary   = "TensorFold 1.0 lane core: the round loop over concurrent streams, the backend vtable it drives (forward, draft, verify windows, keep / drop), draft depth and acceptance, events"
+summary   = "TensorFold 1.0's lane core: a round loop that serves many concurrent streams on one thread, drives a backend through a vtable of forward, draft, verify-window and keep / drop calls, keeps drawn tokens on the GPU behind handles, chooses draft depth from a measured cost profile (a draft is verified while its chance of landing pays for its row), and emits events to the server"
+why       = "It is the scheduler that turns a family into a multi-stream server and the contract executor.strixfold.dsv41 implements (executor.lane-backend); because a verify row draws exactly as the serial run would (with runtime.strixfold.sampling), drafts never change emitted tokens, and the pod's learned prompt states hook in here, which is also where pull request #6 changes when states are kept"
 
 [provenance]
 origin    = "strixfold"

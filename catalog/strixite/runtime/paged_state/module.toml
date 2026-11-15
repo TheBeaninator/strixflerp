@@ -1,6 +1,7 @@
 id      = "runtime.strixite.paged_state"
 kind    = "runtime"
-summary = "Host-only description of a parked conversation's K/V pages (no HIP handles)"
+summary = "A HIP-free header describing a parked conversation to host code: the parked generation id, state and page byte counts, a tally name, and chunks giving each state range's host-readable address in the parked pages"
+why     = "A parked conversation's K/V is device pages whose record holds HIP handles and lives in the runtime layer, but the prompt cache that must hold it while it waits is host-only code built without HIP; this struct is everything about the parked entry that is not a handle, so the cache can count it, write it to disk byte-identical to a HostBuffer entry, or give it back through the owning session. Shared by runtime.strixite.prompt_cache, runtime.strixite.engine and executor.strixite.qwen4exp"
 
 [provenance]
 origin   = "strixite"

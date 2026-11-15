@@ -166,6 +166,14 @@ class Judgements(unittest.TestCase):
         self.assertEqual(len(cfg["run"]["check_blocks4"]), 4)
 
 
+class ServeContext(unittest.TestCase):
+    def test_serve_config_context(self):
+        import flerplib.configs as CF
+        self.assertEqual(CF.context(CF.load("ornith397.serve"), 4096), 65536)
+        self.assertEqual(CF.context(CF.override(CF.load("ornith397.serve"), ["context=8192"]), 4096), 8192)
+        self.assertEqual(CF.context(CF.load("none"), 4096), 4096)
+
+
 class Frames(unittest.TestCase):
     def test_frames_to_file(self):
         with tempfile.TemporaryDirectory() as d:

@@ -1,6 +1,7 @@
 id      = "format.strixite.q8"
 kind    = "format"
-summary = "Q8: 8-bit asymmetric per-group weight format (one code per byte)"
+summary = "Q8 host format: one unsigned 8-bit code per weight with Q4's asymmetric BF16 scale and min per group (8.5 bits at G64), a quantizer bit-identical to the reference, and a chunk-major copy in 32-code chunks for the HC up-mix"
+why     = "Every token reads the dense path, so strixite spends 8 bits there: an all-4-bit layout matched the full model at 194 of 242 positions against 224 with every dense part at 8 bits. In the fleet file it holds attention, GDN out, the HC mixes, the shared expert, PLE kv, the LM head and MTP fc. It has no expert gather, which is why the Q8 shared expert cannot ride in the Q4 expert stack"
 design  = "DESIGN.md"
 
 [provenance]

@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.aux"
 kind      = "kernel"
-summary   = "Indexer top-k selection helpers, torch-order RMSNorm, compress2, complex-FMA RoPE, bf16 scale, mean of 4 streams"
+summary   = "The dsv41 auxiliary HIP kernels whose bodies are TensorFold's CUDA ones with fixed-width parameters and wave32 shuffles: indexer top-k on int64 keys (score bits in total order above, the complement of the index below, ties to the lower index), candidate pools and tile maxima, torch-order RMSNorm with explicit round-to-nearest intrinsics, compress2, complex-FMA RoPE, bf16 scaling and the mean of the four mHC streams"
+why       = "The served CUDA engine computed these steps with its own CUDA kernels at torch's rounding points, and the HIP port keeps those bodies so the AMD build lands on the same arithmetic (no contraction, IEEE denormals) and the selection stays exact; they passed 844 fp64-reference checks (tools/dsv41-hip/RESULTS.md, M2.aux-operators), and the indexer top-k is the attn.indexer-topk provider in the dsv41-flash.strixfold-tp2-abi recipe"
 notes     = "Bodies ported from TensorFold CUDA sources zig/kernels/cuda/dsv41_ops.cu and dsv41_torch.cu (sha256 in the file header)."
 
 [provenance]

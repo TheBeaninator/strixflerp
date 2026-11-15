@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.nemotron"
 kind      = "executor"
-summary   = "Nemotron 3.5 hybrid Mamba-2 / attention / latent MoE with MTP (HIP path in nemotron/hip, CUDA, Metal)"
+summary   = "Nemotron 3.5 (Nemotron-H) hybrid family: Mamba-2 blocks, attention blocks and a latent MoE with sigmoid-plus-bias routing and relu^2 experts, with an MTP head and copy lanes, on Metal, CUDA and a HIP rank (nemotron/hip) whose prompt cache keeps each lane's Mamba state and last row; it also holds the Living Weights lesson adapters."
+why       = "docs/TENSORFOLD.md section 4 lists Nemotron 3.5 Lightning 30B-A3B (MLX 4-bit) as a new family the pod could serve on one worker through this HIP path, which has had MTP and TP since upstream 1.1.4; none of the pod's engines runs a hybrid Mamba-2 model. docs/TENSORFOLD.md found no gfx1151 receipt for it upstream."
 
 [provenance]
 origin    = "tensorfold"

@@ -1,6 +1,7 @@
 id        = "runtime.flerp.text_gufo"
 kind      = "runtime"
 summary   = "The Qwen 3.5 / 3.6 family's tokenizer and chat template behind include/flerp/text.h: a C shim over gufo's QwenTokenizer (from the GGUF), the loader's template check (QwenChatTemplate::ValidateGgufTemplate) and gufo's compiled Qwen ChatML formatter with the options gufo's server resolves"
+why       = "Serving qwen35moe through the generic front end needs the Qwen 3.5 / 3.6 tokenizer and chat format; it uses the compiled ChatML formatter gufo's own server applies rather than each GGUF's Jinja template, so prompts render as the engine that the executor derives from renders them"
 notes     = "No tokenizer or template code of its own. The rendering is the one gufo's server applies to every Qwen file (QwenChatTemplate::Render, compiled), not the file's own Jinja template, whose SHA-256 and profile are only reported. Tool messages and tool calls are refused; thinking switches are read as gufo's ParseReasoningOptions reads them. Keys: weights, context."
 
 [provenance]

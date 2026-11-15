@@ -1,7 +1,8 @@
 id        = "runtime.flerp.decode_loop"
 kind      = "runtime"
-summary   = "The decode loop over the executor ABI that every caller shares (include/flerp/decode_loop.h): prompt forwards with cuts and the lookahead hint; sample, draft (a stepped chain under the margin rule, or drafts held on the device), one verify, keep / keep_prefix and the carried token; fed ids; hooks for the pick, the stop and the records"
-notes     = "The loop of strixite's Engine::run (serve/engine.cpp 1256-1691 at 20937dc) written over the ABI. The conformance driver and serve.flerp.http both run it."
+summary   = "The decode loop over the executor ABI that every caller shares (include/flerp/decode_loop.h): prompt forwards with cuts and the lookahead hint, then a cycle of sample, draft (a stepped chain under the margin rule, or drafts held on the device, taking the round's size from the verify's row count when the executor holds fewer than asked), one verify, keep / keep_prefix and the carried token; fed ids; hooks for the pick, the stop and the records"
+why       = "Speculative decoding has many places to differ (draft rule, keep_prefix, the carried token), so the loop of strixite's Engine::run is written once over the ABI and shared: the conformance driver and the HTTP front end run the same code, which is why equal step records against the native server mean equal forwards"
+notes     = "The loop of strixite's Engine::run (serve/engine.cpp 1256-1691 at 20937dc) written over the ABI; a stepped draft head (FLERP_CAP_DRAFT_STEP) returns one draft a call, a held one (FLERP_CAP_DRAFT_HELD) keeps them on the device and the verify names them by count. SERVE-DRAFTS3 (card 3f6d20b703): in the held form an executor with its own depth rule (executor.flerp.qwen35moe_abi draft_value=on) may hold fewer than the loop asked, so after a verify the loop takes k = rows - 1 from the reply instead of failing on a row count other than 1 + k; any other mismatch still fails. Callers: the conformance driver and serve.flerp.http."
 
 [provenance]
 origin    = "flerp"

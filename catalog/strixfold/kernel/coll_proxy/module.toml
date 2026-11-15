@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.coll_proxy"
 kind      = "kernel"
-summary   = "GPU half of the slot collective: stage copies this rank block into a coherent host slab and publishes it, collect waits for the peer block"
+summary   = "The GPU half of a graph-capturable all-gather: a stage kernel copies this rank's block into a transmit slot of a mapped coherent host slab and publishes it with a sequence number it advances itself, and a collect kernel waits with one bounded guard load per block for the host proxy to deliver the peer's block, copies it into place and releases the slot, using system-scope release and acquire flags and an abort word"
+why       = "HIP graphs are allowed only when the collective can live inside a capture (tools/dsv41-hip/ADAPTER.md D12), and a gather that needs a host call on the stream cannot; with these two kernels the host never sees the call, so a replayed graph runs fresh gathers, which cut a 29-token reply from 1.41 s to 1.245 s with identical ids (tools/dsv41-hip/RESULTS.md); coll_tcp's tcp_proxy and the pod's rdma_proxy both run on them"
 notes     = "Host side: runtime.strixfold.coll_tcp (tcp_proxy.zig) or runtime.strixfold.coll_rdma (rdma_proxy.zig)."
 
 [provenance]

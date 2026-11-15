@@ -1,6 +1,7 @@
 id        = "kernel.flerp.moe_router_hipfire"
 kind      = "kernel"
 summary   = "Adapter (router-slots): strixite's moe_router on hipfire's moe_softmax_topk_renorm_k8 code object, one launch per token, plus strixite's non-finite rule; k != 8, shared-slot and BF16 calls stay with strixite"
+why       = "The hipfire arm of swap 5: hipfire's fused softmax/top-8/renormalize is the fastest router on one token (11.8 against 25.5 us) but is launched once per token (17 ms on a 2,048-row chunk) and its arg-max keeps the lower thread on a tie, which pairs expert t with t + 256 and picks the wrong expert set on tied rows; that failed the interface gate, and its k = 8 against the checkpoint's 10 rules it out of every recipe"
 
 [provenance]
 origin    = "flerp"

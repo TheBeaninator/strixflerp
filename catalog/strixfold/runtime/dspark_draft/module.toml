@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.dspark_draft"
 kind      = "runtime"
-summary   = "The DSpark drafter on one TP rank: window rings, target taps absorbed, N streams drafts and confidences from one pass, the Markov loop over a split vocabulary, the confidence head"
+summary   = "The DSpark drafter on one TP rank: the streams' window rings in one pool absorb the target's taps after each prompt chunk and round, one fused pass produces N streams' drafts and confidences through three stages, a Markov loop over a split vocabulary refines them with cached bias rows for 256 frequent tokens, and a confidence head plus a cost profile pick the draft depth"
+why       = "Speculation is where DeepSeek-V4.1 decode speed comes from on this hardware: the 8-category mean rose from 31.97 to 56.55 tok/s with drafts on (tools/dsv41-hip/RESULTS.md), and because the target verifies every row the output cannot change; the cost profile still holds Spark values, never an AMD measurement (scheduler_costs.zig)"
 notes     = "tri_markov.zig also launches the prompt GEMM tri._gemm."
 
 [provenance]

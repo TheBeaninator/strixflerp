@@ -1,6 +1,7 @@
 id      = "runtime.strixite.memory_governor"
 kind    = "runtime"
-summary = "RAM floor check: how much room MemAvailable leaves above a margin"
+summary = "Header-only owner of the unified-memory RAM budget: a floor MemAvailable must stay above, one /proc/meminfo reading per decision, and pure room() / shortfall() rules every consumer uses to decide on that same reading"
+why     = "On Strix Halo the GPU allocates from the same RAM as everything else, and components that each read MemAvailable at their own moment raced: an eviction rule saw enough room while a check a few MiB later refused, with evictable entries still in the RAM tier. Reading once and deciding on that reading makes every refusal real, and the 4 GiB floor keeps the machine away from the hard hang seen near zero MemAvailable. Used by runtime.strixite.prompt_cache, whose reclaim order (spares, RAM entries, parked pages) answers its shortfall"
 
 [provenance]
 origin   = "strixite"

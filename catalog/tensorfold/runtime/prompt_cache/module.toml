@@ -1,6 +1,7 @@
 id        = "runtime.tensorfold.prompt_cache"
 kind      = "runtime"
-summary   = "Exact prompt reuse: states at prompt-pass chunk ends, on-disk Imprint"
+summary   = "Exact prompt reuse: states keyed by tokens and canonical decoded intervals through their position, kept at prompt-pass chunk ends; Imprint writes them to disk behind an index so a learned harness state outlives the server; staggered segments on their own queues equal serial chunks; and a 400 ms keep-alive stops macOS unwiring an idle model."
+why       = "An agent harness resends the same long prefix every turn, and restoring a bit-exact state skips that prefill without changing a single output token. StrixFold's Imprint states come from the older runtime.strixfold.prompt_cache (1,877 lines behind on six files); upstream's indexed Imprint lookup (#2351, 0.02-0.04 us finds at 100,000 states) is the kind of fix worth diffing for."
 
 [provenance]
 origin    = "tensorfold"

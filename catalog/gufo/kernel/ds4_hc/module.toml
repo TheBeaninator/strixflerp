@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_hc"
 kind      = "kernel"
-summary   = "DeepSeek V4 Flash hyper-connections (called hierarchical composition in the source): split / weighted sum / expand over the 4 x 4096 row, fused pre-block chain, output and pointwise kernels"
+summary   = "DeepSeek V4 Flash hyper-connection fragment (hierarchical composition in DS4's naming): fp32 kernels that split the 4 x 4096 residual row into streams, weight and sum them into a block input and expand the block output back, a fused pre-block chain (norm, mix projection on F16 weights, split, weighted sum) for the supported shape with the separate chain as fallback, and the output and pointwise kernels"
+why       = "DSV4 replaces the single residual with four mixed streams, so every block starts and ends with this mixing; the fused pre-block form does it in one launch where the shape allows (role inferred from the code: fewer launches per token at decode). It is a fragment of kernel.gufo.ds4_backend and, in docs/INTERFACES.md's hc.mix table, one of three hyper-connection implementations with qfn_kernels' Flash-Next mix and kernel.hipfire.hc"
 
 [provenance]
 origin    = "gufo"

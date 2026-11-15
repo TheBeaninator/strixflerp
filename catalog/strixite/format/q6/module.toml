@@ -1,6 +1,7 @@
 id      = "format.strixite.q6"
 kind    = "format"
-summary = "Q6: 6-bit two-plane weight format (Q4 low plane plus a 2-bit high plane)"
+summary = "Q6 host format: the Q4 low plane [K/2] plus a 2-bit high plane [K/4] per row with BF16 scale and min per group; 6.25 bits per weight at G128, K a multiple of 64"
+why     = "Gives dense tensor classes a precision step between Q4 and Q8; the converter allows Q6 only for dense classes (no expert gather exists for it and the HC mixes refuse it), and kernel.strixite.linear_q56 runs it. Nothing in the fleet file is Q6, so it is a supported layout option the served file does not use"
 design  = "DESIGN.md"
 
 [provenance]

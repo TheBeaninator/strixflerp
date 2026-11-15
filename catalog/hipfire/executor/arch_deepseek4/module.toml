@@ -1,6 +1,7 @@
 id        = "executor.hipfire.arch_deepseek4"
 kind      = "executor"
-summary   = "DeepSeek V4 Flash (arch 9): hyper-connections, compressed-KV indexer, tail-only RoPE, Q/O-LoRA, raw SWA; bundle, weights, state, forward; the DSpark and MTP speculators and speculative decode"
+summary   = "hipfire's DeepSeek V4 Flash architecture crate (arch_id 9): config, bundle, weights and state for a model with four Sinkhorn-mixed residual streams (20 iterations), a 64-head compressed-KV indexer choosing 512 positions, RoPE on the last 64 of 512 head dims, Q/O LoRA projections and raw sliding-window attention, plus the forward that dispatches hipfire kernels, expert-parallel loading and the DSpark and MTP speculators"
+why       = "It is hipfire's route for DSV4 on its own MFP4 / MQ formats, kept in the catalogue as a third reading, after gufo's and StrixFold's, of how an engine composes the DSV4 operators. Its map.md records that the native MTP has no measured AR floor, so speculation.mtp = auto leaves it off and only the DSpark sidecar speculates by default. Harvested only: cargo needs the whole workspace, so no recipe builds it"
 
 [provenance]
 origin    = "hipfire"

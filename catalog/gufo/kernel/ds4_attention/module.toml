@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_attention"
 kind      = "kernel"
-summary   = "DeepSeek V4 Flash attention: prefill / decode over raw and mixed (compressed) KV, the DSpark support attention, the KV compressor, FP8 KV quantization and raw-cache store"
+summary   = "DeepSeek V4 Flash attention fragment: decode and prefill attention with a sink over a mix of raw sliding-window rows and ratio-4 compressed rows, the compressor that pools raw rows at compression boundaries, E4M3 FP8 quantization of stored KV rows (round to nearest), and a single-pass rocWMMA prefill kernel, fp32 math compiled -ffast-math"
+why       = "DSV4 reaches long contexts by attending to compressed history plus a raw window instead of every row, and this is gufo's DS4-derived implementation of that attention for its single-device route; storing rows as E4M3 halves their bytes against F16 (role inferred from the code: KV capacity). It compiles only inside kernel.gufo.ds4_backend and no recipe binds it; docs/PHASE5-GLM52-GAPMAP.md rules it out for GLM-5.2's latent attention, leaving it as one of three DSV4 attentions in the catalogue with StrixFold's and hipfire's"
 
 [provenance]
 origin    = "gufo"

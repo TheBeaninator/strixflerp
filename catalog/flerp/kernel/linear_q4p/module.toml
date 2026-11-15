@@ -1,6 +1,7 @@
 id        = "kernel.flerp.linear_q4p"
 kind      = "kernel"
 summary   = "Adapter (Q4Panel16): strixite's Q4 decode GEMV and expert gather / gather+SwiGLU / combine on panel tensors, bit-equal to linear_q4 on the same dequantized weights; a row-major view is handed back to strixite's kernel"
+why       = "Row-major strixw makes prefill's WMMA tiles use a quarter of each cache line they touch, and the fix proposed in docs/STRIXW-LAYOUT-NEXT.md stores Q4 in 16-row panels; that only helps if decode, which sets the token rate, reads the same panels at the origin's speed and bits, which this GEMV and expert path had to prove: its first wave map ran at 109-238 % of linear_q4's time, the decode2 map (one 512-byte run a load, as many waves as the origin) brought it to 96-99 % (sh_down 84 %) with 489 of 489 cases byte-equal"
 design    = "DESIGN.md"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 3. New code over linear_q4.hip's math (strixite 20937dc): kernels/panel_gemv.hpp replays each origin lane's chunk sequence and the butterfly on whole 16-row panels, the steps split over up to 16 waves (decode2 wave map, a load reads one 512-byte run); kernels/linear_q4p.hip holds the expert kernels and the adapter entry points. Dispatch by the panel tag of runtime/panel_device.hpp (format.flerp.panel_device). Gate: gate/strixw-panel-kernels.toml; decode speed gate/strixw-panel-decode2.toml."
 

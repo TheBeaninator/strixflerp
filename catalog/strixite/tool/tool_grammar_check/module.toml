@@ -1,6 +1,7 @@
 id      = "tool.strixite.tool_grammar_check"
 kind    = "tool"
-summary = "Test: the tool-call grammar against the model's tokenizer (tags, free text, tool_choice)"
+summary = "Host-only test of the tool-call grammar through the matcher: well-formed calls and free text are accepted, the malformed shapes a steered agent produced are refused, tool_choice required and named behave, every accepted call parses, and with tokenizer.json the StructuredOutput masks let only the tag tokens open and close a call"
+why     = "Comes with the tool-call grammar commits (1f541c7..d19945e) that the fleet's strix_server.v070tg was built from; the grammar stops an agent's broken calls at decode time, so a mask that admitted a bad shape or blocked a legal one would break agents fleet-wide. Only the plain strixite recipe builds it (unit-tool_grammar_check.txt: PASS, 0 failures)"
 
 [provenance]
 origin   = "strixite"

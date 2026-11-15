@@ -1,6 +1,7 @@
 id      = "runtime.strixite.prompt_cache"
 kind    = "runtime"
-summary = "Prompt cache: token-prefix keyed RAM tier with disk write-back, parked conversations, export and import"
+summary = "Saved session states keyed by the token ids they cover: a host-RAM tier that shrinks with MemAvailable, written lazily under a write budget to one checksummed file per entry (4 KiB header, token ids, state bytes), with System, Turn and Checkpoint kinds, parked K/V pages and export/import"
+why     = "A coding agent resends the same long conversation every turn, a little longer each time; resuming from a saved prefix instead of prefilling it takes about a second from RAM or a few seconds from disk, at roughly 17 KiB of state per token (upstream docs/memory.md). The write budget, idle-priority writer and RAM-only entries for one-shot prompts exist because such prompts once filled 251 of 279 disk entries and most of ~230 GB/day of SSD writes. The engine, the HTTP layer and strix_server use it; /cache/export and /cache/import move entries between nodes (tool.strixite.cache_xfer_check)."
 
 [provenance]
 origin   = "strixite"

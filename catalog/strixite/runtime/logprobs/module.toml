@@ -1,6 +1,7 @@
 id      = "runtime.strixite.logprobs"
 kind    = "runtime"
-summary = "Per-token logprobs from full logits rows"
+summary = "Per-token logprobs for OpenAI-shaped responses: a log-sum-exp and top-k pass over each full FP32 logits row the sampler saw (after the structured-output mask and think guard, before temperature), with engine-fed tokens recorded in order but without a logprob"
+why     = "Clients that score or calibrate answers ask for \"logprobs\" and \"top_logprobs\" (up to 20), and the numbers must mean what the HF reference means, so they are taken from the very row the sampler used; a logprob needs the row's normalisation constant, so these requests read back the full row instead of candidates, which is why the feature sits behind --logprobs (card 31cf21e3d1, ENG-LOGPROB). Required by runtime.strixite.engine and checked by tool.strixite.check_logprobs"
 
 [provenance]
 origin   = "strixite"

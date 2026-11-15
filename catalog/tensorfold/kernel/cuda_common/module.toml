@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.cuda_common"
 kind      = "kernel"
-summary   = "Shared CUDA headers: cp.async, MMA fragments for quantised matmul, KV pages, MLA and KDA helpers, fp pairs, fold"
+summary   = "Header-only CUDA device library under upstream's CUDA kernels: cp.async groups, ldmatrix and bf16 mma with int4 and e2m1 pair decode, FP4/FP8 widening, serial index-order folds and fixed-order warp and block reductions, paged-KV addressing, MLA and KDA bodies, router logits on mma or register tiles, and scalar glue math that matches the host op for op."
+why       = "Its folds and reductions are where the CUDA kernels get bits that repeat run to run and do not depend on tiling, which upstream's kernel contract demands of every kernel. CUDA is never compiled here; the module exists so the other cuda_* modules resolve their includes and their recipes can be read whole for re-expression on HIP (docs/SHAPE-TRANSFERS.md)."
 
 [provenance]
 origin    = "tensorfold"

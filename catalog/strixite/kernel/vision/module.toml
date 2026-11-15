@@ -1,6 +1,7 @@
 id      = "kernel.strixite.vision"
 kind    = "kernel"
-summary = "Vision tower kernels around the BF16 GEMMs: linear with bias, layernorm, GELU, attention, 2D RoPE, patch merge, position add, embedding scatter"
+summary = "The vision tower's non-GEMM kernels plus its linear: BF16-weight linear with the bias added on the FP32 accumulator (WMMA for BF16), LayerNorm, the tanh and erf GELUs, bilinear-resampled 48x48 position table, axial 2D RoPE, non-causal attention per image (one-pass WMMA with online softmax for BF16), patch merge and the scatter of image embeddings into the token rows"
+why     = "strixite accepts images in chat requests (upstream docs/images.md), so the Qwen3.8 vision encoder from vision.strixw has to run on the GPU, and its ops (bias, LayerNorm, GELU, 2D positions) appear nowhere in the text trunk. The fused bias exists because a separate bias add double-rounded, measured 7% worse than the oracle's own BF16 deviation over the 27-layer tower; the WMMA attention has no O(n) shared memory, so a 2.5 MP image (9,800 patches) fits. Provides vision.tower-ops in qwen38-flash-next.strixite, called by executor.strixite.vision_tower."
 
 [provenance]
 origin   = "strixite"

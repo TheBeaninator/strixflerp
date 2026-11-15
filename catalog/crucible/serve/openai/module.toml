@@ -1,6 +1,7 @@
 id        = "serve.crucible.openai"
 kind      = "serve"
-summary   = "Python OpenAI- and Anthropic-compatible HTTP frontend over the engine process: chat template, tool calls, thinking budget, batch scheduler, vision requests, metrics"
+summary   = "Crucible's Python HTTP frontend over the engine process: OpenAI chat and text completions plus an Anthropic messages adapter, the chat template, tokenization, validated tool calls and streamed tool output, a thinking budget, a batch scheduler for the batched backend, vision requests, metrics, and a loopback-only default bind that requires an API key elsewhere"
+why       = "Agent clients speak the OpenAI and Anthropic APIs, not the engine's JSON lines, so this server renders and checks requests, never runs a tool call itself, and passes only the allowed CRUCIBLE_* switches to the engine (ENGINE_KEEP_SWITCHES in server/backend.py; docs/ARCHITECTURE.md request path); strixflerp keeps it as the origin's serving layer, which the Crucible recipe gate does not build"
 
 [provenance]
 origin    = "crucible"

@@ -1,6 +1,7 @@
 id        = "format.crucible.exl3"
 kind      = "format"
-summary   = "EXL3 checkpoint reader: bounded safetensors header parse + mmap of sharded packs, 256-byte-unit static layout, load task split, decode capability list (integer and half-integer K widths)"
+summary   = "EXL3 checkpoint reader for sharded safetensors packs: a bounded header parser that mmaps each shard, a metadata-only sizer that counts in the loader's 256-byte units, a HIP-free split of the upload into load tasks, and the list of trellis K widths the decode kernels instantiate (2-6 narrow, 7-8 wide), so tiles reach the GPU still EXL3-encoded"
+why       = "Crucible decodes the trellis inside its GEMV and GEMM inner loops instead of dequantizing at load, so this reader only has to put the pack's bytes on the device unchanged and to reject a pack whose widths no kernel was built for before any device memory is spent; the bits-per-quality it preserves is what docs/CRUCIBLE-VS-STRIXITE.md section 2 credits Crucible with over strixw's round-to-nearest Q4/Q8 (claimed KL 0.0230 against BF16 at 4.05 bpw)"
 
 [provenance]
 origin    = "crucible"

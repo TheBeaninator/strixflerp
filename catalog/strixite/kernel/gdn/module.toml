@@ -1,6 +1,7 @@
 id      = "kernel.strixite.gdn"
 kind    = "kernel"
-summary = "Gated DeltaNet mixer: causal depthwise conv front end and the delta-rule recurrence"
+summary = "Gated DeltaNet mixer in two kernels: a front end that runs the width-4 causal depthwise conv plus silu over the merged in_proj rows and derives beta = sigmoid(b) and g = -exp(A_log) softplus(a + dt_bias), then the delta rule S = exp(g) S + k (beta (v - S^T k))^T, out = S^T q on an FP32 [Hv, 128, 128] state, token by token or in 32-token chunks (scalar or WMMA)"
+why     = "36 of the model's 48 layers are linear attention, and their fixed-size state is what keeps decode cost independent of context length (how-it-got-fast.md section 4). The kernel reads and writes the state once per call whatever T is, so an MTP verify of k+1 tokens costs one state round trip, and separate in/out state buffers make rejecting drafts free. The chunked WMMA path (HalfU, ~45% less kernel time than exact products) serves prefill. Provides mixer.gdn in the strixite recipes and the Qwen3.5 baseline."
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.pm_gfx1151"
 kind      = "kernel"
-summary   = "Prebuilt PeaceMaker kernels for gfx1151: 28 .hxaco bundles (typed machine code emitted without hipcc, certified against hipcc twins), with their M7 identity records and shape contracts"
+summary   = "Prebuilt PeaceMaker kernels for gfx1151: 28 .hxaco bundles plus raw code objects of typed machine code emitted by hipfire's own generator without hipcc, each with a shape contract and M7 identity record and certified equal to a hipcc twin, covering MQ4 / MQ6 four-row tiles, integer-4 MoE GEMV, QSA select and gather, deterministic MTP heads and ordered speculative accept"
+why       = "Since 0.4.2 hipfire runs builder-emitted, M7-certified kernels on more production routes and keeps the hipcc versions only as oracle twins (README, PeaceMaker), so for these shapes the hxaco is what hipfire really executes on Strix Halo. In the catalogue it is the one prebuilt-object module: nothing compiles, flerp check verifies the [[prebuilt]] hashes, and docs/INTERFACES.md lists it beside the hipcc providers of the same interfaces"
 notes     = "The matching generator crates (peacemaker-*, railgun-*) are not harvested. The assembly listings (.s, .isa) and proof files (.proof.json, 20 MB) are generator outputs and are left out, as is kernels/qwen4_moe_gfx1151_negative (deliberately wrong objects for the certifier tests)."
 
 [provenance]

@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_vision_ocr"
 kind      = "kernel"
-summary   = "Vision and OCR towers: GLM-OCR pointwise ops (PyTorch reduction order), LightOnOCR and Qwen vision (strict IEEE builds)"
+summary   = "Vision tower kernels for three image models: GLM-OCR pointwise ops adapting PyTorch's reduction order and LayerNorm (the Conv3d output rounded to BF16 before its bias), LightOnOCR-3's Pixtral 2D rotary, attention, norms, 2x2 merger and GELU, and Qwen3.5 vision with BF16 op boundaries and FP32 accumulators; the last two built strict IEEE (-O2 -fno-fast-math, IEEE denormals)."
+why       = "OCR text depends on the tower matching its reference, so upstream copies each checkpoint's rounding points and compiles two sources without fast math; glm_ocr, lighton_ocr and qwen3_5's vision path call them. They are the image half of the OCR services in docs/TENSORFOLD.md section 4."
 
 [provenance]
 origin    = "tensorfold"

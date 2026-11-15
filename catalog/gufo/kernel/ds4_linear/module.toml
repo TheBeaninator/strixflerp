@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_linear"
 kind      = "kernel"
-summary   = "DeepSeek V4 Flash dense projections: Q8_0 matmul and grouped outputs, narrow Q8 projections shared with the numerical oracle, blocked F16 GEMM, F16 decode, hipBLASLt state, embedding"
+summary   = "DeepSeek V4 Flash dense projection fragment: Q8_0 matmul (32-weight blocks, fp32 accumulate, the scalar kernel's multiply/FMA order kept under fast-math) with grouped outputs and narrow projections shared with the numerical oracle, an F16 decode GEMV that can publish an F16 copy of its input, a blocked F16 GEMM and hipBLASLt routes for prefill, and the F16 embedding row copy"
+why       = "The Flash 0731 file keeps attention projections, shared experts and the output head at Q8 (its name: AProjQ8-SExpQ8-OutQ8), so every matmul outside the routed experts runs here; holding the scalar product order is what lets the narrow projections agree with the oracle DS4 checks against. A fragment of kernel.gufo.ds4_backend; docs/INTERFACES.md sets it beside the other GGUF decode GEMVs"
 
 [provenance]
 origin    = "gufo"

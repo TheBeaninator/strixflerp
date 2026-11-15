@@ -1,6 +1,7 @@
 id      = "format.strixite.q4_device"
 kind    = "format"
-summary = "Q4 weight resident on the device and the non-owning view the kernels take"
+summary = "Q4DeviceView, three raw device pointers (codes, BF16 scales, BF16 mins) plus N, K and group size with no tiling or padding, and Q4Device, an owning upload of a host Q4Weight into separate buffers"
+why     = "Kernels need a non-owning handle that mirrors the host planes exactly, and G travels in it because every Q4 kernel picks its template instantiation from it; this provides format.device-view/strixw-q4 that linear_q4, moe_grouped and the WMMA kernels require. Views from strixw point into the loader's single allocation, while the owning upload serves weights derived after load, such as the MTP draft head's Q4 copy"
 design  = "DESIGN.md"
 
 [provenance]

@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.core"
 kind      = "runtime"
-summary   = "Host core library the family and server import: tokenizer, chat template engine, small shared helpers"
+summary   = "StrixFold's backend-neutral host core library: the tokenizer, a Jinja chat template engine, checkpoint file helpers, the draft-depth rule and other shared utilities that the families and the server import, in one library with other TensorFold engine parts such as a Metal MoE route and an affine-quant matmul"
+why       = "The server renders prompts and the family decodes ids with one tokenizer and template implementation, which is what let the port pass 580 named cases and 5,000 fuzzed conversations token-identical to the official encoder (RESULTS.md P2.prompt-parity); strixflerp reuses the same text layer behind its own front end as runtime.flerp.text_strixfold"
 
 [provenance]
 origin    = "strixfold"

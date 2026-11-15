@@ -1,6 +1,7 @@
 id        = "executor.gufo.deepseek_v4_flash"
 kind      = "executor"
-summary   = "DeepSeek V4 Flash engine (DS4 import): stable gufo engine API over the imported model data, tokenizer, request sessions, snapshots and ROCm graph execution; chat template and tool calls"
+summary   = "gufo's DeepSeek V4 Flash engine: a gufo-owned C++20 API (engine.hpp) over the DS4 import's GGUF model data, tokenizer, request sessions and snapshots, driving one resident single-device ROCm graph of the kernel.gufo.ds4_* kernels, with DSpark drafts and DeepSeek's chat template and tool-call format"
+why       = "It is how gufo serves the 80.76 GiB Flash 0731 IQ2/Q2/Q8 GGUF on one 128 GiB Strix Halo; UPSTREAM.md keeps only DS4's model graph, tokenizer and kernel closure, drops DS4's own CLI, server, tensor-parallel and SSD-streaming code, and duplicates numerics on purpose so a DeepSeek change cannot move Qwen output. In strixflerp it is harvested host code that the gufo recipes carry only because gufo's include graph ties the cache and server to all three engines; no recipe runs it (the DSV4 recipes run StrixFold)"
 
 [provenance]
 origin    = "gufo"

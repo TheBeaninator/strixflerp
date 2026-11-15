@@ -1,6 +1,7 @@
 id        = "kernel.crucible.exl3_gemv"
 kind      = "kernel"
-summary   = "EXL3 decode matvec (mul1 trellis codebook) for 1..8 activation rows: input Hadamard transform, multi-matrix GEMV over front-ordered tile chunks, output transform; dense ring schedules with lookahead weight prefetch"
+summary   = "EXL3 decode matvec for 1..8 activation rows: the input is scaled and Hadamard-rotated, each lane owns 8 trellis states in one contiguous window (three dword loads and two funnel shifts a tile), decodes the mul1 codebook exactly and accumulates with v_dot2_f32_f16 in one fixed chain per row and column, then the output transform runs; dense groups use front-ordered tiles and ring schedules that prefetch the next weights"
+why       = "Decode reads about 5.36 GB of weights a token at 4.05 bpw, so this kernel sets serial speed (Crucible and strixite both sit at 70-77% of measured bandwidth); what sets it apart is batch invariance: a row's bits never depend on how many rows share the pass, which makes MTP verification and packed batches exact, the property strixite's split-K linear_q4 lacks (measurement M5) and the basis of transfer C4 (docs/CRUCIBLE-VS-STRIXITE.md sections 2, 4 and 5)"
 notes     = "Own HIP code; the activation path and the codebook constants follow ExLlamaV3 (exl3.h:3, lane_window.h:24), so the module carries the MIT notice as well (NOTICE)."
 
 [provenance]

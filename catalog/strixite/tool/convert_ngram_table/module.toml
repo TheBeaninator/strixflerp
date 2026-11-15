@@ -1,6 +1,7 @@
 id      = "tool.strixite.convert_ngram_table"
 kind    = "tool"
-summary = "Converter CLI: the checkpoint's n-gram shards to ngram.table"
+summary = "Offline converter that copies the checkpoint's 128 ngram_embedding.shard_N BF16 tensors (rows of 160) into one ngram.table file in table order, exact BF16 with compression off, records the hashing constants and checkpoint fingerprint in the header, and re-reads a sample of rows to compare with the source"
+why     = "Qwen3.8-Flash-Next carries a 51-billion-value n-gram embedding table read a few rows per token; strixite keeps it on SSD as its own file and reads only the rows it needs instead of holding 95 GiB in memory (docs/tools.md), and this tool produces that file from the original checkpoint as the first of two steps before transcode_ngram_table"
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.rope_heads"
 kind      = "kernel"
-summary   = "RoPE on attention heads in place, bit-identical to the Triton _rope_heads"
+summary   = "In-place rotary embedding on the last rd dims of every attention head, one thread per four (even, odd) pairs, with re = fma(x_e, c, -(x_o s)) and im = fma(x_e, s, x_o c) (the inverse negates sin) from fp32 cos and sin tables, each rounded to bf16 nearest-even, the contractions recovered from Triton _rope_heads' compiled bits"
+why       = "Role inferred from the code: a native drop-in for the Triton _rope_heads that is bit-equal to every recorded variant (t_hiprope), launched by the prompt path's attention input and its inverse on the output (docs/PREFILL-DSV41.md section 1); it gives the kit a RoPE provider with a typed ABI struct, independent of the Triton build, without changing a bit"
 
 [provenance]
 origin    = "strixfold"

@@ -1,6 +1,7 @@
 id        = "executor.hipfire.arch_qwen4"
 kind      = "executor"
-summary   = "Native Qwen4 / Qwen3.8-Flash-Next (arch 16): strict config and admission, typed weights and GPU state, bounded PLE rows, the Qwen4Bundle owner, GPU forward and exact AR lanes, native MTP transactions, expert slabs / tiers / hot sets, mesh TP and slow-link prefill"
+summary   = "hipfire's native Qwen4 / Qwen3.8-Flash-Next architecture crate (arch_id 16): strict config and memory admission, typed weights and GPU state on MQ4 / MQ6, bounded PLE row storage, the Qwen4Bundle owner, a GPU forward with exact AR lanes that never touch the bundle state, native MTP transactions, expert slabs, tiers and hot sets for experts that do not fit device memory, and mesh tensor parallelism with slow-link prefill"
+why       = "hipfire runs Flash-Next on discrete cards as well as on Strix Halo (README: a 32 GB card needs host-mapped experts, or two R9700s in EP2), which is why expert slabs, tiers and hot sets fill this crate; its MTP is the hipfire speculator that ships a measured AR floor, so auto may arm it (map.md). For strixflerp it is the third Flash-Next engine beside strixite's and gufo's, harvested to read how its kernels are called and never built"
 
 [provenance]
 origin    = "hipfire"

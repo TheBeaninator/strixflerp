@@ -1,6 +1,7 @@
 id        = "format.strixfold.exl3"
 kind      = "format"
-summary   = "EXL3 pack loader and device layouts for one TP rank: linears in strips, experts in one trellis buffer with pointer, width and scale tables; checkpoint split and rank cache"
+summary   = "EXL3 weights for one TP rank: the split plan (32 attention heads and 1,152 expert columns a rank, vocabulary halves, Engram by hash column, the rest replicated), a per-rank cache file holding this rank's slices in the Python loader's order and dtypes behind a JSON index, and the device layouts the kernels read: linears in strips, each layer's experts in one trellis buffer with pointer, width and scale tables"
+why       = "Both the served Python lane and the Zig port load the same rank cache, built from the checkpoint alone with no GPU, and every device tensor is listed under the Python engine's name, so a load can be checked byte for byte against weights.py (the bundle's full-bytes gate in tools/dsv41-hip/README.md); slicing once offline is what lets each rank map only its half of a checkpoint that does not fit one node"
 
 [provenance]
 origin    = "strixfold"

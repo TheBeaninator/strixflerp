@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.tensor_ops"
 kind      = "kernel"
-summary   = "Pointwise and tensor utilities: add, mul, scale, SiLU / sigmoid / GELU forms, casts and dequantizers to F16 / BF16, deinterleave, repeat-interleave, transpose, strided copies, NPU trunk consumers (53 sources, 57 gfx1151 compile units)"
+summary   = "hipfire's pointwise and tensor utilities (53 sources, 57 units): add (in place, out of place, broadcast rows, peer residual), mul, scale, SiLU / sigmoid / GELU forms, casts and dequantizers to F16 / BF16 rounding to nearest even, deinterleave, repeat-interleave, transpose, strided copies, an int4 block quantizer and the GPU consumers of the NPU trunk, one IEEE fp32 operation an element"
+why       = "These are the glue launches between hipfire's large kernels, including the GPU side of the Strix Halo NPU prefill route (README, PeaceMaker). Its add_inplace_f32 is one of the three residual-add providers: through kernel.flerp.residual_add_hipfire it matched the CPU reference bit for bit on 9 of 9 cases at 1.98 us a decode token, yet no recipe takes it because strixite fuses its residual adds"
 
 [provenance]
 origin    = "hipfire"

@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_attention"
 kind      = "kernel"
-summary   = "Attention: paged GQA decode with split-K, flash-style prefill (attention_fa), prefill tiles"
+summary   = "Causal attention with fp32 scores and softmax, KV heads read as head / group and never repeated: decode with a warp a key, a block reducing each head and V streamed in 128-key tiles; a Flash Attention 2 prefill of 16 query rows walking keys with an online softmax and an fp32 query; and a 64x64 dot2 prompt tile, flat or over a stream's pages, rerun masked when a key holds a non-finite value."
+why       = "Every upstream HIP text family runs its full-attention layers on these kernels, held to float64 references under the kernel contract; masking only where dot2 rounds a -0 lane apart (RDNA 3.5) and rerunning a block masked for non-finite keys keep the tile's edges equal to that reference. For the pod they are a gfx11-tuned attention to set beside strixite's and StrixFold's."
 
 [provenance]
 origin    = "tensorfold"

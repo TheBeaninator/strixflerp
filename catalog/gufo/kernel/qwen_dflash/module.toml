@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qwen_dflash"
 kind      = "kernel"
-summary   = "DFlash-2 draft kernels: a draft-private Q8_0 copy of the LM head and the draft graph operators (drafts only steer verification, the verifier still runs the BF16 head)"
+summary   = "Kernels of gufo's DFlash-2 block drafter: a draft-private Q8_0 copy of the BF16 LM head quantized at load, non-causal attention inside the draft block, grouped dynamic convolution, the selector step and SiLU-mul, all draft-only numerics that steer verification and cannot change an emitted token"
+why       = "DFlash-2 is the 27B's speculative mode in gufo (ROCM.md's canonical table: 25.9 against 12.0 tok/s decode at depth 0), and a drafter only pays if each block is cheap, hence a Q8_0 head for drafting while the verifier keeps the BF16 head. It backs runtime.gufo.dflash and builds in the gufo recipes; nothing outside gufo uses it"
 
 [provenance]
 origin    = "gufo"

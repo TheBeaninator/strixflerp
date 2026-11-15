@@ -1,6 +1,7 @@
 id      = "runtime.strixite.json_schema"
 kind    = "runtime"
-summary = "JSON Schema to grammar compiler"
+summary = "A compiler from a JSON Schema subset to a byte grammar that matches only texts it can promise are valid: enforces type, properties, required, items, length and item bounds up to 4096, enum, const, anyOf/oneOf and local $ref, ignores annotations, and refuses every other keyword with its path"
+why     = "response_format json_object / json_schema must constrain the answer token by token, and the origin's rule is that a schema keyword is either enforced or refused with a 400 naming it, never accepted and silently left unenforced; where the schema leaves freedom the grammar is stricter (properties in schema order, bounded whitespace and digit counts) so the output still validates. Compiled grammars go to grammar_cache for serve.strixite.http, and flerp's reply_strixite uses it for structured output in the flerp-serve recipes"
 
 [provenance]
 origin   = "strixite"

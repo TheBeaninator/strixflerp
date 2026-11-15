@@ -1,6 +1,7 @@
 id      = "runtime.strixite.trace"
 kind    = "runtime"
-summary = "ROCTX range macros for profiler timelines; expand to nothing unless STRIX_ROCTX is set"
+summary = "ROCTX push/pop macros (STRIX_TRACE_RANGE for a scope, STRIX_TRACE_STAGE and STRIX_TRACE_SET for a range that moves along a scope) that compile to nothing, arguments unevaluated, unless the build defines STRIX_ROCTX"
+why     = "Profiling a decode step needs each kernel labelled by what the host was doing when it queued it; rocprofv3 --marker-trace links every dispatch to the range around its launch, and tools/trace_gaps.py labels kernels that way. Shipping builds pay nothing because the macros vanish. Only executor.strixite.qwen4exp uses it, around its forward and layer stages (preset strix-roctx)."
 
 [provenance]
 origin   = "strixite"

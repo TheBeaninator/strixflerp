@@ -5,7 +5,7 @@ import os
 import tomllib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STAGE_KEYS = {"rows": str, "reply": str, "drafts": int, "draft_head": bool, "with_mtp": bool}
+STAGE_KEYS = {"rows": str, "reply": str, "drafts": int, "draft_head": bool, "with_mtp": bool, "context": int, "reuse_tail": int, "reuse_grid": int}
 
 
 def _read(name, root):
@@ -53,6 +53,20 @@ def override(cfg, sets):
 
 def drafts(cfg):
     return int(cfg["stage"].get("drafts", 0)) if cfg["stage"].get("draft_head", False) else 0
+
+
+def context(cfg, default):
+    """Positions of the one seq and of every stage's arena: the config's stage `context`, else the launcher's default."""
+    return int(cfg["stage"].get("context", default))
+
+
+def reuse_tail(cfg):
+    """Rank 0's executor key reuse_tail (slot-resident prefix reuse, ORNITH-PCACHE): 0 off."""
+    return int(cfg["stage"].get("reuse_tail", 0))
+
+
+def reuse_grid(cfg):
+    return int(cfg["stage"].get("reuse_grid", 0))
 
 
 def env_prefix(cfg):

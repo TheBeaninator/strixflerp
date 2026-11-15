@@ -1,6 +1,8 @@
 id      = "serve.strixite.http"
 kind    = "serve"
-summary = "HTTP server (cpp-httplib) with the OpenAI routes, health, cache and metrics endpoints, and the server's option table and config file"
+summary = "The server's HTTP surface on cpp-httplib: /v1/chat/completions and /v1/completions as JSON or SSE, /v1/models, /health, Prometheus /metrics, /cache counters and the opt-in /cache/export and /cache/import routes; requests are rendered and tokenized on the HTTP thread, queued on the Engine, and streamed back event by event with SSE keep-alive comments, while one option table drives the flags, the key = value config file and the usage text"
+why     = "This is where a client's OpenAI request becomes engine work: it keeps tokenizing off the GPU thread, cancels a request when its client hangs up, salts a steered conversation's cache key so steered and plain entries never mix, and exposes Prometheus and prefix-reuse counters; the single option table exists so flags, deploy/strix-server.conf and --help cannot drift apart. Linked by strix_server in every Qwen3.8 strixite recipe; serve.flerp.http is the executor-ABI front end written to stand in for it on other engines"
+notes   = "Config precedence: built-in default < --config file < flag; unknown, duplicate or relative-path keys are errors. The cache transfer routes carry conversation contents unauthenticated, so cache-xfer is off by default (docs/server.md, Cache transfer)."
 
 [provenance]
 origin   = "strixite"

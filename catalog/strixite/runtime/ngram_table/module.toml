@@ -1,6 +1,7 @@
 id      = "runtime.strixite.ngram_table"
 kind    = "runtime"
-summary = "PLE n-gram rows read on demand from the converted table file, deduplicated, with an LRU row cache"
+summary = "The PLE row source for serving: NgramTableRows reads rows on demand from the converted table file on SSD, deduplicates the ids, issues up to 64 concurrent preads, decodes to BF16 and keeps an LRU row cache (2^18 rows by default in the class; the served config sets 8,388,608, about 3 GiB)"
+why     = "Qwen3.8-Flash-Next's hashed bigram/trigram embedding is 51B parameters, 48 GiB even at int8, but each token touches only 16 rows, so it never needs to be in memory: reading rows from SSD with a cache for the skewed, repeating n-grams keeps it off the RAM budget (docs/how-it-got-fast.md section 5). 64 concurrent reads gathered about 1.25x faster than 32 cold and 128 gained nothing. Required by executor.strixite.qwen4exp and qwen4exp_backend, which prefetch rows while drafting and overlap the reads with GPU work"
 design  = "DESIGN.md"
 
 [provenance]

@@ -1,6 +1,7 @@
 id        = "runtime.flerp.text_strixite"
 kind      = "runtime"
 summary   = "Qwen3.8-Flash-Next's tokenizer and chat template behind include/flerp/text.h: a C shim over strixite's Tokenizer and render_chat, reading a request's template switches as strixite's request parser does"
+why       = "Prompt ids must equal the native server's or no output comparison means anything; delegating to strixite's Tokenizer and render_chat, and reading template switches as its request parser does, is what makes the flerp front end's prompt ids equal strixite's on every gated request"
 notes     = "No tokenizer or template code of its own. Not read here: the serving policy of strixite's HTTP layer (thinking default, thinking left out for a small max_tokens, thinking budgets)."
 
 [provenance]

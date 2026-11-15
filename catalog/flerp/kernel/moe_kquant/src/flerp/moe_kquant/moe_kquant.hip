@@ -268,6 +268,103 @@ __launch_bounds__(kRouterThreads) __global__
   }
 }
 
+// ROUTER-GEMM (c6473d6063): the router of a prompt chunk as a tiled FP32 GEMM. GateLogitsWideKernel is a GEMV: a
+// block takes 4 outputs x 1 token, so every token re-reads the whole FP32 router (2.1 MB a token a block on the 35B).
+// Here a block takes kTiledTokens tokens x 8 waves x kTiledOuts outputs: x is staged through LDS 128 floats at a time,
+// each wave keeps its kTiledOuts router slices in registers, and every x value read from LDS feeds kTiledOuts
+// accumulators. The bits are GateLogitsWideKernel's (and GateLogitsKernel's): lane L of an output accumulates
+// elements L, L+32, L+64, ... in that order with the same `dot += w * x`, starting from 0, then the same WaveSum.
+// WMMA would need F16/BF16 inputs (gfx1151 has no FP32 WMMA) and could flip top-k picks, so this stays on FP32 VALU.
+constexpr int kTiledTokens = 16;
+constexpr int kTiledOuts = 4;
+constexpr int kTiledWaves = 8;
+constexpr std::size_t kTiledMinTokens = 64;
+
+__launch_bounds__(kTiledWaves * 32) __global__
+    void GateLogitsTiledKernel(const float* __restrict__ w_router, const float* __restrict__ w_shared_gate,
+                               const float* __restrict__ x, float* __restrict__ logits, std::size_t n_experts,
+                               std::size_t hidden, std::size_t stride, std::size_t tokens) {
+  __shared__ float4 xs4[kTiledTokens][32];  // 128 floats of each of the block's tokens
+  const int tid = static_cast<int>(threadIdx.x);
+  const int lane = tid & 31;
+  const int wave = tid >> 5;
+  const std::size_t r0 = (static_cast<std::size_t>(blockIdx.x) * kTiledWaves + wave) * kTiledOuts;
+  const std::size_t t0 = static_cast<std::size_t>(blockIdx.y) * kTiledTokens;
+  const float* w[kTiledOuts];
+#pragma unroll
+  for (int e = 0; e < kTiledOuts; ++e) {
+    const std::size_t r = r0 + e;
+    w[e] = r < n_experts ? w_router + r * hidden : (r == n_experts ? w_shared_gate : nullptr);
+  }
+  float acc[kTiledOuts][kTiledTokens];
+#pragma unroll
+  for (int e = 0; e < kTiledOuts; ++e) {
+#pragma unroll
+    for (int t = 0; t < kTiledTokens; ++t) acc[e][t] = 0.0F;
+  }
+  const float* xsf = reinterpret_cast<const float*>(xs4);
+  // Software pipeline (K run 1: 4.2 TFLOPS, each chunk waited out its own loads): the next chunk's x and router
+  // slices are in flight in registers while this chunk's FMAs run. The FMA order per output is unchanged.
+  constexpr int kXPer = kTiledTokens * 32 / (kTiledWaves * 32);  // float4 of x a thread a chunk
+  float4 xr[kXPer];
+  float wv[kTiledOuts][4], wn[kTiledOuts][4];
+  const std::size_t nc = hidden / 128;
+  const auto fetch = [&](std::size_t c, float (&wd)[kTiledOuts][4]) {
+#pragma unroll
+    for (int j = 0; j < kXPer; ++j) {
+      const int idx = tid + j * kTiledWaves * 32, tt = idx >> 5, seg = idx & 31;
+      const std::size_t t = t0 + tt;
+      xr[j] = t < tokens ? reinterpret_cast<const float4*>(x + t * hidden + c * 128)[seg]
+                         : make_float4(0.0F, 0.0F, 0.0F, 0.0F);
+    }
+#pragma unroll
+    for (int e = 0; e < kTiledOuts; ++e) {
+#pragma unroll
+      for (int q = 0; q < 4; ++q) wd[e][q] = w[e] != nullptr ? w[e][c * 128 + q * 32 + lane] : 0.0F;
+    }
+  };
+  fetch(0, wv);
+  for (std::size_t c = 0; c < nc; ++c) {
+    __syncthreads();  // the previous chunk's x is read
+#pragma unroll
+    for (int j = 0; j < kXPer; ++j) {
+      const int idx = tid + j * kTiledWaves * 32;
+      xs4[idx >> 5][idx & 31] = xr[j];
+    }
+    __syncthreads();
+    if (c + 1 < nc) fetch(c + 1, wn);
+#pragma unroll
+    for (int q = 0; q < 4; ++q) {
+#pragma unroll
+      for (int t = 0; t < kTiledTokens; ++t) {
+        const float xv = xsf[t * 128 + q * 32 + lane];
+#pragma unroll
+        for (int e = 0; e < kTiledOuts; ++e) acc[e][t] += wv[e][q] * xv;
+      }
+    }
+#pragma unroll
+    for (int e = 0; e < kTiledOuts; ++e) {
+#pragma unroll
+      for (int q = 0; q < 4; ++q) wv[e][q] = wn[e][q];
+    }
+  }
+#pragma unroll
+  for (int e = 0; e < kTiledOuts; ++e) {
+#pragma unroll
+    for (int t = 0; t < kTiledTokens; ++t) {
+      const float v = WaveSum(acc[e][t]);
+      if (lane == 0 && w[e] != nullptr && t0 + t < tokens) logits[(t0 + t) * stride + r0 + e] = v;
+    }
+  }
+}
+
+int g_router_tiled = -1;  // SetRouterTiled: -1 = FLERP_ROUTER_TILED (default 0), 0 off, 1 on
+bool RouterTiled() {
+  if (g_router_tiled >= 0) return g_router_tiled != 0;
+  static const bool env = [] { const char* v = std::getenv("FLERP_ROUTER_TILED"); return v != nullptr && v[0] == '1'; }();
+  return env;
+}
+
 template <Route R>
 __launch_bounds__(kThreads) __global__
     void IndexedExpertsKernel(const void* __restrict__ w_a, GgmlType type_a, std::size_t bytes_a,
@@ -342,6 +439,8 @@ std::size_t ExpertBytes(GgmlType type, std::size_t rows, std::size_t row_element
   return rows * gufo::quant::QuantizedRowBytes(type, row_elements);
 }
 
+void SetRouterTiled(int mode) noexcept { g_router_tiled = mode; }
+
 void GateLogits(const float* w_router, const float* w_shared_gate, const float* x, float* logits, std::size_t tokens,
                 std::size_t n_experts, std::size_t hidden, std::size_t stride, hipStream_t stream) {
   if (tokens == 0 || n_experts == 0) {
@@ -353,6 +452,14 @@ void GateLogits(const float* w_router, const float* w_shared_gate, const float* 
     std::abort();
   }
   const auto aligned16 = [](const void* p) { return (reinterpret_cast<std::uintptr_t>(p) & 15U) == 0; };
+  if (RouterTiled() && tokens >= kTiledMinTokens && hidden % 128 == 0 && aligned16(x)) {
+    const auto gx = static_cast<std::uint32_t>((outputs + kTiledWaves * kTiledOuts - 1) / (kTiledWaves * kTiledOuts));
+    const auto gy = static_cast<std::uint32_t>((tokens + kTiledTokens - 1) / kTiledTokens);
+    GateLogitsTiledKernel<<<dim3(gx, gy), dim3(kTiledWaves * 32), 0, stream>>>(
+        w_router, w_shared_gate, x, logits, n_experts, hidden, stride, tokens);
+    Check("GateLogitsTiled");
+    return;
+  }
   if (hidden % (kRouterGroup * 128) == 0 && hidden <= kRouterMaxHidden && aligned16(w_router) &&
       (w_shared_gate == nullptr || aligned16(w_shared_gate)) && aligned16(x)) {
     const auto wide_x = static_cast<std::uint32_t>((outputs + kRouterWaves - 1) / kRouterWaves);

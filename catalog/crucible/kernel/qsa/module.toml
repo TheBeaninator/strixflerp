@@ -1,6 +1,7 @@
 id        = "kernel.crucible.qsa"
 kind      = "kernel"
-summary   = "Sparse attention (QSA): exact fp32 indexer scores, tile-local top-512, split-K sparse attention for long decode, prefill union flash over four query rows sharing KV, opt-in input capture"
+summary   = "Qwen sparse attention (QSA): an exact fp32 indexer score over the compressed keys, a fused tile-local top-512 selection, split-K sparse attention with a sink for long decode, a prefill 'union flash' in which four query rows share one key list and one KV load, and opt-in capture of the kernel inputs"
+why       = "QSA is what keeps the model's attention cost flat to half a million tokens (Crucible decodes 52.6 tok/s with drafts at 490K, docs/CRUCIBLE.md section 3); the four-row union shares each KV load and gained 2.6% at 32K and 3.9% at 130K (CHANGELOG 357-364), so docs/CRUCIBLE-VS-STRIXITE.md prefers it to strixite's attention, while strixite's filter top-k at depth is named as the comparison to run back the other way (transfer S2)"
 
 [provenance]
 origin    = "crucible"

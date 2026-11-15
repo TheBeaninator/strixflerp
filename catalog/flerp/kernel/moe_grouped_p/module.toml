@@ -1,6 +1,7 @@
 id        = "kernel.flerp.moe_grouped_p"
 kind      = "kernel"
 summary   = "Adapter (Q4Panel16 experts): strixite's grouped expert prefill GEMMs, MoeMath::WmmaF16 Narrow / Wide / Wide256 with their SwiGLU, F16-h and combine forms, reading panel experts with whole-line loads (Narrow straight to registers), bit-equal to moe_grouped; row-major views and the routing stay strixite's"
+why       = "Routed experts are a third of strixite's prefill time and its grouped kernel's own comment says what costs is cache lines touched, not bytes, so the expert GEMMs are where panels were expected to pay most (about 370 ms of a 5.5 s chunk, estimated); bit-equal to moe_grouped on every case, measured at 93.6-98.4 % of its time, the Narrow kernel now loading panels straight to registers"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 4. Derived from kernel.strixite.moe_grouped (strixite 20937dc, AGPL-3.0-only): kernels/moe_grouped.hip's F16 kernels, combine reduce and launch copied under flerp/moe_grouped_p/, changes marked `kernel.flerp.moe_grouped_p`; the FP32 / WmmaBf16 kernels and the routing are not copied (strixite's run them). Weight tile of the Wide kernel: kernel.flerp.wmma_q4p's kernels/wmma_panel.hpp. Does not touch kernel.flerp.moe_grouped_pf (the prefill-combine work), which a recipe binds in its place for row-major experts. Gate: gate/strixw-panel-kernels.toml."
 
 [provenance]

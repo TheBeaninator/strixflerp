@@ -1,6 +1,7 @@
 id        = "kernel.flerp.dense_bf16_strixfold"
 kind      = "kernel"
 summary   = "Adapter (launch-bf16-gemv): strixite's linear_bf16w, BF16 in and FP32 out, on StrixFold's tf_ds_dense_gemv code object; other dtypes and shapes stay with strixite"
+why       = "Swap 4 of docs/INTERFACES.md: does StrixFold's row-invariant dense GEMV serve strixite's router logits as well as strixite's own split-K kernel? The gate showed the two differ only in summation order (bit-identical at K = 1,280 where strixite does not split), that StrixFold's kernel is slower at one decode row (7.1 against 5.6 us) and only slightly faster in a 16-row verify window, and that the last-bit change is enough to move greedy text in 15 of 18 recipe requests: no decode gain, and evidence that only bit-exact swaps keep token identity"
 
 [provenance]
 origin    = "flerp"

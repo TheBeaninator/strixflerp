@@ -1,6 +1,7 @@
 id      = "format.strixite.safetensors"
 kind    = "format"
-summary = "Hand-rolled read-only mmap reader for HF safetensors files"
+summary = "Hand-rolled read-only safetensors reader: parses the 8-byte little-endian header length and the JSON header into name, dtype, shape and absolute byte offset per tensor, and mmaps the file so tensor data is never copied"
+why     = "strixite reads Hugging Face checkpoints directly, without GGUF or a Python stack, so the converter, the merge plan and the Qwen3.5 baseline need their own parser, and mmap keeps header inspection cheap on checkpoints of hundreds of GB. It provides format.reader/safetensors in the qwen38-flash-next strixite recipes, chiefly feeding convert_qwen4exp; safetensors_loader reuses its parsed offsets for bulk reads"
 
 [provenance]
 origin   = "strixite"

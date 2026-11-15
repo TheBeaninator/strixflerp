@@ -1,6 +1,7 @@
 id      = "runtime.strixite.tool_grammar"
 kind    = "runtime"
-summary = "Tool-call grammar: the grammar a request's tools allow, with the call tags as their added tokens and tool_choice required / named enforced"
+summary = "Compiles a request's tools and tool_choice into a byte grammar where free text never holds a call tag and a call is the <tool_call> token, <function=NAME> with a declared name, <parameter=P> blocks with declared property names and the </tool_call> token, the two tags written as 0xFF sentinels"
+why     = "Under activation steering at scale 8 the model spelled <tool_call> with ordinary tokens, which the parser reads as text, so calls were lost; restricting call syntax to the request's real tool and parameter names, with only the real added tokens able to open or close a call, prevents that and also enforces tool_choice required or a named tool. It is what the 7-commit tool-grammar branch this cut was taken from adds (ORIGIN.toml); used by grammar_cache, the engine and tool_grammar_check."
 
 [provenance]
 origin   = "strixite"

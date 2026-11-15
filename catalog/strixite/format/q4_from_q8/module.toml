@@ -1,6 +1,7 @@
 id      = "format.strixite.q4_from_q8"
 kind    = "format"
-summary = "Q8 to Q4 requantization for the MTP draft's cheaper LM-head copy"
+summary = "Q8 to Q4 requantizer: dequantizes the Q8 rows exactly, then runs quantize_q4 at group G, threaded over contiguous row chunks with output byte-identical to a single call"
+why     = "The MTP draft scores the LM head's first 65,536 rows on every draft call; those rows are Q8 in the served file (178 MB), and a Q4 G64 copy made once at load (94 MB) makes each draft cheaper, in the same spirit as the smaller draft vocabulary that took a draft from 3.9 to 1.7 ms. Starting from the served Q8 rather than BF16 gives the Q4 nearest to what the engine serves, and output cannot change because the full model verifies every drafted token"
 design  = "DESIGN.md"
 
 [provenance]

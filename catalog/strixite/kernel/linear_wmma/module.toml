@@ -1,6 +1,7 @@
 id      = "kernel.strixite.linear_wmma"
 kind    = "kernel"
-summary = "Multi-token (prefill) Q4/Q5/Q6/Q8 and BF16-weight linear on the matrix units"
+summary = "Prefill matmul on the gfx11 matrix units for Q4/Q5/Q6/Q8 row-major weights and BF16 weights: 64 x 128 output tiles over 8 waves, K in steps of 64, with Q4/Q8 codes dequantized once to F16 while staged in LDS (or raw codes on BF16 WMMA with scale and min applied per group in FP32)"
+why     = "Prefill is compute-bound, the opposite of decode, and the matrix units took it from 141 to 652 tokens/s, then staging weights as scaled codes to ~1,000 (how-it-got-fast.md section 7). In the PF-CF profile this kernel was 26% of an 8,192-token chunk, about 57% of an assumed F16 peak (DESIGN.md). Provides linear.prefill for all five weight formats in the strixite recipes; the executor routes 12 tokens and up here, and strixite-p16 replaces it with the panel-layout kernel.flerp.wmma_q4p."
 design  = "DESIGN.md"
 
 [provenance]

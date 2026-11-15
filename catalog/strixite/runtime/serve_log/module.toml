@@ -1,6 +1,7 @@
 id      = "runtime.strixite.serve_log"
 kind    = "runtime"
-summary = "Request-block log helpers on top of common/log.hpp"
+summary = "Printf-style helpers that lay a request's log out as one block of fixed-column label rows, speed rows leading with a right-aligned rate, and numbers comma-grouped by hand instead of through the locale"
+why     = "The engine thread runs one request at a time, so each request can be one readable block in journalctl (prefill rate, generate rate, MTP acceptance, totals) that tools/reqlog.sh pulls out by request number; hand-made thousands separators keep the journal grep-able on any machine, since setlocale would hijack printf. The prompt cache, output parser, resume_loss, engine, HTTP layer and strix_server all write through it."
 
 [provenance]
 origin   = "strixite"

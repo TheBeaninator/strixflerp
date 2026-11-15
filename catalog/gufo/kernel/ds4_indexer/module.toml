@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_indexer"
 kind      = "kernel"
-summary   = "DeepSeek V4 Flash sparse-attention indexer: 64 heads of width 128 scored one 128-thread block a score, exact MSD radix top-k, plus the DSpark Markov correction"
+summary   = "DeepSeek V4 Flash sparse-attention indexer fragment: fp32 scoring of 64 heads of width 128 with one 128-thread block a score and each head owning its slot, an exact MSD radix top-k in which +0 and -0 tie and the lower index wins, and the DSpark Markov correction argmax(logits + W2 * W1[prev]) computed without materializing the correction"
+why       = "The indexer chooses which compressed positions attention reads, so a fixed tie rule keeps that choice, and therefore the output, the same from run to run (role inferred from the code); the Markov kernels give DSpark drafts a cheap first-order correction. Compiled inside kernel.gufo.ds4_backend; docs/PHASE5-GLM52-GAPMAP.md lists it among the DSA indexer candidates for GLM-5.2, which is blocked on indexer weights absent from the pod, not on code"
 
 [provenance]
 origin    = "gufo"

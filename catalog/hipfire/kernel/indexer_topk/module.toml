@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.indexer_topk"
 kind      = "kernel"
-summary   = "Sparse-attention indexer: ReLU scores (scalar and WMMA), compressed-key scoring, top-k (bounded, parallel, two-stage), top-k KV gather; Qwen4 QSA scoring, split-K decode and filter-select (25 sources, 24 gfx1151 compile units)"
+summary   = "hipfire's sparse-attention selection (25 sources, 24 units): fp32 ReLU(q . k) scores summed over heads in scalar and WMMA, compressed-key scoring, exact top-k (bounded, parallel, two-stage), top-k KV gather, and Qwen4's QSA with serial-FMA BF16 pooled-key scores, split-K decode and an exact sampled-threshold filter with certified compaction and radix repair"
+why       = "It serves DSV4's indexer and Flash-Next's QSA in hipfire; writing the QSA scorer as serial FMA fixes its bits, which is what lets the PeaceMaker qsa_select twins be certified against it. gemv_ggml and gemv_mq require it for its top-k helpers, and docs/PHASE5-GLM52-GAPMAP.md lists it for GLM-5.2's DSA top-2048, blocked on missing weights; no parity run yet"
 
 [provenance]
 origin    = "hipfire"

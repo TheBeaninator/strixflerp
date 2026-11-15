@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemv_float"
 kind      = "kernel"
-summary   = "Decode GEMV on float weights: F32, F16 and BF16 with fp32 x, plus the fused Q/K L2-norm scale (7 sources, 7 gfx1151 compile units)"
+summary   = "Decode GEMV on float weights (7 sources, 7 units): F32, F16 (with bias) and BF16 rows against fp32 x, BF16 widened losslessly by a 16-bit shift, fp32 accumulation with a shared-memory reduction across waves, plus a fused Q/K L2-norm scale"
+why       = "hipfire calls its BF16 GEMV the KLD / PPL oracle path: with no quantization in the weights it is what quantized routes are measured against. strixflerp lists it under the BF16 dense interface (docs/INTERFACES.md) and as the same-math f32 GEMV for GLM-5.2's 256 x 6144 router logits (PHASE5-GLM52-GAPMAP.md); none of it has run on the pod"
 
 [provenance]
 origin    = "hipfire"

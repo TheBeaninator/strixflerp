@@ -1,6 +1,7 @@
 id        = "serve.strixfold_pr6.image_prompt"
 kind      = "serve"
-summary   = "The PR's changes to the server's prompt path: each image keeps its identity through the chat template (tool results may be reordered), spans are placed by identity, /tokenize counts the expanded rows"
+summary   = "The PR's changes to two server files: each image_url part (PNG or JPEG data URL, tool results included) becomes a placeholder carrying its index through the chat template, the index is read back after rendering so spans are placed by identity, each span gets as many image tokens as the tower will emit, and /tokenize counts the expanded rows the same way"
+why       = "A chat template may reorder tool results, which would silently attach images to the wrong spans if they were matched by order; carrying an identity through rendering prevents that, and counting expanded rows in /tokenize keeps clients' context budgeting honest; it overlays serve.strixfold.http, which the catalogue keeps unchanged"
 notes     = "Overlay only: the PR's versions of two files of serve.strixfold.http (overlay.json)."
 
 [provenance]

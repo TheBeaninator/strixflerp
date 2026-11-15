@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qwen_sampling"
 kind      = "kernel"
-summary   = "Device-side sampling: bounded tile-winner top-k (radix order, lowest id on ties), penalties, argmax, and lossless speculative accept / residual sampling for verification rows"
+summary   = "Device-side token selection for gufo's Qwen family: a bounded top-k that keeps tile winners from 1,024-token tiles ordered by float bits then original id (lowest id wins ties, signed zeros equal, non-finite last), penalties, argmax, and lossless speculative acceptance that takes a draft token with the target/draft ratio or else samples the residual distribution"
+why       = "Choosing tokens on the device keeps the 248K-wide logit row off the host (role inferred from the code), and gufo's log shows the bounded tile winners cut candidate selection from 125 to 85 us. strixflerp uses LaunchGPUSortLogits behind kernel.flerp.logits_topk_gufo: bit-identical in the logits-topk interface gate and token-identical in the topk-gufo and three-engines recipes, though at 472 us against strixite's 80 us a decode row it buys no speed"
 
 [provenance]
 origin    = "gufo"

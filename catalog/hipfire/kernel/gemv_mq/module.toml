@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemv_mq"
 kind      = "kernel"
-summary   = "Decode GEMV on hipfire MQ weights: FWHT-rotated HFQ (MQ2..MQ8 G256, the dual-fp16-scale V2 family, Lloyd / LUT codebooks, MQ4C); residual, multirow and fused forms (60 sources, 81 gfx1151 compile units)"
+summary   = "Decode GEMV on MagnumQuant weights (60 sources, 81 units): FWHT-rotated HFQ at 2..8 bits in groups of 256, the V2 family with two fp16 scale/zero pairs a group, Lloyd and LUT codebooks and MQ4C, in residual, multirow and fused gate/up forms; x must first be rotated by rotate.fwht, with a fused rotate in some epilogues"
+why       = "MQ4 V2 is hipfire's default 4-bit weight for Qwen 3.5+ and Flash-Next, so this is the decode kernel behind most hipfire tokens; V2 spends the f32 header's unused precision on per-128 granularity at the same 136 bytes (docs/quant-formats/mq4-v2.md). For the catalogue it shows a rotated weight format paying its rotation once per activation instead of per weight; it has been built here but never launched"
 
 [provenance]
 origin    = "hipfire"

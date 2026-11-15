@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.cuda_flashnext"
 kind      = "kernel"
-summary   = "Qwen Flash Next CUDA kernels: GDN (fused, lanes, TPR), QSA tile, sparse attention lanes, hyper-connections dense, pages, MTP, batching"
+summary   = "Flash Next CUDA kernels: Gated DeltaNet as a fused kernel a value head (four producer warps staging, eight chain warps stepping and norming) plus lane and threads-a-row forms with the same bits, the QSA indexer's pooling and scores, sparse attention lanes, hyper-connection and n-gram glue, #952's factored-arithmetic prompt GEMM and g32 experts, MTP draft scoring and Living Weights input gradients."
+why       = "It is upstream's GB10 implementation of the model the pod serves through strixite and Crucible, so its GDN and QSA work mappings can be compared kernel by kernel with theirs; the HIP family uses hip_flashnext and hip_recurrence instead. As with all cuda_* modules it is reading material, not a build input."
 
 [provenance]
 origin    = "tensorfold"

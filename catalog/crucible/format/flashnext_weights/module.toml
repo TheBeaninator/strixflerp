@@ -1,6 +1,7 @@
 id        = "format.crucible.flashnext_weights"
 kind      = "format"
-summary   = "Qwen3.8-Flash-Next pack geometry and load decisions: layer schedule, named geometry, per-matrix width and front order, CPU-only weight validation before allocation, BF16->F16 conversion"
+summary   = "The Qwen3.8-Flash-Next description as compile-time constants (geometry.h: the layer schedule, hidden 2560 and every other named size, no runtime descriptor or virtual dispatch) plus the pure load decisions read from pack headers: each matrix's width, a dense group's front order, the n-gram row width, CPU-only validation of every tensor before allocation, and BF16-to-F16 conversion of tensors the kernels read as F16"
+why       = "Crucible serves one model family and keeps dynamic shapes off the hot path on purpose: a named constant costs nothing over the literal it replaces, and a sibling model edits this file and rebuilds (geometry.h, docs/ARCHITECTURE.md 'model/flashnext'); keeping the load plan on the host lets tests/load_plan_test.cpp check it against real pack headers and makes a malformed checkpoint fail before the GPU is touched"
 
 [provenance]
 origin    = "crucible"

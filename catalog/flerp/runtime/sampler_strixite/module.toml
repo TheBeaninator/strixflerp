@@ -1,6 +1,7 @@
 id        = "runtime.flerp.sampler_strixite"
 kind      = "runtime"
 summary   = "strixite's host sampler behind include/flerp/sampler.h: temperature, top-k, top-p and a seeded mt19937_64 over full rows or the top 20 candidates, the origin's draws bit for bit"
+why       = "When the front end samples on the host for strixite it must make the native server's draws, or sampled output would change with the front end; wrapping strix::Sampler itself (same mt19937_64 stream, same top-k / top-p order) gives those draws bit for bit, which is the parity the flerp-serve gate checks"
 notes     = "A C shim over strix::Sampler (serve/sampler.hpp). min_p is refused: the sampler has none."
 
 [provenance]

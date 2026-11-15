@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.dense_bf16"
 kind      = "kernel"
-summary   = "BF16-weight dense projections for fine-tuned packs (attn.wo_b, shared expert w2): row-invariant GEMV and SwiGLU"
+summary   = "Row-invariant BF16 dense projection for decode and verify windows: the wave that owns an output column keeps one fp32 partial per row, folds each bf16 product (exact in fp32) with one fma in a tile order fixed by K alone, sums the 32 lane partials by xor shuffles 16, 8, 4, 2, 1 and stores or adds the result with one fp32 add, plus DeepSeek's clamped SwiGLU"
+why       = "Some fine-tuned DeepSeek-V4.1 packs store attn.wo_b and the shared expert's w2 of layers 10-36 as BF16 instead of EXL3 (dense.hip), and the decode paths require a row's bits not to depend on what else shares the window; the same code object also serves outside DeepSeek, as the BF16 GEMV under strixite's router logits in the qwen38-flash-next.dense-strixfold and three-engines recipes through the adapter kernel.flerp.dense_bf16_strixfold"
 notes     = "Prompt chunks of these weights go through hipBLAS GemmEx, not this kernel."
 
 [provenance]

@@ -1,6 +1,7 @@
 id      = "runtime.strixite.paged_buffer"
 kind    = "runtime"
-summary = "Device array that takes physical pages as it is used, inside one reserved address range"
+summary = "Header-only growable device arrays on HIP virtual memory: one hipMemAddressReserve range for full capacity, physical pages (hipMemCreate) mapped in as each region's used prefix grows, never unmapped at runtime, carved from a shared VmmReservation so pages can move between arrays without a copy"
+why     = "A serving slot reserved at 512k context would otherwise commit its whole K/V up front; with paging a slot costs the deepest point its conversations reached, which is what lets several deep slots and the prompt cache share 128 GiB. The design follows two measured gfx1151 hazards: a page released and remapped at the same address sometimes read another allocation's memory, and a page mapped into a second reservation reads the wrong memory, so pages stay mapped and stay in their reservation. Required by executor.strixite.qwen4exp for the slots' 8-bit K/V and the parked-page region"
 
 [provenance]
 origin   = "strixite"

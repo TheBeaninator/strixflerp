@@ -1,6 +1,7 @@
 id      = "kernel.strixite.linear_q8"
 kind    = "kernel"
-summary = "Q8 GEMV for decode: linear_q4's structure at one code per byte"
+summary = "Q8 decode GEMV with linear_q4's structure at one code per byte: 16 codes per 16-byte load inside one group, split-K over 1-8 waves, an M == 1 instantiation, and BF16 activations dotted through v_dot2_f32_bf16 with the x-sum as a second dot2"
+why     = "The dense projections (attention, GDN out, shared expert, PLE kv, LM head) are 8-bit because every token reads all of them and 4 bits hurt accuracy most there; they were the largest slice of a decode step, 10.64 of 32.9 ms (how-it-got-fast.md sections 1-2). The dot2 form exists because the scalar version at M = 5 was instruction-bound (35-37% of wave cycles waiting to issue, DESIGN.md). Provides linear.decode/strixw-q8 in the strixite recipes; the panel layout's kernel.flerp.linear_q8p takes its place in strixite-p16."
 design  = "DESIGN.md"
 
 [provenance]

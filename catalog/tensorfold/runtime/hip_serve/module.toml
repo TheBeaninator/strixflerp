@@ -1,6 +1,7 @@
 id        = "runtime.tensorfold.hip_serve"
 kind      = "runtime"
-summary   = "HIP serving glue between a family and the server: offers, options, pages, prefix reuse, snapshots, draws, cancel, costs"
+summary   = "What every HIP family's lane backend shares beside its kernels: device draws (argmax for greedy rows, a keyed draw over top_k + MARGIN candidates otherwise), 64-position KV pages whose ids and holders live on the host, prompt-cache prefix copies and snapshot slots, cancellation at tower checkpoints, load-time costs for the draft depth rule, and the TP step protocol in which rank 0 decides and followers apply."
+why       = "Lifting these out of the families means a new HIP family writes only its forward and its offer, while prompt caching, draft pricing and TP behave the same in all of them. It is the glue between runtime.tensorfold.lanes and a family."
 
 [provenance]
 origin    = "tensorfold"

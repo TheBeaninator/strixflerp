@@ -1,6 +1,7 @@
 id        = "runtime.crucible.batch"
 kind      = "runtime"
-summary   = "Batched serving contracts: start-time admission, CPU boundary checks, row inputs kept alive across queued copies, packed verify span validation, rows per packed pass"
+summary   = "Contracts of batched serving: admission at start-up that charges one memory reserve for the OS, the engine plans and the frontend and prints only settings its own check would accept, CPU boundary checks before any stream advances its retained prefix, host row inputs kept alive until their queued copies finish, packed-verify span validation, and the rule for how many rows one packed pass holds"
+why       = "Crucible serves up to 8 sessions in one engine and verifies their drafts together in packed passes of up to 16 rows, which a 2026-10-09 sweep measured at +4 to +26% with 4-8 sessions but -2 to -3% with 2-3 (packed_rows_option.h); these checks keep a bad request or an oversubscribed setting from corrupting another stream's state, so batching never changes any request's output (docs/ARCHITECTURE.md 'Serving')"
 
 [provenance]
 origin    = "crucible"

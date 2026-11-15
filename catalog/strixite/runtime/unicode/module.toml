@@ -1,6 +1,7 @@
 id      = "runtime.strixite.unicode"
 kind    = "runtime"
-summary = "UTF-8 coding, character classes and NFC with tables derived from the Unicode Character Database"
+summary = "UTF-8 encode and decode with lossy repair, the pre-tokenizer's letter, mark, number and White_Space classes, Python's str.isspace and strip, and NFC composition, all from tables generated off Python's unicodedata (unicode_tables.inc)"
+why     = "The tokenizer and chat template have to classify and normalize text exactly as the reference Python tokenizer and Jinja do, so the classes and NFC deliberately come from the different Unicode versions those use. Model output can arrive as byte tokens in a non-UTF-8 order, so repair swaps bad bytes for U+FFFD rather than failing the request. Required by tokenizer, chat_template and output_parser."
 
 [provenance]
 origin   = "strixite"

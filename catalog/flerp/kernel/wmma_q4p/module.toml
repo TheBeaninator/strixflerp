@@ -1,6 +1,7 @@
 id        = "kernel.flerp.wmma_q4p"
 kind      = "kernel"
 summary   = "Adapter (Q4Panel16 / Q8Panel16): strixite's dense Q4 / Q8 prefill WMMA GEMM (the F16 kernel) reading panels with whole 128-byte lines into the same LDS tile, bit-equal to linear_wmma; row-major views and Q5 / Q6 / BF16 stay strixite's"
+why       = "The prefill half of the panel bet: strixite's dense WMMA GEMM touches 128 cache lines for each 64-K step of a 128-row tile and uses 32 bytes of each, while panels give 32 full lines; measured on the fleet's tensors at 67-99 % of linear_wmma's time with the same bits, the largest wins on the K = 6,144 projections (attn_o, gdn_out) at 2,048 rows; LDS staging stays because RDNA3's fragment layout needs the same row in both half-waves"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 4. Derived from kernel.strixite.linear_wmma + kernel.strixite.wmma_gemm (strixite 20937dc): linear_wmma.hip's linear_wmma_f16_kernel and launch copied into kernels/wmma_q4p.hip, WmmaWCodes adapted into kernels/wmma_panel.hpp (WmmaWCodesP; kernel.flerp.moe_grouped_p uses it too). LDS staging kept: kernels/wmma_q4p.hip's header says why (the fragment layout of wmma.hpp:6-8). Gate: gate/strixw-panel-kernels.toml."
 
 [provenance]

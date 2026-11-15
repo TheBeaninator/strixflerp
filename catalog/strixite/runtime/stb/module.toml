@@ -1,6 +1,7 @@
 id      = "runtime.strixite.stb"
 kind    = "runtime"
-summary = "stb_image 2.30 and stb_image_write 1.16, vendored unchanged by the origin, with the one implementation translation unit"
+summary = "Sean Barrett's single-header codecs, stb_image 2.30 (PNG, JPEG, GIF, BMP, TGA decode) and stb_image_write 1.16, copied unmodified from upstream, with one stb_impl.cpp that compiles the decoder implementation once and the encoder only under STRIX_STB_IMPL_TEST_ONLY"
+why     = "The vision path has to turn the image bytes of a chat request into pixels on the host; vision_preprocess decodes every format except WebP through stb_image, and the writer exists only so tests can encode real images and decode them back (third_party/stb/README.md). The catalogue builds it with the test define set; tool.strixite.sv9_cache_check also requires it."
 
 [provenance]
 origin   = "strixite"

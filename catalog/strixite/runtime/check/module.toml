@@ -1,6 +1,7 @@
 id      = "runtime.strixite.check"
 kind    = "runtime"
-summary = "STRIX_CHECK precondition checks and the strix::Error types (header only, no dependencies)"
+summary = "Header-only, dependency-free STRIX_CHECK / STRIX_FAIL macros that throw strix::Error carrying function, file:line, the failed condition and a caller-built expected-vs-found message, plus the GpuFatalError and KvBudgetExhausted error classes"
+why     = "strixite's rule is that every function validates its parameters (only hot loops are exempt) and that a failure says exactly what was expected and found, so one shared check header is the base of nearly the whole origin: it is the most-required module in the strixite catalogue, used by host code, tools, tests and many flerp modules alike. The two subclasses let the server tell a dead GPU context (exit for the supervisor to restart) and a spent K/V generation budget (refuse before touching the slot) apart from ordinary errors"
 
 [provenance]
 origin   = "strixite"

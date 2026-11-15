@@ -1,6 +1,7 @@
 id      = "tool.strixite.cache_xfer_check"
 kind    = "tool"
-summary = "Test: the prompt cache's export and import transfer API on synthetic states"
+summary = "Host-only test of the prompt cache's export/import API on synthetic token prefixes and state bytes: exact file-byte export and identical import, base-then-delta pairs, refusal of foreign fingerprints, damaged bytes and missing bases, and idempotent re-import; prints one ok/FAIL line per check and exits with the failure count"
+why     = "The pod's cache-transfer patch (CTXMOVE-XFER, card a4a320429d) lets a router move a conversation's cached state to another node instead of re-prefilling it, and a bad import would silently corrupt a conversation; this proves the transport contract without a GPU or weights. Built in every strixite Qwen3.8 recipe and run as a unit gate (gate/results/qwen38-flash-next.strixite/unit-cache_xfer_check.txt)"
 
 [provenance]
 origin   = "strixite"

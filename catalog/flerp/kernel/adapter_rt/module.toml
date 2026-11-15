@@ -1,6 +1,7 @@
 id        = "kernel.flerp.adapter_rt"
 kind      = "kernel"
-summary   = "Adapter runtime, header only: load and launch an embedded device code object; count foreign and origin launches; strixite's non-finite router contract as a fix-up kernel"
+summary   = "Header-only runtime every cross-engine adapter links: it loads a device code object embedded in the binary by another origin's toolchain and launches it with hipModuleLaunchKernel, keeps a tally of foreign launches and of calls handed back to the origin's kernel, and carries strixite's non-finite router contract (ids -1, NaN weights, error word) as a fix-up kernel"
+why       = "A swap only counts if the foreign kernel really ran, so the interface and recipe gates read this tally and fail any adapter whose foreign launches are zero; the code-object loader is what lets a kernel built with StrixFold's or hipfire's flags and TheRock 10.2 run inside a strixite or gufo binary built by another toolchain, and the router fix-up is how gufo's and hipfire's routers were made to answer NaN and +inf tokens the way strixite's contract demands"
 
 [provenance]
 origin    = "flerp"

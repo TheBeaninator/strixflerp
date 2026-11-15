@@ -77,6 +77,33 @@ DraftRound::DraftRound(MtpHead& head, std::size_t hidden, std::uint32_t context)
 
 DraftRound::~DraftRound() {
   if (d_pending_row_ != nullptr) (void)hipFree(d_pending_row_);
+  if (d_edge_row_ != nullptr) (void)hipFree(d_edge_row_);
+}
+
+void DraftRound::SaveEdge() {
+  edge_valid_ = false;
+  if (!has_pending_) return;
+  if (d_edge_row_ == nullptr && hipMalloc(reinterpret_cast<void**>(&d_edge_row_), hidden_ * sizeof(float)) != hipSuccess) {
+    throw std::runtime_error("draft round: edge buffer allocation failed");
+  }
+  if (hipDeviceSynchronize() != hipSuccess || hipMemcpy(d_edge_row_, d_pending_row_, hidden_ * sizeof(float), hipMemcpyDeviceToDevice) != hipSuccess) {
+    throw std::runtime_error("draft round: edge copy failed");
+  }
+  edge_pos_ = pending_pos_;
+  const std::size_t n = std::min<std::size_t>(history_.size(), static_cast<std::size_t>(edge_pos_) + 1);
+  edge_history_.assign(history_.begin(), history_.begin() + static_cast<std::ptrdiff_t>(n));
+  edge_valid_ = true;
+}
+
+bool DraftRound::RestoreEdge(std::uint32_t positions) {
+  if (!edge_valid_ || static_cast<std::uint32_t>(edge_pos_ + 1) != positions) return false;
+  if (hipMemcpy(d_pending_row_, d_edge_row_, hidden_ * sizeof(float), hipMemcpyDeviceToDevice) != hipSuccess) {
+    throw std::runtime_error("draft round: edge restore failed");
+  }
+  has_pending_ = true;
+  pending_pos_ = edge_pos_;
+  history_ = edge_history_;
+  return true;
 }
 
 void DraftRound::Begin(const DraftConfig& config) {

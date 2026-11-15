@@ -1,6 +1,7 @@
 id      = "format.strixite.q8_device"
 kind    = "format"
-summary = "Q8 weight resident on the device and the non-owning view the kernels take"
+summary = "Q8DeviceView and Q8Device: the device mirror of Q8's code, scale and min planes, shaped like Q4DeviceView, with views normally taken from StrixwDevice::q8 inside the loader's single allocation"
+why     = "Provides format.device-view/strixw-q8, the input of linear_q8, the HC kernels and the Q8 embedding, which together carry the fleet layout's dense reads (attention projections, HC mixes, LM head). Its shape matches Q4's view, so runtime.strixite.qweight can wrap either behind one format-dispatching handle"
 design  = "DESIGN.md"
 
 [provenance]

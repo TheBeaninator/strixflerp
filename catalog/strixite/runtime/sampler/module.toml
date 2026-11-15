@@ -1,6 +1,7 @@
 id      = "runtime.strixite.sampler"
 kind    = "runtime"
-summary = "Next-token sampling on the host: temperature, top-k, top-p, logit bias and masks, from a full row or the GPU's candidates"
+summary = "Host next-token sampler in transformers' warper order (logit bias, temperature, top-k, top-p, then a draw from a seeded mt19937_64) over a full FP32 row or the GPU's top-20 candidates with identical draws, greedy at temperature 0 and never past the tokenizer's 248,077 valid ids"
+why     = "Sampling must match the reference generate() while the GPU hands back only 20 candidates a row instead of ~6 MB of full logits (a step-time win listed in upstream how-it-got-fast.md); the candidate path returns the same token, margin and random draws as the full-row path whenever the params allow it. It also carries OpenAI logit_bias and the structured-output masks and keeps the padded LM-head rows out. Used by the engine, logprobs and structured_output, and behind include/flerp/sampler.h by runtime.flerp.sampler_strixite in the flerp-serve recipes."
 
 [provenance]
 origin   = "strixite"

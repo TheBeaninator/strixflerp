@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qwen_linear_decode"
 kind      = "kernel"
-summary   = "Decode and verification projections on GGUF weights: F32/BF16 GEMV, K-quant GEMV decoded in-kernel, fused QKV and fused gate/up SwiGLU, exact wave64 small-batch kernels for draft verification"
+summary   = "Decode and verification projections on GGUF weights for the Qwen family: F32/BF16 GEMV, K-quant GEMV that decodes packed blocks in-kernel with fp32 accumulation (the Q8_K route quantizes x to int8 for an integer MAC with one scale per block), fused QKV and fused gate/up SwiGLU, and wave64 kernels for 9..16 verification rows whose every row equals the one-row kernel bit for bit"
+why       = "Decode on gfx1151 is weight-bandwidth bound, so these GEMVs set the Qwen token rate, and the exact-rows kernels let verification batch rows without moving any row's bits (gufo's masked sixteen-row pass: GEMM time 0.62-0.88 of the old). It is the consumer of the gguf-gemv interface gate, where kernel.flerp.gguf_gemv_hipfire runs hipfire's gemv_ggml under LaunchQ8KBlockGEMV (gufo 13.5 us, hipfire 16.8 us at Q8_0 2560 x 2560), and strixflerp's DECODE-KERN3 and ATTN-PROJ added bit-equal wide-load Q4_K kernels to it"
 
 [provenance]
 origin    = "gufo"

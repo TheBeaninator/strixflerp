@@ -1,6 +1,7 @@
 id        = "kernel.crucible.moe_decode"
 kind      = "kernel"
-summary   = "Decode routed experts: one-launch MoE stage, stream-grid expert body with b128/b64 weight loads and no LDS transpose, row-sparse experts for verify forwards, shared-expert-first scheduling"
+summary   = "Decode routed experts in one launch as a stream grid: persistent 8-wave blocks claim units of column blocks over the whole K span from a global counter with no block barrier, load EXL3 weights as b128/b64 with no LDS transpose, run gate/up, mid and down of every expert job with the shared job first among gate/up units and its down units last, and run row-sparse experts for verify forwards"
+why       = "Launching each expert's small GEMV separately leaves the GPU idle between them; the stream grid streams at 88-95% of the byte floor in its bench and keeps each routed slot in its one-row order with a combine that is stable by router slot, so it is exact by construction (engine/layers/moe_sg.h); docs/CRUCIBLE-VS-STRIXITE.md section 2 rates it over strixite's router plus per-expert Q4 GEMVs, and kernel.flerp.moe_sg re-expresses it for GGUF K-quants (ORNITH-CRUCIBLE item 1)"
 
 [provenance]
 origin    = "crucible"

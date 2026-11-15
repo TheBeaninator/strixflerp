@@ -1,6 +1,7 @@
 id      = "executor.strixite.qwen4exp_backend"
 kind    = "executor"
-summary = "Adapter from the qwen4exp session to the engine's LmBackend ABI"
+summary = "Qwen4ExpBackend: implements the serve engine's LmBackend on one Qwen4ExpSession (BF16 activations, WMMA prefill) with snapshot slots, a paged K/V budget, soft renew and MTP drafts, and fingerprints saved states by source fingerprint, a hash of the layout string, YaRN factor, precision and K/V format"
+why     = "The serve loop and HTTP layer talk only to LmBackend so they can be tested without a GPU; this adapter is where the real model plugs in. Its fingerprint makes the prompt cache drop a saved state from another conversion, YaRN factor or K/V format instead of misreading it. strix_server links it, and flerp's strixite_abi wraps it to expose strixite through the flerp executor ABI"
 
 [provenance]
 origin   = "strixite"

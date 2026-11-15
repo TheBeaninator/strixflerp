@@ -20,7 +20,7 @@ MODULE_KEYS = {
 }
 MODULE_OPTIONAL = {
     "": {"provenance": dict, "licence": dict, "build": dict, "gate": dict, "provides": list, "requires": list,
-         "notes": str, "design": str, "prebuilt": list, "adapter": dict},
+         "notes": str, "why": str, "design": str, "prebuilt": list, "adapter": dict},
     "provenance": {"branch": str, "reason": str, "upstream": str},
     "licence": {},
     "build": {"arch": str, "toolchain": str, "system": bool, "uses": list, "defines": list, "options": list,

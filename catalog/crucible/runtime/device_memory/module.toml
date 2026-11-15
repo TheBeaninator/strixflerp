@@ -1,6 +1,7 @@
 id        = "runtime.crucible.device_memory"
 kind      = "runtime"
-summary   = "Device and host memory policy on the unified-memory APU: pinned host buffers and allocator, SVM migration rules that avoid stopping KFD queues, warm-up page touching"
+summary   = "Memory policy for the unified-memory APU: environment defaults that turn off SVM and user-pointer paging, pinned host buffers and an allocator of locked pages for snapshots, a bounded wait for page migration to settle, and a warm-up that touches pages before serving"
+why       = "On Strix Halo the GPU shares system memory, and migrating an SVM range stops every KFD queue, decode queues included (runtime_memory_policy.h), so Crucible pins what the GPU must see and stages pageable uploads instead of moving pages; pinned fixed buffers also keep pageable-transfer registration out of the decode loop (pinned_buffer.h), and the charter forbids hipSetDeviceFlags because changing the scheduling mode at run time loses CLR completion handlers"
 
 [provenance]
 origin    = "crucible"

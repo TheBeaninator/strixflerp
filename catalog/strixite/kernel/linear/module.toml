@@ -1,6 +1,7 @@
 id      = "kernel.strixite.linear"
 kind    = "kernel"
-summary = "BF16-weight linear layer, deliberately simple: the correctness baseline and the path for tensors that stay BF16"
+summary = "Plain BF16-weight matmul y = x W^T with W kept in the checkpoint's [out, in] row-major bits, F32 or BF16 activations, FP32 accumulation and one rounding (or none when a BF16 input asks for F32 output)"
+why     = "The header calls it deliberately simple and untuned: the correctness baseline for the quantized kernels and the path for tensors that stay BF16. In qwen4_exp that is the MoE router's [513, 2560] projection, whose logits are kept in FP32 even in a BF16 run. The dense-bf16 interface gate measured it at 5.56 us for one decode token against StrixFold's tf_ds_dense_gemv at 7.06 us; recipes dense-strixfold and three-engines swap it for that kernel through an adapter."
 
 [provenance]
 origin   = "strixite"

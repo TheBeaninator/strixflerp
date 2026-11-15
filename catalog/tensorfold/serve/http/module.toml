@@ -1,6 +1,7 @@
 id        = "serve.tensorfold.http"
 kind      = "serve"
-summary   = "The native HTTP server: OpenAI chat / responses and Anthropic messages, SSE, tool calls, auth, metrics"
+summary   = "tensorfold-native's HTTP server, one engine and tokenizer behind the routes with a thread a connection: OpenAI chat, completions and Responses, Anthropic Messages, SSE, tool-call parsing including Kimi's channels, embeddings, rerank, decisions and Clef's systemone, key-file auth scopes, connection admission, metrics, and Cortheon's notes and web search."
+why       = "It is the whole served surface without Python, checking requests the way the Python 0.6.6 server did (CPython's JSON error messages included) before handing them to the lane host. The binary the StrixFold recipes ship under the same tensorfold-native name serves from serve.strixfold.http, whose 55 shared files trail these by 10,304 lines, so API and tool-call fixes are diffed from here."
 notes     = "server/kimi_prompt.zig, kimi_values.zig and fixtures/kimi adapt Kimi K3 release code (THIRD_PARTY_NOTICES.md)"
 
 [provenance]

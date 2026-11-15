@@ -1,6 +1,7 @@
 id        = "runtime.crucible.state_disk"
 kind      = "runtime"
-summary   = "NVMe tier for conversation states: block storage, file formats with checksums, state epoch (code identity) and the switches that are part of a state identity, SHA-256"
+summary   = "The NVMe tier for conversation states: every 4,096 rows of a snapshot go to one block file named by the SHA-256 of its bytes (equal blocks are shared), state files carry checksums and an index, reads run on a reader thread before a request opens, and each state is filed under a state epoch that hashes the state-format sources, the state-changing switches and the gfx1151 machine code"
+why       = "Without it a restart or a cache eviction throws away conversation states; the epoch replaced a hash of the whole binary, which made every daily rebuild empty the SSD cache, so only a change that can alter state bytes now starts a new folder (state_epoch.h), and production binaries carry their own SHA-256 because they do not link OpenSSL (sha256.h); docs/CRUCIBLE-VS-STRIXITE.md compares its SHA blocks with strixite's one-delta states (transfer S3)"
 
 [provenance]
 origin    = "crucible"

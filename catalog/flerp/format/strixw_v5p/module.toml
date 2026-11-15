@@ -1,6 +1,7 @@
 id        = "format.flerp.strixw_v5p"
 kind      = "format"
 summary   = "format.flerp.strixw_v5 (strixw v5: the panel encodings) as an overlay of format.strixite.strixw, so a recipe's whole binary - loader, executor, backend, n-gram pairing - reads v5 through strixite's own include path formats/strixw.hpp"
+why       = "The same v5 container has to replace strixite's inside a whole server binary, loader, executor, backend and n-gram pairing alike, with exactly one StrixwFile definition; this byte copy under its own include root is what a recipe's [overlay] compiles in format.strixite.strixw's target, so strixite's code reads v5 through its own include path without a vendored file being edited"
 notes     = "The two files are byte copies of format.flerp.strixw_v5's (whose include root is src so that nothing else of origin flerp is handed v5); here the root is src/flerp/strixw_v5p, so under a recipe's [overlay] entry this module's formats/strixw.cpp compiles in format.strixite.strixw's target in place of the origin's and its formats/strixw.hpp shadows the origin's header on every include path (flerplib/assemble.py overlay_sources). One StrixwFile definition per binary, v1..v5 readable."
 
 [provenance]

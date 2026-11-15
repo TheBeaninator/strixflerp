@@ -1,6 +1,7 @@
 id      = "serve.strixite.strix_server"
 kind    = "serve"
-summary = "The server program: settings, memory plan, model and vision load, engine and HTTP wiring, signal handling"
+summary = "The strix_server main program: reads the option table and config file, runs the startup memory plan that allocates every GPU buffer up front and refuses (with an exit code systemd will not restart) when the model will not fit, loads weights.strixw, the n-gram table, the tokenizer and optionally the vision tower, then wires the Qwen4Exp session, Engine, prompt cache, steering library and HTTP server and serves until SIGINT or SIGTERM"
+why     = "It is the binary the fleet actually serves Qwen3.8-Flash-Next with (engines.conf strixite_v070pod, ORIGIN.toml), so every Qwen3.8 recipe that builds a strixite-shaped server (strixite, -abi, -pf, -p16, router-gufo, topk-gufo, dense-strixfold, three-engines) names it as the main of its server binary; the up-front memory check exists because of strixite issue #6, failing in seconds instead of after loading 69.5 GiB of weights"
 
 [provenance]
 origin   = "strixite"

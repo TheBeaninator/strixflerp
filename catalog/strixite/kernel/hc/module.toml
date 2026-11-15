@@ -1,6 +1,7 @@
 id      = "kernel.strixite.hc"
 kind    = "kernel"
-summary = "Hyper-connection input mix over the 4 residual streams and the residual injection, per token"
+summary = "Per-token hyper-connection mixes over the 4 residual streams: hc_mix_down dots folded Q4/Q8 W_down rows (hc_norm weight pre-multiplied into the columns) against the raw streams with per-stream inverse RMS accumulated from the same loads, and hc_mix_up reads chunk-major W_up and combines the streams, two launches per mix instead of five"
+why     = "qwen4_exp replaces the plain residual add with hyper-connections, about 97 mixes per token, and they were 4.13 of 32.9 ms per decode token at 64k context (how-it-got-fast.md section 1), so both their launch count and their weight reads matter. Folding the norm into the weights lets one pass over X do norm and projection; the chunk-major W_up layout exists only so this kernel's per-row threads issue contiguous 16-byte loads (DESIGN.md: 27.2 to 25.5 us at the served T = 5 verify). Provides hc.mix for decode and verify in the strixite recipes; prefill from 12 tokens goes to hc_wmma."
 design  = "DESIGN.md"
 
 [provenance]

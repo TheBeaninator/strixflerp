@@ -1192,8 +1192,13 @@ def serve_step(win, src, doc):
     g, b, w = cfg["model"]["gguf"], cfg["host"]["bundle"], cfg["host"]["work"]
     nodes = nodes_of(cfg, 4)
     peers = ",".join(n["rail"] for n in nodes) + f":{run['port'] + 20}"
-    kv = {"weights": g, "context": run["context"], "world": 4, "placement": "even", "epoch": run["epoch"] + 40, "peers": peers,
+    ctx = CF.context(RTCFG, run["context"])   # the serve config's stage context (ORNITH-CTX 266647f0af), else [run] context
+    kv = {"weights": g, "context": ctx, "world": 4, "placement": "even", "epoch": run["epoch"] + 40, "peers": peers,
           "single_reader": "on", "pause_ms": 0, "setup_deadline_ms": run["setup_deadline_ms"], "deadline_ms": run["deadline_ms"]}
+    if CF.reuse_tail(RTCFG):
+        kv["reuse_tail"] = CF.reuse_tail(RTCFG)   # rank 0's keys (ORNITH-PCACHE)
+        if CF.reuse_grid(RTCFG):
+            kv["reuse_grid"] = CF.reuse_grid(RTCFG)
     nd = CONFIG_RT.get("drafts", 0)
     if nd:
         kv["drafts"] = nd   # ORNITH-O3: caps.max_draft on every stage; the last stage also gets draft_head (below)
@@ -1212,13 +1217,15 @@ def serve_step(win, src, doc):
     front = [f"{b}/flerp-serve", "--host", "127.0.0.1", "--port", str(run["http_port"]), "--model-id", "ornith-1.5-397b",
              "--generation-config", f"{w}/generation_config.json"] + (["--delivery", "tokens"] if RTCFG["stage"].get("reply") == "token" else []) + (["--drafts", str(nd)] if nd else []) + \
             [f"executor.{k}={v}" for k, v in kv.items()] + \
-            [f"text.weights={g}", f"text.context={run['context']}"]
+            [f"text.weights={g}", f"text.context={ctx}"]
     win.start(nodes[0], "serve-r0", front, env)
     ev = win.wait_event(nodes[0], "serve-r0", ("waiting", "error"), run["load_timeout_s"])
     win.log(f"front end rank 0: {[e for e in ev if e.get('event') in ('loaded', 'waiting', 'error')][:2]}")
     for r in range(1, 4):
         kr = dict(kv, swarm_manifest=rank_manifest(cfg, 4, r)) if src == "swarm" else dict(kv)
         kr.pop("drafts", None)   # drafts is rank 0's key; the last stage takes draft_head instead
+        kr.pop("reuse_tail", None)
+        kr.pop("reuse_grid", None)
         if nd and r == 3:
             kr.update(draft_head="on", mtp_data_file=cache_path(cfg))   # the PLACE-staged file (stage --with-mtp)
         win.start(nodes[r], f"serve-r{r}", [f"{b}/flerp-qwen35moe-stage"] + [f"{k}={v}" for k, v in kr.items()] + [f"rank={r}"], env)

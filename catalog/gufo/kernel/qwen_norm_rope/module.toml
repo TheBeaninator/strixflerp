@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qwen_norm_rope"
 kind      = "kernel"
-summary   = "RMSNorm (whole row and per head), RoPE, fused Q/K norm + RoPE + KV-cache write, residual add, embedding lookup; single-token and batched forms"
+summary   = "Row-wise kernels of the Qwen family: fp32 RMSNorm over a row and per head (x / sqrt(mean(x^2) + eps) * weight), RoPE, a fused per-head Q/K norm plus RoPE plus write into every selected KV representation in one launch, out-of-place residual add, and GGUF embedding lookup, each in single-token and batched forms"
+why       = "These are the small memory-bound steps between projections; fusing the Q/K norm, rotation and cache write saves launches and a pass over memory per layer (role inferred from the code). Its LaunchResidualAdd is a provider of the residual-add interface gate: through kernel.flerp.residual_add_gufo it gave the CPU reference's bits on 9 of 9 cases at 2.19 us a decode token, but no recipe takes the swap because strixite's executor fuses its residual adds"
 
 [provenance]
 origin    = "gufo"

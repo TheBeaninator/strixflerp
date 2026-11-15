@@ -1,6 +1,8 @@
 id        = "kernel.tensorfold.hip_joint_schema"
 kind      = "kernel"
-summary   = "Structured-output token masks on the GPU (joint schema)"
+summary   = "HIP kernels of Cloudflare Clef's joint schema head: affine layer norm (FP32 mean, then FP32 biased variance), the exact erf GELU, row softmax in FP32 and NaN-keeping maxima, each reduction in one fixed order and each output rounded once to BF16 where the torch head rounds."
+why       = "Clef-Flash answers /v1/systemone questions about a record from this head over the BF16 Qwen3.5 backbone's final-norm rows; upstream put it on the GPU so each prompt piece is read out inside the shared rounds (#2048), behind qwen3_5's joint_readout.zig and runtime hip/joint_schema. It is not a structured-output mask, which is the lanes' xgrammar walk."
+notes     = "The provides interface grammar.mask-tensorfold predates reading the source; the kernels are the joint schema readout head."
 
 [provenance]
 origin    = "tensorfold"

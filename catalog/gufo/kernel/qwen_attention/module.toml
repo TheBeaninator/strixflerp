@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qwen_attention"
 kind      = "kernel"
-summary   = "Grouped-query softmax attention with gating over a canonical FP16 KV cache: decode with split-K partials, verification rows, batched causal tiles, masked prefill on WMMA"
+summary   = "Gated grouped-query softmax attention for gufo's Qwen family over a canonical FP16 KV cache: fp32 scores and softmax with a sigmoid output gate, decode split along K into halves merged by log-sum-exp, verification rows grouped by KV partition, batched causal tiles, and masked prefill on WMMA checked against a CPU double-precision reference"
+why       = "Attention is the part of decode that grows with context, and gufo's 27B experiment log shows what the variants buy: grouping verification queries by KV partition made eight-token attention 2.95x faster at 32K and raised d32K decode 15.7-20.2%, and paired KV loads cut attention time 12.6%. It runs in the passed qwen35-decider-2b.gufo recipe and the qwen36-35b-a3b recipes, and kernel.flerp.attn_wmma_gqa re-instantiates its WMMA causal kernel for other GQA head counts"
 
 [provenance]
 origin    = "gufo"

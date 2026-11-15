@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qwen_ops"
 kind      = "kernel"
-summary   = "Header-only: launch APIs of the shared Qwen HIP operators (kernels/ops/*.hpp), quant block helpers, route and attention policies, and kernel-private headers shared between translation units"
+summary   = "Header-only launch API of gufo's shared Qwen HIP operators (kernels/ops/*.hpp: gemm, attention, ssm, token, norm_residual, swiglu, prefill_fp16), the quant-block dot helpers, the GEMM route and attention execution policies, and kernel-private headers shared between translation units"
+why       = "The Qwen kernel modules are separate compile units that call each other's launchers and share block-decode helpers, so their common declarations need one owner the include check can see. strixflerp added the wide-load Q4_K projection helper here (quant_ops.hpp, ATTN-PROJ), bit-equal to QuantWarpBlockDot, and the flerp MoE and draft kernels (moe_sg, moe_kquant, draft_coarse) build on its block helpers"
 
 [provenance]
 origin    = "gufo"

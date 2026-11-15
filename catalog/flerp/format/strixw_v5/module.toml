@@ -1,6 +1,7 @@
 id        = "format.flerp.strixw_v5"
 kind      = "format"
 summary   = "strixw v5: format.strixite.strixw with the panel encodings Q4Panel16 (10) and Q8Panel16 (11), each one Q component holding codes and per-panel scale/min; the writer writes v5, the reader accepts v1..v5"
+why       = "Panels need encodings the container did not have, and a version bump so that no existing strixite binary (its reader stops at v4) can load a panel file and misread it; it is the copy host tools build with, under include root src so that strixw_patch, which must keep writing v4, is not handed v5 by include resolution"
 design    = "DESIGN.md"
 notes     = "Adapted copies of format.strixite.strixw's formats/strixw.hpp and formats/strixw.cpp; every change is marked `flerp (format.flerp.strixw_v5)`: the two encoding ids and names, kStrixwVersion 4 -> 5, strixw_components for the panel encodings (sizes from format.flerp.q4panel's panel16_geom, refusing N % 16, K % 32, K % G and per-expert rows % 16). Header, index, hashes, alignment (4096 per tensor, 256 per component), writer and reader are otherwise the origin's bytes. A build that uses it puts src/flerp/strixw_v5 ahead of the origin's root as an include root, so `formats/strixw.hpp` resolves to the copy (tool.flerp.convert_strixw_panel's build.sh does); the manifest's include root is `src` so that no other module of origin flerp that includes `formats/strixw.hpp` (tool.flerp.strixw_patch) is handed v5 by `flerp check`'s include resolution."
 

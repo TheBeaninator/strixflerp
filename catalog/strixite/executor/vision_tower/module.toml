@@ -1,6 +1,7 @@
 id      = "executor.strixite.vision_tower"
 kind    = "executor"
-summary = "The 0.45B ViT and merger resident on the device from vision.strixw"
+summary = "Device-resident 0.45B ViT plus patch merger loaded from vision.strixw as bit-exact BF16 rows, dimensions derived from tensor shapes and checked at load, running one image per forward (temporal axis 1) on kernel.strixite.vision with FP32 math and one rounding where an op stores"
+why     = "Lets the server take image parts in chat requests (the origin's images.md gives about 0.2 s to encode a small image and 0.9 s for a full screenshot), producing embeddings at the text width 2560 that the qwen4exp executor splices into the prompt; vision can be switched off to skip the ~0.9 GB file. It provides executor.vision-tower/qwen4exp, used by executor.strixite.qwen4exp and the strix_vision tool"
 
 [provenance]
 origin   = "strixite"

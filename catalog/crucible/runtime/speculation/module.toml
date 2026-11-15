@@ -1,6 +1,7 @@
 id        = "runtime.crucible.speculation"
 kind      = "runtime"
-summary   = "MTP speculative decoding: draft head policy, low-bit (q4/q2) and dense fp16 draft heads, acceptance prior from the MTP top-2 margin, value-aware draft length, draft vocabulary, verify spans"
+summary   = "MTP speculative decoding: draft-head policy, a 4- or 2-bit copy of the head rows that scores every token coarsely and then recomputes the 8 best 128-token blocks exactly from the EXL3 tiles, a dense fp16 head option, a draft length set from the MTP top-2 margin and the value of another token, a 65,536-token draft vocabulary, overlap of the next MTP pass with the server step, and the spans packed verification checks"
+why       = "Decode is memory-bound, so one weight read that verifies a chain of drafts gives several tokens (4.69 accepted a pass on code; Crucible measured 80.6 tok/s on code with drafts against 31.9 without, docs/CRUCIBLE-VS-STRIXITE.md section 0), and only verification commits tokens, so the output stays exact; the coarse-then-exact head scoring is transfer C6 for strixite and was re-expressed for GGUF heads as kernel.flerp.draft_coarse (ORNITH-CRUCIBLE item 2)"
 
 [provenance]
 origin    = "crucible"

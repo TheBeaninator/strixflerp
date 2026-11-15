@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.speculation"
 kind      = "kernel"
-summary   = "Draft and verify helpers: DFlash draft attention (scalar and WMMA over f16 KV), DDTree mask / Gumbel top-k / walk, sampled-accept and chain-accept, DSpark staged KV and lazy sample-accept, draft row packing, verify twins (32 sources, 33 gfx1151 compile units)"
+summary   = "hipfire's draft and verify kernels (32 sources, 33 units): DFlash draft attention in scalar and WMMA over f16 KV for blocks of 32..128 rows, DDTree mask build, Gumbel top-k and sampling-without-replacement walk, sampled-accept and chain-accept, DSpark staged KV and lazy sample-accept, draft row packing and verify twins"
+why       = "hipfire ships three speculative families, DFlash block drafts, DDTree tree verification built from DFlash's per-position marginals and DSpark sidecars (GLOSSARY.md), and these are their device halves, accepting losslessly on the GPU. strixflerp has no caller for them and has only compiled them"
 
 [provenance]
 origin    = "hipfire"

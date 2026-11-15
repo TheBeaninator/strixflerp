@@ -1,6 +1,7 @@
 id      = "kernel.strixite.moe_grouped"
 kind    = "kernel"
-summary = "MoE experts for multi-token forwards: slots grouped by expert so each expert's weights are read once per tile"
+summary = "MoE experts for multi-token forwards: routes are bucketed by expert once per layer, then grouped gather and combine kernels read each active expert's Q4/Q5 rows once per tile of slots, on FP32 vector units, BF16 WMMA, or F16 WMMA in Narrow/Wide/Wide256 tiles chosen by token count, with SwiGLU and the shared expert's gated add fused in"
+why     = "At T = 512 a layer's 5,120 slots hit nearly all 512 experts about ten times each, and the per-token decode kernels re-reading them were 55% of prefill time (header, rocprofv3); grouping and 64-token expert tiles helped carry prefill to ~1,000 tokens/s (how-it-got-fast.md section 7). It is still the largest prefill stage, 33% of an 8,192-token chunk in PF-CF (DESIGN.md). Provides moe.experts-prefill in the strixite recipes, used from 6 tokens (MTP verify and prefill); strixite-pf and strixite-p16 replace it with kernel.flerp.moe_grouped_pf and moe_grouped_p."
 design  = "DESIGN.md"
 
 [provenance]

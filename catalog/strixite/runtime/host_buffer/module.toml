@@ -1,6 +1,7 @@
 id      = "runtime.strixite.host_buffer"
 kind    = "runtime"
-summary = "Growable host buffer backed by mmap that returns its memory on release"
+summary = "A growable host byte buffer on anonymous mmap: faults all pages in up front, keeps the mapping when a resize fits, grows with mremap populating only the added pages, and unmaps on release, using 4 KiB pages"
+why     = "Exporting a GiB-sized session state after every response stalled on std::vector, whose resize zero-fills and faults 4 KiB pages lazily: about 0.7 s per export at 160-200k context. The origin measured 5 GiB at 782 ms with a vector, 287 ms fresh with huge pages and 66 ms on a reused buffer, and chose 4 KiB pages because huge pages compact under memory pressure (517 ms fresh). It backs the prompt cache's host states and is used by flerp's strixite_abi for host-byte states and by tool.strixite.cache_xfer_check"
 
 [provenance]
 origin   = "strixite"

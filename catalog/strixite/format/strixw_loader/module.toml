@@ -1,6 +1,7 @@
 id      = "format.strixite.strixw_loader"
 kind    = "format"
-summary = "strixw weights onto the device: one allocation, concurrent pread into two pinned staging buffers with event-gated async copies"
+summary = "strixw onto the device: one hipMalloc for the whole data region (GTT on gfx1151), 8 parallel preads into two 256 MiB pinned staging buffers whose reuse waits on an event for its last async copy, page cache dropped afterwards, then typed Q4/Q5/Q6/Q8/BF16 views looked up by name, encoding and shape"
+why     = "Puts the 69.5 GiB fleet file into GPU-visible memory at NVMe speed with no conversion and no second copy in page cache; the event gate exists because reusing a pinned buffer for the next async copy without one corrupted data on gfx1151. It provides format.device-loader/strixw and also the four format.device-view interfaces, since every weight pointer a strixite kernel receives is a view into its single allocation"
 design  = "DESIGN.md"
 
 [provenance]

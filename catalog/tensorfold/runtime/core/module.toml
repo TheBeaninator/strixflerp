@@ -1,6 +1,7 @@
 id        = "runtime.tensorfold.core"
 kind      = "runtime"
-summary   = "Host core: tokenizer, chat template engine, small helpers the families import (same file set as runtime.strixfold.core)"
+summary   = "Backend-neutral host core: a tokenizer for HF tokenizer.json whose encode equals the tokenizers library's (with a backtracking Oniguruma matcher that errors on syntax it lacks), a Jinja2 chat-template engine with Python value semantics and HF's tojson, and shared helpers (draft copy index, MoE route, affine and row projections, Metal fences and fragments)."
+why       = "Every family and the server tokenize and render chat templates here, so prompts match transformers token for token with no Python in the process. The StrixFold recipes link runtime.strixfold.core, the same 32 paths ten releases earlier (8 identical, 3,344 changed lines); this copy is the one to diff when pulling tokenizer or template fixes."
 
 [provenance]
 origin    = "tensorfold"

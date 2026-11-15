@@ -283,10 +283,28 @@ void TcpTests(std::uint16_t port) {
   r = TcpRun(port + 40, "", 6);
   Check(r.codes == std::vector<int>{3, 3, 3} && r.seconds < 6.0, "tcp: a rank of another epoch is refused at setup", Codes(r));
 }
+// ORNITH-SUBCHUNK (6abf28258c): the sub-chunk policy shared by the stage driver and the ABI pipeline.
+void SubchunkTests() {
+  using flerp::stage_relay::SubchunkParts;
+  Check(SubchunkParts(21, 0, 1024) == 1 && SubchunkParts(1000, 0, 1024) == 1 && SubchunkParts(1024, 0, 1024) == 1,
+        "subchunks auto: one part under 2,048 rows");
+  Check(SubchunkParts(2048, 0, 1024) == 2 && SubchunkParts(4096, 0, 1024) == 4 && SubchunkParts(16384, 0, 1024) == 16 &&
+            SubchunkParts(32768, 0, 1024) == 16, "subchunks auto: clamp(rows / 1024, 1, 16)");
+  Check(SubchunkParts(4096, 16, 1024) == 4 && SubchunkParts(16384, 16, 1024) == 16 && SubchunkParts(1808, 16, 1024) == 1,
+        "subchunks S: the 1,024-row floor caps the parts");
+  Check(SubchunkParts(4096, 16, 1) == 16 && SubchunkParts(10, 16, 1) == 10 && SubchunkParts(4096, 16, 0) == 16,
+        "subchunks S, no floor: the old cut");
+  bool floor_ok = true;
+  for (std::size_t rows = 1024; rows <= 20000; rows += 37)
+    for (std::size_t s : {std::size_t{0}, std::size_t{4}, std::size_t{16}})
+      floor_ok = floor_ok && rows / SubchunkParts(rows, s, 1024) >= 1024;
+  Check(floor_ok, "subchunks: every part keeps at least 1,024 rows when the call has that many");
+}
 }  // namespace
 
 int main(int argc, char** argv) {
   ::signal(SIGPIPE, SIG_IGN);
+  SubchunkTests();
   LoopbackTests();
   TcpTests(static_cast<std::uint16_t>(argc > 1 ? std::stoi(argv[1]) : 39400));
   std::printf("%d failure(s)\n", failures);

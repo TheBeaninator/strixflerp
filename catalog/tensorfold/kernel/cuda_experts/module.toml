@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.cuda_experts"
 kind      = "kernel"
-summary   = "CUDA MoE expert kernels: affine/NVFP4/FP8 experts, packed and prefill experts, expert rows, CK lanes, generic MoE glue and the lane GEMV"
+summary   = "CUDA MoE expert kernels: MLX affine experts at 4 bits and at 3 bits rebuilt from bit planes, NVFP4 experts (including the block-scaled FP4 mma on sm_121a and GLM's block-32 form) and FP8 experts in decode and prompt forms, an expert-rows kernel whose row bits ignore the window, softmax or sigmoid top-k routing glue and a tile-2 BF16 lane GEMV."
+why       = "These are how upstream's CUDA families run routed experts with a row's result independent of the round it lands in, the property exact verify windows need. Kept as recipes to read: the bit-plane 3-bit rebuild and the window-invariant expert rows are shapes a HIP expert kernel could take over; nothing here compiles them."
 
 [provenance]
 origin    = "tensorfold"

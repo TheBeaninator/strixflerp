@@ -1,6 +1,7 @@
 id        = "executor.gufo.qwen_vision"
 kind      = "executor"
-summary   = "Qwen vision input: the image encoder (ViT tower on HIP), its device input, the prompt layout with image spans and the RoPE layout the text executor reads, the image cache"
+summary   = "gufo's Qwen image input: a ViT tower run on HIP in fp32 over the mmproj GGUF, the device-side image input, a prompt layout that splices image spans into the token stream together with the RoPE positions the text executor reads, and a cache of encoded images"
+why       = "Images are a supported input of gufo's Qwen servers, but strixflerp took this module for a build reason: the text executor's header hip/executor.hpp includes vision/device_input.hpp and the origin links the vision library into its 27B target, so executor.gufo.qwen does not compile without it (phase 5 harvest). docs/VISION-DSV41.md weighed it for DSV4.1 vision and found another model's layout"
 notes     = "Harvested for phase 5: src/models/qwen/hip/executor.hpp includes vision/device_input.hpp and the origin links gufo_qwen_vision into gufo_qwen27b, so the text executor does not build without it."
 
 [provenance]

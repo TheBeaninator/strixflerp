@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.kv_cache"
 kind      = "kernel"
-summary   = "KV cache writers and transcoders: F32 / F16 / BF16, Q8_0, int8, HFQ4 / HFQ8, asymmetric K with FWHT or Givens rotation at 2 / 3 / 4 bits, Lloyd-coded V, fold and compaction, sliding-window ring (44 sources, 42 gfx1151 compile units)"
+summary   = "hipfire's KV writers and transcoders (44 sources, 42 units): F32, F16 by true round-to-nearest-even, BF16, Q8_0 (f16 scale + 32 int8), int8, HFQ4 / HFQ8, asymmetric K rotated by FWHT or Givens at 2, 3 or 4 bits, Lloyd-coded V, fold and compaction, and a sliding-window ring, with older rows transcoded down a bit ladder as context grows"
+why       = "K and V are quantized differently because K errors pass through softmax and exponentiate while V is already attention-weighted (QUANTIZATION.md, KV cache), so hipfire compresses K after a rotation and keeps V at Q8, and the adaptive ladder trades old rows' bits for context length. docs/INTERFACES.md lists it as the KV store the hipfire attention reads; it is compiled, not exercised"
 notes     = "2 of the sources have no compile unit here (assembled by Rust code in the origin, or broken in the origin): see docs/harvest/data/hipfire/not_gfx1151.json."
 
 [provenance]

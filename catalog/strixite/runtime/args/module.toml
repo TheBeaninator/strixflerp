@@ -1,6 +1,7 @@
 id      = "runtime.strixite.args"
 kind    = "runtime"
-summary = "Checked command-line number parsing for tools"
+summary = "Header-only checked integer and double parsing for command-line tools: strtoll/strtod over the whole string, then a range check, with a STRIX_CHECK error naming the argument and its accepted range"
+why     = "The converters and inspectors take sizes, layer numbers and limits on the command line, and atoi() turns a typo into a silent zero that a conversion run would then act on; these two functions make every bad argument stop the tool with its name and range. Used by tool.strixite.convert_qwen4exp, convert_ngram_table, inspect_strixw, serve.strixite.http and flerp's convert_qwen4exp_p16"
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id      = "kernel.strixite.norm"
 kind    = "kernel"
-summary = "RMSNorm kernels (zero-centred, grouped, gated) and the Act activation-dtype enum every kernel takes"
+summary = "RMSNorm kernels on FP32 math with casts at the reference's points: zero-centred x * rsqrt(mean(x^2) + eps) * (1 + w), its grouped form normalizing each d-wide slice separately, and the gated form w * norm(x) * gate(z) whose gate (silu or sigmoid) must be named at every call; also home of the Act activation-dtype enum"
+why     = "The model has two RMSNorm flavours plus a grouped one for the hyper-connection and PLE norms over 4 streams of 2560, and the gated norm reads z in place from inside the in_proj rows instead of copying it. Making the gate type a required argument keeps a qwen4_exp call site from silently getting Qwen3.5's silu. The Act enum defined here is the dtype switch every strixite kernel takes, which is why so many modules require it. Provides norm.rmsnorm-zc and norm.rmsnorm-gated in the strixite recipes."
 
 [provenance]
 origin   = "strixite"

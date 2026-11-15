@@ -1,6 +1,7 @@
 id        = "runtime.hipfire.rdna_compute"
 kind      = "runtime"
-summary   = "The kernel launcher: source registry (kernels.rs maps every kernel name to its HIP source text), JIT compile with a content-keyed cache and packaged kernel packs, arch capability table, typed launch wrappers per family"
+summary   = "hipfire's kernel launcher: kernels.rs maps every kernel name to its HIP source text, KernelCompiler picks chip, then family, then base sources and JIT-compiles them with hipcc into a content-keyed cache or loads hash-verified packaged kernel packs, an arch capability table chooses WMMA, specialized or baseline paths, and typed launch wrappers per family hang off Gpu / GpuTensor"
+why       = "hipfire compiles kernels on first use, which lets one release cover many RDNA chips without shipping every object (role inferred from the code). For strixflerp the important part is kernels.rs, the generator input from which every kernel.hipfire.* module's units.json was derived, which is how a JIT engine's kernels became compile units the gate builds ahead of time"
 notes     = "kernels.rs is the generator input the units.json files of the kernel modules were derived from. src/cdna (gfx942) is left out, so the crate does not build as is."
 
 [provenance]

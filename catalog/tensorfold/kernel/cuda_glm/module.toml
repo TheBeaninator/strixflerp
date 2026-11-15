@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.cuda_glm"
 kind      = "kernel"
-summary   = "GLM-5.3-Flash CUDA kernels: KDA (Kimi delta attention) mixer, DSA indexer pools and scores, glue (attention, latent, router MMA, MoE, hyper-connections, norms, rows), DFlash drafter, quant, vision"
+summary   = "GLM-5.3-Flash CUDA kernels: the KDA mixer (fixed-shape delta-rule steps on 4x4 blocks of an fp32 state), the DSA indexer's pool scores and per-row top-K pools by a sampled floor and radix select, MLA latent absorb and expand, hand-written glue reproducing the Python family's Triton PTX math, row-stable tensor-core linears and the DFlash2 drafter."
+why       = "Upstream has no HIP KDA or DSA indexer, so these files are the only code a GLM-5.3-Flash HIP port would start from (docs/TENSORFOLD.md section 4: port glm_kda.cu and the indexer onto StrixFold's TP2 collectives). Nothing in the pod's plans asks for that port today; kept to read, never built."
 
 [provenance]
 origin    = "tensorfold"

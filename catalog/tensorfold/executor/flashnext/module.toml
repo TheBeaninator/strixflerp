@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.flashnext"
 kind      = "executor"
-summary   = "Qwen3.8 Flash Next: GDN + QSA sparse attention + PLE n-grams + hyper-connections + MTP (HIP path in flashnext/hip, CUDA, Metal)"
+summary   = "Qwen3.8 Flash Next family: Gated DeltaNet layers, QSA sparse attention over blocks a pooled-key indexer picks, PLE n-gram hash rows, hyper-connection residual streams and an MTP head, run as shared rounds that pack several sessions' windows into one target forward with segmented recurrence; MLX affine weights on HIP (flashnext/hip), CUDA and Metal."
+why       = "The pod already serves Flash Next through strixite and Crucible, so this is a third engine for the same model: upstream claims 50.0 / 44.0 tok/s code / chat on a gfx1151 with MTP at three drafts on the uniform 4-bit pack, the number to hold drafted strixite and Crucible runs against, not plain decode. Its HIP code is where transfers R3 (QSA prefill with a lane holding one key for several heads) and R4 (advised random reads of the n-gram table, pages dropped after upload) in docs/TENSORFOLD.md come from."
 
 [provenance]
 origin    = "tensorfold"

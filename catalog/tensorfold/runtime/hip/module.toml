@@ -1,6 +1,7 @@
 id        = "runtime.tensorfold.hip"
 kind      = "runtime"
-summary   = "The HIP backend runtime: raw HIP driver binding, device caps and arch detect, memory and arena, modules and code objects, typed launches per kernel group, graphs (capture, split, cache), streams, hipBLAS, optional AOTriton attention, admission and policy, per-arch tuning tables"
+summary   = "Upstream's HIP backend runtime in Zig: a hand-declared HIP 7 driver binding, capabilities from the exact gfx name, a front-to-back scratch arena so graphs replay the same addresses, embedded code objects with typed launches per kernel group, graphs recorded on a shape's second sighting and cut at collectives, rocBLAS and hipBLASLt products, optional AOTriton attention, admission, policy and tuning tables for gfx1030, gfx1100, gfx1151 and gfx1201."
+why       = "It removes any Python or libtorch layer between server and GPU and is what every HIP family stands on; its tables are where the kernel registry's per-chip tile choice comes from, refreshed by hip-affine-tune. For the pod it is a second Zig HIP facade beside StrixFold's gpu_facade, which did not descend from it."
 
 [provenance]
 origin    = "tensorfold"

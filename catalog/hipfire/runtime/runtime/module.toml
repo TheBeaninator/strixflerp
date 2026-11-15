@@ -1,6 +1,7 @@
 id        = "runtime.hipfire.runtime"
 kind      = "runtime"
-summary   = "The inference orchestrator: KV backends and adaptive KV ladder, session and prefix caches, sampler, speculation (DFlash, DSpark core and block controller, DDTree, n-gram and lookup drafts, speculation economics), device mesh / expert-parallel / TP shards, weight stores and pager, tokenizer, serve"
+summary   = "hipfire-runtime, the arch-agnostic orchestrator: KV backends with an adaptive ladder that moves old rows to fewer bits, session and prefix caches with cold-exact snapshot restore, host and batch samplers, speculation (DFlash, DSpark core and block controller, DDTree, n-gram and lookup drafts) with lossless sampled accept gated by a measured AR floor, device mesh / expert-parallel / TP shards, weight stores and pager, tokenizer and the serve daemon"
+why       = "One crate holds everything between hipfire's kernels and its HTTP daemon, so it is taken whole; it records hipfire's policy choices, for example that speculation runs only where an AR floor was measured to make it pay (spec_economics). docs/INTERFACES.md compares its speculation with gufo's lossless verifier; strixflerp builds none of it"
 notes     = "One crate holds caches, speculation, sampling, mesh and serve; they cannot be harvested as separate modules without splitting the crate. imagedec.rs (image decode) is left out."
 
 [provenance]

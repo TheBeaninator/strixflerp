@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.ds4_sparse_attn"
 kind      = "kernel"
-summary   = "DeepSeek V4 sparse attention: sliding-window + top-k attention (scalar and WMMA, direct and gathered), the KV compressor (softmax pooling, ring write, overlap concat), indexed attention, tri-attention scoring (27 sources, 29 gfx1151 compile units)"
+summary   = "hipfire's DeepSeek V4 sparse attention (27 sources, 29 units): fp32 attention over the sliding window plus the top-k compressed keys in scalar and WMMA, direct and gathered forms, the KV compressor (softmax pooling of raw rows, ring write, overlap concat, absolute-position add), indexed attention and tri-attention scoring"
+why       = "It is the attention of executor.hipfire.arch_deepseek4: DSV4 reads a raw window plus the compressed rows its indexer picks, and here the compressor pools raw rows with a softmax (role inferred from the code). One of three DSV4 attentions in the catalogue with gufo's ds4_attention and StrixFold's sparse_attn; it is proven to compile for gfx1151 and nothing more"
 
 [provenance]
 origin    = "hipfire"

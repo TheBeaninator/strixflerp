@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.grammar"
 kind      = "runtime"
-summary   = "Constrained decoding: regex and JSON-schema programs compiled to a token-trie machine"
+summary   = "Structured output on the host: response_format JSON object and schema, guided JSON, regex and choice, and a required DeepSeek DSML tool call compiled to byte programs (regex through a Thompson NFA determinized so every kept state can still match), run by a frame-stack byte machine against the tokenizer's vocabulary trie, with a per-reply constraint the draws consult"
+why       = "Clients ask for JSON and forced tool calls, and an unconstrained model can drift out of them; this makes every committed token keep the reply inside its grammar, including over a verify window's drafted rows, and caps whitespace because served replies padded themselves with blank lines when a grammar refused the prose they wanted (machine.zig); structured output and required tools were the open items U44/U45 of the port's served suite (RESULTS.md)"
 
 [provenance]
 origin    = "strixfold"

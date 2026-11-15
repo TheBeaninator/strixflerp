@@ -1,6 +1,7 @@
 id        = "tool.tensorfold.zig_build"
 kind      = "tool"
-summary   = "The build graph of the HIP half: root build.zig, zig/build/hip.zig (16 kernel groups, flags, caps switches), hip_contract.zig, lighton_hip.zig, the pinned Zig version"
+summary   = "Build graph of upstream's HIP half: root build.zig and build.zig.zon, zig/build/hip.zig compiling 16 kernel groups with hipcc --genco for -Dhip-arch and embedding each code object, the per-arch caps switches, the kernel-contract binary with its controls' code object, LightOnOCR's module, and the pinned Zig 0.17.0."
+why       = "ORIGIN.toml's [compile] recipe (flags, strict IEEE sources, one code object a group) was read from this file, so it is the authority on how the hip_* modules must be compiled to match upstream. What the StrixFold recipes build with is tool.strixfold.zig_build, a 701-line-different ancestor of three of these files."
 notes     = "zig/build is ignored by this repository's .gitignore (build/); the files are tracked with git add -f, as StrixFold's are."
 
 [provenance]

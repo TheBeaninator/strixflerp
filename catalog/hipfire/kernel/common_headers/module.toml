@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.common_headers"
 kind      = "kernel"
-summary   = "Header-only: shared kernel headers (turbo_common, Givens / FWHT rotation, KV slot descriptors, MMQ bodies, device wait, TP exchange) and the vendored ggml-cuda vecdotq headers"
+summary   = "Header-only kernel support for hipfire: turbo_common, Givens and FWHT-256 rotation helpers, KV slot descriptors, the MMQ bodies, a device wait and the 16-way TP exchange, plus ggml-cuda's vecdotq headers vendored at the pin in third_party/ggml"
+why       = "hipfire's JIT splices these headers into kernel sources as text; in the catalogue they become a module the include check can track, required by every kernel.hipfire.* module. The vendored vecdotq headers are why gemv_ggml decodes GGUF blocks the way ggml does"
 
 [provenance]
 origin    = "hipfire"

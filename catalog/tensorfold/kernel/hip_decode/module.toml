@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_decode"
 kind      = "kernel"
-summary   = "Decode round planning on the GPU: page tables, the per-round launch plan"
+summary   = "Decode-round kernels driven by a plan in device memory (per slot: cached positions, last kept row, two cache addresses a layer, then the page table): the round's KV writes into 64-position pages and its attention walk, where query heads sharing a KV head read it once, plus a few-row MoE router with a wave an expert and the residual tails."
+why       = "Since no stream state is a launch argument, one launch or captured graph serves any mix of streams and positions, which is what lets upstream replay graphs every round with many lanes. It is the device half of the lanes round loop; #1932's four-keys-a-warp planned decode score (7.5-18.9 % faster at 32-64K on a gfx1151, same tokens, claimed) is transfer R7's long-span item."
 
 [provenance]
 origin    = "tensorfold"

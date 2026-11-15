@@ -1,6 +1,7 @@
 id        = "format.tensorfold.exl3"
 kind      = "format"
-summary   = "EXL3 and EXLR8 on the host: format and layout, load and prepare, projection decode, EXLR8 codec, manifest, node split, experts, prompt path"
+summary   = "EXL3 and EXLR8 on the host: a deliberately scalar reference decoder for ExLlamaV3's trellis bitstream and codebooks, the pack's group geometry and each TP rank's byte spans, load-time weight forms (linear strips, routed plus shared expert tables), and EXLR8's mcg codebook rounded to E4M3 with W = diag(suh) Hb T Hb diag(svh), its manifests and per-expert load widths."
+why       = "Many of the strongest low-bit NVIDIA checkpoints ship as EXL3 (upstream docs/recipes/exl3.md) and the full GLM-5.3 release ships as EXLR8; this module lets upstream's CUDA and Metal paths load both. The pod reads EXL3 for DeepSeek-V4.1 through format.strixfold.exl3; this independent reader, with its scalar oracle and EXLR8 support StrixFold lacks, is kept to check against."
 
 [provenance]
 origin    = "tensorfold"

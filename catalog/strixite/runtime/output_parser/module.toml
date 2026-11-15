@@ -1,6 +1,7 @@
 id      = "runtime.strixite.output_parser"
 kind    = "runtime"
-summary = "Incremental parser of the model's output into content, reasoning and tool calls"
+summary = "An incremental parser from generated tokens to the API's channels: reasoning until </think>, then content, with <tool_call> blocks parsed from the model's XML function/parameter form into names and schema-typed JSON arguments, markers honoured only as single special tokens in their phase after a newline, text released in whole UTF-8 characters, stop strings and edge whitespace held back, and an optional streamed-call mode"
+why     = "Clients expect OpenAI's separate reasoning, content and tool_calls, while the model writes one token stream with XML-shaped calls; parsing it incrementally lets responses stream, and counting only real special tokens keeps text the model spelled out from being mistaken for a call. Streamed calls send arguments as they are generated, byte-equal to the buffered parse when the call is well formed. Required by runtime.strixite.engine, checked by check_stream_calls and tool_grammar_check, and reused by flerp's reply_strixite in the flerp-serve recipes"
 
 [provenance]
 origin   = "strixite"

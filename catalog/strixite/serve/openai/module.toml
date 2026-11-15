@@ -1,6 +1,7 @@
 id      = "serve.strixite.openai"
 kind    = "serve"
-summary = "OpenAI request parsing and response bodies (chat completions, completions, chunks, errors)"
+summary = "Validates an OpenAI chat-completions or completions body field by field into the request the engine runs (messages, tools and tool_choice, response_format, logit_bias, logprobs, sampling) and writes the response, SSE chunk and error bodies back out, answering any unsupported field with a 400 that names it"
+why     = "Clients such as agents and openai-python only speak the OpenAI contract, so the server needs one place that decides exactly which parts of it strixite honours; refusing an unsupported field by name instead of silently ignoring it is the origin's stated policy (docs/server.md: keywords are refused, never accepted and left unenforced). Used by serve.strixite.http and so by strix_server in each strixite Qwen3.8 recipe"
 
 [provenance]
 origin   = "strixite"

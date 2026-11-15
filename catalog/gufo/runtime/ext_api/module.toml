@@ -1,6 +1,7 @@
 id        = "runtime.gufo.ext_api"
 kind      = "runtime"
-summary   = "The public extension API (include/gufo/ext) and its runtime: provider registry, options, host budget, device probe, text contracts"
+summary   = "gufo's public extension API (include/gufo/ext) and its runtime: a provider registry with one provider per model family, the adapter, continuation, draft-backend and speculative-verifier contracts, options, a host memory budget, device probing and text contracts"
+why       = "gufo serves several model engines behind one server, and this API is the seam between them: the server and cache reach a model only through its provider, the coupling gufo's model-extensions RFC proposes to turn into build-time extensions. executor.flerp.qwen35moe and the qwen36 recipes require it because the Qwen executor registers through it"
 
 [provenance]
 origin    = "gufo"

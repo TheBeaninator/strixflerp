@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.sparse_attn"
 kind      = "kernel"
-summary   = "DeepSeek-V4.1 sparse attention with a sink (32 heads, head dim 512 a rank): 128-key window ring plus indexer picks, split partials or one pass"
+summary   = "DeepSeek-V4.1 sparse attention with a sink, 32 heads of dim 512 a rank, on WMMA: a row attends to its 128-key window ring plus its indexer picks, read as bf16 or as packed FP4 E2M1 with an E4M3 scale per 16, through an online softmax over 16-key chunks with p rounded to bf16 before the PV product, either writing split partials in Triton's layout or finishing in one pass"
+why       = "It replaces the Triton _sparse_attn_part on decode / verify windows and on the prompt path, where attention is about 17% of a prefill chunk (docs/TENSORFOLD.md R3); keeping Triton's partial layout lets the Triton merge kernels finish it, and docs/TENSORFOLD.md names it the place to try the head-sharing lane mapping upstream reports at 29-41% on Flash Next"
 
 [provenance]
 origin    = "strixfold"

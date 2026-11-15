@@ -29,7 +29,10 @@
 //                 prompt experts, B = the grouped ones (flerp::qwen35moe::SetMoeGrouped), E = grouped exact (exact
 //                 weight codes, hi/lo F16 activations), F = B + the dense projections on the grouped Linear (F16),
 //                 X = E + the dense projections on the exact Linear, G = F and Y = X with the GQA WMMA prompt
-//                 attention (kernel.flerp.attn_wmma_gqa), D = --decode-prompt with A.
+//                 attention (kernel.flerp.attn_wmma_gqa), D = --decode-prompt with A, L = G with live-tile items
+//                 (flerp::kgrouped::SetLiveTiles, PREFILL-KPROF), C = G with the 16-byte MoE combine
+//                 and one F16 conversion per shared projection input (flerp::qwen35moe::SetMoeCombineFast, MOE-COMBINE),
+//                 R = G with the tiled prompt router (flerp::moe::SetRouterTiled, ROUTER-GEMM).
 //                 An `arm` event precedes each arm's events.
 // --cpu --trace   the CPU reference, driven here a token at a time (models::ForwardModel, as QwenGenerator does),
 //                 with the same record of every generated position.
@@ -93,6 +96,8 @@
 #include "src/models/qwen/ssm.hpp"
 #include "src/models/qwen/state.hpp"
 #include "flerp/qwen35moe/moe_ffn.hpp"
+#include "flerp/moe_kgrouped/moe_kgrouped.hpp"
+#include "flerp/moe_kquant/moe_kquant.hpp"
 #include "src/models/qwen/hip/executor.hpp"
 #include "src/models/qwen/modules/embed.hpp"
 #include "src/models/qwen/modules/module_ctx.hpp"
@@ -934,14 +939,17 @@ int main(int argc, char** argv) {
   }
 
   std::vector<char> arm_list;
-  for (const char c : arms) if (std::strchr("ABDEFXGY", c) != nullptr && c != 0) arm_list.push_back(c);
+  for (const char c : arms) if (std::strchr("ABDEFXGYLCR", c) != nullptr && c != 0) arm_list.push_back(c);
   if (arm_list.empty()) arm_list.push_back('-');
   const bool decode_prompt_flag = decode_prompt;
   for (const char arm : arm_list) {
   if (arm != '-') {
-    flerp::qwen35moe::SetMoeGrouped((arm == 'B' || arm == 'F' || arm == 'G') ? 1 : ((arm == 'E' || arm == 'X' || arm == 'Y') ? 2 : 0));
-    flerp::qwen35moe::SetDenseGrouped((arm == 'F' || arm == 'G') ? 1 : ((arm == 'X' || arm == 'Y') ? 2 : 0));
-    flerp::qwen35moe::SetAttnGqa((arm == 'G' || arm == 'Y') ? 1 : 0);
+    flerp::qwen35moe::SetMoeGrouped((arm == 'B' || arm == 'F' || arm == 'G' || arm == 'L' || arm == 'C' || arm == 'R') ? 1 : ((arm == 'E' || arm == 'X' || arm == 'Y') ? 2 : 0));
+    flerp::qwen35moe::SetDenseGrouped((arm == 'F' || arm == 'G' || arm == 'L' || arm == 'C' || arm == 'R') ? 1 : ((arm == 'X' || arm == 'Y') ? 2 : 0));
+    flerp::qwen35moe::SetAttnGqa((arm == 'G' || arm == 'Y' || arm == 'L' || arm == 'C' || arm == 'R') ? 1 : 0);
+    flerp::kgrouped::SetLiveTiles(arm == 'L' ? 1 : 0);   // PREFILL-KPROF (9506f4f116): L = G + live-tile items
+    flerp::qwen35moe::SetMoeCombineFast(arm == 'C' ? 1 : 0);   // MOE-COMBINE (2dc55e67f0): C = G + combine + one ToF16
+    flerp::moe::SetRouterTiled(arm == 'R' ? 1 : 0);   // ROUTER-GEMM (c6473d6063): R = G + the tiled prompt router
     decode_prompt = decode_prompt_flag || arm == 'D';
     std::cout << "{\"event\":\"arm\",\"arm\":\"" << arm << "\"}" << std::endl;
   }

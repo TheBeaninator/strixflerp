@@ -193,7 +193,10 @@ set_property(TARGET gufo_qwen27b PROPERTY SOURCES ${_moe_sources})
 set(FLERP_QFN_UNIT "${GUFO_ROOT}/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp")
 # w8a8_wave64.hip is the other source of kernel.gufo.qfn_kernels: the unit above calls it (W8A8GemmWave64).
 set(FLERP_QFN_WAVE64 "${GUFO_ROOT}/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip")
-add_library(flerp_qfn_kernels STATIC ${FLERP_QFN_UNIT} ${FLERP_QFN_WAVE64})
+# MOE-COMBINE (2dc55e67f0): moe_combine.hip keeps gufo's MoeEpilogue expression, so it is built with the unit's options.
+set(FLERP_MOE_COMBINE "${FLERP_MOE_OVERLAY}/moe_combine.hip")
+add_library(flerp_qfn_kernels STATIC ${FLERP_QFN_UNIT} ${FLERP_QFN_WAVE64} ${FLERP_MOE_COMBINE})
+set_source_files_properties(${FLERP_MOE_COMBINE} PROPERTIES LANGUAGE HIP)
 set_source_files_properties(${FLERP_QFN_UNIT} PROPERTIES LANGUAGE HIP)
 set_source_files_properties(${FLERP_QFN_WAVE64} PROPERTIES COMPILE_OPTIONS "-mwavefrontsize64")
 target_compile_definitions(flerp_qfn_kernels PRIVATE QFN_ROCM_BUILD=1 ENGINE_ENABLE_HIP=1)

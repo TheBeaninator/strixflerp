@@ -1,6 +1,7 @@
 id        = "kernel.crucible.gdn"
 kind      = "kernel"
-summary   = "Gated DeltaNet: decode core for 1..8 rows, one-launch verify core, chunk-64 WY/UT prefill (gram, inverse, state carry), persistent R=1 attention-side prototype"
+summary   = "Gated DeltaNet mixer kernels: the decode recurrence over an fp32 state for 1..8 rows, a single-launch verify core with separate row and state waves, a chunk-64 WY/UT prefill on WMMA (gram matrix, triangular inverse, state carried between chunks) and a persistent one-row prototype"
+why       = "Qwen3.8-Flash-Next's linear-attention layers are Gated DeltaNet and their fp32 state is part of Crucible's exactness contract; the WY/UT form turns prompt processing into matrix products on WMMA (rated ahead of strixite's chunked delta_rule_wmma, at the price of another summation order, so tolerance rather than bits), and the one-launch verify core lets a rejected draft be dropped without a snapshot copy (docs/CRUCIBLE-VS-STRIXITE.md section 2, docs/CRUCIBLE.md 4.8)"
 
 [provenance]
 origin    = "crucible"

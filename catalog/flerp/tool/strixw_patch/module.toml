@@ -1,6 +1,7 @@
 id        = "tool.flerp.strixw_patch"
 kind      = "tool"
 summary   = "Copies a weights.strixw with one tensor class re-encoded from the source checkpoint (only mtp_fc=q4g<G>): every other component copied byte for byte, the class quantized by strixite's quantize_q4, offsets, hashes, index and header from strixite's StrixwWriter, output re-read and hash-verified by StrixwFile"
+why       = "The upstream strixw ships the MTP fc in Q4 where the fleet's is Q8; to test that one class without a 4-hour reconversion it re-encodes only mtp_fc with strixite's own quantizer and copies everything else byte for byte (its output matched the upstream bytes exactly); the A/B on worker B then failed: Q4 changed greedy output on 7 of 20 prompts and lowered draft acceptance, so the fleet keeps Q8"
 design    = "DESIGN.md"
 notes     = "Built with the host C++ compiler by src/flerp/strixw_patch/build.sh (no HIP). Proof on the real files: gate/results/strixw-patch/README.md."
 

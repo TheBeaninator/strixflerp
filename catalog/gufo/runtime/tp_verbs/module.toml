@@ -1,6 +1,7 @@
 id        = "runtime.gufo.tp_verbs"
 kind      = "runtime"
-summary   = "TP2 over native InfiniBand / RoCE v2 verbs: two-rank RC communicator (one RDMA write with immediate per partial), GID selection, the TP partition of the model, and the serving-side TP control, executor and disk store"
+summary   = "Two-rank tensor parallelism for Flash-Next over native InfiniBand / RoCE v2 verbs: an RC communicator that exchanges each fp32 partial by one RDMA write with immediate into fixed windows both ranks map, each collective carrying and checking an operation ordinal, GID selection, the model's TP partition, and the server-side TP control, executor and disk store"
+why       = "It is gufo's answer to a model that is slow or too large on one host: TP2.md runs Flash-Next on two Strix Halos for faster decode and room for full Q8. strixflerp keeps it as the catalogue's only verbs communicator and judged StrixFold's Coll on this Communicator the numerically safest next swap (bytes only), but it is two-rank, eager rather than graph-safe and, by the branch's own RDMA_TEMP_STATE.md, an unqualified checkpoint with an open reuse bug (docs/PHASE5-FOURNODE-DESIGN.md)"
 notes     = "RDMA_TEMP_STATE.md (repo root) says this branch is an unqualified merge checkpoint with one open correctness bug in prefix/checkpoint reuse."
 
 [provenance]

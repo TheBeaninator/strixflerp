@@ -1,6 +1,8 @@
 id        = "kernel.tensorfold.hip_draft"
 kind      = "kernel"
-summary   = "MTP / drafter kernels: draft rows, acceptance on the GPU"
+summary   = "The DFlash2 block drafter's HIP kernels, after cuda_draft*.zig's design: gathers of tap rows from a ring of target hidden rows (a tree's kept path, or in order), the drafter's key ring, its dynamic conv and block attention with an fp32 query in LDS against 16-bit or fp32 keys."
+why       = "A drafter conditioned on the target's own hidden rows proposes a block of tokens that the target then verifies in one window, and qwen3_5's HIP backend loads it (backend/hip/draft, weights quantised to affine-4 g64). Despite the old summary, MTP drafting and acceptance live in the families and lanes, not here."
+notes     = "The provides interface says mtp; the kernels are DFlash2's."
 
 [provenance]
 origin    = "tensorfold"

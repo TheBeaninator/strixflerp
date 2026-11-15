@@ -1,6 +1,7 @@
 id      = "kernel.strixite.logits_topk"
 kind    = "kernel"
-summary = "Each logits row's top 20 candidates on the GPU by rank counting, with optional allow-mask"
+summary = "Top-20 candidates of each logits row on the GPU by rank counting (a threshold from the threads' bests, then each survivor's place = how many beat it), 8,192 inputs per workgroup in two levels for the 248k vocabulary, ordered value-descending with the lower id first on ties, NaNs flagged per row and an optional allow-mask applied in the first level"
+why     = "After each MTP verify the GPU sat ~0.3 ms idle while the host copied and scanned ~1 MB per row; returning ~160 bytes a row instead saved 0.2% per token (header, how-it-got-fast.md section 6), and the tie order makes sampling from candidates bit-identical to sampling from the row. The structured-output mask rides in the same pass. The logits-topk interface gate measured it at 80 us per decode row against gufo's sort at 472 us, both bit-exact; topk-gufo and three-engines swap gufo in to prove the adapter path."
 
 [provenance]
 origin   = "strixite"

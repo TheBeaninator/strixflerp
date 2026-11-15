@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.engine_host"
 kind      = "runtime"
-summary   = "The HIP engine host the server links as native_engines: opens a family for a model directory, memory budget and cache fit, the engine API handed to the HTTP side"
+summary   = "The HIP engine host the server links as native_engines: it registers the families ported to HIP (dsv41 alone), selects the device and the kit directory, checks that the weights fit the memory budget, sizes the prompt cache from what RAM leaves past the loaded model, and hands the engine API to the HTTP side"
+why       = "A served process needs one place that turns a model directory into a running engine and refuses early when it cannot fit: the budget arithmetic is what stopped rank 0 with '98.9 GiB of weights do not fit the 97.5 GiB the HIP memory budget grants' when background jobs held memory (RESULTS.md U25); it follows native/cuda.zig step for step over the backend-neutral gpu module (ADAPTER.md section 9)"
 notes     = "cuda_memory.zig is the memory budget arithmetic hip.zig imports under that name; it holds no CUDA call."
 
 [provenance]

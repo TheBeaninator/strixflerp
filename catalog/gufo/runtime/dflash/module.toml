@@ -1,6 +1,7 @@
 id        = "runtime.gufo.dflash"
 kind      = "runtime"
-summary   = "DFlash speculator for Qwen: draft model weights, policy, executor, batch and backend"
+summary   = "Host side of gufo's DFlash speculator for Qwen: the draft model's weights and policy, a draft executor that predicts a block of positions in one non-causal forward conditioned on target features, batching across requests, and the backend that hands proposals to the lossless verifier"
+why       = "A block drafter lets the target verify several tokens for one pass over its weights, which is what makes DFlash-2 the 27B's fastest mode in gufo (ROCM.md: 25.9 against 12.0 tok/s decode at depth 0; hipfire's GLOSSARY credits the method to Chen et al. 2026). In strixflerp it is harvested host code bound in the gufo recipes as part of the Qwen executor's closure; no flerp recipe drafts with it"
 
 [provenance]
 origin    = "gufo"

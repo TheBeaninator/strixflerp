@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qfn_kernels"
 kind      = "kernel"
-summary   = "Qwen3.8-Flash-Next model-private kernels in one translation unit (83 kernels): embedding, grouped RMSNorm, hyper-connection mix / combine, PLE, Gated DeltaNet, QSA pooling / select, attention, router top-k, MoE epilogue, MTP head, argmax, W8A8 int8 WMMA GEMM"
+summary   = "Qwen3.8-Flash-Next's model-private kernels, 83 in one 9,352-line translation unit with kernels.hpp as launch API, compiled -ffast-math: fp32 hyper-connection mix and combine over 4 x 2560 streams, grouped RMSNorm, PLE injection, Gated DeltaNet with exact rollback, QSA block pooling and selection, split attention merged from partials, RouterTopK and the MoE epilogue, the MTP head, argmax tiles, TP2 partial staging and a W8A8 int8 WMMA GEMM on Q8_0"
+why       = "gufo does not reuse kernels across models, to limit the blast radius of a change (README philosophy), so Flash-Next's operators live here rather than in the Qwen family kernels. In strixflerp it supplied the first foreign kernel inside a served strixite model: kernel.flerp.moe_router_gufo puts RouterTopK under strixite's moe_router, which passed the moe-router interface gate (ids equal slot for slot in all 14 cases; 36.6 against 28.1 us a decode token) and the router-gufo and three-engines recipes under token agreement"
 notes     = "One 9,352-line translation unit: the kernels cannot be compiled or swapped separately without editing it. kernels.hpp is the launch API."
 
 [provenance]

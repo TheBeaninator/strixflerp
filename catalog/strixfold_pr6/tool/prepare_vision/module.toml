@@ -1,6 +1,7 @@
 id        = "tool.strixfold_pr6.prepare_vision"
 kind      = "tool"
-summary   = "Cut the vision tower (266 tensors) and the 43 image routing biases out of the pinned LibertAI EXL3 checkpoint, with every source and output pinned by sha256; and the admission check the launcher runs"
+summary   = "A standard-library Python extractor that cuts the vision tower's 266 BF16 tensors and the 43 image routing biases (gate.bias_vl) out of the pinned LibertAI EXL3 checkpoint, verifying the index and every source shard by sha256 before copying and refusing to publish outputs that differ from their pins, plus verify_vision.py, the launcher's admission check of the worker's interpreter and package versions"
+why       = "The CPU worker needs the tower as one small file and each rank needs the routing biases, and the PR treats both as authenticated inputs rather than whatever a download produced; on the pod it produced both files equal to their pins after hashing 42 shards (197 GB) in about four minutes (docs/VISION-DSV41.md), and it is the first step any image path, this PR's or a catalogue tower behind the executor ABI, would reuse"
 notes     = "Python 3 (hashlib.file_digest: 3.11 or newer), standard library only for prepare_vision.py; verify_vision.py starts the worker's interpreter and asserts torch 2.9.0+cpu, numpy 2.3.5, Pillow 12.3.0. [build] lang is \"zig\" only because SPEC.md has no value for a script; nothing is compiled."
 
 [provenance]

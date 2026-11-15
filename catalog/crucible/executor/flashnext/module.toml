@@ -1,6 +1,7 @@
 id        = "executor.crucible.flashnext"
 kind      = "executor"
-summary   = "Qwen3.8-Flash-Next EXL3 executor: the Engine (engine/engine.hip, one translation unit holding every kernel), model loader, layer loop, prefill engine with chunking, interleave and stage arena, batched and packed-verify forwards, switch registry"
+summary   = "Crucible's Qwen3.8-Flash-Next engine as one HIP translation unit (engine/engine.hip includes every header, 642 kernels): the Engine class loads the EXL3 pack, drives one trunk layer loop (RunTrunk) that the prefill, decode, batched and packed-verify forwards all call, and plans a prompt in 4,096-row chunks merged into 16,384-row bulk GEMM launches while the GDN and QSA cores run in 2,048-row parts over a stage arena"
+why       = "It is the executor the qwen38-flash-next.crucible recipe builds (executor.model/qwen3.8-flash-next/exl3) and the reason Crucible was harvested: on control-node, on the same token ids as strixite v0.7.0-pod, it prefilled 1.2-1.9x faster (1,667 against 1,399 tok/s at a cold 32K) and decoded level without drafts and 5-16% ahead with them (docs/CRUCIBLE-VS-STRIXITE.md section 0, gate/results/qwen38-flash-next.crucible); docs/CRUCIBLE.md puts about half of the prefill gap on this schedule of fewer, larger launches, which became transfer C1 for strixite and 4.1F for StrixFold"
 
 [provenance]
 origin    = "crucible"

@@ -1,6 +1,7 @@
 id      = "format.strixite.strixw"
 kind    = "format"
-summary = "strixw container: header, index and data with every tensor already in its kernel's layout; streaming writer and validating mmap reader"
+summary = "strixw container: 128-byte hashed header, hashed index (name, encoding, shape, per-tensor group size, experts, components), then a data region with every tensor already in its kernel's layout at 4096-byte tensor and 256-byte component alignment; a streaming writer and a validating mmap reader"
+why     = "Moving all layout work to conversion time lets the engine map the file and start with no repacking (the Q4 draft-head copy is the only load-time conversion), and keeping file offsets mod 4096 turns file alignment into device-pointer alignment so the kernels' 16-byte vector loads hold. Its metadata (layout, source_fingerprint) also keys the prompt cache. The qwen38-flash-next strixite recipes bind format.container/strixw to it, and flerp's strixw_v5 and strixw_patch modules derive from it"
 design  = "DESIGN.md"
 
 [provenance]

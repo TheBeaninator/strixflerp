@@ -1,6 +1,7 @@
 id      = "kernel.strixite.hc_wmma"
 kind    = "kernel"
-summary = "Hyper-connection mixes for multi-token forwards on the matrix units"
+summary = "Hyper-connection down/up mixes for multi-token forwards on the gfx11 matrix units: streams and h rounded once to F16, Q4/Q8 weights dequantized to F16 once per 64-token tile from coalesced chunk-major windows, FP32 accumulation, with norms, gates and the stream combine kept in FP32"
+why     = "At prefill sizes the per-token hc kernel would re-read the mix weights for every token; tiling 64 tokens over one weight read moves the stage onto WMMA. It still cost 874 of 5,523 ms per 8,192-token chunk in the PF-CF profile, held back by the small rank r = 320 and the fused elementwise work rather than the 0.7 GB of weights (DESIGN.md). Provides hc.mix-prefill in the strixite recipes, chosen by the executor from 12 tokens."
 design  = "DESIGN.md"
 
 [provenance]

@@ -1,6 +1,7 @@
 id      = "runtime.strixite.device_buffer"
 kind    = "runtime"
-summary = "Owning, named, move-only device and pinned-host allocations with checked copies"
+summary = "Header-only RAII wrappers for device and pinned-host allocations: move-only, every buffer named, uploads and downloads size-checked, and a process-wide GpuMemoryTally that sums live bytes by name category (\"K cache 12\" counts as \"K cache\")"
+why     = "On gfx1151 device and pinned memory both come out of system RAM (GTT), so a server sharing the machine has to be able to say where its memory went and which buffer failed to allocate; naming every allocation and tallying by category gives the startup memory line and readable errors, and ownership semantics rule out leaks and double frees. It is the allocation layer under the strixite device views (q4/q5/q6/q8_device), the strixw loader, the qwen4exp and qwen3_5 executors, the vision tower, paged_buffer and strix_server"
 
 [provenance]
 origin   = "strixite"

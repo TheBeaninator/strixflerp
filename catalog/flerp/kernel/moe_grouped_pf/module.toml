@@ -1,6 +1,7 @@
 id        = "kernel.flerp.moe_grouped_pf"
 kind      = "kernel"
 summary   = "kernel.strixite.moe_grouped with a batched-load combine reduce: each thread loads 8 slots' partials before summing them in the origin's order (same fmaf chain, same bits); off unless STRIXFLERP_PF_COMBINE=1, read per call"
+why       = "Option 2 of the 2026-11-11 strixw prefill report: the combine reduce of strixite's grouped experts issued its partial-sum loads one at a time, and batching eight before the same fmaf chain should hide their latency without changing a bit; the pf2 gate confirmed equal logits at 8K, 32K and 128K prompts but a gain only at 128K (+11.6 %) and not on every repeat, so it failed its speed criterion and stays behind its switch"
 notes     = "Derived from kernel.strixite.moe_grouped (strixite 20937dc, AGPL-3.0-only): kernels/moe_grouped.{hip,hpp} copied whole under flerp/moe_grouped_pf/, changes marked `kernel.flerp.moe_grouped_pf`; the .hpp is unchanged. A whole replacement bound in place of the origin's module (the generated CMake assembler has no source overlay), so it does not require the origin's module; it requires the origin's own requirements. Option 2 of the 2026-11-11 strixw prefill report (combine_reduce part). Gate: gate/qwen38-flash-next.strixite-pf2.toml."
 
 [provenance]

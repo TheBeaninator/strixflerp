@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.coll_tcp"
 kind      = "runtime"
-summary   = "Coll over host-staged TCP on the USB4 / Ethernet links: eager tcp_host, and tcp_proxy (two kernels on the model stream plus a busy-polling proxy thread, graph-capturable)"
+summary   = "Coll over host-staged TCP, one socket per cable between the two ranks with a 48-byte header checked on every call: eager tcp_host, where the host thread copies its block to pinned memory and blocks in a busy-polling exchange, and tcp_proxy, where two kernels on the model stream and a proxy thread do the gather with no host call on the stream"
+why       = "The first HIP deployment linked two boxes by USB4 networking with no RDMA, and waiting for receive interrupts cost about 128 us per direction where spinning with SO_BUSY_POLL took 95-102 us for a 120 KiB exchange (tcp_wire.zig); tcp_host was first light, tcp_proxy made decode rounds capturable in HIP graphs, and gathers too large for an RDMA slot still use tcp_host on the pod"
 
 [provenance]
 origin    = "strixfold"

@@ -1,6 +1,7 @@
 id        = "executor.strixfold_pr6.dsv41_image_rows"
 kind      = "executor"
-summary   = "The PR's changes to the dsv41 family and the HIP host that let image rows into the prompt pass on HIP: spans checked against a restored prefix, rows from the CPU tower, the vision feature switched on"
+summary   = "Pull request #6's versions of five files of the dsv41 family and the HIP host, laid over the catalogue's: the vision feature switched on for HIP builds behind TF_DS_MODALITIES=text_image, image spans checked against a restored prefix so an already-cached image is skipped, rows taken from the CPU tower and copied in place of the span's embedding rows on rank 0, and sent to the followers in wire frames"
+why       = "StrixFold's HIP engine is text-only (tools/dsv41-hip/ADAPTER.md D13) because its own vision tower runs on CUDA library calls; this overlay is the smallest change that lets finished image rows enter the prompt pass and reach both ranks, and docs/VISION-DSV41.md proposes exactly that seam, 'rows across the ABI' (vision.image-rows), as the modular way to give strixflerp's executor images; unlike executor.strixfold.dsv41 it sits on upstream 70cfb8c, not the pod's f64b5ff, and the merge with the pod's kept-state changes is unread"
 notes     = "Overlay only: every file is the PR's version of a file of executor.strixfold.dsv41, runtime.strixfold.gpu_facade or runtime.strixfold.engine_host (overlay.json). The catalogue's versions are at f64b5ff with the pod's patches; the PR's are on upstream 70cfb8c."
 
 [provenance]

@@ -8,6 +8,7 @@
 #include <cstring>
 #include <gufo/ext/experimental/hip_utils.hpp>
 #include <iostream>
+#include <vector>
 
 #include "flerp/moe_kgrouped/moe_kgrouped.hpp"
 #include "flerp/moe_kquant/moe_kquant.hpp"
@@ -133,6 +134,16 @@ bool LaunchGrouped(const gufo::models::QwenLayerWeights& layer, const float* x, 
   HIP_CHECK(hipMemcpyAsync(g_flag_host, flag, sizeof(unsigned), hipMemcpyDeviceToHost, stream));
   HIP_CHECK(hipStreamSynchronize(stream));
   overflow = *g_flag_host != 0;
+  // PREFILL-KPROF (9506f4f116): FLERP_KG_COUNTS=1 prints the routed rows per expert of every grouped block to stderr
+  // (one JSON line a block). The stream is already synchronized here, so this adds a small copy and no GPU work.
+  static const bool dump_counts = [] { const char* v = std::getenv("FLERP_KG_COUNTS"); return v && v[0] == '1'; }();
+  if (dump_counts) {
+    std::vector<int> c(experts);
+    HIP_CHECK(hipMemcpy(c.data(), plan.counts, experts * sizeof(int), hipMemcpyDeviceToHost));
+    std::cerr << "{\"event\":\"kg_counts\",\"tokens\":" << tokens << ",\"bm\":" << bm << ",\"counts\":[";
+    for (std::size_t e = 0; e < experts; ++e) std::cerr << (e ? "," : "") << c[e];
+    std::cerr << "]}\n";
+  }
   if (unsigned* df = DenseOverflowFlag(); df != nullptr) {  // dense projections: counted and reported, no fallback
     unsigned v = 0;
     HIP_CHECK(hipMemcpy(&v, df, sizeof(unsigned), hipMemcpyDeviceToHost));
@@ -150,6 +161,10 @@ void SetMoeGrouped(int mode) noexcept { g_grouped_override = mode; }
 
 namespace {
 int g_dense_override = -1;
+int g_combine_override = -1;            // SetMoeCombineFast
+const float* g_reuse_x = nullptr;       // SetDenseInputReuse window
+const float* g_converted_x = nullptr;   // the input whose F16 form g_dense.p holds inside the window
+std::size_t g_converted_n = 0;
 struct DenseScratch {
   void* p = nullptr;
   std::size_t bytes = 0;
@@ -159,6 +174,19 @@ struct DenseScratch {
 }  // namespace
 
 void SetDenseGrouped(int mode) noexcept { g_dense_override = mode; }
+void SetMoeCombineFast(int mode) noexcept { g_combine_override = mode; }
+int MoeCombineFastMode() noexcept {
+  static const int env_mode = [] {
+    const char* v = std::getenv("FLERP_MOE_COMBINE_FAST");
+    return (v != nullptr && std::strcmp(v, "1") == 0) ? 1 : 0;
+  }();
+  return g_combine_override >= 0 ? g_combine_override : env_mode;
+}
+void SetDenseInputReuse(const float* x) noexcept {
+  g_reuse_x = MoeCombineFastMode() == 1 ? x : nullptr;
+  g_converted_x = nullptr;
+  g_converted_n = 0;
+}
 
 int DenseGroupedMode() noexcept {
   static const int env_mode = [] {
@@ -184,6 +212,7 @@ bool LaunchDenseGrouped(const void* w, gufo::core::GgmlType type, const float* x
     }
     HIP_CHECK(hipMalloc(&g_dense.p, need));
     g_dense.bytes = need;
+    g_converted_x = nullptr;
   }
   if (g_dense.flag == nullptr) {
     HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&g_dense.flag), sizeof(unsigned)));
@@ -199,7 +228,14 @@ bool LaunchDenseGrouped(const void* w, gufo::core::GgmlType type, const float* x
     kg::ToF16Split(x, xh, xl, rows * k, g_dense.flag, stream);
     kg::LinearExact(t, w, xh, xl, plan, y, n, k, stream);
   } else {
-    kg::ToF16(x, xh, rows * k, g_dense.flag, stream);
+    // MOE-COMBINE: inside a SetDenseInputReuse window the F16 form of x made by the window's first call is reused.
+    if (!(g_reuse_x != nullptr && x == g_reuse_x && g_converted_x == x && g_converted_n == rows * k)) {
+      kg::ToF16(x, xh, rows * k, g_dense.flag, stream);
+      if (g_reuse_x != nullptr && x == g_reuse_x) {
+        g_converted_x = x;
+        g_converted_n = rows * k;
+      }
+    }
     kg::Linear(t, w, xh, plan, y, n, k, stream);
   }
   return true;
@@ -306,8 +342,13 @@ void LaunchMoeFfn(const gufo::models::QwenLayerWeights& layer, const float* x, f
                                layer.ffn_down_shexp.type, nullptr, shared_act, shared_out, tokens, 1, 1, hidden,
                                shared_ff, 1, stream);
   }
-  qfn::MoeEpilogue(expert_out, weights, shared_out, logits + experts, static_cast<std::uint32_t>(stride), out, n,
-                   static_cast<std::uint32_t>(used), static_cast<std::uint32_t>(hidden), stream);
+  // MOE-COMBINE (2dc55e67f0): arm C runs the same expression with 16-byte loads on prompt chunks.
+  if (!(MoeCombineFastMode() == 1 && tokens >= GroupedMin() &&
+        MoeCombineVec4(expert_out, weights, shared_out, logits + experts, static_cast<std::uint32_t>(stride), out, n,
+                       static_cast<std::uint32_t>(used), static_cast<std::uint32_t>(hidden), stream))) {
+    qfn::MoeEpilogue(expert_out, weights, shared_out, logits + experts, static_cast<std::uint32_t>(stride), out, n,
+                     static_cast<std::uint32_t>(used), static_cast<std::uint32_t>(hidden), stream);
+  }
   if (g_dump != nullptr && g_dump->armed &&
       std::find(g_dump->layers.begin(), g_dump->layers.end(), layer_index) != g_dump->layers.end()) {
     HIP_CHECK(hipStreamSynchronize(stream));

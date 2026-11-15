@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_quant"
 kind      = "kernel"
-summary   = "Weight decoders for the HIP GEMV/GEMM tiles: MLX affine (4/6/8-bit, group scales and biases) pieces and tiles, BF16 decoder, dense tiles, activation quantisation"
+summary   = "Header-only weight decoders the HIP tiles are instantiated with: MLX affine (BITS-wide codes packed little-endian in 32-bit words, a scale and bias a group of K, codes exact in BF16 and FP16), raw BF16 weights folded with scale 1, activation encoders, and the named MLX and BF16 entry points of each tile (dot2, K-parallel, gfx11 WMMA, skewed, few-row routed, gfx12 WMMA)."
+why       = "Upstream splits the decoder from the tile so several weight formats share one set of GEMV and GEMM schedules: the tile owns the walk and fold order, the decoder how a code becomes a value. It is the device view of format.quant's MLX and BF16 tensors; role for the pod inferred from that split: the seam where another format would enter if the tiles were reused."
 
 [provenance]
 origin    = "tensorfold"

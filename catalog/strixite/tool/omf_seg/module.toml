@@ -1,6 +1,7 @@
 id      = "tool.strixite.omf_seg"
 kind    = "tool"
-summary = "Batch export, import and probe of session states (K/V segment experiments)"
+summary = "Batch driver for session-state experiments: one model load, then a JSON jobs file of reset, forward, export, import and probe steps on a Qwen4ExpSession, where probe measures teacher-forced NLL and greedy output and restores the state, and states are the prompt cache's own file bytes, transformed outside the tool in Python"
+why     = "Written for the pod's OMF research (OMF-R3, card 3fa039212b) on compressing or editing K/V and recurrent state: quantizing, pruning, dropping or RoPE-rebasing segments needs many export/transform/import/measure rounds, and paying a model load per round would make the sweeps impractical. Built in the strixite Qwen3.8 recipes; not part of serving"
 
 [provenance]
 origin   = "strixite"

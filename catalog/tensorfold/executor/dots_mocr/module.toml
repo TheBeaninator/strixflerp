@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.dots_mocr"
 kind      = "executor"
-summary   = "dots.mocr OCR on HIP (gfx1201 checked)"
+summary   = "dots.mocr document OCR in native Zig/HIP: a dense BF16 image tower with a 2x2 merger feeds a Qwen2 decoder that owns a dense BF16 KV cache a stream with ordinary 1-D RoPE, scheduled by the shared lane core with prompt-cache snapshots and a serving allocation fitted inside the HIP admission pool before any weight is uploaded."
+why       = "Upstream added it so the native server reads documents from the BF16 dots-studio/dots.mocr checkpoint with Python used only for the validation reference (docs/recipes/dots-mocr-hip.md, checked on gfx1201). For the pod it is one of the OCR services upstream's HIP path offers (docs/TENSORFOLD.md section 4) and a worked example of a vision family built from the shared HIP projections and column ops. Nobody has run it on a gfx1151."
 
 [provenance]
 origin    = "tensorfold"

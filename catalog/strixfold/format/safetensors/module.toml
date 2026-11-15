@@ -1,6 +1,7 @@
 id        = "format.strixfold.safetensors"
 kind      = "format"
-summary   = "Host readers the core library exports: safetensors headers and tensors, the checkpoint index, O_DIRECT reads, npy files"
+summary   = "Host-side readers the StrixFold core library exports to every family: safetensors header and tensor access, the sharded checkpoint index, O_DIRECT reads, and npy files"
+why       = "Role inferred from the code: the rank-cache builder, the EXL3 loader and the vision tower all read checkpoint tensors through this one implementation, so they agree on offsets and dtypes; it ships as a separate module because the core library, the family and the server import it independently (format.reader-strixfold/safetensors)"
 
 [provenance]
 origin    = "strixfold"

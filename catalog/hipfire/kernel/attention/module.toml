@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.attention"
 kind      = "kernel"
-summary   = "Softmax attention: single-head causal, GQA, Flash-Decoding (per-chunk partials of max, sum, output with an online-softmax reduce) over F32 / F16 / BF16 / Q8_0 / int8 / HFQ / asymmetric FWHT and Givens rotated KV, prefill on WMMA, sliding window (82 sources, 87 gfx1151 compile units)"
+summary   = "hipfire's softmax attention family (82 sources, 87 gfx1151 units): single-head causal, GQA and Flash-Decoding that splits history into chunks of partial max, sum and output merged by an online-softmax correction in chunk order, reading KV stored as F32, F16, BF16, Q8_0, int8, HFQ or FWHT / Givens rotated low-bit K decoded in-kernel, plus WMMA prefill, sliding-window and latent (MLA) attention"
+why       = "hipfire lets each session pick its KV format, so attention must read every format kv_cache can write, and chunked decode keeps long histories parallel across the GPU. docs/PHASE5-GLM52-GAPMAP.md found its latent_attention kernels the catalogue's only MLA attention and the nearest fit for GLM-5.2 (BF16 latent rows where colibri keeps F32); it has passed only the compile gate, and no recipe binds it"
 notes     = "2 of the sources have no compile unit here (assembled by Rust code in the origin, or broken in the origin): see docs/harvest/data/hipfire/not_gfx1151.json."
 
 [provenance]

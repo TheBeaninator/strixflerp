@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.moe_gate"
 kind      = "kernel"
-summary   = "MoE router gate logits (and indexer head weights) of a prompt chunk: x bf16 times fp16 weights on bf16 WMMA with an exact hi/lo split"
+summary   = "Router gate logits and indexer head weights for a prompt chunk on bf16 WMMA: each fp16 weight is split exactly into two bf16 values (top 8 significant bits and the remaining 3), so every product is exact and the fp32 accumulation over 5,120 lands within gamma(5120) of the exact sum, in two tile shapes (128x64 for 384 router outputs, 32x32 for 32 index heads), with each row depending only on its own input"
+why       = "It replaces the prompt path's widen-to-fp32 then hipBLAS sgemm (torch's x.float() @ gate_w.float().t()) with a single kernel that keeps the same error contract as torch's fp32 GEMM, so the conversions and the library call disappear while expert routing keeps the error bound it had (aux_gate.hip); the same kernel, in a 32x32 build, makes the indexer's head weights"
 
 [provenance]
 origin    = "strixfold"

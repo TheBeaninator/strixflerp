@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.norm_rope"
 kind      = "kernel"
-summary   = "RMSNorm (row-split, residual-add and at-slot forms), L2 norm, LayerNorm, RoPE in its interleaved / half-split / partial / tail / YaRN / mRoPE forms, Givens and FWHT (MQ) rotations (32 sources, 52 gfx1151 compile units)"
+summary   = "hipfire's norm and rotation kernels (32 sources, 52 units): fp32 RMSNorm in row-split, residual-add and at-slot forms, L2 norm and LayerNorm, RoPE in interleaved, half-split, partial, tail, YaRN and mRoPE layouts, the FWHT-256 sign rotation of activations for MQ weights (fusable into RMSNorm) and Givens rotations for KV"
+why       = "MQ weights cancel their offline rotation only if each activation is rotated the same way, and hipfire folds that rotation into the RMSNorm that already reads the row so it costs little (GLOSSARY.md, MagnumQuant); the many RoPE layouts cover every arch hipfire loads. docs/PHASE5-GLM52-GAPMAP.md picks its rope_tail_interleaved variants for GLM-5.2's 64-dim tail; compiles, untested on hardware"
 
 [provenance]
 origin    = "hipfire"

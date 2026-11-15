@@ -1,6 +1,7 @@
 id        = "runtime.gufo.mtp"
 kind      = "runtime"
-summary   = "MTP speculators: the Qwen MTP head (model, executor, backend, reference) and the Qwen3.8-Flash-Next MTP policy, costs and n-gram tables"
+summary   = "gufo's multi-token-prediction speculators: the Qwen MTP head as model, executor, backend and reference, and Flash-Next's adaptive MTP policy with per-cycle cost tables and the n-gram tables that propose copies from a session's own earlier tokens"
+why       = "Flash-Next ships an MTP predictor and gufo's best Flash-Next decode uses it (upstream README: up to 117 tok/s single user, 246 aggregated on 8 requests); the policy sizes drafts from measured costs, and the copy tables replace neural drafts on repeated text. docs/PHASE5-GLM52-GAPMAP.md lists it as the catalogue's MTP draft for later phase 5 work; in the gufo recipes it is bound only through the Qwen closure"
 
 [provenance]
 origin    = "gufo"

@@ -1,6 +1,8 @@
 id      = "runtime.strixite.libwebp"
 kind    = "runtime"
-summary = "libwebp 1.6.0 decoder subset (x86), vendored unchanged by the origin, built as C11"
+summary = "The libwebp 1.6.0 WebP decoder (lossy VP8, lossless VP8L, alpha, extended VP8X) vendored unmodified as upstream's DEC, DSP_DEC (generic, SSE2, SSE4.1) and UTILS_DEC object lists, x86 only, no encoder or demux, compiled as C11"
+why     = "Image inputs to the vision path arrive as WebP often enough to matter: stb_image has no WebP and the single-header decoders refuse extended VP8X files, which most transparent WebPs are, so they would turn away much of what people send; libwebp is the reference decoder and heavily fuzzed, which matters for bytes from the network (third_party/libwebp/README.strix.md). runtime.strixite.vision_preprocess calls it from decode_image"
+notes   = "Release tarball sha256 e4ab7009...c4564, signature verified by the origin 2026-10-14; BSD-3-Clause with patent grant."
 
 [provenance]
 origin   = "strixite"

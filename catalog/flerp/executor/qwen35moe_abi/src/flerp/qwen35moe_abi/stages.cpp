@@ -201,6 +201,21 @@ class Stage {
     exec_->Reset();
     flerp::qwen35moe::SetRecurrentRing(exec_.get(), drafts > 0 ? drafts + 1 : 0);
   }
+  // ORNITH-PCACHE: the stage's KV and recurrent state at `positions` kept apart from the arena (the executor's own
+  // snapshot, device to device), and put back after a reset. One snapshot; a save replaces it.
+  void SnapSave(std::uint32_t positions) {
+    HipOk(hipDeviceSynchronize(), "synchronize before the snapshot");
+    snap_.reset();
+    snap_ = exec_->SaveSnapshot(positions);
+    snap_pos_ = positions;
+  }
+  void SnapRestore(std::uint32_t drafts, std::uint32_t positions) {
+    if (!snap_ || snap_pos_ != positions)
+      throw std::runtime_error("stage: no snapshot at " + std::to_string(positions) + " positions (held " + std::to_string(snap_ ? snap_pos_ : 0) + ")");
+    exec_->RestoreSnapshot(*snap_);
+    flerp::qwen35moe::SetRecurrentRing(exec_.get(), drafts > 0 ? drafts + 1 : 0);
+    HipOk(hipDeviceSynchronize(), "synchronize after the snapshot restore");
+  }
   [[nodiscard]] bool last() const { return last_; }
   [[nodiscard]] std::size_t max_rows() const { return max_rows_; }
 
@@ -208,6 +223,8 @@ class Stage {
   std::uint32_t world_;
   std::shared_ptr<const gufo::hip::QwenGpuModel> model_;
   std::unique_ptr<gufo::hip::QwenGpuExecutor> exec_;
+  std::unique_ptr<gufo::hip::QwenGpuSnapshot> snap_;
+  std::uint32_t snap_pos_{0};
   std::size_t hidden_{0}, max_rows_{0};
   bool first_{false}, last_{false};
   float* d_in_{nullptr};
@@ -296,11 +313,18 @@ bool ServeOne(Stage& stage, relay::Relay& r, std::chrono::milliseconds header_de
     case relay::Op::kReset:
     case relay::Op::kClose: {
       if (stage.last()) r.Send(relay::Op::kReply, 0, 1, 0, 0, {}, h.seq_slot);
-      else r.Send(f.op(), 0, 0, h.flags, h.token, {}, h.seq_slot);
+      else r.Send(f.op(), h.start_pos, 0, h.flags, h.token, {}, h.seq_slot);
       if (f.op() == relay::Op::kClose) return false;
+      if ((h.flags & relay::kSnapSave) != 0U) {   // ORNITH-PCACHE: keep the stage's state at h.start_pos positions, no reset
+        stage.SnapSave(h.start_pos);
+        if (stage.last() && g_draft_on) g_draft->SaveEdge();
+        return true;
+      }
       flerp::qwen35moe::SetDecodeGraph((h.flags & relay::kGraphOff) == 0U);
       const std::uint32_t drafts = (h.flags & relay::kSpecRound) != 0U ? h.token : 0U;
-      stage.Reset(drafts);
+      const bool restore = (h.flags & relay::kSnapRestore) != 0U;
+      if (restore) stage.SnapRestore(drafts, h.start_pos);
+      else stage.Reset(drafts);
       g_draft_on = false;
       if (drafts > 0 && stage.last()) {
         if (g_draft == nullptr) throw std::runtime_error("a drafting session, and the last stage has no draft head (draft_head=on)");
@@ -310,6 +334,7 @@ bool ServeOne(Stage& stage, relay::Relay& r, std::chrono::milliseconds header_de
         dc.costs = g_draft_costs;
         g_draft->Begin(dc);
         g_draft_on = true;
+        if (restore && !g_draft->RestoreEdge(h.start_pos)) throw std::runtime_error("a snapshot restore, and the draft head saved no prompt edge at " + std::to_string(h.start_pos));
       }
       return true;
     }
@@ -464,8 +489,13 @@ bool SetKey(Options& o, const std::string& key, const std::string& value, std::s
     else if (key == "draft_value") o.draft_value = ParseOnOff(key, value);
     else if (key == "draft_costs") o.draft_costs = value;
     else if (key == "mtp_data_file") o.mtp_data_file = value;
+    else if (key == "subchunks") o.subchunks = value == "auto" ? 0U : ParseU32(key, value);
+    else if (key == "subchunk_min_rows") o.subchunk_min_rows = ParseU32(key, value);
+    else if (key == "in_flight") o.in_flight = ParseU32(key, value);
+    else if (key == "reuse_tail") o.reuse_tail = ParseU32(key, value);
+    else if (key == "reuse_grid") o.reuse_grid = ParseU32(key, value);
     else {
-      if (error) *error = "unknown key '" + key + "' (weights, context, world, rank, peers, placement, epoch, deadline_ms, setup_deadline_ms, graph, single_reader, pause_ms, data_file, swarm_helper, swarm_manifest, swarm_from, swarm_conns, drafts, draft_value, draft_head, draft_costs, mtp_data_file)";
+      if (error) *error = "unknown key '" + key + "' (weights, context, world, rank, peers, placement, epoch, deadline_ms, setup_deadline_ms, graph, single_reader, pause_ms, data_file, swarm_helper, swarm_manifest, swarm_from, swarm_conns, drafts, draft_value, draft_head, draft_costs, mtp_data_file, reuse_tail, reuse_grid, subchunks, subchunk_min_rows, in_flight)";
       return false;
     }
   } catch (const std::exception& e) {
@@ -488,6 +518,8 @@ std::string CheckOptions(const Options& o) {
   if (o.draft_head && (o.rank == 0 || o.rank + 1 != o.world)) return "draft_head is the last stage process's key";
   if (o.draft_value && o.drafts == 0) return "draft_value needs drafts (rank 0)";
   if (!o.draft_costs.empty() && !o.draft_head) return "draft_costs needs draft_head (the last stage process)";
+  if ((o.reuse_tail > 0 || o.reuse_grid > 0) && o.rank != 0) return "reuse_tail and reuse_grid are rank 0's keys";
+  if (o.reuse_grid > 0 && o.reuse_tail == 0) return "reuse_grid needs reuse_tail";
   if (o.world == 1) {
     if (!o.peers.empty()) return "world 1 has no peers";
     return "";
@@ -621,46 +653,96 @@ Reply Pipeline::Forward(bool decode, std::span<const std::int32_t> ids, std::uin
   try {
     std::vector<TokenId> tok(ids.size());
     for (std::size_t i = 0; i < ids.size(); ++i) tok[i] = static_cast<TokenId>(ids[i]);
-    Out o = I.stages[0]->Run(decode, tok, start, ids.size(), want, full, nullptr);
     if (I.r0 == nullptr) {
+      Out o = I.stages[0]->Run(decode, tok, start, ids.size(), want, full, nullptr);
       rep.token = static_cast<std::int32_t>(o.token);
       rep.logits = std::move(o.logits);
       return rep;
     }
-    if (session_drafts_ > 0) {
-      // a drafting session: a decode step is a round of one frame; a prompt chunk carries its ids
-      if (full) Fail("a drafting session returns tokens only");
-      if (decode) {
+    if (session_drafts_ > 0 && full) Fail("a drafting session returns tokens only");
+    if (decode) {
+      // nothing of a prompt may be in flight before a decode step
+      Drain();
+      Out o = I.stages[0]->Run(true, tok, start, 1, want, full, nullptr);
+      if (session_drafts_ > 0) {
+        // a drafting session: a decode step is a round of one frame
         const relay::Frame f = SendRound(tok[0], 0, start, o.rows);
         TakeSpec(f, nullptr);
         rep.token = static_cast<std::int32_t>(f.header.token);
         return rep;
       }
-      std::vector<std::uint8_t> payload(reinterpret_cast<const std::uint8_t*>(o.rows.data()),
-                                        reinterpret_cast<const std::uint8_t*>(o.rows.data() + o.rows.size()));
-      for (const TokenId id : tok) {
-        const auto u = static_cast<std::uint32_t>(id);
-        payload.insert(payload.end(), reinterpret_cast<const std::uint8_t*>(&u), reinterpret_cast<const std::uint8_t*>(&u) + sizeof(u));
-      }
-      I.r0->Send(relay::Op::kPrefillChunk, start, static_cast<std::uint32_t>(ids.size()), (want ? relay::kWantLogits : 0U) | relay::kWithIds, 0, payload);
-      const relay::Frame f = I.r0->Recv();
-      if (f.op() != relay::Op::kReply) Fail(std::string("rank 0: expected REPLY, got ") + relay::OpName(f.op()));
+      const std::uint32_t flags = want ? relay::kWantLogits | (full ? relay::kFullLogits : 0U) : 0U;
+      I.r0->Send(relay::Op::kDecode, start, 1, flags, 0, Bytes(o.rows));
+      ++unread_;
+      Pump();
+      const relay::Frame f = ReadReply();
+      if (want && full && f.payload.size() != static_cast<std::size_t>(vocab_) * sizeof(float)) Fail("rank 0: the reply carries no logits row");
       rep.token = static_cast<std::int32_t>(f.header.token);
-      if ((f.header.flags & relay::kSpecReply) != 0U) TakeSpec(f, nullptr);
+      rep.logits = Floats(f.payload);
       return rep;
     }
-    const std::uint32_t flags = want ? relay::kWantLogits | (full ? relay::kFullLogits : 0U) : 0U;
-    I.r0->Send(decode ? relay::Op::kDecode : relay::Op::kPrefillChunk, start, static_cast<std::uint32_t>(ids.size()), flags, 0, Bytes(o.rows));
-    Pump();
-    const relay::Frame f = I.r0->Recv();
-    if (f.op() != relay::Op::kReply) Fail(std::string("rank 0: expected REPLY, got ") + relay::OpName(f.op()));
-    if (want && full && f.payload.size() != static_cast<std::size_t>(vocab_) * sizeof(float)) Fail("rank 0: the reply carries no logits row");
+    // A prompt forward (ORNITH-SUBCHUNK 6abf28258c): relay::SubchunkParts(rows) sub-chunks back to back, sizes differing
+    // by at most one row; only the last may ask for the row. With in_flight > 0 over TCP the replies are left unread
+    // until in_flight are, or until a forward wants its row: the front end's next prompt forward then finds the ring
+    // still busy instead of drained. A drafting session's chunks carry their ids (the last stage's MTP head).
+    const bool keep = opt_.in_flight > 0 && I.relays.size() < 2;
+    if (!keep) Drain();
+    const std::size_t rows = tok.size();
+    const std::size_t parts = relay::SubchunkParts(rows, opt_.subchunks, opt_.subchunk_min_rows);
+    std::size_t off = 0;
+    for (std::size_t k = 0; k < parts; ++k) {
+      if (keep && unread_ >= opt_.in_flight) (void)ReadReply();
+      const std::size_t n = rows / parts + (k < rows % parts ? 1 : 0);
+      const bool last = k + 1 == parts;
+      const bool w = want && last;
+      const std::vector<TokenId> sub(tok.begin() + static_cast<std::ptrdiff_t>(off), tok.begin() + static_cast<std::ptrdiff_t>(off + n));
+      const auto pos = static_cast<std::uint32_t>(start + off);
+      Out o = I.stages[0]->Run(false, sub, pos, n, w, full && last, nullptr);
+      if (session_drafts_ > 0) {
+        std::vector<std::uint8_t> payload(reinterpret_cast<const std::uint8_t*>(o.rows.data()),
+                                          reinterpret_cast<const std::uint8_t*>(o.rows.data() + o.rows.size()));
+        for (const TokenId id : sub) {
+          const auto u = static_cast<std::uint32_t>(id);
+          payload.insert(payload.end(), reinterpret_cast<const std::uint8_t*>(&u), reinterpret_cast<const std::uint8_t*>(&u) + sizeof(u));
+        }
+        I.r0->Send(relay::Op::kPrefillChunk, pos, static_cast<std::uint32_t>(n), (w ? relay::kWantLogits : 0U) | relay::kWithIds, 0, payload);
+      } else {
+        const std::uint32_t flags = w ? relay::kWantLogits | (full ? relay::kFullLogits : 0U) : 0U;
+        I.r0->Send(relay::Op::kPrefillChunk, pos, static_cast<std::uint32_t>(n), flags, 0, Bytes(o.rows));
+      }
+      ++unread_;
+      off += n;
+    }
+    if (!keep) {
+      for (std::size_t k = 0; k < parts; ++k) Pump();   // loopback: each other rank serves one frame a pump
+    }
+    if (keep && !want) return rep;   // rows 0: nothing to give back; the replies are read later
+    while (unread_ > 1) (void)ReadReply();
+    const relay::Frame f = ReadReply();
     rep.token = static_cast<std::int32_t>(f.header.token);
-    rep.logits = Floats(f.payload);
+    if ((f.header.flags & relay::kSpecReply) != 0U) {
+      TakeSpec(f, nullptr);
+    } else {
+      if (want && full && f.payload.size() != static_cast<std::size_t>(vocab_) * sizeof(float)) Fail("rank 0: the reply carries no logits row");
+      rep.logits = Floats(f.payload);
+    }
   } catch (const std::exception& e) {
     Fail(e.what());
   }
   return rep;
+}
+
+relay::Frame Pipeline::ReadReply() {
+  Impl& I = *impl_;
+  relay::Frame f = I.r0->Recv();
+  if (f.op() != relay::Op::kReply) Fail(std::string("rank 0: expected REPLY, got ") + relay::OpName(f.op()));
+  if (unread_ > 0) --unread_;
+  return f;
+}
+
+void Pipeline::Drain() {
+  Impl& I = *impl_;
+  while (I.r0 != nullptr && unread_ > 0) (void)ReadReply();
 }
 
 // A spec reply's words: [kept, drafts, frames, kept ids.., drafts.., drawn ids..]; the drafts become held().
@@ -699,6 +781,11 @@ relay::Frame Pipeline::SendRound(std::int32_t pending, std::uint32_t held, std::
 
 Round Pipeline::Verify(std::int32_t pending, std::uint32_t held, std::uint32_t start) {
   if (failed_) throw std::runtime_error("the stages failed earlier: " + reason_);
+  try {
+    Drain();
+  } catch (const std::exception& e) {
+    Fail(e.what());
+  }
   if (session_drafts_ == 0) throw std::logic_error("verify outside a drafting session");
   if (held > held_.size()) throw std::logic_error("verify of " + std::to_string(held) + " drafts, " + std::to_string(held_.size()) + " held");
   Impl& I = *impl_;
@@ -714,18 +801,36 @@ Round Pipeline::Verify(std::int32_t pending, std::uint32_t held, std::uint32_t s
   return round;
 }
 
-void Pipeline::Reset(std::uint32_t drafts) {
+void Pipeline::SnapSave(std::uint32_t positions) {
+  if (failed_) throw std::runtime_error("the stages failed earlier: " + reason_);
+  Impl& I = *impl_;
+  try {
+    if (I.r0 != nullptr) I.r0->Send(relay::Op::kReset, positions, 0, relay::kSnapSave, 0, {});
+    I.stages[0]->SnapSave(positions);
+    if (I.r0 != nullptr) {
+      Pump();
+      if (I.r0->Recv().op() != relay::Op::kReply) Fail("rank 0: SNAPSHOT not answered");
+    }
+  } catch (const std::exception& e) {
+    Fail(e.what());
+  }
+}
+
+void Pipeline::Reset(std::uint32_t drafts, std::uint32_t restore) {
   if (failed_) throw std::runtime_error("the stages failed earlier: " + reason_);
   if (drafts > opt_.drafts) throw std::invalid_argument("a session of " + std::to_string(drafts) + " drafts, the executor's most is " + std::to_string(opt_.drafts));
   Impl& I = *impl_;
   try {
+    Drain();
     std::uint32_t flags = opt_.graph ? 0U : relay::kGraphOff;
     if (drafts > 0) flags |= relay::kSpecRound | relay::kSpecAllRows | (opt_.draft_value ? relay::kSpecValue : 0U);
-    if (I.r0 != nullptr) I.r0->Send(relay::Op::kReset, 0, 0, flags, drafts, {});
+    if (restore > 0) flags |= relay::kSnapRestore;
+    if (I.r0 != nullptr) I.r0->Send(relay::Op::kReset, restore, 0, flags, drafts, {});
     flerp::qwen35moe::SetDecodeGraph(opt_.graph);
     session_drafts_ = drafts;
     held_.clear();
-    I.stages[0]->Reset(drafts);
+    if (restore > 0) I.stages[0]->SnapRestore(drafts, restore);
+    else I.stages[0]->Reset(drafts);
     if (I.r0 != nullptr) {
       Pump();
       if (I.r0->Recv().op() != relay::Op::kReply) Fail("rank 0: RESET not answered");
@@ -741,6 +846,7 @@ void Pipeline::Close() noexcept {
   Impl& I = *impl_;
   if (I.r0 != nullptr && !failed_ && !I.r0->poisoned()) {
     try {
+      Drain();
       I.r0->Send(relay::Op::kClose, 0, 0, 0, 0, {});
       Pump();
       (void)I.r0->Recv();

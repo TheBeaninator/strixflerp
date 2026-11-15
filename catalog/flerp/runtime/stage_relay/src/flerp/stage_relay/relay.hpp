@@ -25,6 +25,7 @@
 #ifndef FLERP_STAGE_RELAY_RELAY_HPP_
 #define FLERP_STAGE_RELAY_RELAY_HPP_
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstddef>
@@ -68,6 +69,12 @@ enum Flags : std::uint32_t {
                        // kept chain ends), so every frame's drawn id comes back (the ABI's verify returns every row)
   kSpecLookup = 256U,  // kReset with kSpecRound: prompt-lookup drafts first, MTP at most (flags >> 16) & 0xff a round
                        // (ORNITH-CRUCIBLE item 4, draft_round.hpp)
+  // Slot-resident prefix reuse (ORNITH-PCACHE, gate/ornith-pcache.toml). Both ride a kReset frame whose start_pos is the
+  // number of positions the snapshot covers:
+  kSnapSave = 512U,    // kReset: no reset; every stage saves a snapshot of its KV and recurrent state at start_pos positions
+                       // (the last stage's draft head also its prompt edge: the pending row and committed ids)
+  kSnapRestore = 1024U,// kReset: every stage resets, then restores its snapshot (start_pos positions, as saved); the session
+                       // flags (kSpecRound, kGraphOff) apply as for a plain reset
 };
 inline constexpr std::uint32_t kSkippedId = 0xffffffffU;
 inline constexpr std::uint32_t SpecFrameFlags(std::uint32_t j, std::uint32_t frames) noexcept {
@@ -220,6 +227,20 @@ class Relay {
 
 /// 64 hex digits to 32 bytes; throws std::invalid_argument.
 [[nodiscard]] std::array<std::uint8_t, 32> PlanFromHex(const std::string& hex);
+
+/// How many sub-chunks a prompt call of `rows` rows goes down the ring as (ORNITH-SUBCHUNK 6abf28258c; the causes in
+/// /data/pod/reports/2026-11/ornith-confirm2.md: a 256-row sub-chunk streams nearly a whole stage's experts once, so it
+/// is weight-bandwidth bound). subchunks 0 = auto: clamp(rows / unit, 1, 16), unit = min_rows (1,024 when min_rows is
+/// 0 or 1); subchunks S > 0: S, at most rows. Then the floor: when min_rows > 1 no call is cut into more than
+/// rows / min_rows parts, so every part keeps at least min_rows rows (one part when rows < min_rows). Parts differ in
+/// size by at most one row (the callers cut rows / parts, one more for the first rows % parts).
+inline std::size_t SubchunkParts(std::size_t rows, std::size_t subchunks, std::size_t min_rows) {
+  if (rows == 0) return 1;
+  const std::size_t unit = min_rows > 1 ? min_rows : 1024;
+  std::size_t parts = subchunks == 0 ? std::clamp<std::size_t>(rows / unit, 1, 16) : std::min(subchunks, rows);
+  if (min_rows > 1) parts = std::min(parts, std::max<std::size_t>(rows / min_rows, 1));
+  return std::max<std::size_t>(parts, 1);
+}
 
 }  // namespace flerp::stage_relay
 

@@ -1,0 +1,37 @@
+# ORNITH-BRIDGE (pod card 8db1be3486, parent PREFILL-ORNITH 8ef0a645e7). Committed BEFORE any GPU run of this card;
+# never loosened after it (an amendment, if any, is added below with its date and reason).
+#
+# Question: ORNITH-CONFIRM2 (3bed1267a2, window 11140653) failed prefill arm G on fidelity: greedy had to equal the
+# OLD prompt path on 3/3 P5 prompts and `bridge` (21 tokens) split at generated token 8 (old ..382, 318, 269 / G ..382,
+# 13, 198). The window recorded no logits (--reply token), so the 397B margin at the split is unknown. Is the split a
+# near-tie that the old path's own rounding decides, or a defect in G's short-prompt path?
+#
+# Mechanism. Below FLERP_MOE_GROUPED_MIN (64 rows) the experts take the per-token path in every arm, so on a 21-row
+# prompt G differs from the old path (A) in two places only: the dense projections read F16 activations through
+# kgrouped Linear instead of BF16 -> tiled Q8_1 MMQ, and attention takes attn_wmma_gqa instead of the scalar online
+# fallback (neither the 35B's 16/2 nor Ornith's 32/2 heads are in the origin's WMMA pass). Both apply on the 35B proxy
+# at the same row count, so it exercises the same code. On the 35B, A is mean KL 0.0176 from FP32 and G 0.0040
+# (gate/prefill-ornith.toml amendment 5a4ef60; pfo-35b-attnD).
+#
+# Tool: python3 gate/prefill_ornith_35b.py short --out DIR (control-node GPU, tools/gpu-queue.sh behind gate/loadwait.sh),
+# then judge-short DIR. Model: Qwen3.6-35B-A3B Q4_K_M, /data/models (pod-weights staged, NVMe).
+
+[run]
+prompts   = "bridge, code, rivers (gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json, the P5 prompts the 397B ran) plus 8 short records slices rec[o:o+24], o = 0, 150, 300, 450, 600, 900, 1200, 1500 (24 rows, under the 64-row expert floor like bridge)"
+arms      = "A (old path), G (window arm), Z (champion: G + live tiles + tiled router + fast combine), X (exact dense, the closest prompt arm to FP32), D (prompt through the decode step, FP32 activations: the reference)"
+phase1    = "one load: greedy 48 tokens a prompt, every arm, through --trace (top 2)"
+phase2    = "one load: every arm teacher-forced on D's greedy ids AND on A's greedy ids (each prompt listed twice), logits top 1,000 + logsumexp at generated positions 0-47"
+split     = "a split of arms P,Q on a prompt = the first index i where their greedy ids differ; the context there (prompt + ids[:i]) is common to both, and its logits come from phase 2 forced on A's ids (same prefix)"
+
+[criteria]
+# gap_D(i) = |log p_D(a_i) - log p_D(g_i)|: the reference's log-probability gap between the two tokens the arms chose.
+N1 = "near-tie: at every A-vs-G split, gap_D < 0.3 nats (the margin F2 of gate/prefill-ornith.toml calls a tie)"
+N2 = "direction: over all A-vs-G splits, G's token is D's top-1 at least as often as A's token is"
+N3 = "distance: mean KL(D || G) <= mean KL(D || A) over the phase-2 positions forced on D's ids (all 11 prompts)"
+N4 = "Z equals G: identical greedy ids on every prompt and identical forced top-1 at every position (PREFILL-LRC Z1 at 21-24 rows)"
+defect = "defect if any A-vs-G split has gap_D >= 1.0 nat with G's token not D's top-1, or mean KL(D || G) > 2 x mean KL(D || A), or N4 fails"
+verdict = "near-tie if N1-N4 hold; defect if the defect rule fires; otherwise inconclusive (recorded as such, with the numbers)"
+no_split = "if A and G do not split on any prompt, N1 and N2 hold vacuously and the verdict rests on N3, N4 and the top-1 agreement with D; that is recorded as 'no split on the proxy'"
+
+[record]
+also = "per split: index, the two tokens, D's top-2 margin, A's and G's own margins there, X's and Z's tokens; per arm: mean/max KL vs D, top-1 vs D, greedy-equal-to-D count; the window's 397B split is not measured here (needs the stage driver's top-k, added on this card)"

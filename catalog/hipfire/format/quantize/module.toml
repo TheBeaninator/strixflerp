@@ -1,6 +1,7 @@
 id        = "format.hipfire.quantize"
 kind      = "format"
-summary   = "The hipfire quantizer / converter: HFQ, MQ (FWHT rotation, symmetric, Lloyd MQ4V2), HFP4 / MFP4, E8 lattice and GPTQ, Q4, GGUF input, per-model pipelines (Qwen4 slabs and PLE hot packs, DeepSeek)"
+summary   = "hipfire's offline, CPU-only quantizer and converter: safetensors or GGUF in, .hfq containers out, writing HFQ, MagnumQuant MQ (an FWHT-256 rotation baked into the weights, asymmetric or Lloyd codebook, V2 dual-fp16 headers), HFP4 / MFP4 (E2M1 codes with UE8M0 scales), E8-lattice and GPTQ variants, through per-model pipelines such as Qwen4 slabs, PLE hot packs and DeepSeek"
+why       = "hipfire's kernels read formats no other tool writes, so it ships its own converter; the rotation spreads outliers across a group before 4-bit or lower quantization and was designed around Qwen 3.5 / 3.6 weight distributions (docs/QUANTIZATION.md), and the crate stays free of GPU dependencies so CI can run it (map.md). strixflerp keeps it as the definition of the bytes the hipfire kernels decode; it is not built"
 notes     = "The crate is taken whole, so it also carries image-model pipelines (pipeline_flux.rs, raon.rs, vision_sidecar.rs) that are outside this pass."
 
 [provenance]

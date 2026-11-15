@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_common"
 kind      = "kernel"
-summary   = "HIP device basics for RDNA2/3/3.5/4: arch switches (TF_WAVE, dot2, sdot, matrix units), vector types, dot2 helpers, WMMA fragments, the columns-controls contract header"
+summary   = "Header-only HIP basics for RDNA2 through RDNA4: arch switches from the build's TF_* caps (wave32, FP16 and BF16 dot2, sdot4/8, gfx11 versus gfx12 WMMA; RDNA1 refused), the 128-bit load vector, Dot plug-ins whose x pair comes from a quad lane by DPP, gfx11 WMMA fragments, and the columns-controls contract header."
+why       = "Upstream's tiles are templates over a Dot unit, so one GEMV or GEMM body compiles to dot2 on RDNA2 and to WMMA on RDNA3 and 4 by swapping these headers, and kernels test capabilities, never a gfx name. Every other hip_* module includes it, which is why it stands alone (SPEC section 5's rule for shared headers)."
 
 [provenance]
 origin    = "tensorfold"

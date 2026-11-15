@@ -1,6 +1,7 @@
 id      = "kernel.strixite.hip_common"
 kind    = "kernel"
-summary = "The repo's HIP runtime include and STRIX_HIP_CHECK return-code checks"
+summary = "Two headers: the repo's single include point for hip_runtime.h (pulling in <format> first so HIP's __noinline__ macro cannot break GCC 16's libstdc++), and STRIX_HIP_CHECK, which formats a failed HIP call with its expression and context and throws GpuFatalError for sticky errors that poison the context"
+why     = "Host code across strixite needs one way to include HIP that compiles with the pod's GCC 16 standard library, and one way to report HIP failures that tells a recoverable error (out of memory, bad argument) from a device fault after which every call fails (strixite issue #6), so the server can stop instead of serving garbage. Header-only; kernel and runtime modules require it by module id."
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id      = "tool.strixite.steer_check"
 kind    = "tool"
-summary = "Test: a run's steering never touches another run of its batch, bit for bit"
+summary = "Two slots with different prompts are prefilled alone and then decoded together in one batch twice, unsteered and with a vector on slot 1 only; slot 0's logits must be bit-identical between the batches and slot 1's must change"
+why     = "Steering (STEER-2) is applied per request inside batched decode, so a bug could leak one user's steering into another's output; holding the batch shape fixed makes bit-exactness the right bar. The recorded run shows slot 0 unchanged bit for bit and slot 1 moved by up to 33.7 logits (gate/results/qwen38-flash-next.strixite/at-20937dc/unit-steer_check.txt)"
 
 [provenance]
 origin   = "strixite"

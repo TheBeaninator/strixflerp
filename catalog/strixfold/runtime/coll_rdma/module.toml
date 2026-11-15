@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.coll_rdma"
 kind      = "runtime"
-summary   = "Coll over RoCE verbs: tcp_proxy slot collective with one RC RDMA write-with-immediate per staged slot (pod card SFR-2); the older one-hop RDMA ring and its sequence bookkeeping"
+summary   = "Coll over RoCE verbs: rdma_proxy, the pod's version of tcp_proxy's slot collective in which each staged slot leaves as one RC RDMA write-with-immediate and every slot carries a checked 64-byte trailer (magic, epoch, sequence, bytes, site, rank), with gathers larger than a slot falling back to tcp_host; plus the CUDA-era one-hop verbs ring and its sequence bookkeeping"
+why       = "The port's links were USB4 TCP, and the pod's workers sit on a 100 GbE RoCE rail instead; rdma_proxy (pod card SFR-2) keeps the same slab, kernels, generation protocol and fault contract, so graph capture is unchanged, and the pod measured 30.8 decode tok/s on F and A with it (its regime note); prefill gathers stay on TCP in this phase"
 notes     = "rdma_proxy.zig and rdma_check.py are pod-authored (commits 3da08b5, 7bf2623). rdma.zig is the CUDA-era verbs ring (f44d736: used on CUDA only)."
 
 [provenance]

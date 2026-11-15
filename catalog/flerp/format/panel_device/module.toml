@@ -1,6 +1,7 @@
 id        = "format.flerp.panel_device"
 kind      = "format"
 summary   = "Q4Panel16 / Q8Panel16 tensors on the device: the panel view the panel kernels take, its device addressing, and the tag that carries a panel tensor inside strixite's Q4DeviceView / Q8DeviceView (scale = min = null, G = encoding id << 32 | G) so no row-major kernel can read it"
+why       = "A panel tensor has to travel through strixite's executor in the same Q4DeviceView / Q8DeviceView types its call sites use, yet no row-major kernel may ever read it as rows; tagging the view (null scale and min, encoding id in the high bits of G) lets the adapters dispatch on it and makes any untouched kernel fail loudly instead of computing garbage, the guard stage 5 of the layout plan asked for"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 5 (the view, dispatched by encoding). Header only. Byte layout: format.flerp.q4panel / q8panel."
 
 [provenance]

@@ -1,6 +1,7 @@
 id      = "kernel.strixite.rope"
 kind    = "kernel"
-summary = "Partial rotary position embedding (rotate-half on the first rot_dim dims), with YaRN and interleaved-mRoPE positions"
+summary = "Partial rotate-half RoPE on the first rot_dim dims of each head, in place inside the merged qkv rows, with inv_freq and angles computed in transformers' exact FP32 order (no FMA), YaRN frequency blending and attention factor, and interleaved-mRoPE positions for image tokens"
+why     = "Positions must match the checkpoint bit for bit, because a double-precision inv_freq differs in 15 of 32 values and the error grows with position (header). YaRN at factor 2 is what let the model reach 512k tokens at no speed or quality cost (how-it-got-fast.md section 4), and interleaved mRoPE gives image patches their (t, h, w) positions while the text path, with null pos3, keeps its old values exactly. Provides pos.rope in the strixite recipes and the host-side inv_freq tables the executors upload."
 
 [provenance]
 origin   = "strixite"

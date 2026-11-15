@@ -35,8 +35,10 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
+#include <span>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "flerp/qwen35moe_abi/stages.hpp"
@@ -60,6 +62,19 @@ struct flerp_executor {
     bool verifying = false; // a verify is pending keep / keep_prefix
     bool left = false;      // a keep left the last stage's greedy chain (an end id kept short, a cut): reset next
     qabi::Round round;
+    // Slot-resident prefix reuse (ORNITH-PCACHE, key reuse_tail > 0; gate/ornith-pcache.toml). The stages keep one snapshot of
+    // their KV and recurrent state, taken at the start of the last prompt forward when at least reuse_tail ids follow (so the
+    // chat template's generation prompt, which the next request's rendering of the same thread does not repeat, stays out of
+    // it; prompt forwards are cut at the reuse grid when reuse_grid > 0). A seq whose
+    // first ids equal the snapshot's ids leaves the stages alone (those forwards are skipped), restores the snapshot at its
+    // end and forwards only what follows; any other prompt resets the stages and forwards everything, as before.
+    std::vector<int32_t> hist;          // the prompt's ids at positions 0.. of this seq (prompt forwards only)
+    std::vector<std::pair<int64_t, size_t>> skipped;   // (start, n) of the forwards skipped while the match holds
+    bool deferred = false;              // seq_new did not reset the stages: the ids so far equal the snapshot's and were skipped
+    int64_t snap_K = 0;                 // positions the snapshot covers (0: none)
+    std::vector<int32_t> snap_ids;      // its ids
+    uint32_t snap_drafts = 0;           // the draft depth of the session that saved it (the draft head's edge exists only then)
+    int64_t reuse_hits = 0, reuse_misses = 0, reuse_tokens = 0, reuse_saves = 0;
     mutable std::string error;
     flerp_stats stats{};
 };
@@ -89,7 +104,94 @@ flerp_status reset_all(flerp_executor *ex) {
     }
     ex->pos = 0, ex->prompted = false;
     ex->pending = -1, ex->hold = 0, ex->verifying = false, ex->left = false;
+    ex->deferred = false, ex->hist.clear(), ex->skipped.clear();
+    ex->snap_K = 0;   // a prompt forwarded from position 0 overwrites the KV the snapshot stands on
     return FLERP_OK;
+}
+
+// A new seq. With a snapshot of the same session kind the stages are left as they are (no reset): the prompt's forwards
+// are matched against the snapshot's ids first (prompt_with_reuse). Otherwise the stages reset now.
+flerp_status begin_session(flerp_executor *ex) {
+    if (ex->opt.reuse_tail > 0 && ex->snap_K > 0 && ex->snap_drafts == ex->drafts) {
+        ex->pos = 0, ex->prompted = false;
+        ex->pending = -1, ex->hold = 0, ex->verifying = false, ex->left = false;
+        ex->deferred = true, ex->hist.clear(), ex->skipped.clear();
+        return FLERP_OK;
+    }
+    return reset_all(ex);
+}
+
+// The match failed (or the final forward must run): the stages reset and the forwards skipped so far run, in the chunks
+// they came in, so the prompt reaches the stages as a cold prompt does.
+void replay_skipped(flerp_executor *ex, const char *why) {
+    ex->deferred = false;
+    ex->snap_K = 0;
+    ex->p->Reset(ex->drafts);
+    for (const auto &[start, n] : ex->skipped)
+        (void)ex->p->Forward(false, std::span<const int32_t>(ex->hist.data() + start, n), (uint32_t)start, false, false);
+    ex->skipped.clear();
+    ++ex->reuse_misses;
+    qabi::Emit(std::string("{\"event\":\"prefix_miss\",\"why\":\"") + why + "\",\"replayed_to\":" + std::to_string(ex->hist.size()) + "}");
+}
+
+// One prompt piece ids[0, n) at position q (a forward, or part of one cut at the reuse grid), reuse on. true: the stages ran
+// it and *r is their reply; false: skipped. ex->hist already holds the ids at their positions.
+bool prompt_piece(flerp_executor *ex, const int32_t *ids, size_t n, int64_t q, bool want, bool full, qabi::Reply *r) {
+    const int64_t P = q + (int64_t)n;
+    size_t off = 0;   // ids[0, off) matched the snapshot and are not forwarded
+    if (ex->deferred) {
+        const int64_t K = ex->snap_K;
+        const int64_t cmp = std::min<int64_t>((int64_t)n, K - q);
+        const bool equal = cmp <= 0 || std::equal(ids, ids + cmp, ex->snap_ids.begin() + q);
+        if (!equal) {
+            replay_skipped(ex, "ids differ from the kept prefix");
+        } else if (P <= K) {
+            if (want) {
+                replay_skipped(ex, "the prompt ends inside the kept prefix");   // the final forward's row needs the stages at the prompt's end
+            } else {
+                ex->skipped.emplace_back(q, n);
+                return false;
+            }
+        } else {   // the prompt runs past the kept prefix: put the snapshot back, forward from its end
+            ex->p->Reset(ex->drafts, (uint32_t)K);
+            ex->deferred = false;
+            ex->skipped.clear();
+            ++ex->reuse_hits, ex->reuse_tokens += K;
+            off = (size_t)(K - q);
+            qabi::Emit("{\"event\":\"prefix_reuse\",\"kept\":" + std::to_string(K) + "}");
+        }
+    }
+    const int64_t start = q + (int64_t)off;
+    if (want) {
+        // The final piece: the stages stand at its start, a piece boundary every cold prefill of this prompt has too (same
+        // chunks, so a warm run that restores here forwards the very chunks a cold run does and its ids are the cold run's).
+        // Keep the state here when at least reuse_tail ids follow (the chat template's generation prompt must stay out of the
+        // kept prefix: the next request's rendering of the thread does not repeat it); otherwise the older snapshot, if any, stays.
+        if (start > 0 && P - start >= (int64_t)ex->opt.reuse_tail && start != ex->snap_K) {
+            ex->p->SnapSave((uint32_t)start);
+            ex->snap_K = start, ex->snap_drafts = ex->drafts;
+            ex->snap_ids.assign(ex->hist.begin(), ex->hist.begin() + start);
+            ++ex->reuse_saves;
+        }
+    }
+    *r = ex->p->Forward(false, std::span<const int32_t>(ids + off, n - off), (uint32_t)start, want, full);
+    return true;
+}
+
+// A prompt forward of ids[0, n) at ex->pos, cut at multiples of the reuse grid (key reuse_grid; 0: as the caller made it).
+bool prompt_with_reuse(flerp_executor *ex, const int32_t *ids, size_t n, bool want, bool full, qabi::Reply *r) {
+    const int64_t q0 = ex->pos;
+    const int64_t grid = ex->opt.reuse_grid;
+    bool ran = false;
+    size_t i = 0;
+    while (i < n) {
+        const int64_t q = q0 + (int64_t)i;
+        size_t m = n - i;
+        if (grid > 0) m = std::min<size_t>(m, (size_t)(grid - q % grid));
+        ran |= prompt_piece(ex, ids + i, m, q, want && i + m == n, full, r);
+        i += m;
+    }
+    return ran;
 }
 
 }  // namespace
@@ -177,7 +279,7 @@ flerp_status flerp_seq_new(flerp_executor *ex, const flerp_seq_args *args, int32
     if (want < 0) return fail(ex, FLERP_E_ARGUMENT, "flerp_seq_new: drafts < 0");
     if (want > 0 && ex->opt.drafts == 0) return unsupported(ex, "no draft head (flerp_open drafts=N with a last stage started draft_head=on; caps.max_draft 0)");
     ex->drafts = (uint32_t)std::min<int64_t>(want, ex->opt.drafts);
-    if (const flerp_status st = reset_all(ex)) return st;
+    if (const flerp_status st = begin_session(ex)) return st;
     ex->open = true;
     *seq = 0;
     return FLERP_OK;
@@ -236,16 +338,25 @@ flerp_status flerp_forward(flerp_executor *ex, int32_t seq, const flerp_token *i
             return unsupported(ex, "a drafting seq takes, after its prompt, one id a forward: the id its last reply drew");
     }
     qabi::Reply r;
+    bool ran = true;
     try {
-        r = ex->p->Forward(decode, std::span<const int32_t>(ids, n), (uint32_t)ex->pos, rows == 1, full);
+        if (!decode && !ex->prompted && ex->opt.reuse_tail > 0) {
+            ex->hist.insert(ex->hist.end(), ids, ids + n);
+            ran = prompt_with_reuse(ex, ids, n, rows == 1, full, &r);
+        } else {
+            r = ex->p->Forward(decode, std::span<const int32_t>(ids, n), (uint32_t)ex->pos, rows == 1, full);
+        }
     } catch (const std::exception &e) {
+        ex->snap_K = 0, ex->deferred = false;
         return fail(ex, FLERP_E_FAILED, std::string("forward: ") + e.what());
     }
     ex->pos += (int64_t)n;
+    if (!ran) return FLERP_OK;   // a prompt forward the kept prefix covers: no stage ran it, and it asked for no row
     ++ex->stats.forwards, ex->stats.forward_tokens += (int64_t)n;
     if (ex->drafts > 0 && rows == 1) ex->pending = r.token, ex->hold = 0, ex->stats.draft_tokens += (int64_t)ex->p->held().size();
     if (rows == 0) return FLERP_OK;
     ex->prompted = true;
+    ex->hist.clear();
     out->rows = 0;
     bool nan = false;
     if (full) {
@@ -386,9 +497,12 @@ flerp_status flerp_get_stats(const flerp_executor *ex, flerp_stats *out) {
 }
 
 size_t flerp_stats_json(const flerp_executor *ex, char *out, size_t cap) {
-    char buf[256];
-    const int n = std::snprintf(buf, sizeof(buf), "{\"world\": %u, \"positions_held\": %lld, \"failed\": %s}", ex->opt.world,
-                                (long long)ex->pos, ex->p->failed() ? "true" : "false");
+    char buf[512];
+    const int n = std::snprintf(buf, sizeof(buf),
+                                "{\"world\": %u, \"positions_held\": %lld, \"failed\": %s, \"prefix_hits\": %lld, \"prefix_misses\": %lld, "
+                                "\"prefix_tokens_reused\": %lld, \"prefix_saves\": %lld, \"prefix_kept\": %lld}",
+                                ex->opt.world, (long long)ex->pos, ex->p->failed() ? "true" : "false", (long long)ex->reuse_hits,
+                                (long long)ex->reuse_misses, (long long)ex->reuse_tokens, (long long)ex->reuse_saves, (long long)ex->snap_K);
     if (out != nullptr && cap > 0) {
         const size_t m = std::min((size_t)n, cap - 1);
         std::memcpy(out, buf, m);

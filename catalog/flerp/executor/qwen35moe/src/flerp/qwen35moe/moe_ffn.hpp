@@ -91,6 +91,18 @@ unsigned* DenseOverflowFlag() noexcept;
 /// PREFILL-ORNITH attention: prompt-chunk attention through kernel.flerp.attn_wmma_gqa (1) or the origin's chain (0),
 /// or -1 (default) to follow FLERP_ATTN_GQA.
 void SetAttnGqa(int mode) noexcept;
+
+/// MOE-COMBINE (card 2dc55e67f0): arm C. With mode 1 (or FLERP_MOE_COMBINE_FAST=1) a prompt chunk's MoE combine runs
+/// MoeCombineVec4 (moe_combine.hip: gufo's MoeEpilogue expression, 16-byte loads; bit-identical) and the grouped dense
+/// projections inside a SetDenseInputReuse window convert their shared FP32 input to F16 once. -1 = the environment.
+void SetMoeCombineFast(int mode) noexcept;
+int MoeCombineFastMode() noexcept;
+/// Opens (x) or closes (nullptr) a window in which every LaunchDenseGrouped call on x reuses one F16 conversion of x;
+/// the caller promises x is not written inside the window. A no-op unless MoeCombineFastMode() is 1.
+void SetDenseInputReuse(const float* x) noexcept;
+bool MoeCombineVec4(const float* expert_out, const float* weights, const float* shared_out, const float* gate,
+                    std::uint32_t gate_stride, float* out, std::uint32_t n_tokens, std::uint32_t k, std::uint32_t dim,
+                    hipStream_t stream);
 int AttnGqaMode() noexcept;
 
 /// out[T, H] = the block's feed forward of x[T, H]. Aborts with a message when the scratch is too small.

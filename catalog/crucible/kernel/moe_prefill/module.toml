@@ -1,6 +1,7 @@
 id        = "kernel.crucible.moe_prefill"
 kind      = "kernel"
-summary   = "Prefill MoE: stable expert-major dispatch without atomics (count, prefix, scatter), grouped expert GEMM items of 192 rows x 128 columns on WMMA, pair path (8-wave, two K sets), stable combine"
+summary   = "Prompt-chunk MoE: a stable expert-major counting sort of the routed rows with no atomics (count, prefix, scatter), grouped expert GEMM items of 192 rows by 128 columns on WMMA in which one trellis decode per k step serves 12 row tiles, a pair kernel that runs gate and up in one 8-wave block with SwiGLU in the epilogue, bank-conflict-aware LDS planes, and a slot-stable combine"
+why       = "Routed experts are the largest share of a prefill chunk (32.7% of strixite's in its profile), and decoding a weight tile is the fixed cost; serving 12 row tiles per decode and keeping gate/up out of memory is the 'decode-once, fused pair' recipe docs/CRUCIBLE.md 4.2 ranks second for the fleet (transfer C2 for strixite, and the item-size idea for StrixFold's prompt experts); the crucible-fatzero gate records that the pair kernel spills 772 B a lane under TheRock 10.1"
 
 [provenance]
 origin    = "crucible"

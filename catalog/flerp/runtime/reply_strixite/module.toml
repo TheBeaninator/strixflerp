@@ -1,6 +1,7 @@
 id        = "runtime.flerp.reply_strixite"
 kind      = "runtime"
 summary   = "Qwen3.8-Flash-Next's reply forms behind include/flerp/reply.h: a C shim over strixite's OutputParser (reasoning, content, tool calls; streamed calls) and ThinkWatch (the thinking nudge), the engine's fed texts (thinking budget stop, think close before a call, nudges), and response_format json_object / json_schema compiled with strixite's grammar modules into per-row token masks (serve/structured_output.hpp)"
+why       = "A served chat reply is more than tokens: reasoning has to be split from content and tool calls, thinking budgets and nudges fed back, and JSON schemas enforced as token masks; reusing strixite's own parser, nudge watch and grammar modules gives the generic front end the native server's reply behaviour with no parser written here"
 notes     = "No parser of its own. The nudge watch runs the origin's served policy (server_config.cpp defaults)."
 
 [provenance]

@@ -1,6 +1,7 @@
 id        = "runtime.crucible.sampling"
 kind      = "runtime"
-summary   = "Sampling and generation: own RNG (no std distribution), generation options, decode policy defaults, resident request acceptance"
+summary   = "Host sampling and generation: Crucible's own portable RNG with no std distribution, a keyed sampling stream so a seeded request draws the same ids at any speculation depth or in a packed pass, generation options shared by the CLI and both serve stacks, user-facing decode defaults (speculation depth 7, the 64k draft head) kept apart from benchmark policies, and acceptance of a resident request's draft only after the serial target verifies it"
+why       = "Speculation and batching must not change what a seeded request returns, which a sampler drawing from one shared stream would break; the keyed law is why docs/CRUCIBLE-VS-STRIXITE.md section 2 rates Crucible ahead of strixite's GPU top-20 sampler on reproducibility, and avoiding std distributions keeps the draws identical across standard libraries"
 
 [provenance]
 origin    = "crucible"

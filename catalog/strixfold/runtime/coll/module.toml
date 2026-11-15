@@ -1,6 +1,7 @@
 id        = "runtime.strixfold.coll"
 kind      = "runtime"
-summary   = "The TP collective interface (Coll): stream-ordered all-gather of fp32 partials in rank order, split begin/end, abort, identity handshake; the ranks control link and fan"
+summary   = "StrixFold's collective interface (Coll): a stream-ordered all-gather of fp32 partials in rank order with split begin and end, an abort that poisons the collective on the first failure, a ranks' identity handshake, and the fan of TCP links rank 0 uses to send lane commands and bootstrap the transports"
+why       = "Every model reduction in TP2 is an all-gather followed by a rank-ordered add, so a collective only has to move bytes, and putting it behind one interface let the CUDA build keep NCCL while the HIP build swapped in host-staged TCP and later RDMA (ADAPTER.md D11); the handshake and bounded aborts turn the CUDA tree's silent hangs (a dead peer, mismatched settings) into attributed errors (COLLECTIVES-DESIGN.md section 1)"
 
 [provenance]
 origin    = "strixfold"

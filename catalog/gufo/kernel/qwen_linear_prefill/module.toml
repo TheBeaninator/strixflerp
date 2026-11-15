@@ -1,6 +1,7 @@
 id        = "kernel.gufo.qwen_linear_prefill"
 kind      = "kernel"
-summary   = "Prefill projections: blocked WMMA GEMM directly on K-quant blocks, the Q8_1 activation-quantized route, the FP16 route, hipBLAS / hipBLASLt BF16 GEMM with cached plans, batched SwiGLU"
+summary   = "Prefill projections for the Qwen family: a blocked WMMA GEMM that reads K-quant blocks directly for each output row with no dequantize-to-BF16 pass (bf16 activations, or pre-quantized Q8_1 tiles with an int8 MAC, fp32 accumulate), an FP16 route that rounds scaled weights to fp16 in-kernel, hipBLAS / hipBLASLt BF16 GEMM with cached plans, and batched SwiGLU"
+why       = "Prefill is compute-bound, so it moves from the decode GEMVs to matrix cores; reading quant blocks inside the GEMM avoids materializing a BF16 copy of the weights, and the hipBLASLt route covers BF16 tensors such as the DFlash draft's feature projection. gufo's 27B ROCM.md attributes most of its prefill time to these quantized target GEMMs. Built in every gufo recipe; docs/VISION-DSV41.md names its hipBLASLt route as a BF16 GEMM candidate for DSV4.1 vision"
 
 [provenance]
 origin    = "gufo"

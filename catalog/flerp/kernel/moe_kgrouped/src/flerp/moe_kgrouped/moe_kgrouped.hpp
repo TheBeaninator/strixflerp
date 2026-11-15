@@ -54,6 +54,10 @@ Plan MakePlan(void* scratch, std::size_t pairs, std::size_t n_experts, int bm) n
 int ChooseBm(std::size_t pairs, std::size_t n_experts) noexcept;
 
 void Group(const std::int32_t* ids, Plan& plan, hipStream_t stream);
+
+// PREFILL-KPROF (9506f4f116): live-tile items in GateUp / Down / Linear (F16 path): a wave skips the WMMAs of its
+// 16-row tiles past the item's rows. Bit-identical outputs. -1 = FLERP_KG_LIVE (default off), 0 off, 1 on.
+void SetLiveTiles(int mode) noexcept;
 void ToF16(const float* x, std::uint16_t* xh, std::size_t n, unsigned* overflow, hipStream_t stream);
 
 // x_share: pairs per token (the router's used count; 1 for the shared expert).

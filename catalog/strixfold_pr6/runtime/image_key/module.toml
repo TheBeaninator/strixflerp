@@ -1,6 +1,7 @@
 id        = "runtime.strixfold_pr6.image_key"
 kind      = "runtime"
-summary   = "Image-aware prompt-cache keys: a shadow prompt whose first eight tokens of each image span are the image's sha256, and the rule that a kept state is cut only between image spans"
+summary   = "Image-aware prompt-cache keys: a shadow prompt in which the first eight tokens of every image span are replaced by words of the image payload's sha256 (31 bits a word, over the rows flag, span length and bytes), plus the rule that a kept state is cut only between image spans, with the PR's versions of lane_host.zig and stream.zig that apply them"
+why       = "Every image becomes the same run of placeholder tokens, so a token-keyed prompt cache would restore one picture's state for a different picture; hashing the payload into the key makes a hit mean the same image, and cutting only between spans keeps a state from ending inside an image; it is active only with the image cache and the prompt cache both on, and whether it returns the same tokens as an uncached run is not yet measured (docs/VISION-DSV41.md)"
 notes     = "image_key.zig is new; lane_host.zig and lanes/stream.zig are the PR's versions of files of runtime.strixfold.lanes (overlay.json)."
 
 [provenance]

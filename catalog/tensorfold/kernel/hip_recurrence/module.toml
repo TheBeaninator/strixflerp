@@ -1,6 +1,7 @@
 id        = "kernel.tensorfold.hip_recurrence"
 kind      = "kernel"
-summary   = "Linear-time mixers: Gated DeltaNet (Qwen3.5 / Flash Next) chunked prefill and recurrent decode; Mamba-2 selective scan and conv (Nemotron hybrid)"
+summary   = "Linear-time mixers with fp32 state: Gated DeltaNet as a wave per (batch, value head, value row) walking the sequence with the Python reference's lane sums, a tiled 128-dim prompt form with the same bits, and plan-driven round windows with per-slot keeps and snapshots; Nemotron's Mamba-2 conv, dt clamp, one state recurrence at every length and group norm."
+why       = "Qwen3.5/3.6/3.8 and Flash Next are mostly DeltaNet layers and Nemotron-H mostly Mamba-2, so these scans sit on every token's path. Giving one call's rows and state bit for bit wherever a prompt is cut (checked at cuts of 1, 63, 64, 65 and 136 rows, #617) is what makes kept prompt states and verify windows exact."
 
 [provenance]
 origin    = "tensorfold"

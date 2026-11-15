@@ -1,6 +1,7 @@
 id        = "runtime.gufo.dspark"
 kind      = "runtime"
-summary   = "DSpark speculation for DeepSeek V4 Flash: sampler bridge with bounded proposals and exact rejection / residual correction, policy"
+summary   = "gufo's DSpark speculation bridge for DeepSeek V4 Flash: a sampler bridge that forms a bounded proposal q from the eight corrected device logits, applies exact rejection and residual correction against the target, makes a rejected draw the next cycle's anchor and keeps penalties and filters over the full vocabulary, plus the draft policy"
+why       = "DSpark (an EAGLE-3-style draft sidecar, in hipfire's glossary) only helps if acceptance stays lossless, and this bridge is where gufo guarantees it: target filters always see the whole vocabulary, so drafting never changes what is sampled. It needs the optional DSpark support GGUF; in strixflerp it is harvested and bound only as part of the gufo closure"
 
 [provenance]
 origin    = "gufo"

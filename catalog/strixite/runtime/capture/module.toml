@@ -1,6 +1,8 @@
 id      = "runtime.strixite.capture"
 kind    = "runtime"
-summary = "Capture files of a generation's steps for replay and debugging"
+summary = "Opt-in per-request capture files (strix_server --capture-dir): a JSON header line, then the prompt and generated token ids as little-endian int32, then one 3-byte {drafted, accepted, emitted} record per decode step, written as .partial and renamed, with a strict reader"
+why     = "Drafting policies (prompt-lookup drafts where the MTP head holds back, per-turn-type acceptance margins) were to be judged by simulating them offline on real logged requests before any of them is built; the capture keeps exactly what that simulation needs, token ids and what MTP did at each step, and nothing is written without the flag because the files hold users' prompts. Required by runtime.strixite.engine, which records a request when it finishes"
+notes   = "Step value drafted = 255 (kThinkingStopStep) marks a step where the engine fed text (the thinking stop or a nudge) instead of sampling."
 
 [provenance]
 origin   = "strixite"

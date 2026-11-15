@@ -1,6 +1,7 @@
 id      = "runtime.strixite.grammar"
 kind    = "runtime"
-summary = "Byte-level grammar, automaton and matcher for structured output"
+summary = "Byte-level context-free grammars (rules of alternatives of byte-range or rule-reference elements) matched by a nondeterministic pushdown automaton that tracks every live parse, with tail-call frames for right recursion, a 256-frame depth bound, a left-recursion refusal, and a shared automaton that caches per-state token masks"
+why     = "Structured output needs to know, at every step, which next tokens keep the answer valid; working on bytes rather than characters lets one grammar judge any token, even one that ends inside a UTF-8 character, and caching masks per automaton state means a repeated state costs nothing. It is the core that json_schema and tool_grammar compile into and that token_mask, structured_output, grammar_cache and the engine consult; flerp's reply_strixite reuses it for response_format in the flerp-serve recipes"
 
 [provenance]
 origin   = "strixite"

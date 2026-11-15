@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemm_hfq"
 kind      = "kernel"
-summary   = "Prefill GEMM on HFQ weights: WMMA, dot2 and MMQ bodies; residual, QKV, QKVZA and gate-up multi-output forms (81 sources, 81 gfx1151 compile units)"
+summary   = "Prefill GEMM on HFQ weights (81 sources, 81 units): group codes decoded to f16 tiles for WMMA with fp32 accumulation, dot2 and integer MMQ bodies with quantized activations, and multi-output forms that fuse the residual add, QKV, QKVZA or gate/up into one launch"
+why       = "Batched prefill amortizes dequantization across prompt tokens on RDNA3+ WMMA, and fused multi-output launches cut launch counts; hipfire gives exactly these two as the reason for its own format (QUANTIZATION.md, Why a custom format). docs/PHASE5-GLM52-GAPMAP.md plans on it for multi-row forwards and prefill of an int4 GLM-5.2 after an HFQ transcode; so far it has only been compiled"
 
 [provenance]
 origin    = "hipfire"

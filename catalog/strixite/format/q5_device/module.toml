@@ -1,6 +1,7 @@
 id      = "format.strixite.q5_device"
 kind    = "format"
-summary = "Q5 weight resident on the device and the non-owning view the kernels take"
+summary = "Q5DeviceView and Q5Device: device-resident codes laid out per row as the low then the high plane (5K/8 bytes a row) beside BF16 scale and min planes, uploaded from a host Q5Weight after check_q5 validates it"
+why     = "Role inferred from the code: the device-side counterpart of format.strixite.q5, providing format.device-view/strixw-q5 for the Q5 expert gather/combine in linear_q4, the grouped MoE kernel and the strixw loader's Q5 views. Every strixite qwen38-flash-next recipe binds it, though the fleet's weights file contains no Q5 tensor"
 
 [provenance]
 origin   = "strixite"

@@ -1,6 +1,7 @@
 id        = "serve.flerp.strixfold_host"
 kind      = "serve"
 summary   = "The Zig side of a front end binary whose executor is StrixFold's: the root file that owns process start-up and calls the front end's main, and the build file that links serve.flerp.http's C++ units (as flerp assemble lists them) with the Zig-exported executor adapter and text module"
+why       = "With StrixFold's executor the binary's start-up belongs to Zig (inferred from the code: its allocator and io must exist before the Zig-exported executor and text modules run), so this root file owns main and calls the C++ front end on the thread that drives the executor; the pair gate built and served it but two of three requests ended one token short and SIGTERM did not exit cleanly"
 notes     = "flerp.serve.build.zig runs the origin's build graph unchanged and adds the step flerp-serve. It names no source of the front end: [build] c_link has flerp assemble write flerp/link.zig from the module manifests. Built on control-node; it has not run (the executor needs the worker pair)."
 
 [provenance]

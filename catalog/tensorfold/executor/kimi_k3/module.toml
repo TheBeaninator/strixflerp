@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.kimi_k3"
 kind      = "executor"
-summary   = "Kimi K3 / K3.1 text adapter (Metal; no HIP path)"
+summary   = "Kimi K3 / K3.1 text adapter on Metal: a resident graph of KDA and MLA decoder layers with attention residuals and a latent MoE of MXFP4 experts inside the existing lane core, exact recurrent rollback for shared windows, and a routed-experts interface where each node runs the experts it owns and a cluster layer adds the rest."
+why       = "Upstream's docs/recipes/kimi-k3-metal.md calls it a bring-up on synthetic components and a cut-down graph with no real-weight forward; the released checkpoint does not fit one Mac and admission refuses it by budget before opening the weights. Role inferred from the code: it is the catalogue's only K3-style KDA plus MLA layer schedule and node-split expert interface, kept to read since nothing of it targets HIP."
 notes     = "fixtures/ are Moonshot AI release files under the Kimi K3 / K3.1-Pro licences (catalog/tensorfold/LICENSES)"
 
 [provenance]

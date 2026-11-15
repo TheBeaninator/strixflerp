@@ -1,6 +1,7 @@
 id        = "kernel.flerp.linear_q8p"
 kind      = "kernel"
 summary   = "Adapter (Q8Panel16): strixite's Q8 decode GEMV on panel tensors, bit-equal to linear_q8 on the same dequantized weights; a row-major view is handed back to strixite's kernel"
+why       = "The Q8 classes (attention, GDN out, shared expert, LM head, MTP fc) must move to panels with the Q4 ones, or the one-copy layout leaves half the dense bytes row-major; it reuses linear_q4p's panel GEMV at 16 codes a chunk with linear_q8's split-K rule, so the Q8 decode path stays byte-equal to strixite's and was gated with it"
 notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 3. The GEMV template is kernel.flerp.linear_q4p's kernels/panel_gemv.hpp at 16 codes a chunk with linear_q8.hip's split-K rule. Gate: gate/strixw-panel-kernels.toml."
 
 [provenance]

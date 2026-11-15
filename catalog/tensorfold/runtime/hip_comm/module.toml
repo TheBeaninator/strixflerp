@@ -1,6 +1,7 @@
 id        = "runtime.tensorfold.hip_comm"
 kind      = "runtime"
-summary   = "HIP tensor-parallel group: RCCL by dlopen, a TCP link transport, loopback, rank identity handshake"
+summary   = "The HIP tensor-parallel group: RCCL opened by dlopen through hand-declared exports for collectives on the engine's own streams, a TCP link where rank 0 listens, checks every rank's hello and then commands, an identity digest of executable, config.json, weight index and shards, and a loopback group of threads over 127.0.0.1 for host tests."
+why       = "Upstream's #655 split Qwen3.5 over 2, 4 or 8 GPUs and made every rank match rank 0's world size, GPU, RCCL version, executable and checkpoint before RCCL starts, else all ranks refuse naming the difference; this module is that join. It corresponds to StrixFold's coll_tcp and coll_nccl and is kept for comparison."
 
 [provenance]
 origin    = "tensorfold"

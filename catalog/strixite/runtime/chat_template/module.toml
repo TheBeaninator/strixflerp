@@ -1,6 +1,7 @@
 id      = "runtime.strixite.chat_template"
 kind    = "runtime"
-summary = "The model's chat template rendered in C++ (messages, tools, thinking switches)"
+summary = "Qwen3.8-Flash-Next's chat_template.jinja hand-rendered in C++ with no Jinja engine, byte-identical to transformers' apply_chat_template (Python strip and json.dumps semantics), covering OpenAI-shaped messages, tools, thinking switches, reasoning effort and optional vision triplets, and reporting which byte spans came from the request"
+why     = "The prompt cache and session resume match on exact token ids, so the server's rendering must equal the reference template byte for byte, and a C++ server should not carry a Jinja interpreter; the plain-span output lets the tokenizer treat special-token text inside user or tool content as text (an opencode tool result holding <|im_end|> had ended a turn). Used by serve.strixite.http and openai, and by flerp's text_strixite shim that puts it behind include/flerp/text.h for the flerp-serve recipes"
 
 [provenance]
 origin   = "strixite"

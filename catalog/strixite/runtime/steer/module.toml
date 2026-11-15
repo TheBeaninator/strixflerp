@@ -1,6 +1,7 @@
 id      = "runtime.strixite.steer"
 kind    = "runtime"
-summary = "Activation steering sets: per-conversation vectors added to the residual streams after chosen layers"
+summary = "Plain structs for one conversation's activation steering: per-layer device vectors of H*d floats with a scale, added to every token row at the end of the chosen layers, plus a signature and a negative salt id that becomes token 0 of the cache key"
+why     = "Steering (the pod's STEER-2 patch on v0.7.0) changes the state a conversation caches, so a steered state must never resume an unsteered or differently steered prompt; a salt that is never a real token at position 0 makes every prefix match (prompt cache, live slot, /cache/export) diverge immediately. The type is shared by executor.strixite.qwen4exp, which adds the vectors, the engine, and serve.strixite.steer_library, which loads them; FreeFitty is the client sending steer requests (docs/FLERP-SWAP-PLAN.md)."
 
 [provenance]
 origin   = "strixite"

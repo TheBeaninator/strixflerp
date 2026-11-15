@@ -1,6 +1,7 @@
 id      = "tool.strixite.check_stream_calls"
 kind    = "tool"
-summary = "Test: streamed tool calls against the buffered parser, on the model's tokenizer.json"
+summary = "Host-only differential test of streamed tool calls: the same generated text is fed to OutputParser as the tokenizer splits it, byte by byte and in random pieces, with and without stream_calls, and the event sequences must match the buffered parser except that a malformed or cut-off call keeps unparseable arguments; 46 fixed cases plus 20000 random and 20000 damaged ones per run"
+why     = "Streaming a tool call as the model writes it means the server cannot take a call back once sent (docs/server.md, Streamed tool calls), so the streaming parser has to agree with the buffered one on every well-formed input and fail safe on bad ones; random damage finds the edge cases hand-written tests miss. Recorded with 0 failures in gate/results/qwen38-flash-next.strixite/unit-check_stream_calls.txt"
 
 [provenance]
 origin   = "strixite"

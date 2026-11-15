@@ -1,6 +1,7 @@
 id      = "format.strixite.safetensors_loader"
 kind    = "format"
-summary = "Bulk safetensors loader into pinned host memory with concurrent pread workers"
+summary = "Bulk safetensors loader: concurrent pread workers over disjoint ranges into pinned host memory (buffered by default, O_DIRECT optional), then fdatasync plus POSIX_FADV_DONTNEED to evict the file from the page cache"
+why     = "At target scale (about 115 GiB quantized on a 124 GiB machine) a second page-cache copy of the weights would crowd out everything else, so bytes go straight to pinned GPU-readable memory and the cache is dropped; buffered is the default because on the build machine's zstd btrfs O_DIRECT silently falls back to buffered anyway. It belongs to the safetensors-era load path: no binary links it now, and the strixite recipes keep it under [include] only so the build proves it compiles"
 
 [provenance]
 origin   = "strixite"

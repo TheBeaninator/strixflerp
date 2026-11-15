@@ -1,0 +1,32 @@
+# ORNITH-PCACHE step 0 pass criteria (card a3656fc5e9): slot-resident prefix reuse in the serve path. Written before the GPU run
+# (gate/ornith_pcache_check.py through tools/gpu-queue.sh, 35B world 4 over loopback TCP, serve config ornith397.serve = drafts 1,
+# context 65536, reuse_tail 32); not loosened after it.
+# Sequence on ONE serve load: T1 (a ~20K-token FreeFitty-shaped thread, cold) ; T2 = T1's thread + the reply + a ~1K new turn (warm) ;
+# T3 = T2's thread + its reply + a short turn (warm) ; a short unrelated request (invalidates the kept prefix) ; T2 again (cold) ;
+# the short request again ; T3 again (cold). Greedy, 32 tokens, the same chat bodies in the warm and the cold runs.
+[identity]
+max_tokens            = 32
+warm_equals_cold      = true     # T2 warm ids == T2 cold ids, and T3 warm ids == T3 cold ids, token for token
+min_tokens_compared   = 24
+
+[reuse]
+t1_prompt_tokens_min  = 18000
+t1_prompt_tokens_max  = 22000
+t2_new_tokens_min     = 700      # T2's prompt tokens minus T1's: the 1K turn (plus the reply and template)
+t2_new_tokens_max     = 1600
+hits_min              = 2        # the executor's stats: prefix_hits after T2 warm and T3 warm
+reused_tokens_min     = 36000    # prefix_tokens_reused after the sequence: T2 and T3 each reuse about T1's prompt minus reuse_tail
+misses_expected       = "the short requests miss and nothing else does"   # prefix_misses, recorded; the cold runs are the short requests' successors
+
+[speed]
+# timings.prompt_ms of the chat replies. The warm turn prefills T2's new ids plus up to reuse_tail + the reply; the cold run all of T2.
+t2_speedup_min        = 5.0      # cold prompt_ms / warm prompt_ms for T2 (the ids are ~20x fewer; the 20K prefill is ~25 s on this proxy)
+
+[state]
+# the three pieces of state the stages restore, each must be consistent: the target's KV and DeltaNet state (ids equal, above), the
+# speculative round's recurrent ring (the session drafts: serve config drafts 1, a decode after the restore must verify drafts
+# without a state error) and the draft head's KV and prompt edge (the warm run's decode steps must draft: accepted drafts > 0 over
+# the 32 tokens, from the executor's draft stats where the front end reports them, else the identity of the tokens above).
+http_status           = 200
+exit_codes            = 0
+snapshot_gib_per_stage_max = 4.0   # GTT of a stage process after T2 minus after load at the same prompt-free state: KV copy + recurrent state

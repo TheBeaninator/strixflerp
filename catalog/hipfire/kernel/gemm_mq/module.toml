@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.gemm_mq"
 kind      = "kernel"
-summary   = "Prefill GEMM on MQ weights: f16 WMMA, the exact integer routes (IU4 and I8 WMMA with a block_i8_128 activation quantizer), MMQ; residual, QKV, QKVZA and gate-up forms (76 sources, 81 gfx1151 compile units)"
+summary   = "Prefill GEMM on MagnumQuant weights (76 sources, 81 units): f16 WMMA with fp32 accumulation, exact-integer IU4 and I8 WMMA after a block_i8_128 activation quantizer with one fp scale per block pair, MMQ bodies, Lloyd-codebook variants, and residual, QKV, QKVZA and gate/up forms, on activations FWHT-rotated beforehand"
+why       = "MQ is hipfire's default weight family for the Qwen 3.5+ hybrids, so this is their prefill; the exact-integer IU4 routes are the ones hipfire-dispatch's map.md admits certified PeaceMaker producer twins beneath. It also owns the per-128 int8 activation quantizer that tensor_ops and norm_rope require; the gate has compiled it, not run it"
 
 [provenance]
 origin    = "hipfire"

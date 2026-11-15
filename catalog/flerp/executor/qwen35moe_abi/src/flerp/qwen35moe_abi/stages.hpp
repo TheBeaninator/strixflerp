@@ -31,6 +31,13 @@
 //   draft_costs        the last stage process: the value-aware rule's costs, base_ms,row_ms,mtp_ms (draft_round.hpp
 //                      DraftCosts; default Ornith's 75.2,19.68,4.83)
 //   mtp_data_file      the head's bytes from this same-size copy (default data_file, else weights)
+//   subchunks          rank 0: "auto" (default: clamp(rows / 1,024, 1, 16)) or S, the sub-chunks a prompt forward
+//                      goes down the ring as (stage_relay SubchunkParts; ORNITH-SUBCHUNK 6abf28258c)
+//   subchunk_min_rows  rank 0: no sub-chunk under this many rows (default 1024; 1 = no floor)
+//   in_flight          rank 0, TCP: prompt replies left unread across forwards (default 8; 0 = every forward reads its
+//                      replies, the old flow). A forward that wants no row returns once its sub-chunks are sent, so
+//                      the stages stay busy between the front end's prompt forwards; a forward that wants its row, a
+//                      decode step, a verify, a reset and a close read every unread reply first
 //
 // Every process loads through format.flerp.gguf_placed: world 1 and the loopback load the whole model once (the
 // loopback's stages are views of it with their block ranges); a TCP rank loads only its own blocks (a world-1
@@ -73,6 +80,11 @@ struct Options {
   bool draft_value{false};
   std::string draft_costs;
   std::string mtp_data_file;
+  std::uint32_t subchunks{0};            // 0 = auto
+  std::uint32_t subchunk_min_rows{1024};
+  std::uint32_t in_flight{8};
+  std::uint32_t reuse_tail{0};   // rank 0's key (abi.cpp, ORNITH-PCACHE): the kept prefix ends before the prompt's last forward, which holds at least this many ids; 0: no reuse
+  std::uint32_t reuse_grid{0};   // rank 0's key: with reuse, prompt forwards are cut at multiples of this many positions (0: the caller's own cut, the arena's batch)
 };
 
 /// One key: false (and *error) for an unknown key or a bad value. Never ignores a key.
@@ -112,7 +124,11 @@ class Pipeline {
   /// Every stage back to position 0 (mirrored RESET), the decode graph switch with it. drafts > 0: a drafting
   /// session (TCP, opt.drafts >= drafts): prompt chunks carry their ids, every reply carries the last stage's next
   /// drafts (held()), and a decode step is a round of one frame. Throws on failure.
-  void Reset(std::uint32_t drafts = 0);
+  void Reset(std::uint32_t drafts = 0, std::uint32_t restore = 0);
+  /// ORNITH-PCACHE: every stage keeps its KV and recurrent state at `positions` (one snapshot; a save replaces it), and
+  /// Reset(drafts, positions) resets every stage and puts that state back. The positions of a restore must be the ones
+  /// of the last save. Throws on failure.
+  void SnapSave(std::uint32_t positions);
   /// A drafting session: the pending id and the first `held` drafts the last stage holds, at start.. as back-to-back
   /// single-row decode steps (every frame run, so every frame's id comes back). Throws on failure.
   Round Verify(std::int32_t pending, std::uint32_t held, std::uint32_t start);
@@ -136,6 +152,9 @@ class Pipeline {
   [[noreturn]] void Fail(const std::string& why);
   void Pump();
   void TakeSpec(const flerp::stage_relay::Frame& f, Round* round);
+  // ORNITH-SUBCHUNK: read the oldest unread prompt reply (keep: the last one's token / logits / drafts into rep).
+  flerp::stage_relay::Frame ReadReply();
+  void Drain();
   flerp::stage_relay::Frame SendRound(std::int32_t pending, std::uint32_t held, std::uint32_t start, const std::vector<float>& rows0);
 
   Options opt_;
@@ -147,6 +166,7 @@ class Pipeline {
   bool failed_{false}, closed_{false};
   std::uint32_t session_drafts_{0};
   std::vector<std::int32_t> held_;
+  std::uint32_t unread_{0};
 };
 
 /// A stage process (rank > 0, TCP): load the rank's blocks, connect, execute rank 0's mirrored calls until CLOSE.

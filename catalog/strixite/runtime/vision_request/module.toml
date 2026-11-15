@@ -1,6 +1,7 @@
 id      = "runtime.strixite.vision_request"
 kind    = "runtime"
-summary = "Images of a chat request: data-URL parsing, decode memo, prompt planning and image-pad expansion"
+summary = "Serving side of image prompts: accepts only base64 data URLs, runs each image through the preprocessor, expands the template's single image pad per image, walks the (t, h, w) rope positions by the get_rope_index rule, and gives image rows content-derived cache ids"
+why     = "An image prompt has to reach the engine in exactly the ImageInput and position contract it consumes, and should hit the prompt cache only when the same images sit in the same places. Its decode memo, keyed by a digest of the image bytes, exists because agents resend every earlier screenshot each step: with 20 known screenshots and one new, preparation fell from 1.76 s to 0.07 s per request (upstream docs/images.md). Used by strix_server, the HTTP and OpenAI layers, sv9_cache_check and strix_vision; a bad image becomes a 400."
 
 [provenance]
 origin   = "strixite"

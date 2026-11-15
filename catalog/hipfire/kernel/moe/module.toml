@@ -1,6 +1,7 @@
 id        = "kernel.hipfire.moe"
 kind      = "kernel"
-summary   = "Mixture-of-experts: router softmax / top-k renorm, hash router, indexed and batched expert gate-up and down GEMV / GEMM across HFQ, MQ, MFP4 and Q8_0, scatter and combine, expert-parallel row gather (154 sources, 181 gfx1151 compile units)"
+summary   = "hipfire's mixture-of-experts kernels (154 sources, 181 units): softmax / top-k-renormalizing and hash routers, DeepSeek's bias-aware top-k, expert gate/up and down GEMV indexed by expert id (k = 8 forms) and grouped GEMM across HFQ, MQ, MFP4 and Q8_0, scatter, a slot-order weighted combine and expert-parallel row gathers"
+why       = "Expert projections are where MoE decode spends its bandwidth, and hipfire keeps one routed path per weight format and arch. Its moe_softmax_topk_renorm_k8 FAILED the moe-router interface gate under strixite's moe_router (kernel.flerp.moe_router_hipfire): the arg-max keeps the lower thread on a tie while thread t holds experts t and t + 256, so tied rows come back reordered, and k is fixed at 8 against the checkpoint's 10, so no recipe binds it; GLM52-GAPMAP still finds its bias-aware top-k and indexed HFQ4 experts the closest math for GLM-5.2"
 
 [provenance]
 origin    = "hipfire"

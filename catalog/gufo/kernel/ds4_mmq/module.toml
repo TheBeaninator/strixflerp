@@ -1,6 +1,7 @@
 id        = "kernel.gufo.ds4_mmq"
 kind      = "kernel"
-summary   = "Quantized matrix kernels of the DS4 import, derived from llama.cpp ggml-cuda with the DS4-GB10 DSpark changes, built with HIP under ds4_ggml_hip_* symbols"
+summary   = "llama.cpp's ggml-cuda quantized matrix kernels ported to HIP for gfx1151 with the DS4-GB10 DSpark changes: mmq on Q8_1-quantized activations with integer dot products and mmvq vector-dot GEMV, WMMA y tile 64, -ffast-math, behind a raw-pointer C ABI under private ds4_ggml_hip_* symbols"
+why       = "DS4 adopted ggml's mature K-quant matmuls instead of writing its own, and gufo renamed this copy so it stays apart from the Qwen copy in kernel.gufo.qfn_mmq (VENDOR.md: separate from Qwen's matrix backend, in line with gufo's rule that one model's change must not move another's output). It is the only DeepSeek module that compiles on its own (six translation units, builds); no recipe binds its interfaces"
 
 [provenance]
 origin    = "gufo"

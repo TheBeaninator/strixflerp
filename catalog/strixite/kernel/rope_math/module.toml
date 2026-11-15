@@ -1,6 +1,7 @@
 id      = "kernel.strixite.rope_math"
 kind    = "kernel"
-summary = "Device-side RoPE and BF16 conversion arithmetic shared by rope, attention, qsa and kv8"
+summary = "Header of device inline functions: cos and sin of fp32(pos * inv_freq) times the YaRN scale, optionally rounded to BF16, the pair rotation with separately rounded products and sum, and the BF16 conversion helpers"
+why     = "Four kernels rotate positions: rope itself, attention's fused q/k norm + RoPE, qsa's block keys and kv8's readers. Keeping the arithmetic in one header guarantees they all rotate identically, so a key roped in the attention job and one roped standalone are the same bits. Required by module id; provides pos.rope-math."
 
 [provenance]
 origin   = "strixite"

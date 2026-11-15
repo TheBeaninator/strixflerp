@@ -1,6 +1,7 @@
 id        = "runtime.flerp.sampler_none"
 kind      = "runtime"
-summary   = "include/flerp/sampler.h for a recipe whose executor never hands logits to the host: every call answers FLERP_E_UNSUPPORTED"
+summary   = "include/flerp/sampler.h with no sampler behind it: every call returns FLERP_E_UNSUPPORTED, so a recipe whose executor draws on the device links a complete binary"
+why       = "StrixFold draws tokens on the device and logits never cross its lane backend, yet the front end's link needs a sample.host module; this empty provider fills the slot so the front end can only take the executor's draws and can never pretend to sample rows it was not given"
 notes     = "Bound by a recipe whose executor draws on the device (StrixFold): the front end asks for a host sampler only when rows are offered."
 
 [provenance]

@@ -1,6 +1,7 @@
 id        = "runtime.gufo.platform"
 kind      = "runtime"
-summary   = "Platform leaves (POSIX side): mapped files, page pinning, prefault, publish, sockets, environment, shutdown signal; crypto, logging, diagnostics"
+summary   = "gufo's POSIX platform leaves: memory-mapped files, page pinning and prefault, publishing, sockets, environment access and the shutdown signal, plus crypto, logging and diagnostics"
+why       = "Everything above the device in gufo reads weights through mapped files and talks over sockets, so these leaves are the floor of its host stack; their Windows twins stayed unharvested because the pod runs Linux. Its crypto is the reason the gufo recipes link libcrypto (role inferred from recipes/qwen35-decider-2b.gufo.toml), and format.flerp.gguf_placed reads files through its mapping"
 
 [provenance]
 origin    = "gufo"

@@ -1,6 +1,7 @@
 id        = "kernel.flerp.gguf_gemv_hipfire"
 kind      = "kernel"
 summary   = "Adapter (launch-gguf-gemv): gufo's LaunchQ8KBlockGEMV on hipfire's gemv_q8_0 and gemv_q4k code objects; other GGUF types stay with gufo"
+why       = "Swap 3 of docs/INTERFACES.md, the GGUF decode GEMV: it puts hipfire's per-lane Q8_0 / Q4_K row kernels under gufo's launch name on the same weight bytes, to learn whether hipfire's kernels are a faster or more exact decode path for gufo; measured within 0.2 % of the any-order bound but 15 to 25 % slower than gufo's own (16.8 against 13.5 us on a 2,560-square Q8_0 projection), and no recipe consumes a GGUF GEMV, so it stays a module-level result"
 
 [provenance]
 origin    = "flerp"

@@ -1,6 +1,7 @@
 id        = "kernel.strixfold.triton_kit"
 kind      = "kernel"
-summary   = "The Triton-compiled half of the dsv41 kit: 158 gfx1151 code objects for 40 kernel functions (199 recorded variants), built ahead of time from tri_kernels.py"
+summary   = "The Triton half of the dsv41 kernel kit: TensorFold's @triton.jit bodies copied verbatim with NVIDIA-only constructs replaced (PDL waits and L2 prefetch as no-ops, float8e4nv as integer round-to-nearest code) and the router score fixed to a stable sqrt-softplus, compiled ahead of time by a pinned AMD Triton into 158 gfx1151 code objects named by sha256 for 40 kernel functions"
+why       = "Most of DeepSeek-V4.1's non-matrix operators (mHC chain, norms, router, indexer, FP4 caches, attention merges, DSpark Markov loop) were Triton in the served CUDA engine, and recompiling the same sources for AMD keeps their semantics without hand ports; building them ahead of time means no Triton at serve time and a kit verified object by object (ADAPTER.md D6, D9), and the softplus fix cured experts being picked by bias alone below lg = -16.6 (tri/README.md)"
 notes     = "Object file names are their sha256 (checked on control-node for all 158). The .hsaco files are not committed; prebuilt/aot.json is the kit manifest as built."
 
 [provenance]

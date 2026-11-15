@@ -1,6 +1,7 @@
 id        = "runtime.flerp.sampler_greedy"
 kind      = "runtime"
 summary   = "include/flerp/sampler.h, greedy only: a row's token is its largest logit (the lower id first on a tie), or candidate 0; temperature above 0 is refused as the client's error"
+why       = "The staged Ornith executor hands back full logits rows but has no sampler of its own, and inventing one would give draws no engine reproduces; a greedy-only sampler lets the front end serve it at temperature 0 and refuse sampled requests as a client error rather than answer them wrongly"
 notes     = "For a recipe whose executor hands back rows but draws nothing at random (executor.flerp.qwen35moe_abi): the front end samples on the host from FLERP_OUT_FULL rows and a sampled request gets HTTP 400. The server's default temperature must then be 0 (--generation-config with temperature 0)."
 
 [provenance]

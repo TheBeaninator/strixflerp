@@ -1,6 +1,7 @@
 id        = "executor.tensorfold.glm_dsa"
 kind      = "executor"
-summary   = "GLM DSA (sparse attention) host pieces"
+summary   = "Full GLM-5.3 (model_type glm_moe_dsa) on kindlingai's EXLR8 weights split over two Macs: MLA attention with a DSA indexer and 256 experts in GLM's own Metal kernels, prompt rows through projections and experts on the tensor units, and a follower loop in which rank 1 receives each of rank 0's engine operations before rank 0 runs it, so both step in the same order."
+why       = "Upstream wrote it to serve the whole GLM-5.3 release on two 256 GB M5 Ultra Macs joined by Thunderbolt, each holding half of every expert and attention head while rank 0 serves the API (docs/glm-5.3-exlr8.md); there is no CUDA or HIP engine for it. Role inferred from the code: for the pod it is a complete two-node tensor-parallel serving design (lock-step operation forwarding, per-rank EXLR8 layer packing) to compare with StrixFold's TP2, read only."
 
 [provenance]
 origin    = "tensorfold"

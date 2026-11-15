@@ -1,6 +1,7 @@
 id      = "kernel.strixite.ple"
 kind    = "kernel"
-summary = "PLE injection: the gate over key, value and streams, then the dilated depthwise conv"
+summary = "PLE injection in two launches: ple_gate computes a signed-sqrt sigmoid gate per (token, stream) from the n-gram key, the value and the streams with the three norms folded into sums, and ple_conv runs a dilated (K 4, dilation 3) causal depthwise conv over the gated value history and adds the result into the streams, carrying conv state between calls"
+why     = "One qwen4_exp layer injects rows of a 51B-parameter n-gram embedding table (16 rows per token, kept on SSD, how-it-got-fast.md section 5); after the host gathers them and the merged Q8 [W_key; W_val] projection runs, these kernels do the arithmetic on the GPU. They are a negligible 22 ms of a 5,523 ms prefill chunk; the real cost is the SSD gather in runtime.strixite.ngram_table (DESIGN.md). Provides ple.inject in the strixite recipes."
 design  = "DESIGN.md"
 
 [provenance]

@@ -1,6 +1,7 @@
 id      = "serve.strixite.steer_library"
 kind    = "serve"
-summary = "Steering vector library loaded from a directory and resolved per request"
+summary = "Loads a directory of steering vectors (<name>.f32 float32 values plus <name>.json naming the layer they are added after) onto the GPU once, and resolves a request's steer field, a list of {vector, scale} with |scale| <= 1000, into a SteerSet of per-layer vectors and an FNV hash of the set used as a negative cache salt"
+why     = "Added by the pod's STEER-2 patch so a request can push the model along a direction measured with strix_acts without a restart or a second model: the vectors live with the model and are named per request, a vector may be one row for all residual streams or one per stream, and the salt keeps a steered conversation's prompt-cache entries apart from unsteered ones. The only serve.steer-library provider; strix_server hands it to the HTTP layer, and the add itself is kernel.strixite.steer"
 
 [provenance]
 origin   = "strixite"

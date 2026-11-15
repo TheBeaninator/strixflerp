@@ -1,6 +1,7 @@
 id        = "executor.gufo.qwen"
 kind      = "executor"
-summary   = "Qwen (3.5 / 3.6 family) engine: forward, state, generator, weights, the HIP executor (arena, decode step, batched decode, prefill chunks, SSM replay), composable modules, tokenizer, chat template, config"
+summary   = "gufo's engine for the Qwen 3.5 / 3.6 dense hybrid family (Gated DeltaNet layers plus gated GQA attention): a host forward and generator over GGUF weights left in their quantized blocks, a HIP executor with one arena, a single-token decode step, batched decode, chunked prefill and SSM replay for rollback, and the Qwen tokenizer, chat template and config"
+why       = "This is the executor strixflerp has proven end to end from catalogue parts: recipes/qwen35-decider-2b.gufo.toml rebuilt it from 39 modules and its GPU stage gave token identity with gufo's own binary (121.6 against 122.8 tok/s). It is also the base of the phase 5 MoE work: executor.flerp.qwen35moe lays adapted copies of its forward, decode and loader files over it for Qwen3.6-35B-A3B, runtime.flerp.text_gufo reuses its tokenizer and template, and docs/PHASE5-ORNITH-GAPMAP.md lists what it lacks for Ornith-1.5 397B"
 notes     = "src/models/qwen/hip/attention.hip (4 lines, an include shim) is here, not in a kernel module."
 
 [provenance]
