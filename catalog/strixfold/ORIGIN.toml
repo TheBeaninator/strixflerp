@@ -1,0 +1,191 @@
+# StrixFold: the pod's fork of StrixFold / TensorFold with the AMD HIP backend for DeepSeek-V4.1-Flash (TP2).
+name      = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+pod_tree  = "/data/pod/plans/strixfold/fork"            # the pod's git tree; 8 pod commits on top of Shoestring-dev 88ea779 (re-cut from f44d736 on 2026-11-11)
+upstream  = "https://github.com/ashhart/TensorFold by way of https://github.com/bertholomus/TensorFold (222a9c0b for the Triton kernels)"
+reference_checkout = "~/Code/strixflerp-upstream/strixfold (+ ~/Code/strixflerp-upstream-supplement/strixfold/zig/build, dropped by the copy)"
+
+[licence]
+spdx      = "Apache-2.0"
+files     = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]        # copied verbatim next to this file; more texts under LICENSES/ in the origin
+third_party = "EXL3 tile format after ExLlamaV3 (MIT, Turboderp); DeepSeek reference code (MIT); see THIRD_PARTY_NOTICES.md"
+
+[toolchain]
+host      = "zig 0.17.0 (/home/pod/opt on control-node)"
+device    = "therock-10.2"                               # /data/models/tools/therock-10.2: HIP 7.17.26392, AMD clang 24
+documented_pin = "ROCm 10.0.0-4 (HIP 7.15, clang 23) under /opt/rocm/core-10.0 (tools/dsv41-hip/BUILD_AND_RUN.md); the pod builds with TheRock 10.2 instead"
+triton    = "triton 3.8.0+git675c5987.rocm10.1.0a20260822 (cp313 wheel, sha256 1bab2eeb...), ahead of time, target hip:gfx1151:32"
+blas      = "hipBLAS by dlopen (libhipblas.so.3) for fp32 GEMMs"
+
+[compile]                                                # how the origin compiles a HIP kernel source (zig/build/hip_dsv41.zig)
+driver    = "<rocm>/bin/hipcc"
+flags     = ["--offload-device-only", "--no-gpu-bundle-output", "-O3", "-std=c++20", "-fno-gpu-rdc", "-mno-wavefrontsize64", "-ffp-contract=off", "-fno-fast-math", "-fdenormal-fp-math=ieee", "-D__HIP_PLATFORM_AMD__"]
+arch_flag = "--offload-arch=gfx1151"
+rocm_flag = "--rocm-path=<rocm>"
+output    = "raw gfx1151 ELF code object (.hsaco), one per .hip source"
+
+[kernels]
+loading   = "a manifest-described kit of raw gfx1151 code objects; the manifest is generated from each object's AMDGPU metadata note and re-verified at load (gpu/hip/kit.zig); kernels are bound by id with a typed parameter struct (gpu.Kernel)"
+registry  = ["zig/kernels/hip/dsv41/registry.json", "tools/dsv41-hip/kernels.json", "tools/dsv41-hip/KERNELS.md"]
+hip_sources = 11
+triton_objects = 158
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_strixfold.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".github/**",
+  ".gitignore",
+  "CHANGELOG.md",
+  "CHANGES.md",
+  "CONTRIBUTING.md",
+  "LICENSE",
+  "LICENSES/**",
+  "NOTICE",
+  "README.md",
+  "RELEASE-NOTES-1.0.0.md",
+  "RUNBOOK.md",
+  "THIRD_PARTY_NOTICES.md",
+  "ZIG-PREVIEW.md",
+  "assets/**",
+  "docs/**",
+  "packaging/**",
+  "setup.py",
+  "tools/bench_concurrent.py",
+  "tools/bench_openai.py",
+  "tools/dsv41-hip/ADAPTER.md",
+  "tools/dsv41-hip/BUILD_AND_RUN.md",
+  "tools/dsv41-hip/COLLECTIVES-DESIGN.md",
+  "tools/dsv41-hip/README.md",
+  "tools/dsv41-hip/RESULTS.md",
+  "tools/dsv41-hip/assets/**",
+  "tools/dsv41-hip/bench_stream.py",
+  "tools/dsv41-hip/coll_fault_matrix.sh",
+  "tools/dsv41-hip/deploy_rank0.sh",
+  "tools/dsv41-hip/exl3/**",
+  "tools/dsv41-hip/first_light.sh",
+  "tools/dsv41-hip/gates.json",
+  "tools/dsv41-hip/gates.py",
+  "tools/dsv41-hip/hip_probe.hip",
+  "tools/dsv41-hip/input_common.py",
+  "tools/dsv41-hip/inventory_checkpoint.py",
+  "tools/dsv41-hip/kit_pin.sh",
+  "tools/dsv41-hip/link/**",
+  "tools/dsv41-hip/lock.json",
+  "tools/dsv41-hip/lock_sources.py",
+  "tools/dsv41-hip/pidexec.sh",
+  "tools/dsv41-hip/preflight.sh",
+  "tools/dsv41-hip/preflight_drift.py",
+  "tools/dsv41-hip/prepare_inputs.py",
+  "tools/dsv41-hip/prepare_inputs.sh",
+  "tools/dsv41-hip/provenance.py",
+  "tools/dsv41-hip/qual/**",
+  "tools/dsv41-hip/qualify.py",
+  "tools/dsv41-hip/qualify.sh",
+  "tools/dsv41-hip/requirements-inputs.lock.txt",
+  "tools/dsv41-hip/requirements-inputs.txt",
+  "tools/dsv41-hip/rope_reference.py",
+  "tools/dsv41-hip/run_gpu_tests.sh",
+  "tools/dsv41-hip/selfcheck.sh",
+  "tools/dsv41-hip/serve-rank0.sh",
+  "tools/dsv41-hip/serve-rank1.sh",
+  "tools/dsv41-hip/serve.conf",
+  "tools/dsv41-hip/serve_lib.sh",
+  "tools/dsv41-hip/snapshot_files.py",
+  "tools/dsv41-hip/source_lock.json",
+  "tools/dsv41-hip/struct/**",
+  "tools/dsv41-hip/tri/bw_probe.hip",
+  "tools/dsv41-hip/tri/hiprt.py",
+  "tools/dsv41-hip/tri/make_hip.py",
+  "tools/dsv41-hip/tri/prof_table.py",
+  "tools/dsv41-hip/tri/refs.py",
+  "tools/dsv41-hip/tri/run_tests.sh",
+  "tools/dsv41-hip/tri/status.py",
+  "tools/dsv41-hip/tri/t_attn.py",
+  "tools/dsv41-hip/tri/t_basic.py",
+  "tools/dsv41-hip/tri/t_cover.py",
+  "tools/dsv41-hip/tri/t_gemm.py",
+  "tools/dsv41-hip/tri/t_hc.py",
+  "tools/dsv41-hip/tri/t_hipattn.py",
+  "tools/dsv41-hip/tri/t_hipgate.py",
+  "tools/dsv41-hip/tri/t_hiphc.py",
+  "tools/dsv41-hip/tri/t_hipindex.py",
+  "tools/dsv41-hip/tri/t_hiprope.py",
+  "tools/dsv41-hip/tri/t_index.py",
+  "tools/dsv41-hip/tri/t_markov.py",
+  "tools/dsv41-hip/tri/t_native.py",
+  "tools/dsv41-hip/tri/t_perf.py",
+  "tools/dsv41-hip/tri/t_real.py",
+  "tools/dsv41-hip/tri/t_route.py",
+  "tools/dsv41-hip/tri/t_wmma.py",
+  "tools/dsv41-hip/tri/wmma_probe.hip",
+  "tools/dsv41-hip/tri/wmma_rate.hip",
+  "tools/dsv41-hip/tri/x_attn.py",
+  "tools/dsv41-hip/tri/x_attn_ab.py",
+  "tools/dsv41-hip/tri/x_attn_one.py",
+  "tools/dsv41-hip/tri/x_attn_phases.py",
+  "tools/dsv41-hip/tri/x_attn_splits.py",
+  "tools/dsv41-hip/tri/x_blas32.py",
+  "tools/dsv41-hip/tri/x_bw.py",
+  "tools/dsv41-hip/tri/x_crossover.py",
+  "tools/dsv41-hip/tri/x_gemm_perf.py",
+  "tools/dsv41-hip/tri/x_hc_ab.py",
+  "tools/dsv41-hip/tri/x_hipattn_perf.py",
+  "tools/dsv41-hip/tri/x_hipgate_perf.py",
+  "tools/dsv41-hip/tri/x_hiphc_perf.py",
+  "tools/dsv41-hip/tri/x_hipindex_perf.py",
+  "tools/dsv41-hip/tri/x_hiprope_perf.py",
+  "tools/dsv41-hip/tri/x_index_same.py",
+  "tools/dsv41-hip/tri/x_kitcmp.py",
+  "tools/dsv41-hip/tri/x_runs.py",
+  "tools/dsv41-hip/tri/x_topk_perf.py",
+  "tools/dsv41-hip/tri/x_tune.py",
+  "tools/dsv41-hip/tri/x_tune2.py",
+  "tools/dsv41-hip/tri/x_wmma_rate.py",
+  "tools/dsv41-hip/verify_inputs.py",
+  "tools/dsv41-hip/verify_inputs.sh",
+  "tools/dsv41-zig/**",
+  "tools/glm5_q8_0_gguf_to_mlx.py",
+  "tools/release/**",
+  "tools/shared_prefix_load.py",
+  "tools/zig/**",
+  "tools/zig_gate.py",
+  "zig/flashnext_host.zig",
+  "zig/flashnext_pack_cases.zig",
+  "zig/gate.json",
+  "zig/kernels/cuda/**",
+  "zig/kernels/hip/dsv41/abi_echo.hip",
+  "zig/kernels/hip/dsv41/smoke.hip",
+  "zig/kernels/metal/**",
+  "zig/src/cli/cuda_checks.zig",
+  "zig/src/cli/cuda_kernel_checks.zig",
+  "zig/src/cli/cuda_lanes.zig",
+  "zig/src/cli/cuda_main.zig",
+  "zig/src/cli/cuda_segments.zig",
+  "zig/src/cli/cuda_shared_checks.zig",
+  "zig/src/cli/tests.zig",
+  "zig/src/cluster/**",
+  "zig/src/core/checkpoint_metal.zig",
+  "zig/src/cuda/**",
+  "zig/src/families/dsv41/hip_test.zig",
+  "zig/src/families/dsv41/picture_main.zig",
+  "zig/src/families/dsv41/vit_main.zig",
+  "zig/src/families/flashnext/**",
+  "zig/src/families/glm/**",
+  "zig/src/families/kimi_k3/**",
+  "zig/src/families/nemotron/**",
+  "zig/src/families/qwen3_5/**",
+  "zig/src/gpu/cuda_facade.zig",
+  "zig/src/main.zig",
+  "zig/src/metal/**",
+  "zig/src/native/cuda.zig",
+  "zig/src/native/flashnext_host.zig",
+  "zig/src/native/glm_host.zig",
+  "zig/src/native/metal.zig",
+  "zig/src/native/qwen35.zig",
+  "zig/src/tensorfold.zig",
+  "zig/tests/**",
+]

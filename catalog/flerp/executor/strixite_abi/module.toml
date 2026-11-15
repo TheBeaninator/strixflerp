@@ -1,0 +1,50 @@
+id        = "executor.flerp.strixite_abi"
+kind      = "executor"
+summary   = "strixite behind the executor ABI: a C++ shim over LmBackend that opens Qwen4ExpBackend with the served defaults; full rows, candidates or greedy tokens; MTP draft steps; batched verify with keep / keep_prefix / drop; snapshot slots and host-byte states"
+notes     = "docs/EXECUTOR-ABI.md has the call-by-call mapping and what does not map (parked and small states, steering, vision prefill, lookahead of PLE rows, renew)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/executor/strixite_abi.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/executor/strixite_abi.cpp"]
+includes  = ["../../../../include"]
+
+[[provides]]
+interface = "executor.abi/flerp-v1/-"
+api       = "flerp_open .. flerp_stats_json (include/flerp/executor.h)"
+numeric   = "the backend's own: rows, candidates and drafts are LmBackend's, greedy tokens are its top candidate (value descending, lower id first on a tie)"
+regime    = "strixite's: seqs slots, 16 verify rows a forward, snapshots at any position"
+
+[[requires]]
+module    = "executor.strixite.qwen4exp_backend"
+
+[[requires]]
+module    = "executor.strixite.qwen4exp"
+
+[[requires]]
+module    = "runtime.strixite.engine"
+
+[[requires]]
+module    = "runtime.strixite.sampler"
+
+[[requires]]
+module    = "runtime.strixite.host_buffer"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "flerp:gate/executor_abi.py"
+bench     = "none"
+status    = "parity"
+evidence  = "gate/results/qwen38-flash-next.strixite-abi/at-20937dc/summary.json"

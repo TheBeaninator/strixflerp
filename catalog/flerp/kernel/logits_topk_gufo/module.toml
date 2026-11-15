@@ -1,0 +1,50 @@
+id        = "kernel.flerp.logits_topk_gufo"
+kind      = "kernel"
+summary   = "Adapter (cands-layout): strixite's logits_topk on gufo's LaunchGPUSortLogits, plus a NaN scan and a pack kernel of its own; masks and short rows stay with strixite"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp_adapters/logits_topk_gufo.hip"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp_adapters/logits_topk_gufo.hip"]
+includes  = []
+arch      = "gfx1151"
+uses      = ["hip-runtime"]
+defines   = ["ENGINE_ENABLE_HIP=1"]
+
+[adapter]
+for       = "kernel.strixite.logits_topk"
+symbols   = ["logits_topk", "logits_topk_workspace_bytes"]
+
+[[provides]]
+interface = "logits.topk/-/-.gufo-select"
+api       = "strix::kernels::logits_topk, logits_topk_workspace_bytes (rows launch gufo::hip::LaunchGPUSortLogits)"
+numeric   = "exact selection on fp32 logits, value descending, lower id first on a tie; equal to kernel.strixite.logits_topk on every row without +inf; a NaN row is flagged exactly, its candidates may differ when fewer than 20 logits are above -inf"
+regime    = "n_valid > 1024, no allow-mask (else strixite's kernel); 5 launches per row + 1 per call"
+
+[[requires]]
+module    = "kernel.strixite.logits_topk"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "kernel.gufo.qwen_sampling"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/interface/logits-topk.toml"
+bench     = "flerp:gate/interface/logits-topk.toml"
+status    = "benched"
+evidence  = "gate/results/interface/logits-topk/result.json"

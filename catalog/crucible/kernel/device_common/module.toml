@@ -1,0 +1,49 @@
+id        = "kernel.crucible.device_common"
+kind      = "kernel"
+summary   = "Header-only gfx1151 wave32 device helpers: shared math and loads, WMMA primitives with fp32 high/low expansions, LDS stream ring, compute-only barriers for loader waves"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/gfx1151/common.h",
+  "engine/gfx1151/lds_stream_ring.h",
+  "engine/gfx1151/persistent_sync.h",
+  "engine/gfx1151/prefill_wmma.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/gfx1151"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "kernel-abi.crucible-device/-/-"
+api       = "crucible:: device helpers (gfx1151/common.h), Wmma* fragments (gfx1151/prefill_wmma.h), LdsStreamRing, persistent barriers"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[provides]]
+interface = "gemm.wmma-tile/-/f16-f32.crucible"
+api       = "gfx1151/prefill_wmma.h"
+numeric   = "v_wmma_f32_16x16x16_f16, fp32 accumulate; high/low fp16 split preserves fp32 state contractions"
+regime    = "prompt chunks (up to 2048 rows a chunk), compute-bound on WMMA"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

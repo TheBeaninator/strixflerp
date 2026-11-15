@@ -1,0 +1,79 @@
+id        = "kernel.hipfire.gdn"
+kind      = "kernel"
+summary   = "Gated DeltaNet: the recurrence with F32 / Q8 / Q4 state (tiled LDS, tree and lanes variants), chunked WMMA forms for gfx1151, conv1d + SiLU front, alpha gate, gated norm (29 sources, 44 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/alpha_gate.hip",
+  "kernels/src/conv1d_silu.hip",
+  "kernels/src/conv1d_silu_split.hip",
+  "kernels/src/conv1d_silu_split_lanes.hip",
+  "kernels/src/conv1d_silu_split_tree.hip",
+  "kernels/src/dynamic_causal_conv_lanes.hip",
+  "kernels/src/dynamic_conv_f32.hip",
+  "kernels/src/gated_add_f32.hip",
+  "kernels/src/gated_delta_chunk_q8_wmma.gfx1151.hip",
+  "kernels/src/gated_delta_chunk_wmma.gfx1151.hip",
+  "kernels/src/gated_delta_net.hip",
+  "kernels/src/gated_delta_net_f32_batch_seq.hip",
+  "kernels/src/gated_delta_net_f32_chunked.hip",
+  "kernels/src/gated_delta_net_f32_tree.hip",
+  "kernels/src/gated_delta_net_q4.hip",
+  "kernels/src/gated_delta_net_q8.hip",
+  "kernels/src/gated_delta_net_q8_fast.hip",
+  "kernels/src/gated_delta_net_q8_fast_lanes_varrows.hip",
+  "kernels/src/gated_delta_net_q8_tree.hip",
+  "kernels/src/gated_delta_net_vector_serial.hip",
+  "kernels/src/gated_norm.hip",
+  "kernels/src/gated_rmsnorm_sigmoid_rows.hip",
+  "kernels/src/gdn_chunk_kkt_solve.gfx11.hip",
+  "kernels/src/gdn_chunk_prep.gfx11.hip",
+  "kernels/src/gdn_chunk_scan.gfx1151.hip",
+  "kernels/src/gdn_lanes.hip",
+  "kernels/src/softplus.hip",
+  "kernels/src/state_overlap_shift_f32_buf.hip",
+  "kernels/src/state_ring_write_f32_buf.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 44
+
+[[provides]]
+interface = "mixer.gdn/-/f32.hipfire"
+api       = "alpha_gate, chunk_arena, chunk_q8_arena, conv1d_silu_split_lanes, conv1d_silu_split (+39 more units, see units.json)"
+numeric   = "fp32 state S[128x128] per head tiled in 8-row chunks; Q8 / Q4 state variants quantize the state"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound; prefill batches, compute-bound (WMMA, MMQ)"
+
+[[provides]]
+interface = "mixer.gdn-front/-/f32.hipfire"
+api       = "conv1d_silu*, alpha_gate, gated_norm"
+numeric   = "causal conv width 4 + SiLU, fp32"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+module    = "kernel.hipfire.tensor_ops"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gdn.json"

@@ -1,0 +1,51 @@
+info: rank cache: 95.1 GiB of expert entries read whole in 61.2 s
+info: collectives: tcp_host over 1 data link(s) from port 29636, stripe >= 0 MiB, RTO floor 8000 us, progress deadline 15000 ms, GPU waits fail after 10 s (logged past 2 s), dma staging, gathers >= 8 MiB pipelined in 4 MiB chunks
+info: collectives: tcp_proxy with 8 slots of 4352 KiB (coherent slab 68 MiB), proxy thread on CPU 6; larger gathers through tcp_host
+info: dsv41: w-tri's HIP kernels in place of Triton: hip (TF_DS_AUX)
+info: config.json declares a vision tower; not opened (text capability)
+[tensorfold] warning: non-loopback server has no API key; requests are open
+[tensorfold] open-file limit raised: soft 1024 -> 1048576
+[tensorfold] HIP gfx1151 device 0 (AMD Radeon 8060S Graphics, memory shared with the host): model 105.78 GiB; 4 streams at once, 0.00 GiB each at a 524288-token window, of 0.1 GiB left after a 12.4 GiB reserve; prompts in 2048-row chunks
+[tensorfold] serving dsv41 at http://10.10.0.50:18080/v1 (sampling: greedy; drafts: on; context: 524270; loaded in 78.7s)
+[tensorfold] 10.10.0.50 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.50 "GET /health HTTP/1.1" 200 -
+info: lanes: step 0 rank 0 prompt pass: 16 tokens, slot 0, extent at 0, 2048 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 2, cable1 2, cable2 0, host 11
+{"prompt_logits": "request", "sha256": "b1cdb895d1bda1d5b7bc2bb343aed6731566a1931aec7bc3f7471a9dd13cded3", "rows": 16}
+info: prompt cache: 16 tokens, resumed at 0, kept 0; 0 states, 0 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 1, evicted 0, refused 0, failed 0)
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "POST /cache/export HTTP/1.1" 400 -
+[tensorfold] done chatcmpl-d9de473a86d4700bb0a9c73f3c3c84e5 prompt=16 cached=0 thinking=False effort=none tokens=8 sha=6243895c315c finish=stop rounds=2 accepted=6/10
+[tensorfold] 10.10.0.50 "POST /v1/chat/completions HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+info: lanes: step 6 rank 0 prompt pass: 4113 tokens, slot 0, extent at 0, 6144 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 273, cable1 273, cable2 0, host 11
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+{"prompt_logits": "request", "sha256": "ba3f7af08f0edfb60a535daa1ddfecc9c830cbcfc91f89ac85eb0357787cd1df", "rows": 4113}
+info: prompt cache: 4113 tokens, resumed at 0, kept 1; 1 states, 6 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 2, evicted 0, refused 0, failed 0)
+[tensorfold] done chatcmpl-d05637850fb1e3ea0f872c968332b437 prompt=4113 cached=0 thinking=False effort=none tokens=4 sha=b900bc9f1387 finish=length rounds=2 accepted=1/2
+[tensorfold] 10.10.0.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "POST /cache/export HTTP/1.1" 200 -
+info: lanes: step 14 rank 0 prompt pass: 4113 tokens, slot 0, extent at 0, 6144 rows; resumes state 1 at 2048 in place; 0 other stream(s) live; collectives (stream idle): staged 579, cable1 579, cable2 0, host 875
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+{"prompt_logits": "request", "sha256": "ba3f7af08f0edfb60a535daa1ddfecc9c830cbcfc91f89ac85eb0357787cd1df", "rows": 4113}
+info: prompt cache: 4113 tokens, resumed at 2048, kept 0; 1 states, 6 MiB and 0 MiB spare of 4096 MiB (hits 1, misses 2, evicted 0, refused 0, failed 0)
+[tensorfold] done chatcmpl-5f0968c4d5b6fc22b4ef8dfe420497ae prompt=4113 cached=2048 thinking=False effort=none tokens=4 sha=b900bc9f1387 finish=length rounds=2 accepted=1/3
+[tensorfold] 10.10.0.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "POST /cache/import HTTP/1.1" 200 -
+info: lanes: step 55 rank 0 prompt pass: 4185 tokens, slot 0, extent at 6144, 6144 rows; resumes state 2 at 2048 in place; 0 other stream(s) live; collectives (stream idle): staged 885, cable1 885, cable2 0, host 1307
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+{"prompt_logits": "request", "sha256": "a5bcceb1a5a0e519f3a30f849fc152383ec54231a3d76d7fb54150032324e373", "rows": 4185}
+info: prompt cache: 4185 tokens, resumed at 2048, kept 0; 2 states, 12 MiB and 0 MiB spare of 4096 MiB (hits 2, misses 2, evicted 0, refused 0, failed 0)
+[tensorfold] done chatcmpl-bd49dd630d593ea1a6f133a53db1a359 prompt=4185 cached=2048 thinking=False effort=none tokens=4 sha=b900bc9f1387 finish=length rounds=2 accepted=1/3
+[tensorfold] 10.10.0.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 10.10.0.31 "GET /health HTTP/1.1" 200 -

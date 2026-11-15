@@ -1,0 +1,14 @@
+$ /usr/bin/python3 flerp assemble qwen38-flash-next.flerp-serve
+assembled qwen38-flash-next.flerp-serve: 82 modules (61 with sources), 1 binaries -> build/qwen38-flash-next.flerp-serve
+build: cmake -G Ninja -S build/qwen38-flash-next.flerp-serve -B build/qwen38-flash-next.flerp-serve/ninja && ninja -C build/qwen38-flash-next.flerp-serve/ninja
+$ nice -n 19 cmake -G Ninja -S /data/projects/strixflerp/build/qwen38-flash-next.flerp-serve -B /data/projects/strixflerp/build/qwen38-flash-next.flerp-serve/ninja
+-- ROCm at /data/tools/therock-10.1.0a20260823
+-- Performing Test FLERP_HOST_STDLIB_OK
+-- Performing Test FLERP_HOST_STDLIB_OK - Success
+-- Configuring done (1.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /data/projects/strixflerp/build/qwen38-flash-next.flerp-serve/ninja
+$ nice -n 19 ninja -C /data/projects/strixflerp/build/qwen38-flash-next.flerp-serve/ninja -j 24 strixflerp-qwen38-flash-next.flerp-serve
+ninja: Entering directory `/data/projects/strixflerp/build/qwen38-flash-next.flerp-serve/ninja'
+[1/2] Building CXX object CMakeFiles/m_serve_flerp_http.dir/data/projects/strixflerp/catalog/flerp/serve/http/src/flerp/serve/request.cpp.o
+[2/2] Linking CXX executable strixflerp-qwen38-flash-next.flerp-serve

@@ -1,0 +1,35 @@
+id      = "runtime.strixite.host_buffer"
+kind    = "runtime"
+summary = "Growable host buffer backed by mmap that returns its memory on release"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/host_buffer.cpp", "serve/host_buffer.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/host_buffer.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.buffer/-/-"
+api       = "strix::HostBuffer"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

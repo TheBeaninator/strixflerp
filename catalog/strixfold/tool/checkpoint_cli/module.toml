@@ -1,0 +1,45 @@
+id        = "tool.strixfold.checkpoint_cli"
+kind      = "tool"
+summary   = "The checkpoint command line the server binary carries (tensorfold-native models / info / pull): hub cache lookup and download"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/cli/cli.zig",
+  "zig/src/cli/hub.zig",
+  "zig/src/cli/info.zig",
+  "zig/src/cli/models.zig",
+  "zig/src/cli/pull.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.checkpoint-cli/-/-"
+api       = "cli/cli.zig"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+interface = "executor.host/hip/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

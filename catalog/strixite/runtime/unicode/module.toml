@@ -1,0 +1,35 @@
+id      = "runtime.strixite.unicode"
+kind    = "runtime"
+summary = "UTF-8 coding, character classes and NFC with tables derived from the Unicode Character Database"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/unicode.cpp", "serve/unicode.hpp", "serve/unicode_tables.inc"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only AND Unicode-3.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/unicode.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "text.unicode/-/-"
+api       = "strix::unicode::{decode_utf8, encode_utf8, char_class, nfc}"
+numeric   = "Unicode 16.0.0 categories, 15.0.0 normalization data"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

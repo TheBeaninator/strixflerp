@@ -1,0 +1,23 @@
+# MTP draft input layer mtp_fc Q8 G64 -> Q4 G64 on worker A (10.10.0.54), committed BEFORE any GPU run
+# (owner approved, ~10 min hold, hard cap 20). Tool: catalog/flerp/tool/strixw_patch (only mtp_fc differs from OLD).
+# Question: does the cheaper draft input layer keep draft acceptance and raise decode, with identical greedy output?
+
+[arms]
+OLD   = "/cache/models/qwen38-fnext-tpn/weights.strixw"         # fleet file, mtp_fc q8g64
+MTPQ4 = "/cache/models/qwen38-fnext-tpn-mtpq4/weights.strixw"   # byte copy of OLD except mtp_fc q4g64; companions symlinked to OLD's
+order = ["MTPQ4", "OLD"]   # one at a time, both required
+
+[server]
+binary = "/data/models/strix-infer/runtime/bin/strix_server.v070tg"   # the binary A serves (pgrep, 2026-11-12 00:00Z)
+# A's live args unchanged (--mtp on, mtp-draft 7 default) except --weights (arm), --port 5310,
+# --prompt-cache-dir /cache/ab-pc-<arm> (empty per arm), --logprobs on (only quality requests ask, top 1).
+runner = "gate/results/strixw-layout/mtpq4-<UTC>/arm.sh (same as ab-20261111T2351Z/arm.sh, client swapped)"
+
+[measure]
+acceptance = "deltas of /metrics strix_mtp_accepted_tokens_total / strix_mtp_drafted_tokens_total per phase (decode2k, decode30k, quality)"
+decode = "timings.predicted_per_second, temperature 0, max_tokens 256, ~2k ctx x3 and ~30k ctx x3, unique nonce per request"
+prefill = "one ~7.5k sanity request (max_tokens 1), timings.prompt_per_second"
+identity = "10 fixed prompts of the previous A/B, temperature 0, max_tokens 128: token sequences + content/reasoning/tool_calls must be identical between arms; any difference is reported as a finding"
+
+[verdict]
+keep = "acceptance (decode phases) >= OLD's and decode 2k/30k not below OLD's by more than the min-max spread, AND 10/10 identical; else delete /cache/models/qwen38-fnext-tpn-mtpq4"

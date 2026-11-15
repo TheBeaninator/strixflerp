@@ -1,0 +1,14 @@
+{
+ "_card": "crucible-fatzero",
+ "_call": "ab1",
+ "src": "/data/pod/kbench/stage/crucible-fatzero",
+ "a_cmd": "N=1 bash gen.sh stock101 prefill-32768 0 --ctx 33792",
+ "b_cmd": "N=1 bash gen.sh fatzero101 prefill-32768 0 --ctx 33792",
+ "metric": "prefill \\d+ tok in [0-9.]+ s \\(([0-9.]+) tok/s\\)",
+ "better": "higher",
+ "reps": 7,
+ "warmup": 1,
+ "timeout_s": 3600,
+ "queue_wait_s": 14400,
+ "why": "Crucible fat-zero spill fix, 32K prefill tok/s: stock 10.1 (A, 772 B/lane spill) vs fat-zero patched 10.1 (B)"
+}

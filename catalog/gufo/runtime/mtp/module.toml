@@ -1,0 +1,69 @@
+id        = "runtime.gufo.mtp"
+kind      = "runtime"
+summary   = "MTP speculators: the Qwen MTP head (model, executor, backend, reference) and the Qwen3.8-Flash-Next MTP policy, costs and n-gram tables"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/qwen/hip/mtp.hpp",
+  "src/models/qwen/hip/mtp/backend.cpp",
+  "src/models/qwen/hip/mtp/detail/allocation.hpp",
+  "src/models/qwen/hip/mtp/executor.cpp",
+  "src/models/qwen/hip/mtp/model.cpp",
+  "src/models/qwen/mtp_reference.cpp",
+  "src/models/qwen/mtp_reference.hpp",
+  "src/models/qwen38_flash_next/draft_vocab.hpp",
+  "src/models/qwen38_flash_next/mtp_costs.hpp",
+  "src/models/qwen38_flash_next/mtp_policy.hpp",
+  "src/models/qwen38_flash_next/ngram.cpp",
+  "src/models/qwen38_flash_next/ngram.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "speculation.draft/mtp/f32"
+api       = "gufo::models::qwen::hip::mtp, qwen38_flash_next mtp_policy"
+numeric   = "draft-only numerics"
+regime    = "draft steps"
+
+[[requires]]
+interface = "draft.mtp/gguf-q8_0/f32"
+
+[[requires]]
+interface = "speculation.window-verify-lossless/-/-"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+module    = "executor.gufo.qwen38_flash_next"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "runtime.gufo.ext_api"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

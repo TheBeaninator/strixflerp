@@ -1,0 +1,65 @@
+# Host facts and run settings for the Crucible recipe gate (gate/crucible_recipe.py), on control-node.
+# The pass criteria below were fixed before the first run; do not edit them to turn a failure into a pass.
+#
+# check   `flerp check --origin crucible` 0 errors.
+# origin  every catalogue file of origin crucible byte-identical to `git archive <commit>` of reference_checkout, which
+#         must be at that commit; every origin file in a module or listed as unharvested.
+# build   (no GPU) the assembled tree's files equal the export's at the same paths; then BOTH trees run the same
+#         command, `make -j1 <make_options> build/engine/crucible.mono` (plain hipcc, one clang process each, the two
+#         trees in parallel = 2 compiler threads). PASS: both build, and the two binaries are byte-identical (same
+#         sha256); if not, the .hip_fatbin sections (all device code) must be byte-identical and the difference is
+#         recorded section by section.
+# tokens, speed: GPU stages, prepared and NOT run (--plan prints them). They wait for the weights pack.
+
+[host]
+origin              = "crucible"
+# The pinned clone, copied from the laptop (rsync of ~/Code/strixflerp-upstream-supplement/crucible-strix-halo, .git
+# included): the pod has no route to GitHub. Under build/: pod-sync never deletes it.
+reference_checkout  = "build/upstream/crucible-strix-halo"
+scratch             = "build/gate-scratch-crucible"
+toolchain           = "rocm-7.2.4"            # docs/BUILD.md: tested with ROCm 7.2.4; HIP 7.2.53211 on control-node
+make_options        = ["SPLIT=0", "STATE_EPOCH=0", "GPU_ARCH=gfx1151"]
+target              = "build/engine/crucible.mono"
+build_timeout_s     = 14400
+# control-node serves the pod: wait while the 1-minute load average is above this, check every poll_s, give up after
+# load_wait_s. Builds run under `ionice -c3 nice -n 19` and raise their own OOM score.
+max_loadavg         = 10.0
+load_poll_s         = 60
+load_wait_s         = 7200
+oom_score_adj       = 1000
+
+[weights]
+# turboderp/Qwen3.8-Flash-Next-exl3, revision 4.05bpw_h6_ng6: added to the ark manifest 2026-11-11, landing on ark-b,
+# not on the pod yet. The plan's first step checks for it; nothing GPU runs until it is there.
+ark_dir             = "/data/ark/models/turboderp__Qwen3.8-Flash-Next-exl3"
+# control-node NVMe copy (rsync to a dot-dir, then renamed whole); used first when present.
+staged_dir          = "/data/models/crucible-exl3"
+revision            = "4.05bpw_h6_ng6"
+# The engine wants the folder that holds config.json and the safetensors shards of that revision; the ark lays a
+# revision out either at the top or under <revision>/. Both are tried.
+must_have           = ["config.json", "model.safetensors.index.json", "tokenizer.json"]
+
+[tokens]
+# Stage `tokens` (GPU, prepared): the reference build (from the export) and the assembled build each run
+# `crucible gen <ckpt> --ids <ids> --n <n> --spec 0` greedily, one process at a time, `repeats` times, on
+# control-node's own GPU under the lease. PASS: generated ids equal, prompt for prompt and repeat for repeat
+# (the binaries are expected to be identical, so this is the run-time confirmation), and each side equal to itself.
+n                   = 128
+repeats             = 2
+spec                = 0                       # then once more with spec 3 (MTP drafts): ids must equal spec 0's (lossless)
+spec_check          = 3
+lease_resource      = "control-gpu"
+lease_owner         = "agent"
+lease_ttl_s         = 1800
+
+[speed]
+# Stage `speed` (GPU, prepared): Crucible (assembled build) against strixite (the fleet's build,
+# recipes/qwen38-flash-next.strixite.toml reference) on the same token ids, same host, same power mode, one engine
+# loaded at a time. Prefill: cold prompts of 4096, 32768 and 131072 tokens (the strixite prefill gate's lengths);
+# decode: 256 tokens without drafts and with each engine's MTP default, on a code prompt and a prose prompt.
+# Recorded, not pass/fail: tok/s per engine and the ratio, with the host's power mode and GPU clock read before
+# and after. Repeats 3, median.
+prefill_lengths     = [4096, 32768, 131072]
+decode_tokens       = 256
+repeats             = 3
+strixite_recipe     = "qwen38-flash-next.strixite"

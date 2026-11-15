@@ -1,0 +1,295 @@
+$ choom -n 1000 -- nice -n 19 cmake -G Ninja -S /data/ark/src/github.com__ggml-org__llama.cpp -B /data/projects/strixflerp/build/gate-scratch-gufo/llama-build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DLLAMA_OPENSSL=OFF -DLLAMA_BUILD_UI=OFF -DLLAMA_USE_PREBUILT_UI=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- llama.cpp version: 0.5.0-dev
+CMAKE_BUILD_TYPE=Release
+-- Found Git: /usr/local/bin/git (found version "2.43.0")
+-- The ASM compiler identification is GNU
+-- Found assembler: /usr/bin/cc
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: x86_64
+-- GGML_SYSTEM_ARCH: x86
+-- Found OpenMP_C: -fopenmp (found version "4.5")
+-- Found OpenMP_CXX: -fopenmp (found version "4.5")
+-- Found OpenMP: TRUE (found version "4.5")
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: -march=native 
+-- ggml version: 0.25.3
+-- ggml commit:  86a24a1-dirty
+-- Generating embedded license file for target: llama-app
+-- Configuring done (1.2s)
+-- Generating done (0.1s)
+-- Build files have been written to: /data/projects/strixflerp/build/gate-scratch-gufo/llama-build
+$ choom -n 1000 -- nice -n 19 ninja -C /data/projects/strixflerp/build/gate-scratch-gufo/llama-build -j2 llama-server
+ninja: Entering directory `/data/projects/strixflerp/build/gate-scratch-gufo/llama-build'
+[1/206] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[2/206] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[3/206] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[4/206] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[5/206] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[6/206] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[7/206] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[8/206] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[9/206] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+[10/206] Linking CXX static library ggml/src/libggml-base.a
+[11/206] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o
+[12/206] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[13/206] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o
+[14/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[15/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[16/206] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[17/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[18/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[19/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[20/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[21/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled-kernel.cpp.o
+[22/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled.cpp.o
+[23/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[24/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[25/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[26/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[27/206] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/quants.c.o
+[28/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+[29/206] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/repack.cpp.o
+[30/206] Linking CXX static library ggml/src/libggml-cpu.a
+[31/206] Linking CXX static library ggml/src/libggml.a
+[32/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_9_cxx.cxx.o
+[33/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_7_cxx.cxx.o
+[34/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_8_cxx.cxx.o
+[35/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_6_cxx.cxx.o
+[36/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_5_cxx.cxx.o
+[37/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_4_cxx.cxx.o
+[38/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_3_cxx.cxx.o
+[39/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_2_cxx.cxx.o
+[40/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_0_cxx.cxx.o
+[41/206] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_1_cxx.cxx.o
+[42/206] Building CXX object src/CMakeFiles/llama.dir/llama.cpp.o
+[43/206] Building CXX object src/CMakeFiles/llama.dir/llama-adapter.cpp.o
+[44/206] Building CXX object src/CMakeFiles/llama.dir/llama-arch.cpp.o
+[45/206] Building CXX object src/CMakeFiles/llama.dir/llama-chat.cpp.o
+[46/206] Building CXX object src/CMakeFiles/llama.dir/llama-batch.cpp.o
+[47/206] Building CXX object src/CMakeFiles/llama.dir/llama-cparams.cpp.o
+[48/206] Building CXX object src/CMakeFiles/llama.dir/llama-context.cpp.o
+[49/206] Building CXX object src/CMakeFiles/llama.dir/llama-grammar.cpp.o
+[50/206] Building CXX object src/CMakeFiles/llama.dir/llama-hparams.cpp.o
+[51/206] Building CXX object src/CMakeFiles/llama.dir/llama-impl.cpp.o
+[52/206] Building CXX object src/CMakeFiles/llama.dir/llama-io.cpp.o
+[53/206] Building CXX object src/CMakeFiles/llama.dir/llama-graph.cpp.o
+[54/206] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-iswa.cpp.o
+[55/206] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-dsa.cpp.o
+[56/206] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o
+[57/206] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-dsa-iswa.cpp.o
+[58/206] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-msa.cpp.o
+[59/206] Building CXX object src/CMakeFiles/llama.dir/llama-memory.cpp.o
+[60/206] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o
+[61/206] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-dsv4.cpp.o
+[62/206] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid-iswa.cpp.o
+[63/206] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid-idx.cpp.o
+[64/206] Building CXX object src/CMakeFiles/llama.dir/llama-mmap.cpp.o
+[65/206] Building CXX object src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o
+[66/206] Building CXX object src/CMakeFiles/llama.dir/llama-model-saver.cpp.o
+[67/206] Building CXX object src/CMakeFiles/llama.dir/llama-model-loader.cpp.o
+[68/206] Building CXX object src/CMakeFiles/llama.dir/llama-model.cpp.o
+[69/206] Building CXX object src/CMakeFiles/llama.dir/llama-quant.cpp.o
+[70/206] Building CXX object src/CMakeFiles/llama.dir/llama-sampler.cpp.o
+[71/206] Building CXX object src/CMakeFiles/llama.dir/unicode-data.cpp.o
+[72/206] Building CXX object src/CMakeFiles/llama.dir/llama-vocab.cpp.o
+[73/206] Building CXX object vendor/hash/CMakeFiles/vendor-hash.dir/hash.cpp.o
+[74/206] Building C object vendor/hash/CMakeFiles/vendor-hash.dir/xxhash/xxhash.c.o
+[75/206] Building CXX object vendor/hash/CMakeFiles/vendor-hash.dir/sha1/sha1.c.o
+[76/206] Building C object vendor/hash/CMakeFiles/vendor-hash.dir/sha256/sha256.c.o
+[77/206] Linking CXX static library vendor/hash/libvendor-hash.a
+[78/206] Building CXX object src/CMakeFiles/llama.dir/unicode.cpp.o
+[79/206] Linking CXX static library src/libllama.a
+[80/206] Building CXX object common/CMakeFiles/llama-common-base.dir/build-info.cpp.o
+[81/206] Linking CXX static library common/libllama-common-base.a
+[82/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/parsers.cpp.o
+[83/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/cohere2moe.cpp.o
+[84/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/deepseek.cpp.o
+[85/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/functionary-v3-2.cpp.o
+[86/206] Building CXX object vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/httplib.cpp.o
+[87/206] Linking CXX static library vendor/cpp-httplib/libcpp-httplib.a
+[88/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/gemma4.cpp.o
+[89/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/gigachat-v3.cpp.o
+[90/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/gpt-oss.cpp.o
+[91/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/kimi-k2.cpp.o
+[92/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/kimi-k3.cpp.o
+[93/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/ling3.cpp.o
+[94/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/lfm2.cpp.o
+[95/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/minicpm5.cpp.o
+[96/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/minimax-m3.cpp.o
+[97/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/ministral3.cpp.o
+[98/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/muse-glimmer.cpp.o
+[99/206] Building CXX object common/CMakeFiles/llama-common.dir/parsers/qwen3-coder.cpp.o
+[100/206] Building CXX object common/CMakeFiles/llama-common.dir/chat-auto-parser-generator.cpp.o
+[101/206] Building CXX object common/CMakeFiles/llama-common.dir/chat-auto-parser-helpers.cpp.o
+[102/206] Building CXX object common/CMakeFiles/llama-common.dir/chat-diff-analyzer.cpp.o
+[103/206] Building CXX object common/CMakeFiles/llama-common.dir/arg.cpp.o
+[104/206] Building CXX object common/CMakeFiles/llama-common.dir/chat-peg-parser.cpp.o
+[105/206] Building CXX object common/CMakeFiles/llama-common.dir/chat.cpp.o
+[106/206] Building CXX object common/CMakeFiles/llama-common.dir/console.cpp.o
+[107/206] Building CXX object common/CMakeFiles/llama-common.dir/common.cpp.o
+[108/206] Building CXX object common/CMakeFiles/llama-common.dir/debug.cpp.o
+[109/206] Building CXX object common/CMakeFiles/llama-common.dir/fit.cpp.o
+[110/206] Building CXX object common/CMakeFiles/llama-common.dir/download.cpp.o
+[111/206] Building CXX object common/CMakeFiles/llama-common.dir/imatrix-loader.cpp.o
+[112/206] Building CXX object common/CMakeFiles/llama-common.dir/hf-cache.cpp.o
+[113/206] Building CXX object common/CMakeFiles/llama-common.dir/json-schema.cpp.o
+[114/206] Building CXX object common/CMakeFiles/llama-common.dir/json-schema-to-grammar.cpp.o
+[115/206] Building CXX object common/CMakeFiles/llama-common.dir/llguidance.cpp.o
+[116/206] Building CXX object common/CMakeFiles/llama-common.dir/json.cpp.o
+[117/206] Building CXX object common/CMakeFiles/llama-common.dir/log.cpp.o
+[118/206] Building CXX object common/CMakeFiles/llama-common.dir/ngram-map.cpp.o
+[119/206] Building CXX object common/CMakeFiles/llama-common.dir/ngram-mod.cpp.o
+[120/206] Building CXX object common/CMakeFiles/llama-common.dir/ngram-cache.cpp.o
+[121/206] Building CXX object common/CMakeFiles/llama-common.dir/preset.cpp.o
+[122/206] Building CXX object common/CMakeFiles/llama-common.dir/reasoning-budget.cpp.o
+[123/206] Building CXX object common/CMakeFiles/llama-common.dir/peg-parser.cpp.o
+[124/206] Building CXX object common/CMakeFiles/llama-common.dir/sampling.cpp.o
+[125/206] Building CXX object common/CMakeFiles/llama-common.dir/subproc.cpp.o
+[126/206] Building CXX object common/CMakeFiles/llama-common.dir/trie.cpp.o
+[127/206] Building CXX object common/CMakeFiles/llama-common.dir/unicode.cpp.o
+[128/206] Building CXX object common/CMakeFiles/llama-common.dir/jinja/lexer.cpp.o
+[129/206] Building CXX object common/CMakeFiles/llama-common.dir/speculative.cpp.o
+[130/206] Building CXX object common/CMakeFiles/llama-common.dir/jinja/parser.cpp.o
+[131/206] Building CXX object common/CMakeFiles/llama-common.dir/jinja/runtime.cpp.o
+[132/206] Building CXX object common/CMakeFiles/llama-common.dir/jinja/string.cpp.o
+[133/206] Building CXX object common/CMakeFiles/llama-common.dir/jinja/value.cpp.o
+[134/206] Provisioning UI assets
+CMake Warning at /data/ark/src/github.com__ggml-org__llama.cpp/scripts/ui-assets.cmake:584 (message):
+  UI: no assets available - building without an embedded UI.  In a
+  disconnected environment, download the pre-built UI from a llama.cpp
+  release at https://github.com/ggml-org/llama.cpp/releases and extract to
+  tools/ui/dist.
+
+
+-- UI: embedded 0 assets
+[135/206] Building CXX object tools/ui/CMakeFiles/llama-ui.dir/ui.cpp.o
+[136/206] Linking CXX static library tools/ui/libllama-ui.a
+[137/206] Building CXX object common/CMakeFiles/llama-common.dir/jinja/caps.cpp.o
+[138/206] Linking CXX static library common/libllama-common.a
+[139/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-chat.cpp.o
+[140/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-queue.cpp.o
+[141/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-task.cpp.o
+[142/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-common.cpp.o
+[143/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-stream.cpp.o
+[144/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-context.cpp.o
+[145/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-mcp.cpp.o
+[146/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-tools.cpp.o
+[147/206] Building CXX object tools/server/CMakeFiles/server-context.dir/server-schema.cpp.o
+[148/206] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server.cpp.o
+[149/206] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server-http.cpp.o
+[150/206] Building CXX object tools/server/CMakeFiles/llama-server.dir/main.cpp.o
+[151/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd.cpp.o
+[152/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-audio.cpp.o
+[153/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-image.cpp.o
+[154/206] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server-models.cpp.o
+[155/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-helper-gen.cpp.o
+[156/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-helper.cpp.o
+[157/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/cogvlm.cpp.o
+[158/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/conformer.cpp.o
+[159/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/deepseek4v.cpp.o
+[160/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/dots3note.cpp.o
+[161/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/clip.cpp.o
+[162/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/dotsocr.cpp.o
+[163/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/exaone4_5.cpp.o
+[164/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/gemma4a.cpp.o
+[165/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/gemma4v.cpp.o
+[166/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/gemma4ua.cpp.o
+[167/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/gemma4uv.cpp.o
+[168/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/glm4v.cpp.o
+[169/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/granite-speech.cpp.o
+[170/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/hunyuanvl.cpp.o
+[171/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/granite4-vision.cpp.o
+[172/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/internvl.cpp.o
+[173/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/kimivl.cpp.o
+[174/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/kimik25.cpp.o
+[175/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/nemotron-v2-vl.cpp.o
+[176/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/muse-glimmer.cpp.o
+[177/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/llama4.cpp.o
+[178/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/llava.cpp.o
+[179/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/minicpmv.cpp.o
+[180/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/paddleocr.cpp.o
+[181/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/pixtral.cpp.o
+[182/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen2vl.cpp.o
+[183/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/minimax-m3.cpp.o
+[184/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen3vl.cpp.o
+[185/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/ling3vl.cpp.o
+[186/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen3a.cpp.o
+[187/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/mimovl.cpp.o
+[188/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/mimo-audio.cpp.o
+[189/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen3tts-spkenc.cpp.o
+[190/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/pockettts-seanet.cpp.o
+[191/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen3tts-gen.cpp.o
+[192/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/pockettts-spkenc.cpp.o
+[193/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/step3vl.cpp.o
+[194/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/pockettts-gen.cpp.o
+[195/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/siglip.cpp.o
+[196/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/whisper-enc.cpp.o
+[197/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/deepseekocr.cpp.o
+[198/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/deepseekocr2.cpp.o
+[199/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/mobilenetv5.cpp.o
+[200/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/youtuvl.cpp.o
+[201/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/yasa2.cpp.o
+[202/206] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/parakeet.cpp.o
+[203/206] Linking CXX static library tools/mtmd/libmtmd.a
+[204/206] Linking CXX static library tools/server/libserver-context.a
+[205/206] Linking CXX static library tools/server/libllama-server-impl.a
+[206/206] Linking CXX executable bin/llama-server
+$ choom -n 1000 -- nice -n 19 /data/projects/strixflerp/build/gate-scratch-gufo/llama-build/bin/llama-server -m /data/ark/models/Mapika__decider-2b-GGUF/gguf/decider-2b-v12-Q4_K_M.gguf --host 127.0.0.1 --port 5397 -ngl 0 -t 8 -c 4096 --parallel 1
+0.00.000.169 I srv  llama_server: initializing ...
+warning: no usable GPU found, --gpu-layers option will be ignored
+warning: one possible reason is that llama.cpp was compiled without GPU support
+warning: consult docs/build.md for compilation instructions
+0.00.002.371 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.002.468 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.004.144 I srv    load_model: loading model '/data/ark/models/Mapika__decider-2b-GGUF/gguf/decider-2b-v12-Q4_K_M.gguf'
+0.04.093.396 I cmn          init: llama threadpool init, n_threads = 8
+0.04.159.395 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 4096, kv_unified = 'false'
+0.04.164.505 I srv  llama_server: model loaded
+0.04.164.509 I srv  llama_server: listening on http://127.0.0.1:5397
+0.06.172.548 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.06.172.951 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.08.565.422 I slot print_timing: id  0 | task 0 | prompt eval time =      98.27 ms /    21 tokens (    4.68 ms per token,   213.69 tokens per second)
+0.08.565.428 I slot print_timing: id  0 | task 0 |        eval time =    2294.18 ms /   128 tokens (   18.06 ms per token,    55.36 tokens per second)
+0.08.565.429 I slot print_timing: id  0 | task 0 |       total time =    2392.45 ms /   149 tokens
+0.08.565.429 I slot print_timing: id  0 | task 0 |    graphs reused =        127
+0.08.565.449 I slot      release: id  0 | task 0 | stop processing: n_tokens = 148, truncated = 0
+0.08.577.698 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 105141404589
+0.08.590.630 I slot launch_slot_: id  0 | task 130 | processing task, is_child = 0
+0.10.976.031 I slot print_timing: id  0 | task 130 | prompt eval time =      67.09 ms /    20 tokens (    3.35 ms per token,   298.12 tokens per second)
+0.10.976.035 I slot print_timing: id  0 | task 130 |        eval time =    2318.28 ms /   128 tokens (   18.25 ms per token,    54.78 tokens per second)
+0.10.976.184 I slot print_timing: id  0 | task 130 |       total time =    2385.37 ms /   148 tokens
+0.10.976.185 I slot print_timing: id  0 | task 130 |    graphs reused =        253
+0.10.976.206 I slot      release: id  0 | task 130 | stop processing: n_tokens = 147, truncated = 0
+0.10.985.381 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 105143815347
+0.10.995.157 I slot launch_slot_: id  0 | task 260 | processing task, is_child = 0
+0.11.608.074 I slot print_timing: id  0 | task 260 | prompt eval time =      78.19 ms /    18 tokens (    4.34 ms per token,   230.21 tokens per second)
+0.11.608.080 I slot print_timing: id  0 | task 260 |        eval time =     534.71 ms /    29 tokens (   19.10 ms per token,    52.37 tokens per second)
+0.11.608.081 I slot print_timing: id  0 | task 260 |       total time =     612.89 ms /    47 tokens
+0.11.608.465 I slot print_timing: id  0 | task 260 |    graphs reused =        280
+0.11.608.485 I slot      release: id  0 | task 260 | stop processing: n_tokens = 46, truncated = 0
+0.11.647.188 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 105144447625
+0.11.657.218 I slot launch_slot_: id  0 | task 291 | processing task, is_child = 0
+0.14.766.348 I slot print_timing: id  0 | task 291 | prompt processing, n_tokens =   1292, progress = 0.71, t =   3.11 s / 415.66 tokens per second
+0.15.985.386 I slot print_timing: id  0 | task 291 | prompt processing, n_tokens =   1804, progress = 1.00, t =   4.33 s / 416.81 tokens per second
+0.18.487.878 I slot print_timing: id  0 | task 291 | prompt eval time =    4397.90 ms /  1808 tokens (    2.43 ms per token,   411.11 tokens per second)
+0.18.488.418 I slot print_timing: id  0 | task 291 |        eval time =    2432.74 ms /   128 tokens (   19.16 ms per token,    52.20 tokens per second)
+0.18.488.421 I slot print_timing: id  0 | task 291 |       total time =    6830.63 ms /  1936 tokens
+0.18.488.421 I slot print_timing: id  0 | task 291 |    graphs reused =        406
+0.18.488.707 I slot      release: id  0 | task 291 | stop processing: n_tokens = 1935, truncated = 0
+0.18.494.532 I srv    operator(): operator(): cleaning up before exit...

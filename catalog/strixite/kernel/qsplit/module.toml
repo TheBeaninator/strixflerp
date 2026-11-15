@@ -1,0 +1,36 @@
+id      = "kernel.strixite.qsplit"
+kind    = "kernel"
+summary = "Row layout of Q4 and Q5 expert weights as the expert kernels read it (device helper)"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/qsplit.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.row-layout/strixw-q4/-"
+api       = "strix::kernels::qsplit_row_bytes and loaders"
+numeric   = "raw codes, no arithmetic"
+regime    = "included by .hip files only; Q5 rows need K % 128 == 0"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

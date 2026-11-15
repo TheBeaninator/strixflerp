@@ -1,0 +1,48 @@
+id      = "kernel.strixite.rope"
+kind    = "kernel"
+summary = "Partial rotary position embedding (rotate-half on the first rot_dim dims), with YaRN and interleaved-mRoPE positions"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/rope.hip", "kernels/rope.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/rope.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "pos.rope/-/bf16"
+api       = "strix::kernels::rope, strix::kernels::rope_inv_freq, strix::kernels::rope_yarn"
+numeric   = "transformers' arithmetic: angle = fp32(pos * inv_freq), products and sum rounded separately (no FMA); bf16 also rounds cos/sin and each step through bf16"
+regime    = "theta 1e7, rot_dim 64 of head_dim 256 on the target models"
+
+[[provides]]
+interface = "pos.rope/-/f32"
+api       = "strix::kernels::rope, strix::kernels::rope_inv_freq, strix::kernels::rope_yarn"
+numeric   = "transformers' arithmetic: angle = fp32(pos * inv_freq), products and sum rounded separately (no FMA); bf16 also rounds cos/sin and each step through bf16"
+regime    = "theta 1e7, rot_dim 64 of head_dim 256 on the target models"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.rope_math"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

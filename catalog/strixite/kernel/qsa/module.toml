@@ -1,0 +1,54 @@
+id      = "kernel.strixite.qsa"
+kind    = "kernel"
+summary = "QSA indexer: block keys, block scores and per-query top-k block selection"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/qsa.hip", "kernels/qsa.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/qsa.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/bf16"
+api       = "strix::kernels::qsa_block_keys, qsa_scores, qsa_topk"
+numeric   = "block-key mean in fp32 then cast to the activation dtype as the reference; scores fp32; top-k is a set with ties to the lower block index; the Wmma score path runs on the matrix units"
+regime    = "4-token blocks; k = budget / 4 (512 on the target); H <= 8 heads, D % 8 == 0, D <= 256"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32"
+api       = "strix::kernels::qsa_block_keys, qsa_scores, qsa_topk"
+numeric   = "block-key mean in fp32 then cast to the activation dtype as the reference; scores fp32; top-k is a set with ties to the lower block index; the Wmma score path runs on the matrix units"
+regime    = "4-token blocks; k = budget / 4 (512 on the target); H <= 8 heads, D % 8 == 0, D <= 256"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.rope"
+
+[[requires]]
+module = "kernel.strixite.rope_math"
+
+[[requires]]
+module = "kernel.strixite.wmma"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,571 @@
+{
+ "origin_registry": "crates/rdna-compute/src/kernels.rs (+ other rdna-compute/src/*.rs constants)",
+ "note": "a unit is the concatenation of its parts, compiled as one HIP source, as hipfire builds it; path parts are relative to catalog/hipfire",
+ "units": [
+  {
+   "name": "alpha_gate",
+   "const": "ALPHA_GATE_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/alpha_gate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "chunk_arena",
+   "const": "CHUNK_ARENA_SRC",
+   "registry": "crates/rdna-compute/src/npu_trunk_consumers.rs",
+   "parts": [
+    {
+     "text": "#define NPU_TRUNK_ARENA 1\n#define gated_delta_chunk_gate_wmma gated_delta_chunk_gate_wmma_arena\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_chunk_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "chunk_q8_arena",
+   "const": "CHUNK_Q8_ARENA_SRC",
+   "registry": "crates/rdna-compute/src/npu_trunk_consumers.rs",
+   "parts": [
+    {
+     "text": "#define NPU_TRUNK_ARENA 1\n#define gated_delta_chunk_gate_q8_wmma gated_delta_chunk_gate_q8_wmma_arena\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_chunk_q8_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "conv1d_silu_split_lanes",
+   "const": "CONV1D_SILU_SPLIT_LANES_SRC",
+   "registry": "crates/rdna-compute/src/lane_gdn.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/conv1d_silu_split_lanes.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "conv1d_silu_split",
+   "const": "CONV1D_SILU_SPLIT_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/conv1d_silu_split.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "conv1d_silu_split_tree",
+   "const": "CONV1D_SILU_SPLIT_TREE_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/conv1d_silu_split_tree.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "conv1d_silu",
+   "const": "CONV1D_SILU_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/conv1d_silu.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "dynamic_causal_conv_f32",
+   "const": "DYNAMIC_CAUSAL_CONV_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/dynamic_conv_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "dynamic_causal_conv_lanes",
+   "const": "DYNAMIC_CAUSAL_CONV_LANES_SRC",
+   "registry": "crates/rdna-compute/src/draft_lane_conv.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/dynamic_causal_conv_lanes.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "dynamic_conv_f32",
+   "const": "DYNAMIC_CONV_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/dynamic_conv_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_add_f32",
+   "const": "GATED_ADD_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_add_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_chunk_q8_wmma",
+   "const": "GATED_DELTA_CHUNK_Q8_WMMA_SRC",
+   "registry": "crates/rdna-compute/src/tensor_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_chunk_q8_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_chunk_wmma",
+   "const": "GATED_DELTA_CHUNK_WMMA_SRC",
+   "registry": "crates/rdna-compute/src/tensor_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_chunk_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_f32_batch_seq",
+   "const": "GATED_DELTA_NET_F32_BATCH_SEQ_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_f32_batch_seq.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_f32_chunked",
+   "const": "GATED_DELTA_NET_F32_CHUNKED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_f32_chunked.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_f32_tree",
+   "const": "GATED_DELTA_NET_F32_TREE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_f32_tree.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q4",
+   "const": "GATED_DELTA_NET_Q4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact2_b12",
+   "const": "GATED_DELTA_NET_Q8_COMPACT2_B12_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 2\n#define HIPFIRE_GDN_MIN_BLOCKS 12\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact2_b12\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact2_b16",
+   "const": "GATED_DELTA_NET_Q8_COMPACT2_B16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 2\n#define HIPFIRE_GDN_MIN_BLOCKS 16\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact2_b16\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact2_b2",
+   "const": "GATED_DELTA_NET_Q8_COMPACT2_B2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 2\n#define HIPFIRE_GDN_MIN_BLOCKS 2\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact2_b2\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact2_b4",
+   "const": "GATED_DELTA_NET_Q8_COMPACT2_B4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 2\n#define HIPFIRE_GDN_MIN_BLOCKS 4\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact2_b4\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact2_b8",
+   "const": "GATED_DELTA_NET_Q8_COMPACT2_B8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 2\n#define HIPFIRE_GDN_MIN_BLOCKS 8\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact2_b8\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact2_dpp_gfx1151",
+   "const": "GATED_DELTA_NET_Q8_COMPACT2_DPP_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 2\n#define HIPFIRE_GDN_MIN_BLOCKS 2\n#define HIPFIRE_GDN_DPP_REDUCE 1\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact2_dpp_gfx1151\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact2_r4x2_gfx1151",
+   "const": "GATED_DELTA_NET_Q8_COMPACT2_R4X2_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 2\n#define HIPFIRE_GDN_BLOCK_SIZE 64\n#define HIPFIRE_GDN_WAVES_PER_BLOCK 2\n#define HIPFIRE_GDN_MIN_BLOCKS 2\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact2_r4x2_gfx1151\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact2_r8_gfx1151",
+   "const": "GATED_DELTA_NET_Q8_COMPACT2_R8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 2\n#define HIPFIRE_GDN_TILE_ROWS 8\n#define HIPFIRE_GDN_MIN_BLOCKS 2\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact2_r8_gfx1151\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_compact3_b2",
+   "const": "GATED_DELTA_NET_Q8_COMPACT3_B2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_QK_HEAD_DIV 3\n#define HIPFIRE_GDN_MIN_BLOCKS 2\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_compact3_b2\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_fast_lanes_varrows_from",
+   "const": "GATED_DELTA_NET_Q8_FAST_LANES_VARROWS_FROM_SRC",
+   "registry": "crates/rdna-compute/src/lane_gdn.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_DPP_REDUCE 1\n#define HIPFIRE_GDN_PREFETCH 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GDN_LAYER_TABLE 1\n#define HIPFIRE_GDN_STATE_SRC 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GDN_LANE_VARROWS 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_fast_lanes_varrows_from\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast_lanes_varrows.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_fast_lanes_varrows",
+   "const": "GATED_DELTA_NET_Q8_FAST_LANES_VARROWS_SRC",
+   "registry": "crates/rdna-compute/src/lane_gdn.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_DPP_REDUCE 1\n#define HIPFIRE_GDN_PREFETCH 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GDN_LAYER_TABLE 1\n#define HIPFIRE_GDN_LANE_VARROWS 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_fast_lanes_varrows\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast_lanes_varrows.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_fast_ml_from",
+   "const": "GATED_DELTA_NET_Q8_FAST_ML_FROM_SRC",
+   "registry": "crates/rdna-compute/src/dflash_gdn_replay.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_DPP_REDUCE 1\n#define HIPFIRE_GDN_PREFETCH 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GDN_LAYER_TABLE 1\n#define HIPFIRE_GDN_STATE_SRC 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_fast_ml_from\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_fast_ml",
+   "const": "GATED_DELTA_NET_Q8_FAST_ML_SRC",
+   "registry": "crates/rdna-compute/src/dflash_gdn_replay.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_DPP_REDUCE 1\n#define HIPFIRE_GDN_PREFETCH 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GDN_LAYER_TABLE 1\n#define HIPFIRE_GDN_KERNEL gated_delta_net_q8_fast_ml\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_fast",
+   "const": "GATED_DELTA_NET_Q8_FAST_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GDN_DPP_REDUCE 1\n#define HIPFIRE_GDN_PREFETCH 1\n"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8",
+   "const": "GATED_DELTA_NET_Q8_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_q8_tree",
+   "const": "GATED_DELTA_NET_Q8_TREE_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_q8_tree.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net",
+   "const": "GATED_DELTA_NET_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_delta_net_vector_serial",
+   "const": "GATED_DELTA_NET_VECTOR_SERIAL_SRC",
+   "registry": "crates/rdna-compute/src/gated_delta_vector.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_delta_net_vector_serial.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_norm",
+   "const": "GATED_NORM_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_norm.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gated_rmsnorm_sigmoid_rows",
+   "const": "GATED_RMSNORM_SIGMOID_ROWS_SRC",
+   "registry": "crates/rdna-compute/src/gated_delta_vector.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gated_rmsnorm_sigmoid_rows.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gdn_chunk_prep_gfx11",
+   "const": "GDN_CHUNK_PREP_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gdn_chunk_prep.gfx11.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gdn_chunk_scan_gfx1151",
+   "const": "GDN_CHUNK_SCAN_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gdn_chunk_scan.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gdn_lanes",
+   "const": "GDN_LANES_SRC",
+   "registry": "crates/rdna-compute/src/tensor_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/common_headers/src/kernels/src/mq_fwht256.h"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/rope_yarn.h"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/tensor_ops.hip"
+    },
+    {
+     "path": "kernel/gdn/src/kernels/src/gdn_lanes.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "softplus",
+   "const": "SOFTPLUS_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/softplus.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "state_overlap_shift_f32_buf",
+   "const": "STATE_OVERLAP_SHIFT_F32_BUF_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/state_overlap_shift_f32_buf.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "state_ring_write_f32_buf",
+   "const": "STATE_RING_WRITE_F32_BUF_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/state_ring_write_f32_buf.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_gdn_chunk_kkt_solve_gfx11",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/gdn/src/kernels/src/gdn_chunk_kkt_solve.gfx11.hip"
+    }
+   ],
+   "flags": []
+  }
+ ]
+}

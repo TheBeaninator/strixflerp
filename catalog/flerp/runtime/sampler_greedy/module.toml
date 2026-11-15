@@ -1,0 +1,34 @@
+id        = "runtime.flerp.sampler_greedy"
+kind      = "runtime"
+summary   = "include/flerp/sampler.h, greedy only: a row's token is its largest logit (the lower id first on a tie), or candidate 0; temperature above 0 is refused as the client's error"
+notes     = "For a recipe whose executor hands back rows but draws nothing at random (executor.flerp.qwen35moe_abi): the front end samples on the host from FLERP_OUT_FULL rows and a sampled request gets HTTP 400. The server's default temperature must then be 0 (--generation-config with temperature 0)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/sampler/sampler_greedy.c"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = ["src/flerp/sampler/sampler_greedy.c"]
+includes  = ["../../../../include"]
+c_std     = 11
+
+[[provides]]
+interface = "sample.host/flerp-v1/-"
+api       = "flerp_sampler_new .. flerp_sampler_pick (include/flerp/sampler.h)"
+numeric   = "argmax over ids [0, n_valid), the lower id first on a tie"
+regime    = "temperature 0"
+
+[gate]
+parity    = "flerp:gate/moe_serve_stage.py"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by CMake (recipes/qwen36-35b-a3b.flerp-serve-stage.toml); its gate is gate/moe_serve_stage.py"

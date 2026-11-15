@@ -1,0 +1,69 @@
+# DECODE-KERN3: the three slow decode kernels of gate/results/decode-profile/summary.md (e5af237), memory access only.
+# Committed BEFORE any GPU run of this experiment; not edited to turn a failure into a pass (an amendment, if any, is
+# added below with its date and reason, as xfer-r1-fold.toml [kernel_rounds]).
+# Method of the R1 fold (gate/xfer-r1-fold.toml). Tools: gate/decode_kern3.hip (kernel bench), gate/decode_kern3_ref.hip
+# (the old kernels as at e5af237, namespace renamed: the reference), gate/decode_kern3.py (runner + judge),
+# gate/decode_kern3_run.sh (GPU job: load wait, control-gpu lease as agent, model path check).
+
+[targets]
+router  = "flerp::moe::GateLogitsKernel (kernel.flerp.moe_kquant), F32 ffn_gate_inp [2048 -> 256] + shared gate row: ~50 GB/s, aim ~180"
+lm_head = "gufo::hip::Q8KBlockGEMVKernel_2Rows Q6_K (kernel.gufo.qwen_linear_decode), output.weight [2048 -> 248320]: ~142 GB/s, aim ~190"
+outproj = "the same kernel, Q4_K attn_output / ssm_out [4096 -> 2048]: ~110 GB/s, aim ~180"
+rule    = "memory access only: every lane sums the same elements in the same order with the same expressions and the same xor reduction; router stays F32 (no bf16)"
+
+[kernel]
+# New source (catalogue) against the reference, one process a case, same weights, same x.
+shapes = """real weights from /data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf (offsets from the census):
+  router     blk.0, blk.10, blk.39 ffn_gate_inp F32 [2048 -> 256] + ffn_gate_inp_shexp, stride 257
+  lm_head    output.weight Q6_K [2048 -> 248320]
+  attn_out   blk.3 and blk.39 attn_output Q4_K [4096 -> 2048]
+  ssm_out    blk.0 and blk.10 ssm_out Q4_K [4096 -> 2048]
+  other callers of LaunchQ8KBlockGEMV the change reaches: blk.0 ssm_alpha Q4_K [2048 -> 32], blk.3 attn_v Q6_K [2048 -> 512],
+             blk.0 attn_qkv Q6_K [2048 -> 8192], blk.0 attn_gate Q4_K [2048 -> 4096]
+  synthetic: router hidden 4096 x 512 experts (Ornith-sized), Q4_K/Q6_K odd M (single-row fallback) and K 256"""
+x       = "x from a fixed-seed uniform(-1, 1), and a second x of real-scale values (normal * 0.05)"
+tokens_router = [1, 2, 3, 8, 21, 128, 1024]   # GateLogits also runs in prefill: every token count it gets must match
+correct = "every case and token count: output bytes equal the reference's (memcmp), 0 differing; counts reported"
+timing  = "7 rounds a case, arm order alternating each round (ref,new / new,ref / ...), 20 warm + 200 timed launches a round; number = each arm's median round, spread = min..max; GB/s = weight bytes (+ x once) / time"
+load    = "loadavg 1-min <= 6 at the start and end of each case's process, else that case's timing is invalid and rerun"
+continue_rule = "new >= ref GB/s on every timed real-weight case at decode (1 token), else that kernel's change does not go in"
+
+[model]
+# The 35B gate prompts (gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json, 4 prompts, 128 tokens each) through
+# executor.flerp.qwen35moe, --staged loopback, model from /data/models (never /data/ark).
+binaries = "before = recipe qwen36-35b-a3b.flerp-moe assembled from the catalogue at e5af237 plus nothing (build/kern3/before); after = the same with the new kernels (build/kern3/after)"
+configs  = "1:even:on;1:even:on;1:even:on;1:even:off;2:even:on;2:even:off"
+order    = "before, after, before, after, after, before: six processes"
+equal    = """after (every process), every config (world 1 and world 2 loopback, graph on and off) and prompt: generated ids
+equal P1's and the sha256 of each of the 128 logits rows equals P1's (gate/results/qwen36-35b-a3b.flerp-moe-placed/equal.json,
+traced). The before binary is judged the same way as a control. Any differing id or sha = FAIL, the change does not go in."""
+speed    = """decode tok/s per prompt = decode_calls / decode_wall_ms (graph on, world 1), before vs after; median over the
+load-valid world-1 graph-on runs a binary; spread min..max. Runs whose process started or ended with 1-min load above 6
+are speed-invalid and rerun."""
+goal     = "after >= 68.3 tok/s (+20 % over R1's 56.95), reported as measured whatever it is; the change goes in if identity holds and after >= before"
+
+[profile]
+rerun = "gate/decode_profile_run.sh on the after binary (DECODE_PROFILE_BIN), new per-role table in gate/results/decode-kern3/profile/"
+
+[kernel_cold]
+# Amendment of 2026-11-13, written after the first [kernel] run (02:47Z) and before this one. That run's byte
+# equality is final (0 of 2,573,432 outputs differ, 88 results). Its GB/s stay in the results as measured, and by
+# this file's continue_rule it FAILED for lm_head (new/ref 0.991) and three of the four out-projection cases
+# (0.991-0.994); the router passed (2.19-2.20x). But the router (2 MiB) and out-projection (4.7 MB) rows were
+# cache-hot: the same tensor is read 220 times in a row and stays in the L2 / 32 MB MALL, rows reach 290-539 GB/s
+# against a ~250 GB/s DRAM peak, while in the model each layer's tensor is read once a token from DRAM (the profile's
+# 50 and 110 GB/s). So timing is taken again with each launch on a different copy of the weights, copies totalling
+# >= 512 MiB, cycled (--cold-mib 512; lm_head is one 417 MB copy, cold either way). Same rounds, same load rule.
+# continue_rule is judged on these cold medians for router and out-projections; for lm_head the hot run already was
+# cold and its FAIL stands unless this run differs, which is reported either way.
+
+[backend_kbench]
+# Note 2026-11-13, added in its own commit; adds no criterion and loosens none (every threshold above is judged as written).
+# The kernel stage (and, for DECODE-KERN3, only its synthetic-code cases) can run on bench box K through pod-kbench k_run
+# (gate/kbench_backend.py, `--backend kbench`, the default; `--backend queue` is the control-node path above, unchanged).
+# Judged the same way: byte equality, cold GB/s, new >= ref, loadavg <= 6 at the start and end of each case's process (K's
+# own loadavg, read on K). Method differences, recorded in each result's -method.json and summary: host K (balanced 85 W,
+# quiet cooling, weak die contact, so absolute GB/s differ; ratios are the judged quantity), ROCm 7.2.4 runtime libs under a
+# binary built with therock 10.1 clang, each case's process started at Tctl <= 50 C, one k_run job (one bench:K lease) a
+# stage. The in-process ref/new alternation is the bench's own; pod-kbench's ABBA process order (k_ab) is not used.
+# Results of this backend: gate/results/<gate>/kbench/ (the control-node results are not overwritten).

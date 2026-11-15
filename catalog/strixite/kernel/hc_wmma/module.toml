@@ -1,0 +1,70 @@
+id      = "kernel.strixite.hc_wmma"
+kind    = "kernel"
+summary = "Hyper-connection mixes for multi-token forwards on the matrix units"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/hc_wmma.hip", "kernels/hc_wmma.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/hc_wmma.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "hc.mix-prefill/strixw-q4/bf16"
+api       = "strix::kernels::hc_mix_down_wmma, hc_mix_up_wmma, hc_inject_inv"
+numeric   = "x and h rounded once to f16, weights dequantized to f16 (one rounding), fp32 accumulation over each GEMM's whole K; norms, gates and the stream combine in fp32; hc_inject_inv is bit-identical to hc_inject followed by the mix's own inverse RMS"
+regime    = "prefill: 64-token tiles; H == 4, d % 64 == 0, r % 64 == 0"
+
+[[provides]]
+interface = "hc.mix-prefill/strixw-q4/f32"
+api       = "strix::kernels::hc_mix_down_wmma, hc_mix_up_wmma, hc_inject_inv"
+numeric   = "x and h rounded once to f16, weights dequantized to f16 (one rounding), fp32 accumulation over each GEMM's whole K; norms, gates and the stream combine in fp32; hc_inject_inv is bit-identical to hc_inject followed by the mix's own inverse RMS"
+regime    = "prefill: 64-token tiles; H == 4, d % 64 == 0, r % 64 == 0"
+
+[[provides]]
+interface = "hc.mix-prefill/strixw-q8/bf16"
+api       = "strix::kernels::hc_mix_down_wmma, hc_mix_up_wmma, hc_inject_inv"
+numeric   = "x and h rounded once to f16, weights dequantized to f16 (one rounding), fp32 accumulation over each GEMM's whole K; norms, gates and the stream combine in fp32; hc_inject_inv is bit-identical to hc_inject followed by the mix's own inverse RMS"
+regime    = "prefill: 64-token tiles; H == 4, d % 64 == 0, r % 64 == 0"
+
+[[provides]]
+interface = "hc.mix-prefill/strixw-q8/f32"
+api       = "strix::kernels::hc_mix_down_wmma, hc_mix_up_wmma, hc_inject_inv"
+numeric   = "x and h rounded once to f16, weights dequantized to f16 (one rounding), fp32 accumulation over each GEMM's whole K; norms, gates and the stream combine in fp32; hc_inject_inv is bit-identical to hc_inject followed by the mix's own inverse RMS"
+regime    = "prefill: 64-token tiles; H == 4, d % 64 == 0, r % 64 == 0"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.wmma_gemm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

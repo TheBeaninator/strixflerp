@@ -1,0 +1,32 @@
+id      = "runtime.strixite.bf16"
+kind    = "runtime"
+summary = "Host BF16 bit helpers, the memcpy twins of the device functions in kernels/rope_math.hpp"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["common/bf16.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.bf16/-/-"
+api       = "strix::f32_to_bf16_bits, strix::bf16_bits_to_f32"
+numeric   = "round to nearest even, non-finite values preserved"
+regime    = "host"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,85 @@
+id        = "kernel.hipfire.speculation"
+kind      = "kernel"
+summary   = "Draft and verify helpers: DFlash draft attention (scalar and WMMA over f16 KV), DDTree mask / Gumbel top-k / walk, sampled-accept and chain-accept, DSpark staged KV and lazy sample-accept, draft row packing, verify twins (32 sources, 33 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/attention_dflash.hip",
+  "kernels/src/attention_dflash_sliding.hip",
+  "kernels/src/attention_dflash_wmma.hip",
+  "kernels/src/attention_dflash_wmma_kvsplit.gfx1151.hip",
+  "kernels/src/attention_dflash_wmma_m128_n32_f16kv_v7_f32.hip",
+  "kernels/src/attention_dflash_wmma_m128_n32_f16kv_v7b_f32.hip",
+  "kernels/src/attention_dflash_wmma_m32.hip",
+  "kernels/src/attention_dflash_wmma_m64_n128_f16kv.hip",
+  "kernels/src/attention_dflash_wmma_m64_n128_f16kv_v2.hip",
+  "kernels/src/attention_dflash_wmma_m64_n128_f16kv_v3.hip",
+  "kernels/src/attention_dflash_wmma_m64_n128_f16kv_v3_causal.hip",
+  "kernels/src/attention_dflash_wmma_m64_n128_f16kv_v4.hip",
+  "kernels/src/attention_dflash_wmma_m64_n128_f16kv_v4_causal.hip",
+  "kernels/src/attention_dflash_wmma_m64_n32_f16kv_v5_f32.hip",
+  "kernels/src/attention_dflash_wmma_m64_n32_f16kv_v6_f32.hip",
+  "kernels/src/attention_dflash_wmma_n128_f16kv.hip",
+  "kernels/src/attention_dflash_wmma_n64.hip",
+  "kernels/src/attention_dflash_wmma_n64_f16kv.hip",
+  "kernels/src/chain_accept_spec.hip",
+  "kernels/src/ddtree_build_attn_mask.hip",
+  "kernels/src/ddtree_gumbel_topk_batched.hip",
+  "kernels/src/ddtree_swor_walk.hip",
+  "kernels/src/dflash_gdn_replay_pre_ml.hip",
+  "kernels/src/dflash_sampled_accept_sparse_q.hip",
+  "kernels/src/dflash_selector_greedy_exact.hip",
+  "kernels/src/draft_rows_pack.hip",
+  "kernels/src/dspark_sample_accept_lazy.hip",
+  "kernels/src/dspark_stage_kv.hip",
+  "kernels/src/sampled_rows_compact.hip",
+  "kernels/src/spec_sampling_cpu_ar.hip",
+  "kernels/src/spec_sampling_cpu_ar_parallel.hip",
+  "kernels/src/verify_segment_twins.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 33
+
+[[provides]]
+interface = "draft.dflash/hipfire/f32"
+api       = "attention_dflash* units"
+numeric   = "draft-only numerics"
+regime    = "draft blocks of 32..128 rows"
+
+[[provides]]
+interface = "speculation.accept/-/f32.hipfire"
+api       = "chain_accept_spec, dflash_sampled_accept_sparse_q, dspark_sample_accept_lazy, spec_sampling_cpu_ar*"
+numeric   = "lossless accept / residual sampling on the device"
+regime    = "verification rows"
+
+[[provides]]
+interface = "draft.ddtree/-/f32"
+api       = "ddtree_build_attn_mask, ddtree_gumbel_topk_batched, ddtree_swor_walk"
+numeric   = "draft tree construction"
+regime    = "draft trees"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.speculation.json"

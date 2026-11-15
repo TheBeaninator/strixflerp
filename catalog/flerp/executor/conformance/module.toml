@@ -1,0 +1,39 @@
+id        = "executor.flerp.conformance"
+kind      = "executor"
+summary   = "Executor ABI conformance driver: decodes greedily through include/flerp/executor.h only (one row a forward; fixed-depth drafts + verify + keep / keep_prefix / drop; snapshot save / restore / export / import; the decode loop of strixite's engine with its draft rule and step records, which is runtime.flerp.decode_loop) and writes the tokens of each path"
+notes     = "A test program, kept under executor/ next to the ABI adapters it drives. It links whichever module the recipe binds to executor.abi/flerp-v1/-."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/executor/conformance.c"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = ["src/flerp/executor/conformance.c"]
+includes  = ["../../../../include"]
+c_std     = 11
+
+[[provides]]
+interface = "executor.abi-conformance/flerp-v1/-"
+api       = "main: conformance --out FILE [--delivery D] key=value ... [--case NAME] --ids FILE [--paths plain,speculative,snapshot,loop,loop-drop] ..."
+numeric   = "n/a: compares token ids"
+regime    = "one seq, greedy; several cases on one opened executor"
+
+[[requires]]
+interface = "executor.abi/flerp-v1/-"
+
+[[requires]]
+module    = "runtime.flerp.decode_loop"
+
+[gate]
+parity    = "flerp:gate/executor_abi.py"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/qwen38-flash-next.strixite-abi/at-20937dc/summary.json"

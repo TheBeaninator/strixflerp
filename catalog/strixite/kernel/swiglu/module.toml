@@ -1,0 +1,45 @@
+id      = "kernel.strixite.swiglu"
+kind    = "kernel"
+summary = "SwiGLU on the merged [gate | up] projection output"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/swiglu.hip", "kernels/swiglu.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/swiglu.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "act.swiglu/-/bf16"
+api       = "strix::kernels::swiglu"
+numeric   = "fp32 math; bf16 rounds where the reference does: h = bf16(bf16(silu(gate)) * up)"
+regime    = "rows of [gate (I) | up (I)]: dense MLP and the expert gather's output"
+
+[[provides]]
+interface = "act.swiglu/-/f32"
+api       = "strix::kernels::swiglu"
+numeric   = "fp32 math; bf16 rounds where the reference does: h = bf16(bf16(silu(gate)) * up)"
+regime    = "rows of [gate (I) | up (I)]: dense MLP and the expert gather's output"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

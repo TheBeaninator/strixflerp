@@ -1,0 +1,52 @@
+id        = "kernel.hipfire.gemm_mfp4"
+kind      = "kernel"
+summary   = "Prefill GEMM on MFP4-G32 weights (f16 WMMA, E8 variants) and the MFP4 dequantizer (8 sources, 12 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/dequantize_mfp4g32_e8_to_f16.hip",
+  "kernels/src/dequantize_mfp4g32_lloyd_to_f16.hip",
+  "kernels/src/dequantize_mfp4g32_p_to_f16.hip",
+  "kernels/src/gemm_mfp4g32_e8_soa_grouped_wmma.gfx1151.hip",
+  "kernels/src/gemm_mfp4g32_e8_soa_wmma.gfx1151.hip",
+  "kernels/src/gemm_mfp4g32_e8_soa_wmma_coop.gfx1151.hip",
+  "kernels/src/gemm_mfp4g32_e8_soa_wmma_coop16.gfx1151.hip",
+  "kernels/src/gemm_mfp4g32_e8_soa_wmma_wide.gfx1151.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 12
+
+[[provides]]
+interface = "linear.prefill/hipfire-mfp4/f32"
+api       = "dequantize_mfp4g32_e8_to_f16, dequantize_mfp4g32_lloyd_to_f16, dequantize_mfp4g32_p_to_f16, gemm_mfp4g32_e8_soa_grouped_wmma_b2_gfx1151, gemm_mfp4g32_e8_soa_grouped_wmma_gfx1151 (+7 more units, see units.json)"
+numeric   = "f16 WMMA, fp32 accumulate"
+regime    = "prefill batches, compute-bound (WMMA, MMQ)"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+interface = "format.device-view/hipfire-mfp4/-"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemm_mfp4.json"

@@ -1,0 +1,59 @@
+id        = "kernel.gufo.ds4_attention"
+kind      = "kernel"
+summary   = "DeepSeek V4 Flash attention: prefill / decode over raw and mixed (compressed) KV, the DSpark support attention, the KV compressor, FP8 KV quantization and raw-cache store"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_attention.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_attention_launch.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_compressor.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_decode_attention.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_fp8_kv.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_fp8_kv_launch.hip.hpp",
+]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/detail",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-fp8-e4m3/f32"
+api       = "ds4_gpu_attention_* (resident_api.h, backend.h)"
+numeric   = "fp32 activations; KV rows quantized to FP8 (E4M3); single-pass rocWMMA prefill kernel; compiled -ffast-math"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound; prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "kvcache.store/fp8-e4m3/f32"
+api       = "fp8_kv_quantize_kernel, ds4_gpu_fp8_kv_* launchers"
+numeric   = "E4M3 round to nearest of fp32 values"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "kvcache.compress/-/f32"
+api       = "ds4_gpu_compressor_* launchers"
+numeric   = "ratio-4 pooling of raw rows into compressed rows at compression boundaries"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.gufo.ds4_backend"
+reason    = "header fragment of one translation unit; compiles only inside kernel.gufo.ds4_backend"

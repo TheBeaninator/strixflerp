@@ -1,0 +1,59 @@
+# Toolchains a module or recipe may name. Paths are where they live on the build host (control-node); override the
+# root at configure time with -DFLERP_ROCM_ROOT=PATH or the FLERP_ROCM_ROOT environment variable.
+
+# therock-10.1's clang reports "AMD clang version 23.0.0git" (checked on control-node 2026-11-10). gufo's flake
+# pins ROCm 10.1.0 with HIP clang 24; the gates build gufo's modules with this entry.
+["therock-10.1"]
+kind       = "therock"
+rocm_root  = "/data/tools/therock-10.1.0a20260823"
+cc         = "lib/llvm/bin/clang"
+cxx        = "lib/llvm/bin/clang++"
+arch       = "gfx1151"
+host_march = "znver5"
+
+["therock-10.0"]
+kind       = "therock"
+rocm_root  = "/data/models/tools/therock-10.0"
+cc         = "lib/llvm/bin/clang"
+cxx        = "lib/llvm/bin/clang++"
+arch       = "gfx1151"
+host_march = "znver5"
+
+["therock-10.2"]
+kind       = "therock"
+rocm_root  = "/data/models/tools/therock-10.2"
+cc         = "lib/llvm/bin/clang"
+cxx        = "lib/llvm/bin/clang++"
+arch       = "gfx1151"
+host_march = "znver5"
+
+# The system ROCm. hipfire's README asks for ROCm 7.2 or newer; 971 of its 1,046 units were compiled with this one
+# in an early compile-gate run. The catalogue names therock-10.2 for hipfire (all 1,046 units compile there).
+# HIP 7.2.53211, AMD clang 22.0.0git (checked on control-node 2026-11-10).
+["rocm-7.2.4"]
+kind       = "rocm"
+rocm_root  = "/opt/rocm-7.2.4"
+cc         = "lib/llvm/bin/clang"
+cxx        = "lib/llvm/bin/clang++"
+arch       = "gfx1151"
+host_march = "znver5"
+
+# The ahead-of-time Triton toolchain StrixFold's Triton kit was built with (catalog/strixfold/kernel/triton_kit,
+# tools/dsv41-hip/tri/README.md and aot_build.py). Not a compiler the assembly can call: the kit is prebuilt and
+# recorded with hashes; this entry says what would rebuild it.
+["triton-3.8-rocm10.1"]
+kind         = "triton"
+version      = "3.8.0+git675c5987.rocm10.1.0a20260822"
+python       = "cp313"
+wheel_sha256 = "1bab2eeb8f4beccad389a497a45b3018fa6291ab93c577f04b1376cf12422499"
+wheel_index  = "https://rocm.nightlies.amd.com/whl-multi-arch/"
+target       = "hip:gfx1151:32"
+
+# The Zig compiler a Zig-hosted recipe is built with ([build] zig in recipes/dsv41-flash.strixfold-tp2*.toml);
+# StrixFold f44d736 pins 0.17.0 (catalog/strixfold/tool/zig_build/src/.zig-version). Not a ROCm install: the
+# recipe's `toolchain` still names the one hipcc comes from.
+["zig-0.17"]
+kind    = "zig"
+root    = "/home/pod/opt/zig-x86_64-linux-0.17.0"
+bin     = "zig"
+version = "0.17.0"

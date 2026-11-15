@@ -1,0 +1,25 @@
+$ /usr/bin/python3 flerp assemble qwen38-flash-next.crucible
+make assembly: 204 files -> build/qwen38-flash-next.crucible/tree; build: build/qwen38-flash-next.crucible/build.sh
+warning: dependency cycle: format.crucible.exl3 -> format.crucible.flashnext_weights -> format.crucible.exl3
+warning: dependency cycle: executor.crucible.flashnext -> format.crucible.exl3 -> format.crucible.flashnext_weights -> kernel.crucible.exl3_gemv -> executor.crucible.flashnext
+warning: dependency cycle: format.crucible.exl3 -> format.crucible.flashnext_weights -> kernel.crucible.exl3_gemv -> format.crucible.exl3
+warning: dependency cycle: format.crucible.flashnext_weights -> kernel.crucible.exl3_gemv -> kernel.crucible.device_common -> format.crucible.flashnext_weights
+warning: dependency cycle: executor.crucible.flashnext -> format.crucible.exl3 -> kernel.crucible.hc -> kernel.crucible.ops -> kernel.crucible.gdn -> executor.crucible.flashnext
+warning: dependency cycle: kernel.crucible.hc -> kernel.crucible.ops -> kernel.crucible.gdn -> kernel.crucible.hc
+warning: dependency cycle: kernel.crucible.ops -> kernel.crucible.gdn -> kernel.crucible.ops
+warning: dependency cycle: executor.crucible.flashnext -> format.crucible.exl3 -> kernel.crucible.hc -> kernel.crucible.ops -> runtime.crucible.conversation_cache -> runtime.crucible.speculation -> executor.crucible.flashnext
+warning: dependency cycle: executor.crucible.flashnext -> format.crucible.exl3 -> kernel.crucible.hc -> kernel.crucible.ops -> runtime.crucible.conversation_cache -> runtime.crucible.state_disk -> executor.crucible.flashnext
+warning: dependency cycle: runtime.crucible.conversation_cache -> runtime.crucible.state_disk -> runtime.crucible.conversation_cache
+warning: dependency cycle: executor.crucible.flashnext -> kernel.crucible.exl3_gemm -> executor.crucible.flashnext
+warning: dependency cycle: executor.crucible.flashnext -> kernel.crucible.moe_prefill -> executor.crucible.flashnext
+warning: dependency cycle: executor.crucible.flashnext -> kernel.crucible.qsa -> executor.crucible.flashnext
+warning: dependency cycle: executor.crucible.flashnext -> runtime.crucible.ablation -> executor.crucible.flashnext
+warning: dependency cycle: executor.crucible.flashnext -> runtime.crucible.sampling -> executor.crucible.flashnext
+warning: dependency cycle: executor.crucible.flashnext -> tool.crucible.engine_cli -> executor.crucible.flashnext
+warning: dependency cycle: executor.crucible.flashnext -> tool.crucible.engine_cli -> serve.crucible.engine_serve -> executor.crucible.flashnext
+warning: [modules] executor.model/qwen3.8-flash-next/exl3 is bound but nothing in the assembly requires it
+assembled qwen38-flash-next.crucible: 24 modules (1 with sources), 1 binaries -> build/qwen38-flash-next.crucible
+build: build/qwen38-flash-next.crucible/build.sh [-jN]   (ROCm from toolchains.toml; FLERP_ROCM_ROOT overrides)
+$ /usr/bin/python3 /data/projects/strixflerp/flerplib/assemble_zig.py verify-tree /data/projects/strixflerp/build/qwen38-flash-next.crucible
+verify-tree: 204 files match assembly.json
+2026-11-12T07:26:40Z loadavg 5.69 (bound 10.0)

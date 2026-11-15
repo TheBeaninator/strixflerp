@@ -1,0 +1,43 @@
+id        = "executor.strixfold.dsv41_vision"
+kind      = "executor"
+summary   = "The DeepSeek-V4.1 vision tower on one rank: picture decode and resize as PIL does it, ViT blocks, fused multi-head attention, the image rows handed to the model"
+notes     = "Imports model.zig, cublas.zig, cublaslt.zig and exact.zig of executor.strixfold.dsv41: the two modules are one Zig import closure and are cut apart for the record only. vit_main.zig and picture_main.zig (stand-alone checkers) are not harvested."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/families/dsv41/fmha.zig",
+  "zig/src/families/dsv41/picture.zig",
+  "zig/src/families/dsv41/pil.zig",
+  "zig/src/families/dsv41/vision.zig",
+  "zig/src/families/dsv41/vit.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "vision.tower/deepseek-v4.1/bf16"
+api       = "vision.zig, vit.zig (Vit), picture.zig, pil.zig, fmha.zig"
+numeric   = "not measured here: the phase 3 gate sends text only"
+regime    = "one image a request, prompt path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: in the assembled tree because model.zig imports vision.zig, but a HIP build analyses none of it (gpu.features.vision is false, native.zig); never compiled or run here"

@@ -1,0 +1,883 @@
+[     0.0s] ━━━ strix-infer converter · Qwen3.8-Flash-Next (qwen4exp) -> strixw v5 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[     0.0s] layout: exp_gu=q4g128p16,exp_down=q4g32p16,sh_gu=q8g64p16,sh_down=q8g32p16,gdn_in=q4g128p16,gdn_out=q8g64p16,attn_qkv=q8g64p16,attn_o=q8g64p16,hc_down=q8g64,hc_up=q8g64,ple_kv=q8g64p16,lm_head=q8g64p16,mtp_fc=q8g64p16,embed=bf16
+[     0.0s] converter git f880f212f3b2, 4 threads
+[     0.0s] reading the checkpoint's headers from /mnt/ark/models/Qwen__Qwen3.8-Flash-Next/raw ...
+[     4.0s]   131 shards, 335.28 GiB of tensor data, fingerprint d1121c2771a0beb1
+
+[     4.0s] ━━━ plan ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[     4.0s] 853 output tensors from 239.07 GiB of source -> 69.46 GiB (29.1% of the source size)
+[     4.0s]   bf16        50 tensors      1.30 GiB
+[     4.0s]   f32        302 tensors       9.9 MiB
+[     4.0s]   i64          3 tensors         280 B
+[     4.0s]   q4         298 tensors     67.49 GiB
+[     4.0s]   q4-chunk   100 tensors     332.0 MiB
+[     4.0s]   q4-fold    100 tensors     336.1 MiB
+[     4.0s]   skipped in total: 96.20 GiB (not in this file)
+[     4.0s]   skipped  128 source tensors (95.37 GiB): n-gram table: its own file (convert_ngram_table)
+[     4.0s]   skipped  333 source tensors (856.3 MiB): vision tower: not loaded (text only)
+[     4.0s] source_fingerprint d1121c2771a0beb1
+[     4.0s]   encoding bf16                 50 tensors      1400099840 B
+[     4.0s]   encoding f32                 302 tensors        10404352 B
+[     4.0s]   encoding i64                   3 tensors             280 B
+[     4.0s]   encoding q4-panel16 g128      85 tensors     44480051200 B
+[     4.0s]   encoding q4-panel16 g32       49 tensors     25690112000 B
+[     4.0s]   encoding q8 g64              100 tensors       352424960 B
+[     4.0s]   encoding q8-chunk-major g64  100 tensors       348160000 B
+[     4.0s]   encoding q8-panel16 g32       49 tensors        90316800 B
+[     4.0s]   encoding q8-panel16 g64      115 tensors      2206986240 B
+[     4.0s] tensor bytes 74578555672
+[     4.0s] file bytes 74579640320 (strixw v5, data offset 167936; metadata as a conversion would write it, so +/- one 4096-byte page with a longer source_dir/converter_git)
+[     4.0s]   bf16      model.language_model.embed_tokens.weight                       [248320 x 2560]  bf16
+[     4.0s]   q4-fold   model.language_model.hyper_connection_mixer.mix_down           [320 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.hyper_connection_mixer.mix_up             [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.hyper_connection_mixer.hc_norm.weight     [10240]          f32
+[     4.0s]   q4        lm_head.weight                                                 [248320 x 2560]  q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.0.linear_attn.in_proj              [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.0.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.0.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.0.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.0.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.0.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.0.linear_attn.out_proj.weight      [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.0.linear_attn.A_log                [48]             f32
+[     4.0s]   f32       model.language_model.layers.0.linear_attn.dt_bias              [48]             f32
+[     4.0s]   f32       model.language_model.layers.0.linear_attn.conv1d.weight        [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.0.linear_attn.norm.weight          [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.0.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.0.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.0.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.0.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.0.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.0.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.1.linear_attn.in_proj              [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.1.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.1.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.1.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.1.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.1.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.1.linear_attn.out_proj.weight      [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.1.linear_attn.A_log                [48]             f32
+[     4.0s]   f32       model.language_model.layers.1.linear_attn.dt_bias              [48]             f32
+[     4.0s]   f32       model.language_model.layers.1.linear_attn.conv1d.weight        [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.1.linear_attn.norm.weight          [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.1.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.1.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.1.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.1.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.1.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.1.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.1.ple.kv_proj                      [12800 x 2560]   q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.1.ple.conv1d.weight                [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.1.ple.norm_conv.weight             [10240]          f32
+[     4.0s]   f32       model.language_model.layers.1.ple.norm_key.weight              [10240]          f32
+[     4.0s]   f32       model.language_model.layers.1.ple.norm_query.weight            [10240]          f32
+[     4.0s]   i64       model.language_model.layers.1.ple.ple_embedding.layer_multipliers [3]              i64
+[     4.0s]   i64       model.language_model.layers.1.ple.ple_embedding.ngram_heads_offsets [16]             i64
+[     4.0s]   i64       model.language_model.layers.1.ple.ple_embedding.ngram_heads_vocab_sizes [16]             i64
+[     4.0s]   q4        model.language_model.layers.2.linear_attn.in_proj              [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.2.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.2.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.2.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.2.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.2.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.2.linear_attn.out_proj.weight      [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.2.linear_attn.A_log                [48]             f32
+[     4.0s]   f32       model.language_model.layers.2.linear_attn.dt_bias              [48]             f32
+[     4.0s]   f32       model.language_model.layers.2.linear_attn.conv1d.weight        [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.2.linear_attn.norm.weight          [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.2.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.2.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.2.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.2.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.2.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.2.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.3.self_attn.qkv                    [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.3.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.3.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.3.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.3.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.3.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.3.self_attn.o_proj.weight          [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.3.self_attn.q_norm.weight          [256]            f32
+[     4.0s]   f32       model.language_model.layers.3.self_attn.k_norm.weight          [256]            f32
+[     4.0s]   f32       model.language_model.layers.3.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.3.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.3.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.3.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.3.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.3.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.3.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.3.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.4.linear_attn.in_proj              [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.4.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.4.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.4.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.4.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.4.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.4.linear_attn.out_proj.weight      [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.4.linear_attn.A_log                [48]             f32
+[     4.0s]   f32       model.language_model.layers.4.linear_attn.dt_bias              [48]             f32
+[     4.0s]   f32       model.language_model.layers.4.linear_attn.conv1d.weight        [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.4.linear_attn.norm.weight          [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.4.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.4.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.4.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.4.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.4.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.4.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.5.linear_attn.in_proj              [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.5.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.5.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.5.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.5.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.5.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.5.linear_attn.out_proj.weight      [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.5.linear_attn.A_log                [48]             f32
+[     4.0s]   f32       model.language_model.layers.5.linear_attn.dt_bias              [48]             f32
+[     4.0s]   f32       model.language_model.layers.5.linear_attn.conv1d.weight        [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.5.linear_attn.norm.weight          [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.5.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.5.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.5.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.5.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.5.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.5.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.6.linear_attn.in_proj              [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.6.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.6.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.6.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.6.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.6.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.6.linear_attn.out_proj.weight      [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.6.linear_attn.A_log                [48]             f32
+[     4.0s]   f32       model.language_model.layers.6.linear_attn.dt_bias              [48]             f32
+[     4.0s]   f32       model.language_model.layers.6.linear_attn.conv1d.weight        [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.6.linear_attn.norm.weight          [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.6.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.6.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.6.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.6.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.6.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.6.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.7.self_attn.qkv                    [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.7.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.7.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.7.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.7.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.7.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.7.self_attn.o_proj.weight          [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.7.self_attn.q_norm.weight          [256]            f32
+[     4.0s]   f32       model.language_model.layers.7.self_attn.k_norm.weight          [256]            f32
+[     4.0s]   f32       model.language_model.layers.7.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.7.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.7.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.7.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.7.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.7.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.7.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.7.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.8.linear_attn.in_proj              [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.8.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.8.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.8.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.8.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.8.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.8.linear_attn.out_proj.weight      [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.8.linear_attn.A_log                [48]             f32
+[     4.0s]   f32       model.language_model.layers.8.linear_attn.dt_bias              [48]             f32
+[     4.0s]   f32       model.language_model.layers.8.linear_attn.conv1d.weight        [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.8.linear_attn.norm.weight          [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.8.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.8.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.8.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.8.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.8.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.8.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.9.linear_attn.in_proj              [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.9.mlp.experts_gate_up              [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.9.mlp.shared_expert.gate_up        [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.9.mlp.experts_down                 [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.9.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.9.mlp.router                       [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.9.linear_attn.out_proj.weight      [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.9.linear_attn.A_log                [48]             f32
+[     4.0s]   f32       model.language_model.layers.9.linear_attn.dt_bias              [48]             f32
+[     4.0s]   f32       model.language_model.layers.9.linear_attn.conv1d.weight        [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.9.linear_attn.norm.weight          [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.9.attn_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.9.attn_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.9.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.9.mlp_hyper_connection.mix_down    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.9.mlp_hyper_connection.mix_up      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.9.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.10.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.10.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.10.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.10.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.10.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.10.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.10.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.10.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.10.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.10.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.10.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.10.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.10.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.10.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.10.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.10.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.10.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.11.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.11.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.11.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.11.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.11.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.11.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.11.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.11.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.11.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.11.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.11.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.11.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.11.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.11.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.11.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.11.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.11.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.12.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.12.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.12.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.12.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.12.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.12.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.12.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.12.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.12.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.12.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.12.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.12.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.12.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.12.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.12.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.12.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.12.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.13.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.13.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.13.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.13.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.13.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.13.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.13.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.13.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.13.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.13.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.13.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.13.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.13.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.13.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.13.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.13.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.13.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.14.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.14.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.14.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.14.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.14.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.14.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.14.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.14.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.14.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.14.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.14.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.14.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.14.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.14.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.14.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.14.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.14.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.15.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.15.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.15.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.15.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.15.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.15.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.15.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.15.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.15.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.15.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.15.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.15.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.15.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.15.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.15.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.15.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.15.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.16.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.16.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.16.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.16.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.16.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.16.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.16.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.16.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.16.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.16.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.16.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.16.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.16.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.16.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.16.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.16.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.16.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.17.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.17.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.17.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.17.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.17.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.17.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.17.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.17.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.17.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.17.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.17.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.17.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.17.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.17.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.17.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.17.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.17.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.18.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.18.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.18.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.18.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.18.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.18.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.18.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.18.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.18.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.18.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.18.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.18.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.18.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.18.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.18.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.18.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.18.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.19.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.19.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.19.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.19.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.19.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.19.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.19.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.19.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.19.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.19.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.19.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.19.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.19.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.19.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.19.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.19.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.19.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.20.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.20.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.20.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.20.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.20.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.20.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.20.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.20.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.20.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.20.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.20.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.20.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.20.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.20.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.20.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.20.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.20.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.21.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.21.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.21.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.21.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.21.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.21.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.21.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.21.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.21.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.21.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.21.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.21.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.21.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.21.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.21.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.21.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.21.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.22.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.22.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.22.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.22.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.22.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.22.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.22.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.22.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.22.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.22.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.22.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.22.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.22.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.22.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.22.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.22.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.22.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.23.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.23.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.23.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.23.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.23.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.23.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.23.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.23.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.23.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.23.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.23.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.23.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.23.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.23.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.23.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.23.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.23.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.24.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.24.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.24.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.24.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.24.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.24.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.24.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.24.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.24.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.24.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.24.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.24.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.24.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.24.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.24.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.24.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.24.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.25.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.25.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.25.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.25.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.25.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.25.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.25.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.25.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.25.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.25.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.25.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.25.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.25.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.25.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.25.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.25.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.25.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.26.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.26.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.26.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.26.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.26.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.26.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.26.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.26.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.26.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.26.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.26.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.26.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.26.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.26.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.26.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.26.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.26.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.27.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.27.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.27.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.27.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.27.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.27.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.27.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.27.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.27.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.27.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.27.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.27.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.27.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.27.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.27.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.27.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.27.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.28.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.28.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.28.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.28.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.28.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.28.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.28.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.28.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.28.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.28.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.28.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.28.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.28.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.28.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.28.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.28.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.28.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.29.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.29.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.29.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.29.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.29.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.29.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.29.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.29.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.29.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.29.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.29.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.29.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.29.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.29.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.29.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.29.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.29.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.30.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.30.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.30.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.30.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.30.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.30.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.30.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.30.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.30.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.30.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.30.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.30.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.30.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.30.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.30.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.30.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.30.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.31.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.31.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.31.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.31.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.31.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.31.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.31.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.31.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.31.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.31.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.31.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.31.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.31.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.31.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.31.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.31.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.31.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.32.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.32.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.32.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.32.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.32.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.32.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.32.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.32.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.32.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.32.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.32.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.32.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.32.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.32.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.32.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.32.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.32.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.33.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.33.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.33.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.33.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.33.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.33.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.33.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.33.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.33.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.33.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.33.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.33.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.33.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.33.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.33.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.33.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.33.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.34.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.34.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.34.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.34.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.34.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.34.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.34.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.34.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.34.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.34.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.34.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.34.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.34.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.34.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.34.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.34.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.34.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.35.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.35.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.35.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.35.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.35.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.35.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.35.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.35.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.35.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.35.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.35.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.35.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.35.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.35.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.35.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.35.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.35.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.36.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.36.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.36.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.36.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.36.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.36.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.36.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.36.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.36.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.36.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.36.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.36.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.36.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.36.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.36.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.36.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.36.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.37.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.37.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.37.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.37.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.37.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.37.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.37.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.37.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.37.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.37.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.37.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.37.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.37.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.37.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.37.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.37.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.37.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.38.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.38.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.38.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.38.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.38.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.38.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.38.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.38.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.38.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.38.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.38.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.38.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.38.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.38.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.38.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.38.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.38.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.39.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.39.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.39.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.39.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.39.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.39.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.39.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.39.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.39.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.39.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.39.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.39.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.39.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.39.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.39.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.39.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.39.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.40.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.40.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.40.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.40.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.40.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.40.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.40.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.40.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.40.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.40.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.40.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.40.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.40.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.40.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.40.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.40.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.40.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.41.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.41.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.41.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.41.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.41.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.41.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.41.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.41.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.41.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.41.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.41.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.41.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.41.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.41.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.41.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.41.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.41.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.42.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.42.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.42.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.42.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.42.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.42.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.42.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.42.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.42.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.42.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.42.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.42.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.42.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.42.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.42.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.42.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.42.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.43.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.43.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.43.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.43.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.43.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.43.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.43.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.43.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.43.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.43.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.43.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.43.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.43.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.43.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.43.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.43.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.43.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.44.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.44.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.44.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.44.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.44.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.44.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.44.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.44.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.44.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.44.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.44.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.44.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.44.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.44.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.44.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.44.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.44.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.45.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.45.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.45.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.45.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.45.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.45.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.45.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.45.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.45.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.45.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.45.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.45.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.45.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.45.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.45.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.45.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.45.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.46.linear_attn.in_proj             [16480 x 2560]   q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.46.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.46.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.46.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.46.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.46.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.46.linear_attn.out_proj.weight     [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.46.linear_attn.A_log               [48]             f32
+[     4.0s]   f32       model.language_model.layers.46.linear_attn.dt_bias             [48]             f32
+[     4.0s]   f32       model.language_model.layers.46.linear_attn.conv1d.weight       [10240 x 1 x 4]  f32
+[     4.0s]   f32       model.language_model.layers.46.linear_attn.norm.weight         [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.46.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.46.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.46.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.46.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.46.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.46.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        model.language_model.layers.47.self_attn.qkv                   [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.47.mlp.experts_gate_up             [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        model.language_model.layers.47.mlp.shared_expert.gate_up       [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        model.language_model.layers.47.mlp.experts_down                [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        model.language_model.layers.47.mlp.shared_expert.down_proj.weight [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      model.language_model.layers.47.mlp.router                      [513 x 2560]     bf16
+[     4.0s]   q4        model.language_model.layers.47.self_attn.o_proj.weight         [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       model.language_model.layers.47.self_attn.q_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.47.self_attn.k_norm.weight         [256]            f32
+[     4.0s]   f32       model.language_model.layers.47.self_attn.indexer.q_layernorm.weight [128]            f32
+[     4.0s]   f32       model.language_model.layers.47.self_attn.indexer.k_layernorm.weight [128]            f32
+[     4.0s]   q4-fold   model.language_model.layers.47.attn_hyper_connection.mix_down  [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.47.attn_hyper_connection.mix_up    [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.47.attn_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4-fold   model.language_model.layers.47.mlp_hyper_connection.mix_down   [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  model.language_model.layers.47.mlp_hyper_connection.mix_up     [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       model.language_model.layers.47.mlp_hyper_connection.hc_norm.weight [10240]          f32
+[     4.0s]   q4        mtp.fc_embedding.weight                                        [2560 x 2560]    q8-panel16 g64
+[     4.0s]   q4        mtp.fc_hidden.weight                                           [2560 x 2560]    q8-panel16 g64
+[     4.0s]   f32       mtp.pre_fc_norm_embedding.weight                               [2560]           f32
+[     4.0s]   f32       mtp.pre_fc_norm_hidden.weight                                  [10240]          f32
+[     4.0s]   q4-fold   mtp.hyper_connection_mixer.mix_down                            [320 x 10240]    q8 g64
+[     4.0s]   q4-chunk  mtp.hyper_connection_mixer.mix_up                              [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       mtp.hyper_connection_mixer.hc_norm.weight                      [10240]          f32
+[     4.0s]   q4        mtp.layers.0.self_attn.qkv                                     [13952 x 2560]   q8-panel16 g64
+[     4.0s]   q4        mtp.layers.0.mlp.experts_gate_up                               [655360 x 2560]  q4-panel16 g128
+[     4.0s]   q4        mtp.layers.0.mlp.shared_expert.gate_up                         [1280 x 2560]    q8-panel16 g64
+[     4.0s]   q4        mtp.layers.0.mlp.experts_down                                  [1310720 x 640]  q4-panel16 g32
+[     4.0s]   q4        mtp.layers.0.mlp.shared_expert.down_proj.weight                [2560 x 640]     q8-panel16 g32
+[     4.0s]   bf16      mtp.layers.0.mlp.router                                        [513 x 2560]     bf16
+[     4.0s]   q4        mtp.layers.0.self_attn.o_proj.weight                           [2560 x 6144]    q8-panel16 g64
+[     4.0s]   f32       mtp.layers.0.self_attn.q_norm.weight                           [256]            f32
+[     4.0s]   f32       mtp.layers.0.self_attn.k_norm.weight                           [256]            f32
+[     4.0s]   f32       mtp.layers.0.self_attn.indexer.q_layernorm.weight              [128]            f32
+[     4.0s]   f32       mtp.layers.0.self_attn.indexer.k_layernorm.weight              [128]            f32
+[     4.0s]   q4-fold   mtp.layers.0.attn_hyper_connection.mix_down                    [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  mtp.layers.0.attn_hyper_connection.mix_up                      [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       mtp.layers.0.attn_hyper_connection.hc_norm.weight              [10240]          f32
+[     4.0s]   q4-fold   mtp.layers.0.mlp_hyper_connection.mix_down                     [324 x 10240]    q8 g64
+[     4.0s]   q4-chunk  mtp.layers.0.mlp_hyper_connection.mix_up                       [10240 x 320]    q8-chunk-major g64
+[     4.0s]   f32       mtp.layers.0.mlp_hyper_connection.hc_norm.weight               [10240]          f32
+[     4.0s] plan only: nothing written

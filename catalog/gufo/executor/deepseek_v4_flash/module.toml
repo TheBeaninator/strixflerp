@@ -1,0 +1,73 @@
+id        = "executor.gufo.deepseek_v4_flash"
+kind      = "executor"
+summary   = "DeepSeek V4 Flash engine (DS4 import): stable gufo engine API over the imported model data, tokenizer, request sessions, snapshots and ROCm graph execution; chat template and tool calls"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/CMakeLists.txt",
+  "src/models/deepseek_v4_flash/LICENSE.ds4",
+  "src/models/deepseek_v4_flash/UPSTREAM.md",
+  "src/models/deepseek_v4_flash/chat_template.cpp",
+  "src/models/deepseek_v4_flash/chat_template.hpp",
+  "src/models/deepseek_v4_flash/engine.cpp",
+  "src/models/deepseek_v4_flash/engine.hpp",
+  "src/models/deepseek_v4_flash/extension.json",
+  "src/models/deepseek_v4_flash/library.json",
+  "src/models/deepseek_v4_flash/runtime/model_data.cpp",
+  "src/models/deepseek_v4_flash/runtime/model_data_internal.h",
+  "src/models/deepseek_v4_flash/runtime/native_internal.h",
+  "src/models/deepseek_v4_flash/runtime/rocm_graph.cpp",
+  "src/models/deepseek_v4_flash/runtime/sampling.cpp",
+  "src/models/deepseek_v4_flash/runtime/session.cpp",
+  "src/models/deepseek_v4_flash/runtime/tensor_types.h",
+  "src/models/deepseek_v4_flash/runtime/tokenizer.cpp",
+  "src/models/deepseek_v4_flash/text/CMakeLists.txt",
+  "src/models/deepseek_v4_flash/text/library.json",
+  "src/models/deepseek_v4_flash/tool_calls.cpp",
+  "src/models/deepseek_v4_flash/tool_calls.hpp",
+]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src", "src/src/models/deepseek_v4_flash/runtime"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.model/deepseek-v4-flash/gguf"
+api       = "gufo::models::deepseek_v4_flash (engine.hpp)"
+numeric   = "single-device resident ROCm route; DSpark drafts with exact correction"
+regime    = "solo only: the DS4 distributed / TP paths are not built or shipped (UPSTREAM.md)"
+
+[[requires]]
+interface = "executor.device-graph/deepseek-v4-flash/gguf"
+
+[[requires]]
+interface = "speculation.draft/dspark/f32"
+
+[[requires]]
+interface = "format.loader/gguf/-"
+
+[[requires]]
+interface = "executor.provider-api/gufo-ext/-"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

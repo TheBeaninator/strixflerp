@@ -1,0 +1,59 @@
+id        = "kernel.hipfire.gemm_float"
+kind      = "kernel"
+summary   = "Prefill GEMM on float weights: F16 x F16 WMMA, F32, BF16 (18 sources, 18 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/gemm_bf16_xf32_batched.hip",
+  "kernels/src/gemm_bf16_xf32_multirow.hip",
+  "kernels/src/gemm_bf16_xf32_multirow_r16.gfx1151.hip",
+  "kernels/src/gemm_f16.hip",
+  "kernels/src/gemm_f16_bias.hip",
+  "kernels/src/gemm_f16_tiled.hip",
+  "kernels/src/gemm_f16_wmma.hip",
+  "kernels/src/gemm_f16_wmma_mb4.hip",
+  "kernels/src/gemm_f16_wmma_mb8.hip",
+  "kernels/src/gemm_f16_x_f16_wmma.hip",
+  "kernels/src/gemm_f16_x_f16_wmma_lds.hip",
+  "kernels/src/gemm_f16_x_f16_wmma_lds256.hip",
+  "kernels/src/gemm_f16_x_f16_wmma_lds_splitk.hip",
+  "kernels/src/gemm_f32.hip",
+  "kernels/src/gemm_f32_register_tiled.hip",
+  "kernels/src/gemm_ksplit_det_finalize.hip",
+  "kernels/src/gemm_mw16_residual_wmma.hip",
+  "kernels/src/qwen4_gemm_f16_x_f16_wmma_lds256.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 18
+
+[[provides]]
+interface = "linear.prefill/f16+bf16+f32/f32.hipfire"
+api       = "gemm_bf16_xf32_batched, gemm_bf16_xf32_multirow_r16_gfx1151, gemm_bf16_xf32_multirow, gemm_f16_bias, gemm_f16 (+13 more units, see units.json)"
+numeric   = "f16 or bf16 WMMA operands, fp32 accumulate"
+regime    = "prefill batches, compute-bound (WMMA, MMQ)"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemm_float.json"

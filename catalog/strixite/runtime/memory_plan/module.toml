@@ -1,0 +1,35 @@
+id      = "runtime.strixite.memory_plan"
+kind    = "runtime"
+summary = "Startup memory plan: weights, K/V budget, prompt cache and margins against the machine's RAM"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/memory_plan.cpp", "serve/memory_plan.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/memory_plan.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.memory-plan/-/-"
+api       = "strix::plan_memory, strix::MemoryPlan"
+numeric   = "n/a"
+regime    = "host, once at startup"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

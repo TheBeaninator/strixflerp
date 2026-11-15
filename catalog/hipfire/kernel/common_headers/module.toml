@@ -1,0 +1,73 @@
+id        = "kernel.hipfire.common_headers"
+kind      = "kernel"
+summary   = "Header-only: shared kernel headers (turbo_common, Givens / FWHT rotation, KV slot descriptors, MMQ bodies, device wait, TP exchange) and the vendored ggml-cuda vecdotq headers"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/device_wait_deadline.h",
+  "kernels/src/gemm_gate_up_hfq3g256_mmq_body.cuh",
+  "kernels/src/gemm_gate_up_hfq4g256_mmq_body.cuh",
+  "kernels/src/gemm_hfq3g256_residual_mmq_body.cuh",
+  "kernels/src/gemm_hfq4g256_residual_mmq_body.cuh",
+  "kernels/src/gemm_qkv_hfq3g256_mmq_body.cuh",
+  "kernels/src/gemm_qkv_hfq4g256_mmq_body.cuh",
+  "kernels/src/gemm_qkvza_hfq3g256_mmq_body.cuh",
+  "kernels/src/gemm_qkvza_hfq4g256_mmq_body.cuh",
+  "kernels/src/gfx1151_xor_shuffle.h",
+  "kernels/src/gfx12_weight_cache_policy.inc",
+  "kernels/src/givens_common.h",
+  "kernels/src/kv_slot_desc.h",
+  "kernels/src/kv_slot_desc_paged.h",
+  "kernels/src/kv_slot_desc_vmm.h",
+  "kernels/src/mq_fwht256.h",
+  "kernels/src/rope_yarn.h",
+  "kernels/src/tp_exchange16.h",
+  "kernels/src/turbo_common.h",
+  "third_party/ggml/LICENSE",
+  "third_party/ggml/PIN",
+  "third_party/ggml/include/ggml-alloc.h",
+  "third_party/ggml/include/ggml-backend.h",
+  "third_party/ggml/include/ggml-cuda.h",
+  "third_party/ggml/include/ggml.h",
+  "third_party/ggml/include/gguf.h",
+  "third_party/ggml/src/ggml-common.h",
+  "third_party/ggml/src/ggml-cuda/common.cuh",
+  "third_party/ggml/src/ggml-cuda/vecdotq.cuh",
+  "third_party/ggml/src/ggml-cuda/vendors/hip.h",
+  "third_party/ggml/src/ggml-impl.h",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+upstream  = "third_party/ggml: see third_party/ggml/PIN (MIT, The ggml authors)"
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src/kernels/src",
+  "src/third_party/ggml/src",
+  "src/third_party/ggml/src/ggml-cuda",
+  "src/third_party/ggml/include",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.hipfire-common/-/-"
+api       = "turbo_common.h, givens_common.h, mq_fwht256.h, kv_slot_desc*.h, tp_exchange16.h, *_mmq_body.cuh"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; included by the kernel.hipfire.* family modules"

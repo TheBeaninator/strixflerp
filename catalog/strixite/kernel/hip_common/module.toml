@@ -1,0 +1,36 @@
+id      = "kernel.strixite.hip_common"
+kind    = "kernel"
+summary = "The repo's HIP runtime include and STRIX_HIP_CHECK return-code checks"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["common/hip_runtime.hpp", "common/hip_check.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+uses      = ["hip-runtime"]
+
+[[provides]]
+interface = "device.hip-check/-/-"
+api       = "STRIX_HIP_CHECK, strix::hip_error_is_sticky"
+numeric   = "n/a"
+regime    = "host side of every launch"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

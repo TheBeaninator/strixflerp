@@ -1,0 +1,164 @@
+# Gate of runtime.flerp.vision_sidecar on CPython 3.12 + torch 2.11.0+cpu: does the CPU vision worker of Strixfold
+# pull request #6 (adapted copy, the tower's arithmetic untouched) produce correct DeepSeek-V4.1 image rows there.
+# CPU only, control-node, no GPU, no engine: `python gate/vision_dsv41_cpu.py --config gate/vision-dsv41-cpu312.toml`.
+# Results: gate/results/vision-dsv41-cpu312/.
+#
+# THE CRITERIA BELOW WERE WRITTEN AND COMMITTED BEFORE THE FIRST COMPARISON RUN. Before that commit: the venv was
+# installed, torch imported once to print its build, and the origin's prepare_vision.py was started (the extraction).
+# No tower forward of any kind had run. They are not edited to make a run pass (SPEC.md section 8).
+
+name      = "vision-dsv41-cpu312"
+module    = "runtime.flerp.vision_sidecar"
+env       = "py312-torch2110"            # the record of the module's vision-env.json this gate runs
+results   = "gate/results/vision-dsv41-cpu312"
+work      = "build/vision/gate"          # rows of every arm (not in git; their sha256 is in the results)
+
+[host]
+python    = "build/vision-venv312/bin/python"      # venv: uv, --no-index --find-links /data/ark/wheels
+threads   = 8                            # torch.set_num_threads, OMP_NUM_THREADS, MKL_NUM_THREADS, TF_DS_VISION_THREADS
+timeout_s = 7200                         # TF_DS_VISION_TIMEOUT for the gate's workers; the origin's default is 240 (recorded)
+
+[weights]
+# "The weights as shipped": the LibertAI EXL3 checkpoint the pull request pins (its vision tensors are plain BF16).
+checkpoint = "/data/ark-inbox/models/LibertAIDAI__DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw/raw"
+shard      = "model-00043-of-00043.safetensors"    # holds all 266 vision / aligner / image_* tensors
+vision     = "build/vision/vision.safetensors"     # written by the origin's prepare_vision.py (unmodified)
+bias       = "build/vision/gate_bias_vl.safetensors"
+pins       = "catalog/strixfold_pr6/tool/prepare_vision/src/tools/dsv41-hip/vision-checkpoint.json"
+
+[reference]
+# The north star (docs/FIDELITY.md): DeepSeek's own inference/vision.py, imported unmodified from the ark, its ViT and
+# Aligner modules holding the checkpoint's tensors and run in FP32 (arm R32). The tensors reach it through a
+# safetensors reader written in the gate, straight from the checkpoint shard: not through the pull request's
+# extraction and not through its loader. Preprocessing (image bytes to patches and grid) is DeepSeek's own
+# inference/image_processor.py with Pillow, for every arm: the worker's input in production is made by picture.zig,
+# which is not in scope and not checked here.
+dir        = "/data/ark-inbox/models/deepseek-ai__DeepSeek-V4.1-Flash-1017/raw/inference"
+vision_git_blob = "77af0bdef9f4649edebac2876cd1df50a147ce98"    # the blob the pull request names, at revision 1bae0e10
+# Arms. R = DeepSeek's modules, S = the sidecar's encode() called in the gate's process, W = the worker over its pipe.
+#   R32   reference, every tensor FP32 (BF16 weights and patches widened exactly). The criterion's reference.
+#   R64   the same modules in FP64 (their norm and rotary go through FP32 inside, as written). Record: how far R32
+#         itself is from more precision.
+#   R16   the same modules in BF16, the dtype of the tensors as shipped. The yardstick of criterion 3b.
+#   S32   the sidecar's encode() given FP32 tensors (it is dtype-generic): its arithmetic before any BF16 rounding.
+#   S16   the sidecar's encode() + span() in BF16, as the worker runs it, `threads` threads.
+#   S16t1 the same on 1 thread.            S16m  the same with math_attention=True (no 128-row query pieces).
+#   W     the worker, `-I -c <source> <weights> <sha256>`, twice.
+
+[[image]]
+name = "tiny"        # 32 x 32 RGB, below min_pixels: upscaled to the smallest square grid, 39 x 39 patches
+expected_tokens = 184
+[[image]]
+name = "photo"       # 640 x 480 RGB, smooth gradients + noise; 35 x 46 patches, neither divisible by 3 (the pad path)
+expected_tokens = 206
+[[image]]
+name = "photo-jpeg"  # the same pixels through a JPEG (quality 90): Pillow's JPEG decoder
+expected_tokens = 206
+[[image]]
+name = "text"        # 800 x 600 mode L, black glyph-like bars on white
+expected_tokens = 317
+[[image]]
+name = "rgba"        # 500 x 700 RGBA with an alpha ramp (convert("RGB") drops it)
+expected_tokens = 223
+[[image]]
+name = "palette"     # 300 x 900 mode P, 16 colours; below min_pixels, tall
+expected_tokens = 209
+[[image]]
+name = "wide"        # 2000 x 100 RGB; 9 x 174 patches
+expected_tokens = 179
+[[image]]
+name = "cap"         # 3024 x 588 RGB: 42 x 216 = 9,072 patches, exactly the 1,024-token cap without a resize
+expected_tokens = 1024
+[[image]]
+name = "over"        # 1400 x 1400 RGB: over the cap, the reference shrinks it. Its grid sits on a floor() of a float
+expected_tokens = 0  # product, so no count is predicted here: 0 = "at most 1,024 and fewer than the unshrunk 1,192"
+[[image]]
+name = "grid-1x1"    # no picture: one patch of seeded values, the worker's smallest grid (4 rows)
+expected_tokens = 4
+[[image]]
+name = "grid-2x5"    # no picture: 2 x 5 patches, padded to 3 x 6 by the aligner (5 rows)
+expected_tokens = 5
+
+[criteria]
+# 1. SHAPE, exact. For every image: the grid from the reference's preprocessing gives tokens = lh * (lw + 1) + 2,
+#    equal to expected_tokens above (worked out by hand from image_processor.py before any run) and <= 1,024; the
+#    worker's reply is "VCPU", that many rows, rows * 10,240 bytes, nothing after; every value finite; the
+#    image_start, image_newline and image_end rows are the checkpoint's tensors bit for bit.
+#
+# 2. THE ARITHMETIC, before BF16 rounding: S32 against R32, aligner rows only (the delimiter rows are in 1).
+#    Both are FP32 evaluations of the same formulas; a correct rewrite differs by FP32 rounding and by the order of
+#    sums in attention (the sidecar cuts the queries into pieces of 128). FP32 rounds to a relative 2^-24 = 6e-8;
+#    the tower has about 32 * 11 + 5 = 357 places a value is rounded, and independent errors add as a random walk:
+#    sqrt(357) * 6e-8 = 1.1e-6 of the row's size. The bounds leave a factor of about 100 for errors that later
+#    layers amplify, and still sit 10 times under one BF16 rounding (2^-9 / sqrt(3) = 1.1e-3). A wrong rotary
+#    order, a dropped bias, a wrong norm or weight shows at 1e-2 to 1.
+fp32_rel_rms_max        = 1e-4       # ||S32 - R32|| / ||R32|| over an image's rows
+fp32_row_cosine_min     = 0.9999999  # every row: 1 - 1e-7 (a row off by 4.5e-4 of its size)
+#
+# 3. AS SHIPPED, in BF16.
+#  a. RESTATED 2026-11-11 by the owner's decision, after the run of 1cdfa3e failed 3a as first committed (2c20dd2).
+#     Now: the worker's aligner rows (W) equal the reference's BF16 rows (R16: DeepSeek's inference/vision.py run
+#     in BF16, the dtype its generate.py sets and the tensors ship in) bit for bit, on every image.
+#     Reason: the old bound measured the tower's own behaviour in BF16, not the worker. The reference produces the
+#     same outlier rows: 9 rows of 4 images under the row bound, bit-identical between W and R16. A worker cannot
+#     be closer to FP32 than the model's own BF16 evaluation without being a different model. Those rows are kept
+#     as a fidelity note about the tower (docs/FIDELITY.md, docs/VISION-DSV41.md), and W against R32 stays in the
+#     results as a record. The first run and its verdict stand in the evidence ([restated] below; summary.md).
+#     No tower forward was run for the restated criterion: it is judged from the stored bit comparisons
+#     (protocol.json, W_vs_R16_bits) of the same run.
+#     The text below, to "bf16_row_cosine_min", is 3a as first committed, kept for the record; its two numbers are
+#     now under [restated] and no longer judged.
+#     An absolute bound from the format. BF16 keeps 8 bits: a rounding is at most 2^-9 relative, 2^-9 / sqrt(3) =
+#     1.13e-3 RMS. The BF16 tower rounds at the same ~357 places; as a random walk that is sqrt(357) * 1.13e-3 =
+#     2.1e-2 of the rows' size. The bound allows 4 times that for amplification through 32 blocks. The 4 is an
+#     allowance, not a derivation: nothing here bounds how much a block amplifies an error. A row's own error is
+#     allowed twice the image's (0.17), which is cosine 1 - 0.17^2 / 2.
+#     first committed: bf16_rel_rms_max = 0.085 (||W - R32|| / ||R32|| over an image's rows),
+#                      bf16_row_cosine_min = 0.9855 (every row)
+bf16_rows_equal_r16     = true       # 3a as restated: 0 values of W differ from R16, every image
+#  b. Against the reference's own BF16 evaluation. R16 is DeepSeek's code in the dtype the tensors ship in: the same
+#     rounding at the same places, so its distance from R32 is what "only rounding" looks like on this image, on
+#     this torch. The worker may be no further from R32 than twice that on any image, and no further than 1.25
+#     times on the mean of the per-image ratios (an image has at least 5,120 values, but the errors of a row are
+#     not independent draws, so one image is given a factor of 2). R16 is a yardstick for the size of the noise,
+#     not the target: bit equality with R16 is recorded, not required, because the 128-row query pieces may change
+#     the order of sums.
+bf16_ratio_to_r16_max      = 2.0     # (||W - R32|| / ||R32||) / (||R16 - R32|| / ||R32||), every image
+bf16_ratio_to_r16_mean_max = 1.25    # mean of that ratio over the images
+#
+# 4. DETERMINISM, exact. The worker twice on the same image, same threads: the same bytes. The sidecar's encode()
+#    + span() in the gate's process (S16), same threads: the worker's bytes (else the arms above did not measure
+#    the worker). 1 thread against `threads` (S16t1 against S16) is recorded, not required.
+#
+# 5. THE PROTOCOL on this interpreter, driven by a Python stand-in for vision_cpu.zig (same argv, same pipe
+#    framing, same checks of the reply): exit status 0 and a well-formed reply for every image; and a refusal
+#    (non-zero exit, not one byte on stdout) for each of: a wrong weights sha256; FLERP_VISION_ENV unset (the
+#    origin's pin, which this environment is not); a setting naming another torch; another python; a malformed
+#    setting; a grid whose token count does not follow from its patches; a payload one value short; one value long.
+#    The admission (verify_vision.py) passes for this record with --allow-candidate and refuses it without.
+#
+# VERDICT: pass = 1 to 5 hold on every image. Recorded without a criterion: R64, R16 bit equality, S16m, S16t1,
+# bit distance to round_to_bf16(R32), time and peak memory per image, whether the origin's 240 s default would have
+# held, the origin's unmodified worker's refusal here, and the optional CPython 3.13 arm.
+
+[restated]
+# The record of the restatement of 3a; summary.md prints it.
+date            = "2026-11-11"
+by              = "the owner's decision"
+first_committed = "2c20dd2"          # criteria before any run
+first_run       = "1cdfa3e"          # the run and its verdict: FAILED, 3a only
+first_config_sha256 = "9dd87b9c8cebe560"   # first 16 hex digits; env.json has it whole
+bf16_rel_rms_max    = 0.085          # 3a as first committed (held on 11 of 11 images: 0.002 to 0.039)
+bf16_row_cosine_min = 0.9855         # 3a as first committed (broken on 4 images)
+first_failures  = [
+  "3a bf16 bound: tiny: rel rms 0.0235, lowest row cosine 0.979462",
+  "3a bf16 bound: text: rel rms 0.0388, lowest row cosine 0.867161",
+  "3a bf16 bound: cap: rel rms 0.0268, lowest row cosine 0.898884",
+  "3a bf16 bound: over: rel rms 0.0291, lowest row cosine 0.934885",
+]
+reason          = "The old bound measured the tower's own BF16 behaviour: the reference (DeepSeek inference/vision.py in BF16) produces the same outlier rows, bit for bit. Restated as bit equality of the worker's BF16 rows with the reference's."
+
+[py313]
+# Optional arm, record only: the same worker and torch 2.11.0+cpu cp313 under /home/pod/opt/python313; are W's
+# bytes the same across the two interpreters. Run only if the venv installs from the mirror without more.
+python    = "build/vision-venv313/bin/python"

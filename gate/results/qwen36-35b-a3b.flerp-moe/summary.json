@@ -1,0 +1,970 @@
+{
+ "recipe": "qwen36-35b-a3b.flerp-moe",
+ "host": "control-node",
+ "written_utc": "2026-11-11T18:37:45Z",
+ "stages": {
+  "check": {
+   "pass": true,
+   "rc": 0,
+   "summary": "flerp check (origin gufo): 38 modules, 13 recipe(s), 0 error(s), 84 warning(s)",
+   "catalogue_rc": 0,
+   "catalogue_summary": "flerp check (catalogue): 235 modules, 13 recipe(s), 0 error(s), 85 warning(s)",
+   "evidence": "check.txt, check-catalogue.txt",
+   "when_utc": "2026-11-11T16:38:46Z"
+  },
+  "origin": {
+   "pass": true,
+   "checkout": "/data/ark-inbox/src/github.com__neuhaus__gufo",
+   "commit": "f070a17",
+   "head": "f070a179c628a7409a5cee8e07b1ca76f1f7e660",
+   "modules": 38,
+   "files": 542,
+   "identical": 542,
+   "problems": 0,
+   "unharvested": 1493,
+   "evidence": "diff-origin.txt",
+   "adapted": {
+    "flerp/qwen35moe/src/models/qwen/forward.cpp": {
+     "origin_file": "src/models/qwen/forward.cpp",
+     "origin_lines": 336,
+     "lines": 458,
+     "added": 126,
+     "removed": 4
+    },
+    "flerp/qwen35moe/src/models/qwen/hip/batched_decode.cpp": {
+     "origin_file": "src/models/qwen/hip/batched_decode.cpp",
+     "origin_lines": 856,
+     "lines": 884,
+     "added": 38,
+     "removed": 10
+    },
+    "flerp/qwen35moe/src/models/qwen/hip/decode_step.cpp": {
+     "origin_file": "src/models/qwen/hip/decode_step.cpp",
+     "origin_lines": 271,
+     "lines": 284,
+     "added": 13,
+     "removed": 0
+    },
+    "flerp/qwen35moe/src/models/qwen/hip/model_loader.cpp": {
+     "origin_file": "src/models/qwen/hip/model_loader.cpp",
+     "origin_lines": 424,
+     "lines": 430,
+     "added": 7,
+     "removed": 1
+    },
+    "flerp/qwen35moe/src/models/qwen/hip/prefill_chunk.cpp": {
+     "origin_file": "src/models/qwen/hip/prefill_chunk.cpp",
+     "origin_lines": 763,
+     "lines": 788,
+     "added": 27,
+     "removed": 2
+    },
+    "flerp/qwen35moe/src/models/qwen/state.hpp": {
+     "origin_file": "src/models/qwen/state.hpp",
+     "origin_lines": 233,
+     "lines": 265,
+     "added": 32,
+     "removed": 0
+    },
+    "flerp/qwen35moe/src/models/qwen/weights.cpp": {
+     "origin_file": "src/models/qwen/weights.cpp",
+     "origin_lines": 344,
+     "lines": 523,
+     "added": 185,
+     "removed": 6
+    }
+   },
+   "when_utc": "2026-11-11T16:38:47Z"
+  },
+  "build": {
+   "evidence": "build.txt, assembly.json, compiled-files.json",
+   "tree": "build/qwen36-35b-a3b.flerp-moe",
+   "files_in_tree": 558,
+   "origin_files": 542,
+   "origin_files_identical": 542,
+   "origin_files_differ": [],
+   "files_written_here": [
+    "flerp/gufo_qwen/CMakeLists.txt",
+    "flerp/gufo_qwen/generate.cpp",
+    "flerp/gufo_qwen/no_image.cpp",
+    "flerp/moe_kquant/moe_kquant.hip",
+    "flerp/moe_kquant/moe_kquant.hpp",
+    "flerp/qwen35moe/moe_ffn.cpp",
+    "flerp/qwen35moe/moe_ffn.hpp",
+    "flerp/qwen35moe/src/models/qwen/forward.cpp",
+    "flerp/qwen35moe/src/models/qwen/hip/batched_decode.cpp",
+    "flerp/qwen35moe/src/models/qwen/hip/decode_step.cpp",
+    "flerp/qwen35moe/src/models/qwen/hip/model_loader.cpp",
+    "flerp/qwen35moe/src/models/qwen/hip/prefill_chunk.cpp",
+    "flerp/qwen35moe/src/models/qwen/state.hpp",
+    "flerp/qwen35moe/src/models/qwen/weights.cpp",
+    "flerp/qwen35moe_tool/CMakeLists.txt",
+    "flerp/qwen35moe_tool/generate.cpp"
+   ],
+   "modules": 42,
+   "commit": "f070a17",
+   "build_s": 3.2,
+   "rc": 0,
+   "binary": {
+    "path": "build/qwen36-35b-a3b.flerp-moe/strixflerp-qwen36-35b-a3b.flerp-moe",
+    "sha256": "d353ccb428e4ebf58bfcd6fdfd0e6d8602321d482c922a73e356120e79ee5c80",
+    "bytes": 75103104
+   },
+   "compiled": {
+    "executor.flerp.qwen35moe": 7,
+    "executor.gufo.qwen": 26,
+    "executor.gufo.qwen_vision": 4,
+    "format.gufo.gguf_kquant": 4,
+    "kernel.flerp.moe_kquant": 1,
+    "kernel.gufo.qfn_kernels": 2,
+    "kernel.gufo.qwen_attention": 8,
+    "kernel.gufo.qwen_dflash": 1,
+    "kernel.gufo.qwen_gdn": 6,
+    "kernel.gufo.qwen_linear_decode": 8,
+    "kernel.gufo.qwen_linear_prefill": 7,
+    "kernel.gufo.qwen_norm_rope": 8,
+    "kernel.gufo.qwen_sampling": 1,
+    "kernel.gufo.snapshot_copy": 1,
+    "runtime.gufo.cache": 14,
+    "runtime.gufo.dflash": 5,
+    "runtime.gufo.ext_api": 4,
+    "runtime.gufo.hip_host": 3,
+    "runtime.gufo.mtp": 4,
+    "runtime.gufo.platform": 13,
+    "runtime.gufo.sampling": 4,
+    "runtime.gufo.speculative": 2,
+    "tool.flerp.gufo_qwen_generate": 1,
+    "tool.flerp.qwen35moe_generate": 1
+   },
+   "compiled_total": 135,
+   "modules_not_compiled": [
+    "executor.gufo.deepseek_v4_flash",
+    "executor.gufo.qwen38_flash_next",
+    "kernel.gufo.core_headers",
+    "kernel.gufo.ds4_attention",
+    "kernel.gufo.ds4_backend",
+    "kernel.gufo.ds4_dspark",
+    "kernel.gufo.ds4_hc",
+    "kernel.gufo.ds4_indexer",
+    "kernel.gufo.ds4_linear",
+    "kernel.gufo.ds4_mmq",
+    "kernel.gufo.ds4_moe",
+    "kernel.gufo.ds4_norm_rope",
+    "kernel.gufo.qfn_mmq",
+    "kernel.gufo.qwen_ops",
+    "runtime.gufo.dspark",
+    "runtime.gufo.image",
+    "runtime.gufo.tp_verbs",
+    "serve.gufo.http"
+   ],
+   "pass": true,
+   "when_utc": "2026-11-11T17:04:03Z"
+  },
+  "cpu": {
+   "evidence": "cpu.txt, prompt-ids.json, cpu-trace.json",
+   "model": {
+    "architecture": "qwen35moe",
+    "layers": 40,
+    "hidden": 2048,
+    "intermediate": 16384,
+    "heads": 16,
+    "kv_heads": 2,
+    "vocab": 248320,
+    "mtp_layers": 1,
+    "expert_count": 256,
+    "expert_used_count": 8,
+    "expert_feed_forward_length": 512,
+    "expert_shared_feed_forward_length": 512
+   },
+   "prompt_tokens": {
+    "bridge": 21,
+    "code": 20,
+    "rivers": 18,
+    "records": 1808
+   },
+   "tokenize_rc": 0,
+   "prompt_ids_equal_dense_recipe": {
+    "bridge": true,
+    "code": true,
+    "rivers": true,
+    "records": true
+   },
+   "cpu_reference": {
+    "rc": 0,
+    "seconds": 71.2,
+    "tokens_asked": 2,
+    "timed_out": false,
+    "runs": {
+     "bridge": {
+      "ids": [
+       561,
+       4528
+      ],
+      "text": " The weight"
+     }
+    }
+   },
+   "cpu_trace": {
+    "rc": 0,
+    "seconds": 54.5,
+    "prompt": "rivers",
+    "ids": [
+     271,
+     248068,
+     271
+    ]
+   },
+   "pass": true,
+   "when_utc": "2026-11-11T16:40:56Z"
+  },
+  "llama": {
+   "evidence": "llama.txt, llama.json, llama-dense.json, llama-trace.json",
+   "source": "/data/ark/src/github.com__ggml-org__llama.cpp",
+   "source_head": "86a24a182bd3c6c877aaf3734d99f9a1820f8cbd",
+   "runs": {
+    "bridge": {
+     "seconds": 5.4,
+     "decode_tok_s": 24.938365908664707,
+     "prompt_tok_s": 74.26057682787105,
+     "prompt_tokens_evaluated": 21,
+     "stop": "limit",
+     "tokenizer_ids_equal": true,
+     "tokenizer_first_difference": null,
+     "tokens": 128,
+     "positions_with_probs": 128
+    },
+    "code": {
+     "seconds": 9.6,
+     "decode_tok_s": 13.677645256592625,
+     "prompt_tok_s": 87.1721781276288,
+     "prompt_tokens_evaluated": 20,
+     "stop": "limit",
+     "tokenizer_ids_equal": true,
+     "tokenizer_first_difference": null,
+     "tokens": 128,
+     "positions_with_probs": 128
+    },
+    "rivers": {
+     "seconds": 5.4,
+     "decode_tok_s": 24.73743742353551,
+     "prompt_tok_s": 78.1596019070943,
+     "prompt_tokens_evaluated": 18,
+     "stop": "limit",
+     "tokenizer_ids_equal": true,
+     "tokenizer_first_difference": null,
+     "tokens": 128,
+     "positions_with_probs": 128
+    },
+    "records": {
+     "seconds": 24.1,
+     "decode_tok_s": 13.467192275982004,
+     "prompt_tok_s": 123.38737377277162,
+     "prompt_tokens_evaluated": 1808,
+     "stop": "limit",
+     "tokenizer_ids_equal": true,
+     "tokenizer_first_difference": null,
+     "tokens": 128,
+     "positions_with_probs": 128
+    }
+   },
+   "dense": {
+    "error": null,
+    "prompts": 4
+   },
+   "trace": {
+    "code": {
+     "rc": 0,
+     "seconds": 11.1,
+     "tensors": 80,
+     "input_ids_equal": false,
+     "input_ids_are_a_prefix": true,
+     "input_tokens": 19
+    },
+    "rivers": {
+     "rc": 0,
+     "seconds": 14.1,
+     "tensors": 80,
+     "input_ids_equal": true,
+     "input_ids_are_a_prefix": true,
+     "input_tokens": 18
+    }
+   },
+   "pass": true,
+   "when_utc": "2026-11-11T16:45:42Z"
+  },
+  "gpu": {
+   "evidence": "gpu.txt, gpu-runs.json, compare.json, lease.txt",
+   "binary_sha256": "f72e1a1a8bb2f27757de8da8008e5bada9780766b6b4dfbcb7a7e986df758ff2",
+   "holds": [
+    {
+     "for": "gpu stage",
+     "from": "2026-11-11T16:46:02Z",
+     "to": "2026-11-11T16:48:25Z",
+     "seconds": 143.2,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "runs": {
+    "dense": {
+     "rc": 0,
+     "seconds": 4.7
+    },
+    "dense-traced": {
+     "rc": 0,
+     "seconds": 6.3
+    },
+    "moe-1": {
+     "rc": 0,
+     "seconds": 46.5
+    },
+    "moe-2": {
+     "rc": 0,
+     "seconds": 46.5
+    },
+    "moe-traced": {
+     "rc": 0,
+     "seconds": 36.3
+    },
+    "moe-decode-fed": {
+     "rc": 0,
+     "seconds": 2.9
+    }
+   },
+   "dense_regression": {
+    "bridge": {
+     "first_difference": null,
+     "compared": 128,
+     "lengths": [
+      128,
+      128
+     ],
+     "equal": true
+    },
+    "code": {
+     "first_difference": null,
+     "compared": 128,
+     "lengths": [
+      128,
+      128
+     ],
+     "equal": true
+    },
+    "rivers": {
+     "first_difference": null,
+     "compared": 28,
+     "lengths": [
+      28,
+      28
+     ],
+     "equal": true
+    },
+    "records": {
+     "first_difference": null,
+     "compared": 128,
+     "lengths": [
+      128,
+      128
+     ],
+     "equal": true
+    }
+   },
+   "self_consistent": {
+    "bridge": {
+     "repeats_equal": true,
+     "traced_equal": true,
+     "argmax_is_token": true,
+     "tokens": 128
+    },
+    "code": {
+     "repeats_equal": true,
+     "traced_equal": true,
+     "argmax_is_token": true,
+     "tokens": 128
+    },
+    "rivers": {
+     "repeats_equal": true,
+     "traced_equal": true,
+     "argmax_is_token": true,
+     "tokens": 128
+    },
+    "records": {
+     "repeats_equal": true,
+     "traced_equal": true,
+     "argmax_is_token": true,
+     "tokens": 128
+    }
+   },
+   "llama": {
+    "bridge": {
+     "tokens": [
+      128,
+      128
+     ],
+     "first_difference": 115,
+     "agree": 115,
+     "first_position": {
+      "max_abs": 0.18439,
+      "mean_abs": 0.06386,
+      "compared": 20,
+      "llama_margin": 2.69282
+     },
+     "at_difference": {
+      "max_abs": 0.4771,
+      "llama_margin": 0.04675,
+      "llama_top2": [
+       513,
+       6564
+      ],
+      "token": 6564,
+      "llama_token": 513
+     },
+     "positions_compared": 116,
+     "max_abs_over_compared_positions": 1.89591,
+     "median_max_abs": 0.35552,
+     "pass": true,
+     "why": []
+    },
+    "code": {
+     "tokens": [
+      128,
+      128
+     ],
+     "first_difference": null,
+     "agree": 128,
+     "first_position": {
+      "max_abs": 0.26306,
+      "mean_abs": 0.125,
+      "compared": 20,
+      "llama_margin": 4.48798
+     },
+     "positions_compared": 128,
+     "max_abs_over_compared_positions": 3.46647,
+     "median_max_abs": 0.41823,
+     "pass": true,
+     "why": []
+    },
+    "rivers": {
+     "tokens": [
+      128,
+      128
+     ],
+     "first_difference": 74,
+     "agree": 74,
+     "first_position": {
+      "max_abs": 0.96672,
+      "mean_abs": 0.23729,
+      "compared": 20,
+      "llama_margin": 4.19207
+     },
+     "at_difference": {
+      "max_abs": 0.66637,
+      "llama_margin": 0.23107,
+      "llama_top2": [
+       725,
+       579
+      ],
+      "token": 579,
+      "llama_token": 725
+     },
+     "positions_compared": 75,
+     "max_abs_over_compared_positions": 2.83029,
+     "median_max_abs": 0.53647,
+     "pass": false,
+     "why": [
+      "first position: log-probabilities differ by up to 0.96672 nats (tolerance 0.5)"
+     ]
+    },
+    "records": {
+     "tokens": [
+      128,
+      128
+     ],
+     "first_difference": 88,
+     "agree": 88,
+     "first_position": {
+      "max_abs": 0.8321,
+      "mean_abs": 0.26863,
+      "compared": 20,
+      "llama_margin": 3.81915
+     },
+     "at_difference": {
+      "max_abs": 0.41562,
+      "llama_margin": 0.47091,
+      "llama_top2": [
+       279,
+       25
+      ],
+      "token": 25,
+      "llama_token": 279
+     },
+     "positions_compared": 89,
+     "max_abs_over_compared_positions": 3.49669,
+     "median_max_abs": 0.84786,
+     "pass": false,
+     "why": [
+      "first position: log-probabilities differ by up to 0.8321 nats (tolerance 0.5)"
+     ]
+    }
+   },
+   "dense_baseline": {
+    "bridge": {
+     "tokens": [
+      128,
+      128
+     ],
+     "first_difference": 5,
+     "agree": 5,
+     "first_position": {
+      "max_abs": 0.363,
+      "mean_abs": 0.15944,
+      "compared": 20,
+      "llama_margin": 1.19379
+     },
+     "at_difference": {
+      "max_abs": 0.29748,
+      "llama_margin": 0.00104,
+      "llama_top2": [
+       3566,
+       2706
+      ],
+      "token": 23016,
+      "llama_token": 3566
+     },
+     "max_abs_over_compared_positions": 0.36737,
+     "median_max_abs": 0.28143,
+     "pass": false,
+     "traced_equal_plain": true
+    },
+    "code": {
+     "tokens": [
+      128,
+      128
+     ],
+     "first_difference": 81,
+     "agree": 81,
+     "first_position": {
+      "max_abs": 0.16634,
+      "mean_abs": 0.04857,
+      "compared": 20,
+      "llama_margin": 4.14028
+     },
+     "at_difference": {
+      "max_abs": 0.17462,
+      "llama_margin": 0.06438,
+      "llama_top2": [
+       2784,
+       17885
+      ],
+      "token": 17885,
+      "llama_token": 2784
+     },
+     "max_abs_over_compared_positions": 0.55879,
+     "median_max_abs": 0.20321,
+     "pass": true,
+     "traced_equal_plain": true
+    },
+    "rivers": {
+     "tokens": [
+      28,
+      29
+     ],
+     "first_difference": null,
+     "agree": 28,
+     "first_position": {
+      "max_abs": 0.48584,
+      "mean_abs": 0.11629,
+      "compared": 20,
+      "llama_margin": 0.66038
+     },
+     "at_difference": null,
+     "max_abs_over_compared_positions": 0.69422,
+     "median_max_abs": 0.26375,
+     "pass": true,
+     "traced_equal_plain": true
+    },
+    "records": {
+     "tokens": [
+      128,
+      128
+     ],
+     "first_difference": 1,
+     "agree": 1,
+     "first_position": {
+      "max_abs": 0.31885,
+      "mean_abs": 0.11266,
+      "compared": 20,
+      "llama_margin": 1.94542
+     },
+     "at_difference": {
+      "max_abs": 0.43933,
+      "llama_margin": 0.02444,
+      "llama_top2": [
+       12,
+       6269
+      ],
+      "token": 6269,
+      "llama_token": 12
+     },
+     "max_abs_over_compared_positions": 0.43933,
+     "median_max_abs": 0.37909,
+     "pass": true,
+     "traced_equal_plain": true
+    }
+   },
+   "three_way": {
+    "prompt": "rivers",
+    "positions": 3,
+    "cpu_reference_ids": [
+     271,
+     248068,
+     271
+    ],
+    "ids": {
+     "gpu, prompt through the decode step": [
+      271,
+      248068,
+      271
+     ],
+     "gpu, prompt pass": [
+      271,
+      248068,
+      271
+     ],
+     "llama.cpp": [
+      271,
+      248068,
+      271
+     ]
+    },
+    "against_cpu_reference": {
+     "gpu, prompt through the decode step": {
+      "positions": 3,
+      "max_abs": 0.00274,
+      "mean_abs": 0.00068,
+      "top1_max_abs": 3e-05,
+      "first_position": {
+       "compared": 20,
+       "max_abs": 0.00274,
+       "mean_abs": 0.00118
+      }
+     },
+     "gpu, prompt pass": {
+      "positions": 3,
+      "max_abs": 0.62585,
+      "mean_abs": 0.17467,
+      "top1_max_abs": 0.01361,
+      "first_position": {
+       "compared": 20,
+       "max_abs": 0.62585,
+       "mean_abs": 0.39681
+      }
+     },
+     "llama.cpp": {
+      "positions": 3,
+      "max_abs": 0.59105,
+      "mean_abs": 0.17948,
+      "top1_max_abs": 0.01873,
+      "first_position": {
+       "compared": 19,
+       "max_abs": 0.59105,
+       "mean_abs": 0.2937
+      }
+     }
+    },
+    "gpu_prompt_pass_against_llama": {
+     "positions": 3,
+     "max_abs": 0.96672,
+     "mean_abs": 0.17673,
+     "top1_max_abs": 0.01494,
+     "first_position": {
+      "compared": 20,
+      "max_abs": 0.96672,
+      "mean_abs": 0.23729
+     }
+    },
+    "gpu_decode_fed_against_llama": {
+     "positions": 3,
+     "max_abs": 0.6692,
+     "mean_abs": 0.18751,
+     "top1_max_abs": 0.01875,
+     "first_position": {
+      "compared": 20,
+      "max_abs": 0.6692,
+      "mean_abs": 0.31153
+     }
+    }
+   },
+   "speed": {
+    "decode_tok_s_median": 56.44,
+    "decode_tok_s_range": [
+     53.29,
+     57.74
+    ],
+    "first_token_s": {
+     "bridge": [
+      0.179,
+      0.129
+     ],
+     "code": [
+      0.101,
+      0.099
+     ],
+     "rivers": [
+      0.099,
+      0.097
+     ],
+     "records": [
+      7.779,
+      7.897
+     ]
+    },
+    "prompt_tokens": {
+     "bridge": 21,
+     "code": 20,
+     "rivers": 18,
+     "records": 1808
+    },
+    "prompt_tok_s": {
+     "bridge": [
+      117.3,
+      162.8
+     ],
+     "code": [
+      198.0,
+      202.0
+     ],
+     "rivers": [
+      181.8,
+      185.6
+     ],
+     "records": [
+      232.4,
+      228.9
+     ]
+    },
+    "llama_decode_tok_s": {
+     "bridge": 24.938365908664707,
+     "code": 13.677645256592625,
+     "rivers": 24.73743742353551,
+     "records": 13.467192275982004
+    },
+    "llama_prompt_tok_s": {
+     "bridge": 74.26057682787105,
+     "code": 87.1721781276288,
+     "rivers": 78.1596019070943,
+     "records": 123.38737377277162
+    },
+    "dense_decode_tok_s": [
+     117.26,
+     120.93,
+     118.77,
+     120.74
+    ]
+   },
+   "device": {
+    "dense": {
+     "device_bytes": 969790420,
+     "weight_resident_bytes": 1274396192,
+     "weight_regions": 1,
+     "load_s": 0.444595,
+     "intermediate": 6144
+    },
+    "dense-traced": {
+     "device_bytes": 969790420,
+     "weight_resident_bytes": 1274396192,
+     "weight_regions": 1,
+     "load_s": 0.694285,
+     "intermediate": 6144
+    },
+    "moe-1": {
+     "device_bytes": 1872518100,
+     "weight_resident_bytes": 21713462624,
+     "weight_regions": 1,
+     "load_s": 28.7627,
+     "intermediate": 16384
+    },
+    "moe-2": {
+     "device_bytes": 1872518100,
+     "weight_resident_bytes": 21713462624,
+     "weight_regions": 1,
+     "load_s": 28.8638,
+     "intermediate": 16384
+    },
+    "moe-traced": {
+     "device_bytes": 1872518100,
+     "weight_resident_bytes": 21713462624,
+     "weight_regions": 1,
+     "load_s": 17.9963,
+     "intermediate": 16384
+    },
+    "moe-decode-fed": {
+     "device_bytes": 1872518100,
+     "weight_resident_bytes": 21713462624,
+     "weight_regions": 1,
+     "load_s": 2.1546,
+     "intermediate": 16384
+    }
+   },
+   "verdict": false,
+   "failures": [
+    "llama.cpp, rivers: first position: log-probabilities differ by up to 0.96672 nats (tolerance 0.5)",
+    "llama.cpp, records: first position: log-probabilities differ by up to 0.8321 nats (tolerance 0.5)"
+   ],
+   "pass": false,
+   "when_utc": "2026-11-11T16:48:25Z"
+  },
+  "reference": {
+   "evidence": "reference.txt, fidelity-reference.json, block-check.json",
+   "block_check": {
+    "records": 126,
+    "layers": [
+     0,
+     19,
+     39
+    ],
+    "ids_equal": 126,
+    "ids_same_set": 126,
+    "weights_max_abs": 1.2858101428037116e-07,
+    "gate_logit_max_abs": 1.1628863338941642e-07,
+    "out_max_abs": 5.053607283755923e-06,
+    "out_max_abs_over_rms": 4.893014161759504e-05,
+    "seconds": 35.4
+   },
+   "dense_f32": {
+    "rc": 0,
+    "seconds": 9.6,
+    "bytes": 7538261536,
+    "error": null
+   },
+   "llama_dense_error": null,
+   "llama_moe_error": null,
+   "cpu_reference": {
+    "moe": {
+     "bridge": {
+      "seconds": 290.5,
+      "cached": false,
+      "tokens_evaluated": 45,
+      "error": null
+     },
+     "code": {
+      "seconds": 128.5,
+      "cached": false,
+      "tokens_evaluated": 44,
+      "error": null
+     },
+     "rivers": {
+      "seconds": 100.4,
+      "cached": false,
+      "tokens_evaluated": 42,
+      "error": null
+     },
+     "records": {
+      "seconds": 4529.3,
+      "cached": false,
+      "tokens_evaluated": 1811,
+      "error": null
+     }
+    },
+    "dense": {
+     "bridge": {
+      "seconds": 55.7,
+      "cached": false,
+      "tokens_evaluated": 45,
+      "error": null
+     },
+     "code": {
+      "seconds": 56.5,
+      "cached": false,
+      "tokens_evaluated": 44,
+      "error": null
+     },
+     "rivers": {
+      "seconds": 51.8,
+      "cached": false,
+      "tokens_evaluated": 42,
+      "error": null
+     }
+    }
+   },
+   "pass": true,
+   "when_utc": "2026-11-11T18:34:31Z"
+  },
+  "fidelity": {
+   "evidence": "fidelity.txt, fidelity-runs.json, fidelity.json, fidelity.md, fidelity-lease.txt",
+   "holds": [
+    {
+     "for": "fidelity stage",
+     "from": "2026-11-11T18:35:02Z",
+     "to": "2026-11-11T18:37:45Z",
+     "seconds": 163.1,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "verdict": false,
+   "failures": [
+    "gpu prompt pass, bridge position 0: compared tokens hold 0.98074 of the reference's mass, 0 above the floor missing",
+    "gpu prompt pass, bridge position 4: compared tokens hold 0.99408 of the reference's mass, 0 above the floor missing",
+    "gpu prompt pass, bridge position 24: compared tokens hold 0.99517 of the reference's mass, 0 above the floor missing",
+    "gpu prompt pass, records position 0: KL 0.00566 is over 3.0 times llama.cpp's 0.00127 (floor 0.002)",
+    "gpu prompt pass, records position 1: KL 0.00381 is over 3.0 times llama.cpp's 0.00072 (floor 0.002)",
+    "gpu, prompt through the decode step, bridge position 0: compared tokens hold 0.98095 of the reference's mass, 0 above the floor missing",
+    "gpu, prompt through the decode step, bridge position 4: compared tokens hold 0.99411 of the reference's mass, 0 above the floor missing",
+    "gpu, prompt through the decode step, bridge position 24: compared tokens hold 0.99517 of the reference's mass, 0 above the floor missing"
+   ],
+   "mean_kl": {
+    "moe": {
+     "gpu prompt pass": 0.0009874425945314898,
+     "gpu prompt pass, FP32 activations": 0.00012935674099498874,
+     "gpu, prompt through the decode step": 0.000126081111260587,
+     "llama.cpp": 0.0006525409986700028
+    },
+    "dense": {
+     "gpu prompt pass": 0.0014980077717499166,
+     "gpu prompt pass, FP32 activations": 0.0006165141053828114,
+     "gpu, prompt through the decode step": 0.0006148291128710322,
+     "llama.cpp": 0.0005970301356424733,
+     "llama.cpp on the F32 conversion": -0.001002002920710706
+    }
+   },
+   "runs": {
+    "moe|gpu prompt pass": {
+     "rc": 0,
+     "seconds": 80.9
+    },
+    "moe|gpu, prompt through the decode step": {
+     "rc": 0,
+     "seconds": 34.0
+    },
+    "moe|gpu prompt pass, FP32 activations": {
+     "rc": 0,
+     "seconds": 20.7
+    },
+    "dense|gpu prompt pass": {
+     "rc": 0,
+     "seconds": 5.6
+    },
+    "dense|gpu, prompt through the decode step": {
+     "rc": 0,
+     "seconds": 13.8
+    },
+    "dense|gpu prompt pass, FP32 activations": {
+     "rc": 0,
+     "seconds": 7.9
+    }
+   },
+   "pass": false,
+   "when_utc": "2026-11-11T18:37:45Z"
+  }
+ },
+ "pass": false,
+ "stages_run": [
+  "check",
+  "origin",
+  "build",
+  "cpu",
+  "llama",
+  "gpu"
+ ]
+}

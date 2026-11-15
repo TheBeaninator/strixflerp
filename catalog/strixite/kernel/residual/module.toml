@@ -1,0 +1,45 @@
+id      = "kernel.strixite.residual"
+kind    = "kernel"
+summary = "Residual add in place"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/residual.hip", "kernels/residual.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/residual.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "residual.add/-/bf16"
+api       = "strix::kernels::residual_add"
+numeric   = "fp32 add, one rounding to the activation dtype"
+regime    = "element-wise"
+
+[[provides]]
+interface = "residual.add/-/f32"
+api       = "strix::kernels::residual_add"
+numeric   = "fp32 add, one rounding to the activation dtype"
+regime    = "element-wise"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

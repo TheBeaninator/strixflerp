@@ -1,0 +1,81 @@
+{
+ "module": "kernel.gufo.qwen_norm_rope",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-10T22:57:17Z",
+ "toolchain": "therock-10.1",
+ "toolchain_root": "/data/tools/therock-10.1.0a20260823",
+ "compiler": "AMD clang version 23.0.0git (https://github.com/ROCm/llvm-project.git 0bace1908348b840e6aa1b4b6e12151dae208158) | Target: x86_64-unknown-linux-gnu",
+ "units": 8,
+ "passed": 8,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 2.1,
+ "results": [
+  {
+   "unit": "src/src/families/qwen/kernels/norm.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/norm.hip -o build/compile-gate/kernel.gufo.qwen_norm_rope/0-norm.hip.o",
+   "rc": 0,
+   "seconds": 0.98,
+   "object_bytes": 26904,
+   "object_sha256": "0e0961995a24f793d01319ae3c5ba5200060dbc9fa93c79df2764f2196b3af63"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_norm.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_norm.hip -o build/compile-gate/kernel.gufo.qwen_norm_rope/1-prefill_norm.hip.o",
+   "rc": 0,
+   "seconds": 1.46,
+   "object_bytes": 31040,
+   "object_sha256": "a27a88a83c2077b79be3797b17ed883be3342617de2e363b2e17789947269b66"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/rope.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/rope.hip -o build/compile-gate/kernel.gufo.qwen_norm_rope/2-rope.hip.o",
+   "rc": 0,
+   "seconds": 1.7,
+   "object_bytes": 35760,
+   "object_sha256": "89eeb9ffbb21a0e537385c96d6bdfb46569be314bd183b17d374a7db0f1dd21d"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_rope.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_rope.hip -o build/compile-gate/kernel.gufo.qwen_norm_rope/3-prefill_rope.hip.o",
+   "rc": 0,
+   "seconds": 2.08,
+   "object_bytes": 40576,
+   "object_sha256": "39ab9b5dfbfa680d039e6f5d42141e4b492f26e1f2cb86331814112cf17419c0"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/residual.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/residual.hip -o build/compile-gate/kernel.gufo.qwen_norm_rope/4-residual.hip.o",
+   "rc": 0,
+   "seconds": 0.96,
+   "object_bytes": 16648,
+   "object_sha256": "fd981e1553af51eda129963e9aab5aadc82be964352f08797a17e30e9abee064"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_residual.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_residual.hip -o build/compile-gate/kernel.gufo.qwen_norm_rope/5-prefill_residual.hip.o",
+   "rc": 0,
+   "seconds": 1.41,
+   "object_bytes": 16688,
+   "object_sha256": "ff67ca2fe4231d3ea347944e8bc00aa12e357367c738e1bb01fa47160c7cef62"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/embed.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/embed.hip -o build/compile-gate/kernel.gufo.qwen_norm_rope/6-embed.hip.o",
+   "rc": 0,
+   "seconds": 1.88,
+   "object_bytes": 33672,
+   "object_sha256": "1fb52e50575d27ba60e8fc10fac7afc6b305c2c67aa02339557a68d11b42f675"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_embed.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_embed.hip -o build/compile-gate/kernel.gufo.qwen_norm_rope/7-prefill_embed.hip.o",
+   "rc": 0,
+   "seconds": 1.78,
+   "object_bytes": 25160,
+   "object_sha256": "2ee37a0556495e784f40e4cd2553f870789b08b69c70197f3963a9541bd20f2b"
+  }
+ ]
+}

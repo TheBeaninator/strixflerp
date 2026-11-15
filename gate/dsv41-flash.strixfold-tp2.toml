@@ -1,0 +1,71 @@
+# Host facts and run settings for the StrixFold recipe gate. Stages check, origin and build run on control-node;
+# the pair stage runs from control-node against workers F and A. The pass criteria were fixed before the first run.
+
+[host]
+origin             = "strixfold"
+reference_checkout = "/data/pod/plans/strixfold/fork"        # the pod's git tree; exported at ORIGIN.toml's commit
+scratch            = "build/gate-scratch-strixfold"
+build_jobs         = 8
+# The kit of the reference deployment (~/tfp/deploy/f64b5ff2e28b on F and A, built in /data/pod/plans/d74bd09137/wt)
+reference_kit_manifest_sha256 = "7693647972ab1b22dbff5d75f44ac080b573b9f0bf27d2bcc8c896b385f08455"
+
+[pair]
+# rank0, rank1, *_rail, serve_url: what earlier runs used (F and A), kept as their record. A run takes the live pair
+# from the pod's serving conf (gate/pair_nodes.py: NODE1/NODE1_IP/NODE1_RAIL, SERVE_HOST, MASTER_IP) or --rank1 etc.
+rank0              = "10.10.0.50"                            # F: the server
+rank1              = "10.10.0.54"                            # A: where first_light.sh runs
+rank0_rail         = "10.20.0.50"
+rank1_rail         = "10.20.0.54"
+launcher           = "/data/pod/tools/strixfold-pair.sh"     # the pod's own: reference runs start and stop with it
+launcher_log       = "/data/pod/strixfold-pair/log"
+quiet_s            = 1800                                    # nobody else started or stopped the pair by hand this long
+base_conf          = "gate/dsv41-flash.strixfold-tp2.conf"   # the pod's serving conf as of 2026-11-10T23:50Z; the gate's confs are it plus [pair.conf]
+reference_deploy   = "$HOME/tfp/deploy/f64b5ff2e28b"         # the reference deployment, on both workers
+reference_commit   = "f64b5ff2e28b1bac7ccb2c1d362908dfbb0dc362"
+worker_scratch     = "/home/pod/tfp/strixflerp-gate"       # created and removed on each worker; /cache is mounted noexec
+serve_url          = "http://10.10.0.50:18080"
+owner              = "agent"
+why                = "strixflerp phase 3 gate"
+hold_ttl_s         = 2700                                    # four loads of a few minutes each, requests, the ABI run
+gpu_free_gtt_bytes = 1073741824                              # idle is about 19 MB
+busy_pattern       = "tensorfold-native|tf-dsv41-|strix_server|strixite|first_light.sh|flerp-executor"
+startup_timeout_s  = 1500
+reference_attempts = 2                                       # a reference that does not reach health twice ends the stage
+# How much of the window a step needs before the hard stop (--release-by); a step that does not fit is skipped.
+# Measured on the pair on 2026-11-11: a reference load, its requests and its stop took under 2 minutes
+# (02:46:48Z up to 02:48:35Z down); an assembled server or front end load with its requests and stop about 2 minutes
+# (02:48:36Z to 02:50:31Z); a reference start that fails first and works second adds up to 2 minutes 20 s
+# (02:50:33Z to 02:52:52Z); the two conformance cases together 3 minutes 20 s (02:00:23Z to 02:03:42Z); teardown,
+# release and slack about a minute and a half.
+setting_margin_s   = 480                                     # one drafts setting: 2 + 2 + 2.3 minutes, plus teardown
+abi_margin_s       = 300                                     # the conformance run: 3.3 minutes, plus teardown
+
+# Appended to the pod's conf for every run of the gate (a later assignment wins: the conf is sourced by serve_lib.sh).
+# Receipts on; draft widths from the cost tables so two runs make the same windows. The prompt cache stays at the
+# pod's serving value (4): with 0, the reference f64b5ff2e28b itself failed its first multi-chunk prompt on
+# 2026-11-11T01:33Z (3176 tokens: hipErrorContextIsDestroyed, CollectiveFailed; gate/results/.../pair-2026-11-11T0131Z-cache0.txt).
+# Both sides get the same requests in the same order, so kept states are the same on both.
+[pair.conf]
+BENCH            = "0"
+LOGITS_SHA       = "1"
+TRACE_ROUNDS     = "1"
+FROZEN_TIMING    = "1"
+PROMPT_CACHE_GIB = "4"
+LEARN_DIR        = ""              # no --learn-dir: nothing is read from or written to /cache/tfp-learned
+
+[run]
+drafts            = [1, 0]            # DSpark drafting on, then off: four server loads in all
+repeats           = 2
+max_tokens        = 192
+long_prompt_sentences = 150      # about 3,700 prompt tokens: past the first prompt chunk (2,048), so the ABI run can keep a state
+request_timeout_s = 900
+tps_tolerance     = 0.05              # medians within 5%, or inside the reference's own min..max
+
+[abi]                                  # the StrixFold adapter's conformance, in the same window
+recipe      = "dsv41-flash.strixfold-tp2-abi"
+conformance = "flerp/bin/flerp-executor-conformance.strixfold"
+new_tokens  = 48
+draft       = 4
+snap_at     = 2048                     # a chunk end: the only place a dsv41 state is kept
+snap_new    = 8
+timeout_s   = 1500

@@ -1,0 +1,65 @@
+id        = "format.flerp.strixw_loader_p"
+kind      = "format"
+summary   = "format.strixite.strixw_loader with the panel encodings: StrixwDevice::qw hands a Q4Panel16 / Q8Panel16 tensor out as a panel-tagged Q4 / Q8 view (runtime/panel_device.hpp), so the call sites keep their types and only the panel kernels' adapters can read it"
+notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 5. Derived from format.strixite.strixw_loader (strixite 20937dc): runtime/strixw_loader.{hpp,cpp} copied under flerp/strixw_loader_p/, changes marked `format.flerp.strixw_loader_p` (qw's two panel cases, one comment). Reading v5 needs the recipe's [overlay] of format.strixite.strixw by format.flerp.strixw_v5p."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/strixw_loader_p/runtime/strixw_loader.cpp", "flerp/strixw_loader_p/runtime/strixw_loader.hpp"]
+authors   = ["shawnshekari", "pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc (v0.7.0-pod): runtime/strixw_loader.hpp, runtime/strixw_loader.cpp, adapted here (catalog/strixite/format/strixw_loader holds them verbatim)"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/strixw_loader_p/runtime/strixw_loader.cpp"]
+includes  = ["src/flerp/strixw_loader_p"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.device-loader/strixw/-"
+api       = "strix::StrixwDevice, strix::WeightPlacement (qw: also Q4Panel16 / Q8Panel16, panel-tagged)"
+numeric   = "bytes as stored"
+regime    = "tensors keep file offsets and alignment; HostExperts placement is for test and bench tools only"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q5/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q6/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module    = "format.flerp.panel_device"
+
+[[requires]]
+module    = "format.strixite.strixw"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[[requires]]
+module    = "runtime.strixite.device_buffer"
+
+[[requires]]
+module    = "runtime.strixite.qweight"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built inside recipes/qwen38-flash-next.strixite-p16.toml (whole-model gate: the token-identity plan of gate/strixw-panel-kernels.toml)"

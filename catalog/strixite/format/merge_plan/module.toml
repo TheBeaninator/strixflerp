@@ -1,0 +1,42 @@
+id      = "format.strixite.merge_plan"
+kind    = "format"
+summary = "Load-time merges of linear weights that read the same input into one row-concatenated weight"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/merge_plan.cpp", "formats/merge_plan.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/merge_plan.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.merge-plan/strixw/-"
+api       = "strix::merge_plan, strix::resolve_merge, strix::quantize_merged"
+numeric   = "row concatenation at quantization time is exact"
+regime    = "host, converter and loaders"
+
+[[requires]]
+module = "format.strixite.q4"
+
+[[requires]]
+module = "format.strixite.safetensors"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

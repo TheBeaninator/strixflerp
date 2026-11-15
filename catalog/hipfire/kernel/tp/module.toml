@@ -1,0 +1,46 @@
+id        = "kernel.hipfire.tp"
+kind      = "kernel"
+summary   = "Tensor-parallel and plumbing kernels: 16-way peer exchange, slow-link prefill staging, railgun copy / fill, device counters (5 sources, 5 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/device_counter_add.hip",
+  "kernels/src/railgun_copy.hip",
+  "kernels/src/railgun_fill.hip",
+  "kernels/src/slowlink_prefill.hip",
+  "kernels/src/tp_exchange16.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 5
+
+[[provides]]
+interface = "collective.device-stage/-/f32.hipfire"
+api       = "tp_exchange16, slowlink_prefill"
+numeric   = "bytes only"
+regime    = "TP peers"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.tp.json"

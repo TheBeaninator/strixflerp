@@ -1,0 +1,54 @@
+id        = "kernel.strixfold.exl3_pf_experts"
+kind      = "kernel"
+summary   = "Routed experts for prompt chunks: picks grouped into jobs of 64 or 128 rows, gate/up and down on f16 WMMA, deterministic combine"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/exl3_pf.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/exl3_pf.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 24
+
+[[provides]]
+interface = "moe.experts-prefill/exl3/bf16.jobs"
+api       = "tf_ds_exl3_pf_experts_combine, tf_ds_exl3_pf_experts_count, tf_ds_exl3_pf_experts_down128_k10, tf_ds_exl3_pf_experts_down128_k12 (+20 more, see registry.json)"
+numeric   = "exact MUL1 decode, v_wmma_f32_16x16x16_f16 with fp32 accumulation, H128 * svh, DeepSeek SwiGLU with clamps, combine = fma chain of wts * z in slot order from 0; no split K, no atomics: deterministic; contract exl3.experts_grouped"
+regime    = "prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[[requires]]
+interface = "format.device-view/exl3/-"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.exl3_pf_experts.json"

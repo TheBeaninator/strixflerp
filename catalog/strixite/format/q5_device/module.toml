@@ -1,0 +1,38 @@
+id      = "format.strixite.q5_device"
+kind    = "format"
+summary = "Q5 weight resident on the device and the non-owning view the kernels take"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/q5_device.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.device-view/strixw-q5/-"
+api       = "strix::Q5Device, strix::Q5DeviceView"
+numeric   = "bytes as stored in the host format"
+regime    = "header only; codes, scale and min as device pointers"
+
+[[requires]]
+module = "format.strixite.q5"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

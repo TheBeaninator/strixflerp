@@ -1,0 +1,292 @@
+{
+ "origin_registry": "crates/rdna-compute/src/kernels.rs (+ other rdna-compute/src/*.rs constants)",
+ "note": "a unit is the concatenation of its parts, compiled as one HIP source, as hipfire builds it; path parts are relative to catalog/hipfire",
+ "units": [
+  {
+   "name": "fused_gate_up_q4k",
+   "const": "FUSED_GATE_UP_Q4K_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/fused_gate_up_q4k.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_gate_up_q8_0",
+   "const": "FUSED_GATE_UP_Q8_0_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/fused_gate_up_q8_0.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_qkvza_q8_0",
+   "const": "FUSED_QKVZA_Q8_0_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/fused_qkvza_q8_0.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_qkv_q4k_qwen2_bias",
+   "const": "FUSED_QKV_Q4K_QWEN2_BIAS_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_QKV_WITH_BIAS 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_QKV_KERNEL_NAME fused_qkv_q4k_qwen2_bias\n"
+    },
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/fused_qkv_q4k.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_qkv_q4k",
+   "const": "FUSED_QKV_Q4K_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/fused_qkv_q4k.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_qkv_q8_0_qwen2_bias",
+   "const": "FUSED_QKV_Q8_0_QWEN2_BIAS_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_QKV_WITH_BIAS 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_QKV_KERNEL_NAME fused_qkv_q8_0_qwen2_bias\n"
+    },
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/fused_qkv_q8_0.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_qkv_q8_0",
+   "const": "FUSED_QKV_Q8_0_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/fused_qkv_q8_0.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_bq1g128",
+   "const": "GEMV_BQ1G128_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_bq1g128.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_bq1g128_xbatch",
+   "const": "GEMV_BQ1G128_XBATCH_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BQ1G128_XBATCH 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_BQ1G128_XBATCH_MAX 4\n"
+    },
+    {
+     "text": "#define HIPFIRE_BQ1G128_XBATCH_KERNEL gemv_bq1g128_xbatch\n"
+    },
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_bq1g128.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q4as8",
+   "const": "GEMV_Q4AS8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q4as8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q4f16_g32",
+   "const": "GEMV_Q4F16_G32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q4f16_g32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q4f16_g64",
+   "const": "GEMV_Q4F16_G64_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q4f16_g64.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q4f16_g64_wide",
+   "const": "GEMV_Q4F16_G64_WIDE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q4f16_g64_wide.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q4k",
+   "const": "GEMV_Q4K_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q4k.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q4lut",
+   "const": "GEMV_Q4LUT_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q4lut.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q4wave",
+   "const": "GEMV_Q4WAVE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q4wave.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q6k",
+   "const": "GEMV_Q6K_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q6k.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q8_0",
+   "const": "GEMV_Q8_0_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q8_0.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q8_0_wide",
+   "const": "GEMV_Q8_0_WIDE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_q8_0_wide.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_tq2g128",
+   "const": "GEMV_TQ2G128_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_tq2g128.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_tq2g128_xbatch",
+   "const": "GEMV_TQ2G128_XBATCH_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_TQ2G128_XBATCH 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_TQ2G128_XBATCH_MAX 4\n"
+    },
+    {
+     "text": "#define HIPFIRE_TQ2G128_XBATCH_KERNEL gemv_tq2g128_xbatch\n"
+    },
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/gemv_tq2g128.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_gemv_q8_0",
+   "const": "QWEN4_GEMV_Q8_0_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/indexer_topk/src/kernels/src/topk8_select.hip"
+    },
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/qwen4_gemv_q8_0.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_gemv_q8_0_wide",
+   "const": "QWEN4_GEMV_Q8_0_WIDE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemv_ggml/src/kernels/src/qwen4_gemv_q8_0_wide.hip"
+    }
+   ],
+   "flags": []
+  }
+ ]
+}

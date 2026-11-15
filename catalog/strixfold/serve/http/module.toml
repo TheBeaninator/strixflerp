@@ -1,0 +1,120 @@
+id        = "serve.strixfold.http"
+kind      = "serve"
+summary   = "TensorFold 1.0 HTTP server: OpenAI chat / responses and Anthropic messages translation, SSE, tool-call parsing, auth, metrics, compaction"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/server/anthropic.zig",
+  "zig/src/server/anthropic_translate.zig",
+  "zig/src/server/auth.zig",
+  "zig/src/server/cache_routes.zig",
+  "zig/src/server/chat.zig",
+  "zig/src/server/chunk_plan.zig",
+  "zig/src/server/cli.zig",
+  "zig/src/server/clock.zig",
+  "zig/src/server/compact.zig",
+  "zig/src/server/compact_mem.zig",
+  "zig/src/server/compact_test.zig",
+  "zig/src/server/dashboard.html",
+  "zig/src/server/dashboard_test.zig",
+  "zig/src/server/decisions.zig",
+  "zig/src/server/decisions_test.zig",
+  "zig/src/server/effort_values_test.zig",
+  "zig/src/server/engines.zig",
+  "zig/src/server/errors.zig",
+  "zig/src/server/fields.zig",
+  "zig/src/server/grammar.zig",
+  "zig/src/server/hf_text.zig",
+  "zig/src/server/http_body.zig",
+  "zig/src/server/http_conn.zig",
+  "zig/src/server/hub.zig",
+  "zig/src/server/ids.zig",
+  "zig/src/server/json.zig",
+  "zig/src/server/json_parse.zig",
+  "zig/src/server/json_write.zig",
+  "zig/src/server/late_system_test.zig",
+  "zig/src/server/listener.zig",
+  "zig/src/server/live.zig",
+  "zig/src/server/log.zig",
+  "zig/src/server/main.zig",
+  "zig/src/server/messages.zig",
+  "zig/src/server/metrics.zig",
+  "zig/src/server/model_text.zig",
+  "zig/src/server/openai.zig",
+  "zig/src/server/prompt.zig",
+  "zig/src/server/pyrepr.zig",
+  "zig/src/server/reply_dsv41.zig",
+  "zig/src/server/reply_parity.zig",
+  "zig/src/server/reply_text.zig",
+  "zig/src/server/request_log.zig",
+  "zig/src/server/responses.zig",
+  "zig/src/server/responses_translate.zig",
+  "zig/src/server/root.zig",
+  "zig/src/server/routes.zig",
+  "zig/src/server/serve.zig",
+  "zig/src/server/server.zig",
+  "zig/src/server/sse.zig",
+  "zig/src/server/status_routes.zig",
+  "zig/src/server/stream_preflight_test.zig",
+  "zig/src/server/structure_test.zig",
+  "zig/src/server/telemetry_reply_test.zig",
+  "zig/src/server/tokens.zig",
+  "zig/src/server/tool_params.zig",
+  "zig/src/server/tool_parse.zig",
+  "zig/src/server/tool_parse_test.zig",
+  "zig/src/server/tool_specs.zig",
+  "zig/src/server/tool_stream.zig",
+  "zig/src/server/tool_streaming.zig",
+  "zig/src/server/top_k_test.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = ["src/zig/src/server/main.zig"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "serve.http-strixfold/openai+anthropic/-"
+api       = "server/main.zig, server/serve.zig"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+interface = "executor.lane-backend/-/-"
+
+[[requires]]
+interface = "grammar.matcher-strixfold/-/-"
+
+[[requires]]
+interface = "text.tokenizer-strixfold/-/-"
+
+[[requires]]
+interface = "text.chat-template-strixfold/jinja/-"
+
+[[requires]]
+interface = "executor.host/hip/-"
+
+[[requires]]
+interface = "tool.checkpoint-cli/-/-"
+
+[[requires]]
+interface = "cache.prompt-strixfold/-/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

@@ -1,0 +1,48 @@
+id        = "runtime.crucible.batch"
+kind      = "runtime"
+summary   = "Batched serving contracts: start-time admission, CPU boundary checks, row inputs kept alive across queued copies, packed verify span validation, rows per packed pass"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/runtime/batch_admission.h",
+  "engine/runtime/batch_contract.h",
+  "engine/runtime/batch_inputs.h",
+  "engine/runtime/batch_spec_contract.h",
+  "engine/runtime/packed_rows_option.h",
+  "engine/runtime/pass_rows.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/runtime"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "serve.memory-plan-crucible/-/-"
+api       = "batch_admission.h"
+numeric   = "n/a"
+regime    = "serving"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[[requires]]
+module    = "runtime.crucible.conversation_cache"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

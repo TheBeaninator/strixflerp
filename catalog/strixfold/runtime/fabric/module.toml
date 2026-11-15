@@ -1,0 +1,62 @@
+id        = "runtime.strixfold.fabric"
+kind      = "runtime"
+summary   = "Host fabric library: verbs ABI and queue pairs, memory registration, RDMA links, mailbox / packet / wire framing used by the transports and the cluster layer"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/fabric/collective.zig",
+  "zig/src/fabric/cost.zig",
+  "zig/src/fabric/decoder.zig",
+  "zig/src/fabric/fabric.zig",
+  "zig/src/fabric/fake.zig",
+  "zig/src/fabric/frames.zig",
+  "zig/src/fabric/layout.zig",
+  "zig/src/fabric/link_fake.zig",
+  "zig/src/fabric/mailbox.zig",
+  "zig/src/fabric/manifest.zig",
+  "zig/src/fabric/mcdma.zig",
+  "zig/src/fabric/mcdma_abi.zig",
+  "zig/src/fabric/packet.zig",
+  "zig/src/fabric/prefill_source.zig",
+  "zig/src/fabric/producer.zig",
+  "zig/src/fabric/rdma.zig",
+  "zig/src/fabric/registration.zig",
+  "zig/src/fabric/sendrecv.zig",
+  "zig/src/fabric/sendrecv_fake.zig",
+  "zig/src/fabric/verbs.zig",
+  "zig/src/fabric/verbs_abi.zig",
+  "zig/src/fabric/verbs_link.zig",
+  "zig/src/fabric/verbs_qp.zig",
+  "zig/src/fabric/wire.zig",
+  "zig/src/fabric/words.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "transport.verbs/-/-"
+api       = "fabric/verbs.zig, verbs_qp.zig, verbs_link.zig, registration.zig"
+numeric   = "n/a"
+regime    = "RC queue pairs over RoCE"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

@@ -1,0 +1,87 @@
+id        = "kernel.hipfire.gemv_hfq"
+kind      = "kernel"
+summary   = "Decode GEMV on hipfire HFQ weights: flat N-bit codes with one f32 scale / zero per group (HFQ2..HFQ8, groups 64..1024), HFP4-G32 (FP4 E2M1 + UE8M0), PARO; residual, multirow, wave64 and fused QKV / gate-up forms (43 sources, 73 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/fused_gate_up_hfq4g256.hip",
+  "kernels/src/fused_gate_up_hfq4g256_wave64.hip",
+  "kernels/src/fused_qkv_hfq4g256.hip",
+  "kernels/src/fused_qkv_hfq4g256_wave64.hip",
+  "kernels/src/fused_qkv_hfq6g256.hip",
+  "kernels/src/fused_qkvza_hfq4g256.hip",
+  "kernels/src/fused_qkvza_hfq4g256_r4_stream.gfx1151.hip",
+  "kernels/src/fused_qkvza_hfq4g256_wave64.hip",
+  "kernels/src/fused_qkvza_hfq4g256_wave64_share_x.gfx1151.hip",
+  "kernels/src/gemv_hfp4g32.hip",
+  "kernels/src/gemv_hfp4g32_dot2.gfx11.hip",
+  "kernels/src/gemv_hfq2g128.hip",
+  "kernels/src/gemv_hfq2g256.hip",
+  "kernels/src/gemv_hfq3g128.hip",
+  "kernels/src/gemv_hfq3g256.hip",
+  "kernels/src/gemv_hfq3g256_residual.hip",
+  "kernels/src/gemv_hfq4g1024.hip",
+  "kernels/src/gemv_hfq4g128.hip",
+  "kernels/src/gemv_hfq4g128_residual_sigmoid_scaled.hip",
+  "kernels/src/gemv_hfq4g256.hip",
+  "kernels/src/gemv_hfq4g256_dot2.gfx1151.hip",
+  "kernels/src/gemv_hfq4g256_multirow.hip",
+  "kernels/src/gemv_hfq4g256_residual.hip",
+  "kernels/src/gemv_hfq4g256_residual_scaled.hip",
+  "kernels/src/gemv_hfq4g256_residual_wave64.hip",
+  "kernels/src/gemv_hfq4g256_residual_wave64_prefetch.hip",
+  "kernels/src/gemv_hfq4g256_wide.hip",
+  "kernels/src/gemv_hfq4g512.hip",
+  "kernels/src/gemv_hfq4g64.hip",
+  "kernels/src/gemv_hfq5g256.hip",
+  "kernels/src/gemv_hfq5g256_residual.hip",
+  "kernels/src/gemv_hfq5g256_residual_sigmoid_scaled.hip",
+  "kernels/src/gemv_hfq5g256_residual_wave64.hip",
+  "kernels/src/gemv_hfq5g256_residual_wave64_prefetch.hip",
+  "kernels/src/gemv_hfq6g256.hip",
+  "kernels/src/gemv_hfq6g256_residual.hip",
+  "kernels/src/gemv_hfq6g256_residual_sigmoid_scaled.hip",
+  "kernels/src/gemv_hfq6g256_residual_wave64.hip",
+  "kernels/src/gemv_hfq6g256_residual_wave64_prefetch.hip",
+  "kernels/src/gemv_hfq8g256.hip",
+  "kernels/src/gemv_paro4g128.hip",
+  "kernels/src/gemv_q8hfq.hip",
+  "kernels/src/gemv_q8hfq_wide.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 73
+
+[[provides]]
+interface = "linear.decode/hipfire-hfq/f32"
+api       = "fused_gate_up_hfq4g256, fused_gate_up_hfq4g256_wave64, fused_qkvza_hfq4g256_k2048_all_buffer_dlc_gfx1151, fused_qkvza_hfq4g256_k2048_all_buffer_gfx1151, fused_qkvza_hfq4g256_k2048_all_buffer_glc_gfx1151 (+68 more units, see units.json)"
+numeric   = "fp32 activations and fp32 accumulate; weights decoded in-kernel; summation order is per kernel variant, so bits differ between variants and from other engines"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+interface = "format.device-view/hipfire-hfq/-"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemv_hfq.json"

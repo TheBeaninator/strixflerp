@@ -1,0 +1,37 @@
+id        = "runtime.strixfold.sampling"
+kind      = "runtime"
+summary   = "The keyed exact sampler: Gumbel draws keyed by (seed, position, token id) so a verify row draws exactly as the serial run; top-k / top-p / min-p in float64 as numpy computes them"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/src/core/lanes/sampling.zig", "zig/src/families/dsv41/sampling.zig"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "sample.next-token/-/f64"
+api       = "core/lanes/sampling.zig Sampling, families/dsv41/sampling.zig"
+numeric   = "float64, libm exp/log, numpy pairwise sum order; bit for bit with the Python exact_sampling.py"
+regime    = "top_k + margin candidates a row, host side"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

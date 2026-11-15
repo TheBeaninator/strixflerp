@@ -1,0 +1,70 @@
+id        = "kernel.gufo.ds4_linear"
+kind      = "kernel"
+summary   = "DeepSeek V4 Flash dense projections: Q8_0 matmul and grouped outputs, narrow Q8 projections shared with the numerical oracle, blocked F16 GEMM, F16 decode, hipBLASLt state, embedding"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_common.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_embedding_launch.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_f16_decode.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_hipblaslt.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_matmul.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_misc_launch.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_q8.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_q8_decode.hip.hpp",
+]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/detail",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/gguf-q8_0/f32.ds4"
+api       = "ds4_gpu_matmul_q8_0_* launchers"
+numeric   = "Q8_0 blocks (QK 32), fp32 accumulate, the scalar kernel compiled multiply/FMA order under fast-math"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "linear.decode/f16/f32.ds4"
+api       = "ds4_gpu_matmul_f16_* launchers, ds4_gpu_matmul_f16_f16_input_tensor"
+numeric   = "F16 weights; optional published F16 mirror of the activation"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "linear.prefill/f16/f16-f32.ds4"
+api       = "blocked F16 GEMM (attention output B projection), hipBLASLt routes"
+numeric   = "F16 operands, fp32 accumulate; library plan order on the hipBLASLt route"
+regime    = "prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "embed.lookup/gguf-f16/f32"
+api       = "ds4_gpu_embedding_* launchers"
+numeric   = "exact row copy and widening"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.gufo.ds4_backend"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.gufo.ds4_backend"
+reason    = "header fragment of one translation unit; compiles only inside kernel.gufo.ds4_backend"

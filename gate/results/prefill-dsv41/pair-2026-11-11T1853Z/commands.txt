@@ -1,0 +1,118 @@
+2026-11-11T18:53:32Z RUN pod-quad held 10.10.0.50
+
+(rc 1)
+2026-11-11T18:53:32Z RUN pod-quad held 10.10.0.54
+
+(rc 1)
+2026-11-11T18:53:32Z RUN OWNER=agent REASON='strixflerp prefill A/B/C window (agreed with the pair owner)' TTL=1620 pod-quad hold 10.10.0.50 10.10.0.54
+2026-11-11 18:53:35  pod-quad: workers free after 1s: 10.10.0.50 10.10.0.54
+2026-11-11 18:53:35  pod-quad: held: 10.10.0.50 10.10.0.54 (owner agent, expires in 0h27m; pod-quad renew to extend)
+(rc 0)
+2026-11-11T18:53:35Z RUN KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh down
+down: by hand (caller: actor agent, /bin/sh -c KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh down )
+(rc 0)
+2026-11-11T18:53:39Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 mkdir -p /home/pod/tfp/strixflerp-prefill/conf /home/pod/tfp/strixflerp-prefill/run
+
+(rc 0)
+2026-11-11T18:53:40Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/pair-2026-11-11T1853Z/A.conf pod@10.10.0.50:/home/pod/tfp/strixflerp-prefill/conf/A.conf
+
+(rc 0)
+2026-11-11T18:53:40Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/pair-2026-11-11T1853Z/B.conf pod@10.10.0.50:/home/pod/tfp/strixflerp-prefill/conf/B.conf
+
+(rc 0)
+2026-11-11T18:53:40Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 mkdir -p /home/pod/tfp/strixflerp-prefill/conf /home/pod/tfp/strixflerp-prefill/run
+
+(rc 0)
+2026-11-11T18:53:40Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/pair-2026-11-11T1853Z/A.conf pod@10.10.0.54:/home/pod/tfp/strixflerp-prefill/conf/A.conf
+
+(rc 0)
+2026-11-11T18:53:41Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/pair-2026-11-11T1853Z/B.conf pod@10.10.0.54:/home/pod/tfp/strixflerp-prefill/conf/B.conf
+
+(rc 0)
+2026-11-11T18:53:41Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-prefill-up --property=KillMode=process bash -c 'cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip && RUN_ID=pf-A-185341 TF_SERVE_CONF=/home/pod/tfp/strixflerp-prefill/conf/A.conf ./first_light.sh up'
+Running as unit: strixflerp-prefill-up.service; invocation ID: df91b645061240ce8e5cd91b8ee6612a
+(rc 0)
+2026-11-11T18:55:31Z arm A rep 0: wall 8.196 s usage {'prompt_tokens': 8163, 'completion_tokens': 2, 'total_tokens': 8165, 'prompt_tokens_details': {'cached_tokens': 0}, 'completion_tokens_details': {'reasoning_tokens': 0}}
+2026-11-11T18:55:37Z arm A rep 1: wall 6.152 s usage {'prompt_tokens': 8163, 'completion_tokens': 2, 'total_tokens': 8165, 'prompt_tokens_details': {'cached_tokens': 0}, 'completion_tokens_details': {'reasoning_tokens': 0}}
+2026-11-11T18:55:38Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-prefill-up 2>/dev/null; cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip && RUN_ID=pf-A-185341 TF_SERVE_CONF=/home/pod/tfp/strixflerp-prefill/conf/A.conf ./first_light.sh down
+rank 0: stopped (1172938)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T18:55:42Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-prefill-up --property=KillMode=process bash -c 'cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip && RUN_ID=pf-B-185542 TF_SERVE_CONF=/home/pod/tfp/strixflerp-prefill/conf/B.conf ./first_light.sh up'
+Running as unit: strixflerp-prefill-up.service; invocation ID: dac84abea5b048b09a2836999c72c3c3
+(rc 0)
+2026-11-11T18:57:37Z arm B rep 0: wall 8.865 s usage {'prompt_tokens': 8163, 'completion_tokens': 2, 'total_tokens': 8165, 'prompt_tokens_details': {'cached_tokens': 0}, 'completion_tokens_details': {'reasoning_tokens': 0}}
+2026-11-11T18:57:44Z arm B rep 1: wall 7.637 s usage {'prompt_tokens': 8163, 'completion_tokens': 2, 'total_tokens': 8165, 'prompt_tokens_details': {'cached_tokens': 0}, 'completion_tokens_details': {'reasoning_tokens': 0}}
+2026-11-11T18:57:45Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-prefill-up 2>/dev/null; cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip && RUN_ID=pf-B-185542 TF_SERVE_CONF=/home/pod/tfp/strixflerp-prefill/conf/B.conf ./first_light.sh down
+rank 0: stopped (1175735)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T18:57:49Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/pair-2026-11-11T1853Z/lane-requests.json pod@10.10.0.50:/home/pod/tfp/strixflerp-prefill/conf/lane-requests.json
+
+(rc 0)
+2026-11-11T18:57:49Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-prefill-r1 --property=KillMode=process bash -c 'cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip/qual && ./lane_rank.sh /home/pod/tfp/strixflerp-prefill/conf/A.conf 1 /home/pod/tfp/strixflerp-prefill/run/lane-C --profile 2'
+Running as unit: strixflerp-prefill-r1.service; invocation ID: 38e941edab1443fc8e8f3729e8419a11
+(rc 0)
+2026-11-11T18:57:53Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-prefill-r0 --property=KillMode=process bash -c 'cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip/qual && ./lane_rank.sh /home/pod/tfp/strixflerp-prefill/conf/A.conf 0 /home/pod/tfp/strixflerp-prefill/run/lane-C --requests /home/pod/tfp/strixflerp-prefill/conf/lane-requests.json --parallel 1 --logits-sha 1 --profile 2'
+Running as unit: strixflerp-prefill-r0.service; invocation ID: affe0a1975c147c6998499f0ce2dffae
+(rc 0)
+2026-11-11T18:58:01Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-prefill-r0 2>/dev/null; true
+
+(rc 0)
+2026-11-11T18:58:02Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-prefill-r1 2>/dev/null; true
+
+(rc 0)
+2026-11-11T18:58:03Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-prefill-up --property=KillMode=process bash -c 'cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip && RUN_ID=pf-A2-185803 TF_SERVE_CONF=/home/pod/tfp/strixflerp-prefill/conf/A.conf ./first_light.sh up'
+Running as unit: strixflerp-prefill-up.service; invocation ID: 4d85ceb67d1c458e97fa2da29bb851fc
+(rc 0)
+2026-11-11T19:00:01Z arm A2 rep 0: wall 7.15 s usage {'prompt_tokens': 8163, 'completion_tokens': 2, 'total_tokens': 8165, 'prompt_tokens_details': {'cached_tokens': 0}, 'completion_tokens_details': {'reasoning_tokens': 0}}
+2026-11-11T19:00:07Z arm A2 rep 1: wall 6.161 s usage {'prompt_tokens': 8163, 'completion_tokens': 2, 'total_tokens': 8165, 'prompt_tokens_details': {'cached_tokens': 0}, 'completion_tokens_details': {'reasoning_tokens': 0}}
+2026-11-11T19:00:07Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-prefill-up 2>/dev/null; cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip && RUN_ID=pf-A2-185803 TF_SERVE_CONF=/home/pod/tfp/strixflerp-prefill/conf/A.conf ./first_light.sh down
+rank 0: stopped (1178962)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T19:00:12Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-prefill-up strixflerp-prefill-r1 2>/dev/null; for u in $(systemctl --user list-units 'tfp-*pf-*' --state=active --no-legend --plain | cut -d' ' -f1); do systemctl --user stop $u; echo stopped $u; done; true
+
+(rc 0)
+2026-11-11T19:00:12Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-prefill-r0 2>/dev/null; for u in $(systemctl --user list-units 'tfp-*pf-*' --state=active --no-legend --plain | cut -d' ' -f1); do systemctl --user stop $u; echo stopped $u; done; true
+
+(rc 0)
+2026-11-11T19:00:12Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 rm -rf /home/pod/tfp/strixflerp-prefill
+
+(rc 0)
+2026-11-11T19:00:13Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 rm -rf /home/pod/tfp/strixflerp-prefill
+
+(rc 0)
+2026-11-11T19:00:13Z restore attempt 1: waiting 75 s for the launcher's keep tick to pass
+2026-11-11T19:01:29Z RUN KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh up
+up: started strixfold-pair-up on A (first_light.sh up, /data/pod/plans/strixfold/tp2-128k.conf with BENCH=0)
+Running as unit: strixfold-pair-up.service; invocation ID: 72b1c930c57c442a9d7d94b39207e9bd
+(rc 0)
+2026-11-11T19:03:22Z serving did not come back before the next keep tick
+2026-11-11T19:03:22Z restore attempt 2: waiting 6 s for the launcher's keep tick to pass
+2026-11-11T19:03:29Z RUN KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh up
+up: started strixfold-pair-up on A (first_light.sh up, /data/pod/plans/strixfold/tp2-128k.conf with BENCH=0)
+Running as unit: strixfold-pair-up.service; invocation ID: 7346ee183755453e97df860b07c7b9f3
+(rc 0)
+2026-11-11T19:05:22Z serving did not come back before the next keep tick
+2026-11-11T19:05:22Z RUN OWNER=agent pod-quad release
+2026-11-11 19:05:22  pod-quad: hold released: 10.10.0.50 10.10.0.54 (owner agent) (pod-model-keeper reloads gufo one at a time; lanes resume when :8082 answers)
+(rc 0)
+2026-11-11T19:05:24Z RUN pod-quad held 10.10.0.50
+
+(rc 1)
+2026-11-11T19:05:24Z RUN pod-quad held 10.10.0.54
+
+(rc 1)
+2026-11-11T19:05:24Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); ls -d /home/pod/tfp/strixflerp-prefill 2>&1 | head -2; systemctl --user list-units 'strixflerp-prefill*' --no-legend --plain | head; pgrep -af 'strixflerp-prefill' | grep -v pgrep | head -3
+ls: cannot access '/home/pod/tfp/strixflerp-prefill': No such file or directory
+(rc 0)
+2026-11-11T19:05:25Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); ls -d /home/pod/tfp/strixflerp-prefill 2>&1 | head -2; systemctl --user list-units 'strixflerp-prefill*' --no-legend --plain | head; pgrep -af 'strixflerp-prefill' | grep -v pgrep | head -3
+ls: cannot access '/home/pod/tfp/strixflerp-prefill': No such file or directory
+(rc 0)

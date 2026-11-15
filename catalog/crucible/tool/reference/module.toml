@@ -1,0 +1,54 @@
+id        = "tool.crucible.reference"
+kind      = "tool"
+summary   = "CPU references: NumPy EXL3 codec and matvec (bit-exact codebook and decoder states), fp64 layer oracle, prefill and vision references, YaRN RoPE table generator"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "ref/README.md",
+  "ref/bf16/__init__.py",
+  "ref/bf16/tokens.py",
+  "ref/check_quality_codec.py",
+  "ref/checkpoint_ranges.py",
+  "ref/exl3_ref.py",
+  "ref/make_fixtures.py",
+  "ref/make_prefill_fixture.py",
+  "ref/oracle.py",
+  "ref/prefill_ref.py",
+  "ref/vision_compare.py",
+  "ref/vision_ref.py",
+  "tools/yarn/__init__.py",
+  "tools/yarn/qwen38-rope-config.json",
+  "tools/yarn/reference.py",
+  "tools/yarn/rope_header.py",
+  "tools/yarn/yarn2-reference.json",
+  "tools/yarn/yarn4-reference.json",
+]
+authors   = ["jaedync"]
+modified  = false
+upstream  = "EXL3 format after ExLlamaV3 d3739fd393337b1ff4d6c2a342b12f0c87a9592f (MIT, Turboderp; catalog/crucible/NOTICE)"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.numerics-contract-crucible/exl3/-"
+api       = "ref/exl3_ref.py, ref/oracle.py, tools/yarn/rope_header.py"
+numeric   = "fp32/fp64 CPU"
+regime    = "offline"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

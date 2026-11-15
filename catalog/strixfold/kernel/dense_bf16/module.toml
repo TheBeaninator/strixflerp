@@ -1,0 +1,58 @@
+id        = "kernel.strixfold.dense_bf16"
+kind      = "kernel"
+summary   = "BF16-weight dense projections for fine-tuned packs (attn.wo_b, shared expert w2): row-invariant GEMV and SwiGLU"
+notes     = "Prompt chunks of these weights go through hipBLAS GemmEx, not this kernel."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/dense.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/dense.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 2
+
+[[provides]]
+interface = "linear.dense/bf16/bf16-f32.row-invariant"
+api       = "tf_ds_dense_gemv"
+numeric   = "w and x bf16 (products exact in fp32), one fma per element in fixed lane order, 32 lane partials summed by xor shuffles 16,8,4,2,1; y fp32 stored or accumulated with one fp32 add; a row gets the same bits whatever shares the window"
+regime    = "decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "act.swiglu/-/bf16.dsv41"
+api       = "tf_ds_dense_swiglu"
+numeric   = "DeepSeek SwiGLU with its clamps (swiglu_bf16)"
+regime    = "decode / verify windows, 1..128 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.dense_bf16.json"

@@ -1,0 +1,103 @@
+id        = "kernel.hipfire.tensor_ops"
+kind      = "kernel"
+summary   = "Pointwise and tensor utilities: add, mul, scale, SiLU / sigmoid / GELU forms, casts and dequantizers to F16 / BF16, deinterleave, repeat-interleave, transpose, strided copies, NPU trunk consumers (53 sources, 57 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/add.hip",
+  "kernels/src/add_inplace.hip",
+  "kernels/src/add_peer_residual_f32.hip",
+  "kernels/src/batched_categorical_sample.hip",
+  "kernels/src/bf16_round_trip.hip",
+  "kernels/src/bias_add.hip",
+  "kernels/src/block_i4_128_quant.hip",
+  "kernels/src/cast_f32_to_f16.hip",
+  "kernels/src/conv1d_decode.hip",
+  "kernels/src/conv1d_gated_decode.hip",
+  "kernels/src/convert_f32_to_bf16.hip",
+  "kernels/src/copy_f32_buffer.hip",
+  "kernels/src/copy_rows_strided_f32.hip",
+  "kernels/src/deepseek4_compressor_cache_f16.hip",
+  "kernels/src/deepseek4_convert_f32_to_f16.hip",
+  "kernels/src/deepseek4_fused_silu_mul_clamp_mq_rotate.hip",
+  "kernels/src/deepseek4_silu_mul_clamp.hip",
+  "kernels/src/deinterleave.hip",
+  "kernels/src/deinterleave_batched.hip",
+  "kernels/src/deinterleave_q_rmsnorm_f32_batched.hip",
+  "kernels/src/dequant_bq1g128_to_f16.hip",
+  "kernels/src/dequant_hfq4g256_to_f16.hip",
+  "kernels/src/dequant_tq2g128_to_f16.hip",
+  "kernels/src/fused_sigmoid_alpha_gate.hip",
+  "kernels/src/fused_silu_mul_givens_rotate.hip",
+  "kernels/src/fused_silu_mul_mq_rotate.hip",
+  "kernels/src/fused_silu_mul_mq_rotate_awq.hip",
+  "kernels/src/fused_silu_mul_mq_rotate_awq_indexed.hip",
+  "kernels/src/gelu_new_mul_f32.hip",
+  "kernels/src/gelu_tanh.hip",
+  "kernels/src/mul.hip",
+  "kernels/src/npu_trunk.hip",
+  "kernels/src/npu_trunk_consumers.hip",
+  "kernels/src/qwen4_bf16_round_trip.hip",
+  "kernels/src/qwen4_decode_head_fuse.hip",
+  "kernels/src/qwen4_silu_mul.hip",
+  "kernels/src/repeat_interleave_qk.hip",
+  "kernels/src/repeat_interleave_qk_batched.hip",
+  "kernels/src/rows_batched_twins.hip",
+  "kernels/src/scale_f32.hip",
+  "kernels/src/scaled_add_inplace.hip",
+  "kernels/src/sigmoid.hip",
+  "kernels/src/sigmoid_mul.hip",
+  "kernels/src/sigmoid_scaled_residual_add_batched.hip",
+  "kernels/src/silu.hip",
+  "kernels/src/silu_mul.hip",
+  "kernels/src/split_mq4v2_z_betaalpha.hip",
+  "kernels/src/sqrt_softplus_f32.hip",
+  "kernels/src/swa_visibility_stage_batched.hip",
+  "kernels/src/tensor_ops.hip",
+  "kernels/src/transpose.hip",
+  "kernels/src/zero_f32.hip",
+  "kernels/src/zero_inactive_rows_f32.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 57
+
+[[provides]]
+interface = "tensor.ops/-/f32.hipfire"
+api       = "add_inplace, add_peer_residual, add, arena, batched_categorical_sample, bf16_round_trip, bias_add, block_i4_128_quant (+49 more units, see units.json)"
+numeric   = "fp32 pointwise; casts round to nearest even"
+regime    = "any rows"
+
+[[provides]]
+interface = "residual.add/-/f32.hipfire"
+api       = "add_inplace_f32 (a[i] += b[i]), add_f32 (c = a + b), broadcast_add_rows_f32"
+numeric   = "one IEEE fp32 add per element"
+regime    = "element-wise"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+module    = "kernel.hipfire.gemm_mq"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.tensor_ops.json"

@@ -1,0 +1,56 @@
+id        = "format.gufo.gguf_kquant"
+kind      = "format"
+summary   = "GGUF reader and ggml quant layouts: K-quants (Q2_K..Q8_K), Q8_0, IQ2 grids; host dequantizers and a host quantized GEMM used as oracles"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/core/gguf_identity.cpp",
+  "src/core/gguf_identity.hpp",
+  "src/core/gguf_reader.cpp",
+  "src/core/quant/ggml_dequant.cpp",
+  "src/core/quant/ggml_gemm.cpp",
+  "src/core/quant/ggml_gemm.hpp",
+  "src/core/quant/ggml_iq_grids.inc",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+upstream  = "block layouts and IQ grids after llama.cpp / ggml (MIT, The ggml authors)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.loader/gguf/-"
+api       = "gufo::core::GgufReader, GgmlType"
+numeric   = "exact (mmap of the GGUF file; weights stay in their GGUF encoding on the device)"
+regime    = "load time"
+
+[[provides]]
+interface = "format.device-view/gguf-kquant/-"
+api       = "block_q8_0 (QK 32), block_q4_K / q5_K / q6_K / q8_K (QK 256), IQ2_XXS/XS/S grids: src/core/quant/ggml_dequant.hpp"
+numeric   = "raw GGUF blocks (layouts declared in src/core/quant/ggml_dequant.hpp, which lives in kernel.gufo.core_headers because kernels include it); ggml_dequant.cpp is the CPU oracle the kernels are compared with"
+regime    = "n/a"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "runtime.gufo.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

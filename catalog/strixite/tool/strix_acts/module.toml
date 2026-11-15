@@ -1,0 +1,50 @@
+id      = "tool.strixite.strix_acts"
+kind    = "tool"
+summary = "Mean activations of prompt sets at layer probe points, for steering directions"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/strix_acts.cpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/strix_acts.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.strix-acts/-/-"
+api       = "main (strix_acts)"
+numeric   = "n/a"
+regime    = "needs the GPU"
+
+[[requires]]
+module = "executor.strixite.qwen4exp"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "runtime.strixite.bf16"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

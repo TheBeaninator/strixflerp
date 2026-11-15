@@ -1,0 +1,59 @@
+id        = "kernel.hipfire.gemm_ggml"
+kind      = "kernel"
+summary   = "Prefill GEMM on GGUF Q8_0 (WMMA) and the TQ2 / BQ1 low-bit formats (15 sources, 15 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/gemm_bq1g128_prefill.hip",
+  "kernels/src/gemm_bq1g128_wmma.hip",
+  "kernels/src/gemm_gate_up_q8_0_wmma.hip",
+  "kernels/src/gemm_q8_0_batched.hip",
+  "kernels/src/gemm_q8_0_batched_wide_exact.hip",
+  "kernels/src/gemm_q8_0_residual_wmma.hip",
+  "kernels/src/gemm_q8_0_wmma.hip",
+  "kernels/src/gemm_q8_0_wmma_4w.hip",
+  "kernels/src/gemm_q8_0_wmma_gfx1151_xlds.hip",
+  "kernels/src/gemm_q8_0_wmma_x64.hip",
+  "kernels/src/gemm_qkv_q8_0_wmma.hip",
+  "kernels/src/gemm_qkvza_q8_0_wmma.hip",
+  "kernels/src/gemm_qkvza_tq2g128.hip",
+  "kernels/src/gemm_tq2g128_prefill.hip",
+  "kernels/src/gemm_tq2g128_wmma.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 15
+
+[[provides]]
+interface = "linear.prefill/gguf-q8_0/f32.hipfire"
+api       = "gemm_bq1g128_prefill, gemm_bq1g128_wmma, gemm_gate_up_q8_0_wmma, gemm_q8_0_batched, gemm_q8_0_batched_wide_exact (+10 more units, see units.json)"
+numeric   = "Q8_0 blocks on WMMA, fp32 accumulate"
+regime    = "prefill batches, compute-bound (WMMA, MMQ)"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+interface = "format.device-view-hipfire/gguf-kquant/-"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemm_ggml.json"

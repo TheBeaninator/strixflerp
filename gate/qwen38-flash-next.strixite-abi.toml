@@ -1,0 +1,56 @@
+# Executor ABI conformance for the strixite adapter, on control-node. Host facts, the server's flags and the GPU
+# rules are the phase 1 recipe gate's.
+#
+# The criteria were changed once, on 2026-11-11, after three runs that could not pass (kept under
+# gate/results/qwen38-flash-next.strixite-abi/before-shape-matching/). The first criteria asked for two things the
+# origin engine does not do itself:
+#   - that paths with different rows a forward (one token a forward, four drafts a verify, a prompt cut elsewhere)
+#     produce the same tokens. strixite's own server does not: with MTP on and off it parts from itself at token 43
+#     of raw-completion and token 95 of short-chat-thinking (gate/results/qwen38-flash-next.strixite/identity.json,
+#     reference-mtp-on against reference-mtp-off), and its session says where results differ by rounding
+#     (runtime/qwen4exp.hpp 800-805: the row counts 1, 6 and 12);
+#   - that the first tokens of the chat request's capture be sampled tokens. At max_tokens 48 they are the thinking
+#     budget's stop text, fed by the engine (before-shape-matching/run3-native-captures.json: step {255, 0, 25}).
+# The criteria now compare runs that make the same forwards (gate/executor_abi.py states them) and are otherwise
+# stricter: every generated token of every request, the step records too, MTP on and off, 256 tokens a request
+# instead of 48. Do not edit them to turn a failure into a pass.
+inherit = "gate/qwen38-flash-next.strixite.toml"
+
+[host]
+port    = 5393                         # not the phase 1 gate's 5391, not the pod's 5300
+scratch = "build/gate-scratch-abi"
+
+[abi]
+conformance   = "flerp-executor-conformance.strixite"
+server        = "strixflerp-qwen38-flash-next.strixite-abi"
+mtp           = ["on", "off"]          # a native load and an executor load for each
+# The native server samples the plain argmax: its two serving policies that act on a sampled token are off (the end
+# of turn banned inside a think block, a think block closed ahead of a tool call). The thinking budget stays: what
+# it feeds is in the capture and the driver feeds the same ids.
+native_args   = ["--think-end-guard", "off", "--think-close-on-call", "off"]
+snap_new      = 8                      # tokens decoded after a snapshot is saved, restored, imported
+observe_new   = 48                     # the cross-shape observation: tokens of the one-row path and of the
+observe_draft = 4                      # fixed-depth draft path (recorded, never a criterion)
+yield_wait_s  = 1800                   # how long a load waits for the pod's own GPU jobs before the stage gives up
+timeout_s     = 900
+
+# Requests of the phase 1 gate, by name, in an order where none extends the one before it (each is a full prefill).
+[[abi.request]]
+name       = "chat-48"                 # the budget's stop text is fed before the first sampled token
+prompt     = "short-chat-thinking"
+max_tokens = 48
+snapshot   = true
+[[abi.request]]
+name       = "raw-256"
+prompt     = "raw-completion"
+max_tokens = 256
+observe_cross_shape = true
+[[abi.request]]
+name       = "chat-256"
+prompt     = "short-chat-thinking"
+max_tokens = 256
+[[abi.request]]
+name       = "long-chat-256"           # a prompt of a few thousand tokens
+prompt     = "long-chat"
+max_tokens = 256
+snapshot   = true

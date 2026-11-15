@@ -1,0 +1,46 @@
+PAIR-STALL c18e4b0bd2 analysis of /data/projects/strixflerp/gate/results/pair-stall/2026-11-11T2147Z
+a frame is stalled over 4000 ms and normal up to 3000 ms; rates are per second of frame time
+
+== arm S: 119 fill_chunk frames, 9 stalled, 106 normal; sampler 195 samples on rank 1's node (longest gap 2.01 s, mlocked [True, True])
+                                                         rank 1 node               rank 0 node
+                                                 normal      stalled       normal      stalled
+frames                                              106            9          106            9
+frame seconds                                     199.3         58.5        199.3         58.5
+mean frame ms                                     1,881        6,502        1,881        6,502
+library mount (mgmt NFS) read MB/s                0.024        0.000        0.000        0.000
+library mount READ busy                           0.000        0.000        0.000        0.000
+library mount ms rtt a READ                       0.843            -            -            -
+library mount ms execute a READ                   0.865            -            -            -
+Engram mount (rail NFS) read MB/s                  72.7         18.4        7.805        0.398
+Engram mount MB a frame                           136.8        119.5         14.7        2.588
+Engram mount READ busy                             28.3         59.0        5.436        2.326
+Engram mount ms rtt a READ                        1.710         14.3        3.264         29.4
+Engram mount ms execute a READ                    1.721         14.3        3.278         29.4
+root image (loop0) read MB/s                      0.014        0.077        0.003        0.022
+root image read busy                              0.000        0.000        0.000        0.000
+rank major faults /s                              0.000        0.000        0.000        0.000
+node major faults /s                              0.278        0.439        0.083        0.175
+file refaults pages/s                           3,818.2      3,302.6         37.7         63.2
+PSI memory some                                   0.000        0.000        0.000        0.000
+PSI memory full                                   0.000        0.000        0.000        0.000
+PSI io some                                       0.310        0.757        0.052        0.030
+PSI io full                                       0.298        0.753        0.050        0.029
+PSI cpu some                                      0.007        0.001        0.011        0.003
+kswapd scan pages/s                             5,600.9     10,084.6      1,162.6        0.000
+direct scan pages/s                               0.000        0.000        0.000        0.000
+compaction stalls /s                              0.043        0.000        0.004        0.000
+management NIC MB/s                               0.027        0.003        0.016        0.009
+  of it NFS reads MB/s                            0.024        0.000        0.000        0.000
+rail NIC MB/s                                   1,887.1        555.5      1,818.9        540.4
+  of it NFS reads MB/s                             72.7         18.4        7.805        0.398
+rank read_bytes MB/s                               72.8         18.4        7.805        0.402
+rank rchar MB/s                                   6.403        1.998        6.440        2.109
+MemAvailable GiB                                   13.4         13.4         14.8         14.8
+rank RssFile MB                                   174.8        175.1        181.9        182.3
+load average                                       32.5         46.8        5.804        4.947
+blocked processes                                  15.8         28.9        2.443        0.000
+L1: RULED OUT: stalled frames: library mount busy 0.00 at 0.0 MB/s, root image busy 0.00 at 0.1 MB/s, rank major faults 0.0/s, file refaults 3303/s; normal frames' busy 0.00
+L2: NOT DECIDED: stalled frames: Engram mount busy 58.96 (normal 28.30), 119.5 MB a frame, 14.3 ms a READ (rtt 14.3); normal: 136.8 MB a frame, 1.7 ms a READ (rtt 1.7)
+L3: RULED OUT: stalled frames: PSI memory some 0.000 full 0.000, PSI io some 0.757, direct scan 0 pages/s, kswapd scan 10085 pages/s, compaction stalls 0.00/s, NFS/root read busy 58.96
+L4: RULED OUT: frames stalled before any eviction; last line: 8 states, 51 of 4096 MiB, evicted 0
+L5: RULED OUT: all frames: management NIC 0.0 MB/s (0.0 of it NFS reads), rail NIC 1555.5 MB/s (59.1 NFS)

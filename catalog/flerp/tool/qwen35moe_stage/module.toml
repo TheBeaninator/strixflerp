@@ -1,0 +1,39 @@
+id        = "tool.flerp.qwen35moe_stage"
+kind      = "tool"
+summary   = "The process of a stage 1..N-1 of executor.flerp.qwen35moe_abi: loads its block range and executes rank 0's mirrored calls until CLOSE (exit 0 on CLOSE or SIGTERM); --loopback runs every stage in one process through the ABI; and the top of the CMake build graph of the stage recipe"
+notes     = "main.cpp is a thin caller of flerp::qwen35moe_abi::StageMain (stages.hpp). CMakeLists.txt is tool.flerp.qwen35moe_generate's build file statement for statement up to its program, then builds the stage recipe's programs: the front end (serve.flerp.http with runtime.flerp.text_gufo, runtime.flerp.sampler_greedy, runtime.flerp.decode_loop), this tool, the conformance driver, and the stage P2 generator as the reference."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/qwen35moe_stage/CMakeLists.txt", "flerp/qwen35moe_stage/main.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/qwen35moe_stage/main.cpp"]
+includes  = ["src", "../../../../include"]
+
+[[provides]]
+interface = "tool.stage-process/flerp-qwen35moe/-"
+api       = "flerp-qwen35moe-stage KEY=VALUE ... (rank=1..W-1, peers=HOST[,HOST...]:PORT); flerp-qwen35moe-stage --loopback [--max-tokens N] --ids-file F... KEY=VALUE ..."
+numeric   = "the executor's own (executor.flerp.qwen35moe_abi)"
+regime    = "one stage a process; one load, one block range"
+
+[[requires]]
+interface = "executor.abi/flerp-v1/-"
+
+[[requires]]
+module    = "tool.flerp.gufo_qwen_generate"
+
+[gate]
+parity    = "flerp:gate/moe_serve_stage.py"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by CMake (recipes/qwen36-35b-a3b.flerp-serve-stage.toml); its gate is gate/moe_serve_stage.py"

@@ -1,0 +1,97 @@
+id        = "kernel.gufo.ds4_mmq"
+kind      = "kernel"
+summary   = "Quantized matrix kernels of the DS4 import, derived from llama.cpp ggml-cuda with the DS4-GB10 DSpark changes, built with HIP under ds4_ggml_hip_* symbols"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/VENDOR.md",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/common.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_ggml_stubs.h",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_ggml_stubs.hip.cpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq.h",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq.hip.cpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq_d2r.hip.cpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq_d2r.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ggml-common.h",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ggml-hip.h",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ggml-impl.h",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ggml.h",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mma.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmid.hip.cpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmid.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmq.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmvq.hip.cpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmvq.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/quantize.hip.cpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/quantize.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/unary.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/vecdotq.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/vendors/hip.h",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+upstream  = "llama.cpp 5c0e9468378eba6bf3cc1989ff5d62fbbe4d9e3a ggml/src/ggml-cuda (MIT) plus xangel82/DS4-GB10-GX10-DSpark-CUDA 910501e; see src/.../mmq/VENDOR.md"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_ggml_stubs.hip.cpp",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq.hip.cpp",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq_d2r.hip.cpp",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/mmq/mmid.hip.cpp",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/mmq/mmvq.hip.cpp",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/mmq/quantize.hip.cpp",
+]
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/mmq",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = [
+  "-x",
+  "hip",
+  "-std=gnu++17",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-Wno-unused-value",
+  "-Wno-unused-command-line-argument",
+  "-fPIC",
+  "-UNDEBUG",
+  "-c",
+  "-DGGML_USE_HIP",
+  "-DGGML_HIP_NO_VMM",
+  "-DDS4_ROCM_WMMA_MMQ_Y=64",
+]
+variants  = 6
+
+[[provides]]
+interface = "linear.prefill/gguf-kquant/q8_1-f32.mmq-ds4"
+api       = "ds4_mmq.h raw-pointer C ABI (ds4_ggml_hip_*)"
+numeric   = "ggml mmq numerics, WMMA y tile 64; -ffast-math"
+regime    = "prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "linear.decode/gguf-kquant/f32.mmvq-ds4"
+api       = "ds4_mmq.h mul_mat_vec_q entries"
+numeric   = "ggml mmvq"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.ds4_mmq.json"

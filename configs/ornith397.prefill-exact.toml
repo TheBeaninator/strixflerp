@@ -1,0 +1,16 @@
+# Variant configuration, area prefill (not the champion): arm X of gate/prefill-ornith-dense.toml, the most faithful
+# prompt pass measured: grouped experts and dense projections with exact weight codes and hi/lo F16 activations
+# (35B: KL vs FP32 0.0027, top-1 99.2 %, greedy equal 6/8; 1,026 tok/s at 2,048 tokens; card de279ffbf6). Bulk chunks
+# off, as for prefill-best.
+name        = "ornith397.prefill-exact"
+description = "Ornith-1.5 397B prompt passes: grouped experts + dense projections on kernel.flerp.moe_kgrouped, exact codes + hi/lo F16 (FLERP_MOE_GROUPED=2, FLERP_DENSE_GROUPED=2)"
+model       = "ornith-1.5-397b"
+areas       = ["prefill"]
+includes    = []
+kernels     = ["moe_kgrouped 412bb79"]
+
+[stage]
+
+[env]
+FLERP_MOE_GROUPED   = "2"
+FLERP_DENSE_GROUPED = "2"

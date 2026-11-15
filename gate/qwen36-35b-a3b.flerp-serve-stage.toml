@@ -1,0 +1,165 @@
+# Host facts, run settings and pass criteria of gate/moe_serve_stage.py: stage P3 of docs/PHASE5-FOURNODE-DESIGN.md
+# (section 3.9), Qwen3.6-35B-A3B behind the executor ABI (executor.flerp.qwen35moe_abi) at world 1 and as two stages,
+# driven by the conformance driver and served by the common front end, on control-node's one GPU. The criteria below
+# were written and committed before the first GPU run of these binaries; they are not edited to turn a failure into
+# a pass.
+
+recipe = "qwen36-35b-a3b.flerp-serve-stage"
+
+[host]
+origin              = "flerp"
+scratch             = "build/gate-scratch-serve-stage"   # under build/: pod-sync deletes anything else it does not know
+build_jobs          = 2
+oom_score_adj       = 1000
+openssl_headers     = "/opt/node/include/node/openssl"   # as gate/qwen36-35b-a3b.flerp-moe.toml
+openssl_crypto      = "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+gpu_busy_pattern    = "^(strix_|strixflerp-|flerp-gufo-|flerp-qwen35moe-|flerp-executor-|steer_check|omf_seg|gufo|ds4|sglang|llama-server|tfp)"
+gpu_free_gtt_bytes  = 1073741824
+lease_resource      = "control-gpu"
+lease_owner         = "agent"
+lease_ttl_s         = 1500
+gpu_wait_s          = 3600
+# The I/O rule of 2026-11-11 (as the P2 gate): every load is the placed loader's single O_DIRECT reader with a pause
+# of pause_ms between tensors; a TCP world's ranks load one after another (rank 1 starts once rank 0 has loaded).
+cpus                = "0-3"
+polite              = ["ionice", "-c3", "nice", "-n", "19"]
+pause_ms            = 100
+load_wait_above     = 10.0
+load_wait_s         = 1800
+# Memory before a run: it starts only if min(GTT total - GTT used, MemAvailable) is at least the bytes its processes
+# load (plan bytes) plus arena_gib a stage plus margin_gib.
+arena_gib           = 2
+margin_gib          = 24
+
+[model]
+gguf                = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"
+model_id            = "qwen36-35b-a3b"
+# The four gate prompts of stages P1 and P2 (raw text, no template; "records" is the long one): their texts are
+# [[prompt]] of prompts_config (the long filler from its [run] long_prompt_sentences), their ids prompt_ids, and P1's
+# greedy result p1_results ("traced": 128 ids a prompt, through the placed loader, 2026-11-11T22:40Z).
+prompts_config      = "gate/qwen36-35b-a3b.flerp-moe.toml"
+prompt_ids          = "gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json"
+p1_results          = "gate/results/qwen36-35b-a3b.flerp-moe-placed/equal.json"
+# The shutdown cases run on the small dense model (1.26 GB a load) through the same executor: they test the
+# processes, not the 35B's numbers.
+dense_gguf          = "/data/models/decider-2b/decider-2b-v12-Q4_K_M.gguf"
+
+[run]
+context             = 4096                   # as P1 and P2: the arena's prompt batch, so the chunk boundaries, are theirs
+max_tokens          = 128
+epoch               = 9
+http_port           = 39710                  # the front end
+relay_port          = 39760                  # TCP: rank r listens on relay_port + r (127.0.0.1)
+startup_timeout_s   = 1200
+request_timeout_s   = 900
+shutdown_timeout_s  = 120
+run_timeout_s       = 1800
+# The front end's runs: world 1; world 2 in one process (peers = loopback, even cuts); world 2 over TCP on
+# 127.0.0.1 (the front end is rank 0 and loads blocks [0, c1); flerp-qwen35moe-stage is rank 1).
+serve_runs          = ["world1", "loopback2", "tcp2"]
+conformance_runs    = ["world1", "loopback2"]
+placement           = "even"
+# The server's sampling defaults: temperature 0 (the greedy sampler refuses any other).
+generation_config   = { temperature = 0 }
+
+# Chat requests (POST /v1/chat/completions, max_tokens [run] max_tokens, no temperature field: the server's default):
+# each gate prompt's text as one user message, and a short multi-turn conversation.
+[[chat]]
+name     = "bridge-chat"
+prompt   = "bridge"
+[[chat]]
+name     = "code-chat"
+prompt   = "code"
+[[chat]]
+name     = "rivers-chat"
+prompt   = "rivers"
+[[chat]]
+name     = "records-chat"
+prompt   = "records"
+[[chat]]
+name     = "multi-turn"
+messages = [
+  { role = "system", content = "You are a concise assistant." },
+  { role = "user", content = "Name one river in Europe." },
+  { role = "assistant", content = "The Danube." },
+  { role = "user", content = "Which sea does it flow into, and through how many countries does it pass?" },
+]
+chat_template_kwargs = { enable_thinking = false }
+
+# Requests the front end must refuse with HTTP 400 and its error shape, on a server that is loaded: what the front end
+# does not serve, and sampling this recipe cannot honour.
+[[refuse]]
+name = "tools"
+path = "/v1/chat/completions"
+body = { messages = [{ role = "user", content = "hi" }], tools = [{ type = "function", function = { name = "f", parameters = { type = "object" } } }] }
+[[refuse]]
+name = "json-schema"
+path = "/v1/chat/completions"
+body = { messages = [{ role = "user", content = "hi" }], response_format = { type = "json_schema", json_schema = { name = "x", schema = { type = "object" } } } }
+[[refuse]]
+name = "json-schema-field"
+path = "/v1/completions"
+body = { prompt = "hi", json_schema = { type = "object" } }
+[[refuse]]
+name = "image"
+path = "/v1/chat/completions"
+body = { messages = [{ role = "user", content = [{ type = "text", text = "what is this" }, { type = "image_url", image_url = { url = "data:image/png;base64,AAAA" } }] }] }
+[[refuse]]
+name = "n2"
+path = "/v1/chat/completions"
+body = { messages = [{ role = "user", content = "hi" }], n = 2 }
+[[refuse]]
+name = "temperature"
+path = "/v1/chat/completions"
+body = { messages = [{ role = "user", content = "hi" }], temperature = 0.7 }
+[[refuse]]
+name = "seeded-sample"
+path = "/v1/completions"
+body = { prompt = "hi", temperature = 1.0, seed = 7, top_p = 0.9 }
+[[refuse]]
+name = "logit-bias"
+path = "/v1/completions"
+body = { prompt = "hi", logit_bias = { "11" = 5 } }
+
+[criteria]
+# --- build ---
+# 1.  `./flerp check` reports 0 errors; `flerp assemble` writes the tree with no hand edit and build.sh builds the four
+#     programs of the recipe (the front end, flerp-qwen35moe-stage, flerp-executor-conformance, flerp-qwen35moe-generate).
+# --- conformance (executor.flerp.conformance over the adapter; [run] conformance_runs; the 35B model) ---
+# 2.  For each run (world 1; world 2 with peers = loopback, even cuts) and each of the four gate prompts as a case with
+#     paths plain and loop (no drafts: the executor has no draft head), 128 new tokens, --max-tokens 128, the end ids
+#     of the model's text, no snapshot path: the driver exits 0 with every check of every case true; `plain` (the
+#     prompt in forwards of caps.max_forward, then one id a forward) equals P1's 128 ids; the loop's ids (the tokens
+#     that entered the sequence) are a prefix of P1's ids of length at least 127, its completion tokens are 128 and
+#     its finish is "length". Shape-matched: these are P1's forwards (prompt chunks of the arena's batch, then one
+#     decode step a token), so equal ids are required, not observed.
+# 3.  caps as the adapter's header states them: abi 2, positions = [run] context, deliveries FULL|TOKENS (5), flags 0,
+#     seqs 1, max_draft 0, snapshots 0, candidates 0; the load is the single direct reader and its allocated bytes are
+#     the world-1 plan's device bytes (gate/gguf_census.py).
+# --- the front end (serve.flerp.http over the adapter; [run] serve_runs; the 35B model) ---
+# 4.  Each run starts (GET /health 200 within startup_timeout_s); a TCP run's ranks load one after another; when
+#     [run] serve_runs names tcp2 and the memory check before it fails, the item is reported as not run, not passed.
+# 5.  /health while idle: status "ok", slots 1, busy false, busy_slots 0, queued 0, context_length = [run] context,
+#     model = [model] model_id. While the records completion runs, at least one /health answer has busy true and
+#     busy_slots 1.
+# 6.  POST /v1/completions with each gate prompt's text, max_tokens 128, "flerp_trace": true and no temperature
+#     field: HTTP 200; the prompt's token ids equal P1's prompt ids; the generated token ids equal P1's 128 ids;
+#     finish_reason "length".
+# 7.  POST /v1/chat/completions with each [[chat]] request (max_tokens 128, "flerp_trace": true): HTTP 200; the
+#     generated token ids equal the reference's on the same prompt ids. The reference is stage P2's generator built in
+#     this tree (flerp-qwen35moe-generate --staged loopback --configs 1:even:on, the same context and max_tokens; it
+#     stops before a stop token), run once on the prompt ids the world-1 server rendered. Every run's prompt ids for a
+#     request equal the world-1 run's.
+# 8.  Each [[refuse]] request: HTTP 400 and a body {"error": {"message": a non-empty string, "type":
+#     "invalid_request_error", "param", "code"}} (the front end's error shape).
+# 9.  Clean shutdown: SIGTERM to the server's process (and, for the TCP run, to the stage process at the same moment):
+#     every process exits by itself within shutdown_timeout_s with status 0 (no signal, no "Segmentation fault" in its
+#     log); the front end's log has "shutdown: the executor is closed".
+# --- shutdown cases ([model] dense_gguf; TCP world 2: the front end as rank 0, flerp-qwen35moe-stage as rank 1) ---
+# 10. (a) one completion served, then SIGTERM to rank 0 only: both exit 0 within shutdown_timeout_s, rank 1 after
+#     printing "closed" (rank 0's CLOSE). (b) SIGTERM to rank 1 only while idle: rank 1 exits 0 after printing
+#     "terminated"; the next completion request to rank 0 answers HTTP 500 with code "executor_failed", /health then
+#     answers 503 with status "failed"; then SIGTERM to rank 0: it exits 0. (c) one completion served, then SIGTERM to
+#     both at once: both exit 0. In each, no process ends by a signal or prints "Segmentation fault".
+# Recorded, not criteria: decode tokens per second of each run (the front end's timings), load seconds and GB read,
+# memory before each run, the /health bodies, the rendered chat prompt sizes.

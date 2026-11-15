@@ -1,0 +1,28 @@
+# SHAPE-TRANSFERS R6 (shortlist #4): speculation in the qwen35moe executor. First experiment. Committed BEFORE any GPU run.
+# Part 1, no GPU (gate/xfer_r6_replay.py): replay the recorded greedy outputs of the 35B gates
+# (gate/results/qwen36-35b-a3b.flerp-moe-p4/q35-*-r0.jsonl `staged` events: prompt ids files + 128 generated ids,
+# 4 prompts: bridge, code, rivers, records) through drafters and count accepted draft tokens a verify step.
+# Part 2, one GPU (control-node, tools/gpu-queue.sh, one weights load): time the executor's forward at 1/2/4/8 rows.
+
+[replay]
+source       = "gate/results/qwen36-35b-a3b.flerp-moe-p4/q35-0-r0.jsonl (config 2:even:on; 4/4 equal to P1 world 1)"
+drafters     = ["prompt-lookup n-gram: match the last n tokens (n = 4..1, longest first; also min n 2) against the earlier context (prompt + generated), most recent match, propose up to k following tokens", "mtp: Qwen3.6 MTP head (mtp_layers 1); its drafts are NOT in the recorded ids, so it cannot be counted offline - reported as not measured unless a recorded MTP draft trace exists"]
+k            = [1, 2, 3, 4, 7]          # draft length; verify rows = k + 1
+accept_rule  = "greedy: a draft token is accepted while it equals the recorded greedy token; each verify step yields accepted + 1 tokens"
+report       = "per prompt and pooled: mean accepted per verify step, tokens per verify step, fraction of steps with a draft, rows per verify"
+
+[forward]
+model        = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf (world 1, whole model, one load)"
+tool         = "build/xfer-r6/xfer-verify-bench (gate/xfer_verify_bench.cpp linked against the qwen35moe_generate build of build/flerp-p5's tree; source of the executor unchanged)"
+paths        = ["decode step ForwardToken (1 row, eager and graph)", "verification ForwardVerificationChunk at 1, 2, 4, 8 rows (the executor's speculative verify path, decode-equivalent arithmetic)", "prompt chunk ForwardPromptBatch at 1, 2, 4, 8 rows (for reference)"]
+context      = "after a prefill of the records prompt (1,808 ids): positions 1,808+"
+repeats      = "30 timed calls a row count after 5 warm, median; load average <= 6 at start and end else invalid"
+ornith_scale = "Ornith four-node: measured P4 decode 1.08 ms a block (stage 0/1), 60 blocks; verify cost ratio from the 35B applied per block; relay overhead per step (P4 rail 1.9-2.5 ms a token, 4 hops) is added unchanged a verify step"
+
+[speedup]
+formula      = "expected speedup = tokens_per_verify * t(1-row decode) / t(k+1-row verify), best k"
+
+[continue]
+accepted     = "pooled mean accepted >= 1.5 a verify step (doc SHAPE-TRANSFERS section 4 item 4)"
+cost         = "a 4-row verify forward <= 1.6 x a 1-row decode forward"
+verdict      = "continue only if both hold; otherwise report which fails"

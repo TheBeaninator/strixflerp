@@ -1,0 +1,44 @@
+id        = "kernel.gufo.ds4_hc"
+kind      = "kernel"
+summary   = "DeepSeek V4 Flash hyper-connections (called hierarchical composition in the source): split / weighted sum / expand over the 4 x 4096 row, fused pre-block chain, output and pointwise kernels"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_hc.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_hc_output_launch.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_output.hip.hpp",
+]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/detail",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "hc.mix/gguf-f16/f32.ds4"
+api       = "ds4_gpu_hc_* launchers (resident_api.h)"
+numeric   = "fp32 row of 4 x 4096; fused pre-block (norm, mix projection, split, weighted sum) for the supported shape, else the separate chain"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound; prefill batches (64..1024 tokens), compute-bound"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.gufo.ds4_backend"
+reason    = "header fragment of one translation unit; compiles only inside kernel.gufo.ds4_backend"

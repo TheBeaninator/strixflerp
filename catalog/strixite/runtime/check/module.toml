@@ -1,0 +1,32 @@
+id      = "runtime.strixite.check"
+kind    = "runtime"
+summary = "STRIX_CHECK precondition checks and the strix::Error types (header only, no dependencies)"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["common/check.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.check/-/-"
+api       = "STRIX_CHECK, strix::Error, strix::GpuFatalError"
+numeric   = "n/a"
+regime    = "host"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

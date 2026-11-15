@@ -1,0 +1,356 @@
+EVIDENCE-BEGIN ltsp-a 2026-11-11T02:50:29Z
+
+==== /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/rank1.log
+info: rank cache: 95.1 GiB of expert entries read whole in 60.5 s
+info: collectives: tcp_host over 1 data link(s) from port 29636, stripe >= 0 MiB, RTO floor 8000 us, progress deadline 15000 ms, GPU waits fail after 10 s (logged past 2 s), dma staging, gathers >= 8 MiB pipelined in 4 MiB chunks
+info: collectives: tcp_proxy with 8 slots of 4352 KiB (coherent slab 68 MiB), proxy thread on CPU 6; larger gathers through tcp_host
+info: dsv41: w-tri's HIP kernels in place of Triton: hip (TF_DS_AUX)
+{"rank": 1, "loaded_s": 80.3, "pool": 131072, "drafts": true, "arena_used": 3961133136, "arena_reserved": 4081057792, "replay_floor": false, "side": false, "engram_aio": false}
+info: lanes: step 0 rank 1 prompt pass: 38 tokens, slot 0, extent at 0; collectives (stream idle): staged 2, cable1 2, cable2 0, host 11
+info: lanes: step 88 rank 1 prompt pass: 38 tokens, slot 0, extent at 0; collectives (stream idle): staged 4127, cable1 4127, cable2 0, host 11
+info: lanes: step 176 rank 1 prompt pass: 3176 tokens, slot 0, extent at 0; collectives (stream idle): staged 8252, cable1 8252, cable2 0, host 11
+warning: lanes: step 177 rank 1 spent 1906 ms on its fill_chunk frame
+warning: lanes: step 178 rank 1 spent 937 ms on its fill_chunk frame
+info: lanes: step 235 rank 1 prompt pass: 3176 tokens, slot 0, extent at 0; collectives (stream idle): staged 10929, cable1 10929, cable2 0, host 739
+warning: lanes: step 236 rank 1 spent 1477 ms on its fill_chunk frame
+warning: lanes: step 237 rank 1 spent 941 ms on its fill_chunk frame
+info: lanes: step 294 rank 1 prompt pass: 28 tokens, slot 0, extent at 0; collectives (stream idle): staged 13606, cable1 13606, cable2 0, host 1467
+info: lanes: step 386 rank 1 prompt pass: 28 tokens, slot 0, extent at 0; collectives (stream idle): staged 17916, cable1 17916, cable2 0, host 1467
+info: lanes: step 478 rank 1 prompt pass: 38 tokens, slot 0, extent at 0; collectives (stream idle): staged 22226, cable1 22226, cable2 0, host 1467
+
+==== /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/lock.log
+
+==== systemctl --user status (this run)
+● tfp-rank1-erpserve20261111T024836Z.service - /home/pod/tfp/strixflerp-gate/deploy/tools/dsv41-hip/pidexec.sh /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/rank1.pid taskset -c 0-5,8-21,24-31 env -i HOME=/home/pod USER=pod PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 TF_GPU_STRICT=0 TF_HIP_DEVICE=0 TENSORFOLD_HIP_MEMORY_LIMIT_GB=110 TF_DS_MODALITIES=text TF_DS_GRAPHS=1 TF_DS_ARENA_GIB=0 TF_COLL_STRIPE_MIB=0 TF_COLL_RTO_MIN_US=8000 TF_COLL_PROGRESS_MS=15000 TF_COLL_STAGING=dma TF_COLL_KIND=proxy TF_DS_AUX=hip TF_DS_REPLAY_FLOOR=0 TF_COLL_PROXY_CPU=6 TF_COLL_SLOT_KIB=4352 TF_COLL_PROXY_STRIPE_KIB=0 TF_COLL_PROXY_CPU2=7 TF_COLL_GPU_WAIT_S=10 TF_COLL_GPU_WARN_S=2 TF_DS_ROUND_MS=36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 TF_DS_DRAFT_MS=0 TF_DS_PREFILL_SPLIT=256 TF_DS_LOGITS_SHA=1 TF_DS_DEPLOY=f64b5ff2e28b1bac7ccb2c1d362908dfbb0dc362 TF_DS_BUNDLE=825407ed0d69d74e65eb72861d36ecbd6effe35245392f6adb817cad530b22ee TF_DS_CONF=4f1bf9504df97483e8ace75c79a9d3dbd348cf9bc88b3618478e8669c0c343cf /usr/bin/env LD_LIBRARY_PATH=/data/models/tools/therock-10.2/lib /home/pod/tfp/strixflerp-gate/deploy/native-hip/bin/tf-dsv41-lanes /home/pod/models/tf-port/inputs-tp2-c178a012/model /home/pod/models/tf-port/inputs-tp2-c178a012/rank1/rank-cache 1 2 10.20.0.50 29620 /home/pod/tfp/ds-kit-128k --pool 131072 --streams 1 --round-rows 16 --drafts 1 --engram /home/pod/models/tf-port/ds1017-1bae0e10 --token-map /home/pod/models/tf-port/inputs-tp2-c178a012/dsv41_token_map.json --modalities text --hip-kit /home/pod/tfp/strixflerp-gate/deploy/native-hip/share/tensorfold/hip/gfx1151/dsv41 --arena-gib 0 --graphs 1 --side 0 --aio 0 --prefetch 0 --round-ms 36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 --draft-ms 0 --logits-sha 1
+     Loaded: loaded (/run/user/1000/systemd/transient/tfp-rank1-erpserve20261111T024836Z.service; transient)
+  Transient: yes
+     Active: active (running) since Wed 2026-11-11 02:48:38 UTC; 1min 50s ago
+   Main PID: 531866 (tf-dsv41-lanes)
+      Tasks: 68 (limit: 141970)
+     Memory: 3.3G (peak: 7.4G)
+        CPU: 1min 15.901s
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/tfp-rank1-erpserve20261111T024836Z.service
+             └─531866 /home/pod/tfp/strixflerp-gate/deploy/native-hip/bin/tf-dsv41-lanes /home/pod/models/tf-port/inputs-tp2-c178a012/model /home/pod/models/tf-port/inputs-tp2-c178a012/rank1/rank-cache 1 2 10.20.0.50 29620 /home/pod/tfp/ds-kit-128k --pool 131072 --streams 1 --round-rows 16 --drafts 1 --engram /home/pod/models/tf-port/ds1017-1bae0e10 --token-map /home/pod/models/tf-port/inputs-tp2-c178a012/dsv41_token_map.json --modalities text --hip-kit /home/pod/tfp/strixflerp-gate/deploy/native-hip/share/tensorfold/hip/gfx1151/dsv41 --arena-gib 0 --graphs 1 --side 0 --aio 0 --prefetch 0 --round-ms 36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 --draft-ms 0 --logits-sha 1
+
+Nov 11 02:48:38 ltsp-a systemd[2942]: Started tfp-rank1-erpserve20261111T024836Z.service - /home/pod/tfp/strixflerp-gate/deploy/tools/dsv41-hip/pidexec.sh /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/rank1.pid taskset -c 0-5,8-21,24-31 env -i HOME=/home/pod USER=pod PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 TF_GPU_STRICT=0 TF_HIP_DEVICE=0 TENSORFOLD_HIP_MEMORY_LIMIT_GB=110 TF_DS_MODALITIES=text TF_DS_GRAPHS=1 TF_DS_ARENA_GIB=0 TF_COLL_STRIPE_MIB=0 TF_COLL_RTO_MIN_US=8000 TF_COLL_PROGRESS_MS=15000 TF_COLL_STAGING=dma TF_COLL_KIND=proxy TF_DS_AUX=hip TF_DS_REPLAY_FLOOR=0 TF_COLL_PROXY_CPU=6 TF_COLL_SLOT_KIB=4352 TF_COLL_PROXY_STRIPE_KIB=0 TF_COLL_PROXY_CPU2=7 TF_COLL_GPU_WAIT_S=10 TF_COLL_GPU_WARN_S=2 TF_DS_ROUND_MS=36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 TF_DS_DRAFT_MS=0 TF_DS_PREFILL_SPLIT=256 TF_DS_LOGITS_SHA=1 TF_DS_DEPLOY=f64b5ff2e28b1bac7ccb2c1d362908dfbb0dc362 TF_DS_BUNDLE=825407ed0d69d74e65eb72861d36ecbd6effe35245392f6adb817cad530b22ee TF_DS_CONF=4f1bf9504df97483e8ace75c79a9d3dbd348cf9bc88b3618478e8669c0c343cf /usr/bin/env LD_LIBRARY_PATH=/data/models/tools/therock-10.2/lib /home/pod/tfp/strixflerp-gate/deploy/native-hip/bin/tf-dsv41-lanes /home/pod/models/tf-port/inputs-tp2-c178a012/model /home/pod/models/tf-port/inputs-tp2-c178a012/rank1/rank-cache 1 2 10.20.0.50 29620 /home/pod/tfp/ds-kit-128k --pool 131072 --streams 1 --round-rows 16 --drafts 1 --engram /home/pod/models/tf-port/ds1017-1bae0e10 --token-map /home/pod/models/tf-port/inputs-tp2-c178a012/dsv41_token_map.json --modalities text --hip-kit /home/pod/tfp/strixflerp-gate/deploy/native-hip/share/tensorfold/hip/gfx1151/dsv41 --arena-gib 0 --graphs 1 --side 0 --aio 0 --prefetch 0 --round-ms 36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 --draft-ms 0 --logits-sha 1.
+
+● tfp-lock1-erpserve20261111T024836Z.service - /usr/bin/flock -w 60 /var/tmp/halo-gpu.lock /home/pod/tfp/strixflerp-gate/deploy/tools/dsv41-hip/pidexec.sh /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/lock.pid sleep 86400
+     Loaded: loaded (/run/user/1000/systemd/transient/tfp-lock1-erpserve20261111T024836Z.service; transient)
+  Transient: yes
+     Active: active (running) since Wed 2026-11-11 02:48:37 UTC; 1min 51s ago
+   Main PID: 531643 (flock)
+      Tasks: 2 (limit: 141970)
+     Memory: 420.0K (peak: 1.1M)
+        CPU: 2ms
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/tfp-lock1-erpserve20261111T024836Z.service
+             ├─531643 /usr/bin/flock -w 60 /var/tmp/halo-gpu.lock /home/pod/tfp/strixflerp-gate/deploy/tools/dsv41-hip/pidexec.sh /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/lock.pid sleep 86400
+             └─531645 sleep 86400
+
+Nov 11 02:48:37 ltsp-a systemd[2942]: Started tfp-lock1-erpserve20261111T024836Z.service - /usr/bin/flock -w 60 /var/tmp/halo-gpu.lock /home/pod/tfp/strixflerp-gate/deploy/tools/dsv41-hip/pidexec.sh /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/lock.pid sleep 86400.
+
+==== journalctl --user since 2026-11-11 02:43:33
+2026-11-11T02:43:33+00:00 ltsp-a sshd[524232]: Received disconnect from 10.10.0.31 port 50246:11: disconnected by user
+2026-11-11T02:43:33+00:00 ltsp-a sshd[524232]: Disconnected from user pod 10.10.0.31 port 50246
+2026-11-11T02:43:34+00:00 ltsp-a sshd[524270]: Received disconnect from 10.10.0.31 port 50250:11: disconnected by user
+2026-11-11T02:43:34+00:00 ltsp-a sshd[524270]: Disconnected from user pod 10.10.0.31 port 50250
+2026-11-11T02:43:35+00:00 ltsp-a sshd[524300]: Received disconnect from 10.10.0.31 port 50260:11: disconnected by user
+2026-11-11T02:43:35+00:00 ltsp-a sshd[524300]: Disconnected from user pod 10.10.0.31 port 50260
+2026-11-11T02:43:37+00:00 ltsp-a sudo[524353]:    pod : PWD=/home/pod ; USER=root ; COMMAND=/usr/bin/systemctl stop gufo-dsv4 ds4-tp worker-llama dsv4 ggml-rpc quad-rpc quad-llama strix-solo
+2026-11-11T02:43:37+00:00 ltsp-a sudo[524353]: pam_unix(sudo:session): session opened for user root(uid=0) by pod(uid=1000)
+2026-11-11T02:43:37+00:00 ltsp-a sudo[524353]: pam_unix(sudo:session): session closed for user root
+2026-11-11T02:43:37+00:00 ltsp-a sshd[524351]: Received disconnect from 10.10.0.31 port 50272:11: disconnected by user
+2026-11-11T02:43:37+00:00 ltsp-a sshd[524351]: Disconnected from user pod 10.10.0.31 port 50272
+2026-11-11T02:43:37+00:00 ltsp-a sshd[524382]: Received disconnect from 10.10.0.31 port 50286:11: disconnected by user
+2026-11-11T02:43:37+00:00 ltsp-a sshd[524382]: Disconnected from user pod 10.10.0.31 port 50286
+2026-11-11T02:43:39+00:00 ltsp-a sshd[524420]: Received disconnect from 10.10.0.31 port 50292:11: disconnected by user
+2026-11-11T02:43:39+00:00 ltsp-a sshd[524420]: Disconnected from user pod 10.10.0.31 port 50292
+2026-11-11T02:43:39+00:00 ltsp-a sshd[524451]: Received disconnect from 10.10.0.31 port 50296:11: disconnected by user
+2026-11-11T02:43:39+00:00 ltsp-a sshd[524451]: Disconnected from user pod 10.10.0.31 port 50296
+2026-11-11T02:43:39+00:00 ltsp-a sshd[524482]: Received disconnect from 10.10.0.31 port 50306:11: disconnected by user
+2026-11-11T02:43:39+00:00 ltsp-a sshd[524482]: Disconnected from user pod 10.10.0.31 port 50306
+2026-11-11T02:43:40+00:00 ltsp-a sshd[524518]: Received disconnect from 10.10.0.31 port 50310:11: disconnected by user
+2026-11-11T02:43:40+00:00 ltsp-a sshd[524518]: Disconnected from user pod 10.10.0.31 port 50310
+2026-11-11T02:43:40+00:00 ltsp-a sshd[524548]: Received disconnect from 10.10.0.31 port 50322:11: disconnected by user
+2026-11-11T02:43:40+00:00 ltsp-a sshd[524548]: Disconnected from user pod 10.10.0.31 port 50322
+2026-11-11T02:43:41+00:00 ltsp-a sshd[524579]: Received disconnect from 10.10.0.31 port 48958:11: disconnected by user
+2026-11-11T02:43:41+00:00 ltsp-a sshd[524579]: Disconnected from user pod 10.10.0.31 port 48958
+2026-11-11T02:43:41+00:00 ltsp-a sshd[524610]: Received disconnect from 10.10.0.31 port 48960:11: disconnected by user
+2026-11-11T02:43:41+00:00 ltsp-a sshd[524610]: Disconnected from user pod 10.10.0.31 port 48960
+2026-11-11T02:43:42+00:00 ltsp-a sshd[524647]: Received disconnect from 10.10.0.31 port 48964:11: disconnected by user
+2026-11-11T02:43:42+00:00 ltsp-a sshd[524647]: Disconnected from user pod 10.10.0.31 port 48964
+2026-11-11T02:43:42+00:00 ltsp-a systemd[2942]: Started strixfold-pair-up.service - /usr/bin/bash -c "cd ~/tfp/deploy/current/tools/dsv41-hip && RUN_ID=pair-\$(date -u +%Y%m%dT%H%M%SZ) TF_SERVE_CONF=\$HOME/tfp/run/conf/pair-serving.conf ./first_light.sh up".
+2026-11-11T02:43:42+00:00 ltsp-a sshd[524678]: Received disconnect from 10.10.0.31 port 48972:11: disconnected by user
+2026-11-11T02:43:42+00:00 ltsp-a sshd[524678]: Disconnected from user pod 10.10.0.31 port 48972
+2026-11-11T02:43:42+00:00 ltsp-a bash[524681]: run pair-20261111T024342Z: rank 0 on node0, rank 1 on ltsp-a
+2026-11-11T02:43:42+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:43:42+00:00 ltsp-a sshd[524726]: Received disconnect from 10.10.0.31 port 48980:11: disconnected by user
+2026-11-11T02:43:42+00:00 ltsp-a sshd[524726]: Disconnected from user pod 10.10.0.31 port 48980
+2026-11-11T02:43:43+00:00 ltsp-a bash[524761]: both ranks: deploy f64b5ff2e28b, kit 7693647972ab, config 657a74b12643, collectives tcp (proxy)
+2026-11-11T02:43:43+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:43:43+00:00 ltsp-a bash[524764]: GPU lock held on ltsp-f (386655)
+2026-11-11T02:43:43+00:00 ltsp-a systemd[2942]: Started tfp-lock1-pair20261111T024342Z.service - /usr/bin/flock -w 60 /var/tmp/halo-gpu.lock /home/pod/tfp/deploy/current/tools/dsv41-hip/pidexec.sh /home/pod/tfp/run/serve128k/pair-20261111T024342Z/lock.pid sleep 86400.
+2026-11-11T02:43:44+00:00 ltsp-a bash[524767]: GPU lock held on ltsp-a (524791)
+2026-11-11T02:43:44+00:00 ltsp-a systemd[2942]: Started tfp-rank1-pair20261111T024342Z.service - /home/pod/tfp/deploy/current/tools/dsv41-hip/pidexec.sh /home/pod/tfp/run/serve128k/pair-20261111T024342Z/rank1.pid taskset -c 0-5,8-21,24-31 env -i HOME=/home/pod USER=pod PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 TF_GPU_STRICT=0 TF_HIP_DEVICE=0 TENSORFOLD_HIP_MEMORY_LIMIT_GB=110 TF_DS_MODALITIES=text TF_DS_GRAPHS=1 TF_DS_ARENA_GIB=0 TF_COLL_STRIPE_MIB=0 TF_COLL_RTO_MIN_US=8000 TF_COLL_PROGRESS_MS=15000 TF_COLL_STAGING=dma TF_COLL_KIND=proxy TF_DS_AUX=hip TF_DS_REPLAY_FLOOR=0 TF_COLL_PROXY_CPU=6 TF_COLL_SLOT_KIB=4352 TF_COLL_PROXY_STRIPE_KIB=0 TF_COLL_PROXY_CPU2=7 TF_COLL_GPU_WAIT_S=10 TF_COLL_GPU_WARN_S=2 TF_DS_ROUND_MS=36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 TF_DS_DRAFT_MS=0 TF_DS_PREFILL_SPLIT=256 TF_DS_LOGITS_SHA=1 TF_DS_DEPLOY=f64b5ff2e28b1bac7ccb2c1d362908dfbb0dc362 TF_DS_BUNDLE=825407ed0d69d74e65eb72861d36ecbd6effe35245392f6adb817cad530b22ee TF_DS_CONF=657a74b12643c5c70f73b1911971f7fa88da0cd90d8babcf5b06f9634cf80c5f /usr/bin/env LD_LIBRARY_PATH=/data/models/tools/therock-10.2/lib /home/pod/tfp/deploy/f64b5ff2e28b/native-hip/bin/tf-dsv41-lanes /home/pod/models/tf-port/inputs-tp2-c178a012/model /home/pod/models/tf-port/inputs-tp2-c178a012/rank1/rank-cache 1 2 10.20.0.50 29620 /home/pod/tfp/ds-kit-128k --pool 131072 --streams 1 --round-rows 16 --drafts 1 --engram /home/pod/models/tf-port/ds1017-1bae0e10 --token-map /home/pod/models/tf-port/inputs-tp2-c178a012/dsv41_token_map.json --modalities text --hip-kit /home/pod/tfp/deploy/f64b5ff2e28b/native-hip/share/tensorfold/hip/gfx1151/dsv41 --arena-gib 0 --graphs 1 --side 0 --aio 0 --prefetch 0 --round-ms 36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 --draft-ms 0 --logits-sha 1.
+2026-11-11T02:43:44+00:00 ltsp-a bash[524866]: rank 1 started (524907): /home/pod/tfp/run/serve128k/pair-20261111T024342Z
+2026-11-11T02:43:44+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:43:44+00:00 ltsp-a bash[524910]: rank 0 started (386796): /home/pod/tfp/run/serve128k/pair-20261111T024342Z
+2026-11-11T02:43:45+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:43:47+00:00 ltsp-a sshd[524944]: Received disconnect from 10.10.0.31 port 48992:11: disconnected by user
+2026-11-11T02:43:47+00:00 ltsp-a sshd[524944]: Disconnected from user pod 10.10.0.31 port 48992
+2026-11-11T02:43:53+00:00 ltsp-a sshd[525016]: Received disconnect from 10.10.0.31 port 41444:11: disconnected by user
+2026-11-11T02:43:53+00:00 ltsp-a sshd[525016]: Disconnected from user pod 10.10.0.31 port 41444
+2026-11-11T02:43:53+00:00 ltsp-a sshd[524986]: Received disconnect from 10.10.0.31 port 41440:11: disconnected by user
+2026-11-11T02:43:53+00:00 ltsp-a sshd[524986]: Disconnected from user pod 10.10.0.31 port 41440
+2026-11-11T02:43:56+00:00 ltsp-a sshd[525075]: Received disconnect from 10.10.0.31 port 41452:11: disconnected by user
+2026-11-11T02:43:56+00:00 ltsp-a sshd[525075]: Disconnected from user pod 10.10.0.31 port 41452
+2026-11-11T02:43:57+00:00 ltsp-a sudo[525246]:    pod : PWD=/home/pod ; USER=root ; COMMAND=/usr/bin/dmesg
+2026-11-11T02:43:57+00:00 ltsp-a sudo[525246]: pam_unix(sudo:session): session opened for user root(uid=0) by pod(uid=1000)
+2026-11-11T02:43:57+00:00 ltsp-a sudo[525246]: pam_unix(sudo:session): session closed for user root
+2026-11-11T02:43:57+00:00 ltsp-a sshd[525132]: Received disconnect from 10.10.0.31 port 41464:11: disconnected by user
+2026-11-11T02:43:57+00:00 ltsp-a sshd[525132]: Disconnected from user pod 10.10.0.31 port 41464
+2026-11-11T02:43:58+00:00 ltsp-a sshd[525286]: Received disconnect from 10.10.0.31 port 41472:11: disconnected by user
+2026-11-11T02:43:58+00:00 ltsp-a sshd[525286]: Disconnected from user pod 10.10.0.31 port 41472
+2026-11-11T02:43:58+00:00 ltsp-a sudo[525318]:    pod : PWD=/home/pod ; USER=root ; COMMAND=/usr/bin/dmesg
+2026-11-11T02:43:58+00:00 ltsp-a sudo[525318]: pam_unix(sudo:session): session opened for user root(uid=0) by pod(uid=1000)
+2026-11-11T02:43:58+00:00 ltsp-a sudo[525318]: pam_unix(sudo:session): session closed for user root
+2026-11-11T02:43:58+00:00 ltsp-a sshd[525316]: Received disconnect from 10.10.0.31 port 41474:11: disconnected by user
+2026-11-11T02:43:58+00:00 ltsp-a sshd[525316]: Disconnected from user pod 10.10.0.31 port 41474
+2026-11-11T02:43:59+00:00 ltsp-a sshd[525348]: Received disconnect from 10.10.0.31 port 41490:11: disconnected by user
+2026-11-11T02:43:59+00:00 ltsp-a sshd[525348]: Disconnected from user pod 10.10.0.31 port 41490
+2026-11-11T02:43:59+00:00 ltsp-a sshd[525447]: Received disconnect from 10.10.0.31 port 41496:11: disconnected by user
+2026-11-11T02:43:59+00:00 ltsp-a sshd[525447]: Disconnected from user pod 10.10.0.31 port 41496
+2026-11-11T02:43:59+00:00 ltsp-a sshd[525487]: Received disconnect from 10.10.0.31 port 41506:11: disconnected by user
+2026-11-11T02:43:59+00:00 ltsp-a sshd[525487]: Disconnected from user pod 10.10.0.31 port 41506
+2026-11-11T02:44:03+00:00 ltsp-a sshd[525527]: Received disconnect from 10.10.0.31 port 59766:11: disconnected by user
+2026-11-11T02:44:03+00:00 ltsp-a sshd[525527]: Disconnected from user pod 10.10.0.31 port 59766
+2026-11-11T02:44:08+00:00 ltsp-a sshd[525570]: Received disconnect from 10.10.0.31 port 59774:11: disconnected by user
+2026-11-11T02:44:08+00:00 ltsp-a sshd[525570]: Disconnected from user pod 10.10.0.31 port 59774
+2026-11-11T02:44:10+00:00 ltsp-a sshd[525600]: Received disconnect from 10.10.0.31 port 59778:11: disconnected by user
+2026-11-11T02:44:10+00:00 ltsp-a sshd[525600]: Disconnected from user pod 10.10.0.31 port 59778
+2026-11-11T02:44:14+00:00 ltsp-a sshd[525655]: Received disconnect from 10.10.0.31 port 53698:11: disconnected by user
+2026-11-11T02:44:14+00:00 ltsp-a sshd[525655]: Disconnected from user pod 10.10.0.31 port 53698
+2026-11-11T02:44:19+00:00 ltsp-a sshd[525766]: Received disconnect from 10.10.0.31 port 53700:11: disconnected by user
+2026-11-11T02:44:19+00:00 ltsp-a sshd[525766]: Disconnected from user pod 10.10.0.31 port 53700
+2026-11-11T02:44:24+00:00 ltsp-a sshd[525809]: Received disconnect from 10.10.0.31 port 47960:11: disconnected by user
+2026-11-11T02:44:24+00:00 ltsp-a sshd[525809]: Disconnected from user pod 10.10.0.31 port 47960
+2026-11-11T02:44:27+00:00 ltsp-a sshd[525844]: Received disconnect from 10.10.0.31 port 47966:11: disconnected by user
+2026-11-11T02:44:27+00:00 ltsp-a sshd[525844]: Disconnected from user pod 10.10.0.31 port 47966
+2026-11-11T02:44:29+00:00 ltsp-a sshd[525895]: Received disconnect from 10.10.0.31 port 47978:11: disconnected by user
+2026-11-11T02:44:29+00:00 ltsp-a sshd[525895]: Disconnected from user pod 10.10.0.31 port 47978
+2026-11-11T02:44:31+00:00 ltsp-a sshd[525995]: Received disconnect from 10.10.0.31 port 50732:11: disconnected by user
+2026-11-11T02:44:31+00:00 ltsp-a sshd[525995]: Disconnected from user pod 10.10.0.31 port 50732
+2026-11-11T02:44:34+00:00 ltsp-a sshd[526057]: Received disconnect from 10.10.0.31 port 50746:11: disconnected by user
+2026-11-11T02:44:34+00:00 ltsp-a sshd[526057]: Disconnected from user pod 10.10.0.31 port 50746
+2026-11-11T02:44:37+00:00 ltsp-a sshd[526093]: Received disconnect from 10.10.0.31 port 50748:11: disconnected by user
+2026-11-11T02:44:37+00:00 ltsp-a sshd[526093]: Disconnected from user pod 10.10.0.31 port 50748
+2026-11-11T02:44:38+00:00 ltsp-a systemd[2942]: Stopping strixfold-pair-up.service - /usr/bin/bash -c "cd ~/tfp/deploy/current/tools/dsv41-hip && RUN_ID=pair-\$(date -u +%Y%m%dT%H%M%SZ) TF_SERVE_CONF=\$HOME/tfp/run/conf/pair-serving.conf ./first_light.sh up"...
+2026-11-11T02:44:38+00:00 ltsp-a systemd[2942]: strixfold-pair-up.service: Unit process 524916 (ssh) remains running after unit stopped.
+2026-11-11T02:44:38+00:00 ltsp-a systemd[2942]: Stopped strixfold-pair-up.service - /usr/bin/bash -c "cd ~/tfp/deploy/current/tools/dsv41-hip && RUN_ID=pair-\$(date -u +%Y%m%dT%H%M%SZ) TF_SERVE_CONF=\$HOME/tfp/run/conf/pair-serving.conf ./first_light.sh up".
+2026-11-11T02:44:40+00:00 ltsp-a sshd[526210]: Received disconnect from 10.10.0.31 port 50770:11: disconnected by user
+2026-11-11T02:44:40+00:00 ltsp-a sshd[526210]: Disconnected from user pod 10.10.0.31 port 50770
+2026-11-11T02:44:40+00:00 ltsp-a sshd[526244]: Received disconnect from 10.10.0.31 port 50786:11: disconnected by user
+2026-11-11T02:44:40+00:00 ltsp-a sshd[526244]: Disconnected from user pod 10.10.0.31 port 50786
+2026-11-11T02:44:44+00:00 ltsp-a sshd[526346]: Received disconnect from 10.10.0.31 port 35298:11: disconnected by user
+2026-11-11T02:44:44+00:00 ltsp-a sshd[526346]: Disconnected from user pod 10.10.0.31 port 35298
+2026-11-11T02:44:56+00:00 ltsp-a sshd[526603]: Received disconnect from 10.10.0.31 port 38950:11: disconnected by user
+2026-11-11T02:44:56+00:00 ltsp-a sshd[526603]: Disconnected from user pod 10.10.0.31 port 38950
+2026-11-11T02:45:00+00:00 ltsp-a sshd[526701]: Received disconnect from 10.10.0.31 port 38964:11: disconnected by user
+2026-11-11T02:45:00+00:00 ltsp-a sshd[526701]: Disconnected from user pod 10.10.0.31 port 38964
+2026-11-11T02:45:01+00:00 ltsp-a sshd[526730]: Received disconnect from 10.10.0.31 port 38968:11: disconnected by user
+2026-11-11T02:45:01+00:00 ltsp-a sshd[526730]: Disconnected from user pod 10.10.0.31 port 38968
+2026-11-11T02:45:17+00:00 ltsp-a sshd[527072]: Received disconnect from 10.10.0.31 port 52456:11: disconnected by user
+2026-11-11T02:45:17+00:00 ltsp-a sshd[527072]: Disconnected from user pod 10.10.0.31 port 52456
+2026-11-11T02:45:32+00:00 ltsp-a sshd[527268]: Received disconnect from 10.10.0.31 port 50582:11: disconnected by user
+2026-11-11T02:45:32+00:00 ltsp-a sshd[527268]: Disconnected from user pod 10.10.0.31 port 50582
+2026-11-11T02:45:34+00:00 ltsp-a sshd[527403]: Received disconnect from 10.10.0.31 port 50584:11: disconnected by user
+2026-11-11T02:45:34+00:00 ltsp-a sshd[527403]: Disconnected from user pod 10.10.0.31 port 50584
+2026-11-11T02:45:36+00:00 ltsp-a sshd[527474]: Received disconnect from 10.10.0.31 port 50588:11: disconnected by user
+2026-11-11T02:45:36+00:00 ltsp-a sshd[527474]: Disconnected from user pod 10.10.0.31 port 50588
+2026-11-11T02:45:50+00:00 ltsp-a sshd[527722]: Received disconnect from 10.10.0.31 port 43550:11: disconnected by user
+2026-11-11T02:45:50+00:00 ltsp-a sshd[527722]: Disconnected from user pod 10.10.0.31 port 43550
+2026-11-11T02:45:56+00:00 ltsp-a sshd[527839]: Received disconnect from 10.10.0.31 port 51456:11: disconnected by user
+2026-11-11T02:45:56+00:00 ltsp-a sshd[527839]: Disconnected from user pod 10.10.0.31 port 51456
+2026-11-11T02:45:58+00:00 ltsp-a sudo[527921]:    pod : PWD=/home/pod ; USER=root ; COMMAND=/usr/bin/dmesg
+2026-11-11T02:45:58+00:00 ltsp-a sudo[527921]: pam_unix(sudo:session): session opened for user root(uid=0) by pod(uid=1000)
+2026-11-11T02:45:58+00:00 ltsp-a sudo[527921]: pam_unix(sudo:session): session closed for user root
+2026-11-11T02:45:58+00:00 ltsp-a sshd[527919]: Received disconnect from 10.10.0.31 port 51472:11: disconnected by user
+2026-11-11T02:45:58+00:00 ltsp-a sshd[527919]: Disconnected from user pod 10.10.0.31 port 51472
+2026-11-11T02:46:00+00:00 ltsp-a sshd[527959]: Received disconnect from 10.10.0.31 port 51480:11: disconnected by user
+2026-11-11T02:46:00+00:00 ltsp-a sshd[527959]: Disconnected from user pod 10.10.0.31 port 51480
+2026-11-11T02:46:11+00:00 ltsp-a sshd[528166]: Received disconnect from 10.10.0.31 port 39520:11: disconnected by user
+2026-11-11T02:46:11+00:00 ltsp-a sshd[528166]: Disconnected from user pod 10.10.0.31 port 39520
+2026-11-11T02:46:32+00:00 ltsp-a sshd[528531]: Received disconnect from 10.10.0.31 port 39380:11: disconnected by user
+2026-11-11T02:46:32+00:00 ltsp-a sshd[528531]: Disconnected from user pod 10.10.0.31 port 39380
+2026-11-11T02:46:32+00:00 ltsp-a sshd[528489]: Received disconnect from 10.10.0.31 port 39374:11: disconnected by user
+2026-11-11T02:46:32+00:00 ltsp-a sshd[528489]: Disconnected from user pod 10.10.0.31 port 39374
+2026-11-11T02:46:40+00:00 ltsp-a systemd[2942]: tfp-rank1-pair20261111T024342Z.service: Consumed 16.941s CPU time.
+2026-11-11T02:46:40+00:00 ltsp-a systemd[2942]: tfp-lock1-pair20261111T024342Z.service: Main process exited, code=exited, status=143/n/a
+2026-11-11T02:46:40+00:00 ltsp-a systemd[2942]: tfp-lock1-pair20261111T024342Z.service: Failed with result 'exit-code'.
+2026-11-11T02:46:41+00:00 ltsp-a sshd[526276]: Received disconnect from 10.10.0.31 port 50800:11: disconnected by user
+2026-11-11T02:46:41+00:00 ltsp-a sshd[526276]: Disconnected from user pod 10.10.0.31 port 50800
+2026-11-11T02:46:41+00:00 ltsp-a sshd[528813]: Received disconnect from 10.10.0.31 port 57816:11: disconnected by user
+2026-11-11T02:46:41+00:00 ltsp-a sshd[528813]: Disconnected from user pod 10.10.0.31 port 57816
+2026-11-11T02:46:41+00:00 ltsp-a sshd[526155]: Received disconnect from 10.10.0.31 port 50754:11: disconnected by user
+2026-11-11T02:46:41+00:00 ltsp-a sshd[526155]: Disconnected from user pod 10.10.0.31 port 50754
+2026-11-11T02:46:42+00:00 ltsp-a sshd[528854]: Received disconnect from 10.10.0.31 port 57828:11: disconnected by user
+2026-11-11T02:46:42+00:00 ltsp-a sshd[528854]: Disconnected from user pod 10.10.0.31 port 57828
+2026-11-11T02:46:46+00:00 ltsp-a sshd[528928]: Received disconnect from 10.10.0.31 port 57836:11: disconnected by user
+2026-11-11T02:46:46+00:00 ltsp-a sshd[528928]: Disconnected from user pod 10.10.0.31 port 57836
+2026-11-11T02:46:47+00:00 ltsp-a sshd[528962]: Received disconnect from 10.10.0.31 port 57846:11: disconnected by user
+2026-11-11T02:46:47+00:00 ltsp-a sshd[528962]: Disconnected from user pod 10.10.0.31 port 57846
+2026-11-11T02:46:47+00:00 ltsp-a sshd[529019]: Received disconnect from 10.10.0.31 port 57866:11: disconnected by user
+2026-11-11T02:46:47+00:00 ltsp-a sshd[529019]: Disconnected from user pod 10.10.0.31 port 57866
+2026-11-11T02:46:48+00:00 ltsp-a sshd[529060]: Received disconnect from 10.10.0.31 port 57874:11: disconnected by user
+2026-11-11T02:46:48+00:00 ltsp-a sshd[529060]: Disconnected from user pod 10.10.0.31 port 57874
+2026-11-11T02:46:48+00:00 ltsp-a systemd[2942]: Started strixfold-pair-up.service - /usr/bin/bash -c "cd ~/tfp/deploy/current/tools/dsv41-hip && RUN_ID=pair-\$(date -u +%Y%m%dT%H%M%SZ) TF_SERVE_CONF=\$HOME/tfp/run/conf/pair-serving.conf ./first_light.sh up".
+2026-11-11T02:46:48+00:00 ltsp-a sshd[529094]: Received disconnect from 10.10.0.31 port 57876:11: disconnected by user
+2026-11-11T02:46:48+00:00 ltsp-a sshd[529094]: Disconnected from user pod 10.10.0.31 port 57876
+2026-11-11T02:46:48+00:00 ltsp-a sshd[528995]: Received disconnect from 10.10.0.31 port 57862:11: disconnected by user
+2026-11-11T02:46:48+00:00 ltsp-a sshd[528995]: Disconnected from user pod 10.10.0.31 port 57862
+2026-11-11T02:46:48+00:00 ltsp-a bash[529097]: run pair-20261111T024648Z: rank 0 on node0, rank 1 on ltsp-a
+2026-11-11T02:46:48+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:46:48+00:00 ltsp-a sshd[529155]: Received disconnect from 10.10.0.31 port 57888:11: disconnected by user
+2026-11-11T02:46:48+00:00 ltsp-a sshd[529155]: Disconnected from user pod 10.10.0.31 port 57888
+2026-11-11T02:46:49+00:00 ltsp-a bash[529190]: both ranks: deploy f64b5ff2e28b, kit 7693647972ab, config 657a74b12643, collectives tcp (proxy)
+2026-11-11T02:46:49+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:46:49+00:00 ltsp-a bash[529193]: GPU lock held on ltsp-f (389935)
+2026-11-11T02:46:49+00:00 ltsp-a systemd[2942]: Started tfp-lock1-pair20261111T024648Z.service - /usr/bin/flock -w 60 /var/tmp/halo-gpu.lock /home/pod/tfp/deploy/current/tools/dsv41-hip/pidexec.sh /home/pod/tfp/run/serve128k/pair-20261111T024648Z/lock.pid sleep 86400.
+2026-11-11T02:46:49+00:00 ltsp-a bash[529196]: GPU lock held on ltsp-a (529220)
+2026-11-11T02:46:49+00:00 ltsp-a systemd[2942]: Started tfp-rank1-pair20261111T024648Z.service - /home/pod/tfp/deploy/current/tools/dsv41-hip/pidexec.sh /home/pod/tfp/run/serve128k/pair-20261111T024648Z/rank1.pid taskset -c 0-5,8-21,24-31 env -i HOME=/home/pod USER=pod PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 TF_GPU_STRICT=0 TF_HIP_DEVICE=0 TENSORFOLD_HIP_MEMORY_LIMIT_GB=110 TF_DS_MODALITIES=text TF_DS_GRAPHS=1 TF_DS_ARENA_GIB=0 TF_COLL_STRIPE_MIB=0 TF_COLL_RTO_MIN_US=8000 TF_COLL_PROGRESS_MS=15000 TF_COLL_STAGING=dma TF_COLL_KIND=proxy TF_DS_AUX=hip TF_DS_REPLAY_FLOOR=0 TF_COLL_PROXY_CPU=6 TF_COLL_SLOT_KIB=4352 TF_COLL_PROXY_STRIPE_KIB=0 TF_COLL_PROXY_CPU2=7 TF_COLL_GPU_WAIT_S=10 TF_COLL_GPU_WARN_S=2 TF_DS_ROUND_MS=36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 TF_DS_DRAFT_MS=0 TF_DS_PREFILL_SPLIT=256 TF_DS_LOGITS_SHA=1 TF_DS_DEPLOY=f64b5ff2e28b1bac7ccb2c1d362908dfbb0dc362 TF_DS_BUNDLE=825407ed0d69d74e65eb72861d36ecbd6effe35245392f6adb817cad530b22ee TF_DS_CONF=657a74b12643c5c70f73b1911971f7fa88da0cd90d8babcf5b06f9634cf80c5f /usr/bin/env LD_LIBRARY_PATH=/data/models/tools/therock-10.2/lib /home/pod/tfp/deploy/f64b5ff2e28b/native-hip/bin/tf-dsv41-lanes /home/pod/models/tf-port/inputs-tp2-c178a012/model /home/pod/models/tf-port/inputs-tp2-c178a012/rank1/rank-cache 1 2 10.20.0.50 29620 /home/pod/tfp/ds-kit-128k --pool 131072 --streams 1 --round-rows 16 --drafts 1 --engram /home/pod/models/tf-port/ds1017-1bae0e10 --token-map /home/pod/models/tf-port/inputs-tp2-c178a012/dsv41_token_map.json --modalities text --hip-kit /home/pod/tfp/deploy/f64b5ff2e28b/native-hip/share/tensorfold/hip/gfx1151/dsv41 --arena-gib 0 --graphs 1 --side 0 --aio 0 --prefetch 0 --round-ms 36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 --draft-ms 0 --logits-sha 1.
+2026-11-11T02:46:49+00:00 ltsp-a bash[529223]: rank 1 started (529264): /home/pod/tfp/run/serve128k/pair-20261111T024648Z
+2026-11-11T02:46:49+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:46:49+00:00 ltsp-a bash[529267]: rank 0 started (390061): /home/pod/tfp/run/serve128k/pair-20261111T024648Z
+2026-11-11T02:46:50+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:46:54+00:00 ltsp-a sshd[529370]: Received disconnect from 10.10.0.31 port 58306:11: disconnected by user
+2026-11-11T02:46:54+00:00 ltsp-a sshd[529370]: Disconnected from user pod 10.10.0.31 port 58306
+2026-11-11T02:46:56+00:00 ltsp-a sshd[529408]: Received disconnect from 10.10.0.31 port 58322:11: disconnected by user
+2026-11-11T02:46:56+00:00 ltsp-a sshd[529408]: Disconnected from user pod 10.10.0.31 port 58322
+2026-11-11T02:46:59+00:00 ltsp-a sshd[529468]: Received disconnect from 10.10.0.31 port 58328:11: disconnected by user
+2026-11-11T02:46:59+00:00 ltsp-a sshd[529468]: Disconnected from user pod 10.10.0.31 port 58328
+2026-11-11T02:47:04+00:00 ltsp-a sshd[529506]: Received disconnect from 10.10.0.31 port 54610:11: disconnected by user
+2026-11-11T02:47:04+00:00 ltsp-a sshd[529506]: Disconnected from user pod 10.10.0.31 port 54610
+2026-11-11T02:47:06+00:00 ltsp-a sshd[529606]: Received disconnect from 10.10.0.31 port 54618:11: disconnected by user
+2026-11-11T02:47:06+00:00 ltsp-a sshd[529606]: Disconnected from user pod 10.10.0.31 port 54618
+2026-11-11T02:47:08+00:00 ltsp-a sshd[529657]: Received disconnect from 10.10.0.31 port 54624:11: disconnected by user
+2026-11-11T02:47:08+00:00 ltsp-a sshd[529657]: Disconnected from user pod 10.10.0.31 port 54624
+2026-11-11T02:47:09+00:00 ltsp-a sshd[529702]: Received disconnect from 10.10.0.31 port 54626:11: disconnected by user
+2026-11-11T02:47:09+00:00 ltsp-a sshd[529702]: Disconnected from user pod 10.10.0.31 port 54626
+2026-11-11T02:47:14+00:00 ltsp-a sshd[529744]: Received disconnect from 10.10.0.31 port 43120:11: disconnected by user
+2026-11-11T02:47:14+00:00 ltsp-a sshd[529744]: Disconnected from user pod 10.10.0.31 port 43120
+2026-11-11T02:47:20+00:00 ltsp-a sshd[529782]: Received disconnect from 10.10.0.31 port 43136:11: disconnected by user
+2026-11-11T02:47:20+00:00 ltsp-a sshd[529782]: Disconnected from user pod 10.10.0.31 port 43136
+2026-11-11T02:47:24+00:00 ltsp-a sshd[529886]: Received disconnect from 10.10.0.31 port 33750:11: disconnected by user
+2026-11-11T02:47:24+00:00 ltsp-a sshd[529886]: Disconnected from user pod 10.10.0.31 port 33750
+2026-11-11T02:47:25+00:00 ltsp-a sshd[529938]: Received disconnect from 10.10.0.31 port 33760:11: disconnected by user
+2026-11-11T02:47:25+00:00 ltsp-a sshd[529938]: Disconnected from user pod 10.10.0.31 port 33760
+2026-11-11T02:47:30+00:00 ltsp-a sshd[529977]: Received disconnect from 10.10.0.31 port 33788:11: disconnected by user
+2026-11-11T02:47:30+00:00 ltsp-a sshd[529977]: Disconnected from user pod 10.10.0.31 port 33788
+2026-11-11T02:47:35+00:00 ltsp-a sshd[530019]: Received disconnect from 10.10.0.31 port 44278:11: disconnected by user
+2026-11-11T02:47:35+00:00 ltsp-a sshd[530019]: Disconnected from user pod 10.10.0.31 port 44278
+2026-11-11T02:47:35+00:00 ltsp-a sshd[530072]: Received disconnect from 10.10.0.31 port 44294:11: disconnected by user
+2026-11-11T02:47:35+00:00 ltsp-a sshd[530072]: Disconnected from user pod 10.10.0.31 port 44294
+2026-11-11T02:47:41+00:00 ltsp-a sshd[530180]: Received disconnect from 10.10.0.31 port 44298:11: disconnected by user
+2026-11-11T02:47:41+00:00 ltsp-a sshd[530180]: Disconnected from user pod 10.10.0.31 port 44298
+2026-11-11T02:47:42+00:00 ltsp-a sshd[530210]: Received disconnect from 10.10.0.31 port 48914:11: disconnected by user
+2026-11-11T02:47:42+00:00 ltsp-a sshd[530210]: Disconnected from user pod 10.10.0.31 port 48914
+2026-11-11T02:47:46+00:00 ltsp-a sshd[530266]: Received disconnect from 10.10.0.31 port 48926:11: disconnected by user
+2026-11-11T02:47:46+00:00 ltsp-a sshd[530266]: Disconnected from user pod 10.10.0.31 port 48926
+2026-11-11T02:47:51+00:00 ltsp-a sshd[530308]: Received disconnect from 10.10.0.31 port 49488:11: disconnected by user
+2026-11-11T02:47:51+00:00 ltsp-a sshd[530308]: Disconnected from user pod 10.10.0.31 port 49488
+2026-11-11T02:47:56+00:00 ltsp-a sshd[530432]: Received disconnect from 10.10.0.31 port 49498:11: disconnected by user
+2026-11-11T02:47:56+00:00 ltsp-a sshd[530432]: Disconnected from user pod 10.10.0.31 port 49498
+2026-11-11T02:47:56+00:00 ltsp-a sshd[530433]: Received disconnect from 10.10.0.31 port 49512:11: disconnected by user
+2026-11-11T02:47:56+00:00 ltsp-a sshd[530433]: Disconnected from user pod 10.10.0.31 port 49512
+2026-11-11T02:47:58+00:00 ltsp-a sudo[530534]:    pod : PWD=/home/pod ; USER=root ; COMMAND=/usr/bin/dmesg
+2026-11-11T02:47:58+00:00 ltsp-a sudo[530534]: pam_unix(sudo:session): session opened for user root(uid=0) by pod(uid=1000)
+2026-11-11T02:47:58+00:00 ltsp-a sudo[530534]: pam_unix(sudo:session): session closed for user root
+2026-11-11T02:47:58+00:00 ltsp-a sshd[530532]: Received disconnect from 10.10.0.31 port 49538:11: disconnected by user
+2026-11-11T02:47:58+00:00 ltsp-a sshd[530532]: Disconnected from user pod 10.10.0.31 port 49538
+2026-11-11T02:47:59+00:00 ltsp-a sshd[530576]: Received disconnect from 10.10.0.31 port 49544:11: disconnected by user
+2026-11-11T02:47:59+00:00 ltsp-a sshd[530576]: Disconnected from user pod 10.10.0.31 port 49544
+2026-11-11T02:47:59+00:00 ltsp-a sshd[530504]: Received disconnect from 10.10.0.31 port 49522:11: disconnected by user
+2026-11-11T02:47:59+00:00 ltsp-a sshd[530504]: Disconnected from user pod 10.10.0.31 port 49522
+2026-11-11T02:48:01+00:00 ltsp-a sshd[530620]: Received disconnect from 10.10.0.31 port 58106:11: disconnected by user
+2026-11-11T02:48:01+00:00 ltsp-a sshd[530620]: Disconnected from user pod 10.10.0.31 port 58106
+2026-11-11T02:48:04+00:00 ltsp-a sshd[530655]: Received disconnect from 10.10.0.31 port 58118:11: disconnected by user
+2026-11-11T02:48:04+00:00 ltsp-a sshd[530655]: Disconnected from user pod 10.10.0.31 port 58118
+2026-11-11T02:48:07+00:00 ltsp-a sshd[530707]: Received disconnect from 10.10.0.31 port 58146:11: disconnected by user
+2026-11-11T02:48:07+00:00 ltsp-a sshd[530707]: Disconnected from user pod 10.10.0.31 port 58146
+2026-11-11T02:48:12+00:00 ltsp-a sshd[530877]: Received disconnect from 10.10.0.31 port 58168:11: disconnected by user
+2026-11-11T02:48:12+00:00 ltsp-a sshd[530877]: Disconnected from user pod 10.10.0.31 port 58168
+2026-11-11T02:48:13+00:00 ltsp-a bash[530895]: {"reply": "The capital of France is Paris.", "usage": {"prompt_tokens": 16, "completion_tokens": 8, "total_tokens": 24, "prompt_tokens_details": {"cached_tokens": 0}, "completion_tokens_details": {"reasoning_tokens": 0}}, "wall_s": 0.32, "completion_tok_per_s_wall": 24.98}
+2026-11-11T02:48:13+00:00 ltsp-a bash[530895]: ready: http://10.10.0.50:18080 (/home/pod/tfp/run/serve128k/pair-20261111T024648Z)
+2026-11-11T02:48:13+00:00 ltsp-a bash[530896]: rank 1 linked: {"rank": 1, "loaded_s": 82.8, "pool": 131072, "drafts": true, "arena_used": 3961133136, "arena_reserved": 4081057792, "replay_floor": false, "side": false, "engram_aio": false}
+2026-11-11T02:48:13+00:00 ltsp-a gpg-agent[944587]: can't connect to the daemon /usr/lib/gnupg/scdaemon: IPC connect call failed
+2026-11-11T02:48:13+00:00 ltsp-a bash[529097]: ready: run pair-20261111T024648Z (/home/pod/tfp/run/serve128k/pair-20261111T024648Z/first_light.json)
+2026-11-11T02:48:17+00:00 ltsp-a sshd[530984]: Received disconnect from 10.10.0.31 port 58190:11: disconnected by user
+2026-11-11T02:48:17+00:00 ltsp-a sshd[530984]: Disconnected from user pod 10.10.0.31 port 58190
+2026-11-11T02:48:17+00:00 ltsp-a sshd[530942]: Received disconnect from 10.10.0.31 port 58182:11: disconnected by user
+2026-11-11T02:48:17+00:00 ltsp-a sshd[530942]: Disconnected from user pod 10.10.0.31 port 58182
+2026-11-11T02:48:17+00:00 ltsp-a sshd[531023]: Received disconnect from 10.10.0.31 port 58202:11: disconnected by user
+2026-11-11T02:48:17+00:00 ltsp-a sshd[531023]: Disconnected from user pod 10.10.0.31 port 58202
+2026-11-11T02:48:26+00:00 ltsp-a sudo[531302]:    pod : PWD=/home/pod ; USER=root ; COMMAND=/usr/bin/dmesg
+2026-11-11T02:48:26+00:00 ltsp-a sudo[531302]: pam_unix(sudo:session): session opened for user root(uid=0) by pod(uid=1000)
+2026-11-11T02:48:27+00:00 ltsp-a sudo[531302]: pam_unix(sudo:session): session closed for user root
+2026-11-11T02:48:27+00:00 ltsp-a sshd[531184]: Received disconnect from 10.10.0.31 port 56208:11: disconnected by user
+2026-11-11T02:48:27+00:00 ltsp-a sshd[531184]: Disconnected from user pod 10.10.0.31 port 56208
+2026-11-11T02:48:35+00:00 ltsp-a systemd[2942]: tfp-rank1-pair20261111T024648Z.service: Main process exited, code=dumped, status=11/SEGV
+2026-11-11T02:48:35+00:00 ltsp-a systemd[2942]: tfp-rank1-pair20261111T024648Z.service: Failed with result 'core-dump'.
+2026-11-11T02:48:35+00:00 ltsp-a systemd[2942]: tfp-rank1-pair20261111T024648Z.service: Consumed 55.954s CPU time.
+2026-11-11T02:48:35+00:00 ltsp-a sshd[531394]: Received disconnect from 10.10.0.31 port 34298:11: disconnected by user
+2026-11-11T02:48:35+00:00 ltsp-a sshd[531394]: Disconnected from user pod 10.10.0.31 port 34298
+2026-11-11T02:48:36+00:00 ltsp-a systemd[2942]: tfp-lock1-pair20261111T024648Z.service: Main process exited, code=exited, status=143/n/a
+2026-11-11T02:48:36+00:00 ltsp-a systemd[2942]: tfp-lock1-pair20261111T024648Z.service: Failed with result 'exit-code'.
+2026-11-11T02:48:36+00:00 ltsp-a sshd[531349]: Received disconnect from 10.10.0.31 port 34294:11: disconnected by user
+2026-11-11T02:48:36+00:00 ltsp-a sshd[531349]: Disconnected from user pod 10.10.0.31 port 34294
+2026-11-11T02:48:36+00:00 ltsp-a sshd[531488]: Received disconnect from 10.10.0.31 port 34314:11: disconnected by user
+2026-11-11T02:48:36+00:00 ltsp-a sshd[531488]: Disconnected from user pod 10.10.0.31 port 34314
+2026-11-11T02:48:37+00:00 ltsp-a systemd[2942]: Started tfp-lock1-erpserve20261111T024836Z.service - /usr/bin/flock -w 60 /var/tmp/halo-gpu.lock /home/pod/tfp/strixflerp-gate/deploy/tools/dsv41-hip/pidexec.sh /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/lock.pid sleep 86400.
+2026-11-11T02:48:37+00:00 ltsp-a sudo[531689]:    pod : PWD=/home/pod ; USER=root ; COMMAND=/usr/bin/dmesg
+2026-11-11T02:48:37+00:00 ltsp-a sudo[531689]: pam_unix(sudo:session): session opened for user root(uid=0) by pod(uid=1000)
+2026-11-11T02:48:37+00:00 ltsp-a sudo[531689]: pam_unix(sudo:session): session closed for user root
+2026-11-11T02:48:37+00:00 ltsp-a sshd[531528]: Received disconnect from 10.10.0.31 port 34326:11: disconnected by user
+2026-11-11T02:48:37+00:00 ltsp-a sshd[531528]: Disconnected from user pod 10.10.0.31 port 34326
+2026-11-11T02:48:38+00:00 ltsp-a sshd[531725]: Received disconnect from 10.10.0.31 port 34342:11: disconnected by user
+2026-11-11T02:48:38+00:00 ltsp-a sshd[531725]: Disconnected from user pod 10.10.0.31 port 34342
+2026-11-11T02:48:38+00:00 ltsp-a systemd[2942]: Started tfp-rank1-erpserve20261111T024836Z.service - /home/pod/tfp/strixflerp-gate/deploy/tools/dsv41-hip/pidexec.sh /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/rank1.pid taskset -c 0-5,8-21,24-31 env -i HOME=/home/pod USER=pod PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 TF_GPU_STRICT=0 TF_HIP_DEVICE=0 TENSORFOLD_HIP_MEMORY_LIMIT_GB=110 TF_DS_MODALITIES=text TF_DS_GRAPHS=1 TF_DS_ARENA_GIB=0 TF_COLL_STRIPE_MIB=0 TF_COLL_RTO_MIN_US=8000 TF_COLL_PROGRESS_MS=15000 TF_COLL_STAGING=dma TF_COLL_KIND=proxy TF_DS_AUX=hip TF_DS_REPLAY_FLOOR=0 TF_COLL_PROXY_CPU=6 TF_COLL_SLOT_KIB=4352 TF_COLL_PROXY_STRIPE_KIB=0 TF_COLL_PROXY_CPU2=7 TF_COLL_GPU_WAIT_S=10 TF_COLL_GPU_WARN_S=2 TF_DS_ROUND_MS=36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 TF_DS_DRAFT_MS=0 TF_DS_PREFILL_SPLIT=256 TF_DS_LOGITS_SHA=1 TF_DS_DEPLOY=f64b5ff2e28b1bac7ccb2c1d362908dfbb0dc362 TF_DS_BUNDLE=825407ed0d69d74e65eb72861d36ecbd6effe35245392f6adb817cad530b22ee TF_DS_CONF=4f1bf9504df97483e8ace75c79a9d3dbd348cf9bc88b3618478e8669c0c343cf /usr/bin/env LD_LIBRARY_PATH=/data/models/tools/therock-10.2/lib /home/pod/tfp/strixflerp-gate/deploy/native-hip/bin/tf-dsv41-lanes /home/pod/models/tf-port/inputs-tp2-c178a012/model /home/pod/models/tf-port/inputs-tp2-c178a012/rank1/rank-cache 1 2 10.20.0.50 29620 /home/pod/tfp/ds-kit-128k --pool 131072 --streams 1 --round-rows 16 --drafts 1 --engram /home/pod/models/tf-port/ds1017-1bae0e10 --token-map /home/pod/models/tf-port/inputs-tp2-c178a012/dsv41_token_map.json --modalities text --hip-kit /home/pod/tfp/strixflerp-gate/deploy/native-hip/share/tensorfold/hip/gfx1151/dsv41 --arena-gib 0 --graphs 1 --side 0 --aio 0 --prefetch 0 --round-ms 36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 --draft-ms 0 --logits-sha 1.
+2026-11-11T02:48:38+00:00 ltsp-a sshd[531548]: Received disconnect from 10.10.0.31 port 34334:11: disconnected by user
+2026-11-11T02:48:38+00:00 ltsp-a sshd[531548]: Disconnected from user pod 10.10.0.31 port 34334
+2026-11-11T02:48:40+00:00 ltsp-a sshd[531903]: Received disconnect from 10.10.0.31 port 34354:11: disconnected by user
+2026-11-11T02:48:40+00:00 ltsp-a sshd[531903]: Disconnected from user pod 10.10.0.31 port 34354
+2026-11-11T02:48:43+00:00 ltsp-a sshd[531953]: Received disconnect from 10.10.0.31 port 52850:11: disconnected by user
+2026-11-11T02:48:43+00:00 ltsp-a sshd[531953]: Disconnected from user pod 10.10.0.31 port 52850
+2026-11-11T02:48:52+00:00 ltsp-a sshd[532031]: Received disconnect from 10.10.0.31 port 42846:11: disconnected by user
+2026-11-11T02:48:52+00:00 ltsp-a sshd[532031]: Disconnected from user pod 10.10.0.31 port 42846
+2026-11-11T02:48:56+00:00 ltsp-a sshd[532152]: Received disconnect from 10.10.0.31 port 42862:11: disconnected by user
+2026-11-11T02:48:56+00:00 ltsp-a sshd[532152]: Disconnected from user pod 10.10.0.31 port 42862
+2026-11-11T02:49:09+00:00 ltsp-a sshd[532234]: Received disconnect from 10.10.0.31 port 39768:11: disconnected by user
+2026-11-11T02:49:09+00:00 ltsp-a sshd[532234]: Disconnected from user pod 10.10.0.31 port 39768
+2026-11-11T02:49:27+00:00 ltsp-a sshd[532452]: Received disconnect from 10.10.0.31 port 34200:11: disconnected by user
+2026-11-11T02:49:27+00:00 ltsp-a sshd[532452]: Disconnected from user pod 10.10.0.31 port 34200
+2026-11-11T02:49:40+00:00 ltsp-a sshd[532597]: Received disconnect from 10.10.0.31 port 59942:11: disconnected by user
+2026-11-11T02:49:40+00:00 ltsp-a sshd[532597]: Disconnected from user pod 10.10.0.31 port 59942
+2026-11-11T02:49:45+00:00 ltsp-a sshd[532658]: Received disconnect from 10.10.0.31 port 35848:11: disconnected by user
+2026-11-11T02:49:45+00:00 ltsp-a sshd[532658]: Disconnected from user pod 10.10.0.31 port 35848
+2026-11-11T02:49:56+00:00 ltsp-a sshd[532795]: Received disconnect from 10.10.0.31 port 44692:11: disconnected by user
+2026-11-11T02:49:56+00:00 ltsp-a sshd[532795]: Disconnected from user pod 10.10.0.31 port 44692
+2026-11-11T02:49:58+00:00 ltsp-a sudo[532861]:    pod : PWD=/home/pod ; USER=root ; COMMAND=/usr/bin/dmesg
+2026-11-11T02:49:58+00:00 ltsp-a sudo[532861]: pam_unix(sudo:session): session opened for user root(uid=0) by pod(uid=1000)
+2026-11-11T02:49:58+00:00 ltsp-a sudo[532861]: pam_unix(sudo:session): session closed for user root
+2026-11-11T02:49:58+00:00 ltsp-a sshd[532859]: Received disconnect from 10.10.0.31 port 44694:11: disconnected by user
+2026-11-11T02:49:58+00:00 ltsp-a sshd[532859]: Disconnected from user pod 10.10.0.31 port 44694
+2026-11-11T02:49:58+00:00 ltsp-a sshd[532895]: Received disconnect from 10.10.0.31 port 44700:11: disconnected by user
+2026-11-11T02:49:58+00:00 ltsp-a sshd[532895]: Disconnected from user pod 10.10.0.31 port 44700
+2026-11-11T02:50:00+00:00 ltsp-a sshd[532996]: Received disconnect from 10.10.0.31 port 44708:11: disconnected by user
+2026-11-11T02:50:00+00:00 ltsp-a sshd[532996]: Disconnected from user pod 10.10.0.31 port 44708
+2026-11-11T02:50:02+00:00 ltsp-a sshd[533033]: Received disconnect from 10.10.0.31 port 50372:11: disconnected by user
+2026-11-11T02:50:02+00:00 ltsp-a sshd[533033]: Disconnected from user pod 10.10.0.31 port 50372
+2026-11-11T02:50:14+00:00 ltsp-a sshd[533224]: Received disconnect from 10.10.0.31 port 39964:11: disconnected by user
+2026-11-11T02:50:14+00:00 ltsp-a sshd[533224]: Disconnected from user pod 10.10.0.31 port 39964
+2026-11-11T02:50:20+00:00 ltsp-a sshd[533294]: Received disconnect from 10.10.0.31 port 39970:11: disconnected by user
+2026-11-11T02:50:20+00:00 ltsp-a sshd[533294]: Disconnected from user pod 10.10.0.31 port 39970
+
+==== processes
+ 531643    2942 Wed Nov 11 02:48:37 2026       01:51 Ss   /usr/bin/flock -w 60 /var/tmp/halo-gpu.lock /home/pod/tfp/strixflerp-gate/deploy/tools/dsv41-hip/pidexec.sh /home/pod/tfp/strixflerp-gate/run/flerp-serve-20261111T024836Z/lock.pid sleep 86400
+ 531866    2942 Wed Nov 11 02:48:38 2026       01:50 Ssl  /home/pod/tfp/strixflerp-gate/deploy/native-hip/bin/tf-dsv41-lanes /home/pod/models/tf-port/inputs-tp2-c178a012/model /home/pod/models/tf-port/inputs-tp2-c178a012/rank1/rank-cache 1 2 10.20.0.50 29620 /home/pod/tfp/ds-kit-128k --pool 131072 --streams 1 --round-rows 16 --drafts 1 --engram /home/pod/models/tf-port/ds1017-1bae0e10 --token-map /home/pod/models/tf-port/inputs-tp2-c178a012/dsv41_token_map.json --modalities text --hip-kit /home/pod/tfp/strixflerp-gate/deploy/native-hip/share/tensorfold/hip/gfx1151/dsv41 --arena-gib 0 --graphs 1 --side 0 --aio 0 --prefetch 0 --round-ms 36.06,43.76,50.38,56.29,59.52,61.52,66.27,71.02,75.77,80.52,85.27,90.02,94.77,99.52,104.27,109.02 --draft-ms 0 --logits-sha 1
+EVIDENCE-END

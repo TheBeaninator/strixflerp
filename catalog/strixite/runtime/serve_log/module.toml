@@ -1,0 +1,38 @@
+id      = "runtime.strixite.serve_log"
+kind    = "runtime"
+summary = "Request-block log helpers on top of common/log.hpp"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/log.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.log-rows/-/-"
+api       = "strix::slog_row, strix::fmt_n, strix::fmt_rate"
+numeric   = "n/a"
+regime    = "header only"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.log"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

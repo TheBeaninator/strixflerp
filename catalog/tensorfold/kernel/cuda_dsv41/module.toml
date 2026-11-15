@@ -1,0 +1,68 @@
+id        = "kernel.tensorfold.cuda_dsv41"
+kind      = "kernel"
+summary   = "DeepSeek-V4.1 CUDA kernels: sparse attention and split-K, hyper-connection mix (mHC) with prefetch, router GEMV, top-k, KV glue and split, Engram gate, prefill glue, L2 pacing/prefetch, sampling"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/cuda/deepseek_v41/attn_cuda.cu",
+  "zig/kernels/cuda/deepseek_v41/attn_split.cuh",
+  "zig/kernels/cuda/deepseek_v41/engram_gate.cu",
+  "zig/kernels/cuda/deepseek_v41/glue.cu",
+  "zig/kernels/cuda/deepseek_v41/kv_glue.cu",
+  "zig/kernels/cuda/deepseek_v41/kvsplit.cu",
+  "zig/kernels/cuda/deepseek_v41/l2pace.cu",
+  "zig/kernels/cuda/deepseek_v41/l2pf.cu",
+  "zig/kernels/cuda/deepseek_v41/mhc_cuda.cu",
+  "zig/kernels/cuda/deepseek_v41/mhc_pf.cu",
+  "zig/kernels/cuda/deepseek_v41/mhc_tail.cuh",
+  "zig/kernels/cuda/deepseek_v41/pointwise.cu",
+  "zig/kernels/cuda/deepseek_v41/prefill_glue.cu",
+  "zig/kernels/cuda/deepseek_v41/router_gemv.cu",
+  "zig/kernels/cuda/deepseek_v41/router_glue.cu",
+  "zig/kernels/cuda/deepseek_v41/router_narrow.cuh",
+  "zig/kernels/cuda/deepseek_v41/sampling.cu",
+  "zig/kernels/cuda/deepseek_v41/topk_b.cu",
+  "zig/kernels/cuda/deepseek_v41/topk_cuda.cu",
+  "zig/kernels/cuda/deepseek_v41/topk_keys.cu",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+upstream  = "DeepSeek-V4.1 CUDA sources (THIRD_PARTY_NOTICES.md \"DeepSeek-V4.1 CUDA sources\")"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-fp8/f32.tensorfold-cuda"
+api       = "deepseek_v41/attn_cuda.cu, attn_split.cuh, kvsplit.cu"
+numeric   = "fp32 softmax"
+regime    = "decode and prefill"
+
+[[provides]]
+interface = "hc.mix/bf16/f32.tensorfold-cuda"
+api       = "deepseek_v41/mhc_cuda.cu, mhc_pf.cu, mhc_tail.cuh"
+numeric   = "fp32"
+regime    = "decode and prefill"
+
+[[provides]]
+interface = "moe.router/-/f32.tensorfold-cuda"
+api       = "deepseek_v41/router_gemv.cu, router_glue.cu, router_narrow.cuh"
+numeric   = "fp32"
+regime    = "all"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source: harvested to read its recipe; not built for gfx1151"

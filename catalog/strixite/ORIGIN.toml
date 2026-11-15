@@ -1,0 +1,43 @@
+origin  = "strixite"
+repo    = "https://github.com/shawnshekari/strixite"
+commit  = "d19945e5bf5e34366a6448eb4bd9b2aac7c381ac"
+branch  = "tool-grammar-v070"   # v0.7.0-pod (20937dc: upstream v0.7.0 plus the pod's patches: cache transfer, steering,
+                              # logprobs, logit bias) plus the tool-call grammar, 7 commits 1f541c7..d19945e
+# The fleet's serving binary is this source: engines.conf strixite_v070pod BIN = /data/models/strix-infer/runtime/bin/
+# strix_server.v070tg (sha256 b3b8b3d8e928ddd54f3f506a44a41af6356410cc3ddc2c701f47a15328282878), built from fd2c51d =
+# d19945e plus 5 lines of CMakeLists.txt wiring serve/tool_grammar.cpp and tools/tool_grammar_check.cpp (unharvested).
+# Previous cut: 20937dc (results kept under gate/results/<recipe>/at-20937dc/).
+summary = "C++ engine with hand-written HIP kernels serving Qwen3.8-Flash-Next on one Strix Halo"
+
+# Where the tree was copied from. The laptop copy has no .git; the git tree is on control-node.
+[checkout]
+laptop      = "~/Code/strixflerp-upstream/strixite-v070pod"   # 20937dc; the d19945e cut was harvested from a copy of pod_control
+pod_control = "/data/projects/strixite-d19945e"                # detached worktree of /data/projects/strixite-v050 at d19945e
+
+[licence]
+spdx  = "AGPL-3.0-only"
+files = ["LICENSE", "THIRD_PARTY.md"]     # copied verbatim next to this file
+# Third-party code the origin vendors keeps its own licence in its module manifest: cpp-httplib (MIT),
+# stb (MIT OR Unlicense), libwebp decoder (BSD-3-Clause), Unicode tables (Unicode-3.0, notice in THIRD_PARTY.md).
+
+# What the origin is built with on the pod (its CMakeLists.txt, preset "strix", build dir build/strix).
+[toolchain]
+name       = "therock-10.1"
+rocm_root  = "/data/tools/therock-10.1.0a20260823"
+compiler   = "lib/llvm/bin/clang++ for host and device; .hip files are CXX sources compiled with -x hip --offload-arch=gfx1151 --rocm-path=<root>"
+build      = "CMake + Ninja, C++20, Release = -O3 -march=znver5 -flto, linked with lld"
+host_stdlib = "libstdc++ of the GCC install clang finds (--gcc-install-dir to choose)"
+
+[harvest]
+tool   = "tools/harvest-strixite.py"
+# Per-file authors: on the git tree, for each `git ls-files` path, `git log --format=%an -- <path> | sort -u`,
+# written to origin-authors.tsv. "Shawn Reed" is upstream (shawnshekari); every other name is a pod actor and
+# appears in manifests as "pod". Some upstream v0.7.0 files were committed by pod actors during the port, so
+# "pod" alone on a file does not prove the pod wrote it.
+authors = "origin-authors.tsv"
+# Origin files that are in no module: build files (flerp assemble generates the build), documentation, deployment
+# units, the kernel tutorial, and the licence texts kept next to this file.
+unharvested = [
+    ".gitignore", "CMakeLists.txt", "CMakePresets.json", "CONTRIBUTING.md", "README.md", "LICENSE",
+    "THIRD_PARTY.md", "assets/**", "deploy/**", "docs/**", "tutorial/**",
+]

@@ -1,0 +1,41 @@
+id        = "tool.tensorfold.checkpoint_cli"
+kind      = "tool"
+summary   = "Checkpoint command line (models / info / pull)"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/cli/cli.zig",
+  "zig/src/cli/hub.zig",
+  "zig/src/cli/info.zig",
+  "zig/src/cli/models.zig",
+  "zig/src/cli/pull.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.checkpoint-cli-tensorfold/-/-"
+api       = "cli/cli.zig"
+numeric   = "n/a"
+regime    = "host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

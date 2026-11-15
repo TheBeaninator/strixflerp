@@ -1,0 +1,39 @@
+id        = "tool.flerp.gufo_qwen_generate"
+kind      = "tool"
+summary   = "A greedy token generator over gufo's Qwen 3.5 executor (HIP, or gufo's CPU reference with --cpu) that prints token ids as JSON lines, and the top of gufo's CMake build graph for that one program"
+notes     = "gufo's CLI (src/cli/main.cpp, prompt.cpp) is not in the catalogue: it links every model family. generate.cpp calls QwenGpuExecutor::CreateFromGguf and ::Generate as the origin's `gufo prompt` does (prompt.cpp 1092 and 794-848 at f070a17), with no chat template and no draft backend. CMakeLists.txt stands in for the origin's root CMakeLists.txt and adds the origin's own CMake files unchanged; its header lists what it leaves out. no_image.cpp is gufo::core::DecodeImage for a build without image.cpp: it throws."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/gufo_qwen/CMakeLists.txt", "flerp/gufo_qwen/generate.cpp", "flerp/gufo_qwen/no_image.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/gufo_qwen/generate.cpp", "src/flerp/gufo_qwen/no_image.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "tool.generate-ids/gufo-qwen/-"
+api       = "flerp-gufo-qwen-generate --model FILE.gguf [--cpu] [--tokenize] [--context N] [--max-tokens N] (--prompt-file F | --ids-file F)..."
+numeric   = "the executor's own: QwenGpuExecutor::Generate at temperature 0 (unmodified argmax), production execution policy"
+regime    = "one process, one model, prompts one after another"
+
+[[requires]]
+interface = "executor.model/qwen3.5/gguf"
+
+[[requires]]
+interface = "format.loader/gguf/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by the origin's CMake files (recipes/qwen35-decider-2b.gufo.toml)"

@@ -1,0 +1,128 @@
+id        = "executor.gufo.qwen38_flash_next"
+kind      = "executor"
+summary   = "Qwen3.8-Flash-Next engine: config, weights, device model, ROCm executor and batch paths, continuation layout and adapter, RoPE scaling, CPU reference"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/qwen38_flash_next/CMakeLists.txt",
+  "src/models/qwen38_flash_next/config.cpp",
+  "src/models/qwen38_flash_next/config.hpp",
+  "src/models/qwen38_flash_next/continuation_adapter.cpp",
+  "src/models/qwen38_flash_next/continuation_adapter.hpp",
+  "src/models/qwen38_flash_next/continuation_hooks.hpp",
+  "src/models/qwen38_flash_next/continuation_layout.cpp",
+  "src/models/qwen38_flash_next/continuation_layout.hpp",
+  "src/models/qwen38_flash_next/cpu_ops.cpp",
+  "src/models/qwen38_flash_next/cpu_ops.hpp",
+  "src/models/qwen38_flash_next/engine.cpp",
+  "src/models/qwen38_flash_next/engine.hpp",
+  "src/models/qwen38_flash_next/extension.json",
+  "src/models/qwen38_flash_next/kernels/rocm/batch.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/blaslt.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/blaslt.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/device_model.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/device_model.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/executor.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/executor.hpp",
+  "src/models/qwen38_flash_next/library.json",
+  "src/models/qwen38_flash_next/reference.cpp",
+  "src/models/qwen38_flash_next/reference.hpp",
+  "src/models/qwen38_flash_next/rope_scaling.cpp",
+  "src/models/qwen38_flash_next/weights.cpp",
+  "src/models/qwen38_flash_next/weights.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.model/qwen3.8-flash-next/gguf"
+api       = "gufo::models::qwen38_flash_next (engine.hpp), provider entry in extension.json"
+numeric   = "fp32 activations on GGUF weights; TP2 adds partials in rank order; MTP drafts verified losslessly"
+regime    = "solo and TP2 (RDMA, unqualified branch)"
+
+[[requires]]
+interface = "hc.mix/gguf-q8_0/f32"
+
+[[requires]]
+interface = "mixer.gdn/-/f32.qfn"
+
+[[requires]]
+interface = "ple.inject/gguf-q8_0/f32"
+
+[[requires]]
+interface = "attn.qsa-indexer/-/f32.qfn"
+
+[[requires]]
+interface = "attn.softmax-gqa/kv-f16/f32.qfn"
+
+[[requires]]
+interface = "moe.router/-/f32.qfn"
+
+[[requires]]
+interface = "moe.combine/-/f32.qfn"
+
+[[requires]]
+interface = "linear.prefill/gguf-q8_0/i8-f32.w8a8"
+
+[[requires]]
+interface = "linear.prefill/gguf-kquant/q8_1-f32.mmq"
+
+[[requires]]
+interface = "linear.decode/gguf-kquant/f32.mmvq"
+
+[[requires]]
+interface = "moe.experts-decode/gguf-kquant/f32.mmid"
+
+[[requires]]
+interface = "draft.mtp/gguf-q8_0/f32"
+
+[[requires]]
+interface = "speculation.draft/mtp/f32"
+
+[[requires]]
+interface = "collective.exchange-partial/-/f32.gufo"
+
+[[requires]]
+interface = "format.loader/gguf/-"
+
+[[requires]]
+interface = "cache.prompt-gufo/-/-"
+
+[[requires]]
+interface = "device.memory/hip/-"
+
+[[requires]]
+interface = "executor.provider-api/gufo-ext/-"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+module    = "executor.gufo.qwen_vision"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

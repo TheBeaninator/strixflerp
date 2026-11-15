@@ -1,0 +1,2483 @@
+{
+ "binaries": {
+  "strixflerp-qwen35-decider-2b.gufo": {
+   "entry": "flerp/gufo_qwen/generate.cpp",
+   "installed": "flerp-gufo-qwen-generate",
+   "main": "tool.flerp.gufo_qwen_generate",
+   "modules": [
+    "kernel.gufo.core_headers",
+    "kernel.gufo.qwen_ops",
+    "runtime.gufo.sampling",
+    "runtime.gufo.platform",
+    "format.gufo.gguf_kquant",
+    "kernel.gufo.qwen_linear_decode",
+    "kernel.gufo.qwen_linear_prefill",
+    "kernel.gufo.qwen_attention",
+    "kernel.gufo.qwen_gdn",
+    "kernel.gufo.qwen_norm_rope",
+    "kernel.gufo.qwen_sampling",
+    "kernel.gufo.qwen_dflash",
+    "kernel.gufo.snapshot_copy",
+    "kernel.gufo.ds4_attention",
+    "kernel.gufo.ds4_dspark",
+    "kernel.gufo.ds4_indexer",
+    "kernel.gufo.ds4_moe",
+    "kernel.gufo.ds4_hc",
+    "kernel.gufo.ds4_linear",
+    "kernel.gufo.ds4_norm_rope",
+    "kernel.gufo.ds4_mmq",
+    "kernel.gufo.ds4_backend",
+    "runtime.gufo.dspark",
+    "executor.gufo.deepseek_v4_flash",
+    "kernel.gufo.qfn_mmq",
+    "kernel.gufo.qfn_kernels",
+    "runtime.gufo.mtp",
+    "runtime.gufo.hip_host",
+    "runtime.gufo.image",
+    "executor.gufo.qwen_vision",
+    "serve.gufo.http",
+    "runtime.gufo.tp_verbs",
+    "executor.gufo.qwen38_flash_next",
+    "runtime.gufo.cache",
+    "runtime.gufo.ext_api",
+    "runtime.gufo.speculative",
+    "runtime.gufo.dflash",
+    "executor.gufo.qwen",
+    "tool.flerp.gufo_qwen_generate"
+   ]
+  }
+ },
+ "bindings": {
+  "attn.qsa-indexer/-/f32.qfn": "kernel.gufo.qfn_kernels",
+  "attn.softmax-gqa/kv-f16/f32.gufo": "kernel.gufo.qwen_attention",
+  "attn.softmax-gqa/kv-f16/f32.qfn": "kernel.gufo.qfn_kernels",
+  "cache.prompt-gufo/-/-": "runtime.gufo.cache",
+  "cache.snapshot-copy/-/-": "kernel.gufo.snapshot_copy",
+  "collective.device-stage/-/f32": "kernel.gufo.qfn_kernels",
+  "collective.exchange-partial/-/f32.gufo": "runtime.gufo.tp_verbs",
+  "device.memory/hip/-": "runtime.gufo.hip_host",
+  "draft.dflash/gguf-q8_0/f32": "kernel.gufo.qwen_dflash",
+  "draft.dspark-sampling/-/f32": "kernel.gufo.ds4_dspark",
+  "draft.markov/gguf/f32": "kernel.gufo.ds4_indexer",
+  "draft.mtp/gguf-q8_0/f32": "kernel.gufo.qfn_kernels",
+  "executor.device-graph/deepseek-v4-flash/gguf": "kernel.gufo.ds4_backend",
+  "executor.model/qwen3.5/gguf": "executor.gufo.qwen",
+  "executor.provider-api/gufo-ext/-": "runtime.gufo.ext_api",
+  "format.device-view/gguf-kquant/-": "format.gufo.gguf_kquant",
+  "format.loader/gguf/-": "format.gufo.gguf_kquant",
+  "hc.mix/gguf-q8_0/f32": "kernel.gufo.qfn_kernels",
+  "linear.decode/gguf-kquant/f32.gufo": "kernel.gufo.qwen_linear_decode",
+  "linear.decode/gguf-kquant/f32.mmvq": "kernel.gufo.qfn_mmq",
+  "linear.prefill/gguf-kquant/bf16-f32": "kernel.gufo.qwen_linear_prefill",
+  "linear.prefill/gguf-kquant/q8_1-f32.mmq": "kernel.gufo.qfn_mmq",
+  "linear.prefill/gguf-q8_0/i8-f32.w8a8": "kernel.gufo.qfn_kernels",
+  "logits.topk/-/f32.gufo": "kernel.gufo.qwen_sampling",
+  "mixer.gdn/-/f32.gufo": "kernel.gufo.qwen_gdn",
+  "mixer.gdn/-/f32.qfn": "kernel.gufo.qfn_kernels",
+  "moe.combine/-/f32.qfn": "kernel.gufo.qfn_kernels",
+  "moe.experts-decode/gguf-kquant/f32.mmid": "kernel.gufo.qfn_mmq",
+  "moe.router/-/f32.qfn": "kernel.gufo.qfn_kernels",
+  "norm.rmsnorm/-/f32.gufo": "kernel.gufo.qwen_norm_rope",
+  "ple.inject/gguf-q8_0/f32": "kernel.gufo.qfn_kernels",
+  "pos.rope/-/f32.gufo": "kernel.gufo.qwen_norm_rope",
+  "sample.next-token/-/f32.gufo": "runtime.gufo.sampling",
+  "speculation.accept/-/f32.gufo": "kernel.gufo.qwen_sampling",
+  "speculation.draft/dflash/f32": "runtime.gufo.dflash",
+  "speculation.draft/dspark/f32": "runtime.gufo.dspark",
+  "speculation.draft/mtp/f32": "runtime.gufo.mtp",
+  "speculation.window-verify-lossless/-/-": "runtime.gufo.speculative"
+ },
+ "configure_options": [
+  "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+  "-DCMAKE_PREFIX_PATH=${FLERP_ROCM_ROOT}",
+  "-DCMAKE_C_COMPILER=${FLERP_ROCM_ROOT}/lib/llvm/bin/clang",
+  "-DCMAKE_CXX_COMPILER=${FLERP_ROCM_ROOT}/lib/llvm/bin/clang++",
+  "-DCMAKE_HIP_COMPILER=${FLERP_ROCM_ROOT}/lib/llvm/bin/clang++"
+ ],
+ "files": {
+  "RDMA_TEMP_STATE.md": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "99453e16e907cc925804bd6191e0526a89cb33800cf10d7f1ce8a4dfc14f369e"
+  },
+  "flerp/gufo_qwen/CMakeLists.txt": {
+   "module": "tool.flerp.gufo_qwen_generate",
+   "sha256": "cf305167ad18bb8cba362bbfcb619a5c688ca7e4ce2b5ae1a22c176ea1e565f7"
+  },
+  "flerp/gufo_qwen/generate.cpp": {
+   "module": "tool.flerp.gufo_qwen_generate",
+   "sha256": "1194b27113896144341d3c53796b37676f1e832b1823741d534312e5fd8e8ae3"
+  },
+  "flerp/gufo_qwen/no_image.cpp": {
+   "module": "tool.flerp.gufo_qwen_generate",
+   "sha256": "ede5c578a11ed1fdbf396cc07e5027dee9c8f0c2db0d79a1ac565aa832ee5887"
+  },
+  "include/gufo/ext/CHANGES.md": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "fb67fbb164fecd53b024be393efd65a6ceea9b0ddbafed7cd1e08eca627fc036"
+  },
+  "include/gufo/ext/SURFACE": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "e2a6e5fddef0756555008440fee357a10de65be0582a38ed80675857a495ebb6"
+  },
+  "include/gufo/ext/adapter.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "a906130f35bbb331ea34364d889d0198441d1f13a9859bbfcf72f44ca7033135"
+  },
+  "include/gufo/ext/cache.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "7d88aa5a5f2651eb2326b148396cd51081028b8732ad772c1dba3bd01fdabcac"
+  },
+  "include/gufo/ext/cancellable_gate.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "9f438b8723d532efc14a7a9ac3b0250f66240a16613b2dcb1a5b660311373d14"
+  },
+  "include/gufo/ext/continuation.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "1c6328e27c3cc832ee118b54f207a74b36e858aabd63133cc6faea7b3d7bf713"
+  },
+  "include/gufo/ext/core_options.def": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "01e13afa70616088f4d8d762bed177255c55c4bb0d8822f22a93805c167588f2"
+  },
+  "include/gufo/ext/crypto.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "53264d58d32ca5b2b1e6628775d5d876446e5b15a0d93d43936527b7bf4d5529"
+  },
+  "include/gufo/ext/device_probe.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "8830ebe94a374130c16dedc671d430d609f773ecf21b789b0022cc4f14caaee6"
+  },
+  "include/gufo/ext/draft_backend.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "d2981e48e8737a960acc42aed33fa878f42c7f1fffacab632a16d011b7c83586"
+  },
+  "include/gufo/ext/experimental/dispatch_telemetry.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "26cb4b373a82e5efa0ba97511d2cc2d1054078e505cf5f6f5d01aee45995c9cf"
+  },
+  "include/gufo/ext/experimental/gemv_dispatcher.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "a39b210ff45360bf86410d497c6973dc7ccae01f2d5399f24e0501404447107a"
+  },
+  "include/gufo/ext/experimental/ggml_dequant.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "8a4b37948d1b9dcc894dd34d872cf4986f8820a68d27b261ff3d66ac51f178c9"
+  },
+  "include/gufo/ext/experimental/ggml_gemm.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "e25029cd61a3f9b2a4c8e2e1be7e811feea432e5e7a893de5e7cdc91960c6646"
+  },
+  "include/gufo/ext/experimental/heap_placement.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "abc60bfa40eec876f895d169592bec57fce5fb83e98be22c8157b70794d2293c"
+  },
+  "include/gufo/ext/experimental/hip_graph_decode_executor.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "2c2631464d7495e99cab4ffbc85feec98737454ca268fa644cad53ab3d07847f"
+  },
+  "include/gufo/ext/experimental/hip_utils.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "cef1565fc5cf010231ac814d635fc939d082c2eb017474719bed2e4eb7a2054a"
+  },
+  "include/gufo/ext/experimental/hipblaslt_plan_database.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "3f2a4ba9e8ccc28954f82c3ab08d5239bf8fc3b4b7af66e891aad2ad75be4216"
+  },
+  "include/gufo/ext/experimental/host_allocations.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "c27d093707b6c8003b030cb6d2daece91a365e2952f1c74b89eb854c8c508a8d"
+  },
+  "include/gufo/ext/experimental/managed_alloc.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "eb8e8ca2698133c6f615f9d5df3fa55b3fec31fc717c4a7a8f7a3a45742e0a70"
+  },
+  "include/gufo/ext/experimental/snapshot_copy.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "af00e841945da9eaf2cc75a3cd24de65c814b63c161fb024144016745fbffadc"
+  },
+  "include/gufo/ext/experimental/snapshot_transfer.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "6fb4b57bbdc22e20fb64eb8e95b4fea5592413a6fefda37c4e507db8500be89d"
+  },
+  "include/gufo/ext/experimental/transfer_pool.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "03b5e55b1e33ab3c031401ca704c12ac3889ade48ac7a453287abe2ab4a08940"
+  },
+  "include/gufo/ext/experimental/weight_upload.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "24326cd6576bb7445d53dc4fe9b24866748f158b7f735116813cf4adc2938462"
+  },
+  "include/gufo/ext/gguf_reader.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "3858979db0b7db30c89ecffa43b28658bd7139050580bf3665d44fc77eb1bbf9"
+  },
+  "include/gufo/ext/host.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "1abc4daa2b0b1c8a40bc6fad2b16c1b161b75e37711f4a44ec8e30fd6d5f8ba0"
+  },
+  "include/gufo/ext/host_budget.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "c196f7b8ca8911af66beb56176d02cfed847505dac07ad0cd009a3ea1cb6376e"
+  },
+  "include/gufo/ext/image.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "f0e263e97e508d987444940e8859f183070e70f55fc18c94f2a0b8a00ea36a2a"
+  },
+  "include/gufo/ext/json.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "064ecd8f31c8fa9c72ca5330b96c2e536d419a15cd3c14c8b4badb2cef8a3de2"
+  },
+  "include/gufo/ext/ledger.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "6928338db48a8f4f0a2eff4c9d532d4066e9cdb4fd926bdd2ed7e0eddcfb76d4"
+  },
+  "include/gufo/ext/mapped_prefetch.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "23bc0fe287c35107595262c363e136d894c2c94254ad51155b9c6968a344274e"
+  },
+  "include/gufo/ext/model_config.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "7c540b32b53e4fa6ab274e53885ef82bf11575c3c0f0a927eb71f1826151158f"
+  },
+  "include/gufo/ext/options.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "fb2993d716284c89a2f1db1998217bacc07d78155fcc4ec54b0f7244a5860eed"
+  },
+  "include/gufo/ext/platform/fs.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "4bd8927335f99b96f6447bbd21b5eded66a4d4a5360ca516cc7200fd7f87d6df"
+  },
+  "include/gufo/ext/platform/library.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "4e2b20ab5142f5e733ef1639a5941f04d9d33ee5a9436e4909b659c8b1ddbdc3"
+  },
+  "include/gufo/ext/platform/mapped_file.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "7606bd482cc6a917d0f9c60fbffbe66ef65907080c3b89f0e2978e9a398f7140"
+  },
+  "include/gufo/ext/platform/os_info.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "8061be64c90a9e48f864474e5d1314f621e66a994e2a12c4de743eced05f541c"
+  },
+  "include/gufo/ext/platform/pages.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "d757090df3a38b890819b4dfb76618126f03ad51930f584a08a7dcf9f7e5e3e4"
+  },
+  "include/gufo/ext/platform/prefault.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "f6a7f1cf75c1cc77c8ccf1a583e4d2f154cc9d44b6ecfb174412ab7f7fba8d0f"
+  },
+  "include/gufo/ext/platform/publish.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "5438fffe94a6cca746828bf24c10a94ce7fb711ec3d53258f4523399e444d536"
+  },
+  "include/gufo/ext/prompt_lookup.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "58c9b783fed6736c77e2327f53349d0c1d1050c6b894d574f96bb25e4d4515e1"
+  },
+  "include/gufo/ext/reasoning.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "e26e6270cd141fa320d0a0919a2769cf48968a78ea343bd5811d37b6a094cc36"
+  },
+  "include/gufo/ext/registry.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "bb716f9cd485bec6e5b97ac7bb5f817cda5429e266cf3b6f231f1d0ba33f3c00"
+  },
+  "include/gufo/ext/sampling.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "3ec502b35a350f37b946a528bad0f6a04d7b104d40cf192c3cebf26fbbd3f734"
+  },
+  "include/gufo/ext/session_mode.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "4b18a75e35e09aff3d0a3e5dcb76bd5777f4094feeb9aefd4d03b658e32603af"
+  },
+  "include/gufo/ext/sha256.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "53264d58d32ca5b2b1e6628775d5d876446e5b15a0d93d43936527b7bf4d5529"
+  },
+  "include/gufo/ext/speculative_verifier.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "9558ed8c599f4db5a0892b08785722ca993131f63f66029b9130df2cd1c1b7c8"
+  },
+  "include/gufo/ext/text_contracts.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "5fd3984f824b2bd8080228ced1ae0b77f6629186d30e1a2f2ca6c5c203a5da7b"
+  },
+  "include/gufo/ext/types.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "d3f8fdeb8776bac36cfb59ef8442cea7fb8c12924036c4d6fefdf821c87b7cad"
+  },
+  "include/gufo/ext/utf8.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "fe9c88b7515a7af0b33c89f3b4f4c8b2909594d4d2910727c521a49d39f3083b"
+  },
+  "include/gufo/ext/version.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "ee9fa23410ca5290f4b79be44b107c86fe4f81fab4ca5b57a31f1f552edd5e52"
+  },
+  "src/cache/CMakeLists.txt": {
+   "module": "runtime.gufo.cache",
+   "sha256": "19c2554395479285cf3dd1bb4369eabd4460489b759ba62e65be81a5d7bec13f"
+  },
+  "src/cache/adapter.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "2d95cfa838ad47fa7c2a944aab93670a23fc6d7ff9d82c81539bd0dc3c1c7e95"
+  },
+  "src/cache/checkpoint.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "da6ced754d1179d65880a2aea01f8f7f98f3af70f74a011f2e7d325968738de3"
+  },
+  "src/cache/checkpoint.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "0fc8227dc454df975975812689e54c40e8eba512dbaea5b7b327e78783fb3792"
+  },
+  "src/cache/completion.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "7d754d17008ef8ebd4532184da05c6eaabe79e961dd2652205d8d6411f5053a1"
+  },
+  "src/cache/completion.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "a596e74dd1243834163fcf794b2c8c5a694b235b79d1f1cb698609c7a30aa1f7"
+  },
+  "src/cache/component_resources.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "702895c682393e5c07e15cfcc2aba057d00acd15dd7f0f250faab659f95e9f6b"
+  },
+  "src/cache/disk.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "00bbc0be67902ae7eb886dbcd9e45d687e247bb00e10e188217995680c98cef8"
+  },
+  "src/cache/disk.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "697acd576dae3b73efa078ed4e12c9f84b31427808f5eee72f5e26ae2193f9e5"
+  },
+  "src/cache/disk_catalog.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "6b0c4bec16ac13a627cd9ac5a9150b28727a38e27d656e8cf3fbc4ad7a22c096"
+  },
+  "src/cache/disk_catalog.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "ad6569ce4b449ff299ca7d79650931967f0f404392af414cd5566c89fb049340"
+  },
+  "src/cache/events.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "e6ffc4c001244c047100743147ae275ef2c9b6baf494235e57528a441d791a11"
+  },
+  "src/cache/identity.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "e1cc8896979a9599e13494dc546828d0cef06df229211ea30f24b11abcedbaaf"
+  },
+  "src/cache/identity.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "3e74461a84cba9b3d91c840934500927bc7fda2447cfa3bf902c72fe2116b2ef"
+  },
+  "src/cache/ledger.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "cdf17f7f0ae7e251237b19407315a6e6dbd7139b001bd3a712dc94c01b6cc6c3"
+  },
+  "src/cache/ledger.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "a9f5ac5201dd0079bfcae47d479da4c32a17afe0d6bc09ddc170064039aab790"
+  },
+  "src/cache/prefix_index.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "da573e1120c59f04df3df2af5aa0203f2f76e95ea9152122f6399ab714a9ea10"
+  },
+  "src/cache/prefix_index.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "41937b32836dfed80dc3c00d6972508e514538e2231389aac7466ce189e7c27f"
+  },
+  "src/cache/retention.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "1aff7a5644650e9fe98b4bc715b8aa75777d65c7d092cda4a1bea0ee16c85573"
+  },
+  "src/cache/retention.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "795576b9c2f43d98c02de640d88334b842b77bd046e82d7f44b264f25c5fffbb"
+  },
+  "src/cache/slot.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "71d39b75cf2f78f63f5b9139e7047f8f6ee6af8e79715645002705a2fe99e5a3"
+  },
+  "src/cache/slot.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "64a829aa3ae50de92ff1b8459f480b20d191a06578803c8ff4c117fa97f9357a"
+  },
+  "src/cache/stream.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "24348525e5cd137c2b9341c7054f67b1aa5691f34e8b6745d58524fb33ed985e"
+  },
+  "src/cache/streaming.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "74525a6c95df2b0b27123d15841db891d749888f80c6e6cec3885db689655116"
+  },
+  "src/cache/streaming.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "40b6f4db0cd2e68b26a4cef0c4fa2908ee50e28fd69d4c704f81aff0b701f51c"
+  },
+  "src/cache/types.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "589de456262b691361309758dfd831c5b1ab4413ac2f117dbb10ed95c6220742"
+  },
+  "src/cli/serve/component_cache_metrics.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "7ce2f117c145abcda4f91626d064f8e60376f0be5755830a2203d99c9fd4119f"
+  },
+  "src/cli/serve/component_text_cache.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "ee39cf8852ef9ed7639fb25c98f34cecbc95f342f415c296f4ca8895e78ae2a2"
+  },
+  "src/cli/serve/component_text_cache.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "c5e7e0940143990e7fd6ad66bbe20c5cc636facb5e4a1f6ec25d42af0e6a8501"
+  },
+  "src/cli/serve/continuation_cache.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "37ca62b090ed187f0144c75dcbdfcfa54dae29633f17006e25628bc105589a41"
+  },
+  "src/cli/serve/continuation_cache.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "5f423a38a8c99795689e880f5f6a0f4c51c7da3a910e1c8d926390b1620e9336"
+  },
+  "src/cli/serve/continuation_disk_store.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "8df9fa9d9634405f3cdf512930cc33b20b8e3ad17c894329622cd369a4426fec"
+  },
+  "src/cli/serve/continuation_disk_store.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "482a825390b296cf98cab84d5c1a75e959f1a421a2a198fdfe14bc81a394ceaa"
+  },
+  "src/cli/serve/continuation_identity.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "c53cf7d5db17ca759664c6578e70bb89fa325de8f4da998c2cfc8f7296586485"
+  },
+  "src/cli/serve/continuation_identity.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "eca81173cc7e513b2ce3d128387dcb7b23c3c78c82105691762b94a942f50bc9"
+  },
+  "src/cli/serve/generation_metrics.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "7e676c15d26edb66aafda6d85b18c236e4089c5828f4f356d925248d20031b8e"
+  },
+  "src/cli/serve/http_server.cpp": {
+   "module": "serve.gufo.http",
+   "sha256": "e621982c5c535da00263adff7874929f8560f63d3b8fe5372ad8e5f27f01bb13"
+  },
+  "src/cli/serve/http_server.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "4d1b72e178656c855bb411211227bc9d77ef827942c27b34f61d050677af48b1"
+  },
+  "src/cli/serve/inference_backend.cpp": {
+   "module": "serve.gufo.http",
+   "sha256": "fea4b896c75f62698cc96dbec1427568ae7ea61f5ff07e534b8de652032140e7"
+  },
+  "src/cli/serve/inference_backend.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "ae6bb86dd5863619ddb867924aae9ef0b3c8f60cc1c7d7c2a11e8fd0d33756a7"
+  },
+  "src/cli/serve/logging.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "439152a4eb7a1355eeaaf04c84f4cc721bb691ec6db335084615a9682cb09a3f"
+  },
+  "src/cli/serve/logprobs.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "9a4b3b82cbca4f56af0ea347024f97cc271b99a98f825c6945609720151b00b0"
+  },
+  "src/cli/serve/openai_chat.cpp": {
+   "module": "serve.gufo.http",
+   "sha256": "72cd2f30e83456b83740d52a50c0ea056c0bd700566ba6368263b0ebf42ee08b"
+  },
+  "src/cli/serve/openai_chat.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "d0553e98895ca84274cf50e73ea88f0b399a1c870eff289c133684a256e127cb"
+  },
+  "src/cli/serve/quote_tracker.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "0d5e7f557578938d05726128ce384e6f4936cea125657bf7ea51099997e557f0"
+  },
+  "src/cli/serve/response_format.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "c1a9bfaab3e3b537d6fdfa1358d98b55b81a69a56190428a171112c88714f687"
+  },
+  "src/cli/serve/responses_logprobs.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "f937912f29414d1d7ee113834385a499a704e0228a9e6a803aae2eaa69d8eb05"
+  },
+  "src/cli/serve/sampling_request.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "a0a6a43f7443bc2cf183f44dfb9d86bc01d4658b467ad0d3d303346c76395f14"
+  },
+  "src/cli/serve/serve.cpp": {
+   "module": "serve.gufo.http",
+   "sha256": "1a7fdc1963f4df58dc9f1c6e0e59704baf81c274d0ef308aadab028bc530ecf1"
+  },
+  "src/cli/serve/serve.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "ccf10e9bfe624f8a0f4d21f172f27004d3029af75bc71adecca372e4a7bb562b"
+  },
+  "src/cli/serve/stop_sequences.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "e6fe26fb0ee9a101f6065f61c108388a7a6cae9f08f65787055a89ddd8623146"
+  },
+  "src/cli/serve/text_generation_backend.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "6e17353b834289d829c2397e3867f4e57d77d925a7ab7dbed38c8a6d89d2afb1"
+  },
+  "src/cli/serve/text_generation_scheduler.cpp": {
+   "module": "serve.gufo.http",
+   "sha256": "b9066333e49773c73f4e6323b22e3f4bfb5aeb93127437b590ce7147adf6deb2"
+  },
+  "src/cli/serve/text_generation_scheduler.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "c28a8871d6f9a8e9a95a896eba66a8e691b8f86b68b2932cc985e39495687820"
+  },
+  "src/cli/serve/text_model_runner.cpp": {
+   "module": "serve.gufo.http",
+   "sha256": "4e936624bba3bc803329aa2a880e86a51c7a443409f488c2db8b2610aa93bb4a"
+  },
+  "src/cli/serve/text_model_runner.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "eff117834af7f945972df78bab50b8a0f93a8baf0e14e7ed218ffc523e35a2f4"
+  },
+  "src/cli/serve/text_publication_wait.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "5b55ab144a1ff25f614a52be42a90f38949758f4361978d6373bd90e2414ee2d"
+  },
+  "src/cli/serve/tp_control.cpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "38987fbc78757687f8cad1e719d7335d3d536444b18d26c803199ff7a66c5e11"
+  },
+  "src/cli/serve/tp_control.hpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "cfb67acb929bc6863f6926c12b300d77757f455ee160abf3ae485f44d3c4ebc5"
+  },
+  "src/cli/serve/tp_disk_store.cpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "8b2059b7127b08a450db39b02238257a6de41e81f5506f92fcb55acf9ca0638e"
+  },
+  "src/cli/serve/tp_disk_store.hpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "e3f574c3babd1e5dcd3db0fc96428a2d54204f2a5a03b8eb688db6359036bfe2"
+  },
+  "src/cli/serve/tp_executor.cpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "fa09c9183881bd14d240cf6fbc10d28207a7d93a95c3b8157ec6a1d7e799dfd3"
+  },
+  "src/cli/serve/tp_executor.hpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "864bbe53e8f0183b68f3ed50849ff21afb6626a10e7820ccc9aa2633a3e6cc74"
+  },
+  "src/cli/serve/tp_snapshot_gate.hpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "9469d252dcca939cbd42c0df1f27521c858a6db9df8bf382dafd0d927eafaeac"
+  },
+  "src/cli/serve/trace.hpp": {
+   "module": "serve.gufo.http",
+   "sha256": "4ae0107be7116d6a1000373c80a24c6696252e693d4823bbe0f50cc6819fca03"
+  },
+  "src/core/cancellable_gate.hpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "a14dac311189113b9a7216bda07062fcf11a2d6edafc103ff518748402b7cca3"
+  },
+  "src/core/crypto/sha256.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "8f4d6c3ee16cec5e446e7f4ad317917e31762cba8634c06760d40c5cbac9012e"
+  },
+  "src/core/crypto/sha256.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "215e0d37da738929c4435e36c2a92359bed18533f6971e1d5dc8bb561aca041e"
+  },
+  "src/core/diagnostics/allocation_benchmark.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "ee6856f951c53428ea3f27f5dfdf699202ff221baf0abfdc034484e7d7386483"
+  },
+  "src/core/diagnostics/allocation_benchmark.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "0bfa2aa27d4df953ab227b25dc09a0dca2c8da52e650b1ce0a349ca3905bb561"
+  },
+  "src/core/diagnostics/artifact_validator.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "9b78236e81b4846763626fea32b9c050abd95b5454cd96d87ed03bd39c41808d"
+  },
+  "src/core/diagnostics/artifact_validator.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "c59221f412f4151d0cb1137750d6b9404550d8e18e0ab7146e15300ee1f9b8ab"
+  },
+  "src/core/diagnostics/bandwidth.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "1b80d0a84540fbacd60a4eda005999ca3e2f49c03674382de2ff3c7065dfd39c"
+  },
+  "src/core/diagnostics/bandwidth.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "b5d90532705f18f477d36d6c7ee7c1df2b39e0138d3466a7253d2a8f5875a71a"
+  },
+  "src/core/diagnostics/bandwidth_run.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "dc946e6aa77d06e785453b1aae7c3720ad1495bf051ca7cf70c14fa8ef9ab03e"
+  },
+  "src/core/diagnostics/compatibility.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "9915ab2a06d2f66b72f86b0814d46a9879680f53e9b397318ab90dda3c3fbf51"
+  },
+  "src/core/diagnostics/compatibility.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "daad78d5eeb594fed0336c88881000551703d06654589abfd72aa501b98e56d0"
+  },
+  "src/core/diagnostics/fingerprint.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "16714b7588bf79c0ac85ad4a1ac78993d3090af0fb682a66b1b873f8b511f74d"
+  },
+  "src/core/diagnostics/fingerprint.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "4e4fa28ae14f79b93d314cff57fb3a67353caa449b6e6962aa0fa37eaa1a3cc6"
+  },
+  "src/core/diagnostics/gpu_queues.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "6cf7383101094c334fd13493fa15c0fa02e0ccbd2394ecd0880cd3e26ba69456"
+  },
+  "src/core/diagnostics/gpu_queues.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "99eb18c8ebac69b3571119973ffa8f85fa53ef8d7d66abe402c5372abe5e5dc8"
+  },
+  "src/core/diagnostics/linux_sysfs.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "c7204b095063cbe0368904780a24a3ac485b99c7c304fec5ec8c74c745cb0ae7"
+  },
+  "src/core/diagnostics/linux_sysfs.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "ad34bf4fe63a666fc00574b4d4d7b0f3cd16aa141ecf778f5725dd10785894a7"
+  },
+  "src/core/diagnostics/report.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "0270c7feffa8daf42f402a6e8c209e8e9cce46d3d24937233022f7adaf6ac6ae"
+  },
+  "src/core/diagnostics/report.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "3bba7b964e2edb7884de1f1fa65fbf4f1d029ab5e1bfe2732b47a78027fcad8d"
+  },
+  "src/core/diagnostics/system_inventory.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "a42c2ddb65d0e7bb3abbfd5b9d1582142849c1030698a16f8dd9d682f7445f24"
+  },
+  "src/core/diagnostics/system_inventory.h": {
+   "module": "runtime.gufo.platform",
+   "sha256": "ebd8361df4967b330e480e18df46fc1a332ace2bbef1542df5e5f160b6ed96fa"
+  },
+  "src/core/gguf_identity.cpp": {
+   "module": "format.gufo.gguf_kquant",
+   "sha256": "1e2dd644b36b94ae45beffbc8d5acb436a46002f146aec761910186fbc0269db"
+  },
+  "src/core/gguf_identity.hpp": {
+   "module": "format.gufo.gguf_kquant",
+   "sha256": "e38e9a30514a84717a472f74f295c169b2183e27d167c0e2e249ee293b413a27"
+  },
+  "src/core/gguf_reader.cpp": {
+   "module": "format.gufo.gguf_kquant",
+   "sha256": "6aba37bffd2df42ba904249d6d1666a75c7371f0c4b0aa5d15f17269064fc1b2"
+  },
+  "src/core/gguf_reader.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "460bf647a5413e01df9dba0820488f03067dc5b764f8f15bff467e34a6f3ae13"
+  },
+  "src/core/hip/bandwidth.cpp": {
+   "module": "runtime.gufo.hip_host",
+   "sha256": "ba946b70c0cd44e7acaa2338b5b16250d212b4817364774ba17dace62b85a12c"
+  },
+  "src/core/hip/committed_backing.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "529804a7707cacee554544c18f7cb3c61756209ebf1a50cf8e76c14c8ce19423"
+  },
+  "src/core/hip/committed_backing.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "de3b2dbf4c415ab8473bacd79c43c0af29e070ca1d9fc695770b9a497e3685dd"
+  },
+  "src/core/hip/component_cache_resources.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "641139217f11d5afd2d6e6675899479643fb636b729e509263018eccd96dc0b5"
+  },
+  "src/core/hip/component_cache_resources.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "5712a7f4d1f7f2b224a909738ad7a9a3c4c705e137edc5d5a2991659a1e0873a"
+  },
+  "src/core/hip/detail/dispatch_telemetry.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "96bf4f476fe7d27348f1e0c8b832459b17b0a8f80a45ee8682ac3b1d2a3962f8"
+  },
+  "src/core/hip/detail/gemv_dispatcher.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "89cc12707cea31f5ab6858d778423467b972ddabc1c66dee3da21576eeb7e414"
+  },
+  "src/core/hip/detail/hip_graph_decode_executor.hpp": {
+   "module": "runtime.gufo.hip_host",
+   "sha256": "cd952ae331d923af8a3721a8e2b5c6bfb23d60272c11581f4a02042dfa471193"
+  },
+  "src/core/hip/detail/hipblaslt_plan_database.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "827300113301db7029eed6221fabb6e11a8b459edde729d2b3c8fc23b74d9411"
+  },
+  "src/core/hip/heap_placement.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "5585fdefb7472be3b3cb56de6da5be17ad6ce1286cb73b427e9e64fa6122568b"
+  },
+  "src/core/hip/hip_utils.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "1037163c31b03b8a1276bd455e1ffe8417f9be56d7ff5154917dd69bc705ac6c"
+  },
+  "src/core/hip/hipblaslt_plan_database.cpp": {
+   "module": "runtime.gufo.hip_host",
+   "sha256": "2c400ea8c87c36d28ea528664193bdfe087e114fcd03758c96ce050b806d61de"
+  },
+  "src/core/hip/host_allocations.cpp": {
+   "module": "runtime.gufo.hip_host",
+   "sha256": "5cddb64006bed15f63181bdaab6e9172a740a9cfed70f642f72b09a5fcac927b"
+  },
+  "src/core/hip/host_allocations.hpp": {
+   "module": "runtime.gufo.hip_host",
+   "sha256": "543504877da4199e22e280014e61ecb96640865fc749c1782c4f5658d6d6c085"
+  },
+  "src/core/hip/libstdcxx_noinline.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "ed3ad7f4809736d2f20b6715df2b90919b3107972432eba7ccf09709e17cd5b2"
+  },
+  "src/core/hip/managed_alloc.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "fa3b320854372fab7650e40a512819cc062fd78c643cd801290f8af2d1a1ea5c"
+  },
+  "src/core/hip/snapshot_copy.hip": {
+   "module": "kernel.gufo.snapshot_copy",
+   "sha256": "4de7d1eb9ea430ff0d1f568e6ff95df0b99ae2296de21102734d0e80f6ecfa89"
+  },
+  "src/core/hip/snapshot_copy.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "281629b65e01a9664328a4454039e23d02de1e800562cd97326759992e4098fa"
+  },
+  "src/core/hip/snapshot_transfer.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "35750f596fb915824bbc101b38831618f12e9417f7e17537aaf0ff6530d5753f"
+  },
+  "src/core/hip/staging.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "c4a89f9780749968941c7b751384713457028e248cf05356eb463113bc66f149"
+  },
+  "src/core/hip/staging.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "9ac87c0ce8de4501effc3b5df44ee48fb915316b198a04cb67ca8370b76cbd2b"
+  },
+  "src/core/hip/transfer_pool.cpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "11b4d88d4f8aae239fcb1ae33406b089c60133387de88938667a456b6ecaf6d1"
+  },
+  "src/core/hip/transfer_pool.hpp": {
+   "module": "runtime.gufo.cache",
+   "sha256": "cb355b21af530386a1242447d4093a44507e7fd58c166d350c7e9885f7467b96"
+  },
+  "src/core/hip/weight_upload.cpp": {
+   "module": "runtime.gufo.hip_host",
+   "sha256": "08469c663d41cf5fbf3fce9515d1fc43bf155d553ede4fa67823c8a699af0eeb"
+  },
+  "src/core/hip/weight_upload.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "5a7404ed5a92416c60bed6e482798ccc484f0454edc582da3c35d0dbbcf43e8a"
+  },
+  "src/core/image.cpp": {
+   "module": "runtime.gufo.image",
+   "sha256": "a9f4c04694cd21823e5a393cf2b61186810883c9226aec41b2e37b5b32623538"
+  },
+  "src/core/image.hpp": {
+   "module": "runtime.gufo.image",
+   "sha256": "9318228fe8e3441e02962e2a9584df842531e613c540f86f94c704a12fbbdb06"
+  },
+  "src/core/json.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "8453ac479a5046562d599d2ea961d1b1f745b23fd5ba3c8fbcc86d6f3e2a823d"
+  },
+  "src/core/json_constraint.cpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "a24cfe455b73017ca8fed21ce0ee790b2a19cafa90ef4b93b6cd7b98108a32de"
+  },
+  "src/core/json_constraint.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "14ea2b30fdf339a108e75301a06fbfff2adb2c0f57d89b77d868eff832c894a2"
+  },
+  "src/core/json_schema_lexeme.cpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "145aa578c856ef321365ec1d351daf92c85e75915a62934cb723af25fcc54074"
+  },
+  "src/core/json_schema_lexeme.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "530e56dfcc33fce541ddf3445487a63c4494be4a73f81b652242c75729d45eff"
+  },
+  "src/core/json_schema_regex.cpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "9e029cbe29725123a1632ea46fdd1f0188799b7f1766c62cfa19bf99ad494013"
+  },
+  "src/core/json_schema_regex.hpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "d9f617167495e705caf2f502f2f61ba55ee18815f20f818ccd8351e9043cda62"
+  },
+  "src/core/logging/logging.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "5e13b8e4405afdc2f845fe54e03315e6da320ffc25d02f2b310bca8a903c6869"
+  },
+  "src/core/logging/logging.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "b924e9c5d235dc1c09d0becf7f38b3da05f9b22f3a0cbafb68b235eb5c67acdb"
+  },
+  "src/core/logging/trace.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "520335d0d8738e478aade6620c566425457755fdf95036979572994c13af8011"
+  },
+  "src/core/logging/trace.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "8bfe158598ff4e244942cd1a37b130f04f788b28202c273ca932cd034187ac4d"
+  },
+  "src/core/mapped_prefetch.hpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "4d7719581bfd39297c8fda65ed9452c4a10c0d925813a3e21c62153098e21c05"
+  },
+  "src/core/model_config.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "b51f341f4239f35a3b011ee32efc4ce8a333abe711f591692b3cf6160b6bae96"
+  },
+  "src/core/platform/CMakeLists.txt": {
+   "module": "runtime.gufo.platform",
+   "sha256": "bbe6ddfc8559e01c09b1d1c6a596f0ad6ea29bb96343688bc594e02fe65d56bf"
+  },
+  "src/core/platform/env.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "5d9f6168a33eda2d798a984af5c3ab3d972a09dee6a9f727575d8cb22a68d743"
+  },
+  "src/core/platform/env.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "d78f5fd08ce768f48fa49ba0509db598229d6ef098fda26831bdbca910e53bc4"
+  },
+  "src/core/platform/fs.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "9a55127a3ad047ff4d07723f054d355bf333ec40d30ae3cd42bd77c9802f4c9b"
+  },
+  "src/core/platform/fs_posix.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "516794c879371f75208777deae1839ee0656fe8dbc066a949fadee72f024ae49"
+  },
+  "src/core/platform/library.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "12784888634546434678c32213e1b5e9e65dcc864f14ae54b4f4c3cafb011e47"
+  },
+  "src/core/platform/library.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "bb0afc79a06b3179da810d1d5712115844c18c0dfcda0102a97d0cd3de414aa6"
+  },
+  "src/core/platform/mapped_file.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "685fc8562bb8f9fad3b6189fa106b8e94efc19980bf34aa72c52059690dff0bb"
+  },
+  "src/core/platform/mapped_file.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "40d8310a6dbe8c8944bda9a0304b743dbdeac9de1d5833546af3858e4cece211"
+  },
+  "src/core/platform/net.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "36737e13b44fd4fee6a41063995b5cd7d843d9073da0f7d634251d47355cddc7"
+  },
+  "src/core/platform/net.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "9c9aedba72e9d91a0e2d85af4288096bb00e42356204dbb28b6eb483a36edc93"
+  },
+  "src/core/platform/os_info.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "9c02b51e74825f2271f9c3200e5a4ed55dfb93ec9eae32d3c3b40325c7707b6f"
+  },
+  "src/core/platform/os_info.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "44a82e3397d98c62fac18491fefa5842a0e997e92cca7277211d8021a9536881"
+  },
+  "src/core/platform/page_pin.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "f6b75248f7e6353e6986b9b69553f9364524f9ac5a5db26cf6e270bf859d4773"
+  },
+  "src/core/platform/page_pin_linux.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "6f3a7c07b64fef4818681916993fc94b0f29f3cbcdda94bfe3462786f2385a0e"
+  },
+  "src/core/platform/pages.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "f1d36186f6b0771a58b8b87e9956b1abbeb5f3df27516f3f524edf2f1ce7586b"
+  },
+  "src/core/platform/pages_posix.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "e6f14e012667e9346e6cafe9a4f42d635fcc47336901b552817d9a11df79b65a"
+  },
+  "src/core/platform/prefault.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "e8ee1e8afdfdd7656a4792c93cee54b8a04b73f03e05b265e767ec8ae5966ee5"
+  },
+  "src/core/platform/publish.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "47dd516ec9403f4d05f69341d5a7d773baf7b7f58e8a87cebd47c8db80e35eef"
+  },
+  "src/core/platform/publish.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "b4f1cf22b2b210487bec7ef8c09f48e08a706044a3557ce0fadea62b4fd367ea"
+  },
+  "src/core/platform/shutdown_signal.cpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "41c449b8325fbb41dcf5240eb60eeeb79eef9ed6f141af89088bc828725f182c"
+  },
+  "src/core/platform/shutdown_signal.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "b8b7515cc3db64f607c1f5b1a2a85376574a8c74f0363394689017a963b34ee0"
+  },
+  "src/core/platform/socket.hpp": {
+   "module": "runtime.gufo.platform",
+   "sha256": "aa7f1ddbccdf177880ebaa90885a16557213d230280dad160a005efd51067812"
+  },
+  "src/core/quant/ggml_dequant.cpp": {
+   "module": "format.gufo.gguf_kquant",
+   "sha256": "8168c797dffc31c3fec2436b603bf26bff06464b7f518b46c30bc66cabbf6bd0"
+  },
+  "src/core/quant/ggml_dequant.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "db4705915166a7aba68c278d2fea4ed12b082a75e050cfffa16cf6e687072b08"
+  },
+  "src/core/quant/ggml_gemm.cpp": {
+   "module": "format.gufo.gguf_kquant",
+   "sha256": "096e7be13a32982c0eb59216ea670b36c329c57a64f149dffffc21b1881b41f7"
+  },
+  "src/core/quant/ggml_gemm.hpp": {
+   "module": "format.gufo.gguf_kquant",
+   "sha256": "57c09c28ee530625ac2d711bc27197ecab3a2730e481255846e9378a37429b97"
+  },
+  "src/core/quant/ggml_iq_grids.inc": {
+   "module": "format.gufo.gguf_kquant",
+   "sha256": "71f5687696bc29a1e8bb5bb4a6e05f9ff0e7d7b446a313769f9382a8bb46104e"
+  },
+  "src/core/reasoning.hpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "e71bd527b14620a2a83da974943bbaac1416d310b983315f5789d0b0eb38e085"
+  },
+  "src/core/sampling.cpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "5cc781d5a83f8e0acbb103323df2c8cff3fb46f946cd081f8dbc1bf185df5d39"
+  },
+  "src/core/sampling.hpp": {
+   "module": "kernel.gufo.core_headers",
+   "sha256": "1fb2c2f7b4df175f600dde5a969eca882519be023872f8d35452d84eae8a7317"
+  },
+  "src/core/session_mode.hpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "e0ddbbbbff727d00de2cca3a8ccb30e52a3d07cc384ca1100ffd7a3c66cc7a04"
+  },
+  "src/core/speculative/draft_backend.hpp": {
+   "module": "runtime.gufo.speculative",
+   "sha256": "12df77793b8d856bc60ce1330ea585ce45650d1a478daa8c719778a270ea827a"
+  },
+  "src/core/speculative/prompt_lookup.hpp": {
+   "module": "runtime.gufo.speculative",
+   "sha256": "360c3fac75dac185e6eb46c08d6915e04f3a96ec30eb41bed71f1b1afb872763"
+  },
+  "src/core/speculative/speculative_verifier.cpp": {
+   "module": "runtime.gufo.speculative",
+   "sha256": "e3fe2585426484fb98d380581a174a2d67fcacfca86a71a6169d1c40c86b0532"
+  },
+  "src/core/speculative/speculative_verifier.hpp": {
+   "module": "runtime.gufo.speculative",
+   "sha256": "afc0b40100ee322724a193ac3177bf59a0330035551589c0e1bbfe1a28a1834c"
+  },
+  "src/core/text_sampling_defaults.hpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "f900b8c6fba112234da5f35708b1868404f5ccccf708737f8535a58c29a50b29"
+  },
+  "src/core/utf8.hpp": {
+   "module": "runtime.gufo.sampling",
+   "sha256": "03736e3d618295786c5fed7652c8fd0e5e873966c648a243c476d8294bafbfd1"
+  },
+  "src/ext/CMakeLists.txt": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "24da39c6f5b7ce37118dcee981173d270e72176fcd15feee4e4399d112d2392b"
+  },
+  "src/ext/continuation.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "c8b4b77366a17386d51e1b7fee2684a742850bec5c908caf4319d1044bea6626"
+  },
+  "src/ext/device_probe.cpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "dab19fcbbf7312988466d438a345e77fa8bea790441fad3b9391607a80f87d32"
+  },
+  "src/ext/device_probe.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "6a782d9e6dcd17f8c962fd3d72ed06f27e6f390ce94892ef4da4241c75f0e7aa"
+  },
+  "src/ext/embeddings.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "4532ddfed2eef4f43d14d6ebb977b592431d8bf87228f752bc18f98c2d89cb46"
+  },
+  "src/ext/host_budget.cpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "f43c2d36120a51b37c47c5455c301ceade7a5d493092f9ed712b4332e7b90a60"
+  },
+  "src/ext/host_budget.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "ea9233e9006b81c4530c2a29cbb2c9a0c350e05dd6f7ef82054374e395961d73"
+  },
+  "src/ext/options.cpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "c99ec9209762b05d1c45033b0a571f4c5300725e44bc2076d00c063634ea18ef"
+  },
+  "src/ext/runtime.cpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "a34e8e6333446c27898ba2e81211176f660924a9168886fd6bbf43584ea1cfd2"
+  },
+  "src/ext/text_contracts.hpp": {
+   "module": "runtime.gufo.ext_api",
+   "sha256": "8aa3a09f4202fe4a0c898b396730e0fe24d88c6c99f6d4c8181043fb7d49a3cb"
+  },
+  "src/families/qwen/CMakeLists.txt": {
+   "module": "executor.gufo.qwen",
+   "sha256": "527ebd9289208fb47f5ee66bd2588f3fd51166959d2daebbb9abbefde1797280"
+  },
+  "src/families/qwen/config/CMakeLists.txt": {
+   "module": "executor.gufo.qwen",
+   "sha256": "64e1e2fcdd1e8a27b6236fd12d764ad59140e395c33a0727d240c9b2f0d69751"
+  },
+  "src/families/qwen/config/library.json": {
+   "module": "executor.gufo.qwen",
+   "sha256": "fa2f9d6bd458b0a989c9e0632239ad14e8f5bc81517d1f6423c98b9e43c12967"
+  },
+  "src/families/qwen/config/qwen_config.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "b98651088eba3ec14f85b80a045a788f02303ec8c782685de34e0bfbce59cb72"
+  },
+  "src/families/qwen/config/qwen_config.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "cf66cbc04528468d3e761e77985397e9f1a21c6d099870494e3be1063c2c2890"
+  },
+  "src/families/qwen/control_tokens/CMakeLists.txt": {
+   "module": "executor.gufo.qwen",
+   "sha256": "4cbb3967356fcfa871fc70ecf51f4ad58e38361236f6a3e45f2f6fd06081a537"
+  },
+  "src/families/qwen/control_tokens/control_tokens.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "9c39eb9c072155bb85ef41e310b7f6367718f2d8b7d4b154de258a931b5326f8"
+  },
+  "src/families/qwen/control_tokens/library.json": {
+   "module": "executor.gufo.qwen",
+   "sha256": "b16a244f4590d5bab847ee323ff6bcebfd488c296b08ae8de6cc914c20f3b6f1"
+  },
+  "src/families/qwen/hip_common/CMakeLists.txt": {
+   "module": "executor.gufo.qwen",
+   "sha256": "f0e8a306ff33077e5938695a7aea72fc5208af200229a1819c3846d302e6a6e4"
+  },
+  "src/families/qwen/hip_common/attention_policy.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "ad2d4c30df3445a2569bba4d74263f28e67e6eb6ac45586bec4afcdad0cb8f7f"
+  },
+  "src/families/qwen/hip_common/continuation_hooks.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "4d94c8112e5f03fc0e7b63917ca730b449e8ecb6650f2414ac076b118aac997c"
+  },
+  "src/families/qwen/hip_common/execution_policy.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "ae7d22c8891be61b2e880d0c3e22b826a791a55945fe20026d133e607ef9e15b"
+  },
+  "src/families/qwen/hip_common/gemm_route.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "9d8993a2cfa5193a0df497ee5488f4cce1a6c4128a93529dc6d164c296fb8751"
+  },
+  "src/families/qwen/hip_common/library.json": {
+   "module": "executor.gufo.qwen",
+   "sha256": "9c1ec09073413c11d954634e05c155b6b1129fd7530123a062d5dc78cbeb6aaf"
+  },
+  "src/families/qwen/hip_common/quant_ops.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "741adbf38e7d9a6334c0fa98da16b94a0cf0440917c7f87b1dd56f385aeecceb"
+  },
+  "src/families/qwen/hip_common/recurrent_state.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "5aa2c92ffdfcb79e39a45442d984bc171a8980db2de7b7bb438fbda92fb4d5cc"
+  },
+  "src/families/qwen/hip_common/rope.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "5a52f5bd67368f2cb0377ef65b18dbccbe31ba0f1116043f311c9384d8c5bb4e"
+  },
+  "src/families/qwen/kernels/CMakeLists.txt": {
+   "module": "executor.gufo.qwen",
+   "sha256": "4fd4911e0af9544f84f39593553644b50e460afa15fa40c4be62b78a88983f3b"
+  },
+  "src/families/qwen/kernels/attention_batched.hip": {
+   "module": "kernel.gufo.qwen_attention",
+   "sha256": "d0c7a1f1af30a941619843258f83a141cb3487871e1daf51132d4bd5d56687d6"
+  },
+  "src/families/qwen/kernels/attention_decode.hip": {
+   "module": "kernel.gufo.qwen_attention",
+   "sha256": "d9da69b44691bdc75b8ca4980de7f1f5c24e899cffab4889b469f73e1b4b4cf4"
+  },
+  "src/families/qwen/kernels/attention_decode_graph.hip": {
+   "module": "kernel.gufo.qwen_attention",
+   "sha256": "10f3bdb885f2d227cb81b42a2cd3a035bbca1caf5945b711d28de0310f875db7"
+  },
+  "src/families/qwen/kernels/attention_decode_split_k.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "10280fc34ca07138a8d4ba387610b5c418cdcdae06d7763b97520b79f5e415e0"
+  },
+  "src/families/qwen/kernels/attention_decode_verify_wave64.hip": {
+   "module": "kernel.gufo.qwen_attention",
+   "sha256": "acb035379105abfc3dac2ccaddf81414a1b583fa4e49d068c400998a889e96f7"
+  },
+  "src/families/qwen/kernels/attention_decode_verify_wave64.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "5c2fad977bf1fef856ee964767d615b4311ba415bdccbad12a046572953e4823"
+  },
+  "src/families/qwen/kernels/attention_tile.hip": {
+   "module": "kernel.gufo.qwen_attention",
+   "sha256": "89d2ae4a733f680abe18695599c8465121cb81f096481fbb6c1dc3aadae5b239"
+  },
+  "src/families/qwen/kernels/attention_wmma.hip": {
+   "module": "kernel.gufo.qwen_attention",
+   "sha256": "c113c5e074acce514eae7dce2dd68b31ae9794d788ad25a46fcf6c028c531673"
+  },
+  "src/families/qwen/kernels/deltanet_decode.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "f71c44248668088afb29b1843f17867f493d6833821c2bb1d4160ef607408d07"
+  },
+  "src/families/qwen/kernels/dflash_kernels.hip": {
+   "module": "kernel.gufo.qwen_dflash",
+   "sha256": "d139e45fc556912307ecf28bace567898de62162270757b7f2cecd4b81f8f6a0"
+  },
+  "src/families/qwen/kernels/dflash_kernels.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "588d3db1495d66f7a0ed11393ca4cf61ad3bcb699aae7c1288eaf7af35b35412"
+  },
+  "src/families/qwen/kernels/embed.hip": {
+   "module": "kernel.gufo.qwen_norm_rope",
+   "sha256": "5fb1ea3457c0987abe8e245cd7209c5a078cef6edee8ec9ac9cd9f0fc87937e0"
+  },
+  "src/families/qwen/kernels/fused.hip": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "sha256": "bf244e5548885abe1b8659821275ea8ad26823a3c43e19262bc09c9454958b70"
+  },
+  "src/families/qwen/kernels/gemv.hip": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "sha256": "65e2254fb44e4f0b922d537cf04b175fcdad50564cf2b1c9a8232bc09c810a90"
+  },
+  "src/families/qwen/kernels/gemv_quant.hip": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "sha256": "300119fa7f9daa6c8d62ab3f7f0e3d271904c0fa970ae08fdf7e53b91e1369a4"
+  },
+  "src/families/qwen/kernels/hipblas_gemm.hip": {
+   "module": "kernel.gufo.qwen_linear_prefill",
+   "sha256": "86e2f17906c9313a0ae4cf832ad6dc195bf0e6371229e82046dea60cdedf388f"
+  },
+  "src/families/qwen/kernels/hipblaslt_gemm.hip": {
+   "module": "kernel.gufo.qwen_linear_prefill",
+   "sha256": "4860b3588301511a91cdef0caa382c41c03f14893f44f4418dd23d13b40bcac7"
+  },
+  "src/families/qwen/kernels/library.json": {
+   "module": "executor.gufo.qwen",
+   "sha256": "2383da1d142ec24192216ebbc5f31fa57991c58b1f0beae039a22a0e676a8e73"
+  },
+  "src/families/qwen/kernels/norm.hip": {
+   "module": "kernel.gufo.qwen_norm_rope",
+   "sha256": "193d5cfc225fb27bbf6631d64e913947915da22ae8109eeff8de6a6019e83064"
+  },
+  "src/families/qwen/kernels/ops.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "9ee8d093395cd1fa56ddcb834a3e23cc5c2befc6a6b50318416c558bb1bf5b4f"
+  },
+  "src/families/qwen/kernels/ops/attention.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "bd496150a801929734f89c3ea3c35e4f432ed0acbe913974da104a6d2f3fe1ca"
+  },
+  "src/families/qwen/kernels/ops/gemm.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "2ca37a5de1d69beb5ed3be68618b91dc33203ffe92cad52a65c1bdf778a4f6e0"
+  },
+  "src/families/qwen/kernels/ops/norm_residual.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "4a9fd685ef36837d474f94cfab08b4cbf8dda506976002cd9f6ceb7812bac141"
+  },
+  "src/families/qwen/kernels/ops/prefill_fp16.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "f4634d796f1c865cd3cdebaccb092abfc26e998d3a8227a79187b2a84e306f73"
+  },
+  "src/families/qwen/kernels/ops/ssm.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "88b0e24553d50c7f2be7476c2236a03c12f632440a358b31db01d3f2e18ac110"
+  },
+  "src/families/qwen/kernels/ops/swiglu.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "420891c196ab428289b508f9f2aca28143f66a56074df3bf0b47618e90f49659"
+  },
+  "src/families/qwen/kernels/ops/token.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "2c9f317dadbad8116ab0768f3e7d471dac5ed2e7e8431bbf05dc06de62689975"
+  },
+  "src/families/qwen/kernels/prefill_embed.hip": {
+   "module": "kernel.gufo.qwen_norm_rope",
+   "sha256": "98fbba65060b2b8c62724fae46e317e269a3cec857a691ece4e697c5c056bcd8"
+  },
+  "src/families/qwen/kernels/prefill_fp16.hip": {
+   "module": "kernel.gufo.qwen_linear_prefill",
+   "sha256": "230b19aebd4e55d9838ddc69765daf0f536261d8ac70e3ecafa6f61453fe4b32"
+  },
+  "src/families/qwen/kernels/prefill_gemm.hip": {
+   "module": "kernel.gufo.qwen_linear_prefill",
+   "sha256": "914a58b3ca99d28c61dbf4a1b62f92c60e41f7055b327597902049ef71e2599d"
+  },
+  "src/families/qwen/kernels/prefill_norm.hip": {
+   "module": "kernel.gufo.qwen_norm_rope",
+   "sha256": "db4c85a029e0ba9ca77834e2063a284f4950150ffb71810d40f4181d40e3293e"
+  },
+  "src/families/qwen/kernels/prefill_quant_gemm.hip": {
+   "module": "kernel.gufo.qwen_linear_prefill",
+   "sha256": "94d3acb4c54b7b40bc2a88ae33d22bc4ca2f4e33bdb3d7cc33e39dd83009fbf9"
+  },
+  "src/families/qwen/kernels/prefill_quant_gemm.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "840402cf46cc2c00fc300c3d9ad5079003a08aa78d39839705cc918e988b2278"
+  },
+  "src/families/qwen/kernels/prefill_quant_wave64.hip": {
+   "module": "kernel.gufo.qwen_linear_prefill",
+   "sha256": "540ee0fa797da62f948dd50526be1df5c7250ce83b4b9690a2e9ac8fb1461610"
+  },
+  "src/families/qwen/kernels/prefill_residual.hip": {
+   "module": "kernel.gufo.qwen_norm_rope",
+   "sha256": "951890ea0cb765c343611140494efba0a29228e30708d1d854617ae72df476f9"
+  },
+  "src/families/qwen/kernels/prefill_rope.hip": {
+   "module": "kernel.gufo.qwen_norm_rope",
+   "sha256": "433a2860bc4dc8139562ee3356b961bc93f73509736086e394a58b6f7686abc8"
+  },
+  "src/families/qwen/kernels/prefill_ssm.hip": {
+   "module": "kernel.gufo.qwen_gdn",
+   "sha256": "4b4b6c3fbf00b2ee77315350c90467f2e9f85acaf8f48fc0e83a7c28e4ed6011"
+  },
+  "src/families/qwen/kernels/prefill_swiglu.hip": {
+   "module": "kernel.gufo.qwen_linear_prefill",
+   "sha256": "39b2ec3cfee63c200378b42cc0288db6311ca73b4965eaeed0f986b256388a80"
+  },
+  "src/families/qwen/kernels/prefill_unpack.hip": {
+   "module": "kernel.gufo.qwen_attention",
+   "sha256": "6fcb744ec87bd4e7b69d27e069e41d31eb41037cb2e83769a6cd8e5be4de15a5"
+  },
+  "src/families/qwen/kernels/qkv.hip": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "sha256": "eadf1ba15b0bb914e6d7d9b44f597cb954f6a292f074d7fa6c5a89ceaf6b1423"
+  },
+  "src/families/qwen/kernels/residual.hip": {
+   "module": "kernel.gufo.qwen_norm_rope",
+   "sha256": "421199c3c5431e1be3598d10a053caa4da5b3dee7f96c4c7cd048ed9971bc09d"
+  },
+  "src/families/qwen/kernels/rope.hip": {
+   "module": "kernel.gufo.qwen_norm_rope",
+   "sha256": "6bb671afdfe7bca4c5798a6e7582fda516630699cf95d97a18099851882ff278"
+  },
+  "src/families/qwen/kernels/sample.hip": {
+   "module": "kernel.gufo.qwen_sampling",
+   "sha256": "b3ec31f8eaa681aea63a3464ca10e785ee076fb3e4c12ddc68c9d3b15fd0d7d1"
+  },
+  "src/families/qwen/kernels/small_batch_gemm.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "cf46ad869ac7d8fcc137aba1916c4d94c3c4d38762b0a1c44b9c57d29036fc93"
+  },
+  "src/families/qwen/kernels/small_batch_quant16_wave64.hip": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "sha256": "a7dafaa5d9ebdebbc0dec9bb29b1884f146a93b37f766384907f538acbae3a87"
+  },
+  "src/families/qwen/kernels/small_batch_quant16_wave64.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "3643cab4e21e0eb1602d61c1a5a4aa44fc162de87e9021ca88f836e2d6d50ce9"
+  },
+  "src/families/qwen/kernels/small_batch_wave64.hip": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "sha256": "c1772f7bbbcb9d03a5d7e8d57e32ec166346eb21e75cc69224b1c5581aadcd10"
+  },
+  "src/families/qwen/kernels/ssm.hip": {
+   "module": "kernel.gufo.qwen_gdn",
+   "sha256": "624ea8177c7598ca75c302e361e6322142cd7473511b7f08a4bf73f2d46761ff"
+  },
+  "src/families/qwen/kernels/ssm_decode_recurrence.hip": {
+   "module": "kernel.gufo.qwen_gdn",
+   "sha256": "d840025535c072bf97153fe27543e25c5dfbedf5ec5d6a8f1411362833e05638"
+  },
+  "src/families/qwen/kernels/ssm_recurrence.hip": {
+   "module": "kernel.gufo.qwen_gdn",
+   "sha256": "c3074decac750defc90f39f869d193b438c87cc5d2a8cc7cb6eff16d854480b2"
+  },
+  "src/families/qwen/kernels/ssm_row_split.hip": {
+   "module": "kernel.gufo.qwen_gdn",
+   "sha256": "c0ea80955513c36fc2034f42f3dd15d2fb41118a01b0fbc3fe0ca3f3e5714c63"
+  },
+  "src/families/qwen/kernels/swiglu.hip": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "sha256": "11acf9b9140ef8eadfb2ed74fe48b97e1866a5c8b4a98db832f82ee99f03032c"
+  },
+  "src/families/qwen/kernels/unpack.hip": {
+   "module": "kernel.gufo.qwen_attention",
+   "sha256": "d48fe0d30631e4e9d3a169afa82dc9bcd7f8879169d59b4e5c13720ee3a2b6ab"
+  },
+  "src/families/qwen/kernels/verify_gemm_27b.hip": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "sha256": "73c8d3517001d8235ed51e627d644a48371a0cc1e95e80a8f4f97738af62f3a3"
+  },
+  "src/families/qwen/kernels/verify_gemm_27b.hpp": {
+   "module": "kernel.gufo.qwen_ops",
+   "sha256": "27be14b43de9dd3ce3f6561cc5b4619b6bd810e295adcf02dea93ea20729c095"
+  },
+  "src/families/qwen/text/CMakeLists.txt": {
+   "module": "executor.gufo.qwen",
+   "sha256": "7bf81a0bc90b52695f11d1ea6604307c0a4adb68f8bee5768ca9e3cf3bc68793"
+  },
+  "src/families/qwen/text/chat_template.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "5144b9c9d0b564ba8754d23646683a4fd3a30c6d4d1cd9fbede2714b3a20b8d0"
+  },
+  "src/families/qwen/text/chat_template.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "bd83f2f8ea686d1de80fab5431bd5c73411271e5deacc4b57bef6d00c7fe46b8"
+  },
+  "src/families/qwen/text/library.json": {
+   "module": "executor.gufo.qwen",
+   "sha256": "ebb94748aac6b7dc03c3c51c81ae5e7a611e0154ce10ee8670b330206df27637"
+  },
+  "src/families/qwen/text/tokenizer.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "b3f92cd621b4e998ad9bd95c18d6e6797c64f4495825c084fea0afa5dc57ec93"
+  },
+  "src/families/qwen/text/tokenizer.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "d4db3fa98c9ed2e7cd21f8c62ef36b54fc7702192e28a09eb3f1e1f18c32fac3"
+  },
+  "src/families/qwen/vision/CMakeLists.txt": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "6279ca0f2d293c59cde6b32ec3de6ee923403ab618bc3987d0403f779655bb83"
+  },
+  "src/families/qwen/vision/device_input.hip": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "cb0d056d78da70dd9e9ddb779a53ccdcee2fac6bee495d11fa413f5a69c37be0"
+  },
+  "src/families/qwen/vision/device_input.hpp": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "a3f9beb5eee242f0c1e7b731139fcd1d95a2e2705e5121f5b186d069402938b7"
+  },
+  "src/families/qwen/vision/encoder.hip": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "916c8ca61655caf40f6e480899b30f00b2565caffeea7791335759b3b9a16660"
+  },
+  "src/families/qwen/vision/encoder.hpp": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "fad57bdb8ed992caa5999951d7a4993db62d40abba2c6424db1258b4d1faf097"
+  },
+  "src/families/qwen/vision/image_cache.cpp": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "4a99611afcc96bf58bbc2544d1dcca000198caa9c3ceb202163ec8ca529b486f"
+  },
+  "src/families/qwen/vision/image_cache.hpp": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "581938830494fb7bdf6a593275fd503a414b9ea07bbfa59409afc446672db2d1"
+  },
+  "src/families/qwen/vision/library.json": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "b84cd0b31944da4b1aa0413a83325fd27dfe89e745c5b5eed9f0691b05e3eff5"
+  },
+  "src/families/qwen/vision/prompt.cpp": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "0f98e8d64d85d644fbc884d33d1fe0dae0d87cd96ae900d1a41aa5d9d21c496f"
+  },
+  "src/families/qwen/vision/prompt.hpp": {
+   "module": "executor.gufo.qwen_vision",
+   "sha256": "d893b31494023f52d1171b79579386c9339ed1dbc5c61c5ec990d53b164e9a92"
+  },
+  "src/models/deepseek_v4_flash/CMakeLists.txt": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "f0e141d0b2f959106fcac69c2081a368c57c2221cc20998cbcf7adcac70459e8"
+  },
+  "src/models/deepseek_v4_flash/LICENSE.ds4": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "9f13072241f0c2f4a92036b7e9f744525e4f16e29d162d11ccf7dacc34f61056"
+  },
+  "src/models/deepseek_v4_flash/UPSTREAM.md": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "989024538f0d87b55e6fff25eaf61fe2559b43262f2b338bb26eea5884f4a88f"
+  },
+  "src/models/deepseek_v4_flash/chat_template.cpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "a7784f2962313dc0a78b59604374b91cae64614b12f80a997f6a05a1794a7119"
+  },
+  "src/models/deepseek_v4_flash/chat_template.hpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "2e0a3b1f992efef65f03f1537972b24b5b58284b6a973203540a716ad0d18a9d"
+  },
+  "src/models/deepseek_v4_flash/dspark_sampler.hpp": {
+   "module": "runtime.gufo.dspark",
+   "sha256": "97cab4bafe48f149a3ed9ea078935d95a7cc65383911e82c26cd8c42345fbbc4"
+  },
+  "src/models/deepseek_v4_flash/engine.cpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "d82734d828730c7bcd8b684358357975cacdfea2ee9e3369f181c0e94a315a54"
+  },
+  "src/models/deepseek_v4_flash/engine.hpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "f535e9ddd01d8a91d19c448ebd6a6df8bcc7fe631b74f27643cf97813422acf3"
+  },
+  "src/models/deepseek_v4_flash/extension.json": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "f54b10a36dec37c34940a8894b6ef5d95a34bc54293b95f335b59f945d74f014"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/backend.h": {
+   "module": "kernel.gufo.ds4_backend",
+   "sha256": "0d134783147bebd4eb11a89ab1f4c0441c1a8665f2c5eef51e64712a53c89f71"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/backend.hip.cpp": {
+   "module": "kernel.gufo.ds4_backend",
+   "sha256": "c169a80e118987ec4b274975ba2c8381b180fc8db049b3878e00f7917987c0d2"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_dspark_sampling.hip.hpp": {
+   "module": "kernel.gufo.ds4_dspark",
+   "sha256": "6f5d80ac725099f4c299a77aa56ebc0afedc017caf866aed71d5030529b6752b"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_attention.hip.hpp": {
+   "module": "kernel.gufo.ds4_attention",
+   "sha256": "4f302317ad65d98d5af77c6bf3b481d60cd37371d8836f830b7b7e2edd239ab1"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_attention_launch.hip.hpp": {
+   "module": "kernel.gufo.ds4_attention",
+   "sha256": "908ba4c54135bed4c5324d874344c1c4ad9ae3aad1391611e7be52c45eb209a0"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_common.hip.hpp": {
+   "module": "kernel.gufo.ds4_linear",
+   "sha256": "8e601340f4d09e2a030f082c454b4d05ebe8416d4e569731be6ede5df1e5091a"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_compressor.hip.hpp": {
+   "module": "kernel.gufo.ds4_attention",
+   "sha256": "0ecb8f6ab89ff4d3e888a9ef521b4bf68a52b8d326fc62ed508a0f92189b7084"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_decode_attention.hip.hpp": {
+   "module": "kernel.gufo.ds4_attention",
+   "sha256": "8ff6e3f3ab9253b642aa2bcb56ffee59a5a0f0468a44bf2b81f0bb2ef9b2b281"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_device.hip.hpp": {
+   "module": "kernel.gufo.ds4_backend",
+   "sha256": "71808ca73de013544624539bba0362fb0b3a9f136554d6a0952231b70f63eb3d"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_embedding_launch.hip.hpp": {
+   "module": "kernel.gufo.ds4_linear",
+   "sha256": "73ea3e98205aa3cca02ff7a960488e0cad1efa679a63aace722fe9b442e81357"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_f16_decode.hip.hpp": {
+   "module": "kernel.gufo.ds4_linear",
+   "sha256": "d40ea0c48bdea2a630f9dfbbd167074a11aac620cdb5c72a0ffdbd4ff25e5b9e"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_fp8_kv.hip.hpp": {
+   "module": "kernel.gufo.ds4_attention",
+   "sha256": "65fc7b05dee65ac55941c5cb98a0484124f61bc58ba4292e0f93ce34f6e05cea"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_fp8_kv_launch.hip.hpp": {
+   "module": "kernel.gufo.ds4_attention",
+   "sha256": "c3ea4bfb031cad619e02a7607c34ed32d03c517cfd8b30cdd5468c6403b7993c"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_hc.hip.hpp": {
+   "module": "kernel.gufo.ds4_hc",
+   "sha256": "35199dae042bee773ea6b2c627416a42fea6c7fa24e3c79294f34b37206a5c36"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_hc_output_launch.hip.hpp": {
+   "module": "kernel.gufo.ds4_hc",
+   "sha256": "67f348a0ca60583971361a1928c10ea962a89abc88b0e519a89b0bb89f11a035"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_hipblaslt.hip.hpp": {
+   "module": "kernel.gufo.ds4_linear",
+   "sha256": "a6b1240e3a4cbea1628a2ee511908e7c9dae220f86b6f24eac8b32cd0bf80836"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_indexer.hip.hpp": {
+   "module": "kernel.gufo.ds4_indexer",
+   "sha256": "98f193bfdd0f3faea0102cc4adcf44bbd1570be5aba8da506cd16bb1cb835885"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_indexer_score.hip.hpp": {
+   "module": "kernel.gufo.ds4_indexer",
+   "sha256": "b0ca92bbec33caa0fe203be71c62cdd7cf1d7b29dac0767774c36f04817a1578"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_indexer_topk.hip.hpp": {
+   "module": "kernel.gufo.ds4_indexer",
+   "sha256": "48503b2df3e2a367dee1aa2ef1b9208ac545d8425cd27b89b9cf756009be5805"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_iq2_gate.hip.hpp": {
+   "module": "kernel.gufo.ds4_moe",
+   "sha256": "6bc3bcfa5c10b8e556f5ce9549c66c2e5c325645f2e98ebb0046eb22c753896c"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_matmul.hip.hpp": {
+   "module": "kernel.gufo.ds4_linear",
+   "sha256": "3f8425d5c40b91a15cd790688e9aaa51cf5f8451205d778087d8a1ab5dfd1033"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_misc_launch.hip.hpp": {
+   "module": "kernel.gufo.ds4_linear",
+   "sha256": "fa3c312b06e44f8ae647fe79fe74ebef5e80c5ee265f27c222f1198a202a6e85"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_moe.hip.hpp": {
+   "module": "kernel.gufo.ds4_moe",
+   "sha256": "187c9221057b1eef5f95de1eb60a5553e1518758b98f8fc5d10e463c729d58ed"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_moe_launch.hip.hpp": {
+   "module": "kernel.gufo.ds4_moe",
+   "sha256": "37532a73bedf10ff193ef940aa27fb1c7c884017871ef81e0103d336ff50ebb2"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_norm.hip.hpp": {
+   "module": "kernel.gufo.ds4_norm_rope",
+   "sha256": "b52df47f826f1b81cac98db51b589135b97fd5f9e3ad8f155343fa369fdbab30"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_norm_rope.hip.hpp": {
+   "module": "kernel.gufo.ds4_norm_rope",
+   "sha256": "6bb214e4dcdc27cb5c35c5022d569f98c97dfcf3f5954e4da9dd98a4ffd196b4"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_output.hip.hpp": {
+   "module": "kernel.gufo.ds4_hc",
+   "sha256": "09761594a20dc26089eabf2d01dee75d531b1a2ce39529142868f4f7b021262d"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_q2_down.hip.hpp": {
+   "module": "kernel.gufo.ds4_moe",
+   "sha256": "2e98e7c172e430ea61a64bbf76bcb2d637051377a2513628d1e2a7f4eeb8d77f"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_q8.hip.hpp": {
+   "module": "kernel.gufo.ds4_linear",
+   "sha256": "3b70d630f7d7011c6cd356f6e616026fc51d7c7f680f623dc2162afa22181038"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_q8_decode.hip.hpp": {
+   "module": "kernel.gufo.ds4_linear",
+   "sha256": "fda330520e26023cc449ced5b4d3da8b59d0aea2d92362b202c44f6672d4467b"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_router.hip.hpp": {
+   "module": "kernel.gufo.ds4_moe",
+   "sha256": "fbe1b9329128cb04df2ba2b494809b29834ec150153820bf8fd362c154a77ae6"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_runtime.hip.hpp": {
+   "module": "kernel.gufo.ds4_backend",
+   "sha256": "1fae5cff90336f9afd84b37285c7e8753f11f63a61e908e413585b463c0ecb1a"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_shared_expert.hip.hpp": {
+   "module": "kernel.gufo.ds4_moe",
+   "sha256": "7a73faf33321ef44103e5641c2e2ceb1403478336d21a2f119e6e23482557e86"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/iq2_tables.hip.hpp": {
+   "module": "kernel.gufo.ds4_moe",
+   "sha256": "81aaeb908d8a4fc82b1161325732aa736a272d6854d7eeac372bcf3076cf3b9c"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/VENDOR.md": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "1e5cd59fc500b4803fa0db0644858b85921b7d4b748f9abcd1e86ba5867dc9a2"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/common.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "ea75eb6b4526e14a68fa2931b2d2d81e798f9f8354bb9d1721c7f4080f71e221"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_ggml_stubs.h": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "84f6b6f89d9b434605f60a18023656d202ebe18b38105c88942a2a1ed2cb56c5"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_ggml_stubs.hip.cpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "6b2d35a9e09ede4ffb7be173bf80ff2437690f26b0b681e4d30c7b8d1256ae95"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq.h": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "da80ee6217dc408fa22aa76e6b836a909d489c90a03bad3bbbfcf2a026c7dcac"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq.hip.cpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "337cdb8ad2a6779adaab3839ef89c38b53dbd0c8480621d488da06322c5492de"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq_d2r.hip.cpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "ed094cd0826b2c89bb0bf9575505fb9202f1faa0ae2ab7fa355d7d1564a538ef"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ds4_mmq_d2r.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "1bc50be5075d14fe8518bf71e421f5a0a7c53e3eb41aea25cc408f4a0257daca"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ggml-common.h": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "c76caae2425b774fa0fe62d35a4942a0e178399cc0c93c006d91be9b0c7f3b15"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ggml-hip.h": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "ab51e0da20c5d05c9eb2e75364bcf88cb33d4fad300fa5992abb587dfdf75b65"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ggml-impl.h": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "ab51e0da20c5d05c9eb2e75364bcf88cb33d4fad300fa5992abb587dfdf75b65"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/ggml.h": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "b0952e059110a564d76a2e7e7f55ebb4d8527d6b3312960d2f4bd42cc4c9f5b8"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mma.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "d69fc9af1cefae98b0986ec28f5b4cd314e60906c1ecc57ad7f94914ca045ef0"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmid.hip.cpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "155def2a2ff92d30cc35bb8b2ae7d18e3dd4006583371d01908b317d9e82757d"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmid.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "7344d353ca440de1c83bd4ded97e5094938dffb7b9a2a4dc2edfbf04a04f09d6"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmq.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "637eba83fa6fe75a59b81d93583fb3585ebf98d5047e99ee21fc70448e5d61e5"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmvq.hip.cpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "d6ceabd3585d9b6bc4aad4fd9c221bfadc7dd5f7d1f1fa70d93a8485001224ed"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/mmvq.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "fbc864a9c4410cec0a7c6e529072e755c3822c8be220b867f8b7160d48e7ee64"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/quantize.hip.cpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "86286ecacf8051c5336e132dd5794e15edc677c78ae4c40ae8e02fd3bd09c966"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/quantize.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "4292be00d8ac8ab7e490d9b2cea2a2509da27d563c32fc957acf019e09f6c6c7"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/unary.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "ad6e92ad4ab612cd6e1f8b1153a6031af42c4075de8ffdf7abca31562f9460de"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/vecdotq.hip.hpp": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "deb6700aa485a774339aa28cbe81cf7beab806a050de5e6e4790daee12e62bea"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/vendors/hip.h": {
+   "module": "kernel.gufo.ds4_mmq",
+   "sha256": "c8196c016839485c1e0c27cd338ea5f2e78993ed367d3d13f6fdb5bf5676b1c0"
+  },
+  "src/models/deepseek_v4_flash/kernels/rocm/resident_api.h": {
+   "module": "kernel.gufo.ds4_backend",
+   "sha256": "a775997721011715421201e084beeedd2aa842cf77aee9ff1a043d483849f80b"
+  },
+  "src/models/deepseek_v4_flash/library.json": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "e90fa55904947a4712df6d59311994d1434d7b61352ee3b057b727b53d9ef47a"
+  },
+  "src/models/deepseek_v4_flash/runtime/dspark_internal.h": {
+   "module": "runtime.gufo.dspark",
+   "sha256": "91b34f2b44d255de7b1e8a7e9d46afd474f6c87e3ea6f91a0f6b6085d5b6d370"
+  },
+  "src/models/deepseek_v4_flash/runtime/dspark_policy.h": {
+   "module": "runtime.gufo.dspark",
+   "sha256": "12705c65bc3a426a145d9da6f3536d6b708a8db3367c04f8a0452952baa60646"
+  },
+  "src/models/deepseek_v4_flash/runtime/model.h": {
+   "module": "kernel.gufo.ds4_backend",
+   "sha256": "2781ab47c74b68a6af70cc83647caf4ce7c7ab87fefb1f10220adf53fd7d0770"
+  },
+  "src/models/deepseek_v4_flash/runtime/model_data.cpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "1fac9e21cd0e2385db8b7d7e5e70b07a8252a5ff182963f5a501571335a6fc5f"
+  },
+  "src/models/deepseek_v4_flash/runtime/model_data_internal.h": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "4a1d36d4327b4e4cd6d2925475ce4df03b729bbe2a20be565e8079ba0c5929c3"
+  },
+  "src/models/deepseek_v4_flash/runtime/native_internal.h": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "c3d62a8a8ec339c00dd6af1e02c8bc07ff5d7459ea378d5abc7dd79c086fc7e2"
+  },
+  "src/models/deepseek_v4_flash/runtime/rocm_graph.cpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "c3f99fc92d705666b47540bbc3dcf8bd2526ba1788dd58492ea879b30a1dcde9"
+  },
+  "src/models/deepseek_v4_flash/runtime/sampling.cpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "c088094b0e4eeb4920bb1e1c727657781de8253433c3ed95dec78a5920f5b15f"
+  },
+  "src/models/deepseek_v4_flash/runtime/session.cpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "38a752df6c5a6b9f97e1e9e29d859ef65f3dc214293497d737e7d8049939b797"
+  },
+  "src/models/deepseek_v4_flash/runtime/tensor_types.h": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "7aab421004173f00301df780a1558d0b22d4b20913c6498f0c3864c789c3b2bd"
+  },
+  "src/models/deepseek_v4_flash/runtime/tokenizer.cpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "2d350ea716f5a1e46a8ef98617600762801775fb829870f8037856e47d5ea1ff"
+  },
+  "src/models/deepseek_v4_flash/text/CMakeLists.txt": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "57e80d5df51b656a8efba9656b5d6c30e96868616bbf1ccf61c95bfe584d83b1"
+  },
+  "src/models/deepseek_v4_flash/text/library.json": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "fa7accb5003efc23fc580ce54916542bde52731aa311dec33209cd132a1e8a6e"
+  },
+  "src/models/deepseek_v4_flash/tool_calls.cpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "0ac65f1fd348c683a76063c9cf32e4ce7ea18601994f02f0c00ea53e8cae732b"
+  },
+  "src/models/deepseek_v4_flash/tool_calls.hpp": {
+   "module": "executor.gufo.deepseek_v4_flash",
+   "sha256": "944b98535b1878e53e3f322d42d618658045ef712efcd3f00cb2bbc590a5886d"
+  },
+  "src/models/qwen/CMakeLists.txt": {
+   "module": "executor.gufo.qwen",
+   "sha256": "8e7d02e02d251c120246a633cc016831a92cf0af4b84f92e49f39810e519d70d"
+  },
+  "src/models/qwen/continuation_adapter.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "a4a1f54c842073c77954dc64ea9e866aa3939f832ce3060d2726e40c50b36231"
+  },
+  "src/models/qwen/continuation_adapter.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "dd7bc4d682cedb430d82227e85809410aa5f9b39ecbe189b4923fb31a9cddcc6"
+  },
+  "src/models/qwen/continuation_layout.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "0e6e0b1a151f9bf983a6ed3e90bca09bd9bada8d64e78df94e52f756f5fb7a42"
+  },
+  "src/models/qwen/continuation_layout.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "205b09024780d26fd68e57c0a7a67b2ee767f6f079c6420f897db55e705d5533"
+  },
+  "src/models/qwen/dflash_policy.hpp": {
+   "module": "runtime.gufo.dflash",
+   "sha256": "7576122f3161e997ccb6af68546e4105e3c6d9d76cdfe19a6f8669db684ab78f"
+  },
+  "src/models/qwen/dflash_weights.cpp": {
+   "module": "runtime.gufo.dflash",
+   "sha256": "3d9b36604a79b6f90a7159a14636f03584ee298f50afe37c521d735d07c81f08"
+  },
+  "src/models/qwen/dflash_weights.hpp": {
+   "module": "runtime.gufo.dflash",
+   "sha256": "204d645c50e83bcb89e30681cb623d8622fc49055eeb30de38087e0ce508fd23"
+  },
+  "src/models/qwen/extension.json": {
+   "module": "executor.gufo.qwen",
+   "sha256": "0c1e182c81360b2abe9bef5153d7d4bd2a987e1698fe414ee4a51ee6040f6840"
+  },
+  "src/models/qwen/forward.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "22a568fb120a283ccb2a4845a11df3c2c8bbc1a4a94a55f5dc4198b759b89be9"
+  },
+  "src/models/qwen/forward.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "2e2c0ccc50872bc8a377857fd9fdf6803d3b5626be1483182c5fdae9541e74f7"
+  },
+  "src/models/qwen/generator.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "6532808cfdc028702a32f049673fa53f24c15fc8dba2ce63e4ba1f24cf37eba0"
+  },
+  "src/models/qwen/generator.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "d150907e76c324e25450c80090aeb16421f8939941bccdbdf5374bfaad820b94"
+  },
+  "src/models/qwen/hip/arena.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "65d728ea8798a2c31f31a0859e369a38483b61c994e0269bef62f84691c389a2"
+  },
+  "src/models/qwen/hip/attention.hip": {
+   "module": "executor.gufo.qwen",
+   "sha256": "0b3efd5699b0393e9cd3919c7ea64e241d9db032d74124bb8f7a2175d90671cb"
+  },
+  "src/models/qwen/hip/batched_decode.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "c61377a0febb0c1137def1cb182bba8a47180a5b89bdbb0397a716fc8b93c79b"
+  },
+  "src/models/qwen/hip/batched_ssm.hip": {
+   "module": "kernel.gufo.qwen_gdn",
+   "sha256": "5cc9b0a3e0788fbe41d5868507112296e5b0e912ee06deba3d00369fc7080b92"
+  },
+  "src/models/qwen/hip/decode.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "c7ff4da5205a38f9c7f3867edaac5834be731a1ec5b22ef081aca2368af200e1"
+  },
+  "src/models/qwen/hip/decode_step.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "fb037d00d55c737b137479e78d85c40f880e1ae5a14ab015b04f38d4ee9143ee"
+  },
+  "src/models/qwen/hip/detail/decode_step.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "ef6b3ee1fce8e09fbc31fa6f0c2d717910d4227e3b02275da42ef500d251245d"
+  },
+  "src/models/qwen/hip/dflash.hpp": {
+   "module": "runtime.gufo.dflash",
+   "sha256": "27f0e38c8b3bb2d65f831c2ddc6870d21324566044dd5416b52233455dd86f78"
+  },
+  "src/models/qwen/hip/dflash/backend.cpp": {
+   "module": "runtime.gufo.dflash",
+   "sha256": "0f92b92b435cda13a2c8e9fa201d5fa6dfcbcc5da61164b27656863851f8bb1c"
+  },
+  "src/models/qwen/hip/dflash/batch.cpp": {
+   "module": "runtime.gufo.dflash",
+   "sha256": "7e023cc8cc3f0ea916b82696eeae31f630aea917c36d47e3b2665d5c4b7a9176"
+  },
+  "src/models/qwen/hip/dflash/executor.cpp": {
+   "module": "runtime.gufo.dflash",
+   "sha256": "69f26ab91bd9390ecb0eb03990abaffffe7c9918319f9aecac31002acc047321"
+  },
+  "src/models/qwen/hip/dflash/model.cpp": {
+   "module": "runtime.gufo.dflash",
+   "sha256": "5f09bffa451a699a102bfcc7a08c8d43bb9aae6ce54b7ca29cdae3a4dc8ba5b3"
+  },
+  "src/models/qwen/hip/executor.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "765322fdb79c8010b1a69a2f3f879ecc3c8164164ab8948b2512d2b9cb3e9e62"
+  },
+  "src/models/qwen/hip/executor.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "abd41502c6e7b4ac6b728f43147265344dce0f1d8c6634e4dd100511cdcbd628"
+  },
+  "src/models/qwen/hip/model_loader.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "ec2eab13a22d15b3cf6f62426e1ddbee3e9c3faeaeb3c3cfa8f7c39bc8d6b7ab"
+  },
+  "src/models/qwen/hip/mtp.hpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "de02618f375a7dd1625101128ef441b4ad4959579b45bcb9888cb8efb84d567c"
+  },
+  "src/models/qwen/hip/mtp/backend.cpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "042ffa896eb0e0d79986e618e3bebf3d79e3ee2d0af26d68a024d70621641cae"
+  },
+  "src/models/qwen/hip/mtp/detail/allocation.hpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "e3d269bd23e9dcabcd96772e08b19e38b890a133d9ffb0244556708195084213"
+  },
+  "src/models/qwen/hip/mtp/executor.cpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "66f78b0923f120cd8b5ced77b78be905fe15440047511702c1afcccdbfef9285"
+  },
+  "src/models/qwen/hip/mtp/model.cpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "0516cbd35a9a01d2e3d89a56aa246cf05f5fdd15f1e13626d0aaaf5f1f1f7034"
+  },
+  "src/models/qwen/hip/prefill.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "7279c3f06e3921308cac55bbb23be726766db589101bcbdde9a2dd6cc799741c"
+  },
+  "src/models/qwen/hip/prefill_chunk.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "0761fb928fff0c01dea9fd43d96d8382aff96266d23b1b8fa3bb2fba32c96e29"
+  },
+  "src/models/qwen/hip/prompt_hidden_buffer.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "e8d5ff245af45ba5bb9d671ae3d3d06f726a4901df56a488a6124d3ac855d58c"
+  },
+  "src/models/qwen/hip/prompt_hidden_buffer.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "2ea69953023fc39e880d3a3a506004feeec1db55c91234a69fc8ed464338c552"
+  },
+  "src/models/qwen/hip/qwen_speculative_verifier.cpp": {
+   "module": "runtime.gufo.speculative",
+   "sha256": "94e40afd3ade7c0a5e00a3c15cd7ed1951e23d1d3589a23af1ff10a7eb9da4cf"
+  },
+  "src/models/qwen/hip/qwen_speculative_verifier.hpp": {
+   "module": "runtime.gufo.speculative",
+   "sha256": "245fa9013688a582d807df47335f81bb783117ae060098b1e0ea34f8ac466996"
+  },
+  "src/models/qwen/hip/ssm_replay.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "3535044c9060d1f60c242fe2eb0d1ed2d9571e87d725d3a62b167eb226b8c027"
+  },
+  "src/models/qwen/library.json": {
+   "module": "executor.gufo.qwen",
+   "sha256": "3bc975df8f826856e387fd94c9201bb8bd0f743f9effe383d5ef5f1dc0ed6332"
+  },
+  "src/models/qwen/modules/attention.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "08dfca80cb913a962ae2ccdb4690a8fd19008303766c2324db95df7ef4df9976"
+  },
+  "src/models/qwen/modules/attention.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "b8f3bc1ad34a6c24dc8d5995219fa7c98efa2b87079e4ad357bcf13615da3d2f"
+  },
+  "src/models/qwen/modules/embed.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "0e385b798a94d1132724b160f35d16a18bf21722634d34ad20bb56c5945159ef"
+  },
+  "src/models/qwen/modules/embed.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "d38bce6099306c1d7d6e5c023d017a1261802a3d93fb7b2f2cbec17f0148571d"
+  },
+  "src/models/qwen/modules/ffn.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "6886255ca955712ea7270021443b7b9db9f345a7616994f541a4ca8b0ea68902"
+  },
+  "src/models/qwen/modules/ffn.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "2d42677084e517b8598867b6a90a7e74d5233d7e5eef615d62326d9b24fc4fe8"
+  },
+  "src/models/qwen/modules/fwd.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "f3d45bca9807a2e8df131bab2179ef308d1b3fd5e38c76809d43c6971ea6eec2"
+  },
+  "src/models/qwen/modules/layer_view.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "391311d9eae56ed0d7f2a1a24e313f508b9aa2ce51c5f3f9fc8d861e76e2cdde"
+  },
+  "src/models/qwen/modules/module_ctx.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "bd0242c67513cc58b5ceb85e9c0f19257c520be713f4e131ae2795259f3a6cb0"
+  },
+  "src/models/qwen/modules/modules.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "e4b9abc58f718d728dd6593d5b1ba531945de28b2f50a16ecfacfd57ef19fa54"
+  },
+  "src/models/qwen/modules/norm.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "3e9264347b1495fa4eb63a4bc26eaa96eee1d99ad85c4a7e363fdcd1af64d2f2"
+  },
+  "src/models/qwen/modules/norm.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "dc837d308bd468eae1bb2d47a478b586b18d8ae44d9b3a930bf82968edc8073c"
+  },
+  "src/models/qwen/modules/quant_gemm.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "5881d6d4f0fe65aacb74ac3060758a27e0d59d48acc6c0274feaaf6578941f29"
+  },
+  "src/models/qwen/modules/quant_gemm.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "0f98db3033e31a8906c33ac90f9a5541839aa6bdccdeaadb5a4d2799ffd94c36"
+  },
+  "src/models/qwen/modules/residual.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "e0ee9835f3cf6a561ba93da1724e06dadd5308403f33a1f0aa34b7230d01309b"
+  },
+  "src/models/qwen/modules/residual.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "35ff0989e6a2d77159eccf06c03eebb85ea1d9aa9bf09eae9b077c9efbc567fd"
+  },
+  "src/models/qwen/modules/rope.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "4a34fd55e9fa4c208f9f3e06c19ef533de73421d5b566a33e30eba073a952d8c"
+  },
+  "src/models/qwen/modules/rope.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "3d06195573945be53ef9ff23c327c7bde864cd19895a3b99fbf6abd05d7625da"
+  },
+  "src/models/qwen/modules/sample.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "d3209a65a3a1487b629602fb6564c309d7f62de2662c4a55a74e95f1381f56f0"
+  },
+  "src/models/qwen/modules/sample.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "2a26370d96ea714123551b16b5644ccbebf728aa1120c0a15193bc44a813d4c1"
+  },
+  "src/models/qwen/modules/ssm.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "1d7415e1a746310b73ec48bfcdc67d94bd52e1d9f21dad146d0d492117544b26"
+  },
+  "src/models/qwen/modules/unembed.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "514ea479713e59a8f80331911fe03b616af48f4560c4e75f6beb21d82b549047"
+  },
+  "src/models/qwen/modules/unembed.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "cdf42a2b0838af80149960035958cef8e30e9d4addb116189182b0a6d47fb191"
+  },
+  "src/models/qwen/mtp_reference.cpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "b89141fd9b2a792c3212abe1903049907a499986d177ac4389d3dd53b7498458"
+  },
+  "src/models/qwen/mtp_reference.hpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "37e0e2ace50a8da35898b65bc2a8ac76c8eca82c84328159b7d891fc4b02d0f9"
+  },
+  "src/models/qwen/oracles.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "c5576b1fa76ce904ad58cd9e679228898658a4a29bc58e05428f8ee53a78c78d"
+  },
+  "src/models/qwen/oracles.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "f058b6925cc1659a9d02a4f50b11f4c117117b25786256b2a4352de87b068e3f"
+  },
+  "src/models/qwen/ssm.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "d004fd2e83f5bcc5f005b6dc1f93240281e694e2c26a642dad66cb951fbe1d3f"
+  },
+  "src/models/qwen/ssm.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "15210432990af1d349d551fefedf73fe22d72f9fae711c75b792fec4333dd076"
+  },
+  "src/models/qwen/state.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "6a1581bb67d030f196fff9252a306a9cad7e5b70d6775abf457000ed3e20ef16"
+  },
+  "src/models/qwen/state.hpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "1ff0cff85384d4ef9098b813234495e054d9e58f070dc34c59bee30bc28968cb"
+  },
+  "src/models/qwen/weights.cpp": {
+   "module": "executor.gufo.qwen",
+   "sha256": "2ae2db1248d569a774fcf05af82dae67e19fa346fbfeddb8de95d0657a25140d"
+  },
+  "src/models/qwen38_flash_next/CMakeLists.txt": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "bc44b0681ef3653a80a2930994aac9c9b81802b9a349afe44fc83514c3c2ba8e"
+  },
+  "src/models/qwen38_flash_next/config.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "1123ae6b2637665c6f10a1ccd06e6f918fe738a461a632a41ee3c57497c7b5f2"
+  },
+  "src/models/qwen38_flash_next/config.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "551cd79ec572bbf0663563c71e65ab0d0964d8f2c7cdde335373d34cefc5de8d"
+  },
+  "src/models/qwen38_flash_next/continuation_adapter.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "b8f05aeb26b94d0eaca86ba469c8bad11ade1d591519f63bcca935bd76c1687d"
+  },
+  "src/models/qwen38_flash_next/continuation_adapter.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "1a0b3e06b3a9a5dcadca10694030b21c615fccfc4edfe8d1821e2f9f4518bedd"
+  },
+  "src/models/qwen38_flash_next/continuation_hooks.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "e926b277512f3da98227cd1bed5a7924d6840e911aeb86cdb37c19611b9ef23b"
+  },
+  "src/models/qwen38_flash_next/continuation_layout.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "925ae54e693890c63f5bf96f4b9d43831bbece1c416f828f9ce25182b0d1a5e3"
+  },
+  "src/models/qwen38_flash_next/continuation_layout.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "76e6d328fee07cb6e46aec4537565a56099a69436fa67ddf19a99325153a842d"
+  },
+  "src/models/qwen38_flash_next/cpu_ops.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "56fc49ecbf6658dbd361e9d42e88e6a85721c93b11ffc094760be55e57634a62"
+  },
+  "src/models/qwen38_flash_next/cpu_ops.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "d3425930f2bf83c69423110915905ba3eba2eba1f5309c420432a2dda63809bb"
+  },
+  "src/models/qwen38_flash_next/distributed/rdma_gid.cpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "117b7e29391257909e3f980200a82fadbfede0b1f903abc5753791a5d5aff493"
+  },
+  "src/models/qwen38_flash_next/distributed/rdma_gid.hpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "ad5dabbbea842a056f259f92ab72d0b6e79cb8cd22e43182cd3fbb437abe1701"
+  },
+  "src/models/qwen38_flash_next/distributed/tp_partition.cpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "e7a8a2dcdf8e56ec9befcbafb4eab11ac9e5f79b1bfc4da1ffb0db3fb330a699"
+  },
+  "src/models/qwen38_flash_next/distributed/tp_partition.hpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "8e772c05983ddc0d105c9a3b9cddd0bd60ea5d06d0014038c838e77c36780930"
+  },
+  "src/models/qwen38_flash_next/draft_vocab.hpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "bf8750c960351f12926688c7b08b8fe9ae3f7cc9317bbf1474e05b55802393d8"
+  },
+  "src/models/qwen38_flash_next/engine.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "c8a4c1254d7177415ecb6a0762eeab24b959ab61e21becdb67b49a9513132954"
+  },
+  "src/models/qwen38_flash_next/engine.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "1cc2c9b147d57760da11efc46e6e887910ea9bf90b83a31befc8f73b9a37ee39"
+  },
+  "src/models/qwen38_flash_next/extension.json": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "b2ef840a53a83c97760bd41e6ce8e40198885deb64b635b78c9962142cc071af"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/batch.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "2d3d1e174c6fbc76a989b5d392579b22f0d435df4e1344c295fa9591eb61915b"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/blaslt.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "31d218b9a591e28312f547712d77daaf2d5a9afd39915da80c9b9de2ac7e28cb"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/blaslt.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "1283ba4d5d6deec5a713610419418eadf97d687fb3ccbb8b494a3119b534dd33"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/communicator.hpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "b878c5b47fd156ed7ef76a715bc6dfc2694248c81a90fdbf9b8e87f65d9ee196"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/device_model.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "57df465ecee739bc80b3d4882e0e126191c4c9d55e30b546055303208097de58"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/device_model.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "738762b5f3cfde050f2312f72f26a9667da80b83f33d31c21e74f875208c41ac"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/executor.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "2b161a89a9b8a29c36e7aa828bf3e4ba47cf972e2eeb163846bb0d254aa61d5c"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/executor.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "96d2b423950b7dc8502b2add862522c986c4a9ab8b1b4e9d269127fa7f47ddfc"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp": {
+   "module": "kernel.gufo.qfn_kernels",
+   "sha256": "bd32799a41897f362d67e038f4826950777b921049566b3eeb9e9556110d9e77"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/kernels.hpp": {
+   "module": "kernel.gufo.qfn_kernels",
+   "sha256": "8fca32b943e8537897aac7f2a2a41f5701b89b88a4cbdf24591a3f4198538523"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/VENDOR.md": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "8368cf5423c4b2bd42f5417aa3df91498a4c969e5506ebcba3bf2f70862dad4d"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/common.hpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "f711c0e8f84d8ca0e5f96b9f2242b3773dee4b9adf5529f2df528ee1afc0eca0"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/ggml-common.h": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "3a6ac624e0c93e18168e31fd6c2b0f418dc6528723e2f489d6b272393bd6555b"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/ggml-hip.h": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "f91fc885874bdb9fddf1fedbe5315eabcf7ece33ba9cdf1894885273ff249178"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/ggml-impl.h": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "f91fc885874bdb9fddf1fedbe5315eabcf7ece33ba9cdf1894885273ff249178"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/ggml.h": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "d25d2dd12fc3c1e8878c89c95c9b01d4031f9fe83c72b37cb688b45aee7b413f"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mma.hpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "6cdab2ffa0687f5ac7f3609c06bf666623bf6a10ddae6dac4c15ef612d3bfbea"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmid.hip.cpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "77fe3b2999ef63a3f00b21d62729400e17a252d2d2bc611800f0251c3f2d5d50"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmid.hpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "1cd2ef6b7cbe381458d1cc80cd2cf201abfebd95340e85a49ecb41e3c73f4b05"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmq.hpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "63133c59a2f24dba5d08fc3e0d58ac5c734f3e07efb9d5dc4a627e9cc1a16b62"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmvq.hip.cpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "250f04a93c9e891721da6a4ec7c778313ac854e96d9d7aed5671d1663183779f"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmvq.hpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "31041c084667ab980ab560d13ca012c76598f4c0f6993c8fa881856565780af8"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/moe_wave64.hip.cpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "98e35595732b45ba4b96b10d9769dc11bc2e9be3d44d5a6607f2dfa35e703510"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_ggml_stubs.h": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "bd37707e73fc009e5b3b9aeef1d6a4fe7e5b1ef2db6e9d0f8457612d0c1c13f0"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_ggml_stubs.hip.cpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "0b54a09f9105b2243dfb8e2715d2873f9d072ca3a5fdd9888239ab3932ac768b"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq.h": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "d390c00af42c0e6fe6c8a27a904b8e6d72e963f31ebf39af2b50faf3d5b927d7"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq.hip.cpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "187b8d5aebd55389a29e2e0ac1907864e2903095be893c10bf6bad4ecf93628b"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq_prelude.h": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "1e4075974196caa40d68098b35c4a4ccbac26351781a63c9964336a891ced473"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/quantize.hip.cpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "b4cf0457be163bdc0d4d0a7baa4a9a8f15ee35cd6af725d40554d99a2e32611f"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/quantize.hpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "63f0a486e227d70b9e43749077f363f7d4fcaf7b9386c396e31311a633d934c9"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/unary.hpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "fa5230fa577597ca39adce24298f7864cbfe5b2b50c5fbe3d466bd1a7ce63f9e"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/vecdotq.hpp": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "e8b57fdf8f06cd73743716168ee655be82274b73cf0913444a0d7ef4496c890d"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/vendors/hip.h": {
+   "module": "kernel.gufo.qfn_mmq",
+   "sha256": "de177755573ad337b7712278de4ca788c9ed1a546d167805be8d75ea99a42200"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/verbs.cpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "a617f4fc69f0313b6eac15e4291f30804716fef8e21f4b5749c5abff7482f6ab"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/verbs.hpp": {
+   "module": "runtime.gufo.tp_verbs",
+   "sha256": "c7862dbd2bf55af2f89ff58e63cfd04acb121098c27f8937ccd143f3690e8c13"
+  },
+  "src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip": {
+   "module": "kernel.gufo.qfn_kernels",
+   "sha256": "07d7fc6617736f2bcc456353c09989c73d1b8dace6720c56ce64bfba9910f2dc"
+  },
+  "src/models/qwen38_flash_next/library.json": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "f35f7d6a12d7fb58e294709a42603d163263099247e25b2ecce6c185c593dba1"
+  },
+  "src/models/qwen38_flash_next/mtp_costs.hpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "3c62f8e9cb23c0b6a71d3b53ef35b8a2089870d0165a5e2588983b1870056d95"
+  },
+  "src/models/qwen38_flash_next/mtp_policy.hpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "e5a2ab36c8eecc1025a32f356ec05f57d05099864183ef658956dcd0fa39496c"
+  },
+  "src/models/qwen38_flash_next/mtp_sampling.hpp": {
+   "module": "kernel.gufo.qfn_kernels",
+   "sha256": "3e6b4d5268720b331b524114dd732d16c04222a2129d92b6210d57714668da9f"
+  },
+  "src/models/qwen38_flash_next/ngram.cpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "5d6325db05d1a50f08d283926e8b7205804b0452136a9dd8823f495c71418a5c"
+  },
+  "src/models/qwen38_flash_next/ngram.hpp": {
+   "module": "runtime.gufo.mtp",
+   "sha256": "e3625918581c45579b554fe46505536ec75324271875e1903ae96ffd130e0698"
+  },
+  "src/models/qwen38_flash_next/reference.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "78d8f31c455d9f46da4665aec73b91f2032c4a2b2138408caeebd75e6119a1d7"
+  },
+  "src/models/qwen38_flash_next/reference.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "2cd0434d28526a3177033bc7208b242ba26ebb2fd761fe6aa299692d279c189d"
+  },
+  "src/models/qwen38_flash_next/rope_scaling.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "e769547f4e68b14c3dfd37d7ddd041a4aa794efba58294c052ca0f7ee6ddc628"
+  },
+  "src/models/qwen38_flash_next/rope_scaling.hpp": {
+   "module": "kernel.gufo.qfn_kernels",
+   "sha256": "079b247419443af5c50534e42974ab6777c4ad44a60bbd05b252f153ceb1c3f4"
+  },
+  "src/models/qwen38_flash_next/weights.cpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "79661eca4f9d6aacef2772422f9db628a82021a189e33129d001d4c16975e442"
+  },
+  "src/models/qwen38_flash_next/weights.hpp": {
+   "module": "executor.gufo.qwen38_flash_next",
+   "sha256": "05aac39d1107bd536147f88974bf1640301928134f6a1c0b30b98e97580daf59"
+  }
+ },
+ "modules": {
+  "executor.gufo.deepseek_v4_flash": {
+   "dir": "catalog/gufo/executor/deepseek_v4_flash",
+   "files": 21,
+   "spdx": "MIT"
+  },
+  "executor.gufo.qwen": {
+   "dir": "catalog/gufo/executor/qwen",
+   "files": 74,
+   "spdx": "MIT"
+  },
+  "executor.gufo.qwen38_flash_next": {
+   "dir": "catalog/gufo/executor/qwen38_flash_next",
+   "files": 26,
+   "spdx": "MIT"
+  },
+  "executor.gufo.qwen_vision": {
+   "dir": "catalog/gufo/executor/qwen_vision",
+   "files": 10,
+   "spdx": "MIT"
+  },
+  "format.gufo.gguf_kquant": {
+   "dir": "catalog/gufo/format/gguf_kquant",
+   "files": 7,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.core_headers": {
+   "dir": "catalog/gufo/kernel/core_headers",
+   "files": 27,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_attention": {
+   "dir": "catalog/gufo/kernel/ds4_attention",
+   "files": 6,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_backend": {
+   "dir": "catalog/gufo/kernel/ds4_backend",
+   "files": 6,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_dspark": {
+   "dir": "catalog/gufo/kernel/ds4_dspark",
+   "files": 1,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_hc": {
+   "dir": "catalog/gufo/kernel/ds4_hc",
+   "files": 3,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_indexer": {
+   "dir": "catalog/gufo/kernel/ds4_indexer",
+   "files": 3,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_linear": {
+   "dir": "catalog/gufo/kernel/ds4_linear",
+   "files": 8,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_mmq": {
+   "dir": "catalog/gufo/kernel/ds4_mmq",
+   "files": 23,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_moe": {
+   "dir": "catalog/gufo/kernel/ds4_moe",
+   "files": 7,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.ds4_norm_rope": {
+   "dir": "catalog/gufo/kernel/ds4_norm_rope",
+   "files": 2,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qfn_kernels": {
+   "dir": "catalog/gufo/kernel/qfn_kernels",
+   "files": 5,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qfn_mmq": {
+   "dir": "catalog/gufo/kernel/qfn_mmq",
+   "files": 23,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_attention": {
+   "dir": "catalog/gufo/kernel/qwen_attention",
+   "files": 8,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_dflash": {
+   "dir": "catalog/gufo/kernel/qwen_dflash",
+   "files": 1,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_gdn": {
+   "dir": "catalog/gufo/kernel/qwen_gdn",
+   "files": 6,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_linear_decode": {
+   "dir": "catalog/gufo/kernel/qwen_linear_decode",
+   "files": 8,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_linear_prefill": {
+   "dir": "catalog/gufo/kernel/qwen_linear_prefill",
+   "files": 7,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_norm_rope": {
+   "dir": "catalog/gufo/kernel/qwen_norm_rope",
+   "files": 8,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_ops": {
+   "dir": "catalog/gufo/kernel/qwen_ops",
+   "files": 22,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_sampling": {
+   "dir": "catalog/gufo/kernel/qwen_sampling",
+   "files": 1,
+   "spdx": "MIT"
+  },
+  "kernel.gufo.snapshot_copy": {
+   "dir": "catalog/gufo/kernel/snapshot_copy",
+   "files": 1,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.cache": {
+   "dir": "catalog/gufo/runtime/cache",
+   "files": 43,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.dflash": {
+   "dir": "catalog/gufo/runtime/dflash",
+   "files": 8,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.dspark": {
+   "dir": "catalog/gufo/runtime/dspark",
+   "files": 3,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.ext_api": {
+   "dir": "catalog/gufo/runtime/ext_api",
+   "files": 54,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.hip_host": {
+   "dir": "catalog/gufo/runtime/hip_host",
+   "files": 6,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.image": {
+   "dir": "catalog/gufo/runtime/image",
+   "files": 2,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.mtp": {
+   "dir": "catalog/gufo/runtime/mtp",
+   "files": 12,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.platform": {
+   "dir": "catalog/gufo/runtime/platform",
+   "files": 45,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.sampling": {
+   "dir": "catalog/gufo/runtime/sampling",
+   "files": 11,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.speculative": {
+   "dir": "catalog/gufo/runtime/speculative",
+   "files": 6,
+   "spdx": "MIT"
+  },
+  "runtime.gufo.tp_verbs": {
+   "dir": "catalog/gufo/runtime/tp_verbs",
+   "files": 15,
+   "spdx": "MIT"
+  },
+  "serve.gufo.http": {
+   "dir": "catalog/gufo/serve/http",
+   "files": 23,
+   "spdx": "MIT"
+  },
+  "tool.flerp.gufo_qwen_generate": {
+   "dir": "catalog/flerp/tool/gufo_qwen_generate",
+   "files": 3,
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "qwen35-decider-2b.gufo",
+ "source_dir": "flerp/gufo_qwen",
+ "system": "cmake",
+ "targets": [
+  "flerp-gufo-qwen-generate"
+ ],
+ "toolchain": "therock-10.1"
+}

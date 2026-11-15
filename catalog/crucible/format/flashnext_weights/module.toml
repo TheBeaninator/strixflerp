@@ -1,0 +1,47 @@
+id        = "format.crucible.flashnext_weights"
+kind      = "format"
+summary   = "Qwen3.8-Flash-Next pack geometry and load decisions: layer schedule, named geometry, per-matrix width and front order, CPU-only weight validation before allocation, BF16->F16 conversion"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/model/flashnext/bf16_half.h",
+  "engine/model/flashnext/geometry.h",
+  "engine/model/flashnext/load_plan.h",
+  "engine/model/flashnext/weight_validation.h",
+]
+authors   = ["jaedync"]
+modified  = false
+upstream  = "EXL3 format after ExLlamaV3 d3739fd393337b1ff4d6c2a342b12f0c87a9592f (MIT, Turboderp; catalog/crucible/NOTICE)"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/model/flashnext"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "format.layout/exl3-flashnext/-"
+api       = "geometry.h, load_plan.h, weight_validation.h"
+numeric   = "exact"
+regime    = "load time"
+
+[[requires]]
+module    = "format.crucible.exl3"
+
+[[requires]]
+module    = "kernel.crucible.exl3_gemv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

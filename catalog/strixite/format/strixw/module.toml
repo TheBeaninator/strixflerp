@@ -1,0 +1,39 @@
+id      = "format.strixite.strixw"
+kind    = "format"
+summary = "strixw container: header, index and data with every tensor already in its kernel's layout; streaming writer and validating mmap reader"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/strixw.cpp", "formats/strixw.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/strixw.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.container/strixw/-"
+api       = "strix::StrixwFile, strix::StrixwWriter, strix::StrixHasher"
+numeric   = "bytes as stored, hashed"
+regime    = "host; 4096-byte tensor alignment, 256 per component"
+
+[[requires]]
+module = "format.strixite.q4"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

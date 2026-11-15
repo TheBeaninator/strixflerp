@@ -1,0 +1,66 @@
+id        = "kernel.tensorfold.hip_recurrence"
+kind      = "kernel"
+summary   = "Linear-time mixers: Gated DeltaNet (Qwen3.5 / Flash Next) chunked prefill and recurrent decode; Mamba-2 selective scan and conv (Nemotron hybrid)"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = ["zig/kernels/hip/recurrence/gated_delta.hip", "zig/kernels/hip/recurrence/mamba.hip"]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/recurrence/gated_delta.hip", "src/zig/kernels/hip/recurrence/mamba.hip"]
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--genco",
+  "-D__HIP_PLATFORM_AMD__=1",
+  "-DUSE_ROCM=1",
+  "-DHIPBLAS_V2",
+  "-fPIC",
+  "-DCUDA_HAS_FP16=1",
+  "-DHIP_ENABLE_WARP_SYNC_BUILTINS=1",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-DTF_WAVE=32",
+  "-DTF_DOT2_F16=1",
+  "-DTF_DOT2_BF16=1",
+  "-DTF_SDOT4=1",
+  "-DTF_SDOT8=1",
+  "-DTF_MATRIX=1",
+  "-DTF_DOT2_SIGNED_ZERO=1",
+]
+
+[[provides]]
+interface = "mixer.gdn/-/f32.tensorfold"
+api       = "recurrence/gated_delta.hip"
+numeric   = "fp32 state"
+regime    = "decode and prefill"
+
+[[provides]]
+interface = "mixer.mamba2/-/f32.tensorfold"
+api       = "recurrence/mamba.hip"
+numeric   = "fp32 state"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_decode"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"

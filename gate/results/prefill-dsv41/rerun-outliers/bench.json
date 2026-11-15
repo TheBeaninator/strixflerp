@@ -1,0 +1,131 @@
+{
+ "host": "control-node",
+ "utc": "2026-11-11T18:31:21Z",
+ "kit": "build/dsv41-flash.strixfold-tp2/tree/zig-out/native-hip/share/tensorfold/hip/gfx1151/dsv41",
+ "hip_lib": "/data/models/tools/therock-10.2/lib/libamdhip64.so",
+ "rows": [
+  2048,
+  4096
+ ],
+ "loadavg_start": [
+  "19.85",
+  "21.17",
+  "19.29"
+ ],
+ "gpu_before": {
+  "gtt_used_bytes": 37322752,
+  "engine_processes": [
+   "3295409 strixflerp-qwen36-35b-a3b.flerp-moe"
+  ],
+  "cpu_only_exempt": "^strixflerp-qwen36-35b-a3b.flerp-moe$"
+ },
+ "results": [
+  {
+   "kernel": "aux.hc_mix_pf",
+   "case": "posted streams + 24 mixes, world 2",
+   "rows": 2048,
+   "ms": 1.4599,
+   "GBps": 172.4
+  },
+  {
+   "kernel": "aux.gate_logits",
+   "case": "ne 384",
+   "rows": 2048,
+   "ms": 0.7572,
+   "tflops": 10.64
+  },
+  {
+   "kernel": "aux.gate_logits",
+   "case": "ne 32",
+   "rows": 2048,
+   "ms": 0.1154,
+   "tflops": 5.81
+  },
+  {
+   "kernel": "aux.rope_heads",
+   "case": "32 heads of 512, rd 64",
+   "rows": 2048,
+   "ms": 0.1599
+  },
+  {
+   "kernel": "aux.rope_heads",
+   "case": "32 heads of 128, rd 64",
+   "rows": 2048,
+   "ms": 0.0296
+  },
+  {
+   "kernel": "aux.sparse_attn",
+   "case": "one pass, window 128 + 0 FP4 picks",
+   "rows": 2048,
+   "n_idx": 0,
+   "ms": 1.1846,
+   "tflops": 14.5
+  },
+  {
+   "kernel": "aux.sparse_attn",
+   "case": "one pass, window 128 + 512 FP4 picks",
+   "rows": 2048,
+   "n_idx": 512,
+   "ms": 4.9228,
+   "tflops": 17.45
+  },
+  {
+   "kernel": "aux.hc_mix_pf",
+   "case": "posted streams + 24 mixes, world 2",
+   "rows": 4096,
+   "ms": 3.0038,
+   "GBps": 167.6
+  },
+  {
+   "kernel": "aux.gate_logits",
+   "case": "ne 384",
+   "rows": 4096,
+   "ms": 1.7078,
+   "tflops": 9.43
+  },
+  {
+   "kernel": "aux.gate_logits",
+   "case": "ne 32",
+   "rows": 4096,
+   "ms": 0.3144,
+   "tflops": 4.27
+  },
+  {
+   "kernel": "aux.rope_heads",
+   "case": "32 heads of 512, rd 64",
+   "rows": 4096,
+   "ms": 0.7952
+  },
+  {
+   "kernel": "aux.rope_heads",
+   "case": "32 heads of 128, rd 64",
+   "rows": 4096,
+   "ms": 0.1045
+  },
+  {
+   "kernel": "aux.sparse_attn",
+   "case": "one pass, window 128 + 0 FP4 picks",
+   "rows": 4096,
+   "n_idx": 0,
+   "ms": 2.4889,
+   "tflops": 13.81
+  },
+  {
+   "kernel": "aux.sparse_attn",
+   "case": "one pass, window 128 + 512 FP4 picks",
+   "rows": 4096,
+   "n_idx": 512,
+   "ms": 9.7872,
+   "tflops": 17.55
+  }
+ ],
+ "checks": [],
+ "lease": "holding control-gpu as agent",
+ "kit_manifest_sha256": "7693647972ab1b22dbff5d75f44ac080b573b9f0bf27d2bcc8c896b385f08455",
+ "loadavg_end": [
+  "26.83",
+  "22.83",
+  "19.91"
+ ],
+ "finished": "2026-11-11T18:31:49Z"
+}

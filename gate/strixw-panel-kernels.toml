@@ -1,0 +1,66 @@
+# Kernel gate of the strixw panel layout (docs/STRIXW-LAYOUT-NEXT.md stages 3-5): kernel.flerp.linear_q4p,
+# linear_q8p, wmma_q4p, moe_grouped_p against strixite's kernels, and the plan of the whole-model token-identity run
+# of recipes/qwen38-flash-next.strixite-p16.toml. Criteria COMMITTED BEFORE the first GPU run; never edit them to turn
+# a failure into a pass. Runner: gate/strixw_panel_kernels.py. Results: gate/results/strixw-panel-kernels/.
+
+[host]
+where       = "control-node, its own GPU, through tools/gpu-queue.sh (minutes); ionice -c3 nice -n 19; build -j2"
+weights     = "/data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw"   # fleet v4 (gate/results/strixw-patch/README.md)
+recipe      = "qwen38-flash-next.strixite-p16"
+bench       = "strixflerp-panel-kernel-bench"
+build_jobs  = 2
+max_load    = 10.0      # wait while the 1-minute load average is above this
+reads       = "the index, then each named tensor's components by byte range (pread): about 1.7 GB in all, never the whole file"
+
+[run]
+# class = tensor of the fleet file (names as gate/strixw-panel.toml b_real_tensors; one tensor per class shape)
+classes = [
+  "exp_gu=model.language_model.layers.0.mlp.experts_gate_up",
+  "exp_down=model.language_model.layers.0.mlp.experts_down",
+  "sh_gu=model.language_model.layers.0.mlp.shared_expert.gate_up",
+  "sh_down=model.language_model.layers.0.mlp.shared_expert.down_proj.weight",
+  "gdn_in=model.language_model.layers.0.linear_attn.in_proj",
+  "gdn_out=model.language_model.layers.0.linear_attn.out_proj.weight",
+  "attn_qkv=model.language_model.layers.3.self_attn.qkv",
+  "attn_o=model.language_model.layers.3.self_attn.o_proj.weight",
+  "ple_kv=model.language_model.layers.1.ple.kv_proj",
+  "lm_head=lm_head.weight",
+  "mtp_fc=mtp.fc_hidden.weight",
+]
+decode_m  = [1, 2, 3, 4, 5, 6, 7, 8]
+prefill_m = [512, 2048, 8192]
+active    = 10          # experts per token (Qwen4ExpDims top_k, shared expert separate)
+reps      = 20          # timed launches per kernel and case, origin and panel alternating, caches flushed before each
+warm      = 3
+
+[paths]
+# What the bench runs (tool.flerp.strixw_panel_kernel_bench), all with BF16 activations as served:
+dense   = "every non-expert class at its stored width (real codes) and at the other width (synthetic codes from a fixed seed, the real scales and mins): decode linear_q4 / linear_q8 at M = 1..8 and prefill linear_q4_wmma / linear_q8_wmma at M = 512, 2048, 8192 (the LM head at 512 only: two 8192-row outputs of 248320 F32 columns do not fit beside the weights; the executor runs it on a chunk's last rows), output BF16 and F32"
+experts = "exp_gu / exp_down (real Q4): decode gather + SwiGLU, gather, combine at M = 1..8 tokens x 10 experts; prefill through strixite's moe_group_routes then each F16 kind (Narrow, Wide, Wide256) for gather + SwiGLU (BF16 h, F16 h), gather, combine (BF16 h, F16 h, F16 h + shared add) at M = 512, 2048, 8192"
+routing = "per token 10 distinct experts drawn from a Zipf(1.1) popularity over a fixed random permutation of the 512 (seeded); one extra case per family with an out-of-range id (decode M = 4, prefill M = 512)"
+origin  = "the same call names with the row-major view: the adapters hand it to strixite's kernel (renamed *_flerp_origin), so 'origin' is strixite's code, not a copy"
+
+[criteria]
+# Numerics, stated before running: every path is bit-equal, decode included. The decode kernels keep, per output
+# row, each origin lane's chunks in the origin's order through the origin's expressions and replay its butterfly and
+# split-K sum (kernels/panel_gemv.hpp of kernel.flerp.linear_q4p); the prefill kernels give every thread the bytes
+# the origin's thread had. No summation order changes, so no tolerance is used anywhere.
+equal       = "every case: the panel output's bytes equal the origin's (BF16 / F32 outputs, F16 h, error words), 0 differing bytes"
+bad_id      = "the out-of-range-id cases: equal as above, which includes the NaN outputs and the 3 error words"
+coverage    = "every class of [run] classes at Q4 and Q8 for the dense paths it has, every expert path at every M listed, every F16 kind"
+read        = "bytes read from the fleet file (the bench's count) <= 2.0 GB"
+# Speed (reported for every case; the verdicts below are the design's expectations, docs/STRIXW-LAYOUT-NEXT.md
+# sections 3-4, tested and reported pass or fail - they do not gate correctness):
+speed_decode_dense   = "dense decode, median over cases per class: panel time <= 105% of the origin's (design: neutral to +2%)"
+speed_prefill_dense  = "dense prefill (WMMA), every class with real codes at M = 2048 and 8192: panel median time <= origin median"
+speed_prefill_expert = "expert prefill, the served kinds (gather + SwiGLU F16 h on Wide256 from 4096, Narrow below; combine F16 h + shared on Wide from 4096, Narrow below) at M = 2048 and 8192: panel median time < origin median"
+noise                = "a speed difference inside both sides' interquartile ranges is reported as noise, not as a gain or loss"
+
+[whole_model]
+# Prepared, NOT run by this gate (the owner arranges the hold): tools/../gate/strixw_panel_kernels.py --plan prints it.
+p16_file    = "/cache/models/qwen38-fnext-tpn-p16/weights.strixw"      # worker A (made and verified by another task)
+v4_file     = "/cache/models/qwen38-fnext-tpn/weights.strixw"          # the same host's fleet copy (the source of the p16 file)
+ngram       = "/data/models/strix-infer/converted/qwen38-fnext-ngram-int8/ngram.table"
+needs       = "one GPU with ~80 GB free and both files on its local NVMe"
+compare     = "token identity: greedy ids of the phase-1 requests (gate/qwen38-flash-next.strixite.toml [run], MTP on and off) and the prompt-pass logits sha256 + greedy ids of 8192- and 32768-token prompts (strixflerp-prefill-bench), p16 recipe on the p16 file against the unmodified strixite recipe on the v4 file; speed: 8k / 32k prefill tok/s and decode tok/s"
+pass        = "every greedy id sequence and every logits sha256 identical; speed reported with min-max over rounds"

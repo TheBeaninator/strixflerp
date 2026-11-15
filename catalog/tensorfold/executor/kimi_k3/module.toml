@@ -1,0 +1,60 @@
+id        = "executor.tensorfold.kimi_k3"
+kind      = "executor"
+summary   = "Kimi K3 / K3.1 text adapter (Metal; no HIP path)"
+notes     = "fixtures/ are Moonshot AI release files under the Kimi K3 / K3.1-Pro licences (catalog/tensorfold/LICENSES)"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/families/kimi_k3/backend.zig",
+  "zig/src/families/kimi_k3/config.zig",
+  "zig/src/families/kimi_k3/config_test.zig",
+  "zig/src/families/kimi_k3/core_safetensors.zig",
+  "zig/src/families/kimi_k3/dsa_config.zig",
+  "zig/src/families/kimi_k3/experts.zig",
+  "zig/src/families/kimi_k3/fixtures/k3-config.json",
+  "zig/src/families/kimi_k3/fixtures/k31-config.json",
+  "zig/src/families/kimi_k3/forward.zig",
+  "zig/src/families/kimi_k3/graph.zig",
+  "zig/src/families/kimi_k3/kernels.zig",
+  "zig/src/families/kimi_k3/kimi_k3.zig",
+  "zig/src/families/kimi_k3/layer.zig",
+  "zig/src/families/kimi_k3/parallel.zig",
+  "zig/src/families/kimi_k3/prepare.zig",
+  "zig/src/families/kimi_k3/round.zig",
+  "zig/src/families/kimi_k3/shard_header.zig",
+  "zig/src/families/kimi_k3/shard_header_test.zig",
+  "zig/src/families/kimi_k3/shards.zig",
+  "zig/src/families/kimi_k3/snapshot.zig",
+  "zig/src/families/kimi_k3/state.zig",
+  "zig/src/families/kimi_k3/store.zig",
+  "zig/src/families/kimi_k3/weights.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND LicenseRef-Kimi-K3"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model/kimi-k3/mlx-affine.tensorfold"
+api       = "families/kimi_k3"
+numeric   = "per family receipts (docs/receipts upstream)"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

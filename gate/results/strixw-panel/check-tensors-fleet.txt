@@ -1,0 +1,38 @@
+# 2026-11-12T00:16:51Z control-node: convert_strixw_panel --check-tensors (commit 2bbe325), ionice -c3 nice -n 19
+model.language_model.layers.0.mlp.experts_gate_up q4g128 [655360,2560] experts 512: 40960 panels x 21760 B (128-aligned), total 891289600 B = q+s+m 891289600 B; offsets as designed; round trip IDENTICAL; 1.1 s
+model.language_model.layers.0.mlp.experts_down q4g32 [1310720,640] experts 512: 81920 panels x 6400 B (128-aligned), total 524288000 B = q+s+m 524288000 B; offsets as designed; round trip IDENTICAL; 0.8 s
+model.language_model.layers.0.mlp.shared_expert.gate_up q8g64 [1280,2560] experts 0: 80 panels x 43520 B (128-aligned), total 3481600 B = q+s+m 3481600 B; offsets as designed; round trip IDENTICAL; 0.0 s
+model.language_model.layers.0.mlp.shared_expert.down_proj.weight q8g32 [2560,640] experts 0: 160 panels x 11520 B (128-aligned), total 1843200 B = q+s+m 1843200 B; offsets as designed; round trip IDENTICAL; 0.0 s
+model.language_model.layers.0.linear_attn.in_proj q4g128 [16480,2560] experts 0: 1030 panels x 21760 B (128-aligned), total 22412800 B = q+s+m 22412800 B; offsets as designed; round trip IDENTICAL; 0.0 s
+model.language_model.layers.0.linear_attn.out_proj.weight q8g64 [2560,6144] experts 0: 160 panels x 104448 B (128-aligned), total 16711680 B = q+s+m 16711680 B; offsets as designed; round trip IDENTICAL; 0.0 s
+model.language_model.layers.3.self_attn.qkv q8g64 [13952,2560] experts 0: 872 panels x 43520 B (128-aligned), total 37949440 B = q+s+m 37949440 B; offsets as designed; round trip IDENTICAL; 0.0 s
+model.language_model.layers.3.self_attn.o_proj.weight q8g64 [2560,6144] experts 0: 160 panels x 104448 B (128-aligned), total 16711680 B = q+s+m 16711680 B; offsets as designed; round trip IDENTICAL; 0.0 s
+model.language_model.layers.1.ple.kv_proj q8g64 [12800,2560] experts 0: 800 panels x 43520 B (128-aligned), total 34816000 B = q+s+m 34816000 B; offsets as designed; round trip IDENTICAL; 0.0 s
+lm_head.weight q8g64 [248320,2560] experts 0: 15520 panels x 43520 B (128-aligned), total 675430400 B = q+s+m 675430400 B; offsets as designed; round trip IDENTICAL; 0.9 s
+mtp.fc_hidden.weight q8g64 [2560,2560] experts 0: 160 panels x 43520 B (128-aligned), total 6963200 B = q+s+m 6963200 B; offsets as designed; round trip IDENTICAL; 0.0 s
+mtp.layers.0.mlp.experts_down q4g32 [1310720,640] experts 512: 81920 panels x 6400 B (128-aligned), total 524288000 B = q+s+m 524288000 B; offsets as designed; round trip IDENTICAL; 0.7 s
+RESULT: every tensor round-trips byte-identical
+	Command being timed: "ionice -c3 nice -n 19 /tmp/csp/convert_strixw_panel --old /data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw --check-tensors model.language_model.layers.0.mlp.experts_gate_up,model.language_model.layers.0.mlp.experts_down,model.language_model.layers.0.mlp.shared_expert.gate_up,model.language_model.layers.0.mlp.shared_expert.down_proj.weight,model.language_model.layers.0.linear_attn.in_proj,model.language_model.layers.0.linear_attn.out_proj.weight,model.language_model.layers.3.self_attn.qkv,model.language_model.layers.3.self_attn.o_proj.weight,model.language_model.layers.1.ple.kv_proj,lm_head.weight,mtp.fc_hidden.weight,mtp.layers.0.mlp.experts_down"
+	User time (seconds): 1.47
+	System time (seconds): 1.92
+	Percent of CPU this job got: 82%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3434724
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 4
+	Minor (reclaiming a frame) page faults: 2183066
+	Voluntary context switches: 79
+	Involuntary context switches: 29
+	Swaps: 0
+	File system inputs: 5384320
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+rc=0

@@ -1,0 +1,42 @@
+id      = "format.strixite.ngram_table"
+kind    = "format"
+summary = "ngram.table: the PLE n-gram embedding table as a flat file of fixed-size rows"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/ngram_table.cpp", "formats/ngram_table.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/ngram_table.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.container/ngram-table/-"
+api       = "strix::NgramTableFile, strix::NgramTableWriter"
+numeric   = "rows stored as bf16 or int8 (e4m3 scale) per the header's dtype"
+regime    = "host; one positioned read per row"
+
+[[requires]]
+module = "format.strixite.strixw"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.ple_hash"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

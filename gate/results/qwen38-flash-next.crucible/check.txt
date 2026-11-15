@@ -1,0 +1,20 @@
+$ /usr/bin/python3 flerp check --origin crucible --warnings
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: format.crucible.exl3 -> format.crucible.flashnext_weights -> format.crucible.exl3
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> format.crucible.exl3 -> format.crucible.flashnext_weights -> kernel.crucible.exl3_gemv -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: format.crucible.exl3 -> format.crucible.flashnext_weights -> kernel.crucible.exl3_gemv -> format.crucible.exl3
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: format.crucible.flashnext_weights -> kernel.crucible.exl3_gemv -> kernel.crucible.device_common -> format.crucible.flashnext_weights
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> format.crucible.exl3 -> kernel.crucible.hc -> kernel.crucible.ops -> kernel.crucible.gdn -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: kernel.crucible.hc -> kernel.crucible.ops -> kernel.crucible.gdn -> kernel.crucible.hc
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: kernel.crucible.ops -> kernel.crucible.gdn -> kernel.crucible.ops
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> format.crucible.exl3 -> kernel.crucible.hc -> kernel.crucible.ops -> runtime.crucible.conversation_cache -> runtime.crucible.speculation -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> format.crucible.exl3 -> kernel.crucible.hc -> kernel.crucible.ops -> runtime.crucible.conversation_cache -> runtime.crucible.state_disk -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: runtime.crucible.conversation_cache -> runtime.crucible.state_disk -> runtime.crucible.conversation_cache
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> kernel.crucible.exl3_gemm -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> kernel.crucible.moe_prefill -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> kernel.crucible.qsa -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> runtime.crucible.ablation -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> runtime.crucible.sampling -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> tool.crucible.engine_cli -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: dependency cycle: executor.crucible.flashnext -> tool.crucible.engine_cli -> serve.crucible.engine_serve -> executor.crucible.flashnext
+warning: recipes/qwen38-flash-next.crucible.toml: [modules] executor.model/qwen3.8-flash-next/exl3 is bound but nothing in the assembly requires it
+flerp check (origin crucible): 27 modules, 18 recipe(s), 0 error(s), 18 warning(s)

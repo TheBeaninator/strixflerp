@@ -1,0 +1,62 @@
+id        = "kernel.tensorfold.hip_decode"
+kind      = "kernel"
+summary   = "Decode round planning on the GPU: page tables, the per-round launch plan"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/hip/decode/decode.hip",
+  "zig/kernels/hip/decode/pages.hpp",
+  "zig/kernels/hip/decode/plan.hip",
+  "zig/kernels/hip/decode/plan.hpp",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/decode/decode.hip", "src/zig/kernels/hip/decode/plan.hip"]
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--genco",
+  "-D__HIP_PLATFORM_AMD__=1",
+  "-DUSE_ROCM=1",
+  "-DHIPBLAS_V2",
+  "-fPIC",
+  "-DCUDA_HAS_FP16=1",
+  "-DHIP_ENABLE_WARP_SYNC_BUILTINS=1",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-DTF_WAVE=32",
+  "-DTF_DOT2_F16=1",
+  "-DTF_DOT2_BF16=1",
+  "-DTF_SDOT4=1",
+  "-DTF_SDOT8=1",
+  "-DTF_MATRIX=1",
+  "-DTF_DOT2_SIGNED_ZERO=1",
+]
+
+[[provides]]
+interface = "kv.pages-tensorfold/-/-"
+api       = "decode/pages.hpp, plan.hpp"
+numeric   = "n/a"
+regime    = "decode rounds (1..N lanes), memory-bound"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"

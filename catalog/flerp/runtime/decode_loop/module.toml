@@ -1,0 +1,36 @@
+id        = "runtime.flerp.decode_loop"
+kind      = "runtime"
+summary   = "The decode loop over the executor ABI that every caller shares (include/flerp/decode_loop.h): prompt forwards with cuts and the lookahead hint; sample, draft (a stepped chain under the margin rule, or drafts held on the device), one verify, keep / keep_prefix and the carried token; fed ids; hooks for the pick, the stop and the records"
+notes     = "The loop of strixite's Engine::run (serve/engine.cpp 1256-1691 at 20937dc) written over the ABI. The conformance driver and serve.flerp.http both run it."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/decode_loop.c"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = ["src/flerp/decode_loop.c"]
+includes  = ["../../../../include"]
+c_std     = 11
+
+[[provides]]
+interface = "executor.decode-loop/flerp-v1/-"
+api       = "flerp_feed_ids, flerp_decode_loop (include/flerp/decode_loop.h)"
+numeric   = "n/a: it calls the executor and compares token ids"
+regime    = "one seq a call; a verify of at most 64 ids"
+
+[[requires]]
+interface = "executor.abi/flerp-v1/-"
+
+[gate]
+parity    = "flerp:gate/executor_abi.py"
+bench     = "none"
+status    = "parity"
+evidence  = "gate/results/qwen38-flash-next.strixite-abi/at-20937dc/summary.json"

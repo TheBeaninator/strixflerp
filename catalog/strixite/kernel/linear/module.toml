@@ -1,0 +1,48 @@
+id      = "kernel.strixite.linear"
+kind    = "kernel"
+summary = "BF16-weight linear layer, deliberately simple: the correctness baseline and the path for tensors that stay BF16"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/linear.hip", "kernels/linear.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/linear.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.dense/bf16/bf16"
+api       = "strix::kernels::linear_bf16w"
+numeric   = "fp32 accumulate, one rounding at the end; a bf16 -> f32 call stores the accumulator unrounded"
+regime    = "untuned; any M"
+
+[[provides]]
+interface = "linear.dense/bf16/f32"
+api       = "strix::kernels::linear_bf16w"
+numeric   = "fp32 accumulate, one rounding at the end; a bf16 -> f32 call stores the accumulator unrounded"
+regime    = "untuned; any M"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

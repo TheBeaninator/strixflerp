@@ -1,0 +1,66 @@
+id        = "kernel.tensorfold.hip_vision_ocr"
+kind      = "kernel"
+summary   = "Vision and OCR towers: GLM-OCR pointwise ops (PyTorch reduction order), LightOnOCR and Qwen vision (strict IEEE builds)"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/hip/glm_ocr/pointwise.hip",
+  "zig/kernels/hip/lighton_ocr.hip",
+  "zig/kernels/hip/qwen_vision.hip",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+upstream  = "glm_ocr/pointwise.hip adapts PyTorch 8514f05 Reduce.cuh and layer_norm_kernel.cu (BSD-3-Clause; THIRD_PARTY_NOTICES.md)"
+
+[licence]
+spdx      = "Apache-2.0 AND BSD-3-Clause"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/zig/kernels/hip/glm_ocr/pointwise.hip",
+  "src/zig/kernels/hip/lighton_ocr.hip",
+  "src/zig/kernels/hip/qwen_vision.hip",
+]
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--genco",
+  "-D__HIP_PLATFORM_AMD__=1",
+  "-DUSE_ROCM=1",
+  "-DHIPBLAS_V2",
+  "-fPIC",
+  "-DCUDA_HAS_FP16=1",
+  "-DHIP_ENABLE_WARP_SYNC_BUILTINS=1",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-DTF_WAVE=32",
+  "-DTF_DOT2_F16=1",
+  "-DTF_DOT2_BF16=1",
+  "-DTF_SDOT4=1",
+  "-DTF_SDOT8=1",
+  "-DTF_MATRIX=1",
+  "-DTF_DOT2_SIGNED_ZERO=1",
+]
+
+[[provides]]
+interface = "vision.tower-ops/bf16/f32.tensorfold"
+api       = "glm_ocr/pointwise.hip, lighton_ocr.hip, qwen_vision.hip"
+numeric   = "fp32; strict IEEE for the last two"
+regime    = "prompt"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"

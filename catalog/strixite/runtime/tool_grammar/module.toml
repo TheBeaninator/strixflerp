@@ -1,0 +1,41 @@
+id      = "runtime.strixite.tool_grammar"
+kind    = "runtime"
+summary = "Tool-call grammar: the grammar a request's tools allow, with the call tags as their added tokens and tool_choice required / named enforced"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/tool_grammar.cpp", "serve/tool_grammar.hpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/tool_grammar.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "grammar.tool-call/-/-"
+api       = "strix::tool_grammar::compile"
+numeric   = "n/a"
+regime    = "host; call tags are the tag tokens, never their text spelling"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.grammar"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

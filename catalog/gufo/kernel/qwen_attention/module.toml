@@ -1,0 +1,65 @@
+id        = "kernel.gufo.qwen_attention"
+kind      = "kernel"
+summary   = "Grouped-query softmax attention with gating over a canonical FP16 KV cache: decode with split-K partials, verification rows, batched causal tiles, masked prefill on WMMA"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/families/qwen/kernels/attention_batched.hip",
+  "src/families/qwen/kernels/attention_decode.hip",
+  "src/families/qwen/kernels/attention_decode_graph.hip",
+  "src/families/qwen/kernels/attention_decode_verify_wave64.hip",
+  "src/families/qwen/kernels/attention_tile.hip",
+  "src/families/qwen/kernels/attention_wmma.hip",
+  "src/families/qwen/kernels/prefill_unpack.hip",
+  "src/families/qwen/kernels/unpack.hip",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/families/qwen/kernels/attention_decode.hip",
+  "src/src/families/qwen/kernels/attention_decode_graph.hip",
+  "src/src/families/qwen/kernels/attention_decode_verify_wave64.hip",
+  "src/src/families/qwen/kernels/attention_batched.hip",
+  "src/src/families/qwen/kernels/attention_tile.hip",
+  "src/src/families/qwen/kernels/attention_wmma.hip",
+  "src/src/families/qwen/kernels/unpack.hip",
+  "src/src/families/qwen/kernels/prefill_unpack.hip",
+]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = ["-x", "hip", "-std=gnu++20", "-O2", "-UNDEBUG", "-DENGINE_ENABLE_HIP=1", "-c"]
+source_options = { "src/src/families/qwen/kernels/attention_decode_verify_wave64.hip" = ["-mwavefrontsize64"] }
+variants  = 8
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.gufo"
+api       = "gufo::hip::LaunchAttention, LaunchCausalDecodeAttention, LaunchBatchedAttention, LaunchBatchedAttentionGemm, LaunchBatchedAttentionTile, LaunchQwenWmmaAttention, LaunchUnpackQG"
+numeric   = "K/V canonical FP16 (FP32 in the validation fallback), fp32 scores and softmax, sigmoid gate; split halves exchange partial log-sum-exp; WMMA path validated against a CPU double-precision reference"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound; prefill batches (64..1024 tokens), compute-bound"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-"
+
+[gate]
+parity    = "origin-test:tests/kernels"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.qwen_attention.json"

@@ -1,0 +1,42 @@
+id      = "runtime.strixite.ngram_table"
+kind    = "runtime"
+summary = "PLE n-gram rows read on demand from the converted table file, deduplicated, with an LRU row cache"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/ngram_table.cpp", "runtime/ngram_table.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/ngram_table.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.ngram-rows/ngram-table/-"
+api       = "strix::NgramRowSource, strix::NgramTableRows"
+numeric   = "rows as stored"
+regime    = "up to 64 concurrent preads; the table stays on SSD"
+
+[[requires]]
+interface = "format.container/ngram-table/-"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.ple_hash"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

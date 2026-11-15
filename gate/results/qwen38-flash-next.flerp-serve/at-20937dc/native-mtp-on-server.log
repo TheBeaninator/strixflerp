@@ -1,0 +1,159 @@
+startup: config file none (defaults and flags only)
+startup: config weights = /data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw (flag)
+startup: config ngram = /data/models/strix-infer/converted/qwen38-fnext-ngram-int8/ngram.table (flag)
+startup: config vision = off (flag)
+startup: config vision-preprocess-limit = 2 (default)
+startup: config tokenizer = /data/models/strix-infer/tok/tokenizer.json (flag)
+startup: config generation-config = /data/models/strix-infer/tok/generation_config.json (flag)
+startup: config host = 127.0.0.1 (flag)
+startup: config port = 5395 (flag)
+startup: config request-read-timeout-s = 30 (default)
+startup: config capacity = 16384 (flag)
+startup: config total-slots = 1 (flag)
+startup: config kv-generations = 0 (default)
+startup: config kv-renew-margin = 16 (default)
+startup: config rope-yarn-factor = 2 (default)
+startup: config chunk = 8192 (flag)
+startup: config chunk-shared = 2048 (default)
+startup: config model-id = qwen3.8-flash-next (flag)
+startup: config prompt-cache-dir = /home/pod/models/strix-infer/prompt-cache (default)
+startup: config prompt-cache-gib = 0 (flag)
+startup: config prompt-cache-ram-margin-gib = 5 (default)
+startup: config low-memory = fail (default)
+startup: config prompt-cache-idle-s = 3600 (default)
+startup: config prompt-cache-write-gib-per-hour = 32 (default)
+startup: config prompt-cache-disk-free-gib = 32 (default)
+startup: config prompt-cache-checkpoints = 2 (default)
+startup: config prompt-cache-points = 16 (default)
+startup: config prompt-cache-delta-max-tokens = 65536 (default)
+startup: config gdn-precision = half-u (default)
+startup: config attention-precision = exact (default)
+startup: config kv-cache = q8 (default)
+startup: config mtp = on (flag)
+startup: config mtp-draft = 7 (default)
+startup: config mtp-margin = 1.5 (default)
+startup: config mtp-vocab = 65536 (default)
+startup: config ngram-cache-rows = 8388608 (default)
+startup: config log-level = info (default)
+startup: config capture-dir = /data/projects/strixflerp/build/gate-scratch-serve/native-mtp-on/capture (flag)
+startup: config think-nudge = off (flag)
+startup: config think-end-guard = off (flag)
+startup: config literal-tags = on (default)
+startup: config think-close-on-call = off (flag)
+startup: config think-nudge-rate = 0.25 (default)
+startup: config think-nudge-min-tokens = 3072 (default)
+startup: config think-nudge-wording = commit (default)
+startup: config placement = device (default)
+startup: config thinking-cap = 0 (default)
+startup: config thinking-cap-grace = 256 (default)
+startup: config thinking = on (default)
+startup: config logprobs = off (default)
+startup: config steer-dir = /data/models/strix-infer/steer (flag)
+startup: config cache-xfer = off (default)
+startup: tokenizer /data/models/strix-infer/tok/tokenizer.json (248077 tokens)
+startup: YaRN factor 2: 524288 positions (262144 trained), cos/sin factor 1.0693
+startup: 69.5 GiB of weights loaded in 49.9 s
+startup: steering vectors from /data/models/strix-infer/steer: librarian16, librarian20, librarian24, pirate20, villain24
+startup: kv-generations auto: 1024 K/V generations per slot (~0.3 TiB of address space per slot, no RAM); the session is rebuilt on the loaded model (the soft K/V reset) once a slot is within 16 generations of the last
+startup: precision gdn=half-u attention=exact (faster, less exact math than all-exact)
+startup: GPU memory 73.9 GiB in 71 buffer kinds; GiB per kind (>= 64 MiB): strixw data region of 69.46, experts combine partials 0.86, recurrent state snapshot layer 0.42, QSA top-k workspace 0.31, projection 0.25, experts gate|up 0.21, PLE key|value 0.20, attention workspace 0.19, PLE history 0.16, MTP normed streams 0.16, residual streams 0.16, MTP streams 0.16, MTP chain previous streams 0.16, gdn q|k|v 0.16, QSA block scores 0.13, experts swiglu 0.11, recurrent state layer 0.11, gdn normed 0.09, mixer core 0.09, PLE n-gram rows (host) 0.08
+startup: memory: MemAvailable 42.4 GiB after loading (GPU buffers 73.9 GiB, n-gram row cache 3.0 GiB) less 0.3 GiB held for one slot's K/V at full capacity (paged: mapped as conversations fill it); needs the floor 4.0 GiB (no prompt cache) (low-memory fail: short of it, startup fails; adapt would start with the RAM caches turned down)
+startup: think-block / tool-call guard off, literal tags on, think close before a call off
+startup: thinking nudge off
+startup: thinking on for requests that don't say
+startup: capturing every request's tokens and MTP steps to /data/projects/strixflerp/build/gate-scratch-serve/native-mtp-on/capture
+startup: qwen4exp, 48 layers, layout exp_gu=q4g128,exp_down=q4g32,sh_gu=q8g64,sh_down=q8g32,gdn_in=q4g128,gdn_out=q8g64,attn_qkv=q8g64,attn_o=q8g64,hc_down=q8g64,hc_up=q8g64,ple_kv=q8g64,lm_head=q8g64,mtp_fc=q8g64,embed=bf16, BF16, capacity 16384, chunk 8192, precision gdn=half-u attention=exact, kv q8, mtp (draft vocabulary 65536), n-gram row cache 8388608 rows
+startup: serving qwen3.8-flash-next on 127.0.0.1:5395
+----------------------------------------
+Request 1
+from        127.0.0.1, POST /v1/completions, 0.2 KB, not streamed
+model       none requested
+prompt      21 tokens, raw completion (no chat template)
+max_tokens  256
+sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed)
+resume      none: no saved state is a prefix of this prompt - all 21 tokens prefilled
+prefill             - t/s   21 new tokens in 0.71 s
+generate         44.9 t/s   256 tokens (think 0) in 5.68 s
+done             6.39 s total, 0.71 s first token, length, queue 0.00 s
+----------------------------------------
+ 
+----------------------------------------
+Request 2
+from        127.0.0.1, POST /v1/chat/completions, 0.2 KB, not streamed
+model       none requested
+prompt      85 tokens, 1 message, 0 tools, thinking on
+max_tokens  256
+sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed)
+resume      none: no saved state is a prefix of this prompt - all 85 tokens prefilled
+prefill             - t/s   85 new tokens in 0.38 s
+generate         51.5 t/s   165 tokens (think 130) in 3.18 s
+done             3.56 s total, 0.38 s first token, stop, queue 0.00 s
+----------------------------------------
+ 
+----------------------------------------
+Request 3
+from        127.0.0.1, POST /v1/completions, 0.2 KB, not streamed
+model       none requested
+prompt      21 tokens, raw completion (no chat template)
+max_tokens  256
+sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed)
+resume      none: no saved state is a prefix of this prompt - all 21 tokens prefilled
+prefill             - t/s   21 new tokens in 0.12 s
+generate         49.4 t/s   168 tokens (think 0) in 3.38 s
+done             3.50 s total, 0.12 s first token, stop, queue 0.00 s
+----------------------------------------
+ 
+----------------------------------------
+Request 4
+from        127.0.0.1, POST /v1/chat/completions, 21.2 KB, not streamed
+model       none requested
+prompt      4,971 tokens, 2 messages, 0 tools, thinking off
+max_tokens  256
+sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed)
+resume      none: no saved state is a prefix of this prompt - all 4,971 tokens prefilled
+prefill         1,338 t/s   4,971 new tokens in 3.71 s
+generate         67.8 t/s   256 tokens (think 0) in 3.76 s
+done             7.48 s total, 3.71 s first token, length, queue 0.00 s
+----------------------------------------
+ 
+----------------------------------------
+Request 5
+from        127.0.0.1, POST /v1/completions, 0.2 KB, not streamed
+model       none requested
+prompt      21 tokens, raw completion (no chat template)
+max_tokens  64
+sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed, logit_bias)
+logit_bias  1 tokens: 1 down (to -100)
+resume      none: no saved state is a prefix of this prompt - all 21 tokens prefilled
+prefill             - t/s   21 new tokens in 0.12 s
+generate         52.6 t/s   64 tokens (think 0) in 1.20 s
+done             1.32 s total, 0.12 s first token, length, queue 0.00 s
+----------------------------------------
+ 
+----------------------------------------
+Request 6
+from        127.0.0.1, POST /v1/chat/completions, 0.3 KB, not streamed
+model       none requested
+prompt      45 tokens, 1 message, 0 tools, thinking off
+max_tokens  128
+sampling    temperature 0.7, top_p 0.95, top_k 20, seed 4242 (asked: temperature, top_p, top_k, seed)
+resume      none: no saved state is a prefix of this prompt - all 45 tokens prefilled
+prefill             - t/s   45 new tokens in 0.21 s
+generate         64.0 t/s   128 tokens (think 0) in 1.98 s
+done             2.19 s total, 0.21 s first token, length, queue 0.00 s
+----------------------------------------
+ 
+----------------------------------------
+Request 7
+from        127.0.0.1, POST /v1/completions, 0.2 KB, not streamed
+model       none requested
+prompt      21 tokens, raw completion (no chat template)
+max_tokens  128
+sampling    temperature 0.8, top_p 0.9, top_k 20, seed 99 (asked: temperature, top_p, top_k, seed)
+resume      none: no saved state is a prefix of this prompt - all 21 tokens prefilled
+prefill             - t/s   21 new tokens in 0.12 s
+generate         39.8 t/s   128 tokens (think 0) in 3.19 s
+done             3.31 s total, 0.12 s first token, length, queue 0.00 s
+----------------------------------------
+ 
+stopped

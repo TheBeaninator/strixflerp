@@ -1,0 +1,57 @@
+id      = "format.strixite.convert_qwen4exp"
+kind    = "format"
+summary = "Offline converter library: Qwen3.8-Flash-Next HF safetensors to weights.strixw"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/convert_qwen4exp.cpp", "formats/convert_qwen4exp.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/convert_qwen4exp.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.convert/strixw/-"
+api       = "strix::convert_qwen4exp, strix::checkpoint_fingerprint"
+numeric   = "per-class Q4/Q5/Q6/Q8 quantization by layout; HC norm weight folded before quantizing; router kept bf16"
+regime    = "host, streaming, all cores"
+
+[[requires]]
+module = "format.strixite.merge_plan"
+
+[[requires]]
+module = "format.strixite.q4"
+
+[[requires]]
+module = "format.strixite.q5"
+
+[[requires]]
+module = "format.strixite.q6"
+
+[[requires]]
+module = "format.strixite.q8"
+
+[[requires]]
+module = "format.strixite.safetensors"
+
+[[requires]]
+module = "format.strixite.strixw"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

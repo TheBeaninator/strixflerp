@@ -1,0 +1,62 @@
+id        = "kernel.crucible.hc"
+kind      = "kernel"
+summary   = "Hyper-connections: decode HC read (dots, mid, mix) on WMMA with fp16 or int8 weights, exact multi-row paths, prefill HC with packed operands"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/exl3/hc8_layout.h",
+  "engine/layers/hc_frag.h",
+  "engine/layers/hc_int8.h",
+  "engine/layers/hc_wmma.h",
+  "engine/layers/hc_wmma2.h",
+  "engine/layers/kernels/hc_multirow.h",
+  "engine/layers/persistent_hc.h",
+  "engine/layers/prefill_hc.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/exl3", "src/engine/layers", "src/engine/layers/kernels"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "hc.mix/f16/f32.crucible"
+api       = "HcWmmaKernel, HcW2Kernel (hc_wmma*.h), HcDots/HcMixKernel (ops.h)"
+numeric   = "fp32 accumulate on WMMA; int8 variant (CRUCIBLE_HC_WMMA=2) is a tolerance contract"
+regime    = "decode and MTP verify, 1..8 rows (R), memory-bound"
+
+[[provides]]
+interface = "hc.mix-prefill/f16/f32.crucible"
+api       = "PrefillHc*Kernel (layers/prefill_hc.h)"
+numeric   = "fp32 accumulate"
+regime    = "prompt chunks (up to 2048 rows a chunk), compute-bound on WMMA"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[[requires]]
+module    = "kernel.crucible.device_common"
+
+[[requires]]
+module    = "kernel.crucible.exl3_gemv"
+
+[[requires]]
+module    = "kernel.crucible.ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

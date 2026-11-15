@@ -1,0 +1,41 @@
+id      = "tool.strixite.transcode_ngram_table"
+kind    = "tool"
+summary = "Makes the int8 n-gram table from the BF16 one"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/transcode_ngram_table.cpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/transcode_ngram_table.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.transcode-ngram-table/-/-"
+api       = "main (transcode_ngram_table)"
+numeric   = "n/a"
+regime    = "host only"
+
+[[requires]]
+interface = "format.container/ngram-table/-"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.ngram_table"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,42 @@
+# Option 3 of the 2026-11-11 strixw prefill report: --chunk 16384 instead of 8192 on the unmodified modules
+# (recipes/qwen38-flash-next.strixite-pf.toml, every switch off). A measurement: what changes, not a pass/fail on
+# bits. Criteria fixed before the first GPU run; do not edit them to turn a failure into a pass.
+inherit = "gate/qwen38-flash-next.strixite.toml"     # host paths (phase-1 weights, n-gram table, tokenizer), server args
+
+[build]
+recipe = "qwen38-flash-next.strixite-pf"
+server = "strixflerp-qwen38-flash-next.strixite-pf"
+
+[bench]
+prompts     = [8192, 32768, 131072]   # fixed token ids (splitmix64, seed below), no prompt cache in the tool
+rounds      = 4                       # round 0 = first request; rounds 1-3 = second-request numbers
+gen         = 32                      # greedy tokens after the prompt (T = 1 forwards, MTP off)
+seed        = 1234
+capacity    = 139264
+logits_rows = 16                      # the last 16 prompt rows' logits are hashed / compared
+timeout_s   = 5400
+
+[trace]
+prompt    = 32768
+variants  = ["base", "c16k"]
+timeout_s = 1800
+
+[server_stage]
+variants = ["base", "c16k"]           # MTP on as served, the phase-1 gate's three requests x 3 repeats
+
+[[variant]]
+name  = "base"
+chunk = 8192
+
+[[variant]]
+name   = "c16k"
+chunk  = 16384
+expect = "report"                     # rows per forward may change bits (docs/EXECUTOR-ABI.md, "Forward shape")
+min_gain_pct = 2.0                    # "worth proposing" bar: +2% at 32k and 128k, every repeat above base's max
+
+[criteria]
+base             = "base"
+speed_prompts    = [32768, 131072]
+decode_tolerance = 0.05               # server decode medians within 5%, or inside base's own min..max (phase-1 rule)
+# Reported, not judged: logits sha256 per prompt, top-1 agreement and KL(base || c16k) over the last 16 rows,
+# greedy ids and their first difference, device memory after the prompt, PLE waits, the per-chunk timeline.

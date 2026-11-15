@@ -1,0 +1,54 @@
+id        = "kernel.hipfire.gemv_float"
+kind      = "kernel"
+summary   = "Decode GEMV on float weights: F32, F16 and BF16 with fp32 x, plus the fused Q/K L2-norm scale (7 sources, 7 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/fused_qk_l2_norm_scale.hip",
+  "kernels/src/fused_qk_l2_norm_scale_interleave_f32_batched.hip",
+  "kernels/src/gemv.hip",
+  "kernels/src/gemv_bf16_xf32.hip",
+  "kernels/src/gemv_f16_bias_xf32.hip",
+  "kernels/src/gemv_f16_xf32.hip",
+  "kernels/src/qwen4_gemv_bf16_xf32.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 7
+
+[[provides]]
+interface = "linear.decode/f32+f16+bf16/f32.hipfire"
+api       = "fused_qk_l2_norm_scale_interleave_f32_batched, fused_qk_l2_norm_scale, gemv_bf16_xf32, gemv_f16_bias_xf32, gemv_f16_xf32 (+2 more units, see units.json)"
+numeric   = "fp32 accumulate, shared-memory reduction across wavefronts"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[provides]]
+interface = "linear.dense/bf16/f32.hipfire"
+api       = "gemv_bf16_xf32 (W [M, K] raw bf16, x [K] f32, y [M] f32)"
+numeric   = "bf16 widened losslessly (16-bit shift), fp32 input and fp32 accumulate; the origin calls it its KLD / PPL oracle path"
+regime    = "1 row"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemv_float.json"

@@ -1,0 +1,82 @@
+id      = "kernel.strixite.linear_q4"
+kind    = "kernel"
+summary = "Q4 group-affine GEMV for decode (split-K, 32 codes per 16-byte load) and the per-token MoE expert gather/combine for Q4 and Q5 experts"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/linear_q4.hip", "kernels/linear_q4.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/linear_q4.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/strixw-q4/bf16"
+api       = "strix::kernels::linear_q4"
+numeric   = "fp32 accumulate (s * sum(x*q) + m * sum(x) per chunk, one FMA per weight), one rounding to the activation dtype on store; a bf16 -> f32 call stores the accumulator unrounded"
+regime    = "decode: small M, memory-bound; M == 1 has its own instantiation, larger M runs 8 rows per pass; K % 32 == 0"
+
+[[provides]]
+interface = "linear.decode/strixw-q4/f32"
+api       = "strix::kernels::linear_q4"
+numeric   = "fp32 accumulate (s * sum(x*q) + m * sum(x) per chunk, one FMA per weight), one rounding to the activation dtype on store; a bf16 -> f32 call stores the accumulator unrounded"
+regime    = "decode: small M, memory-bound; M == 1 has its own instantiation, larger M runs 8 rows per pass; K % 32 == 0"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q4/bf16"
+api       = "strix::kernels::linear_q4_experts_gather, _gather_swiglu, _combine, strix::kernels::check_expert_error"
+numeric   = "fp32 accumulate, one rounding on store; an out-of-range expert id gives NaN and sets the error words"
+regime    = "one launch covers every (token, active expert) slot; reads an expert's rows once per slot"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q4/f32"
+api       = "strix::kernels::linear_q4_experts_gather, _gather_swiglu, _combine, strix::kernels::check_expert_error"
+numeric   = "fp32 accumulate, one rounding on store; an out-of-range expert id gives NaN and sets the error words"
+regime    = "one launch covers every (token, active expert) slot; reads an expert's rows once per slot"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q5/bf16"
+api       = "strix::kernels::linear_q5_experts_gather, _gather_swiglu, _combine"
+numeric   = "as the Q4 experts, one kernel template"
+regime    = "K % 128 == 0"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q5/f32"
+api       = "strix::kernels::linear_q5_experts_gather, _gather_swiglu, _combine"
+numeric   = "as the Q4 experts, one kernel template"
+regime    = "K % 128 == 0"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q5/-"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.qsplit"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

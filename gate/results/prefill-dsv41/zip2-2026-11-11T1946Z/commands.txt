@@ -1,0 +1,190 @@
+2026-11-11T19:46:29Z RUN pod-quad held 10.10.0.50
+
+(rc 1)
+2026-11-11T19:46:29Z RUN pod-quad held 10.10.0.54
+
+(rc 1)
+2026-11-11T19:46:29Z RUN OWNER=agent REASON='strixflerp SPEED-ZIP2 18b8d5d277 window (agreed with the pair owner)' TTL=2040 pod-quad hold 10.10.0.50 10.10.0.54
+2026-11-11 19:46:32  pod-quad: workers free after 1s: 10.10.0.50 10.10.0.54
+2026-11-11 19:46:32  pod-quad: held: 10.10.0.50 10.10.0.54 (owner agent, expires in 0h34m; pod-quad renew to extend)
+(rc 0)
+2026-11-11T19:46:32Z RUN KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh down
+down: by hand (caller: actor agent, /bin/sh -c KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh down )
+(rc 0)
+2026-11-11T19:46:36Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 python3 -c 'import json; print(json.load(open("/home/pod/tfp/deploy/f64b5ff2e28b/DEPLOY.json"))["commit"])'
+f64b5ff2e28b1bac7ccb2c1d362908dfbb0dc362
+(rc 0)
+2026-11-11T19:46:37Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 mkdir -p /home/pod/tfp/strixflerp-zip2/conf /home/pod/tfp/strixflerp-zip2/run /home/pod/tfp/strixflerp-zip2/zip2-deploy && cp -a /home/pod/tfp/deploy/f64b5ff2e28b/tools /home/pod/tfp/strixflerp-zip2/zip2-deploy/ && chmod -R u+w /home/pod/tfp/strixflerp-zip2/zip2-deploy && sed -i '/TF_DS_PREFILL_SPLIT_ZIP=/a\
+  z2=$(cat "$DEPLOY_DIR/PREFILL_ZIP2" 2>/dev/null || true); [ -n "$z2" ] && SERVE_ENV+=(TF_DS_PREFILL_ZIP2="$z2")  # strixflerp executor.flerp.dsv41_zip2' /home/pod/tfp/strixflerp-zip2/zip2-deploy/tools/dsv41-hip/serve_lib.sh && test "$(grep -c TF_DS_PREFILL_ZIP2 /home/pod/tfp/strixflerp-zip2/zip2-deploy/tools/dsv41-hip/serve_lib.sh)" = 1
+
+(rc 0)
+2026-11-11T19:46:37Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/build/dsv41-flash.strixfold-tp2-zip2/tree/zig-out/native-hip pod@10.10.0.50:/home/pod/tfp/strixflerp-zip2/zip2-deploy/
+
+(rc 0)
+2026-11-11T19:46:38Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/zip2-2026-11-11T1946Z/DEPLOY.json pod@10.10.0.50:/home/pod/tfp/strixflerp-zip2/zip2-deploy/DEPLOY.json
+
+(rc 0)
+2026-11-11T19:46:38Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/zip2-2026-11-11T1946Z/T.conf pod@10.10.0.50:/home/pod/tfp/strixflerp-zip2/conf/T.conf
+
+(rc 0)
+2026-11-11T19:46:38Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/zip2-2026-11-11T1946Z/C.conf pod@10.10.0.50:/home/pod/tfp/strixflerp-zip2/conf/C.conf
+
+(rc 0)
+2026-11-11T19:46:38Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 sha256sum /home/pod/tfp/strixflerp-zip2/zip2-deploy/native-hip/share/tensorfold/hip/gfx1151/dsv41/manifest.json /home/pod/tfp/deploy/f64b5ff2e28b/native-hip/share/tensorfold/hip/gfx1151/dsv41/manifest.json | cut -c1-64 | sort -u | wc -l
+1
+(rc 0)
+2026-11-11T19:46:39Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 mkdir -p /home/pod/tfp/strixflerp-zip2/conf /home/pod/tfp/strixflerp-zip2/run /home/pod/tfp/strixflerp-zip2/zip2-deploy && cp -a /home/pod/tfp/deploy/f64b5ff2e28b/tools /home/pod/tfp/strixflerp-zip2/zip2-deploy/ && chmod -R u+w /home/pod/tfp/strixflerp-zip2/zip2-deploy && sed -i '/TF_DS_PREFILL_SPLIT_ZIP=/a\
+  z2=$(cat "$DEPLOY_DIR/PREFILL_ZIP2" 2>/dev/null || true); [ -n "$z2" ] && SERVE_ENV+=(TF_DS_PREFILL_ZIP2="$z2")  # strixflerp executor.flerp.dsv41_zip2' /home/pod/tfp/strixflerp-zip2/zip2-deploy/tools/dsv41-hip/serve_lib.sh && test "$(grep -c TF_DS_PREFILL_ZIP2 /home/pod/tfp/strixflerp-zip2/zip2-deploy/tools/dsv41-hip/serve_lib.sh)" = 1
+
+(rc 0)
+2026-11-11T19:46:39Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/build/dsv41-flash.strixfold-tp2-zip2/tree/zig-out/native-hip pod@10.10.0.54:/home/pod/tfp/strixflerp-zip2/zip2-deploy/
+
+(rc 0)
+2026-11-11T19:46:39Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/zip2-2026-11-11T1946Z/DEPLOY.json pod@10.10.0.54:/home/pod/tfp/strixflerp-zip2/zip2-deploy/DEPLOY.json
+
+(rc 0)
+2026-11-11T19:46:40Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/zip2-2026-11-11T1946Z/T.conf pod@10.10.0.54:/home/pod/tfp/strixflerp-zip2/conf/T.conf
+
+(rc 0)
+2026-11-11T19:46:40Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/zip2-2026-11-11T1946Z/C.conf pod@10.10.0.54:/home/pod/tfp/strixflerp-zip2/conf/C.conf
+
+(rc 0)
+2026-11-11T19:46:40Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 sha256sum /home/pod/tfp/strixflerp-zip2/zip2-deploy/native-hip/share/tensorfold/hip/gfx1151/dsv41/manifest.json /home/pod/tfp/deploy/f64b5ff2e28b/native-hip/share/tensorfold/hip/gfx1151/dsv41/manifest.json | cut -c1-64 | sort -u | wc -l
+1
+(rc 0)
+2026-11-11T19:46:40Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 ln -sfn /home/pod/tfp/deploy/f64b5ff2e28b /home/pod/tfp/strixflerp-zip2/deploy && rm -f /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/deploy/f64b5ff2e28b
+(rc 0)
+2026-11-11T19:46:41Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 ln -sfn /home/pod/tfp/deploy/f64b5ff2e28b /home/pod/tfp/strixflerp-zip2/deploy && rm -f /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/deploy/f64b5ff2e28b
+(rc 0)
+2026-11-11T19:46:41Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-zip2-up --property=KillMode=process bash -c 'cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-A-194641 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/T.conf ./first_light.sh up'
+Running as unit: strixflerp-zip2-up.service; invocation ID: 31d0bd8f362e4a7090a9c617ba0ae0a7
+(rc 0)
+2026-11-11T19:48:28Z arm A p8163-1: 8163 tokens, cached 0, prefill 8.045915754 s, ids [23, 1]
+2026-11-11T19:48:34Z arm A p8163-2: 8163 tokens, cached 0, prefill 6.060289811 s, ids [23, 1]
+2026-11-11T19:48:34Z no ~/tfp/qual/bench/creator/prompts-v1.json on F or A: the origin's 11,594-token prompt is not run
+2026-11-11T19:48:36Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-zip2-up 2>/dev/null; cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-A-194641 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/T.conf ./first_light.sh down
+rank 0: stopped (1231544)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T19:48:40Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 ln -sfn /home/pod/tfp/strixflerp-zip2/zip2-deploy /home/pod/tfp/strixflerp-zip2/deploy && rm -f /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/strixflerp-zip2/zip2-deploy
+(rc 0)
+2026-11-11T19:48:40Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 ln -sfn /home/pod/tfp/strixflerp-zip2/zip2-deploy /home/pod/tfp/strixflerp-zip2/deploy && rm -f /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/strixflerp-zip2/zip2-deploy
+(rc 0)
+2026-11-11T19:48:40Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-zip2-up --property=KillMode=process bash -c 'cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-Z0-194840 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/T.conf ./first_light.sh up'
+Running as unit: strixflerp-zip2-up.service; invocation ID: 79145e8477ed4330af4a075815b6abfa
+(rc 0)
+2026-11-11T19:50:21Z arm Z0 p8163-1: 8163 tokens, cached 0, prefill 6.919360771 s, ids [23, 1]
+2026-11-11T19:50:28Z arm Z0 p8163-2: 8163 tokens, cached 0, prefill 6.060686366 s, ids [23, 1]
+2026-11-11T19:50:29Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-zip2-up 2>/dev/null; cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-Z0-194840 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/T.conf ./first_light.sh down
+rank 0: stopped (1234331)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T19:50:33Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 ln -sfn /home/pod/tfp/strixflerp-zip2/zip2-deploy /home/pod/tfp/strixflerp-zip2/deploy && printf %s 1 > /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/strixflerp-zip2/zip2-deploy
+(rc 0)
+2026-11-11T19:50:33Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 ln -sfn /home/pod/tfp/strixflerp-zip2/zip2-deploy /home/pod/tfp/strixflerp-zip2/deploy && printf %s 1 > /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/strixflerp-zip2/zip2-deploy
+(rc 0)
+2026-11-11T19:50:33Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-zip2-up --property=KillMode=process bash -c 'cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-Z1-195033 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/T.conf ./first_light.sh up'
+Running as unit: strixflerp-zip2-up.service; invocation ID: 48d738556e1c44508f572c9c95a73748
+(rc 0)
+2026-11-11T19:53:00Z arm Z1 p8163-1: 8163 tokens, cached 0, prefill 39.706626513 s, ids [23, 1]
+2026-11-11T19:53:06Z arm Z1 p8163-2: 8163 tokens, cached 0, prefill 5.858183686 s, ids [23, 1]
+2026-11-11T19:53:08Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-zip2-up 2>/dev/null; cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-Z1-195033 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/T.conf ./first_light.sh down
+rank 0: stopped (1237134)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T19:53:12Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 ln -sfn /home/pod/tfp/deploy/f64b5ff2e28b /home/pod/tfp/strixflerp-zip2/deploy && rm -f /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/deploy/f64b5ff2e28b
+(rc 0)
+2026-11-11T19:53:12Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 ln -sfn /home/pod/tfp/deploy/f64b5ff2e28b /home/pod/tfp/strixflerp-zip2/deploy && rm -f /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/deploy/f64b5ff2e28b
+(rc 0)
+2026-11-11T19:53:12Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-zip2-up --property=KillMode=process bash -c 'cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-SA-195312 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/C.conf ./first_light.sh up'
+Running as unit: strixflerp-zip2-up.service; invocation ID: 3de4637d8c51411cba55af704c143bd7
+(rc 0)
+2026-11-11T19:55:04Z arm SA q1-full: 4113 tokens, cached 0, prefill 4.668406868 s, ids [671, 1257, 3676, 396]
+2026-11-11T19:55:06Z arm SA q1-resumed: 4113 tokens, cached 2048, prefill 1.775241438 s, ids [671, 1257, 3676, 396]
+2026-11-11T19:55:10Z arm SA q2-full: 4185 tokens, cached 0, prefill 3.756413612 s, ids [671, 1257, 3676, 396]
+2026-11-11T19:55:12Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-zip2-up 2>/dev/null; cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-SA-195312 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/C.conf ./first_light.sh down
+rank 0: stopped (1240423)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T19:55:16Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 ln -sfn /home/pod/tfp/strixflerp-zip2/zip2-deploy /home/pod/tfp/strixflerp-zip2/deploy && printf %s 1 > /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/strixflerp-zip2/zip2-deploy
+(rc 0)
+2026-11-11T19:55:16Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 ln -sfn /home/pod/tfp/strixflerp-zip2/zip2-deploy /home/pod/tfp/strixflerp-zip2/deploy && printf %s 1 > /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/strixflerp-zip2/zip2-deploy
+(rc 0)
+2026-11-11T19:55:17Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-zip2-up --property=KillMode=process bash -c 'cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-SZ-195517 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/C.conf ./first_light.sh up'
+Running as unit: strixflerp-zip2-up.service; invocation ID: 673ab563ad1741c19872f12bc354616b
+(rc 0)
+2026-11-11T19:56:47Z arm SZ q1-full: 4113 tokens, cached 0, prefill 4.002680718 s, ids [671, 1257, 3676, 396]
+2026-11-11T19:56:49Z arm SZ q1-resumed: 4113 tokens, cached 2048, prefill 1.764849614 s, ids [671, 1257, 3676, 396]
+2026-11-11T19:56:51Z arm SZ q2-imported: 4185 tokens, cached 2048, prefill 2.219822353 s, ids [671, 1257, 3676, 396]
+2026-11-11T19:56:52Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-zip2-up 2>/dev/null; cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-SZ-195517 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/C.conf ./first_light.sh down
+rank 0: stopped (1243479)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T19:56:57Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 ln -sfn /home/pod/tfp/strixflerp-zip2/zip2-deploy /home/pod/tfp/strixflerp-zip2/deploy && printf %s 2 > /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/strixflerp-zip2/zip2-deploy
+(rc 0)
+2026-11-11T19:56:57Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 ln -sfn /home/pod/tfp/strixflerp-zip2/zip2-deploy /home/pod/tfp/strixflerp-zip2/deploy && printf %s 2 > /home/pod/tfp/strixflerp-zip2/zip2-deploy/PREFILL_ZIP2 && readlink /home/pod/tfp/strixflerp-zip2/deploy
+/home/pod/tfp/strixflerp-zip2/zip2-deploy
+(rc 0)
+2026-11-11T19:56:57Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-zip2-up --property=KillMode=process bash -c 'cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-Z2-195657 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/T.conf ./first_light.sh up'
+Running as unit: strixflerp-zip2-up.service; invocation ID: e624a0d5eb5048c5aa553f53658985da
+(rc 0)
+2026-11-11T19:59:30Z arm Z2 p8163-1: 8163 tokens, cached 0, prefill 36.462525951 s, ids [23, 1]
+2026-11-11T19:59:36Z arm Z2 p8163-2: 8163 tokens, cached 0, prefill 5.667971779 s, ids [23, 1]
+2026-11-11T19:59:37Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-zip2-up 2>/dev/null; cd /home/pod/tfp/strixflerp-zip2/deploy/tools/dsv41-hip && RUN_ID=zip2x-Z2-195657 TF_SERVE_CONF=/home/pod/tfp/strixflerp-zip2/conf/T.conf ./first_light.sh down
+rank 0: stopped (1245750)
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T19:59:41Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-zip2-up 2>/dev/null; true
+
+(rc 0)
+2026-11-11T19:59:41Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); for u in $(systemctl --user list-units 'tfp-*zip2x*' --state=active --no-legend --plain | cut -d' ' -f1); do systemctl --user stop $u; echo stopped $u; done; true
+
+(rc 0)
+2026-11-11T19:59:42Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); for u in $(systemctl --user list-units 'tfp-*zip2x*' --state=active --no-legend --plain | cut -d' ' -f1); do systemctl --user stop $u; echo stopped $u; done; true
+
+(rc 0)
+2026-11-11T19:59:42Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 rm -rf /home/pod/tfp/strixflerp-zip2
+
+(rc 0)
+2026-11-11T19:59:43Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 rm -rf /home/pod/tfp/strixflerp-zip2
+
+(rc 0)
+2026-11-11T19:59:43Z RUN OWNER=agent pod-quad release
+2026-11-11 19:59:43  pod-quad: hold released: 10.10.0.50 10.10.0.54 (owner agent) (pod-model-keeper reloads gufo one at a time; lanes resume when :8082 answers)
+(rc 0)
+2026-11-11T19:59:45Z RUN pod-quad held 10.10.0.50
+
+(rc 1)
+2026-11-11T19:59:45Z RUN pod-quad held 10.10.0.54
+
+(rc 1)
+2026-11-11T19:59:45Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); ls -d /home/pod/tfp/strixflerp-zip2 2>&1 | head -2; systemctl --user list-units 'strixflerp-zip2*' --no-legend --plain | head
+ls: cannot access '/home/pod/tfp/strixflerp-zip2': No such file or directory
+(rc 0)
+2026-11-11T19:59:45Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@10.10.0.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); ls -d /home/pod/tfp/strixflerp-zip2 2>&1 | head -2; systemctl --user list-units 'strixflerp-zip2*' --no-legend --plain | head
+ls: cannot access '/home/pod/tfp/strixflerp-zip2': No such file or directory
+(rc 0)
+2026-11-11T19:59:46Z hold released; waiting for the pod's keeper to bring serving back (no start from here)

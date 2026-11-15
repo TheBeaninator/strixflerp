@@ -1,0 +1,55 @@
+id        = "runtime.gufo.dspark"
+kind      = "runtime"
+summary   = "DSpark speculation for DeepSeek V4 Flash: sampler bridge with bounded proposals and exact rejection / residual correction, policy"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/dspark_sampler.hpp",
+  "src/models/deepseek_v4_flash/runtime/dspark_internal.h",
+  "src/models/deepseek_v4_flash/runtime/dspark_policy.h",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src", "src/src/models/deepseek_v4_flash/runtime"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "speculation.draft/dspark/f32"
+api       = "gufo::models::deepseek_v4_flash::DsparkSamplerBridge"
+numeric   = "target filters and penalties always see the complete vocabulary; a rejected draw becomes the next cycle anchor"
+regime    = "draft cycles"
+
+[[requires]]
+interface = "draft.dspark-sampling/-/f32"
+
+[[requires]]
+interface = "draft.markov/gguf/f32"
+
+[[requires]]
+module    = "executor.gufo.deepseek_v4_flash"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "kernel.gufo.ds4_backend"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

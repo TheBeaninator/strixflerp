@@ -1,0 +1,36 @@
+id        = "kernel.flerp.attn_wmma_gqa"
+kind      = "kernel"
+summary   = "Causal prefill attention on the WMMA matrix cores for GQA shapes (16 or 32 query heads over 2 or 4 KV heads of 256): gufo's WmmaCausalAttention / PackAttentionHeads with the head counts as template parameters"
+notes     = "PREFILL-ORNITH attention (gate/prefill-attn.toml). Derived from kernel.gufo.qwen_attention (gufo f070a17, MIT): kernels/attention_wmma.hip, its tile, arithmetic and order unchanged; the 27B's fixed 24 / 4 heads become template parameters. qwen35moe's attention blocks (35B 16/2, Ornith 32/2) otherwise take the scalar online-softmax fallback."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/attn_wmma_gqa/attn_wmma_gqa.hip", "flerp/attn_wmma_gqa/attn_wmma_gqa.hpp"]
+authors   = ["gufo contributors", "neuhaus", "pod"]
+modified  = false
+upstream  = "gufo https://github.com/neuhaus/gufo f070a17 (branch rdma, MIT): src/families/qwen/kernels/attention_wmma.hip, adapted"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/attn_wmma_gqa/attn_wmma_gqa.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.prefill-causal/kv-f16/f32.gqa-wmma"
+api       = "flerp::attn::LaunchGqaWmmaAttention, Supported (flerp/attn_wmma_gqa/attn_wmma_gqa.hpp)"
+numeric   = "the origin's: Q x 1/16 and K, V in F16, FP32 accumulation, online softmax with F16 probabilities, exact causal tail"
+regime    = "prompt chunks with the FP16 KV plane already written; head_dim 256"
+
+[gate]
+parity    = "flerp:gate/prefill-attn.toml"
+bench     = "flerp:gate/prefill-attn.toml"
+status    = "harvested"
+compile   = "n/a"
+reason    = "kernel gate gate/prefill-attn.toml (results gate/results/prefill-attn)"

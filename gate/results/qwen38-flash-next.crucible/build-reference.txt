@@ -1,0 +1,2 @@
+$ choom -n 1000 -- ionice -c3 nice -n 19 env -u HIPCC_COMPILE_FLAGS_APPEND -u HIPCC_LINK_FLAGS_APPEND -u MAKEFLAGS make -j1 ROCM_PATH=/opt/rocm-7.2.4 HIPCC=/opt/rocm-7.2.4/bin/hipcc SPLIT=0 STATE_EPOCH=0 GPU_ARCH=gfx1151 build/engine/crucible.mono
+bash tools/hipcc_checked.sh build/engine/crucible.mono /opt/rocm-7.2.4/bin/hipcc  -O3 -std=c++20 --offload-arch=gfx1151 --rocm-path=/opt/rocm-7.2.4 -I/opt/rocm-7.2.4/include -MMD -MP -MF build/engine/crucible.mono.d engine/engine.hip  -pthread -o build/engine/crucible.mono

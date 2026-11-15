@@ -1,0 +1,56 @@
+id      = "tool.strixite.tool_grammar_check"
+kind    = "tool"
+summary = "Test: the tool-call grammar against the model's tokenizer (tags, free text, tool_choice)"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/tool_grammar_check.cpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/tool_grammar_check.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.tool-grammar-check/-/-"
+api       = "main (tool_grammar_check)"
+numeric   = "n/a"
+regime    = "host only test; tool_grammar_check <tokenizer.json>"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.grammar"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.output_parser"
+
+[[requires]]
+module = "runtime.strixite.structured_output"
+
+[[requires]]
+module = "runtime.strixite.token_mask"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[[requires]]
+module = "runtime.strixite.tool_grammar"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

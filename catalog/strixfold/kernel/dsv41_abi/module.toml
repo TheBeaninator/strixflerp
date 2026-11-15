@@ -1,0 +1,35 @@
+id        = "kernel.strixfold.dsv41_abi"
+kind      = "kernel"
+summary   = "The dsv41 HIP kernel ABI header: version word and every by-value argument struct, shared by hipcc and Zig (translate-c)"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/abi.h"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.dsv41-hip/-/-"
+api       = "TF_DS_HIP_ABI_VERSION, tf_ds_*_args structs"
+numeric   = "fixed-width fields, natural alignment, size and offset static asserts per struct"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside every other kernel.strixfold.* module"

@@ -1,0 +1,18 @@
+# The configuration the Ornith engine launches by default (the WINJOB kit, gate/ornith_p5.py serve): the champions of
+# every area combined. The old behaviour is one explicit override away: --config none, or --set drafts=0,
+# --set reply=full, --set env.FLERP_MOE_GROUPED=0 --set env.FLERP_DENSE_GROUPED=0 --set env.FLERP_ATTN_GQA=0. Prefill (from prefill-best,
+# 2026-11-14): grouped experts + dense F16 + the GQA WMMA prompt attention, the origin's 4,096-row chunk bound; bulk
+# chunks stay off until G4 is explained.
+name        = "ornith397.serve"
+description = "Ornith-1.5 397B serving default: decode-best + prefill-best"
+model       = "ornith-1.5-397b"
+areas       = ["decode-single", "prefill", "ttft"]
+includes    = ["ornith397.decode-best", "ornith397.prefill-best"]
+
+[stage]
+# The serve front end (ABI flerp_draft_hold / flerp_verify) holds ONE draft today: at depth 3 the first decode step fails with
+# "flerp_draft_hold: 3 drafts asked, the last stage holds 1" (35B world 4, 2026-11-14, gate/results/ornith-config-check). Depth 3
+# is the generator path's (decode-best, 25.7 tok/s); raise this to 3 when the ABI path holds N drafts.
+drafts = 1
+
+[env]

@@ -1,0 +1,52 @@
+id        = "kernel.gufo.qwen_sampling"
+kind      = "kernel"
+summary   = "Device-side sampling: bounded tile-winner top-k (radix order, lowest id on ties), penalties, argmax, and lossless speculative accept / residual sampling for verification rows"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = ["src/families/qwen/kernels/sample.hip"]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/families/qwen/kernels/sample.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = ["-x", "hip", "-std=gnu++20", "-O2", "-UNDEBUG", "-DENGINE_ENABLE_HIP=1", "-c"]
+variants  = 1
+
+[[provides]]
+interface = "logits.topk/-/f32.gufo"
+api       = "gufo::hip::LaunchGPUSortLogits, LaunchGPUSampling, LaunchGPUArgmax, LaunchBatchedGPUArgmax (ops/token.hpp)"
+numeric   = "ordered float bits + original id: radix order with lowest-id ties and signed-zero equivalence; non-finite values sort last"
+regime    = "1 row x vocab"
+
+[[provides]]
+interface = "speculation.accept/-/f32.gufo"
+api       = "gufo::hip::LaunchGPUSpeculativeSampling"
+numeric   = "accepts the draft token with the lossless speculative ratio, else samples the residual target-minus-draft distribution"
+regime    = "verification rows"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-"
+
+[gate]
+parity    = "origin-test:tests/kernels"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.qwen_sampling.json"

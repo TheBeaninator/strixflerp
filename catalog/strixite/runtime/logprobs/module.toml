@@ -1,0 +1,41 @@
+id      = "runtime.strixite.logprobs"
+kind    = "runtime"
+summary = "Per-token logprobs from full logits rows"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/logprobs.cpp", "serve/logprobs.hpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/logprobs.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "sample.logprobs/-/-"
+api       = "strix::LogprobRecorder, strix::row_logprobs"
+numeric   = "log-softmax in double over the valid ids"
+regime    = "host; needs full rows, not candidates"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.sampler"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

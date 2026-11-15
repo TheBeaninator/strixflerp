@@ -1,0 +1,128 @@
+# Host facts, run settings and pass criteria of gate/moe_placed.py: stage P1 of docs/PHASE5-FOURNODE-DESIGN.md, the
+# placed loader (format.flerp.gguf_placed) and the block range of executor.flerp.qwen35moe, on control-node's GPU.
+# The criteria below were written and committed before the first GPU run of the new binary; they are not edited to
+# turn a failure into a pass.
+
+recipe = "qwen36-35b-a3b.flerp-moe"          # the binary under test is this recipe's
+
+[host]
+origin              = "gufo"
+scratch             = "build/gate-scratch-placed"      # under build/: pod-sync deletes anything else it does not know
+oom_score_adj       = 1000
+gpu_busy_pattern    = "^(strix_|strixflerp-|flerp-gufo-|flerp-qwen35moe-|steer_check|omf_seg|gufo|ds4|sglang|llama-server|tfp)"
+gpu_free_gtt_bytes  = 1073741824
+lease_resource      = "control-gpu"
+lease_owner         = "agent"
+lease_ttl_s         = 2400                   # the Ornith range reads tens of GiB from a USB disk under one hold
+gpu_wait_s          = 3600
+# The I/O rule of 2026-11-11 (the coordinator, after two crashes of the pod's serving pair that coincided with big
+# jobs on control-node: the pair reads its Engram tables from control-node over NFS on every prefill chunk): no large
+# buffered file reads and no page-cache churn here. So every load of this gate is the placed loader's single
+# reader - one thread, O_DIRECT, a pause between tensors - and nothing runs the origin's loader, which reads the
+# whole file through its mapping with eight workers. No model file was in the page cache when this was written
+# (mincore: 0.00 GiB of each), so "today's binary" cannot load the 35B file under the rule: see [criteria].
+cpus                = "0-3"                  # every binary and the numpy check are bound to these (at most 4 threads)
+polite              = ["ionice", "-c3", "nice", "-n", "19"]
+reader_flags        = ["--single-reader", "--pause-ms", "100"]
+load_wait_above     = 10.0                   # before each heavy step: wait while the 1-minute load is above this
+load_wait_s         = 1800                   # ... at most this long, then the step does not run
+block_check_threads = 4                      # numpy for gate/moe_block_check.py
+load_stop           = 12.0                   # the block check is killed when the 1-minute load rises this far above
+                                             # what it was when the check started
+
+[model]
+# Gate (1): Qwen3.6-35B-A3B Q4_K_M, the whole model at world 1.
+gguf                = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"
+prompt_ids          = "gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json"     # the recipe gate's four prompts
+# What stands in for "today's binary": the recipe gate's recorded GPU run of 2026-11-11T16:48Z (the binary before
+# this stage, the origin's loader): the plain run's ids and the traced run's rows (40 largest logits and the row's
+# log-sum-exp at every position).
+recorded_runs       = "gate/results/qwen36-35b-a3b.flerp-moe/gpu-runs.json"
+# Today's binary itself (built from f650864) is kept at build/gate-scratch-placed/today/ on control-node, sha256
+# d353ccb428e4ebf58bfcd6fdfd0e6d8602321d482c922a73e356120e79ee5c80, for the run this gate does not make.
+# The dense recipe's model and recorded run (the existing recipe's regression criterion, kept).
+dense_gguf          = "/data/models/decider-2b/decider-2b-v12-Q4_K_M.gguf"
+dense_results       = "gate/results/qwen35-decider-2b.gufo"
+# Gate (2): a leading block range of Ornith-1.5 397B Q4_K_M. Read: the header, and the byte ranges of the range's
+# tensors (the loader, direct); a few experts of three blocks (the numpy check, through the page cache, dropped after).
+ornith_gguf         = "/data/ark/models/ornith-1.5-397b/Ornith-1.5-397B-Q4_K_M.gguf"
+gguf_py             = "/data/ark/src/github.com__ggml-org__llama.cpp/gguf-py"
+
+[run]
+context             = 4096
+max_tokens          = 128                    # as recorded: the prompt pass and 127 decode steps a prompt
+trace_top           = 40                     # as recorded
+run_timeout_s       = 1500
+plan_worlds         = [1, 2, 3, 4]           # stage `plan`: C++ plan against gate/gguf_census.py, both files
+# stage `range35`: a rehearsal of gate (2)'s mechanism at shapes that have run before
+range35_blocks      = [[0, 10], [10, 20]]    # one range from block 0 (tokens and synthetic), one that needs a stage input
+range35_check       = [[0, 3, 9], [10, 15, 19]]
+# stage `ornith`
+ornith_context      = 2048                   # a 1,024-row chunk and decode steps after it; the arena's batch is then 2,048
+chunk_rows          = 1024
+decode_steps        = 48
+check_rows          = [0, 1023]              # chunk rows dumped for the numpy check (a decode step is always row 0)
+# How many leading blocks: the most, up to max_blocks, whose plan bytes plus arena_reserve_gib plus margin_gib fit
+# in min(GTT total - GTT used, MemAvailable) as read right before the run. The GPU's memory on this host is system
+# RAM (GTT), and nearly all of what is "available" is the pod's page cache, so the cap is not the memory: it is the
+# hold and the disk. The file sits on a USB disk that gave 0.14 to 0.20 GB/s to one direct reader (probe of
+# 2026-11-11, 768 MiB from inside blocks 0 and 5), and under the I/O rule the load is one direct reader: 10 blocks
+# are 39.3 GiB, about five minutes.
+max_blocks          = 10
+min_blocks          = 9                      # below this the gate does not run: blocks 0-6 have Q6_K down stacks,
+                                             # 7 and 8 are the first all-Q4_K ones, 3 and 7 are attention blocks
+margin_gib          = 24
+arena_reserve_gib   = 6
+ornith_timeout_s    = 2100
+check_timeout_s     = 1500
+
+[criteria]
+# --- gate (1), stage `equal`: 35B, world 1, the whole model through the placed loader ---
+# The brief's criterion is: ids and the copied logits bit-equal (sha256) to today's binary, prompt pass and 128
+# decode steps. Under the I/O rule above today's binary cannot be run (its only loader is the buffered one), so
+# that criterion is NOT judged here and the gate says so. What is judged is the comparison that needs no such
+# load, against the recorded run of the binary before this stage:
+# 1.  The C++ plan (binary --plan-only) and gate/gguf_census.py give the same plan hash and device bytes for every
+#     world of [run] plan_worlds on both files, and for every block range this gate loads (stage `plan`).
+# 2.  Plain run (QwenGpuExecutor::Generate, 128 tokens) through the placed loader: the generated ids equal the
+#     recorded plain run's (moe-1), on all four prompts.
+# 3.  Traced run through the placed loader (the same forwards, each logits row copied out): ids equal the recorded
+#     traced run's; the same number of recorded rows; and for every row the token, the row's log-sum-exp (over the
+#     whole row, printed %.12g) and the 40 largest logits with their ids, as printed, equal. The sha256 of every
+#     row is recorded for the day today's binary can be run; it is compared with nothing here.
+# 4.  The loader's report: bytes allocated == the plan's device bytes as gate/gguf_census.py computes them from the
+#     header; plan hash equal; the executor's resident weight bytes == the plan's tensor bytes.
+# 5.  The fill does not fault the mapping in: RssFile of the process grows by at most rss_file_growth_max bytes
+#     across the fill (the plan is 19.7 GiB); and the single reader read every piece through O_DIRECT.
+# 6.  Kept from the recipe gate: the dense model through the placed loader gives the dense recipe's recorded ids
+#     (that recorded run used the origin's loader); the traced run's ids are the plain run's and the argmax of
+#     every copied row is the token.
+# Recorded, not criteria: load seconds against the recorded run's (28.8 s, the origin's loader, eight buffered
+# workers, cache state unknown), what part is the fill and the pauses, read rate, device memory.
+rss_file_growth_max = 67108864
+
+# --- stage `range35` (35B block ranges) and gate (2), stage `ornith` (leading blocks of Ornith) ---
+# 7.  The range loads through the placed loader: exit 0, bytes allocated == the plan's (gguf_census.py), plan hash
+#     equal, criterion 5. For Ornith: at least [run] min_blocks blocks fit under the memory rule.
+# 8.  Both phases ran where the range allows (token ids only when the range starts at block 0; the fixed synthetic
+#     hidden-state input always): a chunk of [run] chunk_rows rows and the decode steps. Every stage output read
+#     back is finite (no NaN or infinity) with a non-zero RMS, and the chunk run three times gives the same bytes
+#     (sha256 of the output rows).
+# 9.  gate/moe_block_check.py (numpy, gguf-py dequantization, float64; no code of the executor) on the dumped MoE
+#     blocks (three blocks of the range; chunk rows and decode steps; both phases): at least check_records_min
+#     records (half that for a range that does not start at block 0: one phase), and in every record
+#     a. the same experts as the device's router chose - as a set; the order is recorded - unless the float64
+#        margin between the last chosen and the next expert's probability is under check_tie_margin;
+#     b. where the sets agree: router weights within check_weights_max, the shared gate logit within
+#        check_gate_max, the block output within check_out_max of its own RMS (largest absolute difference / RMS).
+#     The bounds are loose on purpose: the CPU reference on the 35B file sat at 1.3e-7 (weights) and 5e-5 (output)
+#     from the same script; a kernel that reads a stack wrongly is off by its whole output. They say "the same
+#     function", not "the same rounding".
+# Recorded, not criteria: read rate (GB/s from the file into the device), load seconds, ms per block for the decode
+# step (as a captured graph where the origin captures it, and eager) and for the chunk, rows per second, the arena's
+# bytes, memory before and after, the 1-minute load.
+check_records_min   = 24
+check_tie_margin    = 1e-6
+check_weights_max   = 1e-4
+check_gate_max      = 1e-3
+check_out_max       = 1e-3

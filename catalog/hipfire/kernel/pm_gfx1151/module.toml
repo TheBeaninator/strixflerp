@@ -1,0 +1,353 @@
+id        = "kernel.hipfire.pm_gfx1151"
+kind      = "kernel"
+summary   = "Prebuilt PeaceMaker kernels for gfx1151: 28 .hxaco bundles (typed machine code emitted without hipcc, certified against hipcc twins), with their M7 identity records and shape contracts"
+notes     = "The matching generator crates (peacemaker-*, railgun-*) are not harvested. The assembly listings (.s, .isa) and proof files (.proof.json, 20 MB) are generator outputs and are left out, as is kernels/qwen4_moe_gfx1151_negative (deliberately wrong objects for the certifier tests)."
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/bf16_rows_wide_pm_gfx1151.co",
+  "kernels/bf16_rows_wide_pm_gfx1151.decode.json",
+  "kernels/bf16_rows_wide_pm_gfx1151.hxaco",
+  "kernels/bf16_rows_wide_pm_gfx1151.hxaco.sha256",
+  "kernels/bf16_rows_wide_pm_gfx1151.identity.json",
+  "kernels/bf16_rows_wide_pm_gfx1151.m7.json",
+  "kernels/bf16_rows_wide_pm_gfx1151.shape.d/qwen4_bf16_rows_wide.gfx1151.t8_hc_k4_s1.contract.json",
+  "kernels/bf16_rows_wide_pm_gfx1151.shape.d/qwen4_bf16_rows_wide.gfx1151.t8_x4_s1.contract.json",
+  "kernels/e8p_i4_moe_gemv.gfx1151.r128_down.contract.json",
+  "kernels/e8p_i4_moe_gemv.gfx1151.r256_gate_up.contract.json",
+  "kernels/e8p_i4_moe_gemv_pm_gfx1151.co",
+  "kernels/e8p_i4_moe_gemv_pm_gfx1151.hxaco",
+  "kernels/e8p_i4_moe_gemv_pm_gfx1151.hxaco.sha256",
+  "kernels/e8p_i4_moe_gemv_pm_gfx1151.m7.json",
+  "kernels/e8p_i4_moe_gemv_pm_gfx1151.shape.d/e8p_i4_moe_gemv.gfx1151.r128_down.contract.json",
+  "kernels/e8p_i4_moe_gemv_pm_gfx1151.shape.d/e8p_i4_moe_gemv.gfx1151.r128_down_t8.contract.json",
+  "kernels/e8p_i4_moe_gemv_pm_gfx1151.shape.d/e8p_i4_moe_gemv.gfx1151.r256_gate_up.contract.json",
+  "kernels/e8p_i4_moe_gemv_pm_gfx1151.shape.d/e8p_i4_moe_gemv.gfx1151.r256_gate_up_t8.contract.json",
+  "kernels/gemm_mq4g256v2_gate_up_silu_a4_iu4_pm_v2b_gfx1151.hxaco",
+  "kernels/gemm_mq4g256v2_residual_iu4_pm_v2b_gfx1151.hxaco",
+  "kernels/legacy_mq4_rowtiles_pm_gfx1151.hxaco",
+  "kernels/legacy_mq4_rowtiles_pm_gfx1151.hxaco.sha256",
+  "kernels/mq4_rows_x4_pm_gfx1151.co",
+  "kernels/mq4_rows_x4_pm_gfx1151.hxaco",
+  "kernels/mq4_rows_x4_pm_gfx1151.hxaco.sha256",
+  "kernels/mq4_rows_x4_pm_gfx1151.m7.json",
+  "kernels/mq4_rows_x4_pm_gfx1151.shape.d/mq4_rows_x4.gfx1151.exact_columns_r2_b8_x4.contract.json",
+  "kernels/mq4_rows_x4_pm_gfx1151.shape.d/mq4_rows_x4.gfx1151.exact_default_rowtiles_t8_x4.contract.json",
+  "kernels/mq_i4_moe_gemv_c1_pm_gfx1151.hxaco",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.co",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.hxaco",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.hxaco.sha256",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.m7.json",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.shape.d/mq_i4_moe_gemv_cn.gfx1151.mq3i4_r128_down.contract.json",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.shape.d/mq_i4_moe_gemv_cn.gfx1151.mq3i4_r128_down_t8.contract.json",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.shape.d/mq_i4_moe_gemv_cn.gfx1151.mq3i4_r256_gate_up.contract.json",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.shape.d/mq_i4_moe_gemv_cn.gfx1151.mq3i4_r256_gate_up_t8.contract.json",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.shape.d/mq_i4_moe_gemv_cn.gfx1151.mq4sym_r128_down.contract.json",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.shape.d/mq_i4_moe_gemv_cn.gfx1151.mq4sym_r128_down_t8.contract.json",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.shape.d/mq_i4_moe_gemv_cn.gfx1151.mq4sym_r256_gate_up.contract.json",
+  "kernels/mq_i4_moe_gemv_cn_pm_gfx1151.shape.d/mq_i4_moe_gemv_cn.gfx1151.mq4sym_r256_gate_up_t8.contract.json",
+  "kernels/mq_i4_moe_gemv_pm_gfx1151.hxaco",
+  "kernels/mtp_dense_det_pm_gfx1151.hxaco",
+  "kernels/mtp_q8_det_pm_gfx1151.hxaco",
+  "kernels/npu_trunk_arena_pm_gfx1151.co",
+  "kernels/npu_trunk_arena_pm_gfx1151.hxaco",
+  "kernels/npu_trunk_arena_pm_gfx1151.m7.json",
+  "kernels/npu_trunk_pm_gfx1151.co",
+  "kernels/npu_trunk_pm_gfx1151.hxaco",
+  "kernels/npu_trunk_pm_gfx1151.m7.json",
+  "kernels/qsa_gather_pm_gfx1151.hxaco",
+  "kernels/qsa_select_bf16_pm_gfx1151.hxaco",
+  "kernels/qsa_select_pm_gfx1151.hxaco",
+  "kernels/qwen4-w3-gfx1151-reemission-diff.json",
+  "kernels/qwen4_lane_rows_pm_gfx1151.co",
+  "kernels/qwen4_lane_rows_pm_gfx1151.hxaco",
+  "kernels/qwen4_lane_rows_pm_gfx1151.hxaco.sha256",
+  "kernels/qwen4_lane_rows_pm_gfx1151.m7.json",
+  "kernels/qwen4_moe_gate_up_stream8_pm_gfx1151.hxaco",
+  "kernels/qwen4_moe_iu4_sym_e8p_pm_gfx1151.hxaco",
+  "kernels/qwen4_moe_iu4_sym_pm_gfx1151.hxaco",
+  "kernels/qwen4_moe_iu4_sym_w3_nt4_pm_gfx1151.hxaco",
+  "kernels/qwen4_moe_iu4_sym_w3_pm_gfx1151.hxaco",
+  "kernels/qwen4_mq4_x4_pm_gfx1151.hxaco",
+  "kernels/qwen4_mq6_x4_pm_gfx1151.hxaco",
+  "kernels/qwen4_shared_gu_pm_gfx1151.hxaco",
+  "kernels/qwen4_slab_union_plan_t8_pm_gfx1151.co",
+  "kernels/qwen4_slab_union_plan_t8_pm_gfx1151.hxaco",
+  "kernels/qwen4_slab_union_plan_t8_pm_gfx1151.hxaco.sha256",
+  "kernels/qwen4_slab_union_plan_t8_pm_gfx1151.m7.json",
+  "kernels/qwen4_slab_union_plan_t8_pm_gfx1151.shape.d/qwen4_slab_union_plan.gfx1151.t8.contract.json",
+  "kernels/railgun_guard_pm_gfx1151.co",
+  "kernels/railgun_guard_pm_gfx1151.m7.json",
+  "kernels/spec_accept_ordered_pm_gfx1151.hxaco",
+  "kernels/spec_sampling_rows_parallel_pm_gfx1151.hxaco",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hsaco"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+variants  = 37
+
+[[provides]]
+interface = "linear.decode/hipfire-mq/f32.pm"
+api       = "mq4_rows_x4_pm_gfx1151, qwen4_mq4_x4_pm_gfx1151, qwen4_mq6_x4_pm_gfx1151, bf16_rows_wide_pm_gfx1151, legacy_mq4_rowtiles_pm_gfx1151"
+numeric   = "certified equal to the hipcc twin kernel on the shape contract (proof.json); exact-columns row tiles"
+regime    = "4 rows a tile, decode"
+
+[[provides]]
+interface = "moe.experts-decode/hipfire-mq+e8p/f32.pm"
+api       = "mq_i4_moe_gemv_*_pm_gfx1151, e8p_i4_moe_gemv_pm_gfx1151, qwen4_moe_iu4_sym_*_pm_gfx1151, qwen4_moe_gate_up_stream8_pm_gfx1151, qwen4_shared_gu_pm_gfx1151"
+numeric   = "integer-4 MoE GEMV per shape contract (r128_down, r256_gate_up)"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/bf16+f32.pm"
+api       = "qsa_select_pm_gfx1151, qsa_select_bf16_pm_gfx1151, qsa_gather_pm_gfx1151"
+numeric   = "exact selection, certified against the hipcc arm"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[provides]]
+interface = "speculation.accept/-/f32.pm"
+api       = "spec_accept_ordered_pm_gfx1151, spec_sampling_rows_parallel_pm_gfx1151, mtp_dense_det_pm_gfx1151, mtp_q8_det_pm_gfx1151"
+numeric   = "deterministic MTP draft heads and ordered accept"
+regime    = "draft rows"
+
+[[prebuilt]]
+file      = "src/kernels/bf16_rows_wide_pm_gfx1151.co"
+sha256    = "808c823514940b3efbe413d05c1e27e1c683b805148b3e4947f81bf8a294db7c"
+bytes     = 19904
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/bf16_rows_wide_pm_gfx1151.hxaco"
+sha256    = "31938988bdfe71a4565038b8e1fd63929bf03806cb0584383e9c935f22c670d7"
+bytes     = 24000
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/e8p_i4_moe_gemv_pm_gfx1151.co"
+sha256    = "e5aa024a99d110283f539c6fb376212524036a65f916efb6320439813151b764"
+bytes     = 57424
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/e8p_i4_moe_gemv_pm_gfx1151.hxaco"
+sha256    = "75d8860249767540b2fb89890d0ba65dfc15db7442a0ebe5f1e9e7eb4f43d87a"
+bytes     = 61520
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/gemm_mq4g256v2_gate_up_silu_a4_iu4_pm_v2b_gfx1151.hxaco"
+sha256    = "4f3cc63475c709997e3f4bfb3dcb735098c24ca5a9976e916be22da143575eaf"
+bytes     = 118264
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/gemm_mq4g256v2_residual_iu4_pm_v2b_gfx1151.hxaco"
+sha256    = "c2890da64946418b3112565dcc0d8cd2d262fb6f085d63fc1265414822b517d1"
+bytes     = 101240
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/legacy_mq4_rowtiles_pm_gfx1151.hxaco"
+sha256    = "a1e6c6f06c3758b068ee23754510c959b5c956f44bd2174472ace975d11c75c4"
+bytes     = 52016
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/mq4_rows_x4_pm_gfx1151.co"
+sha256    = "9ca3fcdc919507dd478d753ebd89151d3f2f34c4b8d71a355ef3816578f8e929"
+bytes     = 129592
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/mq4_rows_x4_pm_gfx1151.hxaco"
+sha256    = "646728410156c72b9ba4f4d37b33e6407f1cae4b2e9bcba13dd465e2e95ae607"
+bytes     = 133688
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/mq_i4_moe_gemv_c1_pm_gfx1151.hxaco"
+sha256    = "1d06ca53651614971f8bab7265ce96d82558658ff9c89a3a9656cb82cf337dbd"
+bytes     = 22944
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/mq_i4_moe_gemv_cn_pm_gfx1151.co"
+sha256    = "4cfaaec12f0585ee1811259429e3be981dc7f9934a7eb933a591c67c81407fa2"
+bytes     = 104120
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/mq_i4_moe_gemv_cn_pm_gfx1151.hxaco"
+sha256    = "28cabfb114488e9a52914f465a3c9489c38be656d4f6c83cc5344e63dde1f8ab"
+bytes     = 108216
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/mq_i4_moe_gemv_pm_gfx1151.hxaco"
+sha256    = "443f03cf0eed10bf1d6b34dd61ecb22c72fe00d5c72c4de3c9405374aeee9633"
+bytes     = 173568
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/mtp_dense_det_pm_gfx1151.hxaco"
+sha256    = "47ac9e93982afdfe1a3f4d02a1e76df07eeda0f8f18b10bfd0dd7b58c8bd4915"
+bytes     = 15024
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/mtp_q8_det_pm_gfx1151.hxaco"
+sha256    = "17684c306baf699c75d42d5bdf66a9459b38388f7fa37e8c0d163e24ab4bef7c"
+bytes     = 7728
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/npu_trunk_arena_pm_gfx1151.co"
+sha256    = "c5096b21779001eaecd8c325dc84d1e11b514dfe1d8ae98cf93cf1cde4fa6422"
+bytes     = 6528
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/npu_trunk_arena_pm_gfx1151.hxaco"
+sha256    = "dbfaf02cbf12015b6c2b4637d82d35c5824d042a4d80490b649c2343d286cc7f"
+bytes     = 10624
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/npu_trunk_pm_gfx1151.co"
+sha256    = "412b4ded58f6edd0f3a86626b1c9896f4861458d49f5c5fdc721edcf559e182c"
+bytes     = 7920
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/npu_trunk_pm_gfx1151.hxaco"
+sha256    = "f0199464d5a94253678ecd4c6720440734e24a213d7ae37966ce9d5c361ebe09"
+bytes     = 12016
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qsa_gather_pm_gfx1151.hxaco"
+sha256    = "ad83c8da896261901671b8beeaa583c22e7a3e361f41f24ae784269c3e3de4c2"
+bytes     = 36952
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qsa_select_bf16_pm_gfx1151.hxaco"
+sha256    = "b8a33ae8a2b7d2197fc4a8fdebc0c3cb66c87339141836bd48a0b6a69d7745cb"
+bytes     = 18440
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qsa_select_pm_gfx1151.hxaco"
+sha256    = "fa80eac5dca2d8c5d69745c13f664db2a70ce250adb9d6d8066d7ac0b5cee4db"
+bytes     = 47640
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_lane_rows_pm_gfx1151.co"
+sha256    = "b0a702507aa5420261ac90742e3665403e47636c24e034918507997bb14c53dc"
+bytes     = 467368
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_lane_rows_pm_gfx1151.hxaco"
+sha256    = "bc34ee389bd990386bdfc93d94b66752affcd3fbd33bec212a6b4edcaa51a963"
+bytes     = 471464
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_moe_gate_up_stream8_pm_gfx1151.hxaco"
+sha256    = "7762f78f3988f90a45a75d3da99e2a9fe98e29c48e698f1a22ee4438fa7a7a8a"
+bytes     = 46184
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_moe_iu4_sym_e8p_pm_gfx1151.hxaco"
+sha256    = "20f3b17c86887ab5228740e6a1cc3b8584d64e6f0fd99eb811d8b6876b84abfa"
+bytes     = 54640
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_moe_iu4_sym_pm_gfx1151.hxaco"
+sha256    = "20d6a98d700d2eb47dc5c5f8b74ee65835912c317898ce42c345cf0cddb78c0a"
+bytes     = 119384
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_moe_iu4_sym_w3_nt4_pm_gfx1151.hxaco"
+sha256    = "676bdbe4cea8440b02d63b82789fcabca3afb164306dccc1e7ae21070182b29a"
+bytes     = 197528
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_moe_iu4_sym_w3_pm_gfx1151.hxaco"
+sha256    = "69df2d67c6dfe0f28d8c4a80fd50b648c244b03a848e52cddedc0867656e8f66"
+bytes     = 73576
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_mq4_x4_pm_gfx1151.hxaco"
+sha256    = "d9eb27bc771f2091904194ee0311dd63487c4a3a81ec1a82337cf44701177e98"
+bytes     = 232688
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_mq6_x4_pm_gfx1151.hxaco"
+sha256    = "abfc9a35b60f76538e705327bc53f0ea5f5a51fa5783650b25c620004769ec11"
+bytes     = 226032
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_shared_gu_pm_gfx1151.hxaco"
+sha256    = "f243bcec8e431289f6decd9e797fdfb5d5ef750faff5fad57a72fccfdd70bdcc"
+bytes     = 74656
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_slab_union_plan_t8_pm_gfx1151.co"
+sha256    = "e0e0677df68cfb9fccf155e0f2693804b115e4bb3b55487241fc364c75e34be9"
+bytes     = 4800
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/qwen4_slab_union_plan_t8_pm_gfx1151.hxaco"
+sha256    = "b35215ec05f1744fbcbeae5b4334ed1b204f62a410763d9e97f042a557565c70"
+bytes     = 8896
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/railgun_guard_pm_gfx1151.co"
+sha256    = "88d9856ae3cf7ef3a6d1c180ae3815851003414259058ccf952dd356d3bddb90"
+bytes     = 5600
+kind      = "code object"
+
+[[prebuilt]]
+file      = "src/kernels/spec_accept_ordered_pm_gfx1151.hxaco"
+sha256    = "604a8bb8d93c3174485e8ca138bfc52b73c14b91108f5bcf77078800dffcfe67"
+bytes     = 10304
+kind      = "hxaco bundle"
+
+[[prebuilt]]
+file      = "src/kernels/spec_sampling_rows_parallel_pm_gfx1151.hxaco"
+sha256    = "48a57c1e6dfbae0bb74b4f1f7c51df1c14ffd4207aeb5d048d211432dcb1b4b7"
+bytes     = 43592
+kind      = "hxaco bundle"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "prebuilt"
+reason    = "prebuilt code objects: emitted by the PeaceMaker generator (crates/peacemaker-*), not by hipcc; hashes are recorded in [[prebuilt]]"

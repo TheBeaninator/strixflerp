@@ -1,0 +1,50 @@
+id        = "kernel.flerp.dense_bf16_strixfold"
+kind      = "kernel"
+summary   = "Adapter (launch-bf16-gemv): strixite's linear_bf16w, BF16 in and FP32 out, on StrixFold's tf_ds_dense_gemv code object; other dtypes and shapes stay with strixite"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp_adapters/dense_bf16_strixfold.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp_adapters/dense_bf16_strixfold.cpp"]
+includes  = []
+uses      = ["hip-runtime"]
+
+[adapter]
+for       = "kernel.strixite.linear"
+symbols   = ["linear_bf16w"]
+
+[[adapter.code_object]]
+module    = "kernel.strixfold.dense_bf16"
+unit      = "src/zig/kernels/hip/dsv41/dense.hip"
+symbol    = "flerp_co_strixfold_dense"
+
+[[provides]]
+interface = "linear.dense/bf16/bf16.f32-out-row-invariant"
+api       = "strix::kernels::linear_bf16w (BF16 x with FP32 y launches tf_ds_dense_gemv; every other dtype pair goes to strixite's kernel, renamed linear_bf16w_flerp_origin)"
+numeric   = "BF16 x, FP32 y (the router logits): StrixFold's order - exact bf16 products, one fmaf per element in fixed lane order over tiles of 256 (128), 32 lane partials summed by xor shuffles, fp32 stored unrounded, row-invariant; equal to kernel.strixite.linear's bits only where strixite does not split K (K <= 1280 and K % 256 == 0). Same-dtype calls: strixite's own kernel"
+regime    = "StrixFold path: 1..128 rows, K % 128 == 0, 16-byte aligned w and x, one launch, grid N / 32; otherwise strixite's kernel"
+
+[[requires]]
+module    = "kernel.strixite.linear"
+
+[[requires]]
+module    = "kernel.strixfold.dense_bf16"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/interface/dense-bf16.toml"
+bench     = "flerp:gate/interface/dense-bf16.toml"
+status    = "benched"
+evidence  = "gate/results/interface/dense-bf16/result.json"

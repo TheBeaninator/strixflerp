@@ -1,0 +1,127 @@
+id        = "kernel.hipfire.attention"
+kind      = "kernel"
+summary   = "Softmax attention: single-head causal, GQA, Flash-Decoding (per-chunk partials of max, sum, output with an online-softmax reduce) over F32 / F16 / BF16 / Q8_0 / int8 / HFQ / asymmetric FWHT and Givens rotated KV, prefill on WMMA, sliding window (82 sources, 87 gfx1151 compile units)"
+notes     = "2 of the sources have no compile unit here (assembled by Rust code in the origin, or broken in the origin): see docs/harvest/data/hipfire/not_gfx1151.json."
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/attention.hip",
+  "kernels/src/attention_band_mask.hip",
+  "kernels/src/attention_causal_batched.hip",
+  "kernels/src/attention_decode_batched_history.hip",
+  "kernels/src/attention_flash.hip",
+  "kernels/src/attention_flash_asym2_tile.hip",
+  "kernels/src/attention_flash_asym2_tile_batched.hip",
+  "kernels/src/attention_flash_asym3_tile.hip",
+  "kernels/src/attention_flash_asym3_tile_batched.hip",
+  "kernels/src/attention_flash_asym3_tile_hd512.hip",
+  "kernels/src/attention_flash_asym3_tile_hd512_batched.hip",
+  "kernels/src/attention_flash_asym4_tile.hip",
+  "kernels/src/attention_flash_asym4_tile_batched.hip",
+  "kernels/src/attention_flash_asym4_wmma_tile_batched.hip",
+  "kernels/src/attention_flash_asym_reduce_batched.hip",
+  "kernels/src/attention_flash_bf16_tile.hip",
+  "kernels/src/attention_flash_bf16_tile_batched.hip",
+  "kernels/src/attention_flash_decode_vmm_rows.hip",
+  "kernels/src/attention_flash_decode_vmm_rows_a3b.hip",
+  "kernels/src/attention_flash_f16_tile.hip",
+  "kernels/src/attention_flash_f16_tile_batched.hip",
+  "kernels/src/attention_flash_fwht2_tile.hip",
+  "kernels/src/attention_flash_fwht2_tile_batched.hip",
+  "kernels/src/attention_flash_fwht3_tile.hip",
+  "kernels/src/attention_flash_fwht3_tile_batched.hip",
+  "kernels/src/attention_flash_fwht3_tile_hd512.hip",
+  "kernels/src/attention_flash_fwht3_tile_hd512_batched.hip",
+  "kernels/src/attention_flash_fwht4_tile.hip",
+  "kernels/src/attention_flash_fwht4_tile_batched.hip",
+  "kernels/src/attention_flash_gqa.hip",
+  "kernels/src/attention_flash_gqa_fused.hip",
+  "kernels/src/attention_flash_lloyd_reduce.hip",
+  "kernels/src/attention_flash_lloyd_reduce_batched.hip",
+  "kernels/src/attention_flash_q8_0_reduce.hip",
+  "kernels/src/attention_flash_q8_0_reduce_skip.hip",
+  "kernels/src/attention_flash_q8_0_tile.hip",
+  "kernels/src/attention_flash_q8_0_tile_batched.hip",
+  "kernels/src/attention_flash_q8_0_tile_gqa.gfx1151.hip",
+  "kernels/src/attention_flash_q8_0_tile_gqa_gemma.gfx1151.hip",
+  "kernels/src/attention_flash_q8_0_tile_hd64.hip",
+  "kernels/src/attention_flash_q8_0_tile_rows.hip",
+  "kernels/src/attention_flash_q8_0_tile_swa.hip",
+  "kernels/src/attention_flash_reduce_dsplit.gfx1151.hip",
+  "kernels/src/attention_gqa_warp.hip",
+  "kernels/src/attention_gqa_warp_dv.hip",
+  "kernels/src/attention_hfq4_kv.hip",
+  "kernels/src/attention_hfq8_kv.hip",
+  "kernels/src/attention_int8_kv.hip",
+  "kernels/src/attention_int8c_f16_kv.hip",
+  "kernels/src/attention_int8c_kv.hip",
+  "kernels/src/attention_partition_merge_f32.hip",
+  "kernels/src/attention_q4kv.hip",
+  "kernels/src/attention_q8_0_fa2_gqa.gfx11.hip",
+  "kernels/src/attention_q8_0_fa2_gqa.gfx1151.hip",
+  "kernels/src/attention_q8_0_flash_prefill.hip",
+  "kernels/src/attention_q8_0_flash_prefill_wmma.hip",
+  "kernels/src/attention_q8_0_flash_prefill_wmma_swa.gfx1151.hip",
+  "kernels/src/attention_q8_0_flash_prefill_wmma_swa.hip",
+  "kernels/src/attention_q8_0_kv.hip",
+  "kernels/src/attention_q8_0_kv_batched.hip",
+  "kernels/src/attention_q8_0_kv_swa.hip",
+  "kernels/src/attention_q8_0_kv_timed.hip",
+  "kernels/src/attention_q8_0_prefill_gqa_wmma.gfx11.hip",
+  "kernels/src/attention_q8kv.hip",
+  "kernels/src/attention_rows_softmax.hip",
+  "kernels/src/attention_t5_bias_f32.hip",
+  "kernels/src/attention_verify_wmma.gfx1151.hip",
+  "kernels/src/causal_conv_depthwise_rows.hip",
+  "kernels/src/latent_attention_absorb.hip",
+  "kernels/src/latent_attention_decode.hip",
+  "kernels/src/latent_attention_decompress.hip",
+  "kernels/src/latent_attention_flash.hip",
+  "kernels/src/latent_attention_gate.hip",
+  "kernels/src/latent_attention_serial.hip",
+  "kernels/src/latent_attention_split.hip",
+  "kernels/src/qk_rmsnorm_rope_flux.hip",
+  "kernels/src/qkv_split_interleaved.hip",
+  "kernels/src/wo_per_group_batched_f32.hip",
+  "kernels/src/wo_per_group_batched_hfq4g256.hip",
+  "kernels/src/wo_per_group_batched_q8_0.hip",
+  "kernels/src/wo_per_group_batched_q8_0_multirow.hip",
+  "kernels/src/wo_per_group_batched_q8_0_wmma_4w.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 87
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+bf16+q8_0+rotated/f32.hipfire"
+api       = "attention_band_mask, attention_bf16_kv_batched, attention_bf16_kv, attention_causal_batched, attention_decode_batched_history (+82 more units, see units.json)"
+numeric   = "fp32 scores and online softmax; KV rows decoded from their storage format in-kernel; split chunks merged by an online-softmax correction (order fixed by chunk index)"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound; prefill batches, compute-bound (WMMA, MMQ)"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+interface = "kvcache.store/hipfire-kv/f32"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.attention.json"

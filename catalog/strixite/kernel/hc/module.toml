@@ -1,0 +1,67 @@
+id      = "kernel.strixite.hc"
+kind    = "kernel"
+summary = "Hyper-connection input mix over the 4 residual streams and the residual injection, per token"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/hc.hip", "kernels/hc.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/hc.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "hc.mix/strixw-q4/bf16"
+api       = "strix::kernels::hc_mix_down, hc_mix_up, hc_inject"
+numeric   = "everything inside in fp32 (normed streams never stored); u rounded once to the activation dtype; the injection rounds once per element"
+regime    = "decode: two launches per mix; H == 4, d % 32 == 0, r % 32 == 0, r <= 1024"
+
+[[provides]]
+interface = "hc.mix/strixw-q4/f32"
+api       = "strix::kernels::hc_mix_down, hc_mix_up, hc_inject"
+numeric   = "everything inside in fp32 (normed streams never stored); u rounded once to the activation dtype; the injection rounds once per element"
+regime    = "decode: two launches per mix; H == 4, d % 32 == 0, r % 32 == 0, r <= 1024"
+
+[[provides]]
+interface = "hc.mix/strixw-q8/bf16"
+api       = "strix::kernels::hc_mix_down, hc_mix_up, hc_inject"
+numeric   = "everything inside in fp32 (normed streams never stored); u rounded once to the activation dtype; the injection rounds once per element"
+regime    = "decode: two launches per mix; H == 4, d % 32 == 0, r % 32 == 0, r <= 1024"
+
+[[provides]]
+interface = "hc.mix/strixw-q8/f32"
+api       = "strix::kernels::hc_mix_down, hc_mix_up, hc_inject"
+numeric   = "everything inside in fp32 (normed streams never stored); u rounded once to the activation dtype; the injection rounds once per element"
+regime    = "decode: two launches per mix; H == 4, d % 32 == 0, r % 32 == 0, r <= 1024"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,48 @@
+id        = "runtime.strixfold_pr6.image_key"
+kind      = "runtime"
+summary   = "Image-aware prompt-cache keys: a shadow prompt whose first eight tokens of each image span are the image's sha256, and the rule that a kept state is cut only between image spans"
+notes     = "image_key.zig is new; lane_host.zig and lanes/stream.zig are the PR's versions of files of runtime.strixfold.lanes (overlay.json)."
+
+[provenance]
+origin    = "strixfold_pr6"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "766df75"
+branch    = "feat/hip-cpu-image-input (pull request #6, aercanozcan)"
+paths     = [
+  "zig/src/core/lane_host.zig",
+  "zig/src/core/lanes/image_key.zig",
+  "zig/src/core/lanes/stream.zig",
+]
+authors   = ["aercanozcan", "StrixFold contributors", "TensorFold contributors"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.lanes (origin strixfold): 2 of these paths are theirs too; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:core"
+
+[[provides]]
+interface = "cache.prefix-key-image/-/-"
+api       = "core/lanes/image_key.zig make, validCut; lane_host.zig Job.cachePrompt"
+numeric   = "exact: sha256 over (rows flag, span length, payload bytes), 31 bits a word kept"
+regime    = "on when Vision.cache_images (TF_DS_VISION_CACHE_MIB > 0) and the prompt cache is on"
+
+[[requires]]
+module    = "runtime.strixfold.lanes"
+
+[[requires]]
+interface = "cache.prompt-strixfold/-/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "never compiled or run here: no recipe assembles it. It needs the overlay rule of docs/SPEC-PROPOSALS.md section 12 before `flerp assemble` can place its files over the strixfold modules"

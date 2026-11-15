@@ -1,0 +1,62 @@
+id        = "kernel.tensorfold.hip_attention"
+kind      = "kernel"
+summary   = "Attention: paged GQA decode with split-K, flash-style prefill (attention_fa), prefill tiles"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/hip/attention/attention.hip",
+  "zig/kernels/hip/attention/attention_fa.hip",
+  "zig/kernels/hip/attention/prefill.hip",
+  "zig/kernels/hip/attention/prefill.hpp",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/attention/attention.hip", "src/zig/kernels/hip/attention/prefill.hip"]
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--genco",
+  "-D__HIP_PLATFORM_AMD__=1",
+  "-DUSE_ROCM=1",
+  "-DHIPBLAS_V2",
+  "-fPIC",
+  "-DCUDA_HAS_FP16=1",
+  "-DHIP_ENABLE_WARP_SYNC_BUILTINS=1",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-DTF_WAVE=32",
+  "-DTF_DOT2_F16=1",
+  "-DTF_DOT2_BF16=1",
+  "-DTF_SDOT4=1",
+  "-DTF_SDOT8=1",
+  "-DTF_MATRIX=1",
+  "-DTF_DOT2_SIGNED_ZERO=1",
+]
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.tensorfold"
+api       = "attention/attention.hip, attention_fa.hip, prefill.hip"
+numeric   = "fp32 softmax"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"

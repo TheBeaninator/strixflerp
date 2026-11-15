@@ -1,0 +1,35 @@
+{
+ "criteria_file": "gate/strixw-panel-decode2.toml",
+ "cases": 489,
+ "verdicts": [
+  {
+   "criterion": "equal",
+   "pass": true,
+   "detail": "489 of 489 cases byte-equal (bad ids included)"
+  },
+  {
+   "criterion": "decode_dense",
+   "pass": false,
+   "detail": "median panel % per group: attn_o 99.0, attn_qkv 98.6, gdn_in 98.0, gdn_out 98.8, lm_head 96.3, mtp_fc 98.4, ple_kv 99.5, sh_down 83.6, sh_gu 95.5; slower outside noise by > 3%: attn_o Q8 dense-decode M5 bf16 104.5%; attn_o Q8 dense-decode M5 f32 104.6%"
+  },
+  {
+   "criterion": "decode_expert",
+   "pass": true,
+   "detail": "median panel % per group: expert-decode-combine 96.7, expert-decode-gather 98.9, expert-decode-gather-swiglu 98.5; slower outside noise by > 3%: none"
+  },
+  {
+   "criterion": "prefill",
+   "pass": true,
+   "detail": "speed_prefill_dense PASS; speed_prefill_expert PASS"
+  },
+  {
+   "criterion": "read",
+   "pass": true,
+   "detail": "2.232 GB read"
+  }
+ ],
+ "load": [
+  "load_before 7.90 18.20 23.32 3/1189 1594453\n",
+  "load_after 8.68 14.23 21.01 5/1248 1688184\n"
+ ]
+}

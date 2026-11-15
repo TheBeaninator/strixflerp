@@ -1,0 +1,71 @@
+id        = "tool.flerp.strixw_panel_kernel_bench"
+kind      = "tool"
+summary   = "Kernel gate of the strixw panel layout: real tensors of the fleet strixw read by byte range, laid out row-major and as panels in memory, every decode / prefill / expert path run through strixite's call names both ways; byte comparison and per-kernel times (hip events, caches flushed, origin and panel alternating)"
+notes     = "Criteria and run settings: gate/strixw-panel-kernels.toml, runner gate/strixw_panel_kernels.py. Built inside recipes/qwen38-flash-next.strixite-p16.toml, so the names it calls are the adapters of kernel.flerp.linear_q4p / linear_q8p / wmma_q4p / moe_grouped_p (row-major view: strixite's kernel; panel-tagged view: the panel kernel)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/strixw_panel_kernel_bench/panel_kernel_bench.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/strixw_panel_kernel_bench/panel_kernel_bench.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.kernel-bench/strixw-panel/-"
+api       = "main (strixflerp-panel-kernel-bench --weights W --out FILE --class name=tensor .. [--decode-m L] [--prefill-m L] [--reps R] [--active A])"
+numeric   = "outputs compared byte for byte; times in ms from hip events"
+regime    = "needs the GPU; reads only the named tensors' byte ranges and the index"
+
+[[requires]]
+interface = "linear.decode/strixw-q4/bf16"
+
+[[requires]]
+interface = "linear.decode/strixw-q8/bf16"
+
+[[requires]]
+interface = "linear.prefill/strixw-q4/bf16"
+
+[[requires]]
+interface = "linear.prefill/strixw-q8/bf16"
+
+[[requires]]
+interface = "moe.experts-decode/strixw-q4/bf16"
+
+[[requires]]
+interface = "moe.experts-prefill/strixw-q4/bf16"
+
+[[requires]]
+module    = "format.flerp.q4panel"
+
+[[requires]]
+module    = "format.flerp.panel_device"
+
+[[requires]]
+module    = "format.strixite.strixw"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "kernel.strixite.norm"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside recipes/qwen38-flash-next.strixite-p16.toml; a measuring tool, read by gate/strixw_panel_kernels.py"

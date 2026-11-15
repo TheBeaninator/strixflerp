@@ -1,0 +1,39 @@
+id      = "format.strixite.q8_device"
+kind    = "format"
+summary = "Q8 weight resident on the device and the non-owning view the kernels take"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/q8_device.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.device-view/strixw-q8/-"
+api       = "strix::Q8Device, strix::Q8DeviceView, Q8ChunkMajorDevice/View"
+numeric   = "bytes as stored in the host format"
+regime    = "header only; codes, scale and min as device pointers"
+
+[[requires]]
+module = "format.strixite.q8"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

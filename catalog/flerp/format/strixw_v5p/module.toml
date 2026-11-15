@@ -1,0 +1,46 @@
+id        = "format.flerp.strixw_v5p"
+kind      = "format"
+summary   = "format.flerp.strixw_v5 (strixw v5: the panel encodings) as an overlay of format.strixite.strixw, so a recipe's whole binary - loader, executor, backend, n-gram pairing - reads v5 through strixite's own include path formats/strixw.hpp"
+notes     = "The two files are byte copies of format.flerp.strixw_v5's (whose include root is src so that nothing else of origin flerp is handed v5); here the root is src/flerp/strixw_v5p, so under a recipe's [overlay] entry this module's formats/strixw.cpp compiles in format.strixite.strixw's target in place of the origin's and its formats/strixw.hpp shadows the origin's header on every include path (flerplib/assemble.py overlay_sources). One StrixwFile definition per binary, v1..v5 readable."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/strixw_v5p/formats/strixw.cpp", "flerp/strixw_v5p/formats/strixw.hpp"]
+authors   = ["shawnshekari", "pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc (v0.7.0-pod): formats/strixw.hpp, formats/strixw.cpp, as adapted by format.flerp.strixw_v5 (byte copies of its files)"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/strixw_v5p/formats/strixw.cpp"]
+includes  = ["src/flerp/strixw_v5p"]
+
+[[provides]]
+interface = "format.container/strixw-v5-overlay/-"
+api       = "strix::StrixwFile, StrixwWriter, strixw_components with StrixwEncoding::Q4Panel16 / Q8Panel16 at formats/strixw.hpp, in place of format.strixite.strixw (recipe [overlay])"
+numeric   = "bytes as stored, hashed"
+regime    = "host; reads v1..v5, writes v5"
+
+[[requires]]
+module    = "format.strixite.strixw"
+
+[[requires]]
+module    = "format.flerp.q4panel"
+
+[[requires]]
+module    = "format.strixite.q4"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "the files are format.flerp.strixw_v5's (evidence tests/test_convert_strixw_panel.py); compiled as an overlay inside recipes/qwen38-flash-next.strixite-p16.toml"

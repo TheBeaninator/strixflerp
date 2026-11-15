@@ -1,0 +1,55 @@
+id        = "kernel.tensorfold.hip_quant"
+kind      = "kernel"
+summary   = "Weight decoders for the HIP GEMV/GEMM tiles: MLX affine (4/6/8-bit, group scales and biases) pieces and tiles, BF16 decoder, dense tiles, activation quantisation"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/hip/quant/act.hpp",
+  "zig/kernels/hip/quant/bf16_decoder.hpp",
+  "zig/kernels/hip/quant/dense_tiles.hpp",
+  "zig/kernels/hip/quant/mlx.hpp",
+  "zig/kernels/hip/quant/mlx_decoder.hpp",
+  "zig/kernels/hip/quant/mlx_pieces.hpp",
+  "zig/kernels/hip/quant/mlx_tiles.hpp",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.device-view/mlx-affine/-"
+api       = "quant/mlx.hpp, mlx_decoder.hpp, mlx_pieces.hpp, mlx_tiles.hpp"
+numeric   = "exact dequant (q*scale+bias) in fp32"
+regime    = "n/a"
+
+[[provides]]
+interface = "format.device-view-tensorfold/bf16/-"
+api       = "quant/bf16_decoder.hpp, dense_tiles.hpp"
+numeric   = "exact"
+regime    = "n/a"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_common"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_tiles"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; included by the group sources of the other kernel.tensorfold.hip_* modules"

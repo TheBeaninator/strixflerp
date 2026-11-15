@@ -1,0 +1,44 @@
+id      = "runtime.strixite.ngram_rows"
+kind    = "runtime"
+summary = "PLE n-gram rows straight from the HF checkpoint's shards (interim source kept for tests)"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/ngram_rows.cpp", "runtime/ngram_rows.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/ngram_rows.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.ngram-rows/safetensors/-"
+api       = "strix::NgramRowsFromShards"
+numeric   = "the checkpoint's own bf16 rows"
+regime    = "one 4 KiB page read per row, no caching"
+
+[[requires]]
+interface = "format.reader/safetensors/-"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.ngram_table"
+
+[[requires]]
+module = "runtime.strixite.ple_hash"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

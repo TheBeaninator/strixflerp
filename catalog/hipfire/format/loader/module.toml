@@ -1,0 +1,73 @@
+id        = "format.hipfire.loader"
+kind      = "format"
+summary   = "Top-of-DAG model loader and carrier registry: admission, batch staging, native GGUF path, Qwen4 slab loading, speculation build"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/hipfire-loader/Cargo.toml",
+  "crates/hipfire-loader/map.md",
+  "crates/hipfire-loader/src/admission.rs",
+  "crates/hipfire-loader/src/batch_staging.rs",
+  "crates/hipfire-loader/src/bench_topology.rs",
+  "crates/hipfire-loader/src/carriers.rs",
+  "crates/hipfire-loader/src/decide.rs",
+  "crates/hipfire-loader/src/gguf_native.rs",
+  "crates/hipfire-loader/src/gguf_native/test_writer.rs",
+  "crates/hipfire-loader/src/gguf_native/tests.rs",
+  "crates/hipfire-loader/src/lib.rs",
+  "crates/hipfire-loader/src/qwen4_slab.rs",
+  "crates/hipfire-loader/src/spec_build.rs",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.loader/hipfire-hfq/-"
+api       = "hipfire_loader (Carrier registry, admission.rs, decide.rs)"
+numeric   = "weights uploaded verbatim (passthrough qt) or host-decoded per the qt register"
+regime    = "load time"
+
+[[provides]]
+interface = "format.device-view/hipfire-hfq/-"
+api       = "HFQ group blocks: [f32 scale][f32 zero][codes]"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[provides]]
+interface = "format.device-view/hipfire-mq/-"
+api       = "MQ blocks: HFQ payload of FWHT-rotated weights; V2 header = two fp16 scale / zero pairs"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[provides]]
+interface = "format.device-view/hipfire-mfp4/-"
+api       = "MFP4-G32: FP4 codes with per-32 scales"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[provides]]
+interface = "format.device-view-hipfire/gguf-kquant/-"
+api       = "gguf_native: GGUF blocks as stored"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

@@ -1,0 +1,25 @@
+# The common front end with no model behind it: serve.flerp.http linked with the stand-in executor
+# (executor.flerp.fake_abi: a hash, no weights, no GPU) and Qwen3.8-Flash-Next's text module and host sampler. It is
+# how the front end is tested without a GPU: the stand-in offers, at flerp_open, each shape of executor the ABI allows
+# (rows or tokens only, a stepped or a held draft head, sampled draws or none, ABI version 1 or 2), so the request
+# paths and the refusals are exercised against all of them. It serves nothing useful.
+name      = "qwen38-flash-next.flerp-serve-fake"
+model     = "qwen3.8-flash-next"
+reference = { engine = "none", build = "none: a test double; the gate checks the front end against itself" }
+toolchain = "therock-10.1"
+
+[modules]
+"executor.abi/flerp-v1/-" = "executor.flerp.fake_abi"
+"text.model/flerp-v1/-"   = "runtime.flerp.text_strixite"
+"sample.host/flerp-v1/-"  = "runtime.flerp.sampler_strixite"
+"text.reply/flerp-v1/-"   = "runtime.flerp.reply_strixite"
+
+[binaries]
+"strixflerp-qwen38-flash-next.flerp-serve-fake" = { main = "serve.flerp.http", entry = "flerp/serve/main.cpp" }
+
+[deploy]
+topology = "solo"
+
+[gate]
+runner = "gate/flerp_serve.py"
+config = "gate/qwen38-flash-next.flerp-serve-fake.toml"

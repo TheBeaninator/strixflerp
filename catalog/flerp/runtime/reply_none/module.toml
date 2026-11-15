@@ -1,0 +1,33 @@
+id        = "runtime.flerp.reply_none"
+kind      = "runtime"
+summary   = "include/flerp/reply.h for a recipe whose model has no reply module yet: every call answers FLERP_E_UNSUPPORTED"
+notes     = "The front end then returns chat replies whole and refuses tools, thinking budgets and structured output by name (FLERP-SF-REPLY brings StrixFold's)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/reply/reply_none.c"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = ["src/flerp/reply/reply_none.c"]
+includes  = ["../../../../include"]
+c_std     = 11
+
+[[provides]]
+interface = "text.reply/flerp-v1/-"
+api       = "flerp_reply_open .. flerp_reply_nudge_fired (include/flerp/reply.h)"
+numeric   = "n/a: splits nothing"
+regime    = "none"
+
+[gate]
+parity    = "flerp:gate/flerp_serve.py"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.flerp-serve-tp2/summary.json"

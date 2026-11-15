@@ -1,0 +1,41 @@
+id        = "kernel.tensorfold.hip_common"
+kind      = "kernel"
+summary   = "HIP device basics for RDNA2/3/3.5/4: arch switches (TF_WAVE, dot2, sdot, matrix units), vector types, dot2 helpers, WMMA fragments, the columns-controls contract header"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/hip/columns_controls.hpp",
+  "zig/kernels/hip/common/arch.hpp",
+  "zig/kernels/hip/common/dot2.hpp",
+  "zig/kernels/hip/common/vec.hpp",
+  "zig/kernels/hip/common/wmma.hpp",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.tensorfold-hip/-/-"
+api       = "common/arch.hpp, vec.hpp, dot2.hpp, wmma.hpp"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; included by the group sources of the other kernel.tensorfold.hip_* modules"

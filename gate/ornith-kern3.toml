@@ -1,0 +1,52 @@
+# ORNITH-KERN3: does the 35B decode speedup (R1 fold ca8110b, DECODE-KERN3 57e890b/2f72621/83d5366) carry to
+# Ornith-1.5 397B decode (FLERP-P5, layer stages, executor.flerp.qwen35moe)? Committed BEFORE any GPU run of this
+# experiment; not edited to turn a failure into a pass (an amendment, if any, is added below with its date and reason).
+# Method and tools of DECODE-KERN3 (gate/decode-kern3.toml): build/kern3/decode-kern3 (the NEW kernels from the
+# catalogue at 83d5366 against gate/decode_kern3_ref.hip, the old ones). Runner gate/ornith_kern3.py, GPU job
+# gate/ornith_kern3_run.sh through tools/gpu-queue.sh on control-node's GPU only. No worker, no multi-node window.
+
+[facts]
+# From the census (gate/results/ornith15-397b.census) and the P5 run 11121855 (gate/results/ornith15-397b.flerp-p5).
+model      = "qwen35moe, 60 blocks (45 GDN + 15 attention), hidden 4096, 512 experts, 10 used + shared, expert width 1024"
+router     = "ffn_gate_inp F32 [4096 -> 512] + ffn_gate_inp_shexp F32 [4096]: 8.4 MB a block, 504 MB a token"
+outproj    = "attn_output (15) and ssm_out (45), all Q4_K [8192 -> 4096]: 18.9 MB a block, 1.13 GB a token"
+lm_head    = "output.weight Q6_K [4096 -> 248320]; KERN3 left Q6_K on the old kernel, so nothing to carry"
+r1_fold    = "ALREADY IN: the P5 bundle (build/flerp-p5, 2026-11-12 18:31Z) has moe_kquant.hip sha256 ddd63bd2... = ca8110b; its 12 tok/s includes R1"
+p5_decode  = "world 4: 83 ms a token wall (12.0 tok/s); stage 0 decode 18.2-18.7 ms a step for 15 blocks; relay_overhead 62.5-64.6 ms = 3 other stages + transport, so transport ~8-9 ms (~11 %); GPU-bound per stage"
+
+[weights]
+# The Ornith GGUF under /data/models is a symlink to /mnt/nv1 (not NVMe-at-/data, off limits) and /data has 193 GB
+# free for a 227 GB file. So the Ornith rows are SYNTHETIC codes in the real block layouts at the real dims (as
+# gate/xfer-r1-fold.toml shapes_ornith). Kernel byte equality on real codes is already shown by DECODE-KERN3 on the
+# 35B's weights; the kernels are memory access only, so GB/s does not depend on the values.
+source = "synthetic (decode-kern3 without --gguf), fixed seeds"
+
+[kernel]
+shapes = """Ornith dims, the callers the KERN3 change reaches:
+  router      hidden 4096 x 512 experts + shared row, tokens 1, 2, 3, 8, 21, 128, 1024
+  outproj     Q4_K rows 4096 k 8192 (attn_output = ssm_out shape)
+  identity-only Q4_K callers of LaunchQ8KBlockGEMV at Ornith dims: rows 64 k 4096 (ssm_alpha/beta), 512 k 4096 (attn_k/v),
+              8192 k 4096 (attn_gate), 16384 k 4096 (attn_q), 12288 k 4096 (attn_qkv Q4_K)"""
+x       = "as decode-kern3: uniform(-1, 1) and normal * 0.05, fixed seeds"
+correct = "every case, x and token count: output bytes equal the reference's (memcmp), 0 differing"
+timing  = "router and outproj only, cache-cold (--cold-mib 512, as [kernel_cold] of decode-kern3.toml), 7 alternating rounds, 20 warm + 200 timed; median round, spread min..max"
+load    = "loadavg 1-min <= 6 at the start and end of each case's process, else that case's timing is invalid and rerun"
+continue_rule = "new >= ref cold GB/s on router and outproj at 1 token, else that kernel is not claimed for Ornith"
+
+[projection]
+# No Ornith stage can load on one GPU from /data/models (58-62 GB a stage, source is /mnt/nv1), so the stage gain
+# is computed, not measured: per stage (15 blocks) saved = 15 x (ref_us - new_us) for router + outproj, at 1 token.
+stage  = "stage decode ms a step = 18.5 (P5 median, stage 0) - 15 x (router saving + outproj saving)"
+e2e    = "token ms = 83.0 (P5 world-4 median wall) - 60 x (router saving + outproj saving); tok/s = 1000 / token ms"
+report = "the projection is labelled projected, never measured; a 4-node confirm run is owner's call"
+
+[backend_kbench]
+# Note 2026-11-13, added in its own commit; adds no criterion and loosens none (every threshold above is judged as written).
+# The kernel stage (and, for DECODE-KERN3, only its synthetic-code cases) can run on bench box K through pod-kbench k_run
+# (gate/kbench_backend.py, `--backend kbench`, the default; `--backend queue` is the control-node path above, unchanged).
+# Judged the same way: byte equality, cold GB/s, new >= ref, loadavg <= 6 at the start and end of each case's process (K's
+# own loadavg, read on K). Method differences, recorded in each result's -method.json and summary: host K (balanced 85 W,
+# quiet cooling, weak die contact, so absolute GB/s differ; ratios are the judged quantity), ROCm 7.2.4 runtime libs under a
+# binary built with therock 10.1 clang, each case's process started at Tctl <= 50 C, one k_run job (one bench:K lease) a
+# stage. The in-process ref/new alternation is the bench's own; pod-kbench's ABBA process order (k_ab) is not used.
+# Results of this backend: gate/results/<gate>/kbench/ (the control-node results are not overwritten).

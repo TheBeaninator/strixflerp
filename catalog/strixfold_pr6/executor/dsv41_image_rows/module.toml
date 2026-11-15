@@ -1,0 +1,56 @@
+id        = "executor.strixfold_pr6.dsv41_image_rows"
+kind      = "executor"
+summary   = "The PR's changes to the dsv41 family and the HIP host that let image rows into the prompt pass on HIP: spans checked against a restored prefix, rows from the CPU tower, the vision feature switched on"
+notes     = "Overlay only: every file is the PR's version of a file of executor.strixfold.dsv41, runtime.strixfold.gpu_facade or runtime.strixfold.engine_host (overlay.json). The catalogue's versions are at f64b5ff with the pod's patches; the PR's are on upstream 70cfb8c."
+
+[provenance]
+origin    = "strixfold_pr6"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "766df75"
+branch    = "feat/hip-cpu-image-input (pull request #6, aercanozcan)"
+paths     = [
+  "zig/src/families/dsv41/lanes.zig",
+  "zig/src/families/dsv41/model.zig",
+  "zig/src/families/dsv41/native.zig",
+  "zig/src/gpu/hip_facade.zig",
+  "zig/src/native/hip.zig",
+]
+authors   = ["aercanozcan", "StrixFold contributors", "TensorFold contributors"]
+modified  = false
+upstream  = "overlay on executor.strixfold.dsv41, runtime.strixfold.engine_host, runtime.strixfold.gpu_facade (origin strixfold): 5 of these paths are theirs too; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "vision.image-rows/deepseek-v4.1/bf16"
+api       = "lanes.zig Lanes fill: Stream.images -> prompt.Span + rows -> Model.setImages"
+numeric   = "rows are copied, not computed: bf16 [tokens][5120] replace the embedding rows of the span"
+regime    = "rank 0 encodes; followers get the rows in wire frames"
+
+[[requires]]
+interface = "vision.tower/deepseek-v4.1/bf16.cpu-torch"
+
+[[requires]]
+module    = "executor.strixfold.dsv41"
+
+[[requires]]
+module    = "runtime.strixfold.gpu_facade"
+
+[[requires]]
+module    = "runtime.strixfold.engine_host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "never compiled or run here: no recipe assembles it. It needs the overlay rule of docs/SPEC-PROPOSALS.md section 12 before `flerp assemble` can place its files over the strixfold modules"

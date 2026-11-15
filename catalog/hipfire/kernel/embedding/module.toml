@@ -1,0 +1,53 @@
+id        = "kernel.hipfire.embedding"
+kind      = "kernel"
+summary   = "Embedding lookup from F32 / F16 / BF16 / Q8 / Q4_K / HFQ4 / MQ4V2 tables, single and batched, and external scatter (12 sources, 12 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/embedding_bf16_batched.hip",
+  "kernels/src/embedding_f16_batched.hip",
+  "kernels/src/embedding_f32_batched.hip",
+  "kernels/src/embedding_hfq4g128.hip",
+  "kernels/src/embedding_hfq4g128_batched.hip",
+  "kernels/src/embedding_hfq4g256.hip",
+  "kernels/src/embedding_hfq4g256_batched.hip",
+  "kernels/src/embedding_mq4v2_batched.hip",
+  "kernels/src/embedding_q4k.hip",
+  "kernels/src/embedding_q8.hip",
+  "kernels/src/embedding_q8_batched.hip",
+  "kernels/src/embedding_scatter_ext.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 12
+
+[[provides]]
+interface = "embed.lookup/hipfire-hfq+q8+bf16/f32"
+api       = "embedding_bf16_batched, embedding_f16_batched, embedding_f32_batched, embedding_hfq4g128_batched, embedding_hfq4g128 (+7 more units, see units.json)"
+numeric   = "row dequantized to fp32"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.embedding.json"

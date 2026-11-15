@@ -1,0 +1,63 @@
+id        = "kernel.gufo.core_headers"
+kind      = "kernel"
+summary   = "Header-only: the gufo core and public extension headers that kernel translation units include (HIP utilities, dispatch telemetry, model config, sampling state, JSON constraint types)"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "include/gufo/ext/experimental/managed_alloc.hpp",
+  "include/gufo/ext/experimental/snapshot_transfer.hpp",
+  "include/gufo/ext/experimental/weight_upload.hpp",
+  "include/gufo/ext/host.hpp",
+  "include/gufo/ext/platform/mapped_file.hpp",
+  "include/gufo/ext/platform/os_info.hpp",
+  "include/gufo/ext/sampling.hpp",
+  "src/core/gguf_reader.hpp",
+  "src/core/hip/detail/dispatch_telemetry.hpp",
+  "src/core/hip/detail/gemv_dispatcher.hpp",
+  "src/core/hip/detail/hipblaslt_plan_database.hpp",
+  "src/core/hip/heap_placement.hpp",
+  "src/core/hip/hip_utils.hpp",
+  "src/core/hip/libstdcxx_noinline.hpp",
+  "src/core/hip/managed_alloc.hpp",
+  "src/core/hip/snapshot_copy.hpp",
+  "src/core/hip/snapshot_transfer.hpp",
+  "src/core/hip/weight_upload.hpp",
+  "src/core/json.hpp",
+  "src/core/json_constraint.hpp",
+  "src/core/json_schema_lexeme.hpp",
+  "src/core/logging/logging.hpp",
+  "src/core/model_config.hpp",
+  "src/core/platform/mapped_file.hpp",
+  "src/core/platform/os_info.hpp",
+  "src/core/quant/ggml_dequant.hpp",
+  "src/core/sampling.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.gufo-core/-/-"
+api       = "src/core/hip/hip_utils.hpp, src/core/hip/detail/*.hpp, include/gufo/ext/*.hpp"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside every kernel.gufo.* module"

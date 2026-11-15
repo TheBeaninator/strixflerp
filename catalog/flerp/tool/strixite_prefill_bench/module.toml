@@ -1,0 +1,42 @@
+id        = "tool.flerp.strixite_prefill_bench"
+kind      = "tool"
+summary   = "Chunked prefill of fixed token ids through strixite's Qwen4ExpSession as the server's engine runs a prompt (set_lookahead, last-chunk logits), then greedy decode; per-chunk wall times, PLE waits, logits sha256 and greedy ids per variant (chunk size, module switches) from one weights load"
+notes     = "Variants alternate order per round. A variant's environment entries are set before its session is built: the switches of the prefill modules of recipes/qwen38-flash-next.strixite-pf.toml are read there."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/strixite_prefill_bench/prefill_bench.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/strixite_prefill_bench/prefill_bench.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "tool.prefill-bench/qwen4exp/-"
+api       = "main (strixflerp-prefill-bench --weights W --ngram T --out DIR --prompts L,.. --variants NAME:chunk=N[:ENV=V..],..)"
+numeric   = "the session's own forwards; logits hashed as float32 bytes"
+regime    = "needs the GPU; one process, one weights load"
+
+[[requires]]
+module    = "executor.strixite.qwen4exp"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside recipes/qwen38-flash-next.strixite-pf.toml; a measuring tool, its numbers are read by gate/strixite_prefill.py"

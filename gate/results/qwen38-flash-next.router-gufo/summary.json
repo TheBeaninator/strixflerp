@@ -1,0 +1,574 @@
+{
+ "recipe": "qwen38-flash-next.router-gufo",
+ "host": "control-node",
+ "when_utc": "2026-11-11T00:26:01Z",
+ "stages_run": [
+  "check",
+  "origin",
+  "build",
+  "unit",
+  "gpu"
+ ],
+ "pass": true,
+ "stages": {
+  "check": {
+   "pass": true,
+   "rc": 0,
+   "summary": "flerp check (origin strixite): 105 modules, 8 recipe(s), 0 error(s), 4 warning(s)",
+   "catalogue_rc": 0,
+   "catalogue_summary": "flerp check (catalogue): 221 modules, 8 recipe(s), 0 error(s), 34 warning(s)",
+   "evidence": "check.txt, check-catalogue.txt"
+  },
+  "origin": {
+   "pass": true,
+   "rc": 0,
+   "checkout_head": "20937dce2eb1d994b617229bc1242f2a5572ac91",
+   "origin_toml_commit": "20937dce2eb1d994b617229bc1242f2a5572ac91",
+   "checkout_dirty": false,
+   "summary": "diff-origin origin strixite vs /data/projects/strixite-v070: 105 module(s), 269/269 files byte-identical, 0 problem(s), 29 origin files listed as unharvested",
+   "evidence": "diff-origin.txt"
+  },
+  "build": {
+   "tree": "build/qwen38-flash-next.router-gufo",
+   "evidence": "build.txt",
+   "references_origin_checkout": false,
+   "configure_s": 1.7,
+   "build_s": 149.8,
+   "binaries": {
+    "strixflerp-qwen38-flash-next.router-gufo": {
+     "sha256": "4a8c6097e9562ac70bd6a538502014ab5a2b0508fb351eddf8be18163b7d0344",
+     "bytes": 20942480
+    },
+    "convert_qwen4exp": {
+     "sha256": "d2caecb48a35b213f57939354877d5e09816022b342f9824c8272c7629c6760e",
+     "bytes": 723216
+    },
+    "convert_ngram_table": {
+     "sha256": "d7852040ec9d30b62a3c724478bebc77c5ceb0e391aea15b63b3a274c8cea59d",
+     "bytes": 186128
+    },
+    "transcode_ngram_table": {
+     "sha256": "4f481c94a61bf783e346addc82bf6f132e9e56d4f58b6a4f275529e3f1f9a474",
+     "bytes": 133632
+    },
+    "inspect_strixw": {
+     "sha256": "535522a3715ce067e68c5f05f475e1be15ab55ae077464dfcee715c78c5d436f",
+     "bytes": 107904
+    },
+    "check_stream_calls": {
+     "sha256": "0d691ff06a68cac0992a06509e161a4ae3b27236a51db5a266d6cc2b50c93664",
+     "bytes": 488968
+    },
+    "check_logprobs": {
+     "sha256": "ea43bab1ba99d75bab0b81417796fb34b72816bae7dd0758c34f008905fa28dd",
+     "bytes": 1333648
+    },
+    "sv9_cache_check": {
+     "sha256": "f514bbaa77ae6a8ba1e9290364c1f41f1eca3a4d712aaff305648bc228aa2d2d",
+     "bytes": 984456
+    },
+    "cache_xfer_check": {
+     "sha256": "f1149469db56c1284b26cf62a949ed56f87c551df9367ee80242be854611f9ef",
+     "bytes": 252832
+    },
+    "strix_vision": {
+     "sha256": "104819efa93bdf343f188f35d6ea8b998d0f3546fdda356075312835d4575f05",
+     "bytes": 12001896
+    },
+    "omf_seg": {
+     "sha256": "511bc099490062a4a5239459191e8689e8c18eddd309d97bb19d0d6fff6f0512",
+     "bytes": 18042672
+    },
+    "strix_acts": {
+     "sha256": "ddb0ac6aa68c8886de522f854b3c416d2808e3de2d5ff670d7ddd71ac3812197",
+     "bytes": 17984512
+    },
+    "steer_check": {
+     "sha256": "9fbf1d2d1d7415211310d85c35251d3a43570a2e407bdacdfde869c8bb6173ac",
+     "bytes": 17904536
+    }
+   },
+   "pass": true,
+   "rc": 0
+  },
+  "unit": {
+   "pass": true,
+   "tests": [
+    {
+     "binary": "check_stream_calls",
+     "rc": 0,
+     "seconds": 7.1,
+     "last_line": "46 fixed cases, 20000 random well-formed, 20000 random (x2 with damage), 3 feeds each: 0 failures (0 in the fixed cases)",
+     "evidence": "unit-check_stream_calls.txt"
+    },
+    {
+     "binary": "check_logprobs",
+     "rc": 0,
+     "seconds": 1.0,
+     "last_line": "check_logprobs: ok",
+     "evidence": "unit-check_logprobs.txt"
+    },
+    {
+     "binary": "cache_xfer_check",
+     "rc": 0,
+     "seconds": 0.1,
+     "last_line": "ok    a prompt longer than any entry exports the base+delta pair below its end",
+     "evidence": "unit-cache_xfer_check.txt"
+    },
+    {
+     "binary": "sv9_cache_check",
+     "rc": 0,
+     "seconds": 0.6,
+     "last_line": "SV9-CACHE-CHECK PASS",
+     "evidence": "unit-sv9_cache_check.txt"
+    }
+   ]
+  },
+  "gpu": {
+   "evidence": "identity.json",
+   "gpu_before": {
+    "gtt_used_bytes": 37322752,
+    "engine_processes": []
+   },
+   "lease": "holding control-gpu as agent-phase4",
+   "gpu_tests": [
+    {
+     "binary": "steer_check",
+     "rc": 0,
+     "seconds": 49.7,
+     "last_lines": [
+      "flerp-adapter kernel.flerp.moe_router_gufo provider=kernel.gufo.qfn_kernels:RouterTopK foreign_launches=1152 origin_launches=0 (exit)",
+      "unsteered batch repeats bit for bit: yes",
+      "slot 0 unchanged by slot 1's steering (bit for bit): yes",
+      "slot 1 changed by its steering: max |dlogit| 34.4190 yes"
+     ],
+     "evidence": "unit-steer_check.txt"
+    }
+   ],
+   "module_gate": {
+    "evidence": "gate/results/interface/moe-router/result.json (strixite, gufo)",
+    "pass": true,
+    "gates": [
+     {
+      "evidence": "gate/results/interface/moe-router/result.json",
+      "providers": [
+       "strixite",
+       "gufo"
+      ],
+      "pass": true
+     }
+    ]
+   },
+   "token_identity": false,
+   "speed_within_noise": false,
+   "criterion": "token-agreement",
+   "speed_is_criterion": false,
+   "adapters": [
+    "kernel.flerp.moe_router_gufo"
+   ],
+   "adapter_tallies": [
+    {
+     "mtp": true,
+     "adapter": "kernel.flerp.moe_router_gufo",
+     "provider": "kernel.gufo.qfn_kernels:RouterTopK",
+     "foreign_launches": 31227,
+     "origin_launches": 0,
+     "line": "exit"
+    },
+    {
+     "mtp": false,
+     "adapter": "kernel.flerp.moe_router_gufo",
+     "provider": "kernel.gufo.qfn_kernels:RouterTopK",
+     "foreign_launches": 95760,
+     "origin_launches": 0,
+     "line": "exit"
+    }
+   ],
+   "swaps_ran": true,
+   "token_agreement": [
+    {
+     "mtp": true,
+     "prompt": "short-chat-thinking",
+     "repeat": 0,
+     "generated_tokens": [
+      164,
+      96
+     ],
+     "first_divergence": 5,
+     "tokens_agreeing": 5
+    },
+    {
+     "mtp": true,
+     "prompt": "long-chat",
+     "repeat": 0,
+     "generated_tokens": [
+      255,
+      256
+     ],
+     "first_divergence": 11,
+     "tokens_agreeing": 11
+    },
+    {
+     "mtp": true,
+     "prompt": "raw-completion",
+     "repeat": 0,
+     "generated_tokens": [
+      256,
+      255
+     ],
+     "first_divergence": 53,
+     "tokens_agreeing": 53
+    },
+    {
+     "mtp": true,
+     "prompt": "short-chat-thinking",
+     "repeat": 1,
+     "generated_tokens": [
+      164,
+      96
+     ],
+     "first_divergence": 5,
+     "tokens_agreeing": 5
+    },
+    {
+     "mtp": true,
+     "prompt": "long-chat",
+     "repeat": 1,
+     "generated_tokens": [
+      255,
+      256
+     ],
+     "first_divergence": 11,
+     "tokens_agreeing": 11
+    },
+    {
+     "mtp": true,
+     "prompt": "raw-completion",
+     "repeat": 1,
+     "generated_tokens": [
+      256,
+      255
+     ],
+     "first_divergence": 53,
+     "tokens_agreeing": 53
+    },
+    {
+     "mtp": true,
+     "prompt": "short-chat-thinking",
+     "repeat": 2,
+     "generated_tokens": [
+      164,
+      96
+     ],
+     "first_divergence": 5,
+     "tokens_agreeing": 5
+    },
+    {
+     "mtp": true,
+     "prompt": "long-chat",
+     "repeat": 2,
+     "generated_tokens": [
+      255,
+      256
+     ],
+     "first_divergence": 11,
+     "tokens_agreeing": 11
+    },
+    {
+     "mtp": true,
+     "prompt": "raw-completion",
+     "repeat": 2,
+     "generated_tokens": [
+      256,
+      255
+     ],
+     "first_divergence": 53,
+     "tokens_agreeing": 53
+    },
+    {
+     "mtp": false,
+     "prompt": "short-chat-thinking",
+     "repeat": 0,
+     "generated_tokens": [
+      150,
+      150
+     ],
+     "first_divergence": 5,
+     "tokens_agreeing": 5
+    },
+    {
+     "mtp": false,
+     "prompt": "long-chat",
+     "repeat": 0,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": false,
+     "prompt": "raw-completion",
+     "repeat": 0,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": 43,
+     "tokens_agreeing": 43
+    },
+    {
+     "mtp": false,
+     "prompt": "short-chat-thinking",
+     "repeat": 1,
+     "generated_tokens": [
+      150,
+      150
+     ],
+     "first_divergence": 5,
+     "tokens_agreeing": 5
+    },
+    {
+     "mtp": false,
+     "prompt": "long-chat",
+     "repeat": 1,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": false,
+     "prompt": "raw-completion",
+     "repeat": 1,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": 43,
+     "tokens_agreeing": 43
+    },
+    {
+     "mtp": false,
+     "prompt": "short-chat-thinking",
+     "repeat": 2,
+     "generated_tokens": [
+      150,
+      150
+     ],
+     "first_divergence": 5,
+     "tokens_agreeing": 5
+    },
+    {
+     "mtp": false,
+     "prompt": "long-chat",
+     "repeat": 2,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": false,
+     "prompt": "raw-completion",
+     "repeat": 2,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": 43,
+     "tokens_agreeing": 43
+    }
+   ],
+   "pass": true,
+   "comparisons": [
+    {
+     "mtp": true,
+     "token_identity": false,
+     "speed_within_noise": false,
+     "speed": [
+      {
+       "prompt": "short-chat-thinking",
+       "decode_tps_reference": [
+        46.560264645812,
+        55.83575832422082,
+        51.99199016970524
+       ],
+       "decode_tps_assembled": [
+        45.69335021792547,
+        53.093587645347576,
+        49.216712887318664
+       ],
+       "decode_median": [
+        51.99,
+        49.22
+       ],
+       "decode_rel_diff": -0.0534,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        10.5,
+        12.18
+       ],
+       "prefill_tps_first_run": [
+        261.0,
+        133.0
+       ]
+      },
+      {
+       "prompt": "long-chat",
+       "decode_tps_reference": [
+        64.37055201208123,
+        63.30136972534101,
+        62.57486885204905
+       ],
+       "decode_tps_assembled": [
+        66.37062245718161,
+        67.72888269135622,
+        67.29896482718436
+       ],
+       "decode_median": [
+        63.3,
+        67.3
+       ],
+       "decode_rel_diff": 0.0632,
+       "decode_within_noise": false,
+       "host_loadavg_1m": [
+        10.5,
+        12.18
+       ],
+       "prefill_tps_first_run": [
+        1304.2,
+        488.3
+       ]
+      },
+      {
+       "prompt": "raw-completion",
+       "decode_tps_reference": [
+        47.16080735781284,
+        47.24157896922737,
+        47.23691288458434
+       ],
+       "decode_tps_assembled": [
+        48.46142293206022,
+        49.262356894674305,
+        49.9486548590595
+       ],
+       "decode_median": [
+        47.24,
+        49.26
+       ],
+       "decode_rel_diff": 0.0429,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        10.5,
+        12.18
+       ],
+       "prefill_tps_first_run": [
+        166.2,
+        166.1
+       ]
+      }
+     ]
+    },
+    {
+     "mtp": false,
+     "token_identity": false,
+     "speed_within_noise": true,
+     "speed": [
+      {
+       "prompt": "short-chat-thinking",
+       "decode_tps_reference": [
+        25.837439177159442,
+        32.69079049217009,
+        32.689251276646615
+       ],
+       "decode_tps_assembled": [
+        26.322293195081283,
+        32.256893805947186,
+        32.90547686501569
+       ],
+       "decode_median": [
+        32.69,
+        32.26
+       ],
+       "decode_rel_diff": -0.0132,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        15.37,
+        11.26
+       ],
+       "prefill_tps_first_run": [
+        251.4,
+        234.0
+       ]
+      },
+      {
+       "prompt": "long-chat",
+       "decode_tps_reference": [
+        31.923967974954948,
+        32.287603903748405,
+        32.443635689228074
+       ],
+       "decode_tps_assembled": [
+        31.56818172713762,
+        32.52664479485799,
+        32.02680644199762
+       ],
+       "decode_median": [
+        32.29,
+        32.03
+       ],
+       "decode_rel_diff": -0.0081,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        15.37,
+        11.26
+       ],
+       "prefill_tps_first_run": [
+        1351.1,
+        1355.1
+       ]
+      },
+      {
+       "prompt": "raw-completion",
+       "decode_tps_reference": [
+        32.35890423577537,
+        32.982480050380516,
+        32.84379856364636
+       ],
+       "decode_tps_assembled": [
+        27.05396015187605,
+        32.955903206778885,
+        32.978122629306974
+       ],
+       "decode_median": [
+        32.84,
+        32.96
+       ],
+       "decode_rel_diff": 0.0034,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        15.37,
+        11.26
+       ],
+       "prefill_tps_first_run": [
+        165.5,
+        136.0
+       ]
+      }
+     ]
+    }
+   ],
+   "requests_compared": 18,
+   "gpu_after": {
+    "gtt_used_bytes": 37322752,
+    "engine_processes": []
+   }
+  }
+ }
+}

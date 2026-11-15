@@ -1,0 +1,44 @@
+id        = "runtime.flerp.text_strixite"
+kind      = "runtime"
+summary   = "Qwen3.8-Flash-Next's tokenizer and chat template behind include/flerp/text.h: a C shim over strixite's Tokenizer and render_chat, reading a request's template switches as strixite's request parser does"
+notes     = "No tokenizer or template code of its own. Not read here: the serving policy of strixite's HTTP layer (thinking default, thinking left out for a small max_tokens, thinking budgets)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/text/text_strixite.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/text/text_strixite.cpp"]
+includes  = ["../../../../include"]
+
+[[provides]]
+interface = "text.model/flerp-v1/-"
+api       = "flerp_text_open .. flerp_text_render_chat (include/flerp/text.h)"
+numeric   = "n/a"
+regime    = "one thread; the checkpoint's tokenizer.json"
+
+[[requires]]
+module    = "runtime.strixite.tokenizer"
+
+[[requires]]
+module    = "runtime.strixite.chat_template"
+
+[[requires]]
+module    = "runtime.strixite.json"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "flerp:gate/flerp_serve.py"
+bench     = "none"
+status    = "parity"
+evidence  = "gate/results/qwen38-flash-next.flerp-serve/at-20937dc/summary.json"

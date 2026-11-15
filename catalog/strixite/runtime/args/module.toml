@@ -1,0 +1,35 @@
+id      = "runtime.strixite.args"
+kind    = "runtime"
+summary = "Checked command-line number parsing for tools"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["common/args.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.args/-/-"
+api       = "strix::parse_int, strix::parse_double"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,44 @@
+id      = "serve.strixite.steer_library"
+kind    = "serve"
+summary = "Steering vector library loaded from a directory and resolved per request"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/steer_library.cpp", "serve/steer_library.hpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/steer_library.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.steer-library/-/-"
+api       = "strix::SteerLibrary"
+numeric   = "vectors uploaded as stored"
+regime    = "needs the device"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[[requires]]
+module = "runtime.strixite.steer"
+
+[[requires]]
+module = "serve.strixite.http"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,884 @@
+{
+ "origin_registry": "crates/rdna-compute/src/kernels.rs (+ other rdna-compute/src/*.rs constants)",
+ "note": "a unit is the concatenation of its parts, compiled as one HIP source, as hipfire builds it; path parts are relative to catalog/hipfire",
+ "units": [
+  {
+   "name": "fused_rmsnorm_mq_rotate_awq_g12dec",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_AWQ_G12DEC_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_RMSNORM_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_GROUP_GRID 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_awq_g12dec\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_awq_i4_b8_gfx1151",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_AWQ_I4_B8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_IU4_ONEPASS 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n#define HIPFIRE_RMSNORM_P1A_DRAIN 1\n#define HIPFIRE_RMSNORM_P1A_MAX8 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_awq_i4_b8_gfx1151\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_awq_i4_b8",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_AWQ_I4_B8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n#define HIPFIRE_RMSNORM_P1A_DRAIN 1\n#define HIPFIRE_RMSNORM_P1A_MAX8 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_awq_i4_b8\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_awq_i4_fold_b8",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_AWQ_I4_FOLD_B8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_FOLD 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n#define HIPFIRE_RMSNORM_P1A_DRAIN 1\n#define HIPFIRE_RMSNORM_P1A_MAX8 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_awq_i4_fold_b8\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_awq_i4_fold",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_AWQ_I4_FOLD_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_FOLD 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_awq_i4_fold\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_awq_i4",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_AWQ_I4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_awq_i4\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_awq_i8_gfx11",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_AWQ_I8_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/gemv.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I8_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_quant.hip"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_emit.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n#define HIPFIRE_RMSNORM_P1A_DRAIN 1\n#define HIPFIRE_RMSNORM_P1A_MAX8 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_awq_i8_gfx11\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_awq",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_AWQ_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_RMSNORM_AWQ 1\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_i4_b8_gfx1151",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_I4_B8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_IU4_ONEPASS 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n#define HIPFIRE_RMSNORM_P1A_DRAIN 1\n#define HIPFIRE_RMSNORM_P1A_MAX8 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_i4_b8_gfx1151\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_i4_b8",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_I4_B8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n#define HIPFIRE_RMSNORM_P1A_DRAIN 1\n#define HIPFIRE_RMSNORM_P1A_MAX8 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_i4_b8\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_i4_fold_b8",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_I4_FOLD_B8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_FOLD 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n#define HIPFIRE_RMSNORM_P1A_DRAIN 1\n#define HIPFIRE_RMSNORM_P1A_MAX8 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_i4_fold_b8\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_i4_fold",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_I4_FOLD_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_FOLD 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_i4_fold\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_i4",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_I4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_i4\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_i8_gfx11",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_I8_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/gemv.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I8_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_quant.hip"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_emit.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_P1A_BATCHED 1\n#define HIPFIRE_RMSNORM_P1A_DRAIN 1\n#define HIPFIRE_RMSNORM_P1A_MAX8 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RMSNORM_KERNEL fused_rmsnorm_mq_rotate_i8_gfx11\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate_plain",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_PLAIN_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate_plain.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_rmsnorm_mq_rotate",
+   "const": "FUSED_RMSNORM_MQ_ROTATE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/fused_rmsnorm_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "givens_rotate",
+   "const": "GIVENS_ROTATE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/givens_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "givens_rotate_to_g64",
+   "const": "GIVENS_ROTATE_TO_G64_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define GROUP_SIZE 64\n"
+    },
+    {
+     "text": "#define HALF_GROUP 32\n"
+    },
+    {
+     "text": "#define GIVENS_ROTATE_TO_KERNEL givens_rotate_to_g64_f32\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/givens_rotate_to.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "givens_rotate_to",
+   "const": "GIVENS_ROTATE_TO_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/givens_rotate_to.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hfq4g256_dequantize_to_f16",
+   "const": "HFQ4G256_DEQUANTIZE_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/hfq4g256_dequantize_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "l2_norm",
+   "const": "L2_NORM_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/l2_norm.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "layernorm",
+   "const": "LAYERNORM_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/layernorm.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "mq_rotate_x_128_v2",
+   "const": "MQ_ROTATE_X_128_V2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/mq_rotate_x_128_v2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "mq_rotate_x_awq_i4",
+   "const": "MQ_ROTATE_X_AWQ_I4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_AWQ 1\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/mq_rotate_x_i4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "mq_rotate_x_i4_f16out",
+   "const": "MQ_ROTATE_X_I4_F16OUT_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_F16_OUT 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_KERNEL mq_rotate_x_i4_f16out\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/mq_rotate_x_i4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "mq_rotate_x_i4",
+   "const": "MQ_ROTATE_X_I4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/mq_rotate_x_i4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "mq_rotate_x_i8_gfx11",
+   "const": "MQ_ROTATE_X_I8_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I8_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_quant.hip"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_emit.hip"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_KERNEL mq_rotate_x_i8_gfx11\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/mq_rotate_x_i4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rmsnorm_at_slot_buf",
+   "const": "RMSNORM_AT_SLOT_BUF_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rmsnorm_at_slot_buf.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rmsnorm_residual_add",
+   "const": "RMSNORM_RESIDUAL_ADD_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rmsnorm_residual_add.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rmsnorm_rowsplit",
+   "const": "RMSNORM_ROWSPLIT_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rmsnorm_rowsplit.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rmsnorm",
+   "const": "RMSNORM_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rmsnorm.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_2d_halfsplit_qkv_interleaved",
+   "const": "ROPE_2D_HALFSPLIT_QKV_INTERLEAVED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_2d_halfsplit_qkv_interleaved.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_2d_halfsplit",
+   "const": "ROPE_2D_HALFSPLIT_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_2d_halfsplit.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_batched",
+   "const": "ROPE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_mrope_halfsplit_batched",
+   "const": "ROPE_MROPE_HALFSPLIT_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_mrope_halfsplit_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_mrope_halfsplit",
+   "const": "ROPE_MROPE_HALFSPLIT_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_mrope_halfsplit.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_partial_halfsplit_batched",
+   "const": "ROPE_PARTIAL_HALFSPLIT_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_partial_halfsplit_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_partial_halfsplit_headgrid",
+   "const": "ROPE_PARTIAL_HALFSPLIT_HEADGRID_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_partial_halfsplit_headgrid.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_partial_halfsplit",
+   "const": "ROPE_PARTIAL_HALFSPLIT_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_partial_halfsplit.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_partial_halved_batched",
+   "const": "ROPE_PARTIAL_HALVED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_partial_halved_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_partial_halved",
+   "const": "ROPE_PARTIAL_HALVED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_partial_halved.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_partial_interleaved_batched",
+   "const": "ROPE_PARTIAL_INTERLEAVED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_partial_interleaved_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_partial_interleaved",
+   "const": "ROPE_PARTIAL_INTERLEAVED_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_partial_interleaved.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope",
+   "const": "ROPE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_tail_interleaved_batched",
+   "const": "ROPE_TAIL_INTERLEAVED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_tail_interleaved_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_tail_interleaved",
+   "const": "ROPE_TAIL_INTERLEAVED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_tail_interleaved.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_tail_yarn_interleaved_at_slot_buf",
+   "const": "ROPE_TAIL_YARN_INTERLEAVED_AT_SLOT_BUF_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_tail_yarn_interleaved_at_slot_buf.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_tail_yarn_interleaved_batched",
+   "const": "ROPE_TAIL_YARN_INTERLEAVED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_tail_yarn_interleaved_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rope_tail_yarn_interleaved",
+   "const": "ROPE_TAIL_YARN_INTERLEAVED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rope_tail_yarn_interleaved.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rotate_x_mq_awq",
+   "const": "ROTATE_X_MQ_AWQ_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/norm_rope/src/kernels/src/rotate_x_mq_awq.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "sigmoid_mul_mq_rotate_x_awq_i4_gfx11",
+   "const": "SIGMOID_MUL_MQ_ROTATE_X_AWQ_I4_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_SIGMOID_GATE 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_KERNEL sigmoid_mul_rotate_x_mq_awq_i4_gfx11\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/mq_rotate_x_i4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "sigmoid_mul_mq_rotate_x_awq_i8_gfx11",
+   "const": "SIGMOID_MUL_MQ_ROTATE_X_AWQ_I8_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/gemv.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I8_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_quant.hip"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_emit.hip"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_SIGMOID_GATE 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_AWQ 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_ROTATE_KERNEL sigmoid_mul_rotate_x_mq_awq_i8_gfx11\n"
+    },
+    {
+     "path": "kernel/norm_rope/src/kernels/src/mq_rotate_x_i4.hip"
+    }
+   ],
+   "flags": []
+  }
+ ]
+}

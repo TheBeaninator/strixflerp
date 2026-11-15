@@ -1,0 +1,73 @@
+id      = "serve.strixite.http"
+kind    = "serve"
+summary = "HTTP server (cpp-httplib) with the OpenAI routes, health, cache and metrics endpoints, and the server's option table and config file"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = [
+    "serve/http_server.cpp",
+    "serve/http_server.hpp",
+    "serve/server_config.cpp",
+    "serve/server_config.hpp",
+]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/http_server.cpp", "src/serve/server_config.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.http/openai/-"
+api       = "strix::HttpServer, strix::ServerConfig, strix::ServerSettings"
+numeric   = "n/a"
+regime    = "POST /v1/chat/completions, /v1/completions; GET /v1/models, /health, /cache, /metrics"
+
+[[requires]]
+module = "runtime.strixite.args"
+
+[[requires]]
+module = "runtime.strixite.chat_template"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.engine"
+
+[[requires]]
+module = "runtime.strixite.grammar_cache"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.prompt_cache"
+
+[[requires]]
+module = "runtime.strixite.serve_log"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[[requires]]
+module = "runtime.strixite.vision_request"
+
+[[requires]]
+module = "serve.strixite.cpp_httplib"
+
+[[requires]]
+module = "serve.strixite.openai"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

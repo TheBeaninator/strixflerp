@@ -1,0 +1,39 @@
+id      = "kernel.strixite.logits_topk"
+kind    = "kernel"
+summary = "Each logits row's top 20 candidates on the GPU by rank counting, with optional allow-mask"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/logits_topk.hip", "kernels/logits_topk.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/logits_topk.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "logits.topk/-/-"
+api       = "strix::kernels::logits_topk"
+numeric   = "exact selection on fp32 logits: value descending, lower id first on a tie, so sampling from the candidates is bit-identical to sampling from the row; NaN flagged per row"
+regime    = "kLogitCands = 20; 8,192 inputs per workgroup, 2 launches for 248,077 logits"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

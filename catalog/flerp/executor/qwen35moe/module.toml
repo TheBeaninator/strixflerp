@@ -1,0 +1,103 @@
+id        = "executor.flerp.qwen35moe"
+kind      = "executor"
+summary   = "gufo's Qwen 3.5 executor with a mixture-of-experts feed forward for qwen35moe GGUF files (router, top-k experts, shared expert with a sigmoid gate), sizes read from the header; eight adapted files of executor.gufo.qwen laid over the origin's, plus the launch sequence; dense qwen35 files take the origin's path unchanged"
+notes     = "Derived from executor.gufo.qwen (gufo f070a17, branch rdma, MIT): src/models/qwen/{state.hpp, weights.cpp, forward.cpp, hip/model_loader.cpp, hip/decode.cpp, hip/decode_step.cpp, hip/batched_decode.cpp, hip/prefill_chunk.cpp} are copies of the origin's files with the changes marked `flerp (executor.flerp.qwen35moe)`; they sit under flerp/qwen35moe/, an include root ahead of the gufo tree, and the recipe's build file swaps them into the target gufo_qwen27b. No origin file is edited. moe_ffn.{hpp,cpp} are written here. The math is llama.cpp's (src/models/qwen35moe.cpp:494-548, src/llama-graph.cpp:2002-2310 at 86a24a1). One node, one device: the whole file is one device region, as in the origin. The MTP block of the file (nextn_predict_layers) is not loaded by the executor; ORNITH-O3 (gate/ornith-o3-mtp.toml): mtp_head.{hpp,cpp}, written here, runs it as a draft head beside the executor (llama.cpp src/models/qwen35moe.cpp graph_mtp semantics, its own device copy of blk.N and KV, the target's head), used by the tool's --mtp-probe only. Phase 5 stage P1 (docs/PHASE5-FOURNODE-DESIGN.md): stage.{hpp,cpp} are written here; when asked (flerp::qwen35moe::SetLoadOptions, the tool's --placed) model_loader.cpp loads through format.flerp.gguf_placed instead of the origin's whole-file region - a placement plan, one allocation of its bytes, per-tensor regions - and the model runs a block range [block_begin, block_end) (state.hpp QwenModelWeights::BlockBegin/BlockEnd; decode_step.cpp and prefill_chunk.cpp loop over it, take a stage input in place of the embedding and write a stage output; a range without the head answers token 0). The default is still the origin's loader. batched_decode.cpp, the verification paths and forward.cpp (CPU) do not know the range. moe_ffn has a dump of whole blocks for gate/moe_block_check.py (MoeDump). Stage P2: hip/decode.cpp is adapted too (the origin's, with the block range and the stage buffers folded into the decode graph's key and a process-wide decode graph switch, SetDecodeGraph); stage buffers can be bound to one weights object (BindStageIo), so several stages - executors over views of one load with different ranges - run in one process."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = [
+  "flerp/qwen35moe/draft_round.cpp",
+  "flerp/qwen35moe/draft_round.hpp",
+  "flerp/qwen35moe/moe_ffn.cpp",
+  "flerp/qwen35moe/moe_ffn.hpp",
+  "flerp/qwen35moe/mtp_head.cpp",
+  "flerp/qwen35moe/mtp_head.hpp",
+  "flerp/qwen35moe/stage.cpp",
+  "flerp/qwen35moe/stage.hpp",
+  "flerp/qwen35moe/src/models/qwen/forward.cpp",
+  "flerp/qwen35moe/src/models/qwen/hip/arena.cpp",
+  "flerp/qwen35moe/src/models/qwen/hip/batched_decode.cpp",
+  "flerp/qwen35moe/src/models/qwen/hip/decode.cpp",
+  "flerp/qwen35moe/src/models/qwen/hip/decode_step.cpp",
+  "flerp/qwen35moe/src/models/qwen/hip/model_loader.cpp",
+  "flerp/qwen35moe/src/models/qwen/hip/prefill_chunk.cpp",
+  "flerp/qwen35moe/src/models/qwen/state.hpp",
+  "flerp/qwen35moe/src/models/qwen/weights.cpp",
+]
+authors   = ["gufo contributors", "neuhaus", "pod"]
+modified  = false
+upstream  = "gufo https://github.com/neuhaus/gufo f070a17 (branch rdma, MIT): src/models/qwen/state.hpp, weights.cpp, forward.cpp, hip/model_loader.cpp, hip/decode_step.cpp, hip/batched_decode.cpp, hip/prefill_chunk.cpp, adapted here (catalog/gufo/executor/qwen holds them verbatim)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/flerp/qwen35moe/draft_round.cpp",
+  "src/flerp/qwen35moe/moe_ffn.cpp",
+  "src/flerp/qwen35moe/mtp_head.cpp",
+  "src/flerp/qwen35moe/stage.cpp",
+  "src/flerp/qwen35moe/src/models/qwen/forward.cpp",
+  "src/flerp/qwen35moe/src/models/qwen/hip/arena.cpp",
+  "src/flerp/qwen35moe/src/models/qwen/hip/batched_decode.cpp",
+  "src/flerp/qwen35moe/src/models/qwen/hip/decode.cpp",
+  "src/flerp/qwen35moe/src/models/qwen/hip/decode_step.cpp",
+  "src/flerp/qwen35moe/src/models/qwen/hip/model_loader.cpp",
+  "src/flerp/qwen35moe/src/models/qwen/hip/prefill_chunk.cpp",
+  "src/flerp/qwen35moe/src/models/qwen/weights.cpp",
+]
+includes  = ["src/flerp/qwen35moe", "src"]
+uses      = ["hip-runtime"]
+defines   = ["ENGINE_ENABLE_HIP=1"]
+
+[[provides]]
+interface = "executor.model/qwen35moe/gguf"
+api       = "gufo::hip::QwenGpuExecutor and gufo::models::QwenGenerator on a qwen35moe (or qwen35) GGUF; flerp::qwen35moe::LaunchMoeFfn, SetMoeTrace, SetMoeDump (flerp/qwen35moe/moe_ffn.hpp); SetLoadOptions, SetStageIo, BindStageIo, SetDecodeGraph, LastLoadReport (flerp/qwen35moe/stage.hpp); flerp::qwen35moe::MtpHead (flerp/qwen35moe/mtp_head.hpp)"
+numeric   = "the origin's outside the feed forward. MoE block: fp32 router logits, softmax over all experts and top-k by gufo's RouterTopK (fast-math, lower index on a tie, weights p / max(sum of the selected p, 2^-14)), experts by gufo's K-quant row dot on fp32 activations, fp32 weighted sum plus sigmoid(gate) * shared expert; the same kernels for prompt chunks and decode steps"
+regime    = "one node, the whole stack or a block range of it; expert_count <= 1024, expert_used <= 32, a quantized expert row whole blocks; prompt chunks read every selected expert once a token"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-.placed"
+
+[[requires]]
+interface = "moe.gate-logits/gguf-f32/f32"
+
+[[requires]]
+interface = "moe.experts-decode/gguf-kquant/f32.indexed"
+
+[[requires]]
+interface = "moe.experts-prefill/gguf-kquant/f16-f32.grouped"
+
+[[requires]]
+interface = "attn.prefill-causal/kv-f16/f32.gqa-wmma"
+
+[[requires]]
+interface = "draft.head-score/gguf-kquant/f32.coarse-exact"
+
+[[requires]]
+interface = "moe.router/-/f32.qfn"
+
+[[requires]]
+interface = "moe.combine/-/f32.qfn"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "runtime.gufo.ext_api"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by CMake (recipes/qwen36-35b-a3b.flerp-moe.toml); that recipe built and ran on gfx1151 on 2026-11-11 and its gate did not pass (one criterion against llama.cpp, gate/results/qwen36-35b-a3b.flerp-moe/summary.md), so nothing here moves past harvested"

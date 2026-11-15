@@ -1,0 +1,92 @@
+id        = "runtime.tensorfold.core"
+kind      = "runtime"
+summary   = "Host core: tokenizer, chat template engine, small helpers the families import (same file set as runtime.strixfold.core)"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/core/affine_mm.zig",
+  "zig/src/core/copy_index.zig",
+  "zig/src/core/fence.zig",
+  "zig/src/core/frags.zig",
+  "zig/src/core/hc.zig",
+  "zig/src/core/ids_json.zig",
+  "zig/src/core/moe_route.zig",
+  "zig/src/core/root.zig",
+  "zig/src/core/row_projection.zig",
+  "zig/src/core/template/access.zig",
+  "zig/src/core/template/ast.zig",
+  "zig/src/core/template/concat_test.zig",
+  "zig/src/core/template/eval.zig",
+  "zig/src/core/template/filters.zig",
+  "zig/src/core/template/lexer.zig",
+  "zig/src/core/template/methods.zig",
+  "zig/src/core/template/parity.zig",
+  "zig/src/core/template/parser.zig",
+  "zig/src/core/template/provenance.zig",
+  "zig/src/core/template/provenance_test.zig",
+  "zig/src/core/template/pyjson.zig",
+  "zig/src/core/template/scope.zig",
+  "zig/src/core/template/sequence.zig",
+  "zig/src/core/template/template.zig",
+  "zig/src/core/template/tests.zig",
+  "zig/src/core/template/unicode.zig",
+  "zig/src/core/template/unicode_data.zig",
+  "zig/src/core/template/value.zig",
+  "zig/src/core/tokenizer/check.zig",
+  "zig/src/core/tokenizer/eos.zig",
+  "zig/src/core/tokenizer/fixtures/nfkc.json",
+  "zig/src/core/tokenizer/fixtures/qwen2_slow/golden.json",
+  "zig/src/core/tokenizer/fixtures/qwen2_slow/merges.txt",
+  "zig/src/core/tokenizer/fixtures/qwen2_slow/tokenizer_config.json",
+  "zig/src/core/tokenizer/fixtures/qwen2_slow/vocab.json",
+  "zig/src/core/tokenizer/identity.zig",
+  "zig/src/core/tokenizer/masked_test.zig",
+  "zig/src/core/tokenizer/memo.zig",
+  "zig/src/core/tokenizer/memo_reuse_test.zig",
+  "zig/src/core/tokenizer/model.zig",
+  "zig/src/core/tokenizer/nfkd_data.zig",
+  "zig/src/core/tokenizer/qwen2_slow.zig",
+  "zig/src/core/tokenizer/regex.zig",
+  "zig/src/core/tokenizer/steps.zig",
+  "zig/src/core/tokenizer/tiktoken.zig",
+  "zig/src/core/tokenizer/tokenizer.zig",
+  "zig/src/core/tokenizer/tokenizer_test.zig",
+  "zig/src/core/tokenizer/unicode.zig",
+  "zig/src/core/tokenizer/unicode_data.zig",
+  "zig/src/core/tokenizer/unicode_nfkc_test.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "text.tokenizer-tensorfold/-/-"
+api       = "core/tokenizer/tokenizer.zig"
+numeric   = "n/a"
+regime    = "host"
+
+[[provides]]
+interface = "text.chat-template-tensorfold/jinja/-"
+api       = "core/template/template.zig"
+numeric   = "n/a"
+regime    = "host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

@@ -1,0 +1,534 @@
+# 2026-11-14T00:05:41Z assemble + build qwen36-35b-a3b.flerp-moe in /data/projects/strixflerp-spec
+cmake assembly: 574 files -> build/qwen36-35b-a3b.flerp-moe/tree; build: build/qwen36-35b-a3b.flerp-moe/build.sh
+warning: dependency cycle: runtime.gufo.platform -> runtime.gufo.sampling -> runtime.gufo.platform
+warning: dependency cycle: executor.gufo.qwen -> runtime.gufo.dflash -> runtime.gufo.speculative -> executor.gufo.qwen
+warning: dependency cycle: kernel.gufo.ds4_backend -> kernel.gufo.ds4_indexer -> kernel.gufo.ds4_dspark -> kernel.gufo.ds4_backend
+warning: dependency cycle: kernel.gufo.ds4_backend -> kernel.gufo.ds4_moe -> kernel.gufo.ds4_backend
+warning: dependency cycle: kernel.gufo.ds4_backend -> kernel.gufo.ds4_linear -> kernel.gufo.ds4_backend
+warning: dependency cycle: executor.gufo.deepseek_v4_flash -> runtime.gufo.dspark -> executor.gufo.deepseek_v4_flash
+warning: dependency cycle: runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.deepseek_v4_flash -> runtime.gufo.ext_api
+warning: dependency cycle: executor.gufo.qwen -> runtime.gufo.dflash -> runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen
+warning: dependency cycle: runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.mtp -> runtime.gufo.speculative
+warning: dependency cycle: executor.gufo.qwen -> runtime.gufo.dflash -> runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.mtp -> executor.gufo.qwen
+warning: dependency cycle: executor.gufo.qwen38_flash_next -> runtime.gufo.mtp -> executor.gufo.qwen38_flash_next
+warning: dependency cycle: runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.mtp -> runtime.gufo.ext_api
+warning: dependency cycle: executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> executor.gufo.qwen38_flash_next
+warning: dependency cycle: runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> runtime.gufo.ext_api
+warning: dependency cycle: runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> serve.gufo.http -> runtime.gufo.ext_api
+warning: dependency cycle: runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> serve.gufo.http -> runtime.gufo.cache
+warning: dependency cycle: executor.gufo.qwen -> runtime.gufo.dflash -> runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> serve.gufo.http -> executor.gufo.qwen
+warning: dependency cycle: executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> serve.gufo.http -> executor.gufo.qwen38_flash_next
+warning: dependency cycle: executor.gufo.qwen -> runtime.gufo.dflash -> runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> serve.gufo.http -> executor.gufo.qwen_vision -> executor.gufo.qwen
+warning: dependency cycle: runtime.gufo.dflash -> runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> serve.gufo.http -> runtime.gufo.dflash
+warning: dependency cycle: runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.tp_verbs -> serve.gufo.http -> runtime.gufo.speculative
+warning: dependency cycle: runtime.gufo.tp_verbs -> serve.gufo.http -> runtime.gufo.tp_verbs
+warning: dependency cycle: runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.cache
+warning: dependency cycle: runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> runtime.gufo.ext_api
+warning: dependency cycle: executor.gufo.qwen -> runtime.gufo.dflash -> runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> executor.gufo.qwen38_flash_next -> executor.gufo.qwen
+warning: dependency cycle: runtime.gufo.dflash -> runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> runtime.gufo.dflash
+warning: dependency cycle: runtime.gufo.ext_api -> runtime.gufo.cache -> runtime.gufo.ext_api
+warning: dependency cycle: runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.cache -> runtime.gufo.speculative
+warning: dependency cycle: runtime.gufo.speculative -> runtime.gufo.ext_api -> runtime.gufo.speculative
+warning: dependency cycle: executor.gufo.qwen -> runtime.gufo.dflash -> executor.gufo.qwen
+assembled qwen36-35b-a3b.flerp-moe: 44 modules (18 with sources), 1 binaries -> build/qwen36-35b-a3b.flerp-moe
+build: build/qwen36-35b-a3b.flerp-moe/build.sh [-jN]   (ROCm from toolchains.toml; FLERP_ROCM_ROOT overrides)
+verify-tree: 574 files match assembly.json
+-- The C compiler identification is Clang 23.0.0
+-- The CXX compiler identification is Clang 23.0.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ICU: /usr/include (found version "74.2") found components: uc i18n
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- flerp: libcrypto /usr/lib/x86_64-linux-gnu/libcrypto.so.3, headers /data/projects/strixflerp-spec/build/gate-scratch-o3-spec/openssl-include
+-- The HIP compiler identification is Clang 23.0.0
+-- Detecting HIP compiler ABI info
+-- Detecting HIP compiler ABI info - done
+-- Check for working HIP compiler: /data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ - skipped
+-- Detecting HIP compile features
+-- Detecting HIP compile features - done
+-- HIP: Using hipcc from relative path: /data/tools/therock-10.1.0a20260823/bin/hipcc
+-- HIP_PLATFORM using hip_HIPCONFIG_EXECUTABLE: amd
+-- Performing Test HIP_CLANG_SUPPORTS_PARALLEL_JOBS
+-- Performing Test HIP_CLANG_SUPPORTS_PARALLEL_JOBS - Success
+-- HIP: Using hipcc from relative path: /data/tools/therock-10.1.0a20260823/bin/hipcc
+-- flerp: gufo tree /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree, HIP target gfx1151
+-- Found OpenMP_C: -fopenmp=libomp (found version "5.1")
+-- Found OpenMP_CXX: -fopenmp=libomp (found version "5.1")
+-- Found OpenMP: TRUE (found version "5.1")
+-- Configuring done (6.9s)
+-- Generating done (0.0s)
+-- Build files have been written to: /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/out
+ninja: Entering directory `/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/out'
+[1/155] Building CXX object CMakeFiles/gufo_hip_host.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/hip/host_allocations.cpp.o
+[2/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/crypto/sha256.cpp.o
+[3/155] Building CXX object CMakeFiles/gufo_cache_hip.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/hip/transfer_pool.cpp.o
+[4/155] Building CXX object CMakeFiles/gufo_cache_hip.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/hip/staging.cpp.o
+[5/155] Building CXX object CMakeFiles/gufo_cache_hip.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/hip/committed_backing.cpp.o
+[6/155] Building CXX object CMakeFiles/gufo_cache_hip.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/hip/component_cache_resources.cpp.o
+[7/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/gguf_identity.cpp.o
+[8/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/json_schema_lexeme.cpp.o
+[9/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/json_schema_regex.cpp.o
+[10/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/hip/hipblaslt_plan_database.cpp.o
+[11/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/quant/ggml_gemm.cpp.o
+[12/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/quant/ggml_dequant.cpp.o
+[13/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/sampling.cpp.o
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/sampling.cpp:209:51: warning: missing field 'top' initializer [-Wmissing-designated-field-initializers]
+  209 |   TokenLogprobs result{.selected = entry(selected)};
+      |                                                   ^
+1 warning generated.
+[14/155] Building HIP object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/hip/snapshot_copy.hip.o
+[15/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/gguf_reader.cpp.o
+[16/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/hip/weight_upload.cpp.o
+[17/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/speculative/speculative_verifier.cpp.o
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/speculative/speculative_verifier.cpp:348:3: warning: missing field 'logprobs' initializer [-Wmissing-designated-field-initializers]
+  348 |   };
+      |   ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/speculative/speculative_verifier.cpp:525:59: warning: missing field 'logprobs' initializer [-Wmissing-designated-field-initializers]
+  525 |                       .hit_eos = IsStopToken(next, eos_id)};
+      |                                                           ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/speculative/speculative_verifier.cpp:844:41: warning: missing field 'logprobs' initializer [-Wmissing-designated-field-initializers]
+  844 |                       .hit_eos = hit_eos};
+      |                                         ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/speculative/speculative_verifier.cpp:873:41: warning: missing field 'logprobs' initializer [-Wmissing-designated-field-initializers]
+  873 |                       .hit_eos = hit_eos};
+      |                                         ^
+4 warnings generated.
+[18/155] Building CXX object CMakeFiles/gufo_core.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/json_constraint.cpp.o
+[19/155] Building HIP object CMakeFiles/flerp_moe_kernels.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/moe_kquant/moe_kquant.hip.o
+[20/155] Building CXX object CMakeFiles/flerp_gguf_placed.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/gguf_placed/placement.cpp.o
+[21/155] Building HIP object CMakeFiles/flerp_qfn_kernels.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip.o
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip:1:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hpp:393:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  393 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+1 warning generated when compiling for gfx1151.
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip:1:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hpp:393:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  393 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+1 warning generated when compiling for host.
+[22/155] Building CXX object CMakeFiles/flerp_gguf_placed.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/gguf_placed/placed_loader.cpp.o
+[23/155] Building CXX object CMakeFiles/flerp_stage_relay.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/stage_relay/relay.cpp.o
+[24/155] Building CXX object CMakeFiles/flerp-qwen35moe-generate.dir/mtp_probe.cpp.o
+[25/155] Linking CXX static library libflerp_stage_relay.a
+[26/155] Building CXX object CMakeFiles/flerp-qwen35moe-generate.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/gufo_qwen/no_image.cpp.o
+[27/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/completion.cpp.o
+[28/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/identity.cpp.o
+[29/155] Building CXX object CMakeFiles/flerp-qwen35moe-generate.dir/generate.cpp.o
+[30/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/ledger.cpp.o
+[31/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/checkpoint.cpp.o
+[32/155] Building CXX object CMakeFiles/flerp-qwen35moe-generate.dir/stage_driver.cpp.o
+[33/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/retention.cpp.o
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/cache/retention.cpp:582:69: warning: missing field 'reused_at' initializer [-Wmissing-field-initializers]
+  582 |       e = {std::move(checkpoint), entry, purpose, r.stable, ++clock_};
+      |                                                                     ^
+1 warning generated.
+[34/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/slot.cpp.o
+[35/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/prefix_index.cpp.o
+[36/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/env.cpp.o
+[37/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/library.cpp.o
+[38/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/disk_catalog.cpp.o
+[39/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/mapped_file.cpp.o
+[40/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/net.cpp.o
+[41/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/shutdown_signal.cpp.o
+[42/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/os_info.cpp.o
+[43/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/streaming.cpp.o
+[44/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/publish.cpp.o
+[45/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/fs_posix.cpp.o
+[46/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/page_pin_linux.cpp.o
+[47/155] Building CXX object gufo/src/core/platform/CMakeFiles/gufo_platform.dir/pages_posix.cpp.o
+[48/155] Linking CXX static library gufo/src/core/platform/libgufo_platform.a
+[49/155] Linking CXX static library libgufo_hip_host.a
+[50/155] Linking HIP static library libgufo_core.a
+[51/155] Linking HIP static library libflerp_gguf_placed.a
+[52/155] Building CXX object gufo/src/families/qwen/config/CMakeFiles/gufo_qwen_config.dir/qwen_config.cpp.o
+[53/155] Linking HIP static library gufo/src/families/qwen/config/libgufo_qwen_config.a
+[54/155] Building CXX object gufo/src/cache/CMakeFiles/gufo_cache.dir/disk.cpp.o
+[55/155] Linking CXX static library gufo/src/cache/libgufo_cache.a
+[56/155] Linking CXX static library libgufo_cache_hip.a
+[57/155] Building CXX object gufo/src/families/qwen/text/CMakeFiles/gufo_qwen_text.dir/tokenizer.cpp.o
+[58/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/attention_decode_graph.hip.o
+[59/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/attention_batched.hip.o
+[60/155] Building CXX object gufo/src/families/qwen/text/CMakeFiles/gufo_qwen_text.dir/chat_template.cpp.o
+[61/155] Linking HIP static library gufo/src/families/qwen/text/libgufo_qwen_text.a
+[62/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/attention_decode_verify_wave64.hip.o
+[63/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/attention_decode.hip.o
+[64/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/attention_tile.hip.o
+[65/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/embed.hip.o
+[66/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/dflash_kernels.hip.o
+[67/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/fused.hip.o
+[68/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/gemv.hip.o
+[69/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/hipblas_gemm.hip.o
+[70/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/gemv_quant.hip.o
+[71/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/norm.hip.o
+[72/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/attention_wmma.hip.o
+[73/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_embed.hip.o
+[74/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/hipblaslt_gemm.hip.o
+[75/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_gemm.hip.o
+[76/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_norm.hip.o
+[77/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_residual.hip.o
+[78/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_quant_wave64.hip.o
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_wave64.hip:2:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hpp:393:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  393 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+1 warning generated when compiling for gfx1151.
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_wave64.hip:2:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hpp:393:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  393 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+1 warning generated when compiling for host.
+[79/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_rope.hip.o
+[80/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_ssm.hip.o
+[81/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_swiglu.hip.o
+[82/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_unpack.hip.o
+[83/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/residual.hip.o
+[84/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/qkv.hip.o
+[85/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/rope.hip.o
+[86/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_fp16.hip.o
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_fp16.hip:4:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hpp:393:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  393 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+1 warning generated when compiling for gfx1151.
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_fp16.hip:4:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hpp:393:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  393 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+1 warning generated when compiling for host.
+[87/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/sample.hip.o
+[88/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/ssm_decode_recurrence.hip.o
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/ssm_decode_recurrence.hip:10:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+  249 |       for (std::size_t vi = 0; vi < key_vec; ++vi) {
+      |       ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+6 warnings generated when compiling for gfx1151.
+ld.lld: warning: tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
+ld.lld: warning: tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
+ld.lld: warning: tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
+ld.lld: warning: tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
+ld.lld: warning: tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
+ld.lld: warning: tree/src/families/qwen/kernels/deltanet_decode.hpp:249:7: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
+[89/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/small_batch_quant16_wave64.hip.o
+[90/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/ssm.hip.o
+[91/155] Building HIP object CMakeFiles/flerp_qfn_kernels.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp.o
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:116:11: warning: enumeration values 'kQ5_1', 'kQ4_K', and 'kQ5_K' not handled in switch [-Wswitch]
+  116 |   switch (type) {
+      |           ^~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:136:11: warning: enumeration values 'kQ5_1', 'kQ4_K', and 'kQ5_K' not handled in switch [-Wswitch]
+  136 |   switch (type) {
+      |           ^~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:856:23: warning: unused variable 'chunks' [-Wunused-variable]
+  856 |   const std::uint32_t chunks = static_cast<std::uint32_t>(hc_dim / 4);
+      |                       ^~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:1885:29: warning: comparison of integers of different signs: 'int' and 'std::uint32_t' (aka 'unsigned int') [-Wsign-compare]
+ 1885 |             w * kW + tl + 1 == checkpoint.tokens) {
+      |             ~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:3889:20: warning: comparison of integers of different signs: 'std::int32_t' (aka 'int') and 'std::uint32_t' (aka 'unsigned int') [-Wsign-compare]
+ 3889 |         best.index < vocab
+      |         ~~~~~~~~~~ ^ ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:5399:18: warning: unused variable 'kKQuant' [-Wunused-variable]
+ 5399 |   constexpr bool kKQuant = kType == WeightType::kQ4_K || kQ5K;
+      |                  ^~~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7896:65: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7896 |             if (token_of(((wave_tok * kWaveTokTiles) + j) * 16) >= batch)
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7932:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel(const void *__restrict, const __half *__restrict, float *__restrict, std::size_t, std::size_t, std::size_t, const __half *, __half *, void *, const float *, float *, AttentionProjectionOutput, std::uint32_t, std::size_t, std::uint32_t, std::uint32_t)::(lambda)::operator()<true>' requested here
+ 7932 |       accumulate.template operator()<true>();
+      |                           ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8372:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 1, 4, 2, 2, false, false, false, false, false, true, false>' requested here
+ 8372 |       hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 1, 4, 2, 2, false, false,
+      |                           ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7929:22: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7929 |     if (t_block + BN <= batch)
+      |         ~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8372:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 1, 4, 2, 2, false, false, false, false, false, true, false>' requested here
+ 8372 |       hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 1, 4, 2, 2, false, false,
+      |                           ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7896:65: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7896 |             if (token_of(((wave_tok * kWaveTokTiles) + j) * 16) >= batch)
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7932:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel(const void *__restrict, const __half *__restrict, float *__restrict, std::size_t, std::size_t, std::size_t, const __half *, __half *, void *, const float *, float *, AttentionProjectionOutput, std::uint32_t, std::size_t, std::uint32_t, std::uint32_t)::(lambda)::operator()<true>' requested here
+ 7932 |       accumulate.template operator()<true>();
+      |                           ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8379:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 2, 8, 1, 5, false, false, false, false, false, true, false>' requested here
+ 8379 |       hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 2, 8, 1, 5, false, false,
+      |                           ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7929:22: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7929 |     if (t_block + BN <= batch)
+      |         ~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8379:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 2, 8, 1, 5, false, false, false, false, false, true, false>' requested here
+ 8379 |       hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 2, 8, 1, 5, false, false,
+      |                           ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7896:65: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7896 |             if (token_of(((wave_tok * kWaveTokTiles) + j) * 16) >= batch)
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7932:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel(const void *__restrict, const __half *__restrict, float *__restrict, std::size_t, std::size_t, std::size_t, const __half *, __half *, void *, const float *, float *, AttentionProjectionOutput, std::uint32_t, std::size_t, std::uint32_t, std::uint32_t)::(lambda)::operator()<true>' requested here
+ 7932 |       accumulate.template operator()<true>();
+      |                           ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8452:23: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 2, 8, 1, 2, false, true, false, false, false, false, false>' requested here
+ 8452 |   hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 2, 8, 1, 2, false, true>),
+      |                       ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7929:22: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7929 |     if (t_block + BN <= batch)
+      |         ~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8452:23: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 2, 8, 1, 2, false, true, false, false, false, false, false>' requested here
+ 8452 |   hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 2, 8, 1, 2, false, true>),
+      |                       ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8194:57: warning: comparison of integers of different signs: 'const int' and 'unsigned int' [-Wsign-compare]
+ 8194 |               if (row >= channels || tok_l < 3 || tok_l >= kOutputTokens - 3 ||
+      |                                                   ~~~~~ ^  ~~~~~~~~~~~~~~~~~
+13 warnings generated when compiling for gfx1151.
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:116:11: warning: enumeration values 'kQ5_1', 'kQ4_K', and 'kQ5_K' not handled in switch [-Wswitch]
+  116 |   switch (type) {
+      |           ^~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:136:11: warning: enumeration values 'kQ5_1', 'kQ4_K', and 'kQ5_K' not handled in switch [-Wswitch]
+  136 |   switch (type) {
+      |           ^~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:856:23: warning: unused variable 'chunks' [-Wunused-variable]
+  856 |   const std::uint32_t chunks = static_cast<std::uint32_t>(hc_dim / 4);
+      |                       ^~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:1885:29: warning: comparison of integers of different signs: 'int' and 'std::uint32_t' (aka 'unsigned int') [-Wsign-compare]
+ 1885 |             w * kW + tl + 1 == checkpoint.tokens) {
+      |             ~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:3889:20: warning: comparison of integers of different signs: 'std::int32_t' (aka 'int') and 'std::uint32_t' (aka 'unsigned int') [-Wsign-compare]
+ 3889 |         best.index < vocab
+      |         ~~~~~~~~~~ ^ ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:5399:18: warning: unused variable 'kKQuant' [-Wunused-variable]
+ 5399 |   constexpr bool kKQuant = kType == WeightType::kQ4_K || kQ5K;
+      |                  ^~~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7896:65: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7896 |             if (token_of(((wave_tok * kWaveTokTiles) + j) * 16) >= batch)
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7932:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel(const void *__restrict, const __half *__restrict, float *__restrict, std::size_t, std::size_t, std::size_t, const __half *, __half *, void *, const float *, float *, AttentionProjectionOutput, std::uint32_t, std::size_t, std::uint32_t, std::uint32_t)::(lambda)::operator()<true>' requested here
+ 7932 |       accumulate.template operator()<true>();
+      |                           ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8372:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 1, 4, 2, 2, false, false, false, false, false, true, false>' requested here
+ 8372 |       hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 1, 4, 2, 2, false, false,
+      |                           ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7929:22: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7929 |     if (t_block + BN <= batch)
+      |         ~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8372:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 1, 4, 2, 2, false, false, false, false, false, true, false>' requested here
+ 8372 |       hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 1, 4, 2, 2, false, false,
+      |                           ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7896:65: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7896 |             if (token_of(((wave_tok * kWaveTokTiles) + j) * 16) >= batch)
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7932:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel(const void *__restrict, const __half *__restrict, float *__restrict, std::size_t, std::size_t, std::size_t, const __half *, __half *, void *, const float *, float *, AttentionProjectionOutput, std::uint32_t, std::size_t, std::uint32_t, std::uint32_t)::(lambda)::operator()<true>' requested here
+ 7932 |       accumulate.template operator()<true>();
+      |                           ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8379:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 2, 8, 1, 5, false, false, false, false, false, true, false>' requested here
+ 8379 |       hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 2, 8, 1, 5, false, false,
+      |                           ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7929:22: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7929 |     if (t_block + BN <= batch)
+      |         ~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8379:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 2, 8, 1, 5, false, false, false, false, false, true, false>' requested here
+ 8379 |       hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 2, 8, 1, 5, false, false,
+      |                           ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7896:65: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7896 |             if (token_of(((wave_tok * kWaveTokTiles) + j) * 16) >= batch)
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7932:27: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel(const void *__restrict, const __half *__restrict, float *__restrict, std::size_t, std::size_t, std::size_t, const __half *, __half *, void *, const float *, float *, AttentionProjectionOutput, std::uint32_t, std::size_t, std::uint32_t, std::uint32_t)::(lambda)::operator()<true>' requested here
+ 7932 |       accumulate.template operator()<true>();
+      |                           ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8452:23: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 2, 8, 1, 2, false, true, false, false, false, false, false>' requested here
+ 8452 |   hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 2, 8, 1, 2, false, true>),
+      |                       ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:7929:22: warning: comparison of integers of different signs: 'int' and 'std::size_t' (aka 'unsigned long') [-Wsign-compare]
+ 7929 |     if (t_block + BN <= batch)
+      |         ~~~~~~~~~~~~ ^  ~~~~~
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8452:23: note: in instantiation of function template specialization 'gufo::models::qwen38_flash_next::rocm::DenseF16GEMMKernel<256, 128, 2, 8, 1, 2, false, true, false, false, false, false, false>' requested here
+ 8452 |   hipLaunchKernelGGL((DenseF16GEMMKernel<256, 128, 2, 8, 1, 2, false, true>),
+      |                       ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:226:73: note: expanded from macro 'hipLaunchKernelGGL'
+  226 | #define hipLaunchKernelGGL(kernelName, ...) hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
+      |                                                                         ^
+/mnt/ark/pod-overflow-2026-11-13/therock-10.1.0a20260823/lib/llvm/bin/../../../include/hip/amd_detail/amd_hip_runtime.h:223:5: note: expanded from macro 'hipLaunchKernelGGLInternal'
+  223 |     kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);             \
+      |     ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp:8194:57: warning: comparison of integers of different signs: 'const int' and 'unsigned int' [-Wsign-compare]
+ 8194 |               if (row >= channels || tok_l < 3 || tok_l >= kOutputTokens - 3 ||
+      |                                                   ~~~~~ ^  ~~~~~~~~~~~~~~~~~
+13 warnings generated when compiling for host.
+[92/155] Linking HIP static library libflerp_qfn_kernels.a
+[93/155] Linking HIP static library libflerp_moe_kernels.a
+[94/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/ssm_recurrence.hip.o
+[95/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/ssm_row_split.hip.o
+[96/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/unpack.hip.o
+[97/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/swiglu.hip.o
+[98/155] Building CXX object gufo/src/families/qwen/vision/CMakeFiles/gufo_qwen_vision.dir/image_cache.cpp.o
+[99/155] Building CXX object gufo/src/families/qwen/vision/CMakeFiles/gufo_qwen_vision.dir/prompt.cpp.o
+[100/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/continuation_layout.cpp.o
+[101/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/oracles.cpp.o
+[102/155] Building HIP object gufo/src/families/qwen/vision/CMakeFiles/gufo_qwen_vision.dir/device_input.hip.o
+[103/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/state.cpp.o
+[104/155] Building HIP object gufo/src/families/qwen/vision/CMakeFiles/gufo_qwen_vision.dir/encoder.hip.o
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/vision/encoder.hip:503:67: warning: missing field 'plan_database_path' initializer [-Wmissing-designated-field-initializers]
+  503 |         gufo::hip::HipblasLtGemmOptions{.ignore_environment = true});
+      |                                                                   ^
+1 warning generated when compiling for gfx1151.
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/vision/encoder.hip:503:67: warning: missing field 'plan_database_path' initializer [-Wmissing-designated-field-initializers]
+  503 |         gufo::hip::HipblasLtGemmOptions{.ignore_environment = true});
+      |                                                                   ^
+1 warning generated when compiling for host.
+[105/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/ssm.cpp.o
+[106/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/attention.cpp.o
+[107/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/embed.cpp.o
+[108/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/ffn.cpp.o
+[109/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/norm.cpp.o
+[110/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/quant_gemm.cpp.o
+[111/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/residual.cpp.o
+[112/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/rope.cpp.o
+[113/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/sample.cpp.o
+[114/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/ssm.cpp.o
+[115/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/modules/unembed.cpp.o
+[116/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/generator.cpp.o
+[117/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/mtp_reference.cpp.o
+[118/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/prefill_quant_gemm.hip.o
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hip:2:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hpp:393:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  393 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hip:565:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  565 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+2 warnings generated when compiling for gfx1151.
+In file included from /data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hip:2:
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hpp:393:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  393 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hip:388:66: warning: unused parameter 'a' [-Wunused-parameter]
+  388 | __device__ __forceinline__ int32x8_t Wmma_16x16x16_iu8(int32x4_t a, int32x4_t b,
+      |                                                                  ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hip:388:79: warning: unused parameter 'b' [-Wunused-parameter]
+  388 | __device__ __forceinline__ int32x8_t Wmma_16x16x16_iu8(int32x4_t a, int32x4_t b,
+      |                                                                               ^
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/families/qwen/kernels/prefill_quant_gemm.hip:565:16: warning: argument to '#pragma unroll' should not be in parentheses in CUDA C/C++ [-Wcuda-compat]
+  565 | #pragma unroll(BK <= 2 ? BK : 1)
+      |                ^
+4 warnings generated when compiling for host.
+[119/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/verify_gemm_27b.hip.o
+[120/155] Building HIP object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/attention.hip.o
+[121/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/dflash_weights.cpp.o
+[122/155] Building HIP object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/batched_ssm.hip.o
+[123/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/arena.cpp.o
+/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/models/qwen/hip/arena.cpp:130:3: warning: missing field 'rope' initializer [-Wmissing-designated-field-initializers]
+  130 |   };
+      |   ^
+1 warning generated.
+[124/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/prefill.cpp.o
+[125/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/executor.cpp.o
+[126/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/continuation_adapter.cpp.o
+[127/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/prompt_hidden_buffer.cpp.o
+[128/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/qwen_speculative_verifier.cpp.o
+[129/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/ssm_replay.cpp.o
+[130/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/mtp/executor.cpp.o
+[131/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/mtp/model.cpp.o
+[132/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/mtp/backend.cpp.o
+[133/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/dflash/model.cpp.o
+[134/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/dflash/executor.cpp.o
+[135/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/src/models/qwen/weights.cpp.o
+[136/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/dflash/batch.cpp.o
+[137/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/hip/dflash/backend.cpp.o
+[138/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/src/models/qwen/forward.cpp.o
+[139/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/src/models/qwen/hip/decode.cpp.o
+[140/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/src/models/qwen/hip/decode_step.cpp.o
+[141/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/src/models/qwen/hip/model_loader.cpp.o
+[142/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/src/models/qwen/hip/prefill_chunk.cpp.o
+[143/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/src/models/qwen/hip/batched_decode.cpp.o
+[144/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/stage.cpp.o
+[145/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/moe_ffn.cpp.o
+[146/155] Building CXX object gufo/src/ext/CMakeFiles/gufo_logging.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/logging/logging.cpp.o
+[147/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/mtp_head.cpp.o
+[148/155] Building CXX object gufo/src/models/qwen/CMakeFiles/gufo_qwen27b.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/flerp/qwen35moe/draft_round.cpp.o
+[149/155] Building CXX object gufo/src/ext/CMakeFiles/gufo_logging.dir/data/projects/strixflerp-spec/build/qwen36-35b-a3b.flerp-moe/tree/src/core/logging/trace.cpp.o
+[150/155] Linking CXX static library gufo/src/ext/libgufo_logging.a
+[151/155] Building HIP object gufo/src/families/qwen/kernels/CMakeFiles/gufo_qwen_kernels.dir/small_batch_wave64.hip.o
+[152/155] Linking HIP static library gufo/src/families/qwen/kernels/libgufo_qwen_kernels.a
+[153/155] Linking HIP static library gufo/src/families/qwen/vision/libgufo_qwen_vision.a
+[154/155] Linking HIP static library gufo/src/models/qwen/libgufo_qwen27b.a
+[155/155] Linking HIP executable flerp-qwen35moe-generate
+# 2026-11-14T00:07:27Z build rc 0 in 106 s

@@ -1,0 +1,41 @@
+id        = "runtime.flerp.text_strixfold"
+kind      = "runtime"
+summary   = "A Hugging Face checkpoint's tokenizer and Jinja chat template behind include/flerp/text.h: the C functions exported from Zig over StrixFold's HfText (zig/src/server/hf_text.zig), the text layer its own server renders prompts with"
+notes     = "No tokenizer or template code of its own. Built by the Zig build of a recipe (flerp.serve.build.zig); it has not run."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/text/text_strixfold.zig"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "zig"
+sources   = ["src/flerp/text/text_strixfold.zig"]
+includes  = []
+
+[[provides]]
+interface = "text.model/flerp-v1/-"
+api       = "flerp_text_open .. flerp_text_render_chat (include/flerp/text.h), exported from flerp/text/text_strixfold.zig"
+numeric   = "n/a"
+regime    = "one thread; a checkpoint directory (tokenizer.json, tokenizer_config.json, chat template)"
+
+[[requires]]
+interface = "text.tokenizer-strixfold/-/-"
+
+[[requires]]
+interface = "text.chat-template-strixfold/jinja/-"
+
+[[requires]]
+module    = "serve.strixfold.http"
+
+[gate]
+parity    = "flerp:gate/flerp_serve_pair.py"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.flerp-serve-tp2/summary.json"

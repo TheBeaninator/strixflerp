@@ -1,0 +1,52 @@
+id        = "runtime.hipfire.hip_bridge"
+kind      = "runtime"
+summary   = "Safe Rust FFI to the AMD HIP runtime by dlopen: device, streams, memory, modules, launches"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/hip-bridge/Cargo.toml",
+  "crates/hip-bridge/map.md",
+  "crates/hip-bridge/src/emu_budget.rs",
+  "crates/hip-bridge/src/error.rs",
+  "crates/hip-bridge/src/ffi.rs",
+  "crates/hip-bridge/src/ffi/kernel_timing.rs",
+  "crates/hip-bridge/src/ffi/kernel_timing/tests.rs",
+  "crates/hip-bridge/src/kernarg.rs",
+  "crates/hip-bridge/src/launch_grid.rs",
+  "crates/hip-bridge/src/lib.rs",
+  "crates/hip-bridge/src/plan_tape.rs",
+  "crates/hip-bridge/src/rccl.rs",
+  "crates/hip-bridge/src/registry.rs",
+  "crates/hip-bridge/src/rocblas.rs",
+  "crates/hip-bridge/src/rocsolver.rs",
+  "crates/hip-bridge/src/vmm.rs",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "device.ffi/hip/-"
+api       = "hip_bridge"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

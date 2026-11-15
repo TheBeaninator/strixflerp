@@ -1,0 +1,72 @@
+id        = "kernel.tensorfold.cuda_exl3"
+kind      = "kernel"
+summary   = "EXL3 on CUDA: tile decode straight into MMA fragments, linear and grouped-expert GEMV, prefill dense (pfdense k8..k16), x3gm grouped GEMM plan/load/epilogue, segmented experts; EXLR8 codecs"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/cuda/exl3_block/dense3.cu",
+  "zig/kernels/cuda/exl3_block/exl3_experts.cu",
+  "zig/kernels/cuda/exl3_block/experts_grouped.cuh",
+  "zig/kernels/cuda/exl3_block/lin2.cu",
+  "zig/kernels/cuda/exl3_block/linear.cu",
+  "zig/kernels/cuda/exl3_block/pfdense.cuh",
+  "zig/kernels/cuda/exl3_block/pfdense_args.h",
+  "zig/kernels/cuda/exl3_block/pfdense_k10.cu",
+  "zig/kernels/cuda/exl3_block/pfdense_k12.cu",
+  "zig/kernels/cuda/exl3_block/pfdense_k16.cu",
+  "zig/kernels/cuda/exl3_block/pfdense_k8.cu",
+  "zig/kernels/cuda/exl3_block/x3gm.cu",
+  "zig/kernels/cuda/exl3_block/x3gm2.cuh",
+  "zig/kernels/cuda/exl3_block/x3gm3.cu",
+  "zig/kernels/cuda/exl3_block/x3gm_plan.cu",
+  "zig/kernels/cuda/exl3_block/x3ld.cu",
+  "zig/kernels/cuda/exl3_block/x3ld_epi.cu",
+  "zig/kernels/cuda/exl3_block/x3pf.cu",
+  "zig/kernels/cuda/exl3_block/x3seg.cu",
+  "zig/kernels/cuda/exl3_candidate.cu",
+  "zig/kernels/cuda/exl3_candidate.cuh",
+  "zig/kernels/cuda/exl3_decode.cuh",
+  "zig/kernels/cuda/exl3_experts.cu",
+  "zig/kernels/cuda/exl3_grouped.cuh",
+  "zig/kernels/cuda/exl3_linear.cu",
+  "zig/kernels/cuda/exl3_linear_wc.cuh",
+  "zig/kernels/cuda/exl3_plan.cuh",
+  "zig/kernels/cuda/exl3_prompt.cuh",
+  "zig/kernels/cuda/exlr8.cu",
+  "zig/kernels/cuda/exlr8_dense.cu",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+upstream  = "EXL3 after ExLlamaV3 (MIT, Copyright (c) 2025 Turboderp), per-file headers"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.decode/exl3/f32.tensorfold-cuda"
+api       = "exl3_linear.cu, exl3_block/linear.cu, lin2.cu"
+numeric   = "fp32 accumulate"
+regime    = "decode rounds (1..N lanes), memory-bound"
+
+[[provides]]
+interface = "moe.experts-prefill/exl3/f32.tensorfold-cuda"
+api       = "exl3_experts.cu, exl3_block/x3gm*.cu, x3seg.cu, experts_grouped.cuh"
+numeric   = "rows independent, K ranges fixed by shape, warps summed in order"
+regime    = "prompt chunks, compute-bound"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source: harvested to read its recipe; not built for gfx1151"

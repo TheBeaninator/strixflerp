@@ -1,0 +1,51 @@
+id      = "kernel.strixite.vision"
+kind    = "kernel"
+summary = "Vision tower kernels around the BF16 GEMMs: linear with bias, layernorm, GELU, attention, 2D RoPE, patch merge, position add, embedding scatter"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/vision.hip", "kernels/vision.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/vision.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "vision.tower-ops/bf16/bf16"
+api       = "strix::kernels::vision_linear_bias, vision_layernorm, vision_gelu, vision_attn, vision_rope_qk, vision_merge_regroup, vision_pos_add, vision_embedding_scatter, vision_bias_add"
+numeric   = "bf16 weights, fp32 math with the bias added on the fp32 accumulator, one rounding where the output is stored"
+regime    = "one image per forward; sequence capped at kMaxVisionSeq"
+
+[[provides]]
+interface = "vision.tower-ops/bf16/f32"
+api       = "strix::kernels::vision_linear_bias, vision_layernorm, vision_gelu, vision_attn, vision_rope_qk, vision_merge_regroup, vision_pos_add, vision_embedding_scatter, vision_bias_add"
+numeric   = "bf16 weights, fp32 math with the bias added on the fp32 accumulator, one rounding where the output is stored"
+regime    = "one image per forward; sequence capped at kMaxVisionSeq"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.wmma"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

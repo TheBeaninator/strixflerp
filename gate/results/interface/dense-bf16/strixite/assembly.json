@@ -1,0 +1,76 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_dense_bf16",
+   "modules": [
+    "runtime.strixite.check",
+    "kernel.strixite.hip_common",
+    "kernel.strixite.device_info",
+    "kernel.strixite.norm",
+    "kernel.strixite.linear",
+    "tool.flerp.gate_dense_bf16"
+   ]
+  }
+ },
+ "bindings": {
+  "linear.dense/bf16/bf16": "kernel.strixite.linear"
+ },
+ "code_objects": [],
+ "contract_changes": [],
+ "foreign": {},
+ "include_only": [],
+ "modules": {
+  "kernel.strixite.device_info": {
+   "dir": "catalog/strixite/kernel/device_info",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.hip_common": {
+   "dir": "catalog/strixite/kernel/hip_common",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.linear": {
+   "dir": "catalog/strixite/kernel/linear",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/linear.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.norm": {
+   "dir": "catalog/strixite/kernel/norm",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/norm.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "runtime.strixite.check": {
+   "dir": "catalog/strixite/runtime/check",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "tool.flerp.gate_dense_bf16": {
+   "dir": "gate/interface/drivers/dense_bf16",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-dense-bf16.strixite",
+ "renames": {},
+ "toolchain": "therock-10.1"
+}

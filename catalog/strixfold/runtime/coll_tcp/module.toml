@@ -1,0 +1,50 @@
+id        = "runtime.strixfold.coll_tcp"
+kind      = "runtime"
+summary   = "Coll over host-staged TCP on the USB4 / Ethernet links: eager tcp_host, and tcp_proxy (two kernels on the model stream plus a busy-polling proxy thread, graph-capturable)"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/families/dsv41/tcp_coll.zig",
+  "zig/src/families/dsv41/tcp_proxy.zig",
+  "zig/src/families/dsv41/tcp_wire.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "collective.allgather-tcp/-/f32"
+api       = "tcp_coll.zig (tcp_host), tcp_proxy.zig"
+numeric   = "bytes only; site, layer, byte count and generation checked against the peer on every call"
+regime    = "TP2; decode slices and prompt blocks"
+
+[[requires]]
+interface = "collective.interface/-/-"
+
+[[requires]]
+interface = "collective.device-proxy/-/-"
+
+[[requires]]
+interface = "device.facade/hip/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

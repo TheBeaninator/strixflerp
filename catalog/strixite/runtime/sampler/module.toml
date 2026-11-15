@@ -1,0 +1,35 @@
+id      = "runtime.strixite.sampler"
+kind    = "runtime"
+summary = "Next-token sampling on the host: temperature, top-k, top-p, logit bias and masks, from a full row or the GPU's candidates"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/sampler.cpp", "serve/sampler.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/sampler.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "sample.next-token/-/-"
+api       = "strix::Sampler, strix::SamplingParams, strix::LogitRows, strix::LogitMasks"
+numeric   = "transformers' warper order; temperature 0 is argmax with the lowest id on a tie; candidates path bit-identical to the full row"
+regime    = "host; only ids below n_valid can come out"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

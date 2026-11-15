@@ -1,0 +1,269 @@
+# Interface gate: MoE router top-k for Qwen3.8-Flash-Next (512 experts; the checkpoint routes k = 10, the gate
+# also runs k = 8, the only k hipfire's kernel is compiled for). Swap 5 of docs/INTERFACES.md.
+# Pass criteria fixed on 2026-11-10 before the first run. Do not edit them to turn a failure into a pass.
+interface = "moe.router/-/bf16"
+api       = "strix::kernels::moe_router(logits, ld = E + 1, M, E, k, nullptr, 0, 0, ids, coef, Act::F32, err, stream)"
+driver    = "gate/interface/drivers/moe_router"
+toolchain = "therock-10.1"
+
+[criteria]
+# Two parts, both required on every parity case that is not marked "report":
+#   structure   the selected ids, slot for slot, equal the reference's (largest logit first, an equal logit to the
+#               lower expert index); a token with a non-finite logit has ids -1, NaN weights, and the error word
+#               names it;
+#   weights     each weight within coef_tol_ulps = 32 fp32 rounding steps (relative 1.9e-6) of the exact value:
+#               room for an fp32 exp, a sum of k terms and the divisions of any of the three formulations, and
+#               far below anything that is not rounding.
+# "near-ties" (logits one ulp apart) is reported only: a router that selects on probabilities may see such a
+# pair as equal, which the adapters document.
+parity                          = "order-bound"
+max_err_over_bound              = 1.0
+adapter_must_launch_foreign     = true
+adapter_origin_launches_allowed = 0
+
+[[provider]]
+name     = "strixite"
+module   = "kernel.strixite.moe_router"
+launches = "1 per call"
+[provider.bind]
+"moe.router/-/bf16" = "kernel.strixite.moe_router"
+
+[[provider]]
+name     = "gufo"
+module   = "kernel.flerp.moe_router_gufo"
+wraps    = "kernel.gufo.qfn_kernels"
+adapter  = true
+launches = "2 per call"
+[provider.bind]
+"moe.router/-/bf16"                = "kernel.flerp.moe_router_gufo"
+"format.device-view/gguf-kquant/-" = "format.gufo.gguf_kquant"
+
+[[provider]]
+name     = "hipfire"
+module   = "kernel.flerp.moe_router_hipfire"
+wraps    = "kernel.hipfire.moe"
+adapter  = true
+launches = "M + 1 per call"
+cases    = "^k8-"            # its kernel is compiled for k = 8: the k = 10 cases do not apply to it
+[provider.bind]
+"moe.router/-/bf16"                 = "kernel.flerp.moe_router_hipfire"
+"format.device-view/hipfire-hfq/-"  = "format.hipfire.loader"
+"format.device-view/hipfire-mq/-"   = "format.hipfire.loader"
+"format.device-view/hipfire-mfp4/-" = "format.hipfire.loader"
+"rotate.fwht/-/f32"                 = "kernel.hipfire.norm_rope"
+
+[[case]]
+name = "k10-decode-1"
+kind = "parity"
+dump = "raw"
+M = 1
+k = 10
+pattern = "gauss"
+seed = 310
+coef_tol_ulps = 32
+
+[[case]]
+name = "k10-verify-16"
+kind = "parity"
+dump = "raw"
+M = 16
+k = 10
+pattern = "gauss"
+seed = 320
+coef_tol_ulps = 32
+
+[[case]]
+name = "k10-prefill-2048"
+kind = "parity"
+dump = "raw"
+M = 2048
+k = 10
+pattern = "gauss"
+seed = 330
+coef_tol_ulps = 32
+
+[[case]]
+name = "k10-exact-ties-64"
+kind = "parity"
+dump = "raw"
+M = 64
+k = 10
+pattern = "exact-ties"
+seed = 340
+coef_tol_ulps = 32
+
+[[case]]
+name = "k10-boundary-tie-4"
+kind = "parity"
+dump = "raw"
+M = 4
+k = 10
+pattern = "boundary-tie"
+seed = 350
+coef_tol_ulps = 32
+
+[[case]]
+name = "k10-nan-token-5"
+kind = "parity"
+dump = "raw"
+M = 5
+k = 10
+pattern = "nan-token"
+seed = 360
+coef_tol_ulps = 32
+
+[[case]]
+name = "k10-inf-token-5"
+kind = "parity"
+dump = "raw"
+M = 5
+k = 10
+pattern = "inf-token"
+seed = 370
+coef_tol_ulps = 32
+
+[[case]]
+name = "k10-near-ties-8"
+kind = "parity"
+dump = "raw"
+M = 8
+k = 10
+pattern = "near-ties"
+seed = 380
+coef_tol_ulps = 32
+require = "report"
+
+[[case]]
+name = "k8-decode-1"
+kind = "parity"
+dump = "raw"
+M = 1
+k = 8
+pattern = "gauss"
+seed = 308
+coef_tol_ulps = 32
+
+[[case]]
+name = "k8-verify-16"
+kind = "parity"
+dump = "raw"
+M = 16
+k = 8
+pattern = "gauss"
+seed = 318
+coef_tol_ulps = 32
+
+[[case]]
+name = "k8-prefill-2048"
+kind = "parity"
+dump = "raw"
+M = 2048
+k = 8
+pattern = "gauss"
+seed = 328
+coef_tol_ulps = 32
+
+[[case]]
+name = "k8-exact-ties-64"
+kind = "parity"
+dump = "raw"
+M = 64
+k = 8
+pattern = "exact-ties"
+seed = 338
+coef_tol_ulps = 32
+
+[[case]]
+name = "k8-boundary-tie-4"
+kind = "parity"
+dump = "raw"
+M = 4
+k = 8
+pattern = "boundary-tie"
+seed = 348
+coef_tol_ulps = 32
+
+[[case]]
+name = "k8-nan-token-5"
+kind = "parity"
+dump = "raw"
+M = 5
+k = 8
+pattern = "nan-token"
+seed = 358
+coef_tol_ulps = 32
+
+[[case]]
+name = "k8-inf-token-5"
+kind = "parity"
+dump = "raw"
+M = 5
+k = 8
+pattern = "inf-token"
+seed = 368
+coef_tol_ulps = 32
+
+[[case]]
+name = "k8-near-ties-8"
+kind = "parity"
+dump = "raw"
+M = 8
+k = 8
+pattern = "near-ties"
+seed = 378
+coef_tol_ulps = 32
+require = "report"
+
+[[case]]
+name = "k10-bench-decode-1"
+kind = "bench"
+shape = "M=1, E=512, k=10 (one decode token)"
+M = 1
+k = 10
+iters = 2000
+repeats = 9
+
+[[case]]
+name = "k10-bench-verify-16"
+kind = "bench"
+shape = "M=16, E=512, k=10 (a verify window)"
+M = 16
+k = 10
+iters = 1000
+repeats = 9
+
+[[case]]
+name = "k10-bench-prefill-2048"
+kind = "bench"
+shape = "M=2048, E=512, k=10 (a prefill chunk)"
+M = 2048
+k = 10
+iters = 30
+repeats = 9
+
+[[case]]
+name = "k8-bench-decode-1"
+kind = "bench"
+shape = "M=1, E=512, k=8 (one decode token)"
+M = 1
+k = 8
+iters = 2000
+repeats = 9
+
+[[case]]
+name = "k8-bench-verify-16"
+kind = "bench"
+shape = "M=16, E=512, k=8 (a verify window)"
+M = 16
+k = 8
+iters = 1000
+repeats = 9
+
+[[case]]
+name = "k8-bench-prefill-2048"
+kind = "bench"
+shape = "M=2048, E=512, k=8 (a prefill chunk)"
+M = 2048
+k = 8
+iters = 30
+repeats = 9

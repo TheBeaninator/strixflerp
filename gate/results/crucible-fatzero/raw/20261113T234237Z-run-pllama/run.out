@@ -1,0 +1,14 @@
+● worker-llama.service - llama-server on this worker (model from /etc/default/worker-llama; weights over NFS from control-node)
+     Loaded: loaded (/etc/systemd/system/worker-llama.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2026-11-13 22:20:40 UTC; 1h 21min ago
+    Process: 1888 ExecStartPre=/bin/sh -c for i in $(seq 1 60); do [ -r ${WORKER_MODEL} ] && exit 0; sleep 5; done; echo "model ${WORKER_MODEL} not readable (NFS mount?)"; exit 1 (code=exited, status=0/SUCCESS)
+   Main PID: 2011 (llama-server)
+Restart=on-failure
+User=pod
+stop-rc=0
+53773 bash -c export PATH=/data/models/tools/zig-0.17.0:/opt/rocm/bin:/usr/local/bin:/usr/bin:/bin HOME=${HOME:-/tmp} LANG=C.UTF-8; cd /var/tmp/kbench/crucible-fatzero/scratch && s=$(date +%s.%N);  timeout 120 bash -c 'systemctl status worker-llama --no-pager 2>&1 | head -5; systemctl show -p Restart,User worker-llama; sudo -n systemctl stop worker-llama; echo stop-rc=$?; sleep 5; pgrep -af llama-server || echo no-llama; cat /sys/class/drm/card*/device/mem_info_gtt_used | awk '"'"'{print "gtt_used_MiB", $1/1048576}'"'"'; free -g | head -2'; rc=$?; e=$(date +%s.%N); echo "KBT $s $e $rc" >&2
+53775 timeout 120 bash -c systemctl status worker-llama --no-pager 2>&1 | head -5; systemctl show -p Restart,User worker-llama; sudo -n systemctl stop worker-llama; echo stop-rc=$?; sleep 5; pgrep -af llama-server || echo no-llama; cat /sys/class/drm/card*/device/mem_info_gtt_used | awk '{print "gtt_used_MiB", $1/1048576}'; free -g | head -2
+53776 bash -c systemctl status worker-llama --no-pager 2>&1 | head -5; systemctl show -p Restart,User worker-llama; sudo -n systemctl stop worker-llama; echo stop-rc=$?; sleep 5; pgrep -af llama-server || echo no-llama; cat /sys/class/drm/card*/device/mem_info_gtt_used | awk '{print "gtt_used_MiB", $1/1048576}'; free -g | head -2
+gtt_used_MiB 17.7969
+               total        used        free      shared  buff/cache   available
+Mem:             124           2         122           1           1         122

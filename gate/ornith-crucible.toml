@@ -1,0 +1,109 @@
+# ORNITH-CRUCIBLE: three Ornith-1.5 397B items borrowed from Crucible (owner approved 2026-11-14). Committed BEFORE any GPU
+# run of this experiment; never edited to turn a failure into a pass (an amendment, if any, is its own commit with date
+# and reason; no threshold is loosened).
+#   item 1  kernel.flerp.moe_sg: the stream-grid decode experts (Crucible kernel.crucible.moe_decode, moe_sg.h:1-13,
+#           moe_shared_first.h; docs/CRUCIBLE-VS-STRIXITE.md section 2 and C5) for row-major Q4_K / Q6_K, one launch a
+#           block in place of the four IndexedExperts launches of moe_ffn.cpp; bit-identical by construction.
+#   item 2  kernel.flerp.draft_coarse in executor.flerp.qwen35moe mtp_head (FLERP_MTP_COARSE): coarse-then-exact
+#           draft scoring (Crucible engine/runtime/draft_quant.h:1-11).
+#   item 3  tools/isa-scan.py on kernel.flerp.moe_kgrouped (0d5c1fd): CPU only, no criterion here (reported).
+# Tools: gate/ornith_crucible_bench.hip (one binary; build gate/ornith_crucible_build.sh on control-node, CPU, in the
+# export /data/projects/strixflerp-ocr), runner gate/ornith_crucible.py: kernel cases on bench box K through pod-kbench
+# k_run (gate/kbench_backend.py), the 35B probe through tools/gpu-queue.sh on control-node's GPU. Card: KIND experiment
+# under STRIX-META bd830ae1ca. Baselines: ORNITH-KERN3 (gate/ornith-kern3.toml), ORNITH-O3 (gate/ornith-o3-spec.toml).
+
+[facts]
+model    = "Ornith-1.5 397B Q4_K_M: qwen35moe, 60 blocks, hidden 4096, 512 experts of width 1024, 10 used + a shared expert of 1024; gate/up Q4_K; down Q6_K in 30 blocks and Q4_K in 30 (shared down the same type); vocab 248320, head Q6_K 834 MB"
+decode   = "P5 run 11121855, world 4: 83.0 ms a token (12.05 tok/s); stage 0 18.5 ms a step for 15 blocks (gate/ornith-kern3.toml [facts])"
+experts  = "decode today: 4 IndexedExperts launches a block (moe_ffn.cpp: routed gate/up+SwiGLU, routed down, shared gate/up, shared down), one wave a row, rows/4 x slots blocks"
+draft    = "Ornith MTP draft step with logits 4.83 ms (gate/ornith-o3-spec.toml ornith_mtp_ms, confirm run); the exact head = LaunchGEMV (Q8KBlockGEMVKernel_2Rows, QuantWarpBlockDot) + ArgmaxKernel"
+proxy    = "Qwen3.6-35B-A3B Q4_K_M (/data/models, NVMe): hidden 2048, 256 experts of 512, 8 used + shared 512, down Q6_K in 21 of 40 blocks, head Q6_K [2048 x 248320], MTP block 40"
+
+[hypothesis]
+# Read the mechanism first: the four launches cost a launch tail each and the old grid gives each wave one row of
+# 2304 B (gate/up) or 576-840 B (down) to read, with x re-read from cache per row; Crucible's persistent claim grid
+# streams at 88-95 % of the byte floor [C]. The head is 834 MB of Q6_K read every draft step; a 2-bit copy is 318 MB.
+item1_prediction = "one launch with persistent 16-row units reads the experts of a block (83-89 MB at Ornith dims) in about 0.72x the time of the four launches (145 -> 200 GB/s in the survey), so Ornith decode gains about 12-14 % (projected)"
+item1_confirmed  = "new / old per-launch time <= 0.80 at Ornith dims, both down types"
+item1_refuted    = "new / old per-launch time > 0.95 at either down type"
+item2_prediction = "with a 2-bit coarse copy the head step reads 318 MB + 8 blocks of exact rows instead of 834 MB, so Ornith's MTP draft step goes from 4.83 ms to about 2.5 ms (projected), drafts unchanged"
+item2_confirmed  = "projected Ornith draft step <= 3.0 ms and the 35B draft ids equal the exact head's at every checked step"
+item2_refuted    = "projected Ornith draft step > 4.0 ms, or any checked 35B draft id differs from the exact head's"
+
+[item1_kernel]
+# Bench box K, synthetic codes in the real block layouts (as ORNITH-KERN3 [weights]): routed stacks of all experts
+# (each launch reads its own random 10 of 512, distinct ids, 512 id sets), the shared expert from 64 copies, so every
+# launch reads its weights from DRAM (the in-model condition). Set 0 carries an id past the stack and a negative id.
+# x: uniform(-1, 1) and normal * 0.05, fixed seeds (decode-kern3's). Cases: Ornith dims (4096 / 1024 / 10 of 512 + shared)
+# with down+shared down Q6_K, and Q4_K; the 35B dims (2048 / 512 / 8 of 256 + shared) with Q6_K and Q4_K.
+# Variants 0-3 (moe_sg.hpp: rows side by side and unroll); every variant is judged on I1.
+I1 = "identity: for every case, check set (16), x kind (2) and variant (4): act, expert_out, shared_act and shared_out equal the four IndexedExperts launches' bytes (0 differing 32-bit words), and the control words read back all zero after every launch"
+I2 = "speed, Ornith dims, both down types: the best variant's median per-launch time (7 alternating rounds of 20 warm + 200 timed launches, hipEvents) <= 0.90 x the four launches' median (the continue rule: else moe_sg is not claimed for Ornith)"
+I3 = "speed, 35B dims: recorded (new / old), no criterion"
+load = "K's loadavg <= 6 at the start and end of each case's process and Tctl <= 50 C at the start (gate/kbench_backend.py), else that case is rerun"
+record = "GB/s = (10 x (gate + up + down) + shared (gate + up + down)) expert bytes / time; per-launch us; the grid and VGPRs of each variant (isa-scan)"
+
+[item1_projection]
+# No Ornith stage loads on one GPU here (/mnt/nv1 source, off limits), so the decode gain is computed, not measured,
+# with ORNITH-KERN3's method: per block saved = old_us - new_us at Ornith dims (30 blocks Q6_K down, 30 Q4_K).
+e2e    = "token ms = 83.0 - (30 x saved_q6k + 30 x saved_q4k) / 1000; tok/s = 1000 / token ms; also against ORNITH-KERN3's projected 77.5 ms"
+report = "labelled projected; K absolute times (85 W, weak die contact) are slower than a worker's, so the saving is also given as new/old ratio applied to the expert time"
+
+[item2_kernel]
+# Bench box K, synthetic Q6_K head at Ornith dims (vocab 248320, hidden 4096) and the 35B dims (hidden 2048); 8 x
+# vectors normal(0, 1); bits 2 and 4; keep 8 blocks; k 8. Old = Q8KBlockGEMVKernel_2Rows' Q6_K path + ArgmaxKernel
+# (copied in the bench), new = Score (coarse + select + rescore + choose). 7 alternating rounds of 5 warm + 50 timed.
+D1 = "kept-row logits bit-equal to the exact head kernel's (0 mismatches over 8 x vectors, each bits, both dims)"
+D2 = "no wrong id without fallback: whenever Score sets no fallback, its id equals the exact argmax (synthetic heads; their miss and fallback rates are not judged)"
+D3 = "speed, Ornith dims, 2-bit: new head step <= 0.50 x old head step (median)"
+record = "4-bit speed; each pass's time; coarse GB/s; build time of the copy"
+
+[item2_proxy]
+# control-node GPU through tools/gpu-queue.sh, the 35B from /data/models (NVMe), the generator built from this commit
+# in the export (build/ocr-35b), --mtp-probe 3 on ORNITH-O3's 8 prompts (gate/ornith-o3-mtp.toml [proxy]: code 4,
+# prose 4, chat-rendered, context 2048, 256 new tokens), one load per arm because the coarse mode is fixed at the
+# head's creation from the environment. Arms: A exact; B q2 + FLERP_MTP_COARSE_CHECK=1; C q2; D q4 + check; E q4.
+E1 = "check arms B and D: wrong_ids == 0 and rescore_mismatch == 0 over every checked step (the draft ids and the kept logits equal the exact head's in the real executor build)"
+E2 = "acceptance unchanged: arm C's (and E's) mtp_probe events carry the same ids and the same drafts at every frontier as arm A's, all 8 prompts"
+E3 = "unsafe == 0 in B and D: no checked step had a top-1 or top-2 miss without a fallback"
+E4 = "draft step: arm C's mtp_ms_per_step (mean over prompts) <= 0.65 x arm A's"
+record = "coarse-miss rates miss_top1 / checked and miss_top2 / checked (no fallback), fallbacks / steps, max_z, err_rms, build_s, arm E's step time"
+
+[item2_projection]
+ornith = "Ornith draft step ms = 4.83 - (old_us - new_us) / 1000 of the K head bench at Ornith dims, 2-bit (and 4-bit), plus the 35B fallback rate x the old head step; labelled projected"
+
+[resources]
+nodes   = "bench box K via pod-kbench k_run (queue-only) for the kernel cases; control-node's GPU via tools/gpu-queue.sh for the 35B probe; no worker, no multi-node window"
+hold    = "none: queued jobs; K ~35 min in 3 k_run jobs (TTL 50 min each), control-node GPU ~40 min in one queued job (TTL 75 min)"
+weights = "K: synthetic codes only (K has no disk and no rail); 35B: /data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf, already on control-node NVMe, no staging; nothing from /mnt/nv*, /mnt/ark*, /data/ark"
+loads   = "1 per K case process, every rep inside it; 35B: 1 load per arm (5), because the coarse mode is read once at head creation"
+reps    = "kernels 7 rounds (ORNITH-KERN3's count; identity is exact, the speed gaps expected are 10-30 %); 35B one pass of 8 prompts x 256 tokens per arm (~2,000 draft steps)"
+shares  = "K alone during its jobs (the bench:K lease of pod-kbench); control-node's GPU alone during the queued job (gpu-queue waits for a free GPU)"
+cleanup = "pod-kbench releases bench:K at job end; the queued job ends with its processes; build/ocr* in the export stay (CPU artifacts)"
+
+[monitor]
+milestones = "K experts job done by T+30 min, K head job by T+45 min, 35B probe job started within 60 min of queueing and done 75 min after start"
+stop_rule  = "stop at the first identity failure (I1, D1, E1) and report; a hung job is killed at its TTL"
+
+# --------------------------------------------------------------------------------------------------------------------
+# Amendment 2026-11-14, before any GPU run of this item (owner, through the coordinator): item 4, prompt-lookup drafts.
+# Adds criteria; changes none above.
+[item4]
+# executor.flerp.qwen35moe draft_round (DraftConfig.lookup; gufo runtime/speculative prompt_lookup.hpp:41 recipe: key 3
+# ids, 16 most recent occurrences, longest backward match up to 64 over the answer's span, 12 ids needed or 5 when
+# resuming a mostly-kept copy), wired as run spec KpL (stage_driver.cpp; relay kSpecLookup): lookup drafts up to L when a
+# match is long enough, else at most K MTP drafts. Speculative decoding as ORNITH-O3 step two (option B), 35B proxy,
+# --staged tcp world 2 on control-node's one GPU (two processes, each loads its half of the blocks: one load of the model),
+# one launch for every arm, run specs A B C A B C: on:token:1:0 (off), on:token:1:2 (MTP k 2), on:token:1:2p8 (lookup
+# up to 8, else MTP 2). Context 4096, 256 new tokens, --rows pinned, graph on.
+hypothesis = "on edit-style prompts the answer copies long spans of the prompt, so lookup rounds keep most of 8 drafts and decode tok/s rises >= 15 % over MTP k 2; on ordinary prompts lookup rarely fires (12-id gate) and tok/s stays within 3 %"
+edit = ["Here is a Python module:\n\n```python\nimport json\n\n\ndef load_orders(path):\n    with open(path) as f:\n        data = json.load(f)\n    total = 0\n    orders = []\n    for item in data['orders']:\n        if item.get('status') == 'cancelled':\n            continue\n        total += item['amount']\n        orders.append(item)\n    return orders, total\n\n\ndef summarize(orders, total):\n    lines = []\n    for o in orders:\n        lines.append(f\"{o['id']}: {o['amount']:.2f}\")\n    lines.append(f\"total: {total:.2f}\")\n    return '\\n'.join(lines)\n\n\ndef main():\n    orders, total = load_orders('orders.json')\n    print(summarize(orders, total))\n\n\nif __name__ == '__main__':\n    main()\n```\n\nRename the variable `total` to `running_sum` everywhere. Output the whole module, nothing else.",
+        "Here is a JSON configuration:\n\n{\n  \"server\": {\n    \"host\": \"0.0.0.0\",\n    \"port\": 8080,\n    \"workers\": 4,\n    \"timeout_s\": 30,\n    \"debug\": false\n  },\n  \"database\": {\n    \"url\": \"postgres://app@db:5432/app\",\n    \"pool_size\": 10,\n    \"statement_timeout_ms\": 5000\n  },\n  \"cache\": {\n    \"backend\": \"redis\",\n    \"url\": \"redis://cache:6379/0\",\n    \"ttl_s\": 600\n  },\n  \"logging\": {\n    \"level\": \"info\",\n    \"format\": \"json\",\n    \"file\": \"/var/log/app/app.log\"\n  }\n}\n\nChange the server port to 8081 and set debug to true. Output the complete JSON, nothing else.",
+        "Here is a C file:\n\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\nstruct buffer {\n    char *data;\n    size_t len;\n    size_t cap;\n};\n\nint buffer_init(struct buffer *b, size_t cap) {\n    b->data = malloc(cap);\n    if (!b->data) return -1;\n    b->len = 0;\n    b->cap = cap;\n    return 0;\n}\n\nint buffer_append(struct buffer *b, const char *s, size_t n) {\n    if (b->len + n > b->cap) {\n        size_t cap = b->cap * 2 > b->len + n ? b->cap * 2 : b->len + n;\n        char *p = realloc(b->data, cap);\n        if (!p) return -1;\n        b->data = p;\n        b->cap = cap;\n    }\n    memcpy(b->data + b->len, s, n);\n    b->len += n;\n    return 0;\n}\n\nvoid buffer_free(struct buffer *b) {\n    free(b->data);\n    b->data = NULL;\n    b->len = b->cap = 0;\n}\n```\n\nAdd a check at the start of each function that returns -1 (or just returns, for the void one) when b is NULL. Output the full file, nothing else.",
+        "Here is a paragraph:\n\nThe comittee met on tuesday to discus the new budjet. Several members argued that the proposal did not adress the needs of the smaller departments, wich have been underfunded for years. After a long debate, the chair sugested that a working group should review the numbers and report back next month. The motion was aproved unanimously, and the meeting adjurned at six o'clock.\n\nFix the spelling mistakes and output the corrected paragraph in full, nothing else."]
+ordinary = "ORNITH-O3's code0, code1, prose0, prose1 (gate/ornith-o3-mtp.toml [proxy])"
+L1 = "identity: for every prompt, the ids of every 2 and 2p8 run equal that launch's first off run's ids byte for byte (same length), and the two off runs are equal"
+L2 = "recorded per class (edit / ordinary): lookup hit rate = lookup_rounds / frontiers, lookup acceptance = lookup_accepted / lookup_proposed, MTP acceptance, mean ids per round"
+L3 = "speed, edit prompts: 2p8 decode tok/s (ids / rank 0's decode_s; mean over the 4 prompts of the 2 runs' median) >= 1.15 x the 2 runs'"
+L4 = "speed, ordinary prompts: 2p8 tok/s >= 0.97 x 2's"
+resources = "control-node GPU via tools/gpu-queue.sh (control-gpu lease, TTL 60 min, ~25 min expected), the 35B from /data/models NVMe, one launch (two rank processes = one load of the model), 8 prompts x 6 runs x 256 tokens; no worker, no window"

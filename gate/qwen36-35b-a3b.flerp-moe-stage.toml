@@ -1,0 +1,89 @@
+# Host facts, run settings and pass criteria of gate/moe_stage.py: stage P2 of docs/PHASE5-FOURNODE-DESIGN.md, the
+# model as N stages joined by runtime.flerp.stage_relay, on control-node's one GPU. The criteria below were written and
+# committed before the first GPU run of the binary that has the stages; they are not edited to turn a failure into a
+# pass.
+
+recipe = "qwen36-35b-a3b.flerp-moe"          # the binary under test is this recipe's (stage_driver.cpp, --staged)
+
+[host]
+origin              = "gufo"
+scratch             = "build/gate-scratch-stage"       # under build/: pod-sync deletes anything else it does not know
+gpu_busy_pattern    = "^(strix_|strixflerp-|flerp-gufo-|flerp-qwen35moe-|steer_check|omf_seg|gufo|ds4|sglang|llama-server|tfp)"
+gpu_free_gtt_bytes  = 1073741824
+lease_resource      = "control-gpu"
+lease_owner         = "agent"
+lease_ttl_s         = 1500
+gpu_wait_s          = 3600
+# The I/O rule of 2026-11-11 (as gate/qwen36-35b-a3b.flerp-moe-placed.toml): every load is the placed loader's single
+# direct reader with pauses; TCP ranks start one after another (rank r + 1 only after rank r has loaded), so there is
+# never more than one reader.
+cpus                = "0-3"
+polite              = ["ionice", "-c3", "nice", "-n", "19"]
+reader_flags        = ["--single-reader", "--pause-ms", "100"]
+load_wait_above     = 10.0
+load_wait_s         = 1800
+# Memory before a run: the run starts only if min(GTT total - GTT used, MemAvailable) is at least the sum of what its
+# processes load (plan bytes) plus arena_gib for every stage plus margin_gib.
+arena_gib           = 2
+margin_gib          = 24
+
+[model]
+gguf                = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"
+prompt_ids          = "gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json"     # the four gate prompts (21, 20, 18, 1,808 ids)
+# P1's world-1 values: the traced run through the placed loader (stage `equal` of the P1 gate, 2026-11-11T22:40Z):
+# per prompt the 128 generated ids and the sha256 of each of the 128 logits rows (row 0 = the prompt pass).
+p1_results          = "gate/results/qwen36-35b-a3b.flerp-moe-placed/equal.json"
+# The injected faults over TCP run on the small dense model (1.26 GB a load): what they test is the relay, the
+# stage loop and the processes, not the 35B's numbers.
+fault_gguf          = "/data/models/decider-2b/decider-2b-v12-Q4_K_M.gguf"
+fault_prompt_ids    = "gate/results/qwen35-decider-2b.gufo/prompt-ids.json"
+
+[run]
+context             = 4096                   # as P1: the arena's prompt batch, so the chunk boundaries, are P1's
+max_tokens          = 128
+run_timeout_s       = 1500
+port                = 39610                  # rank r listens on port + r (127.0.0.1)
+epoch               = 7
+deadline_ms         = 60000                  # invariance runs: no progress on a link within this fails the run
+# stage `loopback`: one process, one load, every configuration W:CUTS:GRAPH (even = the stage plan's byte-balanced
+# cuts: world 2 [0, 20, 40], world 4 [0, 10, 20, 31, 40]; the lopsided cuts put an attention block (3) in a stage of
+# three blocks and leave two blocks to the head's stage).
+loopback_configs    = ["1:even:on", "1:even:off", "2:even:on", "2:even:off", "2:0,7,40:on", "2:0,7,40:off",
+                       "4:even:on", "4:even:off", "4:0,1,4,38,40:on", "4:0,1,4,38,40:off"]
+loopback_fault      = "4:even:on"            # the configuration of the in-process fault cases (first prompt)
+# stage `tcp`: N processes on 127.0.0.1, each loading only its blocks; every prompt with the graph on, then off.
+tcp_configs         = [[2, "0,7,40"], [4, "even"]]
+# stage `faults`: TCP, the dense model, world 3 even, the first dense prompt then the others, graph on then off.
+fault_world         = 3
+fault_deadline_ms   = 10000
+fault_ordinal       = 40                     # rank 1's outgoing frame 40: a decode step of the first prompt
+fault_slack_s       = 5
+fault_timeout_s     = 600
+
+[criteria]
+# --- invariance (stages `loopback` and `tcp`) ---
+# 1.  Every configuration of [run] loopback_configs (one process, stages over one load joined by the in-process
+#     relay) and of [run] tcp_configs x graph on/off (one process a rank, TCP on 127.0.0.1), on each of the four
+#     gate prompts: the run exits 0; the generated ids equal P1's (128 ids); 128 logits rows are recorded; the sha256
+#     of every row - the prompt pass's (row 0) and the 127 decode steps' after it - equals P1's sha256 of that row;
+#     and the argmax of every row is the token the last stage answered.
+# 2.  Loads: the loopback's one load is the whole model through the placed loader, bytes allocated == the world-1
+#     plan's device bytes (gate/gguf_census.py); each TCP rank's load is its block range's world-1 range plan (bytes
+#     allocated == that plan's); every load by the single direct reader.
+# --- faults ---
+# 3.  Loopback ([run] loopback_fault, the first prompt): a drop, a stale-epoch frame, a replayed frame and a frame
+#     whose byte count is wrong, each injected on rank 1's outgoing frame 6: the fault fires, rank 0's call fails,
+#     and every rank ends poisoned (no rank is left waiting); the stale-epoch rank's reason names the epoch and the
+#     replay's the ordinal. A rank of another epoch is refused at the handshake.
+# 4.  TCP ([run] fault_world ranks on the dense model): each of
+#     kill (rank 1 sends SIGKILL to itself at its frame fault_ordinal), sigkill (the gate kills rank 2 once rank 0
+#     has finished its first prompt), drop, stale-epoch and replay (rank 1's frame fault_ordinal), and epoch (rank 1
+#     started with another epoch): every process exits by itself within fault_timeout_s (no hang); every rank that
+#     was not killed exits 3 after printing relay_failed, at most fault_deadline_ms / 1000 + fault_slack_s seconds
+#     after the fault (the fault_injected time; the kill; for epoch, when the last rank printed
+#     `loaded`); the stale-epoch run names the
+#     epoch and the replay run the ordinal in some rank's reason. A control run of the same ranks with no fault
+#     exits 0 on every rank.
+# Recorded, not criteria: per stage ms a block for decode steps and for each prompt chunk; relay overhead per decode
+# token and per chunk (rank 0's call wall time minus the stages' forwards, minus the last stage's logits copy for
+# decode); load seconds and GB read; memory before each run; the dense model's staged ids against its recorded run.

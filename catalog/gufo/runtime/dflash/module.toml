@@ -1,0 +1,65 @@
+id        = "runtime.gufo.dflash"
+kind      = "runtime"
+summary   = "DFlash speculator for Qwen: draft model weights, policy, executor, batch and backend"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/qwen/dflash_policy.hpp",
+  "src/models/qwen/dflash_weights.cpp",
+  "src/models/qwen/dflash_weights.hpp",
+  "src/models/qwen/hip/dflash.hpp",
+  "src/models/qwen/hip/dflash/backend.cpp",
+  "src/models/qwen/hip/dflash/batch.cpp",
+  "src/models/qwen/hip/dflash/executor.cpp",
+  "src/models/qwen/hip/dflash/model.cpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "speculation.draft/dflash/f32"
+api       = "gufo::models::qwen::hip::dflash"
+numeric   = "draft-only numerics"
+regime    = "draft block"
+
+[[requires]]
+interface = "draft.dflash/gguf-q8_0/f32"
+
+[[requires]]
+interface = "speculation.window-verify-lossless/-/-"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "runtime.gufo.ext_api"
+
+[[requires]]
+module    = "runtime.gufo.mtp"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

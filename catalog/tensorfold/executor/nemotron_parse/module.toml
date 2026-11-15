@@ -1,0 +1,58 @@
+id        = "executor.tensorfold.nemotron_parse"
+kind      = "executor"
+summary   = "Nemotron Parse on HIP"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/families/nemotron_parse/backend.zig",
+  "zig/src/families/nemotron_parse/cache.zig",
+  "zig/src/families/nemotron_parse/checkpoint.zig",
+  "zig/src/families/nemotron_parse/compute.zig",
+  "zig/src/families/nemotron_parse/config.zig",
+  "zig/src/families/nemotron_parse/decoder.zig",
+  "zig/src/families/nemotron_parse/engine.zig",
+  "zig/src/families/nemotron_parse/fixtures/processor.json",
+  "zig/src/families/nemotron_parse/hip.zig",
+  "zig/src/families/nemotron_parse/hip_ops_test.zig",
+  "zig/src/families/nemotron_parse/hip_position_test.zig",
+  "zig/src/families/nemotron_parse/host_test.zig",
+  "zig/src/families/nemotron_parse/media.zig",
+  "zig/src/families/nemotron_parse/model_check.zig",
+  "zig/src/families/nemotron_parse/mtp.zig",
+  "zig/src/families/nemotron_parse/prefill.zig",
+  "zig/src/families/nemotron_parse/probe.zig",
+  "zig/src/families/nemotron_parse/processor.zig",
+  "zig/src/families/nemotron_parse/root.zig",
+  "zig/src/families/nemotron_parse/schema.zig",
+  "zig/src/families/nemotron_parse/tower.zig",
+  "zig/src/families/nemotron_parse/weights.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model/nemotron-parse/bf16.tensorfold"
+api       = "families/nemotron_parse"
+numeric   = "per family receipts (docs/receipts upstream)"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

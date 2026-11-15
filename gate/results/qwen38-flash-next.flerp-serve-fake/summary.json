@@ -1,0 +1,4205 @@
+{
+ "recipe": "qwen38-flash-next.flerp-serve-fake",
+ "host": "control-node",
+ "date": "2026-11-11T02:01:11Z",
+ "pass": true,
+ "stages": {
+  "check": {
+   "pass": true,
+   "evidence": "check.txt",
+   "last_line": [
+    "flerp check (catalogue): 229 modules, 11 recipe(s), 0 error(s), 35 warning(s)"
+   ]
+  },
+  "build": {
+   "tree": "build/qwen38-flash-next.flerp-serve-fake",
+   "evidence": "build.txt",
+   "started": "2026-11-11T01:57:32Z",
+   "configure_s": 1.0,
+   "build_s": 4.5,
+   "modules": 12,
+   "binaries": {
+    "strixflerp-qwen38-flash-next.flerp-serve-fake": {
+     "sha256": "6677ac874ff05ba2fe241a74fe14f65f242247f050cfe114235faf0feba7666d",
+     "bytes": 1032056
+    }
+   },
+   "rc": 0,
+   "finished": "2026-11-11T01:57:38Z",
+   "pass": true
+  },
+  "nogpu": {
+   "host": "control-node",
+   "started": "2026-11-11T02:00:59Z",
+   "servers": [
+    {
+     "server": "rows",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 7, draft form 0, ABI 2",
+        "executor_abi": 2,
+        "deliveries": [
+         "full",
+         "candidates",
+         "tokens"
+        ],
+        "sampled_by": "host",
+        "sampler": "strixite Sampler (host; temperature, top_k, top_p, seed)",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "none",
+        "drafts": 0,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "refuse:stream-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on a streamed response is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "candidates",
+        "sampled_by": "host",
+        "verifies": 0,
+        "drafted": 0,
+        "accepted": 0,
+        "forwards": 40
+       }
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "candidates",
+        "sampled_by": "host",
+        "verifies": 0,
+        "drafted": 0,
+        "accepted": 0,
+        "forwards": 40
+       }
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "logit_bias",
+       "pass": true,
+       "first": 2771,
+       "got": [
+        2772,
+        16261
+       ]
+      },
+      {
+       "check": "logprobs",
+       "pass": true,
+       "status": 200
+      },
+      {
+       "check": "sampled-seeded",
+       "pass": true,
+       "status": 200,
+       "got": [
+        2772,
+        16262,
+        24532,
+        12103,
+        58,
+        20465
+       ]
+      },
+      {
+       "check": "sampled:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 22
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    },
+    {
+     "server": "rows-step",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046",
+      "executor.draft=step"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 7, draft form 1, ABI 2",
+        "executor_abi": 2,
+        "deliveries": [
+         "full",
+         "candidates",
+         "tokens"
+        ],
+        "sampled_by": "host",
+        "sampler": "strixite Sampler (host; temperature, top_k, top_p, seed)",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "step",
+        "drafts": 7,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "refuse:stream-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on a streamed response is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "candidates",
+        "sampled_by": "host",
+        "verifies": 12,
+        "drafted": 48,
+        "accepted": 26,
+        "forwards": 2
+       }
+      },
+      {
+       "check": "raw:drafts-used",
+       "pass": true,
+       "verifies": 12,
+       "accepted": 26,
+       "drafted": 48
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "candidates",
+        "sampled_by": "host",
+        "verifies": 12,
+        "drafted": 48,
+        "accepted": 26,
+        "forwards": 2
+       }
+      },
+      {
+       "check": "chat:drafts-used",
+       "pass": true,
+       "verifies": 12,
+       "accepted": 26,
+       "drafted": 48
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "logit_bias",
+       "pass": true,
+       "first": 2771,
+       "got": [
+        2772,
+        16261
+       ]
+      },
+      {
+       "check": "logprobs",
+       "pass": true,
+       "status": 200
+      },
+      {
+       "check": "sampled-seeded",
+       "pass": true,
+       "status": 200,
+       "got": [
+        2772,
+        16262,
+        24532,
+        12103,
+        58,
+        20465
+       ]
+      },
+      {
+       "check": "sampled:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 22
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    },
+    {
+     "server": "rows-held",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046",
+      "executor.draft=held"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 7, draft form 2, ABI 2",
+        "executor_abi": 2,
+        "deliveries": [
+         "full",
+         "candidates",
+         "tokens"
+        ],
+        "sampled_by": "host",
+        "sampler": "strixite Sampler (host; temperature, top_k, top_p, seed)",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "held",
+        "drafts": 8,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "refuse:stream-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on a streamed response is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "candidates",
+        "sampled_by": "host",
+        "verifies": 9,
+        "drafted": 72,
+        "accepted": 31,
+        "forwards": 0
+       }
+      },
+      {
+       "check": "raw:drafts-used",
+       "pass": true,
+       "verifies": 9,
+       "accepted": 31,
+       "drafted": 72
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "candidates",
+        "sampled_by": "host",
+        "verifies": 9,
+        "drafted": 72,
+        "accepted": 31,
+        "forwards": 0
+       }
+      },
+      {
+       "check": "chat:drafts-used",
+       "pass": true,
+       "verifies": 9,
+       "accepted": 31,
+       "drafted": 72
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "logit_bias",
+       "pass": true,
+       "first": 2771,
+       "got": [
+        2772,
+        16261
+       ]
+      },
+      {
+       "check": "logprobs",
+       "pass": true,
+       "status": 200
+      },
+      {
+       "check": "sampled-seeded",
+       "pass": true,
+       "status": 200,
+       "got": [
+        2772,
+        16262,
+        24532,
+        12103,
+        58,
+        20465
+       ]
+      },
+      {
+       "check": "sampled:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 22
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    },
+    {
+     "server": "full-step",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046",
+      "executor.deliveries=full,tokens",
+      "executor.draft=step"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 5, draft form 1, ABI 2",
+        "executor_abi": 2,
+        "deliveries": [
+         "full",
+         "tokens"
+        ],
+        "sampled_by": "host",
+        "sampler": "strixite Sampler (host; temperature, top_k, top_p, seed)",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "step",
+        "drafts": 7,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "refuse:stream-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on a streamed response is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "full",
+        "sampled_by": "host",
+        "verifies": 12,
+        "drafted": 48,
+        "accepted": 26,
+        "forwards": 2
+       }
+      },
+      {
+       "check": "raw:drafts-used",
+       "pass": true,
+       "verifies": 12,
+       "accepted": 26,
+       "drafted": 48
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "full",
+        "sampled_by": "host",
+        "verifies": 12,
+        "drafted": 48,
+        "accepted": 26,
+        "forwards": 2
+       }
+      },
+      {
+       "check": "chat:drafts-used",
+       "pass": true,
+       "verifies": 12,
+       "accepted": 26,
+       "drafted": 48
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "logit_bias",
+       "pass": true,
+       "first": 2771,
+       "got": [
+        2772,
+        16261
+       ]
+      },
+      {
+       "check": "logprobs",
+       "pass": true,
+       "status": 200
+      },
+      {
+       "check": "sampled-seeded",
+       "pass": true,
+       "status": 200,
+       "got": [
+        2772,
+        16262,
+        24532,
+        12103,
+        58,
+        20465
+       ]
+      },
+      {
+       "check": "sampled:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 22
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    },
+    {
+     "server": "candidates-only",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046",
+      "executor.deliveries=candidates"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 2, draft form 0, ABI 2",
+        "executor_abi": 2,
+        "deliveries": [
+         "candidates"
+        ],
+        "sampled_by": "host",
+        "sampler": "strixite Sampler (host; temperature, top_k, top_p, seed)",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "none",
+        "drafts": 0,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "refuse:stream-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on a streamed response is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "candidates",
+        "sampled_by": "host",
+        "verifies": 0,
+        "drafted": 0,
+        "accepted": 0,
+        "forwards": 40
+       }
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "candidates",
+        "sampled_by": "host",
+        "verifies": 0,
+        "drafted": 0,
+        "accepted": 0,
+        "forwards": 40
+       }
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "logit_bias",
+       "pass": true,
+       "first": 2771,
+       "got": [
+        2772,
+        16261
+       ]
+      },
+      {
+       "check": "refuse:logprobs",
+       "pass": true,
+       "status": 400,
+       "message": "'logprobs' cannot be honoured by this recipe's executor: it hands no full logits rows to the host (no FLERP_OUT_FULL)"
+      },
+      {
+       "check": "sampled-seeded",
+       "pass": true,
+       "status": 200,
+       "got": [
+        2772,
+        16262,
+        24532,
+        12103,
+        58,
+        20465
+       ]
+      },
+      {
+       "check": "sampled:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "sampling:top_k-off-needs-full-rows",
+       "pass": true,
+       "status": 400,
+       "message": "these sampling parameters need full logits rows and this recipe's executor hands back candidates only: send top_k from 1 to 20, or temperature 0"
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 22
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    },
+    {
+     "server": "tokens-held-sampled",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046",
+      "executor.deliveries=tokens",
+      "executor.draft=held",
+      "executor.sampled=on",
+      "executor.needs_top_k=on",
+      "executor.top_k_max=8",
+      "executor.masks=off"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 4, draft form 2, ABI 2",
+        "executor_abi": 2,
+        "deliveries": [
+         "tokens"
+        ],
+        "sampled_by": "executor",
+        "sampler": "the executor's draws",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "held",
+        "drafts": 8,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "tokens",
+        "sampled_by": "executor",
+        "verifies": 9,
+        "drafted": 72,
+        "accepted": 31,
+        "forwards": 0
+       }
+      },
+      {
+       "check": "raw:drafts-used",
+       "pass": true,
+       "verifies": 9,
+       "accepted": 31,
+       "drafted": 72
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "tokens",
+        "sampled_by": "executor",
+        "verifies": 9,
+        "drafted": 72,
+        "accepted": 31,
+        "forwards": 0
+       }
+      },
+      {
+       "check": "chat:drafts-used",
+       "pass": true,
+       "verifies": 9,
+       "accepted": 31,
+       "drafted": 72
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "refuse:logit_bias",
+       "pass": true,
+       "status": 400,
+       "message": "'logit_bias' cannot be honoured by this recipe's executor: it takes no logit bias (no FLERP_CAP_MASKS)"
+      },
+      {
+       "check": "refuse:logprobs",
+       "pass": true,
+       "status": 400,
+       "message": "'logprobs' cannot be honoured by this recipe's executor: it hands no logits to the host: its tokens are drawn on the device"
+      },
+      {
+       "check": "sampled-seeded",
+       "pass": true,
+       "status": 200,
+       "got": [
+        1218,
+        12793,
+        6202,
+        360,
+        15324,
+        27825
+       ]
+      },
+      {
+       "check": "sampling:top_k-missing",
+       "pass": true,
+       "status": 400,
+       "message": "'top_k' cannot be honoured by this recipe's executor: it samples only with top_k set, from 1 to 8: send top_k, or temperature 0"
+      },
+      {
+       "check": "sampling:top_k-above-max",
+       "pass": true,
+       "status": 400,
+       "message": "'top_k' cannot be honoured by this recipe's executor: its largest top_k is 8"
+      },
+      {
+       "check": "sampling:top_p-not-taken",
+       "pass": true,
+       "status": 400,
+       "message": "'top_p' cannot be honoured by this recipe's executor: its sampler has no top_p"
+      },
+      {
+       "check": "sampling:min_p-not-taken",
+       "pass": true,
+       "status": 400,
+       "message": "'min_p' cannot be honoured by this recipe's executor: its sampler has no min_p"
+      },
+      {
+       "check": "sampling:top_k-in-range",
+       "pass": true,
+       "status": 200,
+       "message": null
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 21
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    },
+    {
+     "server": "tokens-greedy-v1",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046",
+      "executor.deliveries=tokens",
+      "executor.abi=1",
+      "executor.masks=off"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 4, draft form 0, ABI 1",
+        "executor_abi": 1,
+        "deliveries": [
+         "tokens"
+        ],
+        "sampled_by": "executor",
+        "sampler": "the executor's draws",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "none",
+        "drafts": 0,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "tokens",
+        "sampled_by": "executor",
+        "verifies": 0,
+        "drafted": 0,
+        "accepted": 0,
+        "forwards": 40
+       }
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "tokens",
+        "sampled_by": "executor",
+        "verifies": 0,
+        "drafted": 0,
+        "accepted": 0,
+        "forwards": 40
+       }
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "refuse:logit_bias",
+       "pass": true,
+       "status": 400,
+       "message": "'logit_bias' cannot be honoured by this recipe's executor: it takes no logit bias (no FLERP_CAP_MASKS)"
+      },
+      {
+       "check": "refuse:logprobs",
+       "pass": true,
+       "status": 400,
+       "message": "'logprobs' cannot be honoured by this recipe's executor: it hands no logits to the host: its tokens are drawn on the device"
+      },
+      {
+       "check": "refuse:temperature",
+       "pass": true,
+       "status": 400,
+       "message": "'temperature' cannot be honoured by this recipe's executor: it draws greedy tokens only (no FLERP_CAP_SAMPLED_TOKENS): send temperature 0"
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 17
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    },
+    {
+     "server": "tokens-sampled-v1",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046",
+      "executor.deliveries=tokens",
+      "executor.abi=1",
+      "executor.masks=off",
+      "executor.sampled=on",
+      "executor.needs_top_k=on",
+      "executor.draft=step"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 4, draft form 1, ABI 1",
+        "executor_abi": 1,
+        "deliveries": [
+         "tokens"
+        ],
+        "sampled_by": "executor",
+        "sampler": "the executor's draws",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "step",
+        "drafts": 7,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "tokens",
+        "sampled_by": "executor",
+        "verifies": 12,
+        "drafted": 48,
+        "accepted": 26,
+        "forwards": 2
+       }
+      },
+      {
+       "check": "raw:drafts-used",
+       "pass": true,
+       "verifies": 12,
+       "accepted": 26,
+       "drafted": 48
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "tokens",
+        "sampled_by": "executor",
+        "verifies": 12,
+        "drafted": 48,
+        "accepted": 26,
+        "forwards": 2
+       }
+      },
+      {
+       "check": "chat:drafts-used",
+       "pass": true,
+       "verifies": 12,
+       "accepted": 26,
+       "drafted": 48
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "refuse:logit_bias",
+       "pass": true,
+       "status": 400,
+       "message": "'logit_bias' cannot be honoured by this recipe's executor: it takes no logit bias (no FLERP_CAP_MASKS)"
+      },
+      {
+       "check": "refuse:logprobs",
+       "pass": true,
+       "status": 400,
+       "message": "'logprobs' cannot be honoured by this recipe's executor: it hands no logits to the host: its tokens are drawn on the device"
+      },
+      {
+       "check": "sampled-seeded",
+       "pass": true,
+       "status": 200,
+       "got": [
+        1218,
+        12793,
+        6202,
+        360,
+        15324,
+        27825
+       ]
+      },
+      {
+       "check": "sampling:top_k-missing-refused-by-the-executor",
+       "pass": true,
+       "status": 400,
+       "message": "flerp_seq_new: fake: a sampled seq needs top_k"
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 21
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    },
+    {
+     "server": "rows-taken-as-tokens",
+     "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5396",
+      "--model-id",
+      "fake",
+      "text.tokenizer=/data/models/strix-infer/tok/tokenizer.json",
+      "executor.vocab=248077",
+      "executor.lo=1000",
+      "executor.hi=30000",
+      "executor.reply=40",
+      "executor.end=248046",
+      "executor.draft=step",
+      "--delivery",
+      "tokens"
+     ],
+     "checks": [
+      {
+       "check": "health",
+       "pass": true,
+       "health": {
+        "status": "ok",
+        "model": "fake",
+        "front_end": "serve.flerp.http",
+        "executor": "fake executor (a hash, no weights): vocab 248077, deliveries 7, draft form 1, ABI 2",
+        "executor_abi": 2,
+        "deliveries": [
+         "full",
+         "candidates",
+         "tokens"
+        ],
+        "sampled_by": "executor",
+        "sampler": "the executor's draws",
+        "text": "strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json",
+        "draft_form": "step",
+        "drafts": 7,
+        "context": 4096,
+        "conversations_at_once": 1,
+        "busy": false,
+        "requests_served": 0
+       }
+      },
+      {
+       "check": "models",
+       "pass": true
+      },
+      {
+       "check": "tokenize",
+       "pass": true,
+       "got": {
+        "tokens": [
+         9419,
+         1814,
+         248046
+        ]
+       }
+      },
+      {
+       "check": "refuse:tools",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tools, and the grammar and parsing of tool calls) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:tool_choice-named",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling (tool_choice) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:functions",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "tool calling is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_object",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:response_format-json_schema",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output (response_format other than {\"type\": \"text\"}) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:grammar",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('grammar') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:guided_json",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "structured output ('guided_json') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:vision-image_url",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "vision and other media (a content part of type 'image_url') is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:steer",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:cache_prompt",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-max_thinking_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-thinking.budget_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-reasoning.max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:thinking-budget-chat_template_kwargs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "a thinking budget is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:n-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "more than one choice (n) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:echo",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "echo is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:suffix",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "suffix is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:best_of-2",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "best_of is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:completions-logprobs",
+       "pass": true,
+       "status": 400,
+       "code": "not_served",
+       "message": "logprobs on /v1/completions (ask /v1/chat/completions) is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-cache-export",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the prompt cache is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-steer",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "activation steering is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:route-anthropic-messages",
+       "pass": true,
+       "status": 501,
+       "code": "not_served",
+       "message": "the Anthropic messages API is not served by this front end (serve.flerp.http)"
+      },
+      {
+       "check": "refuse:malformed-json",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "the request body is not JSON: fail (/data/projects/strixflerp/catalog/strixite/runtime/json/src/serve/json.cpp:196): JSON parse error at byte 1 (line 1, column 2): expected a string key, found 'not json'"
+      },
+      {
+       "check": "refuse:malformed-no-messages",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'messages' must be an array"
+      },
+      {
+       "check": "refuse:malformed-prompt-array",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'prompt' must be a string (token ids and batches of prompts are not served)"
+      },
+      {
+       "check": "refuse:malformed-temperature",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'temperature' must be in [0, 100]"
+      },
+      {
+       "check": "refuse:malformed-top_p",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'top_p' must be in (0, 1]"
+      },
+      {
+       "check": "refuse:malformed-max_tokens",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'max_tokens' must be >= 1"
+      },
+      {
+       "check": "refuse:malformed-stop",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "'stop' strings must not be empty"
+      },
+      {
+       "check": "refuse:malformed-logit_bias-key",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "logit_bias key 'not-an-id' is not a token id in [0, 248077)"
+      },
+      {
+       "check": "refuse:malformed-role",
+       "pass": true,
+       "status": 400,
+       "code": null,
+       "message": "render_chat (/data/projects/strixflerp/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp:230): check `last_query >= 0` failed: chat template: No user query found in messages."
+      },
+      {
+       "check": "raw:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 11,
+         "completion_tokens": 41,
+         "total_tokens": 52
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "raw:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "tokens",
+        "sampled_by": "executor",
+        "verifies": 12,
+        "drafted": 48,
+        "accepted": 26,
+        "forwards": 2
+       }
+      },
+      {
+       "check": "raw:drafts-used",
+       "pass": true,
+       "verifies": 12,
+       "accepted": 26,
+       "drafted": 48
+      },
+      {
+       "check": "raw:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "raw:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 42
+      },
+      {
+       "check": "raw:stream-plain",
+       "pass": true,
+       "chunks": 6
+      },
+      {
+       "check": "raw:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "raw:stop",
+       "pass": true,
+       "stop": "activ("
+      },
+      {
+       "check": "raw:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "chat:greedy",
+       "pass": true,
+       "status": 200,
+       "got": {
+        "usage": {
+         "prompt_tokens": 18,
+         "completion_tokens": 41,
+         "total_tokens": 59
+        },
+        "finish": "stop"
+       }
+      },
+      {
+       "check": "chat:delivery",
+       "pass": true,
+       "trace": {
+        "delivery": "tokens",
+        "sampled_by": "executor",
+        "verifies": 12,
+        "drafted": 48,
+        "accepted": 26,
+        "forwards": 2
+       }
+      },
+      {
+       "check": "chat:drafts-used",
+       "pass": true,
+       "verifies": 12,
+       "accepted": 26,
+       "drafted": 48
+      },
+      {
+       "check": "chat:same-tokens-as-rows",
+       "pass": true
+      },
+      {
+       "check": "chat:stream",
+       "pass": true,
+       "status": 200,
+       "error": null,
+       "chunks": 43
+      },
+      {
+       "check": "chat:stream-plain",
+       "pass": true,
+       "chunks": 7
+      },
+      {
+       "check": "chat:max_tokens",
+       "pass": true
+      },
+      {
+       "check": "chat:stop",
+       "pass": true,
+       "stop": "emove "
+      },
+      {
+       "check": "chat:stop-stream",
+       "pass": true
+      },
+      {
+       "check": "logit_bias",
+       "pass": true,
+       "first": 2771,
+       "got": [
+        2772,
+        16261
+       ]
+      },
+      {
+       "check": "refuse:logprobs",
+       "pass": true,
+       "status": 400,
+       "message": "'logprobs' cannot be honoured by this recipe's executor: it hands no logits to the host: its tokens are drawn on the device"
+      },
+      {
+       "check": "refuse:temperature",
+       "pass": true,
+       "status": 400,
+       "message": "'temperature' cannot be honoured by this recipe's executor: it draws greedy tokens only (no FLERP_CAP_SAMPLED_TOKENS): send temperature 0"
+      },
+      {
+       "check": "context-exceeded",
+       "pass": true,
+       "status": 400
+      },
+      {
+       "check": "two-at-once",
+       "pass": true
+      },
+      {
+       "check": "health-after",
+       "pass": true,
+       "served": 18
+      },
+      {
+       "check": "clean-exit",
+       "pass": true,
+       "rc": 0,
+       "log_tail": [
+        "startup: serving on http://127.0.0.1:5396 (one conversation at a time)",
+        "shutdown: closing the executor"
+       ]
+      }
+     ],
+     "pass": true,
+     "failed": []
+    }
+   ],
+   "finished": "2026-11-11T02:01:11Z",
+   "checks": 551,
+   "pass": true
+  }
+ }
+}

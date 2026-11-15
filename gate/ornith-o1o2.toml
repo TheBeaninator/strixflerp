@@ -1,0 +1,96 @@
+# ORNITH-O1O2: two relay changes from the Ornith survey (report section 4, O1 and O2), tried on ONE node with the 35B.
+#   O1  stage rows through fixed pinned host buffers (--rows pinned), and a token-only reply (--reply token): the last
+#       stage's executor already picks the token on the GPU (LaunchGPUArgmax / LaunchBatchedGPUArgmax, lowest id on a
+#       tie, sample.hip:1020-1049), so the 993 KB logits row need not leave the GPU or cross the ring.
+#   O2  prompt sub-chunks sent back to back (--prompt-subchunks S): rank 0 sends sub-chunk k + 1 without waiting for
+#       the reply to sub-chunk k (StrixFold stagger.zig; docs/PHASE5-FOURNODE-DESIGN.md:120, 4N / (N + 3)).
+# Committed BEFORE any GPU run of this experiment; not edited to turn a failure into a pass (an amendment, if any,
+# gets its own commit with its date and reason). Runner gate/ornith_o1o2.py, one GPU job through tools/gpu-queue.sh on
+# control-node's GPU only. No worker, no hold, no lease. Weights from control-node's NVMe only.
+
+recipe = "qwen36-35b-a3b.flerp-moe"          # the binary under test: stage_driver.cpp (--staged tcp) of this recipe
+
+[facts]
+# Ornith P5 run 11121855 (gate/results/ornith15-397b.flerp-p5/w4-r*.jsonl, stage_timing; 33 calls a session):
+ornith_copy   = "ranks 1/2/3 copy_ms a call 1.67-2.05 (mean 1.87 over 18 sessions): a synchronous hipMemcpy of a 16 KiB row from a fresh pageable vector (stage_driver.cpp Run)"
+ornith_logits = "rank 3 logits_copy_ms a call 0.086-0.100; 32.78 MB sent by rank 3 in 33 calls (the full logits row every reply)"
+ornith_decode = "rank 0 decode_wall_ms / decode_calls = 80.7-83.0 ms a token (12.0 tok/s); stage decode 18.7 / 17.25 / 17.3 / 21.3 ms a step"
+ornith_prompt = "P4 stage 0 on a 1,024-row chunk: 7.08 s (144 rows/s a stage); the 21-token prompt pass 0.48-0.65 s wall"
+# The 35B on one node (P2, gate/results/qwen36-35b-a3b.flerp-moe-stage, 2026-11-11), the same code before this change:
+p2_copy       = "TCP world 4 on 127.0.0.1, ranks 1-3: 0.15-0.62 ms a call (8 KiB rows, hidden 2048); in-process loopback 0.01-0.09"
+p2_note       = "so the Ornith 1.8 ms does NOT reproduce at this size on one node; this experiment shows the mechanism, the identity and the one-node copy time; the Ornith number is a projection until a 4-node run"
+
+[build]
+# The pod tree /data/projects/strixflerp is a shared checkout and another lane has uncommitted kernel edits in it
+# (catalog/gufo/kernel/qwen_gdn, qwen_linear_decode, qwen_ops), all compiled into this recipe. So the binary under test
+# is built from a clean export: git HEAD plus this change only, synced by tools/pod-sync.sh with
+# POD_SYNC_DEST=/data/projects/strixflerp-o1o2, assembled and built there (flerp assemble; build.sh -j4 under nice/ionice).
+tree = "/data/projects/strixflerp-o1o2"
+
+[host]
+origin              = "gufo"
+scratch             = "build/gate-scratch-o1o2"
+cpus                = "0-3"
+polite              = ["ionice", "-c3", "nice", "-n", "19"]
+reader_flags        = ["--single-reader", "--pause-ms", "100"]
+load_wait_above     = 10.0
+load_wait_s         = 1800
+arena_gib           = 2
+margin_gib          = 24
+
+[model]
+gguf        = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"     # control-node NVMe (/dev/nvme0n1p3), a plain file
+prompt_ids  = "gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json"      # the four gate prompts: 21, 20, 18, 1,808 ids
+p1_results  = "gate/results/qwen36-35b-a3b.flerp-moe-placed/equal.json"    # P1: 128 ids and 128 logits-row sha256 a prompt
+
+[run]
+context      = 4096          # P1's arena: the whole prompt is one arena chunk, so S sub-chunks cut that one chunk
+max_tokens   = 128
+world        = 4
+cuts         = "even"        # the stage plan's [0, 10, 20, 31, 40]
+port         = 39710
+epoch        = 11
+deadline_ms  = 60000
+run_timeout_s = 2400
+# Four launches of four TCP rank processes on 127.0.0.1, A B A B, every rank of a launch in the same --rows mode;
+# rank 0 runs every prompt once per run spec (graph:reply:subchunks), graph on throughout.
+launches = [
+  { rows = "pageable", specs = "on:full:1,on:token:1" },
+  { rows = "pinned",   specs = "on:full:1,on:token:1,on:full:4,on:full:16" },
+  { rows = "pageable", specs = "on:token:1,on:full:1" },
+  { rows = "pinned",   specs = "on:full:16,on:full:4,on:token:1,on:full:1" },
+]
+
+[criteria]
+# --- identity ---
+# 1.  O1 baseline and pinned rows: every (launch, prompt) run with reply full and 1 sub-chunk, pageable and pinned:
+#     every rank exits 0; the 128 generated ids equal P1's; 128 logits rows are recorded and the sha256 of every row
+#     (row 0 = the prompt pass, then 127 decode steps) equals P1's; the argmax of every row is the token the last
+#     stage answered (host argmax, lower id on a tie).
+# 2.  Token-only reply: every (launch, prompt) run with reply token: the 128 ids equal P1's.
+# 3.  O2 sub-chunks: every (pinned launch, prompt) run with reply full at 4 and at 16 sub-chunks: ids and every logits
+#     sha256 equal P1's (and so the 1-sub-chunk run's), byte for byte, on all four prompts including the 1,808-token
+#     one; a prompt shorter than S is cut into one-row sub-chunks.
+# --- O1 copy time ---
+# 4.  Pinned launches: for each of ranks 1, 2, 3 and each session (one prompt under one run spec), copy_ms / calls
+#     < 0.1 ms (calls = decode steps + prompt sub-chunks; copy_ms = the host<->device copies of the stage's rows,
+#     the copy into the pinned buffer included).
+#     The pageable launches' copy_ms a call is the baseline, recorded beside it (the 1.8 -> < 0.1 claim for Ornith
+#     itself needs the 4-node run: [facts] p2_note).
+# --- recorded, not criteria ---
+# - TTFT (rank 0's prefill_s: the prompt pass up to the first token's reply) at 1, 4 and 16 sub-chunks, every prompt,
+#   both pinned launches; each stage's summed chunk ms at each S (per-row cost of smaller sub-chunks). One GPU is
+#   time-shared by the four processes, so the overlap that O2 buys on four nodes cannot show here; no TTFT threshold.
+# - decode wall ms a token (rank 0's decode_wall_ms / decode_calls) for pageable/pinned x full/token, A B A B.
+# - rank 3's logits_copy_ms a call and bytes_sent, full against token.
+
+[projection]
+# Labelled projected, never measured. Ornith world 4 per token:
+#   copy   = 3 x (1.87 - pinned copy a call measured here)
+#   reply  = rank 3 logits_copy_ms a call (0.09, P5) + the one-node full-minus-token decode wall difference (the 993 KB
+#            row over TCP, its conversion and the host hash) as measured here
+#   ms     = 82.4 (P5 rank 0 decode_wall_ms / decode_calls, median of 6 sessions: 80.7-83.0) - copy - reply
+# TTFT: per stage time a row from P4 (7.08 s / 1,024 rows) times the one-node per-row cost ratio at S against S = 1,
+#   pipelined over 4 stages: TTFT(S) = (S + 3) / S x one stage's chunk time at S (equal stages), against 4 x at S = 1.
+# A 4-node confirm (owner's call) reruns P5 with --rows pinned --reply token and --run-specs at 1/4/16 sub-chunks: ids and
+#   every logits sha256 equal to run 11121855, decode ms A B A B, every repeat below the old minimum.

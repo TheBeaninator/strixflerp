@@ -1,0 +1,16 @@
+# Recipe gate config for the swapped variant qwen38-flash-next.router-gufo: the unmodified recipe's host facts,
+# run settings and unit tests, unchanged. Criteria fixed on 2026-11-10 before the first run.
+inherit = "gate/qwen38-flash-next.strixite.toml"
+
+[host]
+scratch = "build/gate-scratch-router-gufo"
+lease_owner = "agent-phase4"      # its own name: the phase 3 lane leases the same GPU as agent
+
+[variant]
+# gufo's router selects the same experts (module gate: ids equal the reference's, ties included) and its weights
+# agree to fp32 rounding, not bit for bit, so token identity is not promised. The numeric criterion is the module
+# gate (gate/interface/moe-router.toml: structure exact, weights within 32 fp32 steps) for strixite and gufo.
+# hipfire's router is not part of this variant (k = 8 only, and it fails that gate's tie cases).
+module_gate           = "gate/results/interface/moe-router/result.json"
+module_gate_providers = ["strixite", "gufo"]
+speed_is_criterion    = false

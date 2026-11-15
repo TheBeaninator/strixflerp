@@ -1,0 +1,201 @@
+# Interface gate: decode GEMV on packed GGUF blocks, Q8_0 and Q4_K. Swap 3 of docs/INTERFACES.md.
+# Module gate only: no recipe of this repository consumes a GGUF GEMV yet.
+# Pass criteria fixed on 2026-11-10 before the first run. Do not edit them to turn a failure into a pass.
+interface = "linear.decode/gguf-kquant/f32"
+api       = "gufo::hip::LaunchQ8KBlockGEMV(A, type, x, y, M, K, stream)"
+driver    = "gate/interface/drivers/gguf_gemv"
+toolchain = "therock-10.1"
+
+[criteria]
+# Same weight bytes, different summation order and association, so the providers' bits need not agree. The
+# criterion is the any-order bound against the exact (double) sum over the real-valued weights:
+#   Q8_0  |y - exact| <= (K - 1 + 2) * 2^-24 * sum |d q x|          (two roundings inside a term: d * q * x)
+#   Q4_K  |y - exact| <= (2K - 1 + 4) * 2^-24 * sum (|d sc q x| + |dmin m x|)
+# (gate/interface/reference/gguf_gemv.hpp). Above 1.0 of the bound fails. Order emulations are recorded.
+parity                          = "order-bound"
+max_err_over_bound              = 1.0
+adapter_must_launch_foreign     = true
+adapter_origin_launches_allowed = 0
+
+[[provider]]
+name   = "gufo"
+module = "kernel.gufo.qwen_linear_decode"
+[provider.bind]
+"linear.decode/gguf-kquant/f32"    = "kernel.gufo.qwen_linear_decode"
+"format.device-view/gguf-kquant/-" = "format.gufo.gguf_kquant"
+
+[[provider]]
+name    = "hipfire"
+module  = "kernel.flerp.gguf_gemv_hipfire"
+wraps   = "kernel.hipfire.gemv_ggml"
+adapter = true
+[provider.bind]
+"linear.decode/gguf-kquant/f32"            = "kernel.flerp.gguf_gemv_hipfire"
+"format.device-view/gguf-kquant/-"         = "format.gufo.gguf_kquant"
+"format.device-view-hipfire/gguf-kquant/-" = "format.hipfire.loader"
+
+[[case]]
+name = "q8_0-1row-k2560"
+kind = "parity"
+type = "q8_0"
+M = 1
+K = 2560
+seed = 401
+pattern = "gauss"
+
+[[case]]
+name = "q8_0-2rows-k2560"
+kind = "parity"
+type = "q8_0"
+M = 2
+K = 2560
+seed = 402
+pattern = "gauss"
+
+[[case]]
+name = "q8_0-odd-2559rows-k2560"
+kind = "parity"
+type = "q8_0"
+M = 2559
+K = 2560
+seed = 403
+pattern = "gauss"
+
+[[case]]
+name = "q8_0-2560x2560"
+kind = "parity"
+type = "q8_0"
+M = 2560
+K = 2560
+seed = 404
+pattern = "gauss"
+
+[[case]]
+name = "q8_0-10240x2560"
+kind = "parity"
+type = "q8_0"
+M = 10240
+K = 2560
+seed = 405
+pattern = "gauss"
+
+[[case]]
+name = "q8_0-2560x6144-wide-range"
+kind = "parity"
+type = "q8_0"
+M = 2560
+K = 6144
+seed = 406
+pattern = "wide-range"
+
+[[case]]
+name = "q8_0-640x256"
+kind = "parity"
+type = "q8_0"
+M = 640
+K = 256
+seed = 407
+pattern = "gauss"
+
+[[case]]
+name = "q4k-1row-k2560"
+kind = "parity"
+type = "q4_k"
+M = 1
+K = 2560
+seed = 401
+pattern = "gauss"
+
+[[case]]
+name = "q4k-2rows-k2560"
+kind = "parity"
+type = "q4_k"
+M = 2
+K = 2560
+seed = 402
+pattern = "gauss"
+
+[[case]]
+name = "q4k-odd-2559rows-k2560"
+kind = "parity"
+type = "q4_k"
+M = 2559
+K = 2560
+seed = 403
+pattern = "gauss"
+
+[[case]]
+name = "q4k-2560x2560"
+kind = "parity"
+type = "q4_k"
+M = 2560
+K = 2560
+seed = 404
+pattern = "gauss"
+
+[[case]]
+name = "q4k-10240x2560"
+kind = "parity"
+type = "q4_k"
+M = 10240
+K = 2560
+seed = 405
+pattern = "gauss"
+
+[[case]]
+name = "q4k-2560x6144-wide-range"
+kind = "parity"
+type = "q4_k"
+M = 2560
+K = 6144
+seed = 406
+pattern = "wide-range"
+
+[[case]]
+name = "q4k-640x256"
+kind = "parity"
+type = "q4_k"
+M = 640
+K = 256
+seed = 407
+pattern = "gauss"
+
+[[case]]
+name = "q8_0-bench-2560x2560"
+kind = "bench"
+shape = "M=2560, K=2560 q8_0 (7.0 MB of weights: a decode projection)"
+type = "q8_0"
+M = 2560
+K = 2560
+iters = 1000
+repeats = 9
+
+[[case]]
+name = "q8_0-bench-16384x2560"
+kind = "bench"
+shape = "M=16384, K=2560 q8_0 (44.6 MB: the large shape; a GEMV has one x row, prefill is a GEMM)"
+type = "q8_0"
+M = 16384
+K = 2560
+iters = 200
+repeats = 9
+
+[[case]]
+name = "q4k-bench-2560x2560"
+kind = "bench"
+shape = "M=2560, K=2560 q4_k (3.7 MB of weights: a decode projection)"
+type = "q4_k"
+M = 2560
+K = 2560
+iters = 1000
+repeats = 9
+
+[[case]]
+name = "q4k-bench-16384x2560"
+kind = "bench"
+shape = "M=16384, K=2560 q4_k (23.6 MB: the large shape; a GEMV has one x row, prefill is a GEMM)"
+type = "q4_k"
+M = 16384
+K = 2560
+iters = 200
+repeats = 9

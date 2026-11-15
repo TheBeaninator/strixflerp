@@ -1,0 +1,316 @@
+{
+ "recipe": "qwen38-flash-next.strixite",
+ "host": "control-node",
+ "when_utc": "2026-11-11T00:28:11Z",
+ "stages_run": [
+  "check",
+  "origin",
+  "build",
+  "unit",
+  "gpu"
+ ],
+ "pass": true,
+ "stages": {
+  "check": {
+   "pass": true,
+   "rc": 0,
+   "summary": "flerp check (origin strixite): 105 modules, 8 recipe(s), 0 error(s), 4 warning(s)",
+   "catalogue_rc": 0,
+   "catalogue_summary": "flerp check (catalogue): 221 modules, 8 recipe(s), 0 error(s), 34 warning(s)",
+   "evidence": "check.txt, check-catalogue.txt",
+   "when_utc": "2026-11-11T00:28:03Z"
+  },
+  "origin": {
+   "pass": true,
+   "rc": 0,
+   "checkout_head": "20937dce2eb1d994b617229bc1242f2a5572ac91",
+   "origin_toml_commit": "20937dce2eb1d994b617229bc1242f2a5572ac91",
+   "checkout_dirty": false,
+   "summary": "diff-origin origin strixite vs /data/projects/strixite-v070: 105 module(s), 269/269 files byte-identical, 0 problem(s), 29 origin files listed as unharvested",
+   "evidence": "diff-origin.txt",
+   "when_utc": "2026-11-11T00:28:03Z"
+  },
+  "build": {
+   "tree": "build/qwen38-flash-next.strixite",
+   "evidence": "build.txt",
+   "references_origin_checkout": false,
+   "configure_s": 1.3,
+   "build_s": 0.0,
+   "binaries": {
+    "strixflerp-qwen38-flash-next.strixite": {
+     "sha256": "88a891cb63a47b35221a405e430f9ef44d7de4d9cf21f2ea09f2517e14de2065",
+     "bytes": 18256640
+    },
+    "convert_qwen4exp": {
+     "sha256": "d2caecb48a35b213f57939354877d5e09816022b342f9824c8272c7629c6760e",
+     "bytes": 723216
+    },
+    "convert_ngram_table": {
+     "sha256": "d7852040ec9d30b62a3c724478bebc77c5ceb0e391aea15b63b3a274c8cea59d",
+     "bytes": 186128
+    },
+    "transcode_ngram_table": {
+     "sha256": "4f481c94a61bf783e346addc82bf6f132e9e56d4f58b6a4f275529e3f1f9a474",
+     "bytes": 133632
+    },
+    "inspect_strixw": {
+     "sha256": "535522a3715ce067e68c5f05f475e1be15ab55ae077464dfcee715c78c5d436f",
+     "bytes": 107904
+    },
+    "check_stream_calls": {
+     "sha256": "0d691ff06a68cac0992a06509e161a4ae3b27236a51db5a266d6cc2b50c93664",
+     "bytes": 488968
+    },
+    "check_logprobs": {
+     "sha256": "ea43bab1ba99d75bab0b81417796fb34b72816bae7dd0758c34f008905fa28dd",
+     "bytes": 1333648
+    },
+    "sv9_cache_check": {
+     "sha256": "f514bbaa77ae6a8ba1e9290364c1f41f1eca3a4d712aaff305648bc228aa2d2d",
+     "bytes": 984456
+    },
+    "cache_xfer_check": {
+     "sha256": "f1149469db56c1284b26cf62a949ed56f87c551df9367ee80242be854611f9ef",
+     "bytes": 252832
+    },
+    "strix_vision": {
+     "sha256": "104819efa93bdf343f188f35d6ea8b998d0f3546fdda356075312835d4575f05",
+     "bytes": 12001896
+    },
+    "omf_seg": {
+     "sha256": "1d6a3ecd892ca1d1d8a4f4e2fb2743380d8fd5bdf7337210a4255e7c18699da3",
+     "bytes": 15356432
+    },
+    "strix_acts": {
+     "sha256": "c5ce55d6e68c55f4922d3804e42de97ee62eb55c7501fb7692be2c167c80e227",
+     "bytes": 15302384
+    },
+    "steer_check": {
+     "sha256": "b396706b177bd3ef1bf4966712d1195da5958d31133178639aeb67a09ed27ca8",
+     "bytes": 15222408
+    }
+   },
+   "pass": true,
+   "rc": 0,
+   "when_utc": "2026-11-11T00:28:05Z"
+  },
+  "unit": {
+   "pass": true,
+   "tests": [
+    {
+     "binary": "check_stream_calls",
+     "rc": 0,
+     "seconds": 4.3,
+     "last_line": "46 fixed cases, 20000 random well-formed, 20000 random (x2 with damage), 3 feeds each: 0 failures (0 in the fixed cases)",
+     "evidence": "unit-check_stream_calls.txt"
+    },
+    {
+     "binary": "check_logprobs",
+     "rc": 0,
+     "seconds": 1.0,
+     "last_line": "check_logprobs: ok",
+     "evidence": "unit-check_logprobs.txt"
+    },
+    {
+     "binary": "cache_xfer_check",
+     "rc": 0,
+     "seconds": 0.0,
+     "last_line": "ok    a prompt longer than any entry exports the base+delta pair below its end",
+     "evidence": "unit-cache_xfer_check.txt"
+    },
+    {
+     "binary": "sv9_cache_check",
+     "rc": 0,
+     "seconds": 0.9,
+     "last_line": "SV9-CACHE-CHECK PASS",
+     "evidence": "unit-sv9_cache_check.txt"
+    }
+   ],
+   "when_utc": "2026-11-11T00:28:11Z"
+  },
+  "gpu": {
+   "evidence": "identity.json",
+   "gpu_before": {
+    "gtt_used_bytes": 37322752,
+    "engine_processes": []
+   },
+   "lease": "holding control-gpu as agent",
+   "gpu_tests": [
+    {
+     "binary": "steer_check",
+     "rc": 0,
+     "seconds": 101.0,
+     "last_lines": [
+      "$ /data/projects/strixflerp/build/qwen38-flash-next.strixite/ninja/steer_check --weights /data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw --ngram /data/models/strix-infer/converted/qwen38-fnext-ngram-int8/ngram.table --tokenizer /data/models/strix-infer/tok/tokenizer.json",
+      "unsteered batch repeats bit for bit: yes",
+      "slot 0 unchanged by slot 1's steering (bit for bit): yes",
+      "slot 1 changed by its steering: max |dlogit| 33.7254 yes"
+     ],
+     "evidence": "unit-steer_check.txt"
+    }
+   ],
+   "token_identity": true,
+   "speed_within_noise": true,
+   "pass": true,
+   "comparisons": [
+    {
+     "mtp": true,
+     "token_identity": true,
+     "speed_within_noise": true,
+     "speed": [
+      {
+       "prompt": "short-chat-thinking",
+       "decode_tps_reference": [
+        43.49005307295679,
+        55.93255112481065,
+        55.38772536278736
+       ],
+       "decode_tps_assembled": [
+        28.72428228238934,
+        55.37208925372197,
+        55.96447609552432
+       ],
+       "decode_median": [
+        55.39,
+        55.37
+       ],
+       "decode_rel_diff": -0.0003,
+       "decode_within_noise": true,
+       "prefill_tps_first_run": [
+        235.8,
+        46.1
+       ]
+      },
+      {
+       "prompt": "long-chat",
+       "decode_tps_reference": [
+        67.38894011107146,
+        66.88213011544295,
+        61.36717924355917
+       ],
+       "decode_tps_assembled": [
+        59.688514601766656,
+        67.00762748989084,
+        67.43278759665054
+       ],
+       "decode_median": [
+        66.88,
+        67.01
+       ],
+       "decode_rel_diff": 0.0019,
+       "decode_within_noise": true,
+       "prefill_tps_first_run": [
+        1308.5,
+        981.7
+       ]
+      },
+      {
+       "prompt": "raw-completion",
+       "decode_tps_reference": [
+        50.169766916637265,
+        47.79595638560417,
+        47.34825968576691
+       ],
+       "decode_tps_assembled": [
+        46.89134744417614,
+        49.45601626809354,
+        50.24160355706455
+       ],
+       "decode_median": [
+        47.8,
+        49.46
+       ],
+       "decode_rel_diff": 0.0347,
+       "decode_within_noise": true,
+       "prefill_tps_first_run": [
+        167.5,
+        75.1
+       ]
+      }
+     ]
+    },
+    {
+     "mtp": false,
+     "token_identity": true,
+     "speed_within_noise": true,
+     "speed": [
+      {
+       "prompt": "short-chat-thinking",
+       "decode_tps_reference": [
+        32.072264007442065,
+        30.815707828905897,
+        32.93581487432493
+       ],
+       "decode_tps_assembled": [
+        17.691408806428623,
+        33.452484146010725,
+        33.49113649063085
+       ],
+       "decode_median": [
+        32.07,
+        33.45
+       ],
+       "decode_rel_diff": 0.043,
+       "decode_within_noise": true,
+       "prefill_tps_first_run": [
+        47.3,
+        232.6
+       ]
+      },
+      {
+       "prompt": "long-chat",
+       "decode_tps_reference": [
+        32.58825740148244,
+        32.040296474252386,
+        32.357910290411716
+       ],
+       "decode_tps_assembled": [
+        32.15927316949664,
+        32.80474071333063,
+        32.88483313680871
+       ],
+       "decode_median": [
+        32.36,
+        32.8
+       ],
+       "decode_rel_diff": 0.0138,
+       "decode_within_noise": true,
+       "prefill_tps_first_run": [
+        1367.5,
+        1343.3
+       ]
+      },
+      {
+       "prompt": "raw-completion",
+       "decode_tps_reference": [
+        32.26583537417018,
+        32.84448574914225,
+        32.75159785109662
+       ],
+       "decode_tps_assembled": [
+        32.992887682404266,
+        33.399930996931396,
+        33.36085905541403
+       ],
+       "decode_median": [
+        32.75,
+        33.36
+       ],
+       "decode_rel_diff": 0.0186,
+       "decode_within_noise": true,
+       "prefill_tps_first_run": [
+        170.3,
+        167.9
+       ]
+      }
+     ]
+    }
+   ],
+   "requests_compared": 18,
+   "gpu_after": {
+    "gtt_used_bytes": 37322752,
+    "engine_processes": []
+   }
+  }
+ }
+}

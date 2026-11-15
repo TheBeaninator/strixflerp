@@ -1,0 +1,94 @@
+id        = "kernel.tensorfold.hip_ops"
+kind      = "kernel"
+summary   = "Model-free ops: RMS/layer norms, RoPE, elementwise, activations, MoE routing and expert GEMV (Qwen and Nemotron shapes), TP shard helpers, sampling draws, dense text rows, vision ops, VL positions"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/hip/ops/act.hip",
+  "zig/kernels/hip/ops/attention.hpp",
+  "zig/kernels/hip/ops/columns.hpp",
+  "zig/kernels/hip/ops/common.hpp",
+  "zig/kernels/hip/ops/dense_text.hpp",
+  "zig/kernels/hip/ops/draw.hpp",
+  "zig/kernels/hip/ops/elementwise.hpp",
+  "zig/kernels/hip/ops/linear.hpp",
+  "zig/kernels/hip/ops/moe.hpp",
+  "zig/kernels/hip/ops/nemotron_moe.hpp",
+  "zig/kernels/hip/ops/norms.hpp",
+  "zig/kernels/hip/ops/ops.hip",
+  "zig/kernels/hip/ops/rope.hpp",
+  "zig/kernels/hip/ops/tp.hpp",
+  "zig/kernels/hip/ops/vision.hip",
+  "zig/kernels/hip/ops/vision.hpp",
+  "zig/kernels/hip/ops/vl_position.hpp",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/zig/kernels/hip/ops/ops.hip",
+  "src/zig/kernels/hip/ops/act.hip",
+  "src/zig/kernels/hip/ops/vision.hip",
+]
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--genco",
+  "-D__HIP_PLATFORM_AMD__=1",
+  "-DUSE_ROCM=1",
+  "-DHIPBLAS_V2",
+  "-fPIC",
+  "-DCUDA_HAS_FP16=1",
+  "-DHIP_ENABLE_WARP_SYNC_BUILTINS=1",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-DTF_WAVE=32",
+  "-DTF_DOT2_F16=1",
+  "-DTF_DOT2_BF16=1",
+  "-DTF_SDOT4=1",
+  "-DTF_SDOT8=1",
+  "-DTF_MATRIX=1",
+  "-DTF_DOT2_SIGNED_ZERO=1",
+]
+
+[[provides]]
+interface = "norm.rmsnorm/-/f32.tensorfold"
+api       = "ops/norms.hpp"
+numeric   = "fp32"
+regime    = "all"
+
+[[provides]]
+interface = "pos.rope/-/f32.tensorfold"
+api       = "ops/rope.hpp"
+numeric   = "fp32"
+regime    = "all"
+
+[[provides]]
+interface = "moe.experts-decode/mlx-affine/f32.tensorfold"
+api       = "ops/moe.hpp, ops/nemotron_moe.hpp"
+numeric   = "per-expert fp32, fixed combine order"
+regime    = "decode rounds (1..N lanes), memory-bound"
+
+[[provides]]
+interface = "sample.draw/-/f32.tensorfold"
+api       = "ops/draw.hpp"
+numeric   = "keyed draws on the GPU"
+regime    = "decode rounds (1..N lanes), memory-bound"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"

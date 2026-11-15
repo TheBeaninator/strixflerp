@@ -1,0 +1,43 @@
+id        = "kernel.flerp.draft_coarse"
+kind      = "kernel"
+summary   = "Coarse-then-exact scoring of a GGUF Q6_K / Q4_K draft head: a 2- or 4-bit copy (64-value groups, fp16 scale and minimum) scores every token, the best 128-token blocks are recomputed from the GGUF rows with the exact head's row dot (same bits), the draft is chosen from them, and a margin test (tau = k err_rms ||x||) tells the caller when to run the exact head instead"
+notes     = "ORNITH-CRUCIBLE item 2 (gate/ornith-crucible.toml). Recipe of Crucible's low-bit draft head (catalog/crucible/runtime/speculation, engine/runtime/draft_quant.h: DraftQGemvKernel, DraftQRescoreKernel, DraftQChoiceKernel) re-expressed for GGUF heads read in place; written here, not copied. Used by executor.flerp.qwen35moe mtp_head (FLERP_MTP_COARSE), off by default."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/draft_coarse/draft_coarse.hip", "flerp/draft_coarse/draft_coarse.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/draft_coarse/draft_coarse.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+uses      = ["hip-runtime"]
+defines   = ["ENGINE_ENABLE_HIP=1"]
+
+[[provides]]
+interface = "draft.head-score/gguf-kquant/f32.coarse-exact"
+api       = "flerp::draft_coarse::Coarse::Build, Score (flerp/draft_coarse/draft_coarse.hpp)"
+numeric   = "coarse logits FP32 from 2/4-bit asymmetric codes (fp16 scale, minimum); kept-block logits = gufo QuantWarpBlockDot (the decode GEMV's row dot), bit-equal to the exact head; choice = ArgmaxKernel's rule (finite only, lower id on a tie) over the kept rows"
+regime    = "one row (a draft step); hidden a multiple of 2048 up to 8192; vocab up to 262144; keep 1..32 blocks of 128"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "flerp:gate/ornith-crucible.toml"
+bench     = "flerp:gate/ornith-crucible.toml"
+status    = "harvested"
+compile   = "n/a"
+reason    = "kernel and 35B checks in gate/ornith-crucible.toml (results gate/results/ornith-crucible)"

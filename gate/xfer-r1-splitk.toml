@@ -1,0 +1,26 @@
+# SHAPE-TRANSFERS R1 (shortlist #3): strixite's split-K group-affine GEMV shape on GGUF Q4_K experts. First experiment.
+# Committed BEFORE any GPU run. Tool: gate/xfer_r1_splitk.hip (standalone; moe_kquant.hip is #included from the
+# build/flerp-p5 tree and compiled with its exact flags, so the reference is the real kernel source).
+
+[shapes]
+q35_gateup   = "35B real: blk.10.ffn_gate_exps / ffn_up_exps Q4_K [2048 -> 512] x 256 experts, 8 slots, read by byte range from the GGUF (offsets from gate/results/qwen36-35b-a3b.census/census.json)"
+ornith_gateup = "Ornith shape, synthetic codes in the real Q4_K block layout: [4096 -> 1024], 10 slots, 64 experts resident (2.4 GB would not add information)"
+ornith_down  = "Ornith shape, synthetic Q4_K: [1024 -> 4096], x per slot (x_share 1), 10 slots"
+tokens       = [1, 4, 8]
+note         = "35B ffn_down_exps is Q6_K: not in this experiment"
+
+[arms]
+ref = "flerp::moe::IndexedExperts (kernel.flerp.moe_kquant: gufo QuantWarpBlockDot, one wave a row, lane = every 32nd 16-element sub-block)"
+a   = "same lane mapping and summation order as ref, but 16-byte vector loads of codes and x (aligned, Q4_K blocks are 9 x 16 B), scale pair from the same GetQKScaleMin: must be bit-identical to ref"
+b   = "strixite shape: a lane owns a 32-byte code run (both nibbles = two 32-element groups), s*sum(xq) - m*sum(x) per group, KS waves split K (KS 1 and 2), gate+up in one wave, LDS combine across waves: summation order changes"
+
+[timing]
+method = "200 timed launches after 20 warm, each launch with fresh random ids (a pre-built id table walked by pointer) so the touched experts change and the 32 MB MALL cannot hold them; hipEvent around the loop; us a launch and GB/s = distinct experts' bytes of the launch / time"
+load   = "loadavg <= 6 at start and end, else invalid and rerun"
+
+[correctness]
+a   = "bytes of the output equal to ref's (memcmp), every shape and token count"
+b   = "order change stated; measured: max |b - ref| / RMS(ref), and both against an fp64 CPU dot of the dequantized weights on token 0 (all slots, all rows)"
+
+[continue]
+bandwidth = "an arm reaches >= 160 GB/s on the 35B gate/up at 1 token (doc section 4 item 3); recipe decode rise >= 20 % is the next experiment, not this one"

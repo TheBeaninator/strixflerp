@@ -1,0 +1,77 @@
+# ORNITH-O3 step one: how often the checkpoint's own MTP head drafts the right next token, before anyone builds
+# speculative decoding (survey: agent 2026-11-13, "Which strixflerp catalogue techniques could speed up
+# Ornith-1.5 397B", sections 0.1, 2A, 3.1, 4 O3). Committed BEFORE any GPU run of this experiment; not edited to turn a
+# failure into a pass (an amendment, if any, is added below in its own commit with its date and reason).
+# Tools: catalog/flerp/executor/qwen35moe .../flerp/qwen35moe/mtp_head.{hpp,cpp} (the MTP forward),
+# catalog/flerp/tool/qwen35moe_generate .../mtp_probe.{hpp,cpp} (the probe: --mtp-probe DEPTH, off by default),
+# gate/ornith_o3_mtp.py (prompts, runs, the numpy reference, llama.cpp comparison, judge), gate/ornith_o3_mtp_run.sh
+# (GPU jobs through tools/gpu-queue.sh, control-node's GPU only; no worker, no hold, no multi-node window).
+
+[reference]
+# What the forward matches, read before any code was written.
+llama_cpp = """llama.cpp src/models/qwen35moe.cpp graph_mtp (LLM_GRAPH_TYPE_DECODER_MTP, "draft head for Qwen3.5/3.6
+MoE"; the copy on control-node /data/projects/llama-rdma-src, lines 550-741) and common/speculative.cpp
+common_speculative_impl_draft_mtp (lines 1328-1760), the code behind /opt/llama's --spec-type draft-mtp:
+  h       = the target's last block output after output_norm ("h_nextn", qwen35moe.cpp:229-233: post-norm feeds both the
+            LM head and the MTP seed)
+  x       = concat(enorm(embed(tok)), hnorm(h))              (enorm first, then hnorm; ggml_concat dim 0)
+  y       = eh_proj . x                                       ([2H] -> [H])
+  y      += attn_output(sigmoid(gate) * attention(rope(q_norm(q)), rope(k_norm(k)), v))   on attn_norm(y); the block's
+            own KV cache, every position of the conversation
+  y      += moe(attn_post_norm(y))      routed softmax top-k with renormalised weights + sigmoid(gate_shexp) * shared
+  h_out   = shared_head_norm(y)          (output_norm when absent); logits = output . h_out (nextn.shared_head_head
+            and nextn.embed_tokens when the file has them; neither file here has them)
+  pairing: (h_p, x_{p+1}) at MTP position p+1; position 0 carries (zero h, x_0) (speculative.cpp process(): the batch's
+            embeddings shifted right by one, pending_h zero at the start)
+  chain:   draft i+1 = MTP(draft i, h_out of draft i) at position pos0 + i + 1; its KV rows are overwritten when the
+            real rows arrive (attention reads positions <= the current one only)."""
+gufo = "catalog/gufo/runtime/mtp mtp_reference.cpp / hip/mtp/executor.cpp: the same order (enorm then hnorm, eh_proj, block, shared_head_norm, head) with a dense FFN and blk.64; the HIP launches are reused, the FFN is executor.flerp.qwen35moe's LaunchMoeFfn"
+
+[proxy]
+model    = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"   # NVMe; blk.40 = full attention + MoE + nextn.{eh_proj,enorm,hnorm,shared_head_norm} (gate/results/qwen36-35b-a3b.census/summary.md)
+why      = "the same architecture (qwen35moe) with an MTP block on NVMe, on one GPU; Ornith's own numbers need the 4-node window ([ornith] below)"
+context  = 2048
+max_tokens = 256
+depth    = 3
+# chat-rendered, thinking off (assistant turn opened with an empty <think></think>), so the drafted text is the answer
+code  = ["Write a Python function that parses an ISO-8601 duration such as P3DT4H5M into a number of seconds, with a few unit tests.",
+         "Write a C function that reverses a singly linked list in place, and a main() that tests it.",
+         "Implement an LRU cache class in TypeScript with O(1) get and put. Include a short usage example.",
+         "Write a bash script that prints the ten largest files under a directory with human-readable sizes."]
+prose = ["Explain to a curious ten-year-old why the sky is blue and sunsets are red.",
+         "Write a short story about a lighthouse keeper who finds a message in a bottle.",
+         "Summarize the main causes of the French Revolution in a few paragraphs.",
+         "Describe how a bill becomes a law in the United States, step by step."]
+
+[criteria]
+# 1. Off by default, ids unchanged. For every one of the 8 prompts, the ids of the probe run (--mtp-probe 3) equal,
+#    token for token, the ids of the same binary without the flag (the engine's own QwenGpuExecutor::Generate).
+# 2. Unit check against a reference. gate/ornith_o3_mtp.py ref recomputes in numpy (float64, weights dequantized
+#    by gguf-py from the same file) the MTP forward of [reference] llama_cpp for every step the probe dumped on prompt
+#    0 (the whole prompt's rows, then the first 8 frontiers with their depth-2 and depth-3 chain steps), from the
+#    probe's own inputs (token, the target's pre-norm row or the previous step's h_out, position), with its own KV
+#    rows written and overwritten by position as the probe's are. Pass when
+#      a. every step's h_out has cosine >= 0.999 with the reference's;
+#      b. on every logits step where the reference's top-1 leads its top-2 by >= 0.5, the probe's argmax equals the
+#         reference's; and the probe's argmax equals the reference's on >= 90% of all logits steps.
+# 3. Against llama.cpp. /opt/llama/llama-server --spec-type draft-mtp --spec-draft-n-max 1 --spec-draft-p-min 0,
+#    greedy, the same 8 prompts as token ids, 256 tokens: its draft_n_accepted / draft_n over all prompts, against the
+#    probe's d1 acceptance simulated on the same schedule (a round at frontier f drafts one token; the next round
+#    starts at f + 2 on a hit, f + 1 on a miss). Pass when they differ by at most 0.05 (absolute). The two engines'
+#    greedy texts may diverge (different kernels), so this checks the semantics, not the numbers to the token.
+# Recorded, not criteria: per depth k = 1..3 and per class (code, prose, all): marginal acceptance P(d_k = x_{f+k}),
+# chain acceptance P(d_1..d_k all right) and conditional a_k = chain_k / chain_{k-1}; expected tokens per round at
+# k = 1, 2, 3 (1 + chain_1 + .. + chain_k); MTP ms per draft step (the 35B's, not Ornith's); llama.cpp's
+# n_max 3 acceptance (draft_n_accepted / draft_n) beside the probe's simulated on that schedule.
+# Decision rule of the survey (O3 gate), applied to Ornith's numbers only: continue with O3 when a1 >= 0.6 on code.
+# The 35B numbers are a proxy and decide nothing.
+
+[ornith]
+# The 4-node acceptance probe: PREPARED, NOT RUN. It needs owner's go (a window on F, D, A, C).
+plan = """gate/ornith_p5.py stage --with-mtp, then gate/ornith_p5.py run --steps w4 --mtp-probe 3 (world 4, cuts
+0/15/30/45/60, graph on): rank 3 (C, blocks 45-60 + head) also loads blk.60 (3.98 GiB) and a copy of token_embd
+(0.53 GiB) from its /cache/flerp-p5 staged file, takes the same ids files as rank 0, and logs one `mtp_probe` event a
+prompt; ids are produced exactly as without the flag."""
+criteria = """1. every rank exits 0; rank 3's `mtp_probe` events cover every prompt of every run; in each, the greedy ids
+the probe saw equal rank 0's ids for that prompt; 2. the ids of the two graph-on runs are equal per prompt (P5
+criterion 1). Recorded: the same per-depth table as [criteria]; a1 on code against the survey's 0.6 bar."""

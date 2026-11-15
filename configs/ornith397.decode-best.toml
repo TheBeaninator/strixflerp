@@ -1,0 +1,20 @@
+# Champion configuration, area decode-single (one stream, tok/s). Ledger: configs/champions.toml, docs/CHAMPIONS.md.
+# Fidelity floor: identity (the ids with drafts equal drafts-off, greedy, byte for byte).
+name        = "ornith397.decode-best"
+description = "Ornith-1.5 397B decode: ORNITH-KERN3 + DECODE-KERN3 + ATTN-PROJ kernels, pinned rows, token-only reply, MTP speculative decoding at 3 drafts"
+model       = "ornith-1.5-397b"
+areas       = ["decode-single"]
+includes    = []
+# Compiled into every build of the serve recipe (no switch): DECODE-KERN3 83d5366, ORNITH-KERN3 d0c3714, ATTN-PROJ e77a2bf.
+kernels     = ["DECODE-KERN3 83d5366", "ORNITH-KERN3 d0c3714", "ATTN-PROJ e77a2bf"]
+
+[stage]
+# rows: pinned stage row buffers (O1, 35fa289). reply: token-only (O1). drafts: MTP head on the last rank, N drafts a
+# round (ORNITH-O3 step two, 100ab29). with_mtp: blk.<last> + token_embd staged on the last rank's node (stage --with-mtp).
+rows       = "pinned"
+reply      = "token"
+drafts     = 3
+draft_head = true
+with_mtp   = true
+
+[env]

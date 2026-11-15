@@ -1,0 +1,41 @@
+id      = "runtime.strixite.vision_preprocess"
+kind    = "runtime"
+summary = "Image decode (PNG, JPEG, GIF, BMP, TGA, WebP) and the model's resize and patch preprocessing"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/vision_preprocess.cpp", "serve/vision_preprocess.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/vision_preprocess.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "vision.preprocess/-/-"
+api       = "strix::vision::{decode_image, preprocess_image, resize_bicubic_aa_u8}"
+numeric   = "antialiased bicubic resize on u8 as the reference processor"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.libwebp"
+
+[[requires]]
+module = "runtime.strixite.stb"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

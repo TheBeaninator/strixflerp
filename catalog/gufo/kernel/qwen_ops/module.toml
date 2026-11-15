@@ -1,0 +1,62 @@
+id        = "kernel.gufo.qwen_ops"
+kind      = "kernel"
+summary   = "Header-only: launch APIs of the shared Qwen HIP operators (kernels/ops/*.hpp), quant block helpers, route and attention policies, and kernel-private headers shared between translation units"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/families/qwen/hip_common/attention_policy.hpp",
+  "src/families/qwen/hip_common/execution_policy.hpp",
+  "src/families/qwen/hip_common/gemm_route.hpp",
+  "src/families/qwen/hip_common/quant_ops.hpp",
+  "src/families/qwen/hip_common/recurrent_state.hpp",
+  "src/families/qwen/hip_common/rope.hpp",
+  "src/families/qwen/kernels/attention_decode_split_k.hpp",
+  "src/families/qwen/kernels/attention_decode_verify_wave64.hpp",
+  "src/families/qwen/kernels/deltanet_decode.hpp",
+  "src/families/qwen/kernels/dflash_kernels.hpp",
+  "src/families/qwen/kernels/ops.hpp",
+  "src/families/qwen/kernels/ops/attention.hpp",
+  "src/families/qwen/kernels/ops/gemm.hpp",
+  "src/families/qwen/kernels/ops/norm_residual.hpp",
+  "src/families/qwen/kernels/ops/prefill_fp16.hpp",
+  "src/families/qwen/kernels/ops/ssm.hpp",
+  "src/families/qwen/kernels/ops/swiglu.hpp",
+  "src/families/qwen/kernels/ops/token.hpp",
+  "src/families/qwen/kernels/prefill_quant_gemm.hpp",
+  "src/families/qwen/kernels/small_batch_gemm.hpp",
+  "src/families/qwen/kernels/small_batch_quant16_wave64.hpp",
+  "src/families/qwen/kernels/verify_gemm_27b.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = true
+reason    = "quant_ops.hpp: adds WideQ4KRowsDot and WideQuantProjectionsKernel / TryLaunchWideQuantProjections (Q4_K rows two a wave, or one a wave in segments under 256 rows, with 16-byte code and x loads, x shared; other K-quant rows one a wave by QuantWarpBlockDot), same lanes, decode and summation order as QuantWarpBlockDot, bit-equal; nothing existing changed (strixflerp ATTN-PROJ, gate/attn-proj.toml)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.gufo-qwen-ops/-/-"
+api       = "gufo::hip::Launch* declarations (ops/gemm.hpp, attention.hpp, ssm.hpp, token.hpp, norm_residual.hpp, swiglu.hpp, prefill_fp16.hpp)"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the kernel.gufo.qwen_* modules"

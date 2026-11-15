@@ -1,0 +1,46 @@
+id        = "runtime.strixfold.grammar"
+kind      = "runtime"
+summary   = "Constrained decoding: regex and JSON-schema programs compiled to a token-trie machine"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/core/lanes/grammar/constraint.zig",
+  "zig/src/core/lanes/grammar/grammar.zig",
+  "zig/src/core/lanes/grammar/grammar_test.zig",
+  "zig/src/core/lanes/grammar/machine.zig",
+  "zig/src/core/lanes/grammar/program.zig",
+  "zig/src/core/lanes/grammar/regex.zig",
+  "zig/src/core/lanes/grammar/trie.zig",
+  "zig/src/core/lanes/grammar/vocab.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:core"
+
+[[provides]]
+interface = "grammar.matcher-strixfold/-/-"
+api       = "core/lanes/grammar/grammar.zig"
+numeric   = "n/a"
+regime    = "host side, per sampled row"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

@@ -1,0 +1,38 @@
+id        = "runtime.flerp.sampler_strixite"
+kind      = "runtime"
+summary   = "strixite's host sampler behind include/flerp/sampler.h: temperature, top-k, top-p and a seeded mt19937_64 over full rows or the top 20 candidates, the origin's draws bit for bit"
+notes     = "A C shim over strix::Sampler (serve/sampler.hpp). min_p is refused: the sampler has none."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/sampler/sampler_strixite.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/sampler/sampler_strixite.cpp"]
+includes  = ["../../../../include"]
+
+[[provides]]
+interface = "sample.host/flerp-v1/-"
+api       = "flerp_sampler_new .. flerp_sampler_pick (include/flerp/sampler.h)"
+numeric   = "strixite's Sampler: the same result and the same random draws as Sampler::sample on the row"
+regime    = "full rows, or candidates for greedy and top_k 1..20"
+
+[[requires]]
+module    = "runtime.strixite.sampler"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "flerp:gate/flerp_serve.py"
+bench     = "none"
+status    = "parity"
+evidence  = "gate/results/qwen38-flash-next.flerp-serve/at-20937dc/summary.json"

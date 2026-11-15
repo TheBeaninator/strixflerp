@@ -1,0 +1,67 @@
+id        = "kernel.gufo.qwen_gdn"
+kind      = "kernel"
+summary   = "Gated DeltaNet (called SSM in gufo): fused input projections, causal conv1d, token-serial DeltaNet recurrence, row-split recurrence with fused post-norm and gate, rollback capture"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/families/qwen/kernels/prefill_ssm.hip",
+  "src/families/qwen/kernels/ssm.hip",
+  "src/families/qwen/kernels/ssm_decode_recurrence.hip",
+  "src/families/qwen/kernels/ssm_recurrence.hip",
+  "src/families/qwen/kernels/ssm_row_split.hip",
+  "src/models/qwen/hip/batched_ssm.hip",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = true
+reason    = "ssm.hip: LaunchFusedSSMInputProjections takes quant_ops.hpp TryLaunchWideQuantProjections first (Q4_K rows two a wave with wide loads), same bits for every row (strixflerp ATTN-PROJ, gate/attn-proj.toml)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/families/qwen/kernels/ssm.hip",
+  "src/src/families/qwen/kernels/ssm_recurrence.hip",
+  "src/src/families/qwen/kernels/ssm_decode_recurrence.hip",
+  "src/src/families/qwen/kernels/ssm_row_split.hip",
+  "src/src/families/qwen/kernels/prefill_ssm.hip",
+  "src/src/models/qwen/hip/batched_ssm.hip",
+]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = ["-x", "hip", "-std=gnu++20", "-O2", "-UNDEBUG", "-DENGINE_ENABLE_HIP=1", "-c"]
+variants  = 6
+
+[[provides]]
+interface = "mixer.gdn/-/f32.gufo"
+api       = "gufo::hip::LaunchSSMConvRecurrence, LaunchSSMConvRecurrenceRows, LaunchSSMConvRecurrenceBatch, LaunchBatchedSSMConvRecurrence, LaunchBatchedSSMConvRecurrenceRowSplit, LaunchCaptureBatchedSsmReplay (ops/ssm.hpp)"
+numeric   = "fp32 state; each row arithmetic and order identical to the one-row-per-launch form (bit-exact across batch shapes); in-place and pinned-buffer passes bit-identical"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound; prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "mixer.gdn-front/gguf-kquant/f32"
+api       = "gufo::hip::LaunchFusedSSMInputProjections, LaunchBatchedFusedSSMInputProjections"
+numeric   = "fused q,k,v,gate,alpha,beta projections on GGUF weights"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-"
+
+[gate]
+parity    = "origin-test:tests/kernels"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.qwen_gdn.json"

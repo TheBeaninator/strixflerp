@@ -1,0 +1,50 @@
+id      = "runtime.strixite.prompt_cache"
+kind    = "runtime"
+summary = "Prompt cache: token-prefix keyed RAM tier with disk write-back, parked conversations, export and import"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/prompt_cache.cpp", "serve/prompt_cache.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/prompt_cache.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "cache.prompt/-/-"
+api       = "strix::PromptCache, strix::PromptCacheStats"
+numeric   = "restored state is the saved bytes; keys carry the weights, K/V dtype, MTP and YaRN fingerprint"
+regime    = "host only (no HIP on its compile line); disk tier gated by a free-space margin"
+
+[[requires]]
+interface = "format.container/strixw/-"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.host_buffer"
+
+[[requires]]
+module = "runtime.strixite.memory_governor"
+
+[[requires]]
+module = "runtime.strixite.paged_state"
+
+[[requires]]
+module = "runtime.strixite.serve_log"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

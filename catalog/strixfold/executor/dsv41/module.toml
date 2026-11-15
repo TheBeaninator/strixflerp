@@ -1,0 +1,182 @@
+id        = "executor.strixfold.dsv41"
+kind      = "executor"
+summary   = "DeepSeek-V4.1-Flash, one TP rank: prompt chunks, decode / verify rounds, the Triton and HIP kernel launch sites, behind the lane backend vtable and the native family interface"
+notes     = "native.zig carries a pod patch (f44d736). cublas.zig / cublaslt.zig are dlopen shims the family imports unconditionally and stay; the *2d* files (the TP4 split, exercised on CUDA only) are included because round.zig, prompt.zig and draft.zig import them; model.zig imports vision.zig unconditionally, so the vision tower is its own module (executor.strixfold.dsv41_vision) that this one requires; fixtures/*.json are embedded by tri.zig."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/families/dsv41/blas.zig",
+  "zig/src/families/dsv41/check_main.zig",
+  "zig/src/families/dsv41/config.zig",
+  "zig/src/families/dsv41/cpu.zig",
+  "zig/src/families/dsv41/cublas.zig",
+  "zig/src/families/dsv41/cublaslt.zig",
+  "zig/src/families/dsv41/dense.zig",
+  "zig/src/families/dsv41/draft2d.zig",
+  "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/elf.zig",
+  "zig/src/families/dsv41/exact.zig",
+  "zig/src/families/dsv41/exl3_experts.zig",
+  "zig/src/families/dsv41/exl3_experts2d.zig",
+  "zig/src/families/dsv41/exl3_experts2d_rec.zig",
+  "zig/src/families/dsv41/exl3_experts_rec.zig",
+  "zig/src/families/dsv41/exl3_linear.zig",
+  "zig/src/families/dsv41/exl3_prefill.zig",
+  "zig/src/families/dsv41/fixtures/derived_launches.json",
+  "zig/src/families/dsv41/fixtures/launches.json",
+  "zig/src/families/dsv41/hip_load.zig",
+  "zig/src/families/dsv41/hipblas.zig",
+  "zig/src/families/dsv41/hipblas_abi_check.c",
+  "zig/src/families/dsv41/lanes.zig",
+  "zig/src/families/dsv41/lanes_main.zig",
+  "zig/src/families/dsv41/layer_main.zig",
+  "zig/src/families/dsv41/load_main.zig",
+  "zig/src/families/dsv41/model.zig",
+  "zig/src/families/dsv41/native.zig",
+  "zig/src/families/dsv41/ops.zig",
+  "zig/src/families/dsv41/prompt.zig",
+  "zig/src/families/dsv41/prompt2d.zig",
+  "zig/src/families/dsv41/ring2d.zig",
+  "zig/src/families/dsv41/ring2d_check_main.zig",
+  "zig/src/families/dsv41/round.zig",
+  "zig/src/families/dsv41/round2d.zig",
+  "zig/src/families/dsv41/state_file.zig",
+  "zig/src/families/dsv41/text.zig",
+  "zig/src/families/dsv41/tri.zig",
+  "zig/src/families/dsv41/tri_attn.zig",
+  "zig/src/families/dsv41/tri_aux.zig",
+  "zig/src/families/dsv41/tri_basic.zig",
+  "zig/src/families/dsv41/tri_hc.zig",
+  "zig/src/families/dsv41/tri_index.zig",
+  "zig/src/families/dsv41/tri_norm.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = ["src/zig/src/families/dsv41/lanes_main.zig", "src/zig/src/families/dsv41/layer_main.zig"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "executor.model/deepseek-v4.1-flash/exl3"
+api       = "lanes.zig (lane Backend), native.zig (native family), tf-dsv41-lanes, tf-dsv41-layer"
+numeric   = "token identity with the served Python lane is the origin gate (layer_main.zig against recordings); decode rows are row-invariant, drafts output-invariant"
+regime    = "TP2 over two gfx1151 nodes; 30.8 decode tok/s, 1,226..1,432 prefill tok/s measured on F+A over RDMA"
+
+[[requires]]
+interface = "executor.lane-backend/-/-"
+
+[[requires]]
+interface = "device.facade/hip/-"
+
+[[requires]]
+interface = "verify.kit-manifest/hsaco/-"
+
+[[requires]]
+interface = "collective.interface/-/-"
+
+[[requires]]
+interface = "collective.allgather-tcp/-/f32"
+
+[[requires]]
+interface = "collective.allgather-rdma/-/f32"
+
+[[requires]]
+interface = "collective.allgather-nccl/-/f32"
+
+[[requires]]
+interface = "format.device-view/exl3/-"
+
+[[requires]]
+interface = "format.loader/engram-fp8/-"
+
+[[requires]]
+interface = "sample.next-token/-/f64"
+
+[[requires]]
+interface = "speculation.draft/dspark/bf16"
+
+[[requires]]
+interface = "cache.prompt-strixfold/-/-"
+
+[[requires]]
+interface = "linear.decode/exl3/f16-f32.row-invariant"
+
+[[requires]]
+interface = "linear.prefill/exl3/f16-f32"
+
+[[requires]]
+interface = "moe.experts-decode/exl3/bf16"
+
+[[requires]]
+interface = "moe.experts-prefill/exl3/bf16.jobs"
+
+[[requires]]
+interface = "moe.gate-logits/f16/bf16-f32"
+
+[[requires]]
+interface = "moe.router/-/bf16-f32"
+
+[[requires]]
+interface = "attn.sparse-sink/kv-fp4-e2m1/bf16"
+
+[[requires]]
+interface = "attn.indexer-score/kv-fp4-e2m1/bf16"
+
+[[requires]]
+interface = "attn.indexer-topk/-/i64-keys"
+
+[[requires]]
+interface = "hc.mix-decode/dsv41-mhc-f32/bf16"
+
+[[requires]]
+interface = "hc.mix-prefill/dsv41-mhc-f32/bf16"
+
+[[requires]]
+interface = "pos.rope-heads/-/bf16.triton-bits"
+
+[[requires]]
+interface = "pos.rope-heads/-/bf16.hip"
+
+[[requires]]
+interface = "norm.rmsnorm/-/bf16.triton-bits"
+
+[[requires]]
+interface = "kvcache.store/fp4-e2m1/bf16"
+
+[[requires]]
+interface = "linear.dense/bf16/bf16-f32.row-invariant"
+
+[[requires]]
+interface = "residual.add2/-/f32-bf16"
+
+[[requires]]
+module    = "runtime.strixfold.core"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[[requires]]
+module    = "executor.strixfold.dsv41_vision"
+
+[[requires]]
+module    = "runtime.strixfold.fabric"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

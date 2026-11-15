@@ -1,0 +1,6 @@
+{"_card": "crucible-fatzero", "_call": "j2tokens",
+ "src": "/data/pod/kbench/stage/crucible-fatzero",
+ "cmd": "pgrep -x llama-server && exit 8; for t in stock101 fatzero101 stock724; do test -x $t/build/engine/crucible.mono || exit 9; sha256sum $t/build/engine/crucible.mono; done; bash tokens.sh fatzero101:0,3 stock101:0,3 stock724:0",
+ "fetch": ["fatzero101/build/kbout/*", "stock101/build/kbout/*", "stock724/build/kbout/*"],
+ "timeout_s": 14400, "queue_wait_s": 14400,
+ "why": "Crucible ROCm 10.1 fat-zero spill fix: tokens on the gate's 3 prompts, n 128, spec 0 and 3 (patched 10.1, stock 10.1), spec 0 stock 7.2.4"}

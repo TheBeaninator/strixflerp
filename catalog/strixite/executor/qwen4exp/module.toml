@@ -1,0 +1,153 @@
+id      = "executor.strixite.qwen4exp"
+kind    = "executor"
+summary = "Qwen3.8-Flash-Next (qwen4exp) text model: 4 hyper-connected streams, 36 GDN + 12 QSA full-attention layers, PLE, MoE (top-10 of 512 + shared), MTP draft head, sessions with paged K/V"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/qwen4exp.cpp", "runtime/qwen4exp.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/qwen4exp.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.forward/qwen4exp/bf16"
+api       = "strix::Qwen4ExpModel, strix::Qwen4ExpSession"
+numeric   = "bf16 activations in the server; fp32 math inside every kernel; prefill may use the WMMA lower-precision paths per PrecisionOptions; decode and verify use the exact kernels"
+regime    = "weights.strixw resident on the device; decode, chunked prefill, MTP verify, batched runs"
+
+[[requires]]
+module = "executor.strixite.vision_tower"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.requant/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-loader/strixw/-"
+
+[[requires]]
+interface = "attn.softmax-gqa/-/bf16"
+
+[[requires]]
+interface = "embed.lookup/bf16/bf16"
+
+[[requires]]
+interface = "embed.lookup/strixw-q8/bf16"
+
+[[requires]]
+interface = "mixer.gdn/-/bf16"
+
+[[requires]]
+interface = "hc.mix/strixw-q4/bf16"
+
+[[requires]]
+interface = "hc.mix/strixw-q8/bf16"
+
+[[requires]]
+interface = "hc.mix-prefill/strixw-q4/bf16"
+
+[[requires]]
+interface = "hc.mix-prefill/strixw-q8/bf16"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+interface = "linear.dense/bf16/bf16"
+
+[[requires]]
+interface = "logits.bias/-/-"
+
+[[requires]]
+interface = "logits.topk/-/-"
+
+[[requires]]
+interface = "moe.experts-prefill/strixw-q4/bf16"
+
+[[requires]]
+interface = "moe.experts-prefill/strixw-q5/bf16"
+
+[[requires]]
+interface = "moe.router/-/bf16"
+
+[[requires]]
+interface = "draft.mtp-pick/-/-"
+
+[[requires]]
+interface = "norm.rmsnorm-zc/-/bf16"
+
+[[requires]]
+interface = "norm.rmsnorm-gated/-/bf16"
+
+[[requires]]
+interface = "ple.inject/-/bf16"
+
+[[requires]]
+interface = "attn.qsa-indexer/-/bf16"
+
+[[requires]]
+interface = "residual.add/-/bf16"
+
+[[requires]]
+interface = "pos.rope/-/bf16"
+
+[[requires]]
+interface = "steer.add-rows/-/bf16"
+
+[[requires]]
+interface = "act.swiglu/-/bf16"
+
+[[requires]]
+interface = "vision.tower-ops/bf16/bf16"
+
+[[requires]]
+module = "runtime.strixite.bf16"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[[requires]]
+module = "runtime.strixite.log"
+
+[[requires]]
+module = "runtime.strixite.ngram_rows"
+
+[[requires]]
+module = "runtime.strixite.ngram_table"
+
+[[requires]]
+module = "runtime.strixite.paged_buffer"
+
+[[requires]]
+module = "runtime.strixite.paged_state"
+
+[[requires]]
+module = "runtime.strixite.ple_hash"
+
+[[requires]]
+module = "runtime.strixite.qweight"
+
+[[requires]]
+module = "runtime.strixite.steer"
+
+[[requires]]
+module = "runtime.strixite.trace"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

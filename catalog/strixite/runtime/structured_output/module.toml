@@ -1,0 +1,47 @@
+id      = "runtime.strixite.structured_output"
+kind    = "runtime"
+summary = "Structured output state for a generation: grammar cursor and row masks"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/structured_output.cpp", "serve/structured_output.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/structured_output.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "grammar.structured-output/-/-"
+api       = "strix::StructuredOutput"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.grammar"
+
+[[requires]]
+module = "runtime.strixite.sampler"
+
+[[requires]]
+module = "runtime.strixite.token_mask"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

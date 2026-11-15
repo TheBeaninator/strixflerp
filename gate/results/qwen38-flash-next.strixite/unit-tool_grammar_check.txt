@@ -1,0 +1,56 @@
+$ /data/projects/strixflerp/build/qwen38-flash-next.strixite/ninja/tool_grammar_check /data/models/strix-infer/tok/tokenizer.json
+grammar: 95 rules
+ok    auto: an empty answer
+ok    auto: plain text
+ok    auto: text with look-alike tags
+ok    auto: one call
+ok    auto: text, blank line, call
+ok    auto: two calls on consecutive lines
+ok    auto: a call of a tool with no properties and no parameters
+ok    auto: a tool without properties takes any parameter name
+ok    auto: a value may hold other tags; two parameters
+ok    auto: a value without the format's newlines
+ok    auto: blank lines between tags
+ok    refuses the lib-3-brief shape (undeclared tool 'expert')
+ok    refuses a value without its <parameter=> tag
+ok    refuses an undeclared parameter name
+ok    refuses a prefix of a tool name
+ok    refuses a bare <function=> block outside a call (scale-8 replay shape)
+ok    refuses the text spelling of </tool_call> in text
+ok    refuses a stray </tool_call> token in text
+ok    refuses a call opened with the text spelling of <tool_call>
+ok    refuses a call closed with the text spelling of </tool_call> (the scale-8 shape)
+ok    refuses a call tag's text inside a parameter value
+ok    refuses a call tag token inside a parameter value
+ok    refuses <tool_call> not right after a newline
+ok    refuses </tool_call> not right after a newline
+ok    refuses a second call not on a new line
+ok    an open call is not an end of turn
+ok    ... but may continue
+ok    required: text is refused (the answer is the call)
+ok    required: no text before the call either
+ok    required: a call alone
+ok    required: two calls
+ok    named: the named tool
+ok    named: another tool is refused
+ok    named: a tool not among the tools is an error
+ok    parser: the grammar accepts the call
+ok    parser: parse_tool_call accepts a call the grammar accepts
+ok    parser: the grammar accepts the call
+ok    parser: parse_tool_call accepts a call the grammar accepts
+ok    parser: the grammar accepts the call
+ok    parser: parse_tool_call accepts a call the grammar accepts
+ok    parser: the grammar accepts the call
+ok    parser: parse_tool_call accepts a call the grammar accepts
+ok    tokenizer: the call tags are added tokens
+ok    tokenizer: a raw 0xFF byte token exists
+ok    masks: <tool_call> allowed after a newline
+ok    masks: the end of the turn allowed after text
+ok    masks: the row mask has the <tool_call> bit
+ok    masks: the row mask lacks </tool_call> outside a call
+ok    masks: the row mask lacks the raw 0xFF byte token
+ok    masks: <tool_call> refused when not right after a newline
+ok    masks: a whole call feeds through the tag tokens to a complete answer
+ok    masks: the end of the turn allowed after the call
+ok    masks: without tag tokens (a response_format grammar) <tool_call> stays refused
+PASS (0 failures)

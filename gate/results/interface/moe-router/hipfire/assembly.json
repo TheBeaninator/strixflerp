@@ -1,0 +1,195 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_moe_router",
+   "modules": [
+    "runtime.strixite.check",
+    "kernel.strixite.hip_common",
+    "kernel.strixite.device_info",
+    "kernel.strixite.norm",
+    "kernel.strixite.moe_router",
+    "kernel.hipfire.common_headers",
+    "format.hipfire.loader",
+    "kernel.hipfire.norm_rope",
+    "kernel.hipfire.gemm_mq",
+    "kernel.hipfire.tensor_ops",
+    "kernel.hipfire.moe",
+    "kernel.flerp.adapter_rt",
+    "kernel.flerp.moe_router_hipfire",
+    "tool.flerp.gate_moe_router"
+   ]
+  }
+ },
+ "bindings": {
+  "format.device-view/hipfire-hfq/-": "format.hipfire.loader",
+  "format.device-view/hipfire-mfp4/-": "format.hipfire.loader",
+  "format.device-view/hipfire-mq/-": "format.hipfire.loader",
+  "moe.router/-/bf16": "kernel.flerp.moe_router_hipfire",
+  "rotate.fwht/-/f32": "kernel.hipfire.norm_rope"
+ },
+ "code_objects": [
+  {
+   "adapter": "kernel.flerp.moe_router_hipfire",
+   "command": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/norm_rope/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I /data/models/tools/therock-10.2/include @SRC@ -o @OUT@",
+   "module": "kernel.hipfire.moe",
+   "symbol": "flerp_co_hipfire_moe_topk_k8",
+   "toolchain": "therock-10.2",
+   "unit": "moe_softmax_topk_k8"
+  }
+ ],
+ "contract_changes": [
+  {
+   "module": "kernel.flerp.moe_router_hipfire",
+   "provided": "moe.router/-/bf16.hipfire-k8",
+   "required": "moe.router/-/bf16"
+  }
+ ],
+ "foreign": {
+  "kernel.hipfire.common_headers": {
+   "origin": "hipfire",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  },
+  "kernel.hipfire.gemm_mq": {
+   "origin": "hipfire",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  },
+  "kernel.hipfire.moe": {
+   "origin": "hipfire",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  },
+  "kernel.hipfire.norm_rope": {
+   "origin": "hipfire",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  },
+  "kernel.hipfire.tensor_ops": {
+   "origin": "hipfire",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  }
+ },
+ "include_only": [],
+ "modules": {
+  "format.hipfire.loader": {
+   "dir": "catalog/hipfire/format/loader",
+   "files": 13,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.flerp.adapter_rt": {
+   "dir": "catalog/flerp/kernel/adapter_rt",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.flerp.moe_router_hipfire": {
+   "dir": "catalog/flerp/kernel/moe_router_hipfire",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/flerp_adapters/moe_router_hipfire.hip"
+   ],
+   "spdx": "MIT"
+  },
+  "kernel.hipfire.common_headers": {
+   "dir": "catalog/hipfire/kernel/common_headers",
+   "files": 31,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.hipfire.gemm_mq": {
+   "dir": "catalog/hipfire/kernel/gemm_mq",
+   "files": 76,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.hipfire.moe": {
+   "dir": "catalog/hipfire/kernel/moe",
+   "files": 154,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.hipfire.norm_rope": {
+   "dir": "catalog/hipfire/kernel/norm_rope",
+   "files": 32,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.hipfire.tensor_ops": {
+   "dir": "catalog/hipfire/kernel/tensor_ops",
+   "files": 53,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.strixite.device_info": {
+   "dir": "catalog/strixite/kernel/device_info",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.hip_common": {
+   "dir": "catalog/strixite/kernel/hip_common",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.moe_router": {
+   "dir": "catalog/strixite/kernel/moe_router",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/moe_router.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.norm": {
+   "dir": "catalog/strixite/kernel/norm",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/norm.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "runtime.strixite.check": {
+   "dir": "catalog/strixite/runtime/check",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "tool.flerp.gate_moe_router": {
+   "dir": "gate/interface/drivers/moe_router",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-moe-router.hipfire",
+ "renames": {
+  "kernel.strixite.moe_router": {
+   "adapter": "kernel.flerp.moe_router_hipfire",
+   "suffix": "_flerp_origin",
+   "symbols": [
+    "moe_router"
+   ]
+  }
+ },
+ "toolchain": "therock-10.1"
+}

@@ -1,0 +1,56 @@
+id        = "runtime.strixfold.coll_rdma"
+kind      = "runtime"
+summary   = "Coll over RoCE verbs: tcp_proxy slot collective with one RC RDMA write-with-immediate per staged slot (pod card SFR-2); the older one-hop RDMA ring and its sequence bookkeeping"
+notes     = "rdma_proxy.zig and rdma_check.py are pod-authored (commits 3da08b5, 7bf2623). rdma.zig is the CUDA-era verbs ring (f44d736: used on CUDA only)."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "tools/dsv41-hip/rdma_check.py",
+  "zig/src/families/dsv41/rdma.zig",
+  "zig/src/families/dsv41/rdma_bench_main.zig",
+  "zig/src/families/dsv41/rdma_proxy.zig",
+  "zig/src/families/dsv41/rdma_seq.zig",
+]
+authors   = ["pod", "StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "collective.allgather-rdma/-/f32"
+api       = "rdma_proxy.zig (TF_COLL_KIND=rdma)"
+numeric   = "bytes only; 64-byte trailer (magic, epoch, sequence, bytes, site, rank) checked per slot; gathers larger than a slot fall back to tcp_host"
+regime    = "TP2 decode slices; measured 30.8 decode tok/s on F+A (pod /data/pod/plans/af9276f296/NOTES.md)"
+
+[[requires]]
+interface = "collective.interface/-/-"
+
+[[requires]]
+interface = "collective.device-proxy/-/-"
+
+[[requires]]
+module    = "runtime.strixfold.coll_tcp"
+
+[[requires]]
+module    = "runtime.strixfold.fabric"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

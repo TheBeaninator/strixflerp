@@ -1,0 +1,74 @@
+id      = "serve.strixite.strix_server"
+kind    = "serve"
+summary = "The server program: settings, memory plan, model and vision load, engine and HTTP wiring, signal handling"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/strix_server.cpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/strix_server.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.program/qwen4exp/-"
+api       = "main (strix_server)"
+numeric   = "n/a"
+regime    = "one process, one GPU"
+
+[[requires]]
+module = "executor.strixite.qwen4exp"
+
+[[requires]]
+module = "executor.strixite.qwen4exp_backend"
+
+[[requires]]
+interface = "vision.tower-ops/bf16/bf16"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[[requires]]
+module = "runtime.strixite.engine"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.memory_plan"
+
+[[requires]]
+module = "runtime.strixite.prompt_cache"
+
+[[requires]]
+module = "runtime.strixite.serve_log"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[[requires]]
+module = "runtime.strixite.vision_request"
+
+[[requires]]
+module = "serve.strixite.http"
+
+[[requires]]
+module = "serve.strixite.steer_library"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

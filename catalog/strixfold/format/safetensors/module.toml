@@ -1,0 +1,42 @@
+id        = "format.strixfold.safetensors"
+kind      = "format"
+summary   = "Host readers the core library exports: safetensors headers and tensors, the checkpoint index, O_DIRECT reads, npy files"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/core/checkpoint.zig",
+  "zig/src/core/direct_io.zig",
+  "zig/src/core/npy.zig",
+  "zig/src/core/safetensors.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:core"
+
+[[provides]]
+interface = "format.reader-strixfold/safetensors/-"
+api       = "core/safetensors.zig, core/checkpoint.zig, core/direct_io.zig, core/npy.zig"
+numeric   = "exact"
+regime    = "load time"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

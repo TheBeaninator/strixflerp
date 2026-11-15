@@ -1,0 +1,42 @@
+id      = "kernel.strixite.mtp_pick"
+kind    = "kernel"
+summary = "The MTP draft's pick on the GPU: best logit, runner-up value and NaN flag in one 64-byte struct"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/mtp_pick.hip", "kernels/mtp_pick.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/mtp_pick.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "draft.mtp-pick/-/-"
+api       = "strix::kernels::mtp_pick"
+numeric   = "exact selection on fp32 logits: lowest index on a tie, runner-up is the multiset second"
+regime    = "one block per draft step"
+
+[[requires]]
+module = "kernel.strixite.embedding"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

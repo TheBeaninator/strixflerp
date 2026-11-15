@@ -1,0 +1,69 @@
+id        = "kernel.strixfold.glue"
+kind      = "kernel"
+summary   = "Byte-moving and widening glue: bf16/f16 to f32, rank-ordered add, row scatter/gather, strided copy, argmax"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/glue.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/glue.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 9
+
+[[provides]]
+interface = "tensor.cast/-/bf16-f32"
+api       = "tf_ds_glue_bf16_to_f32, tf_ds_glue_f16_to_f32"
+numeric   = "exact widening"
+regime    = "any rows, memory-bound"
+
+[[provides]]
+interface = "residual.add2/-/f32-bf16"
+api       = "tf_ds_glue_add2_bf16"
+numeric   = "one IEEE fp32 add of two fp32 partials then one rounding to bf16 (clang float->__bf16, RNE); this is the TP rank-ordered reduction of a 2-rank all-gather"
+regime    = "any rows, memory-bound"
+
+[[provides]]
+interface = "tensor.rows/-/-"
+api       = "tf_ds_glue_scatter_rows, tf_ds_glue_gather_rows, tf_ds_glue_strided_copy, tf_ds_glue_copy_rows16"
+numeric   = "exact byte moves"
+regime    = "any rows, memory-bound"
+
+[[provides]]
+interface = "logits.argmax/-/f32"
+api       = "tf_ds_glue_argmax_rows"
+numeric   = "argmax, first index on ties (torch.argmax)"
+regime    = "rows x vocab fp32 logits, one block of 1024 a row"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.glue.json"

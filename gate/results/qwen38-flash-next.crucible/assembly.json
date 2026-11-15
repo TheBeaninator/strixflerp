@@ -1,0 +1,991 @@
+{
+ "binaries": {
+  "strixflerp-qwen38-flash-next.crucible": {
+   "entry": "engine/engine.hip",
+   "installed": "build/engine/crucible.mono",
+   "main": "executor.crucible.flashnext",
+   "modules": [
+    "kernel.crucible.device_common",
+    "kernel.crucible.exl3_gemv",
+    "format.crucible.flashnext_weights",
+    "format.crucible.ngram16",
+    "kernel.crucible.gdn",
+    "runtime.crucible.device_memory",
+    "runtime.crucible.speculation",
+    "runtime.crucible.state_disk",
+    "runtime.crucible.conversation_cache",
+    "kernel.crucible.ops",
+    "kernel.crucible.hc",
+    "format.crucible.exl3",
+    "kernel.crucible.exl3_gemm",
+    "kernel.crucible.moe_decode",
+    "kernel.crucible.moe_prefill",
+    "kernel.crucible.qsa",
+    "kernel.crucible.vision",
+    "runtime.crucible.ablation",
+    "runtime.crucible.batch",
+    "runtime.crucible.sampling",
+    "serve.crucible.engine_serve",
+    "tool.crucible.engine_cli",
+    "executor.crucible.flashnext"
+   ]
+  }
+ },
+ "bindings": {
+  "executor.model/qwen3.8-flash-next/exl3": "executor.crucible.flashnext"
+ },
+ "files": {
+  "Makefile": {
+   "module": "tool.crucible.build",
+   "sha256": "23b70b87f4b19e540a031932ab6adc751f1764cce86865659355066e848d7a4e"
+  },
+  "VERSION": {
+   "module": "tool.crucible.build",
+   "sha256": "f1a49cdeb0cce1d8c2d7cde8b8ae660a88ddd2fe44f9e8c2aac95b5d4dad6105"
+  },
+  "engine/cli/batch_cli.h": {
+   "module": "tool.crucible.engine_cli",
+   "sha256": "00af3f9a116d286d62a186ce53877d4cf67dc68317f75289869f276bfced6394"
+  },
+  "engine/cli/batch_options.h": {
+   "module": "tool.crucible.engine_cli",
+   "sha256": "dd050c50963f358147269852fe4779e2ee294feb2726e9fe6d1bb3a99a5279f3"
+  },
+  "engine/cli/gen_cli.h": {
+   "module": "tool.crucible.engine_cli",
+   "sha256": "193cb6652c62b457cfa92799723813d7d5bbc33eb34aff1b20ec0426f61130c5"
+  },
+  "engine/cli/gen_debug_schedule.h": {
+   "module": "tool.crucible.engine_cli",
+   "sha256": "42ebab674501d2d114d7773da852940db5b088103d8f485505c5215e81e37b22"
+  },
+  "engine/cli/gen_job_state.h": {
+   "module": "tool.crucible.engine_cli",
+   "sha256": "4b52acdea726fd59cdee1355194836f89af2d2bbc902ec13486e6a7160bee6ff"
+  },
+  "engine/cli/gen_jobs.h": {
+   "module": "tool.crucible.engine_cli",
+   "sha256": "e22034faaf258ea58b910f44efc943dd57ba63f20d1d9e1b7a54aa960a03981f"
+  },
+  "engine/cli/prefill_bench.h": {
+   "module": "tool.crucible.engine_cli",
+   "sha256": "a1ebd7949c75742ac53e5fef4f7dae4fab26212d3ea764a324511b072ee1cfd5"
+  },
+  "engine/cli/version.h": {
+   "module": "tool.crucible.engine_cli",
+   "sha256": "e1b1ee294fe7869427d97578f448a0f70dd8239a7c269d16ad3c41178af95a7d"
+  },
+  "engine/engine.hip": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "488020005061717291969bfb36280d7f9db19f28f15af625fcf2809a09c0f36b"
+  },
+  "engine/exl3/balanced_items.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "4e6c943b96370649b37f0faed191ea68b867432a0590a274642430f0c7cd995b"
+  },
+  "engine/exl3/decode_split.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "e060dc058d7993c4ce392806f9501ead8f770f4099ed07c8c50b3d01fadd2ced"
+  },
+  "engine/exl3/decode_support.h": {
+   "module": "format.crucible.exl3",
+   "sha256": "3aab90fdc7abec2882a730e94a5b8c5acb535630a97b5d243a4d52c9d857a139"
+  },
+  "engine/exl3/dense_rows.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "fadea4589fc5566168b001c56588830bd0ca620007675806ada0f3d809e184d3"
+  },
+  "engine/exl3/exl3.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "adc044855eee5a00429a2a467c896662f33cedbc6d78a0c6306695a0c76bf22a"
+  },
+  "engine/exl3/exl3_ring.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "a91c58013912e74b8b36d154a1f6ba03076c85eff5be5934176d70330d92ce77"
+  },
+  "engine/exl3/front_order.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "92950f2080a14f05b6a00ce47348d6cf62052ca7ca2cee9d0e16e3e6da83c615"
+  },
+  "engine/exl3/hc8_layout.h": {
+   "module": "kernel.crucible.hc",
+   "sha256": "8f9a3bf12cb46881fd5a606a6f11e1d1de4df715df730316b7e37ec368e68c31"
+  },
+  "engine/exl3/kernels/exl3_gemm.h": {
+   "module": "kernel.crucible.exl3_gemm",
+   "sha256": "f93649231df0781cdd3161719b4041969970800be0d0b0f588e40f759aea2e95"
+  },
+  "engine/exl3/kernels/exl3_gemm_pair.h": {
+   "module": "kernel.crucible.exl3_gemm",
+   "sha256": "a68d981807ea4c4512bdfacf36bc7fa25fa35f6d8ac7c28d9ad3874f1234a25c"
+  },
+  "engine/exl3/kernels/exl3_gemv.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "f7ddbbe881f802757d84d525f17b79e21d64f367d7410584ea5667aa2c6224b4"
+  },
+  "engine/exl3/kernels/exl3_moe_window.h": {
+   "module": "kernel.crucible.exl3_gemm",
+   "sha256": "38e66bbcf279d44fbecabd4fd2059b64cd12d6bb1ec42edf7f988eaf53502b4d"
+  },
+  "engine/exl3/kernels/lane_window.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "9fba2bc6e42df3402ce479ffc5e06df6631e7223c681efb4308e4a39f8c08a47"
+  },
+  "engine/exl3/load_tasks.h": {
+   "module": "format.crucible.exl3",
+   "sha256": "8ff03b72c372df315b053cc802171a2a450cc1563a63a7473599e660e1ff0110"
+  },
+  "engine/exl3/lookahead.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "12400d9411038e88f549a3371f493bc15f507430ca7d8593f8485809b8ae27fa"
+  },
+  "engine/exl3/plans.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "eea262c7e98ce91cbb4192cd98f1ace85f217e1d98336982074dd65b6fb60a78"
+  },
+  "engine/exl3/prefill_half.h": {
+   "module": "kernel.crucible.exl3_gemm",
+   "sha256": "9516a360706704083fd43351a5786093e0d33ca3f74d3507593bc8d8555fe75a"
+  },
+  "engine/exl3/prefill_items.h": {
+   "module": "kernel.crucible.exl3_gemm",
+   "sha256": "e7363458a0f9df32821995ff322d26674d554e633198e34d86bdec82252733ea"
+  },
+  "engine/exl3/prefill_linear.h": {
+   "module": "kernel.crucible.exl3_gemm",
+   "sha256": "81f44f5d0dfc9d5ae8d25db9755b85c4956551351beda77eaf8edd07244ab437"
+  },
+  "engine/exl3/ring_rows.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "fc2886a0a959c6c7df1d498506e44049af6e8f88c565b553b602267a0c1942de"
+  },
+  "engine/exl3/row_policy.h": {
+   "module": "kernel.crucible.exl3_gemv",
+   "sha256": "01858d1e9ec1bb5b4f16ae44b863b4168d5b15778a69a8eeef2b7c1daefda490"
+  },
+  "engine/exl3/safetensors.h": {
+   "module": "format.crucible.exl3",
+   "sha256": "0190b4eeb140ee07c737842a065dfff5b6a4ab27ea4751984e5f024a5e8d6235"
+  },
+  "engine/exl3/static_layout.h": {
+   "module": "format.crucible.exl3",
+   "sha256": "1fc4991846728914116f76dc18f2d3047ca0e8e8d35eee5a044c833da729926f"
+  },
+  "engine/gfx1151/common.h": {
+   "module": "kernel.crucible.device_common",
+   "sha256": "e56bb04c999cf270516440b1c8d981c2b760132a5f5c96ac154a40e937dfb393"
+  },
+  "engine/gfx1151/lds_stream_ring.h": {
+   "module": "kernel.crucible.device_common",
+   "sha256": "5c3d3a832898f042a1401be724a405e386b84d5e291dfc50a6b0d3933e067212"
+  },
+  "engine/gfx1151/migration_wait.h": {
+   "module": "runtime.crucible.device_memory",
+   "sha256": "ac9848d923f81cc39ec268c332f296619b5f3e45245c10136a7812bc304ca3e9"
+  },
+  "engine/gfx1151/persistent_sync.h": {
+   "module": "kernel.crucible.device_common",
+   "sha256": "df1cf73bc5486cd4a1c2f772aa1d657ee1da44aa9178e3659d8851c16cf3c38c"
+  },
+  "engine/gfx1151/pinned_allocator.h": {
+   "module": "runtime.crucible.device_memory",
+   "sha256": "1d68df57b52b68e133488df3b5959304f309f41ddb4c5dee738a14fc072556a8"
+  },
+  "engine/gfx1151/pinned_buffer.h": {
+   "module": "runtime.crucible.device_memory",
+   "sha256": "4672a3ddfdd8e29b288d2fae04c3ea781869b8486ffeaafb9d03a9707102a922"
+  },
+  "engine/gfx1151/prefill_wmma.h": {
+   "module": "kernel.crucible.device_common",
+   "sha256": "c45d31dea7c183eb1d016ebab25070aebeed91e2f5a3845f2617b81ac1c49374"
+  },
+  "engine/gfx1151/runtime_memory_policy.h": {
+   "module": "runtime.crucible.device_memory",
+   "sha256": "48320219867250e19c34a1bb96573f855c5e21f8b4bbe5e181ffaee728fa39b2"
+  },
+  "engine/gfx1151/warmup.h": {
+   "module": "runtime.crucible.device_memory",
+   "sha256": "2e881777c7f824116d99a84842e89ab1d139b6bfa7674452ed2e15fd322a9d82"
+  },
+  "engine/layers/ablation.h": {
+   "module": "runtime.crucible.ablation",
+   "sha256": "94af475c601820818c576d698134a0707224537acfe540421fd663fe8579c6ef"
+  },
+  "engine/layers/ablation_device.h": {
+   "module": "runtime.crucible.ablation",
+   "sha256": "caf94de6a1559a7bbbbecbab71f6fe2faef8f276a19bcc25367a529ab2703b49"
+  },
+  "engine/layers/cache_storage.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "bedacdf8c6188c53f473f21b13da76f15bdd5cd573dd47f5808ec959e172d6a6"
+  },
+  "engine/layers/dense_rows.h": {
+   "module": "kernel.crucible.ops",
+   "sha256": "733e6b84df5558a0b97e1ab56590f4c076e01f779ff0a57950a0d5cd22e51671"
+  },
+  "engine/layers/expert_count.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "cf3382338732d0d19039ed82674314adb3593d97059acbacc246e667ef002d3b"
+  },
+  "engine/layers/gdn_rows.h": {
+   "module": "kernel.crucible.gdn",
+   "sha256": "d6f008aae9b46794843bb4277847b5ae0a25f906b40c8ab73752b4e4c618325c"
+  },
+  "engine/layers/gdn_verify.h": {
+   "module": "kernel.crucible.gdn",
+   "sha256": "2fddc913949a37d1b1df6d7b98c0cbee18e11a30b89d42c45e6212993ec4261d"
+  },
+  "engine/layers/gdn_verify_switch.h": {
+   "module": "kernel.crucible.gdn",
+   "sha256": "98c731d167d72e1f9333c05a6456785bbcba72ac227a0588b1660a8e1666da33"
+  },
+  "engine/layers/hc_frag.h": {
+   "module": "kernel.crucible.hc",
+   "sha256": "c98d6f38d4b83941131e4e37f76dd7f0e2cc0a1a907195ba681a6f236fa71791"
+  },
+  "engine/layers/hc_int8.h": {
+   "module": "kernel.crucible.hc",
+   "sha256": "5e793bd3dff0e0de998b548cdf28c18f500a5cf3433da2aa25425bd23e40a9ea"
+  },
+  "engine/layers/hc_wmma.h": {
+   "module": "kernel.crucible.hc",
+   "sha256": "fc5c02f5983f606bcf106080321355510819120580cb481ac9895771331294f1"
+  },
+  "engine/layers/hc_wmma2.h": {
+   "module": "kernel.crucible.hc",
+   "sha256": "cc29494b5389131d74c461f8231f145c767503cf4513db42b21535410de6535e"
+  },
+  "engine/layers/kernels/hc_multirow.h": {
+   "module": "kernel.crucible.hc",
+   "sha256": "1da91135c5e5b19039db805af8b7f57168aa721adde2b2a901d6a875331374d7"
+  },
+  "engine/layers/kernels/persistent_gdn_load.h": {
+   "module": "kernel.crucible.gdn",
+   "sha256": "30ea608b4a848cb39263256213d25d43cd005301a96de97dac8d6a98b39eb067"
+  },
+  "engine/layers/kernels/prefill_gdn.h": {
+   "module": "kernel.crucible.gdn",
+   "sha256": "f1564eaf781b95077a1013898f74a3f59bd728ed5c3141af46577e88045548ec"
+  },
+  "engine/layers/kernels/prefill_moe.h": {
+   "module": "kernel.crucible.moe_prefill",
+   "sha256": "1d3cd91bd322be6404c75dfd540759538c9462bdba3c9e9b94d113669f6575b2"
+  },
+  "engine/layers/kernels/prefill_qsa.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "231b0c8357bc677efc20aca583a348ab56188e32920355cad0221bc2848b254a"
+  },
+  "engine/layers/kernels/prefill_qsa_score.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "c39b7a41757b586b88ceef37ff0969114c91d603fe1e5814849002731891e92c"
+  },
+  "engine/layers/kernels/prefill_qsa_score_sgpr.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "1113b04ea22ca666be1ffceb8cedac3579e3ad66963253493dc95507046b1b82"
+  },
+  "engine/layers/kernels/prefill_qsa_select.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "8c395a32bcc6a3e9e5d4b53036823dcd4791ac6f4a490bd96bd09ea15fa506d7"
+  },
+  "engine/layers/kernels/prefill_qsa_union.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "27b3da85646a88bcea92934236548800c400a0471323c847dd2dfe38d52897e4"
+  },
+  "engine/layers/kernels/qsa_union_lds.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "477f3e121e71977780de8a1af3fcc83032708c2473dad85cf4a7f40fb0600ab9"
+  },
+  "engine/layers/kernels/vision.h": {
+   "module": "kernel.crucible.vision",
+   "sha256": "8b1151b2dd314c115dd2d20a90cbff1792ff3d1f3aa2ca71bb3aa916678f09f3"
+  },
+  "engine/layers/moe_b128.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "cf18520b9defada9fbe1a8e90a1f7c99b40052f1bb14b670fa4682b70a537415"
+  },
+  "engine/layers/moe_b128_switch.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "a6064c4b78c03f21e559b3ecc3fbcb3e0d00e891ff27834ac4e0c8602ae190e6"
+  },
+  "engine/layers/moe_chunk_map.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "abdc3184c460ec6e1bb5ce63ab6f263a82af747692afbf2a9da2e9d9c2f5191e"
+  },
+  "engine/layers/moe_rows.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "3ea916587068bbe6f02c6d26497625c8f3f76149fc7408a3dfd7f99931d72685"
+  },
+  "engine/layers/moe_sg.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "78641019fb483fd830835413beee316bfe65b6502f37dae8826529299ed42a1b"
+  },
+  "engine/layers/moe_shared_first.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "0163981ceb1ba21a0a1dfde7660b694dd0462cc3a9ebe2ea0702e22395ec13ba"
+  },
+  "engine/layers/moe_stage.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "377d74c2c9b344208507349663fe41937446f66fbfc01e317fd5848d5f55813a"
+  },
+  "engine/layers/moe_window_policy.h": {
+   "module": "kernel.crucible.moe_decode",
+   "sha256": "5a1f678b2987cc1381ee23dc0eec622f5378bf06512501479591c44b27c27852"
+  },
+  "engine/layers/nonfinite_probe.h": {
+   "module": "kernel.crucible.ops",
+   "sha256": "b63f17b2b5defcc57eed9f4985f973b409462eb2a4d3ce7f3a4bd8eb2374cd57"
+  },
+  "engine/layers/numerics.h": {
+   "module": "kernel.crucible.ops",
+   "sha256": "d96ebdeeb8b9a24dac383a88948aa651b808429f6f29645ee5e8c6e1d37b980a"
+  },
+  "engine/layers/ops.h": {
+   "module": "kernel.crucible.ops",
+   "sha256": "49c327ccec69985542ad983e8c5385f4a876a4f0116f261e7036e62c31762234"
+  },
+  "engine/layers/packed_state.h": {
+   "module": "kernel.crucible.gdn",
+   "sha256": "bc9cf96c8120a2f988ed0b48bb5401171779f514731e7ba6a894c53f19756f1c"
+  },
+  "engine/layers/persistent_gdn.h": {
+   "module": "kernel.crucible.gdn",
+   "sha256": "6a9857930cb1c6bfab1b5b2a9e78a1ab512ec6db044d341e9ef0cdf3cc7b19b3"
+  },
+  "engine/layers/persistent_hc.h": {
+   "module": "kernel.crucible.hc",
+   "sha256": "165ae4cd0bc2ff43f8ff231298edf43695575011bee18b23051441a74d40df8b"
+  },
+  "engine/layers/persistent_ops.h": {
+   "module": "kernel.crucible.ops",
+   "sha256": "5950cb65ec1a7e1475f84ccf690be1f33978a31fce03da4e46f237ae6de1c13c"
+  },
+  "engine/layers/ple_row_codec.h": {
+   "module": "format.crucible.ngram16",
+   "sha256": "59b21500421e2528156db732886fecd3a89d01cb8e0afc64252f1983cd2df924"
+  },
+  "engine/layers/prefill_hc.h": {
+   "module": "kernel.crucible.hc",
+   "sha256": "48ec6696b8ea17912caa6894bdaf5ae036a888e14c513dba0f93e9a45042891c"
+  },
+  "engine/layers/prefill_moe.h": {
+   "module": "kernel.crucible.moe_prefill",
+   "sha256": "f0063101828045e3dbb3b534cd92d5872d708f0bed20e29d91a4b756ebca6cf2"
+  },
+  "engine/layers/prefill_moe_kset.h": {
+   "module": "kernel.crucible.moe_prefill",
+   "sha256": "54601c3c0ee41a899c2a8d8db8439e218ac0d4bef6b0492520c594e72089a08f"
+  },
+  "engine/layers/prefill_moe_pair.h": {
+   "module": "kernel.crucible.moe_prefill",
+   "sha256": "86c1fa435e0d7dc0b22260b25ec61d88dc2975aab29f40d791e984bf96d45d77"
+  },
+  "engine/layers/prefill_moe_tile.h": {
+   "module": "kernel.crucible.moe_prefill",
+   "sha256": "9e92a793a1f5573d784ed16d334b45a107d16cc15953f3cf903d79a0972d6997"
+  },
+  "engine/layers/prefill_ple.h": {
+   "module": "kernel.crucible.ops",
+   "sha256": "b95e796411b483d19c84eed98dcb311b64d606803393234c64d264dbf0bbd878"
+  },
+  "engine/layers/qsa_capture.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "ba72372a60be5aea4313c18dc3fcb284ce4a4ffd7093eec0a249a508073f71ec"
+  },
+  "engine/layers/qsa_capture_policy.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "83b7bba8f95b79fbb809f6c6d4bcd2d2d2d92528d59db58e1eb82aed2cb950e0"
+  },
+  "engine/layers/qsa_long.h": {
+   "module": "kernel.crucible.qsa",
+   "sha256": "09bd092c9de92aa9384373725950b4d292ea1550f48a232f07880e4435132eb9"
+  },
+  "engine/layers/rope_tables.h": {
+   "module": "kernel.crucible.ops",
+   "sha256": "ca9d7a8cc416acf130a78a35b130d066327efdc2ca403b014effd22fdbb56d50"
+  },
+  "engine/model/flashnext/active_config.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "c51a0e5c8fc8a1d15e3ea5af0e52f2153c33b47048e883e4f78b5e377529b8a7"
+  },
+  "engine/model/flashnext/bf16_half.h": {
+   "module": "format.crucible.flashnext_weights",
+   "sha256": "5659d7e50ba5a9dbf108d9f68632e35f667dbd5b009bb08c65e7d4cb36b1429f"
+  },
+  "engine/model/flashnext/draft_chain_switch.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "d708c59d9359d66d621ad50d8e4024952f225aef1e30a2982ff34ea50882c76d"
+  },
+  "engine/model/flashnext/fixed_state.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "9e60af26579d82bb4d9a226ade0de7d6685ecf297862758bd918ccf052d5f213"
+  },
+  "engine/model/flashnext/geometry.h": {
+   "module": "format.crucible.flashnext_weights",
+   "sha256": "b7d25444a077d6663e467208925d780c46089c3a622f573a4bf16b3758f09f38"
+  },
+  "engine/model/flashnext/load_plan.h": {
+   "module": "format.crucible.flashnext_weights",
+   "sha256": "b8b291ac541a1a4c66e6e59366c02743344ac9637d5f5114f4e99f1190407f1e"
+  },
+  "engine/model/flashnext/model.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "ae27031e4a237b3382a76fe9af301c2932687ff9c26d5c0e0936af60932663d2"
+  },
+  "engine/model/flashnext/mtp_sidecar.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "e0b68816d326b6c4a0c7a1c59aa0e478fdcd26858a7be62066f6ac2282f02955"
+  },
+  "engine/model/flashnext/multimodal.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "abc4c7b34369c56192d6911f4dd68cd62fffe1e7034d78827cf3fa9c90a16b42"
+  },
+  "engine/model/flashnext/ple_host.h": {
+   "module": "format.crucible.ngram16",
+   "sha256": "057223dfd16c89413bf0127a227d1cc14f7371d10d109db748733281a9fea3f7"
+  },
+  "engine/model/flashnext/prefill_launch.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "5845646d8ccb7b6b2fe52e82f63b6fbee76fd0bf7d826a27b28dd6262b083878"
+  },
+  "engine/model/flashnext/vision.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "9f7d6d7128480c7daf8ef3e74d63718ea1308c725b1d7d76b5c0daa8277dbced"
+  },
+  "engine/model/flashnext/weight_validation.h": {
+   "module": "format.crucible.flashnext_weights",
+   "sha256": "ff6effb42fab0b6aa6104a4db7c5896ffee5957e1ac4cf28f0d385c024d927c2"
+  },
+  "engine/runtime/ablate_request.h": {
+   "module": "runtime.crucible.ablation",
+   "sha256": "78e5c1e98ec6a41cbaeef4dd1e5587d705a2d61bd18fd65bf7e984012cbf54c5"
+  },
+  "engine/runtime/batch_admission.h": {
+   "module": "runtime.crucible.batch",
+   "sha256": "efa7994994c246205bdca5beade83d618349f2989808b9ef877914aa84a66971"
+  },
+  "engine/runtime/batch_contract.h": {
+   "module": "runtime.crucible.batch",
+   "sha256": "28891a431ffe7fe2007e319a158bf47b216fce2b69f14db357477e94e628419c"
+  },
+  "engine/runtime/batch_forward.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "8e1d7b8bfadab1a2808355e7a421e179f27bdf9dabc5e871d718e11318d188e7"
+  },
+  "engine/runtime/batch_inputs.h": {
+   "module": "runtime.crucible.batch",
+   "sha256": "285fbcf0f5fd49cf8716e96961d9f2d6a224cd6abfd2d2421adf0cadbb62743d"
+  },
+  "engine/runtime/batch_spec_contract.h": {
+   "module": "runtime.crucible.batch",
+   "sha256": "c983029bcab79a5af73674601e658017ab2367258d9b6b78c1dbc8690b1536ba"
+  },
+  "engine/runtime/batch_spec_forward.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "6cc394ae7a264c69e11ebf12d7be503640c9e96af7072d855d20b9eefd569f60"
+  },
+  "engine/runtime/bounds.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "ab43f3e9a8095432a135b06ca5204171ebdb8b007fc09a6d787a51759c46395e"
+  },
+  "engine/runtime/conversation_admission.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "a2afc5f36bd008747556f847f133a130ebb9ed32e82970b6e6c930062dc78ca0"
+  },
+  "engine/runtime/conversation_cache.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "a4303859e8b49a09fc31f1167976c61af8e0b23623f4062c591c25bdbdbf6086"
+  },
+  "engine/runtime/conversation_resume.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "a87d501b88239b376248ecd262a47c756cf08b8fa7976391b8ddfdac5d7332ef"
+  },
+  "engine/runtime/conversation_snapshot.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "3a1b27821b1242f28580b54e9ff7934d419178fd6b054b6d57badac1fff56290"
+  },
+  "engine/runtime/decode_policy.h": {
+   "module": "runtime.crucible.sampling",
+   "sha256": "93eb29c928c17ac2adc00c18982d163cb0b85f740e3beadd115eed11529b7255"
+  },
+  "engine/runtime/device_zero.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "f8402b1f06186ad9ee62a3e453003b44de6e2b505880346d4f1fcaf0f6c616d8"
+  },
+  "engine/runtime/draft_accept.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "1ef4a1c68cd48c66dfa50ec79b0dafe8c4bbccb94ed7cc6d72bef808bc95f515"
+  },
+  "engine/runtime/draft_adapt.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "f86ffeb6b392d90dce0e80e85c15498939f411e58be203fc52b7938c19b9bffe"
+  },
+  "engine/runtime/draft_dense.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "e1a74c7784ca6cd4562407a83ee6133d264adebc3f073092a8d40e6a422199e8"
+  },
+  "engine/runtime/draft_head_policy.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "896445323275eb021f85e49b7b7ac62f5d7fa760d165401e27912de55ef7d055"
+  },
+  "engine/runtime/draft_ops.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "cabf7ab494a19cc2b2c4f505611a7067cf4ed892b6dd429d5ec244b68faa41eb"
+  },
+  "engine/runtime/draft_overlap.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "ec426ac027c1179756cf02dbd79b2a1a377943873fe129e7c6d246c6e496dc98"
+  },
+  "engine/runtime/draft_policy.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "525fab212745cbe2d8f8a6eb81f3358f72e721bfd6a43df7a9cc1742690d12ea"
+  },
+  "engine/runtime/draft_quant.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "f0c2c129a4eb9c809c9d94f5b06a09ee70f675b352576f1c716f356914e293b5"
+  },
+  "engine/runtime/draft_quant_host.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "bbaff1f63bf65007e4b9cd2afdecc236e4f318cfe8ce76eab0dd17b01798c393"
+  },
+  "engine/runtime/draft_stop.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "0c866e6146ed56b75fef8e0f909e3df880933fabbb0ae7bcdac6a8bd298abbbe"
+  },
+  "engine/runtime/draft_value.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "0ddcc8d53884558a35357315305fc5a656e4abf973b6712ec465990dc8071055"
+  },
+  "engine/runtime/draft_vocab.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "bb7d40054906340d084adc2633d19956b78c19da71e5186b6d4e8e45ec63cfa4"
+  },
+  "engine/runtime/draft_warmup.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "12218ef7186ddf1abe681f4f6cc71f1b2451b764440a6c754858ae727f1d3095"
+  },
+  "engine/runtime/dump_io.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "726eaeb42aa1af2c840839c372847a73e823d5f8c9bb981ec919a89e3e19f9da"
+  },
+  "engine/runtime/gen_options.h": {
+   "module": "runtime.crucible.sampling",
+   "sha256": "14a41a1f93e283d8a8f6bd363ffee7aa4fb992d6f9d820638de8708609e2f5ca"
+  },
+  "engine/runtime/generation.h": {
+   "module": "runtime.crucible.sampling",
+   "sha256": "14148559ea6d4d826c3e4beb1b5bacba4861759e747e674f5b58f0c9ea2ecfb7"
+  },
+  "engine/runtime/layer_loop.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "b72d20af878ded032d802a5e91ec495693578c25d72818c339d364c968a0f91e"
+  },
+  "engine/runtime/lazy_snapshot.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "79e9e7ffa8ae9af638e91fcd65451cdd4e6a37c8325f7adab7a10172e473376c"
+  },
+  "engine/runtime/mtp_bulk.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "5725561d1eb630c4f97d0505343414f32e56a3b5f007ba69a4998c959b185e14"
+  },
+  "engine/runtime/packed_rows_option.h": {
+   "module": "runtime.crucible.batch",
+   "sha256": "e20455bc962420f24e43a49d5f7da70db06b0d20ae76859c6c49af5d48e8ba93"
+  },
+  "engine/runtime/pass_rows.h": {
+   "module": "runtime.crucible.batch",
+   "sha256": "93af9ebc010be5d52a17a438727b3d2f8f7c870f5e91512b46d1aeb2e080501d"
+  },
+  "engine/runtime/prefill_engine.inc": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "f163f4e0204d7e48037f1ef22d2e9285cac94fc0e8bd620a0ce54cd21bc0a11a"
+  },
+  "engine/runtime/prefill_front_check.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "a25abe63b7151660f2a8bf3384b341ffb1477f91ed2e257e3a2c029f9be06c4e"
+  },
+  "engine/runtime/prefill_interleave.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "4937abf2920b96810f22b93ee9b7219aaf8041f06598d6f0e06541ec290248ad"
+  },
+  "engine/runtime/prefill_plan_budget.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "b43e84c7320e8c2a84949157035ac805aab52942b7cb75faf94d20dbf6858cd9"
+  },
+  "engine/runtime/prefill_prune.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "54cf05e961367f6da8283352b74c014678a2a0252e55eb68175cf195c2e63ea7"
+  },
+  "engine/runtime/prefill_rows.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "abc5ad11f95fbc43ea2b678527670d3da15d9f154495bd8097da0ca1b59205e6"
+  },
+  "engine/runtime/prompt.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "ace8f8cdc86ec6e31ddb589f75a287464d4160067ee371cfa53b95e7799431b6"
+  },
+  "engine/runtime/retained_prefix.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "e45087a6d66898de70fea5d8cde606656bdbf6ef645088c5c27beb1fa1d1e51d"
+  },
+  "engine/runtime/rope_mode.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "6490379df3b084bf4e6e2282d009c59a5b4d85d65f2d755e1f129c0d19e95f3c"
+  },
+  "engine/runtime/rope_policy.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "4fde08532ce8a8f96112d5f6b2c3a47986f6ce9b4c0ebb72ff8f1b9c313a0265"
+  },
+  "engine/runtime/sampling.h": {
+   "module": "runtime.crucible.sampling",
+   "sha256": "ec06a0ca579c3c12c627ef174da198144a03575b4f079c5d29c60e206eb4c750"
+  },
+  "engine/runtime/sampling_generation.h": {
+   "module": "runtime.crucible.sampling",
+   "sha256": "f8bd057407a930b95ab2d2904d3f4872330be75a2fb1744b0cd401432f0f3526"
+  },
+  "engine/runtime/sequence_state.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "d08636b8b3caa25964a97881c6fb5be8b7aee1784d7b2d8eab976793573a8d22"
+  },
+  "engine/runtime/sha256.h": {
+   "module": "runtime.crucible.state_disk",
+   "sha256": "1c6a4cdb42723d6ce60dc33a4e3ffc704baed9e0b9791fca6c95b0045b4ccaf1"
+  },
+  "engine/runtime/slot_checkpoint_io.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "d57be559ebc07a25f4b7ff751c9087600f5a937f8bd0bd0fe2a746734be79ea1"
+  },
+  "engine/runtime/slot_checkpoints.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "db3e0915e7fabf405a4a254ddbc4d97d484365826eecb330b70ec6335321f7c1"
+  },
+  "engine/runtime/snapshot_bytes.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "4f7f3d73d1dcf25274a880650a4ee187c0931a04cfec4c987d39fb1ff3922f2f"
+  },
+  "engine/runtime/spec_span.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "8ddc4dbebcd75f5018a720cebf75bbe26a5737da0c668fde57be2770127e9f01"
+  },
+  "engine/runtime/spec_steps.h": {
+   "module": "runtime.crucible.speculation",
+   "sha256": "5310caa0f6753e1676f7ddadac8688534dad9df55c8fe77abc080c8efedf0ccb"
+  },
+  "engine/runtime/stage_arena.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "88ca19945e8df3a5a2e0823d8d973210148dca6604d14437b2f7967532913678"
+  },
+  "engine/runtime/stage_plan.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "3867bfd13118d51367219d5666e755b9783d965adf7a4365d63764fda259fb84"
+  },
+  "engine/runtime/state_blocks.h": {
+   "module": "runtime.crucible.state_disk",
+   "sha256": "a1e812e1b9cad452ad51a60e536b3e7b843bc5bcbb4f003215a232baac11ddd1"
+  },
+  "engine/runtime/state_disk.h": {
+   "module": "runtime.crucible.state_disk",
+   "sha256": "63dd6492a7eb2e65aede29dd01a41a1c49f0c8bdec9406e43aeebd20ffa1c6eb"
+  },
+  "engine/runtime/state_epoch.h": {
+   "module": "runtime.crucible.state_disk",
+   "sha256": "94166941211ba7f07c212abcd795b774b394fc42f51029ca4300a1300abdc65e"
+  },
+  "engine/runtime/state_format.h": {
+   "module": "runtime.crucible.state_disk",
+   "sha256": "517f8e20defd43b5565e54800722ad1ff9abd41c6250f12bd1827c20ec691aee"
+  },
+  "engine/runtime/state_switches.h": {
+   "module": "runtime.crucible.state_disk",
+   "sha256": "97acd424f175ef9e2549aad00428d266e81692f5eb1b2f3c9d49ccc172913852"
+  },
+  "engine/runtime/tenant.h": {
+   "module": "runtime.crucible.conversation_cache",
+   "sha256": "62225227909dd37ed031e7f35ff4c1ecb32de39a9c99af9f9bd138eefe74a9cf"
+  },
+  "engine/serve/batch_conversation_cache.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "5468dc3e8ab9ae6ada7e1714a0e4860c838f1d3bec78714e5aba2239a68fec04"
+  },
+  "engine/serve/batch_mtp_history.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "ada8d626aa519eb2f5027e7a1e094014466377d9a5669c213bb8ae2bc59b5dc0"
+  },
+  "engine/serve/batch_session.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "7c6da0aae9801ff6c3e214267f311344c5cd5424d853962ea8763a561770dbcc"
+  },
+  "engine/serve/batch_state_disk.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "422ac18e9ae7a749358909b7719a19918d5a2cfdb46ce910c556cd3b0b58fa16"
+  },
+  "engine/serve/batched_serve.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "adff211dd38a12cc4078d9bba45c8cb4ad98efc87718dd8032d311f23f581d13"
+  },
+  "engine/serve/batched_serve_protocol.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "4e8ef1f83e2b68670baf3bf1350e20a1e149c82b90f5961ede2a387624683322"
+  },
+  "engine/serve/batched_serve_settings.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "fba02b04600904fec3a3979a48ad82a5034ab1f260f8b0875863e90b0dc76bfa"
+  },
+  "engine/serve/cache_status.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "3adbeb92510665d764a37780b8ba1e6814eab0bf7158aac801d67ce14aadb3ae"
+  },
+  "engine/serve/draft_tally.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "bc016c457e1996ea2e3d708994fc67dcbdd1bb7e80f8be9d87a7317d1dab1019"
+  },
+  "engine/serve/handover_spill.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "d18c9597d0e2dbcedad3da6093f6d906276e7959f448b611982995e453a708d4"
+  },
+  "engine/serve/logprobs.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "527547eed6d6f48a0b8dfbfd08fc45840dd55687090eb333a9340f786614b532"
+  },
+  "engine/serve/miss_ledger.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "521325406abd8808f25194a0a376720a47f03475311c5b374e86e0debc32af84"
+  },
+  "engine/serve/serve.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "8437a31dea60f92caec71250617bbb138b4af99e6e5df89803bc1e2bfa5bc12d"
+  },
+  "engine/serve/serve_line.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "45d377771be5db3bf2c251d57007de2f615b53beafbdfb659bc86cd4b3ad1405"
+  },
+  "engine/serve/serve_protocol.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "765a84bab4c1a8ec03248de5e5146947c59bd1312ca9560ab0b4997ff825fed1"
+  },
+  "engine/serve/serve_settings.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "96c497749942d1be6f7e9f13859b7e927ff8ae4ded68aaecc04e3cee64bf86c2"
+  },
+  "engine/serve/slot_base.h": {
+   "module": "serve.crucible.engine_serve",
+   "sha256": "35b3b6824c0632d532c06cb77548252080a1088109742e9ea11102416153b89b"
+  },
+  "engine/switches.h": {
+   "module": "executor.crucible.flashnext",
+   "sha256": "261426b3f653ce6fd4d832d030c7b3e9d922f365bd17449685a45a5ff3cf7cc8"
+  },
+  "tools/devsplit.py": {
+   "module": "tool.crucible.build",
+   "sha256": "d54a93acf6604a752d444aa15b96816fa099b70f1dc1968d3188596b85d05751"
+  },
+  "tools/devsplit_facts.tsv": {
+   "module": "tool.crucible.build",
+   "sha256": "f1fe19610c836439e8a56d0914e37d8b34a78bfc8801b217b26aaf0135f61566"
+  },
+  "tools/devsplit_groups.tsv": {
+   "module": "tool.crucible.build",
+   "sha256": "3f5d529d1c137327c099506198cfc463d088522930c0fd771cd7dad2af0aff2c"
+  },
+  "tools/devsplit_ir.py": {
+   "module": "tool.crucible.build",
+   "sha256": "7a26513d9d6b03b463df4bda82668c50cc904938224c33eb773cf87f6a43917c"
+  },
+  "tools/generate_persistent_ops.py": {
+   "module": "tool.crucible.build",
+   "sha256": "26065d1687aa91a6ff2209d94c85dc65e13319711eb7c85b26c53676c7a0bd3f"
+  },
+  "tools/hipcc_checked.sh": {
+   "module": "tool.crucible.build",
+   "sha256": "4e12a45df24cee099f7547fe318d19f66c551bee6ce12b03179dae8ddc7a6200"
+  },
+  "tools/isa_diff.py": {
+   "module": "tool.crucible.build",
+   "sha256": "a955ed74c23e1c7f6d8a0da2c4c84b13ffc3daea3af411d7f978e3f6a639511e"
+  },
+  "tools/ngram16/codec.py": {
+   "module": "format.crucible.ngram16",
+   "sha256": "0c450f98c24876b9daa9ad91bd9d73fa0e35baa64c1282a0999b78a4abf874fe"
+  },
+  "tools/ngram16/common.py": {
+   "module": "format.crucible.ngram16",
+   "sha256": "fb9efabf153bd15c2ec8f685b7076fcd8d8c8dd04c24e125ac1544d2eaecbbe6"
+  },
+  "tools/ngram16/convert.py": {
+   "module": "format.crucible.ngram16",
+   "sha256": "4f9686587e66d94a1f6cb7914d2bbb72c03595c4494cb6ffca8088ec91079077"
+  },
+  "tools/ngram16/error_check.py": {
+   "module": "format.crucible.ngram16",
+   "sha256": "930a8ccffb5f62747902349251beb32116790f6343ec34d8c5fae39831d9a0c5"
+  },
+  "tools/ngram16/fetch.py": {
+   "module": "format.crucible.ngram16",
+   "sha256": "860f431e419297449b7ca57499aaf56bfc1d0dc12430a7c41383c9a64f6d20cb"
+  },
+  "tools/ngram16/fp16_scan.py": {
+   "module": "format.crucible.ngram16",
+   "sha256": "1b53df763a8cdcec852fc6cd50a97fc18bcadf65900646c046607d5a9831cfb9"
+  },
+  "tools/ngram16/make_fixture.py": {
+   "module": "format.crucible.ngram16",
+   "sha256": "fa0abdf7f5595a5862dca2887f641a8963a215f8466a5430a07da00b64da195a"
+  },
+  "tools/ngram16/synth.py": {
+   "module": "format.crucible.ngram16",
+   "sha256": "bf57c197cdac5a3c05c1b76be95cf95e629cd16a65cf79f2439003a48b8bb437"
+  },
+  "tools/release_engine.py": {
+   "module": "tool.crucible.build",
+   "sha256": "15f3c1abeb851940314eb577dfcc46c33c4a9ed7104f347a1ae4bdbb05c3e2c0"
+  },
+  "tools/state_epoch.py": {
+   "module": "tool.crucible.build",
+   "sha256": "feaa132a71639bf47b8323382415a7df16de0247691aac65aa68e215e6dc2169"
+  },
+  "tools/state_epoch_pins.tsv": {
+   "module": "tool.crucible.build",
+   "sha256": "f4cca80daffc026f2a878251a1dca972ef8ba6ef8abac630ebb1d8c954e3c603"
+  },
+  "tools/state_epoch_sources.txt": {
+   "module": "tool.crucible.build",
+   "sha256": "3d2cdddb05b25b83508e92894ec36a66ad55b0235dde51687d2240fd4cb2ec44"
+  }
+ },
+ "make_options": [
+  "ROCM_PATH=${FLERP_ROCM_ROOT}",
+  "HIPCC=${FLERP_ROCM_ROOT}/bin/hipcc",
+  "GPU_ARCH=gfx1151",
+  "SPLIT=0",
+  "STATE_EPOCH=0"
+ ],
+ "modules": {
+  "executor.crucible.flashnext": {
+   "dir": "catalog/crucible/executor/flashnext",
+   "files": 28,
+   "spdx": "Apache-2.0"
+  },
+  "format.crucible.exl3": {
+   "dir": "catalog/crucible/format/exl3",
+   "files": 4,
+   "spdx": "Apache-2.0 AND MIT"
+  },
+  "format.crucible.flashnext_weights": {
+   "dir": "catalog/crucible/format/flashnext_weights",
+   "files": 4,
+   "spdx": "Apache-2.0 AND MIT"
+  },
+  "format.crucible.ngram16": {
+   "dir": "catalog/crucible/format/ngram16",
+   "files": 10,
+   "spdx": "Apache-2.0 AND MIT"
+  },
+  "kernel.crucible.device_common": {
+   "dir": "catalog/crucible/kernel/device_common",
+   "files": 4,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.crucible.exl3_gemm": {
+   "dir": "catalog/crucible/kernel/exl3_gemm",
+   "files": 6,
+   "spdx": "Apache-2.0 AND MIT"
+  },
+  "kernel.crucible.exl3_gemv": {
+   "dir": "catalog/crucible/kernel/exl3_gemv",
+   "files": 12,
+   "spdx": "Apache-2.0 AND MIT"
+  },
+  "kernel.crucible.gdn": {
+   "dir": "catalog/crucible/kernel/gdn",
+   "files": 7,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.crucible.hc": {
+   "dir": "catalog/crucible/kernel/hc",
+   "files": 8,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.crucible.moe_decode": {
+   "dir": "catalog/crucible/kernel/moe_decode",
+   "files": 9,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.crucible.moe_prefill": {
+   "dir": "catalog/crucible/kernel/moe_prefill",
+   "files": 5,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.crucible.ops": {
+   "dir": "catalog/crucible/kernel/ops",
+   "files": 7,
+   "spdx": "Apache-2.0 AND MIT"
+  },
+  "kernel.crucible.qsa": {
+   "dir": "catalog/crucible/kernel/qsa",
+   "files": 9,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.crucible.vision": {
+   "dir": "catalog/crucible/kernel/vision",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.crucible.ablation": {
+   "dir": "catalog/crucible/runtime/ablation",
+   "files": 3,
+   "spdx": "Apache-2.0 AND MIT"
+  },
+  "runtime.crucible.batch": {
+   "dir": "catalog/crucible/runtime/batch",
+   "files": 6,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.crucible.conversation_cache": {
+   "dir": "catalog/crucible/runtime/conversation_cache",
+   "files": 11,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.crucible.device_memory": {
+   "dir": "catalog/crucible/runtime/device_memory",
+   "files": 5,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.crucible.sampling": {
+   "dir": "catalog/crucible/runtime/sampling",
+   "files": 5,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.crucible.speculation": {
+   "dir": "catalog/crucible/runtime/speculation",
+   "files": 16,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.crucible.state_disk": {
+   "dir": "catalog/crucible/runtime/state_disk",
+   "files": 6,
+   "spdx": "Apache-2.0"
+  },
+  "serve.crucible.engine_serve": {
+   "dir": "catalog/crucible/serve/engine_serve",
+   "files": 17,
+   "spdx": "Apache-2.0"
+  },
+  "tool.crucible.build": {
+   "dir": "catalog/crucible/tool/build",
+   "files": 13,
+   "spdx": "Apache-2.0"
+  },
+  "tool.crucible.engine_cli": {
+   "dir": "catalog/crucible/tool/engine_cli",
+   "files": 8,
+   "spdx": "Apache-2.0"
+  }
+ },
+ "recipe": "qwen38-flash-next.crucible",
+ "source_dir": ".",
+ "system": "make",
+ "targets": [
+  "build/engine/crucible.mono"
+ ],
+ "toolchain": "rocm-7.2.4"
+}

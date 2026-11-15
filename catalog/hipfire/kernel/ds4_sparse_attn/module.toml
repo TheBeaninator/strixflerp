@@ -1,0 +1,74 @@
+id        = "kernel.hipfire.ds4_sparse_attn"
+kind      = "kernel"
+summary   = "DeepSeek V4 sparse attention: sliding-window + top-k attention (scalar and WMMA, direct and gathered), the KV compressor (softmax pooling, ring write, overlap concat), indexed attention, tri-attention scoring (27 sources, 29 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/compressor_add_ape_batched.hip",
+  "kernels/src/compressor_commit_staged_f16.hip",
+  "kernels/src/compressor_compress_aligned_batched.hip",
+  "kernels/src/compressor_overlap_concat.hip",
+  "kernels/src/compressor_ring_write_batched.hip",
+  "kernels/src/compressor_softmax_pool.hip",
+  "kernels/src/compressor_softmax_pool_buf.hip",
+  "kernels/src/deepseek4_attn_pos0.hip",
+  "kernels/src/deepseek4_attn_swa.hip",
+  "kernels/src/deepseek4_attn_swa_batched.hip",
+  "kernels/src/deepseek4_attn_swa_batched_debug.hip",
+  "kernels/src/deepseek4_attn_swa_buf.hip",
+  "kernels/src/deepseek4_attn_swa_topk_batched.hip",
+  "kernels/src/deepseek4_attn_swa_topk_batched_wmma.hip",
+  "kernels/src/deepseek4_attn_swa_topk_buf.hip",
+  "kernels/src/deepseek4_attn_swa_topk_direct_batched.hip",
+  "kernels/src/deepseek4_attn_swa_topk_direct_wmma.hip",
+  "kernels/src/indexed_attention_dense_wmma.gfx1151.hip",
+  "kernels/src/indexed_attention_gathered_wmma.gfx1151.hip",
+  "kernels/src/indexed_attention_hg12_den1.gfx1151.hip",
+  "kernels/src/indexed_attention_select_exact.hip",
+  "kernels/src/triattn_accumulate.hip",
+  "kernels/src/triattn_score_asym2.hip",
+  "kernels/src/triattn_score_asym3.hip",
+  "kernels/src/triattn_score_asym4.hip",
+  "kernels/src/triattn_score_fwht.hip",
+  "kernels/src/triattn_score_q8.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 29
+
+[[provides]]
+interface = "attn.sparse-sink/kv-f16/f32.hipfire"
+api       = "compressor_add_ape_batched, compressor_compress_aligned_batched, compressor_overlap_concat, compressor_ring_write_batched, compressor_softmax_pool_buf (+24 more units, see units.json)"
+numeric   = "fp32 math over the SWA window plus the top-k compressed keys"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound; prefill batches, compute-bound (WMMA, MMQ)"
+
+[[provides]]
+interface = "kvcache.compress/-/f32.hipfire"
+api       = "compressor_* units"
+numeric   = "softmax pooling of raw rows into compressed rows"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.ds4_sparse_attn.json"

@@ -1,0 +1,55 @@
+# SHAPE-TRANSFERS R1, second experiment: arm a of gate/xfer-r1-splitk.toml folded into kernel.flerp.moe_kquant for
+# Q4_K (and the same recipe for Q6_K, the down stacks). Committed BEFORE any GPU run of this experiment; not edited
+# to turn a failure into a pass.
+# Tools: gate/xfer_r1_fold.hip (kernel bench), gate/xfer_r1_fold_ref.hip (moe_kquant.hip as of 504ca20, namespace
+# renamed: the reference), gate/xfer_r1_fold_model.py (whole model), gate/xfer_r1_fold_run.sh (GPU jobs).
+
+[remeasure]
+# Settle the erratic rows of gate/results/xfer-r1/splitk.jsonl with the SAME tool and criteria (xfer-r1-splitk.toml
+# [timing]): build/xfer-r1/xfer-r1-splitk unchanged, 200 timed launches after 20 warm, fresh ids a launch.
+cases   = ["ornith-gateup tokens 4", "ornith-down tokens 4", "q35-gateup tokens 2, 4, 8"]
+repeats = 3                     # each case run 3 times in one job; the median and the spread are reported
+load    = "loadavg 1-min <= 6 at the start and end of the job, else every number of it is invalid and rerun"
+
+[kernel]
+# The new moe_kquant (flerp::moe::IndexedExperts, the public call) against the reference (the old source), one
+# process a case, same ids, same weights.
+shapes_35b = """real weights from the 35B GGUF (offsets from gate/results/qwen36-35b-a3b.census/census.json):
+  gateup     blk.10 ffn_gate_exps/ffn_up_exps Q4_K [2048 -> 512] x 256 experts, 8 slots, pair, x_share 8
+  down_q6    blk.10 ffn_down_exps Q6_K [512 -> 2048] x 256, 8 slots, x_share 1
+  down_q4    blk.11 ffn_down_exps Q4_K [512 -> 2048] x 256, 8 slots, x_share 1
+  sh_gateup  blk.10 ffn_gate_shexp/ffn_up_shexp Q4_K [2048 -> 512], 1 expert, ids null, 1 slot
+  sh_down_q6 blk.10 ffn_down_shexp Q6_K [512 -> 2048];  sh_down_q4 blk.11 ffn_down_shexp Q4_K"""
+shapes_ornith = """synthetic codes in the real block layouts (normal fp16 d/dmin), 64 experts resident (Ornith has 512):
+  gateup Q4_K [4096 -> 1024] 10 slots pair; down_q6 Q6_K and down_q4 Q4_K [1024 -> 4096] 10 slots x_share 1;
+  sh_gateup Q4_K [4096 -> 1024]; sh_down_q6 / sh_down_q4 [1024 -> 4096]"""
+tokens_equal  = [1, 2, 3, 4, 8, 21, 128, 1024]   # decode (1-8), a prompt tail, chunk sizes the executor issues
+tokens_timing = [1, 2, 4, 8]
+correct = "every case and every tokens_equal value: the output bytes equal the reference's (memcmp, 0 differing)"
+timing  = "as xfer-r1-splitk.toml [timing]: 200 launches after 20 warm, fresh ids a launch, GB/s = distinct experts' bytes / time"
+load    = "loadavg 1-min <= 6 at start and end of the job, else invalid and rerun"
+continue_rule = "new >= ref GB/s on every timed 35B case at 1 token (a fold that is slower anywhere at decode does not go in)"
+
+[model]
+# The 35B gate prompts (gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json, 4 prompts, 128 tokens each) through
+# executor.flerp.qwen35moe, --staged loopback (one load a process, placed single direct reader, as P2).
+binaries = "before = recipe qwen36-35b-a3b.flerp-moe assembled from the catalogue before the change (build/xfer-r1-fold/before); after = the same with the new moe_kquant (build/xfer-r1-fold/after)"
+configs  = "1:even:on;1:even:on;1:even:on;2:even:on;2:even:off"
+order    = "before, after, before, after: four processes, so each binary is measured in two loads, three world-1 repeats each"
+equal    = """after (both processes), every config and prompt: generated ids equal P1's and the sha256 of each of the 128
+logits rows equals P1's (gate/results/qwen36-35b-a3b.flerp-moe-placed/equal.json, traced), argmax of each row is the
+token. World 1 = P1 itself; world 2 even on/off = P2 loopback rows (P2's reference is the same P1 hashes). The before
+binary is judged the same way, as a control."""
+speed    = """decode tok/s per prompt = decode_calls / decode_wall_ms (graph on, world 1), before vs after; medians over
+the 6 world-1 runs a binary per prompt; noise = the min..max spread across those runs. Runs whose process started or
+ended with the 1-minute load above 6 are marked invalid and rerun."""
+r1_rule  = "R1's continue bar: 35B world-1 decode +20 %. Reported against it as measured, whatever it is."
+
+[kernel_rounds]
+# Amendment of 2026-11-12, written after the first [kernel] run (08:14Z) and before this one. That run's byte
+# equality is final (0 of 170,131,968 outputs differ); its GB/s are not usable: one 200-launch loop is 1-50 ms of GPU
+# time, and rows jumped 10x between neighbouring token counts for both kernels (e.g. 35B down Q4_K ref 104.7 / 12.4 /
+# 33.5 GB/s at 1 / 2 / 4 tokens) - the GPU's clock and power state, not the kernels. Timing is taken again, every case
+# at tokens_timing, as 7 rounds per arm with the arm order alternating each round (ref,new / new,ref / ...), each
+# round 20 warm + 200 timed launches; the number is each arm's median round, the spread min..max. Byte equality is
+# re-checked at 1 token. Same load rule; continue_rule judged on these medians.

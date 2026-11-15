@@ -1,0 +1,35 @@
+id        = "kernel.flerp.moe_kgrouped"
+kind      = "kernel"
+summary   = "Grouped prefill GEMMs over GGUF Q4_K / Q6_K blocks read in place: counting-sort grouping with a device tile list, gate/up pair with a SwiGLU epilogue in registers, down into [token, slot] rows, and the same kernel as a dense Linear; each 64-K step decodes a 128-row weight tile into LDS as F16 once for BM 32/64/128 rows on v_wmma_f32_16x16x16_f16"
+notes     = "docs/PREFILL-ORNITH.md. Written here for executor.flerp.qwen35moe prompt chunks (Ornith-1.5 397B, the 35B proxy). Recipes re-expressed, not copied: strixite moe_grouped / linear_wmma (F16 dequant-to-LDS tile, register prefetch), Crucible prefill_moe (gate/up pair, SwiGLU epilogue, counting-sort dispatch). No repack: the decode kernels and the placed weights are untouched."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/moe_kgrouped/moe_kgrouped.hip", "flerp/moe_kgrouped/moe_kgrouped.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/moe_kgrouped/moe_kgrouped.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-kquant/f16-f32.grouped"
+api       = "flerp::kgrouped::Group, ToF16, GateUp, Down, Linear (flerp/moe_kgrouped/moe_kgrouped.hpp)"
+numeric   = "weights d*sc*q - dmin*m (Q4_K) / d*sc*(q-32) (Q6_K) in FP32 rounded once to F16; x and h in F16 (overflow flagged); FP32 WMMA accumulation over the whole K; outputs row-invariant (bit-identical across grouping, BM and chunk cuts)"
+regime    = "prompt chunks, 64 rows and up; K % 256 == 0; n_experts <= 1024; wave32 gfx11"
+
+[gate]
+parity    = "flerp:gate/prefill-ornith.toml"
+bench     = "flerp:gate/prefill-ornith.toml"
+status    = "harvested"
+compile   = "n/a"
+reason    = "kernel gate gate/prefill-ornith.toml (results gate/results/prefill-ornith)"

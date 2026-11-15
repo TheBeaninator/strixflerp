@@ -1,0 +1,63 @@
+id        = "runtime.strixfold.gpu_facade"
+kind      = "runtime"
+summary   = "Backend-neutral GPU surface checked at compile time against each backend, with the HIP backend: context, streams, memory, modules, typed kernel launch, graphs, Triton AOT launch"
+notes     = "cuda_facade.zig and zig/src/cuda are not harvested; interface.zig still names both facades."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/gpu/hip/abi.zig",
+  "zig/src/gpu/hip/aot.zig",
+  "zig/src/gpu/hip/caps.zig",
+  "zig/src/gpu/hip/code_object.zig",
+  "zig/src/gpu/hip/context.zig",
+  "zig/src/gpu/hip/device_arch.c",
+  "zig/src/gpu/hip/driver.zig",
+  "zig/src/gpu/hip/graph.zig",
+  "zig/src/gpu/hip/hip_abi_check.c",
+  "zig/src/gpu/hip/kit.zig",
+  "zig/src/gpu/hip/launch.zig",
+  "zig/src/gpu/hip/memory.zig",
+  "zig/src/gpu/hip/module.zig",
+  "zig/src/gpu/hip/root.zig",
+  "zig/src/gpu/hip/stream.zig",
+  "zig/src/gpu/hip_facade.zig",
+  "zig/src/gpu/interface.zig",
+  "zig/src/gpu/kernel.zig",
+  "zig/src/gpu/staging.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "device.facade/hip/-"
+api       = "gpu/interface.zig (top, Driver, Stream, Kernel, Graph), gpu/hip/root.zig"
+numeric   = "n/a"
+regime    = "kernel launch about 0.024 ms on gfx1151; HIP graphs capture decode rounds"
+
+[[requires]]
+interface = "verify.kit-manifest/hsaco/-"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

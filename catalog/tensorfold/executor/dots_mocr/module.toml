@@ -1,0 +1,59 @@
+id        = "executor.tensorfold.dots_mocr"
+kind      = "executor"
+summary   = "dots.mocr OCR on HIP (gfx1201 checked)"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/families/dots_mocr/config.zig",
+  "zig/src/families/dots_mocr/config_test.zig",
+  "zig/src/families/dots_mocr/dots_mocr.zig",
+  "zig/src/families/dots_mocr/fixtures/README.md",
+  "zig/src/families/dots_mocr/fixtures/config.json",
+  "zig/src/families/dots_mocr/fixtures/demo-reference.json",
+  "zig/src/families/dots_mocr/fixtures/generation_config.json",
+  "zig/src/families/dots_mocr/fixtures/preprocessor_config.json",
+  "zig/src/families/dots_mocr/fixtures/processor-reference.json",
+  "zig/src/families/dots_mocr/hip.zig",
+  "zig/src/families/dots_mocr/hip_backend.zig",
+  "zig/src/families/dots_mocr/hip_engine.zig",
+  "zig/src/families/dots_mocr/hip_graph.zig",
+  "zig/src/families/dots_mocr/hip_native.zig",
+  "zig/src/families/dots_mocr/hip_plan.zig",
+  "zig/src/families/dots_mocr/hip_snapshots.zig",
+  "zig/src/families/dots_mocr/hip_text.zig",
+  "zig/src/families/dots_mocr/hip_vision.zig",
+  "zig/src/families/dots_mocr/hip_weights.zig",
+  "zig/src/families/dots_mocr/image.zig",
+  "zig/src/families/dots_mocr/image_test.zig",
+  "zig/src/families/dots_mocr/weights.zig",
+  "zig/src/families/dots_mocr/weights_test.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model/dots.mocr/bf16.tensorfold"
+api       = "families/dots_mocr"
+numeric   = "per family receipts (docs/receipts upstream)"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

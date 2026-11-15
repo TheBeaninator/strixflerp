@@ -1,0 +1,81 @@
+{
+ "module": "kernel.gufo.qwen_linear_decode",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-10T22:56:55Z",
+ "toolchain": "therock-10.1",
+ "toolchain_root": "/data/tools/therock-10.1.0a20260823",
+ "compiler": "AMD clang version 23.0.0git (https://github.com/ROCm/llvm-project.git 0bace1908348b840e6aa1b4b6e12151dae208158) | Target: x86_64-unknown-linux-gnu",
+ "units": 8,
+ "passed": 8,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 36.4,
+ "results": [
+  {
+   "unit": "src/src/families/qwen/kernels/gemv.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/gemv.hip -o build/compile-gate/kernel.gufo.qwen_linear_decode/0-gemv.hip.o",
+   "rc": 0,
+   "seconds": 1.56,
+   "object_bytes": 37008,
+   "object_sha256": "03993f8d88d612290527f8883b352adfc2d83b5562145c9b394b737693ca5607"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/gemv_quant.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/gemv_quant.hip -o build/compile-gate/kernel.gufo.qwen_linear_decode/1-gemv_quant.hip.o",
+   "rc": 0,
+   "seconds": 1.68,
+   "object_bytes": 50904,
+   "object_sha256": "d154f2770ffe2cab4547f8d8ab5f5a6749e5cd142758f079e6a21502caba83e7"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/fused.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/fused.hip -o build/compile-gate/kernel.gufo.qwen_linear_decode/2-fused.hip.o",
+   "rc": 0,
+   "seconds": 1.87,
+   "object_bytes": 29344,
+   "object_sha256": "aa97ce641be734f14d5cbf0da778cceec684d8c22d98f625e4ed6f892faa9c3c"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/qkv.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/qkv.hip -o build/compile-gate/kernel.gufo.qwen_linear_decode/3-qkv.hip.o",
+   "rc": 0,
+   "seconds": 1.89,
+   "object_bytes": 37968,
+   "object_sha256": "0b4b17aa54ce5b33f80b39fd3ac76e33c66ac5bd8d481df8da1be157c5ff3621"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/swiglu.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/swiglu.hip -o build/compile-gate/kernel.gufo.qwen_linear_decode/4-swiglu.hip.o",
+   "rc": 0,
+   "seconds": 1.99,
+   "object_bytes": 121088,
+   "object_sha256": "ba9da27460c1b475f63a9541fb4246fb5fb6d8c18589b01283e922b6e97aac12"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/small_batch_wave64.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/small_batch_wave64.hip -o build/compile-gate/kernel.gufo.qwen_linear_decode/5-small_batch_wave64.hip.o",
+   "rc": 0,
+   "seconds": 36.39,
+   "object_bytes": 2957168,
+   "object_sha256": "069f52f76c8d81cfd9181446239781805c554bb9a99413b67fe7cb26366b06ba"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/small_batch_quant16_wave64.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -gline-tables-only -Xarch_device -mllvm=-amdgpu-sched-strategy=iterative-ilp -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/small_batch_quant16_wave64.hip -o build/compile-gate/kernel.gufo.qwen_linear_decode/6-small_batch_quant16_wave64.hip.o",
+   "rc": 0,
+   "seconds": 10.54,
+   "object_bytes": 774952,
+   "object_sha256": "998f20ef62a5c59aa84748876ae26d6f5488d06a32fcf10d5f00101a6078a3ab"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/verify_gemm_27b.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/verify_gemm_27b.hip -o build/compile-gate/kernel.gufo.qwen_linear_decode/7-verify_gemm_27b.hip.o",
+   "rc": 0,
+   "seconds": 9.35,
+   "object_bytes": 680912,
+   "object_sha256": "7bc391e97f905883ca25eeec9e115ae3bbe8f90e29f1e5d5e5440d0c0d39f0a3"
+  }
+ ]
+}

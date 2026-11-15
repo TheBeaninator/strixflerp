@@ -1,0 +1,39 @@
+# Is StrixFold's prefill experts kernel (kernel.strixfold.exl3_pf_experts, phases gu_k*, down_k*) waiting on memory?
+# A lossless load-time reorder of its EXL3 weights ("experts strips") can only help if it is. Committed BEFORE any GPU run.
+# Tool: gate/exl3_pf_bytes.py (reuses gate/prefill_dsv41_bench.py's Kit / Experts / routing; kit = the assembled
+# dsv41-flash.strixfold-tp2 kit, manifest = the deployed one). control-node GPU via tools/gpu-queue.sh only.
+
+[shape]
+# one rank's layer: 384 routed experts at k2_r + the shared one (gate/up k2 8, down k2 10); D 5120, EI 1152
+# bytes a projection an expert = (5120/16)*(1152/16) tiles * 16 * k2 = 368640 * k2
+rows   = [512, 1024]
+k2     = [6, 4]          # 3-bit, 2-bit
+routing = "uniform"      # all 384 routed experts touched at 512 and 1024 rows (bench.json: 385 distinct)
+repeats = 5              # separate bench_experts calls; each a median of 3 batches; noise = min..max over the 5
+
+[floor]
+stream_GBps = 230        # KDEC.md: ~230 GB/s streaming read ceiling on gfx1151 (hip/bw.hip)
+# routed bytes only (shared expert in gu_k8 / down_k10, separate launches)
+gu_k6_bytes   = 1698693120   # 2 * 384 * 2211840  -> floor 7.39 ms
+down_k6_bytes = 849346560    #     384 * 2211840  -> floor 3.69 ms
+gu_k4_bytes   = 1132462080   # 2 * 384 * 1474560  -> floor 4.92 ms
+down_k4_bytes = 566231040    #     384 * 1474560  -> floor 2.46 ms
+gu_k6_ms = 7.39
+down_k6_ms = 3.69
+gu_k4_ms = 4.92
+down_k4_ms = 2.46
+# bench.json (2026-11-11) as deployed, 512 rows: gu_k6 12.53, down_k6 5.94, gu_k4 11.67, down_k4 5.56 ms
+
+[arms]
+a = "as deployed: the kit's hsaco, bench_experts timing"
+b = "no-decode: catalogue exl3_pf.hip copied into build/exl3-pf-bytes/, dec_pair's MUL1 decode replaced by r & 0x3bff3bff (KDEC 'nodecode'); same loads, same WMMA, wrong numbers; built with the kit's exact hipcc flags; a control build of the unmodified copy must reproduce the kit's hsaco sha256 bf902bfa..."
+c = "cache-resident equivalent: the table (1.7-2.6 GB) cannot fit the 32 MB MALL / 2 MB L2, so the routed experts' pointer tables are aliased to 2 experts (e % 2): 13 MB (3-bit) / 9 MB (2-bit) of weights, pre-touched by a warm call, same jobs, same work; weight reads then hit MALL/L2"
+d = "rocprofv3 --pmc FETCH_SIZE (gfx1151 derived counter from GL2C_EA_RDREQ_{32,64,96,128}B: bytes L2 fetched from the fabric, MALL hits included) and GL2C_EA_RDREQ_DRAM_sum, per dispatch of gu_k* / down_k*, arm a"
+
+[verdict]
+near_floor = "phase ms <= 1.3 x floor"
+far_above  = "phase ms >= 1.5 x floor"
+fetch_near_table = "FETCH_SIZE / phase routed bytes <= 1.25"
+pointless = "for gu and down at each size and bit width: (b) near_floor AND (a) far_above AND fetch_near_table -> bound by decode / WMMA / structure; reordering is pointless"
+worth = "FETCH_SIZE / phase bytes >= 1.5 on some phase, OR (c) gu+down <= 0.75 x (a) gu+down -> prototype a load-time experts-strips reorder"
+otherwise = "mixed: reported per phase as measured, no reorder prototype on this evidence"

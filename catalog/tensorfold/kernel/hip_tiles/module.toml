@@ -1,0 +1,79 @@
+id        = "kernel.tensorfold.hip_tiles"
+kind      = "kernel"
+summary   = "Matrix tiles: dot2 streaming GEMV (fp16/bf16 dot2, column-split, fused epilogues), WMMA gemm for gfx11 and gfx12 (wmma12), k-split gemm, stream and plan tables"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/hip/tiles/dot2.hip",
+  "zig/kernels/hip/tiles/dot2.hpp",
+  "zig/kernels/hip/tiles/dot2_tiles.hip",
+  "zig/kernels/hip/tiles/epilogue.hpp",
+  "zig/kernels/hip/tiles/gemm.hpp",
+  "zig/kernels/hip/tiles/gemm_kp.hpp",
+  "zig/kernels/hip/tiles/matrix_gemm.hpp",
+  "zig/kernels/hip/tiles/matrix_item.hpp",
+  "zig/kernels/hip/tiles/plan.hpp",
+  "zig/kernels/hip/tiles/stream.hpp",
+  "zig/kernels/hip/tiles/wmma12_gemm.hpp",
+  "zig/kernels/hip/tiles/wmma12_gemm_k32_ref.hpp",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/tiles/dot2.hip", "src/zig/kernels/hip/tiles/dot2_tiles.hip"]
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--genco",
+  "-D__HIP_PLATFORM_AMD__=1",
+  "-DUSE_ROCM=1",
+  "-DHIPBLAS_V2",
+  "-fPIC",
+  "-DCUDA_HAS_FP16=1",
+  "-DHIP_ENABLE_WARP_SYNC_BUILTINS=1",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-DTF_WAVE=32",
+  "-DTF_DOT2_F16=1",
+  "-DTF_DOT2_BF16=1",
+  "-DTF_SDOT4=1",
+  "-DTF_SDOT8=1",
+  "-DTF_MATRIX=1",
+  "-DTF_DOT2_SIGNED_ZERO=1",
+]
+
+[[provides]]
+interface = "linear.decode/mlx-affine/f32.tensorfold-dot2"
+api       = "tiles/dot2.hip, dot2_tiles.hip (affine_dot2_stream_*)"
+numeric   = "fp32 accumulate in a fixed lane order"
+regime    = "decode rounds (1..N lanes), memory-bound"
+
+[[provides]]
+interface = "linear.prefill/mlx-affine/f32.tensorfold-wmma"
+api       = "tiles/gemm.hpp, matrix_gemm.hpp, wmma12_gemm.hpp, gemm_kp.hpp"
+numeric   = "WMMA fp32 accumulate"
+regime    = "prompt chunks, compute-bound"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_common"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_quant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"

@@ -1,0 +1,168 @@
+{
+ "origin_registry": "crates/rdna-compute/src/kernels.rs (+ other rdna-compute/src/*.rs constants)",
+ "note": "a unit is the concatenation of its parts, compiled as one HIP source, as hipfire builds it; path parts are relative to catalog/hipfire",
+ "units": [
+  {
+   "name": "dequantize_mfp4g32_e8_to_f16",
+   "const": "DEQUANTIZE_MFP4G32_E8_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/dequantize_mfp4g32_e8_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "dequantize_mfp4g32_lloyd_to_f16",
+   "const": "DEQUANTIZE_MFP4G32_LLOYD_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/dequantize_mfp4g32_lloyd_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "dequantize_mfp4g32_p_to_f16",
+   "const": "DEQUANTIZE_MFP4G32_P_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/dequantize_mfp4g32_p_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_grouped_wmma_b2_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_GROUPED_WMMA_B2_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define E8_GROUPED_PREFILL_BATCH_TILES 2\n"
+    },
+    {
+     "text": "#define E8_GROUPED_PREFILL_KERNEL_NAME gemm_mfp4g32_e8_soa_grouped_wmma_b2_gfx1151\n"
+    },
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_grouped_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_grouped_wmma_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_GROUPED_WMMA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_grouped_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_wmma_b16_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_WMMA_B16_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define E8_PREFILL_WIDE_TILES 16\n"
+    },
+    {
+     "text": "#define E8_PREFILL_WIDE_KERNEL_NAME gemm_mfp4g32_e8_soa_wmma_b16_gfx1151\n"
+    },
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_wmma_wide.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_wmma_b2_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_WMMA_B2_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define E8_PREFILL_BATCH_TILES 2\n"
+    },
+    {
+     "text": "#define E8_PREFILL_KERNEL_NAME gemm_mfp4g32_e8_soa_wmma_b2_gfx1151\n"
+    },
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_wmma_b4_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_WMMA_B4_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define E8_PREFILL_BATCH_TILES 4\n"
+    },
+    {
+     "text": "#define E8_PREFILL_KERNEL_NAME gemm_mfp4g32_e8_soa_wmma_b4_gfx1151\n"
+    },
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_wmma_b8_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_WMMA_B8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define E8_PREFILL_WIDE_TILES 8\n"
+    },
+    {
+     "text": "#define E8_PREFILL_WIDE_KERNEL_NAME gemm_mfp4g32_e8_soa_wmma_b8_gfx1151\n"
+    },
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_wmma_wide.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_wmma_coop16_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_WMMA_COOP16_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_wmma_coop16.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_wmma_coop4_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_WMMA_COOP4_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_wmma_coop.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_soa_wmma_gfx1151",
+   "const": "GEMM_MFP4G32_E8_SOA_WMMA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/gemm_mfp4/src/kernels/src/gemm_mfp4g32_e8_soa_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  }
+ ]
+}

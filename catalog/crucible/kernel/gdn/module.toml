@@ -1,0 +1,64 @@
+id        = "kernel.crucible.gdn"
+kind      = "kernel"
+summary   = "Gated DeltaNet: decode core for 1..8 rows, one-launch verify core, chunk-64 WY/UT prefill (gram, inverse, state carry), persistent R=1 attention-side prototype"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/layers/gdn_rows.h",
+  "engine/layers/gdn_verify.h",
+  "engine/layers/gdn_verify_switch.h",
+  "engine/layers/kernels/persistent_gdn_load.h",
+  "engine/layers/kernels/prefill_gdn.h",
+  "engine/layers/packed_state.h",
+  "engine/layers/persistent_gdn.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/layers", "src/engine/layers/kernels"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.crucible"
+api       = "GdnKernel (ops.h) / GdnVerifyKernel (gdn_verify.h)"
+numeric   = "fp32 recurrent state, fixed-order accumulate"
+regime    = "decode and MTP verify, 1..8 rows (R), memory-bound"
+
+[[provides]]
+interface = "mixer.gdn-prefill/-/f32.crucible-wy64"
+api       = "GdnPrefill*Kernel (layers/kernels/prefill_gdn.h)"
+numeric   = "chunk-64 WY/UT form: not the decode recurrence order (tolerance, not bits)"
+regime    = "prompt chunks (up to 2048 rows a chunk), compute-bound on WMMA"
+
+[[requires]]
+module    = "executor.crucible.flashnext"
+
+[[requires]]
+module    = "kernel.crucible.device_common"
+
+[[requires]]
+module    = "kernel.crucible.exl3_gemv"
+
+[[requires]]
+module    = "kernel.crucible.hc"
+
+[[requires]]
+module    = "kernel.crucible.ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

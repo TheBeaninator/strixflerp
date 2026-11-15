@@ -1,0 +1,840 @@
+{
+ "name": "residual-add",
+ "interface": "residual.add/-/f32",
+ "api": "strix::kernels::residual_add(x, y, n, Act::F32, stream)",
+ "host": "control-node",
+ "config_sha256": "524785ddba368772725dcb7367d7f2adf1bf2c1458b114d5f33e2d2c99bafc39",
+ "criteria": {
+  "parity": "bit-identical",
+  "adapter_must_launch_foreign": true,
+  "adapter_origin_launches_allowed": 0
+ },
+ "cases": [
+  {
+   "name": "one",
+   "kind": "parity",
+   "n": 1,
+   "seed": 11,
+   "mix": "special"
+  },
+  {
+   "name": "block-minus-1",
+   "kind": "parity",
+   "n": 255,
+   "seed": 12,
+   "mix": "special"
+  },
+  {
+   "name": "block",
+   "kind": "parity",
+   "n": 256,
+   "seed": 13,
+   "mix": "special"
+  },
+  {
+   "name": "block-plus-1",
+   "kind": "parity",
+   "n": 257,
+   "seed": 14,
+   "mix": "special"
+  },
+  {
+   "name": "decode-row-4x2560",
+   "kind": "parity",
+   "n": 10240,
+   "seed": 15,
+   "mix": "plain"
+  },
+  {
+   "name": "decode-row-special",
+   "kind": "parity",
+   "n": 10240,
+   "seed": 16,
+   "mix": "special"
+  },
+  {
+   "name": "odd-1000003",
+   "kind": "parity",
+   "n": 1000003,
+   "seed": 17,
+   "mix": "special"
+  },
+  {
+   "name": "alias-y-is-x",
+   "kind": "parity",
+   "n": 10240,
+   "seed": 18,
+   "mix": "special",
+   "alias": 1
+  },
+  {
+   "name": "prefill-2048x4x2560",
+   "kind": "parity",
+   "n": 20971520,
+   "seed": 19,
+   "mix": "special"
+  },
+  {
+   "name": "bench-decode-4x2560",
+   "kind": "bench",
+   "shape": "n=10240 (1 token x 4 streams x 2560)",
+   "n": 10240,
+   "iters": 2000,
+   "repeats": 9
+  },
+  {
+   "name": "bench-prefill-2048x4x2560",
+   "kind": "bench",
+   "shape": "n=20971520 (2048 tokens x 4 streams x 2560)",
+   "n": 20971520,
+   "iters": 40,
+   "repeats": 9
+  }
+ ],
+ "providers": {
+  "strixite": {
+   "module": "kernel.strixite.residual",
+   "wraps": null,
+   "adapter": false,
+   "bind": {
+    "residual.add/-/f32": "kernel.strixite.residual"
+   },
+   "build": {
+    "tree": "build/gate-interface/residual-add/strixite",
+    "foreign_modules": {},
+    "code_objects": [],
+    "renames": {},
+    "contract_changes": [],
+    "built": true,
+    "build_s": 0.9,
+    "rc": 0,
+    "driver_sha256": "11089bfbbd9056012400a8f153470639d576c51be81a15e864446fd148ccd065"
+   },
+   "run": {
+    "ran": true,
+    "rc": 0,
+    "seconds": 1.6,
+    "host_loadavg_before": [
+     22.64,
+     18.57,
+     11.37
+    ],
+    "host_loadavg_after": [
+     22.64,
+     18.57,
+     11.37
+    ],
+    "gpu_before": {
+     "gtt_used_bytes": 37322752,
+     "engine_processes": []
+    },
+    "adapter_tallies": []
+   },
+   "pass": true,
+   "cases": [
+    {
+     "case": "one",
+     "kind": "parity",
+     "n": 1,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block-minus-1",
+     "kind": "parity",
+     "n": 255,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block",
+     "kind": "parity",
+     "n": 256,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block-plus-1",
+     "kind": "parity",
+     "n": 257,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "decode-row-4x2560",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "decode-row-special",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "odd-1000003",
+     "kind": "parity",
+     "n": 1000003,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "alias-y-is-x",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "prefill-2048x4x2560",
+     "kind": "parity",
+     "n": 20971520,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "bench-decode-4x2560",
+     "kind": "bench",
+     "n": 10240,
+     "median_us": 2.005054,
+     "min_us": 2.003044,
+     "max_us": 2.0432045,
+     "iters": 2000,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 122880,
+     "gb_per_s": 61.2851325,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "bench-prefill-2048x4x2560",
+     "kind": "bench",
+     "n": 20971520,
+     "median_us": 1207.47615,
+     "min_us": 1201.43833,
+     "max_us": 7097.7191,
+     "iters": 40,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 251658240,
+     "gb_per_s": 208.416738,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    }
+   ],
+   "problems": [],
+   "parity": {
+    "class": "bit-identical to the CPU reference",
+    "cases": 9
+   }
+  },
+  "gufo": {
+   "module": "kernel.flerp.residual_add_gufo",
+   "wraps": "kernel.gufo.qwen_norm_rope",
+   "adapter": true,
+   "bind": {
+    "residual.add/-/f32": "kernel.flerp.residual_add_gufo",
+    "format.device-view/gguf-kquant/-": "format.gufo.gguf_kquant"
+   },
+   "build": {
+    "tree": "build/gate-interface/residual-add/gufo",
+    "foreign_modules": {
+     "kernel.gufo.core_headers": {
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     },
+     "kernel.gufo.qwen_norm_rope": {
+      "commands": [
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/norm.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_norm.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/rope.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_rope.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/residual.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_residual.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/embed.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_embed.hip -o @OUT@"
+      ],
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     },
+     "kernel.gufo.qwen_ops": {
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     }
+    },
+    "code_objects": [],
+    "renames": {
+     "kernel.strixite.residual": {
+      "adapter": "kernel.flerp.residual_add_gufo",
+      "suffix": "_flerp_origin",
+      "symbols": [
+       "residual_add"
+      ]
+     }
+    },
+    "contract_changes": [],
+    "built": true,
+    "build_s": 0.8,
+    "rc": 0,
+    "driver_sha256": "d7fa989114c8b58eec4f23fcad3fb402aab7f68417ef0c3ab46675190f005a82"
+   },
+   "run": {
+    "ran": true,
+    "rc": 0,
+    "seconds": 1.1,
+    "host_loadavg_before": [
+     22.64,
+     18.57,
+     11.37
+    ],
+    "host_loadavg_after": [
+     22.64,
+     18.57,
+     11.37
+    ],
+    "gpu_before": {
+     "gtt_used_bytes": 37322752,
+     "engine_processes": []
+    },
+    "adapter_tallies": [
+     {
+      "adapter": "kernel.flerp.residual_add_gufo",
+      "provider": "kernel.gufo.qwen_norm_rope:LaunchResidualAdd",
+      "foreign_launches": 18375,
+      "origin_launches": 0
+     }
+    ]
+   },
+   "pass": true,
+   "cases": [
+    {
+     "case": "one",
+     "kind": "parity",
+     "n": 1,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block-minus-1",
+     "kind": "parity",
+     "n": 255,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block",
+     "kind": "parity",
+     "n": 256,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block-plus-1",
+     "kind": "parity",
+     "n": 257,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "decode-row-4x2560",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "decode-row-special",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "odd-1000003",
+     "kind": "parity",
+     "n": 1000003,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "alias-y-is-x",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "prefill-2048x4x2560",
+     "kind": "parity",
+     "n": 20971520,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "bench-decode-4x2560",
+     "kind": "bench",
+     "n": 10240,
+     "median_us": 2.189666,
+     "min_us": 2.017524,
+     "max_us": 2.2137965,
+     "iters": 2000,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 122880,
+     "gb_per_s": 56.1181477,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "bench-prefill-2048x4x2560",
+     "kind": "bench",
+     "n": 20971520,
+     "median_us": 1207.95765,
+     "min_us": 1206.15638,
+     "max_us": 1331.36562,
+     "iters": 40,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 251658240,
+     "gb_per_s": 208.333661,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    }
+   ],
+   "problems": [],
+   "parity": {
+    "class": "bit-identical to the CPU reference",
+    "cases": 9
+   }
+  },
+  "hipfire": {
+   "module": "kernel.flerp.residual_add_hipfire",
+   "wraps": "kernel.hipfire.tensor_ops",
+   "adapter": true,
+   "bind": {
+    "residual.add/-/f32": "kernel.flerp.residual_add_hipfire",
+    "format.device-view/hipfire-mq/-": "format.hipfire.loader",
+    "rotate.fwht/-/f32": "kernel.hipfire.norm_rope"
+   },
+   "cases_pattern": null,
+   "launches": null,
+   "build": {
+    "tree": "build/gate-interface/residual-add/hipfire",
+    "foreign_modules": {
+     "kernel.hipfire.common_headers": {
+      "origin": "hipfire",
+      "product": "code-object",
+      "toolchain": "therock-10.2"
+     },
+     "kernel.hipfire.gemm_mq": {
+      "origin": "hipfire",
+      "product": "code-object",
+      "toolchain": "therock-10.2"
+     },
+     "kernel.hipfire.norm_rope": {
+      "origin": "hipfire",
+      "product": "code-object",
+      "toolchain": "therock-10.2"
+     },
+     "kernel.hipfire.tensor_ops": {
+      "origin": "hipfire",
+      "product": "code-object",
+      "toolchain": "therock-10.2"
+     }
+    },
+    "code_objects": [
+     {
+      "adapter": "kernel.flerp.residual_add_hipfire",
+      "command": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/norm_rope/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include @SRC@ -o @OUT@",
+      "module": "kernel.hipfire.tensor_ops",
+      "symbol": "flerp_co_hipfire_add_inplace",
+      "toolchain": "therock-10.2",
+      "unit": "add_inplace"
+     }
+    ],
+    "renames": {
+     "kernel.strixite.residual": {
+      "adapter": "kernel.flerp.residual_add_hipfire",
+      "suffix": "_flerp_origin",
+      "symbols": [
+       "residual_add"
+      ]
+     }
+    },
+    "contract_changes": [],
+    "built": true,
+    "build_s": 2.6,
+    "rc": 0,
+    "driver_sha256": "48b1ef5921d509f95f9f56fd58b9c03d122545fad1341fabfc8e2a82899fdd0b"
+   },
+   "run": {
+    "ran": true,
+    "rc": 0,
+    "seconds": 1.0,
+    "host_loadavg_before": [
+     11.1,
+     14.03,
+     16.26
+    ],
+    "host_loadavg_after": [
+     11.1,
+     14.03,
+     16.26
+    ],
+    "gpu_before": {
+     "gtt_used_bytes": 37322752,
+     "engine_processes": []
+    },
+    "adapter_tallies": [
+     {
+      "adapter": "kernel.flerp.residual_add_hipfire",
+      "provider": "kernel.hipfire.tensor_ops:add_inplace_f32",
+      "foreign_launches": 18375,
+      "origin_launches": 0
+     }
+    ]
+   },
+   "pass": true,
+   "cases": [
+    {
+     "case": "one",
+     "kind": "parity",
+     "n": 1,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block-minus-1",
+     "kind": "parity",
+     "n": 255,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block",
+     "kind": "parity",
+     "n": 256,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "block-plus-1",
+     "kind": "parity",
+     "n": 257,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "decode-row-4x2560",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "decode-row-special",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "odd-1000003",
+     "kind": "parity",
+     "n": 1000003,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "alias-y-is-x",
+     "kind": "parity",
+     "n": 10240,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "prefill-2048x4x2560",
+     "kind": "parity",
+     "n": 20971520,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "ran": true,
+     "required": "bit-identical",
+     "pass": true
+    },
+    {
+     "case": "bench-decode-4x2560",
+     "kind": "bench",
+     "n": 10240,
+     "median_us": 1.9829335,
+     "min_us": 1.9724385,
+     "max_us": 1.990214,
+     "iters": 2000,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 122880,
+     "gb_per_s": 61.9687952,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "bench-prefill-2048x4x2560",
+     "kind": "bench",
+     "n": 20971520,
+     "median_us": 1246.99537,
+     "min_us": 1235.09722,
+     "max_us": 1253.30642,
+     "iters": 40,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 251658240,
+     "gb_per_s": 201.811687,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    }
+   ],
+   "problems": [],
+   "parity": {
+    "class": "bit-identical to the CPU reference",
+    "cases": 9
+   },
+   "order_evidence": null
+  }
+ },
+ "lease": "holding control-gpu as agent-phase4",
+ "gpu_after": {
+  "gtt_used_bytes": 37322752,
+  "engine_processes": []
+ },
+ "pairwise": [
+  {
+   "a": "strixite",
+   "b": "gufo",
+   "cases_identical": 9,
+   "cases_differing": 0,
+   "bit_identical": true,
+   "max_abs_gap": 0.0,
+   "differing": []
+  },
+  {
+   "a": "strixite",
+   "b": "hipfire",
+   "cases_identical": 9,
+   "cases_differing": 0,
+   "bit_identical": true,
+   "max_abs_gap": 0.0,
+   "differing": []
+  },
+  {
+   "a": "gufo",
+   "b": "hipfire",
+   "cases_identical": 9,
+   "cases_differing": 0,
+   "bit_identical": true,
+   "max_abs_gap": 0.0,
+   "differing": []
+  }
+ ],
+ "when_utc": "2026-11-11T00:16:16Z",
+ "pass": true,
+ "complete": true
+}

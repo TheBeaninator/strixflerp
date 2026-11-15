@@ -1,0 +1,51 @@
+id        = "kernel.strixfold.mhc_mix"
+kind      = "kernel"
+summary   = "mHC (hyper-connection) posted streams and mixes of a prompt chunk: 4 streams of 5120, 40 mix blocks of 512"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/aux_hc.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/aux_hc.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 1
+
+[[provides]]
+interface = "hc.mix-prefill/dsv41-mhc-f32/bf16"
+api       = "tf_ds_aux_hc_mix_pf_d5120"
+numeric   = "fp32 fma chains in column order, post contraction as _hc_post; hc_mix_fp32_bound (not Triton bits)"
+regime    = "prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.mhc_mix.json"

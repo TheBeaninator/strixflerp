@@ -1,0 +1,53 @@
+id      = "tool.strixite.omf_seg"
+kind    = "tool"
+summary = "Batch export, import and probe of session states (K/V segment experiments)"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/omf_seg.cpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/omf_seg.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.omf-seg/-/-"
+api       = "main (omf_seg)"
+numeric   = "n/a"
+regime    = "needs the GPU"
+
+[[requires]]
+module = "executor.strixite.qwen4exp"
+
+[[requires]]
+interface = "format.container/strixw/-"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+interface = "linear.decode/strixw-q8/bf16"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

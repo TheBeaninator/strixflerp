@@ -1,0 +1,110 @@
+id        = "kernel.hipfire.gemv_mq"
+kind      = "kernel"
+summary   = "Decode GEMV on hipfire MQ weights: FWHT-rotated HFQ (MQ2..MQ8 G256, the dual-fp16-scale V2 family, Lloyd / LUT codebooks, MQ4C); residual, multirow and fused forms (60 sources, 81 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/fused_gate_up_mq2g256v2.hip",
+  "kernels/src/fused_gate_up_mq3g256_lloyd.hip",
+  "kernels/src/fused_gate_up_mq3g256v2.hip",
+  "kernels/src/fused_gate_up_mq4cg256.hip",
+  "kernels/src/fused_gate_up_mq4g256_lloyd.hip",
+  "kernels/src/fused_gate_up_mq4g256v2.hip",
+  "kernels/src/fused_gate_up_mq5g256v2.hip",
+  "kernels/src/fused_gate_up_mq6g256v2.hip",
+  "kernels/src/fused_qkv_mq2g256v2.hip",
+  "kernels/src/fused_qkv_mq3g256_lloyd.hip",
+  "kernels/src/fused_qkv_mq3g256v2.hip",
+  "kernels/src/fused_qkv_mq4cg256.hip",
+  "kernels/src/fused_qkv_mq4g256_lloyd.hip",
+  "kernels/src/fused_qkv_mq4g256v2.hip",
+  "kernels/src/fused_qkv_mq5g256v2.hip",
+  "kernels/src/fused_qkv_mq6g256v2.hip",
+  "kernels/src/fused_qkvza_mq2g256v2.hip",
+  "kernels/src/fused_qkvza_mq3g256_lloyd.hip",
+  "kernels/src/fused_qkvza_mq3g256v2.hip",
+  "kernels/src/fused_qkvza_mq4cg256.hip",
+  "kernels/src/fused_qkvza_mq4g256_lloyd.hip",
+  "kernels/src/fused_qkvza_mq4g256v2.hip",
+  "kernels/src/fused_qkvza_mq5g256v2.hip",
+  "kernels/src/fused_qkvza_mq6g256v2.hip",
+  "kernels/src/gemv_mq2g256_lloyd.hip",
+  "kernels/src/gemv_mq2g256_lloyd_residual.hip",
+  "kernels/src/gemv_mq2g256v2.hip",
+  "kernels/src/gemv_mq2g256v2_multirow.hip",
+  "kernels/src/gemv_mq2g256v2_residual.hip",
+  "kernels/src/gemv_mq3g256_lloyd.hip",
+  "kernels/src/gemv_mq3g256_lloyd_residual.hip",
+  "kernels/src/gemv_mq3g256v2.hip",
+  "kernels/src/gemv_mq3g256v2_multirow.hip",
+  "kernels/src/gemv_mq3g256v2_residual.hip",
+  "kernels/src/gemv_mq4cg256.hip",
+  "kernels/src/gemv_mq4cg256_multirow.hip",
+  "kernels/src/gemv_mq4cg256_residual.hip",
+  "kernels/src/gemv_mq4g128.hip",
+  "kernels/src/gemv_mq4g128v2.hip",
+  "kernels/src/gemv_mq4g256.hip",
+  "kernels/src/gemv_mq4g256_lloyd.hip",
+  "kernels/src/gemv_mq4g256_lloyd_residual.hip",
+  "kernels/src/gemv_mq4g256v2.hip",
+  "kernels/src/gemv_mq4g256v2_multirow.hip",
+  "kernels/src/gemv_mq4g256v2_multirow_r2_lanes.hip",
+  "kernels/src/gemv_mq4g256v2_multirow_r2_x3.hip",
+  "kernels/src/gemv_mq4g256v2_q8x.hip",
+  "kernels/src/gemv_mq4g256v2_residual.hip",
+  "kernels/src/gemv_mq4g256v2_residual_sigmoid_scaled_k512_r2.hip",
+  "kernels/src/gemv_mq4g256v2_xbatch.hip",
+  "kernels/src/gemv_mq5g256.hip",
+  "kernels/src/gemv_mq5g256v2.hip",
+  "kernels/src/gemv_mq5g256v2_multirow.hip",
+  "kernels/src/gemv_mq5g256v2_residual.hip",
+  "kernels/src/gemv_mq6g256.hip",
+  "kernels/src/gemv_mq6g256v2.hip",
+  "kernels/src/gemv_mq6g256v2_multirow.hip",
+  "kernels/src/gemv_mq6g256v2_residual.hip",
+  "kernels/src/qwen4_gemv_mq4g256.hip",
+  "kernels/src/qwen4_gemv_mq6g256v2.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 81
+
+[[provides]]
+interface = "linear.decode/hipfire-mq/f32"
+api       = "fused_gate_up_mq2g256v2, fused_gate_up_mq3g256v2, fused_gate_up_mq3g256_lloyd, fused_gate_up_mq4cg256, fused_gate_up_mq4g256v2_lut (+76 more units, see units.json)"
+numeric   = "fp32 activations and fp32 accumulate; weights decoded in-kernel; summation order is per kernel variant, so bits differ between variants and from other engines; the input must be rotated first (rotate.fwht), a fused rotate exists for some epilogues"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+module    = "kernel.hipfire.indexer_topk"
+
+[[requires]]
+interface = "format.device-view/hipfire-mq/-"
+
+[[requires]]
+interface = "rotate.fwht/-/f32"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemv_mq.json"

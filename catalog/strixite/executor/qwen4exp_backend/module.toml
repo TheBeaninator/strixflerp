@@ -1,0 +1,50 @@
+id      = "executor.strixite.qwen4exp_backend"
+kind    = "executor"
+summary = "Adapter from the qwen4exp session to the engine's LmBackend ABI"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/qwen4exp_backend.cpp", "serve/qwen4exp_backend.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/qwen4exp_backend.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.backend/qwen4exp/-"
+api       = "strix::Qwen4ExpBackend"
+numeric   = "that of executor.strixite.qwen4exp"
+regime    = "what the server binds the engine to"
+
+[[requires]]
+module = "executor.strixite.qwen4exp"
+
+[[requires]]
+interface = "format.container/strixw/-"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.engine"
+
+[[requires]]
+module = "runtime.strixite.log"
+
+[[requires]]
+module = "runtime.strixite.ngram_table"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

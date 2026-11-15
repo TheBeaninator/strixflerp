@@ -1,0 +1,521 @@
+[
+ {
+  "range": [
+   0,
+   10
+  ],
+  "check_layers": [
+   0,
+   3,
+   9
+  ],
+  "memory_before": {
+   "gtt_total": 133143986176,
+   "gtt_used": 18661376,
+   "mem_available": 127421681664
+  },
+  "load_before": 2.87,
+  "memory_after_exit": {
+   "gtt_total": 133143986176,
+   "gtt_used": 18706432,
+   "mem_available": 127349080064
+  },
+  "rc": 0,
+  "seconds": 37.7,
+  "loaded": {
+   "event": "loaded",
+   "engine": "flerp-qwen35moe-hip",
+   "architecture": "qwen35moe",
+   "layers": 40,
+   "hidden": 2048,
+   "intermediate": 16384,
+   "heads": 16,
+   "kv_heads": 2,
+   "vocab": 248320,
+   "mtp_layers": 1,
+   "context": 2048,
+   "load_s": 30.284,
+   "expert_count": 256,
+   "expert_used_count": 8,
+   "expert_feed_forward_length": 512,
+   "expert_shared_feed_forward_length": 512,
+   "device_bytes": 1007000532,
+   "weight_resident_bytes": 5472839680,
+   "weight_regions": 185,
+   "max_prompt_batch": 2048,
+   "arena_estimate_bytes": {
+    "context": 1070570452,
+    "32768": 2523864020
+   },
+   "loader": "placed",
+   "placed": {
+    "plan_sha256": "06d359b9853cca988c4db468bc4db5eb63042c2bfa82998aaa21e8b9d066b11e",
+    "world": 1,
+    "rank": 0,
+    "blocks": [
+     0,
+     10
+    ],
+    "model_blocks": 40,
+    "plan_device_bytes": 5472843776,
+    "allocated_bytes": 5472843776,
+    "tensor_bytes": 5472839680,
+    "tensors": 185,
+    "unloaded_tensors": 568,
+    "unloaded_bytes": 16229632512,
+    "plan_s": 0.000683488,
+    "alloc_s": 0.190808375,
+    "fill_s": 29.925110431,
+    "read_gb_per_s": 0.182884527448,
+    "single_reader": true,
+    "direct_io": true,
+    "read_calls": 472,
+    "pause_s": 18.515667972,
+    "hip_free_before": 129919143936,
+    "hip_free_after": 124240236544,
+    "hip_total": 133143986176,
+    "rss_file_before_fill": 190263296,
+    "rss_file_after_fill": 210391040
+   }
+  },
+  "events": [
+   {
+    "event": "stage_bench",
+    "phase": "tokens",
+    "blocks": [
+     0,
+     10
+    ],
+    "chunk_rows": 1024,
+    "hidden": 2048,
+    "chunk_s": [
+     1.103150331,
+     1.071666775,
+     1.060497442
+    ],
+    "chunk_first_run_dumped": true,
+    "chunk_ms_per_block": 106.0497442,
+    "chunk_rows_per_s": 965.58460157,
+    "chunk_out": {
+     "sha256": "d3f7be4492f32bb9eb2367062ebc7acce7ed00ba47de37cbd79c63bd47be8245",
+     "non_finite": 0,
+     "rms": 0.0496929022536
+    },
+    "chunk_out_again": {
+     "sha256": "d3f7be4492f32bb9eb2367062ebc7acce7ed00ba47de37cbd79c63bd47be8245",
+     "non_finite": 0,
+     "rms": 0.0496929022536
+    },
+    "chunk_out_third": {
+     "sha256": "d3f7be4492f32bb9eb2367062ebc7acce7ed00ba47de37cbd79c63bd47be8245",
+     "non_finite": 0,
+     "rms": 0.0496929022536
+    },
+    "chunk_repeats_equal": true,
+    "decode_out_after_chunk": {
+     "sha256": "992d8aaea6046fbd56d0cbab1d2d0396b1c177f6ec3764891b01fb7e2568b14e",
+     "non_finite": 0,
+     "rms": 0.0408461746304
+    },
+    "decode_dumped_records": 9,
+    "decode_at_context": {
+     "context": 1027,
+     "with_logits_request": {
+      "steps": 8,
+      "first_ms": 3.845135,
+      "mean_ms_after_first": 3.87037328571
+     },
+     "eager": {
+      "steps": 8,
+      "first_ms": 3.841905,
+      "mean_ms_after_first": 3.83882014286
+     }
+    },
+    "decode_fresh": {
+     "with_logits_request": {
+      "steps": 48,
+      "first_ms": 9.736596,
+      "mean_ms_after_first": 3.72537674468
+     },
+     "eager": {
+      "steps": 48,
+      "first_ms": 3.758175,
+      "mean_ms_after_first": 3.77189048936
+     },
+     "out_after_with_logits": {
+      "sha256": "5fd6cd9e6ae4f48e5c1f0b435f898142e16602aa5bde06b0dacbf7453411ccf6",
+      "non_finite": 0,
+      "rms": 0.0533873566015
+     }
+    },
+    "decode_ms_per_block": {
+     "with_logits_request": 0.372537674468,
+     "eager": 0.377189048936
+    }
+   },
+   {
+    "event": "synthetic_input",
+    "rows": 1024,
+    "hidden": 2048,
+    "sha256": "d33e3d70f4abcc4be7ed574b05bc6c6c8f7225ba5e069a4e67038e3f6e367d99"
+   },
+   {
+    "event": "stage_bench",
+    "phase": "synthetic",
+    "blocks": [
+     0,
+     10
+    ],
+    "chunk_rows": 1024,
+    "hidden": 2048,
+    "chunk_s": [
+     1.057248023,
+     1.086162168,
+     1.092858448
+    ],
+    "chunk_first_run_dumped": true,
+    "chunk_ms_per_block": 108.6162168,
+    "chunk_rows_per_s": 942.7689807,
+    "chunk_out": {
+     "sha256": "92e7f6ddffa1e2965b7340a1802c78ae9a28259093abeb4c365edcf6618b7801",
+     "non_finite": 0,
+     "rms": 0.461243001585
+    },
+    "chunk_out_again": {
+     "sha256": "92e7f6ddffa1e2965b7340a1802c78ae9a28259093abeb4c365edcf6618b7801",
+     "non_finite": 0,
+     "rms": 0.461243001585
+    },
+    "chunk_out_third": {
+     "sha256": "92e7f6ddffa1e2965b7340a1802c78ae9a28259093abeb4c365edcf6618b7801",
+     "non_finite": 0,
+     "rms": 0.461243001585
+    },
+    "chunk_repeats_equal": true,
+    "decode_out_after_chunk": {
+     "sha256": "8a6a9b5627fbf90adde545bcbe9af652fe2012bc41c303324559092f3de2da78",
+     "non_finite": 0,
+     "rms": 0.0632582128845
+    },
+    "decode_dumped_records": 9,
+    "decode_at_context": {
+     "context": 1027,
+     "with_logits_request": {
+      "steps": 0,
+      "first_ms": 0,
+      "mean_ms_after_first": 0
+     },
+     "eager": {
+      "steps": 8,
+      "first_ms": 3.672824,
+      "mean_ms_after_first": 3.68782385714
+     }
+    },
+    "decode_fresh": {
+     "with_logits_request": {
+      "steps": 0,
+      "first_ms": 0,
+      "mean_ms_after_first": 0
+     },
+     "eager": {
+      "steps": 48,
+      "first_ms": 3.853376,
+      "mean_ms_after_first": 3.68233687234
+     },
+     "out_after_with_logits": {
+      "sha256": "13d02e3bf6f5b10d5099ec1519a0137921aaa20ee35356b7e097809739fdb200",
+      "non_finite": 0,
+      "rms": 0.0671296177524
+     }
+    },
+    "decode_ms_per_block": {
+     "with_logits_request": null,
+     "eager": 0.368233687234
+    }
+   },
+   {
+    "event": "moe_dump",
+    "path": "/data/projects/strixflerp/build/gate-scratch-placed/moe-dump-range35-0-10.bin",
+    "records": 30,
+    "bytes": 494160,
+    "layers": [
+     0,
+     3,
+     9
+    ],
+    "rows": [
+     0,
+     1023
+    ]
+   }
+  ],
+  "plan": {
+   "sha256": "06d359b9853cca988c4db468bc4db5eb63042c2bfa82998aaa21e8b9d066b11e",
+   "cuts": [
+    0,
+    10
+   ],
+   "ranks": [
+    {
+     "rank": 0,
+     "blocks": [
+      0,
+      10
+     ],
+     "tensors": 185,
+     "tensor_bytes": 5472839680,
+     "device_bytes": 5472843776
+    }
+   ]
+  },
+  "failures_before_check": [],
+  "block_check": {
+   "records": 30,
+   "layers": [
+    0,
+    3,
+    9
+   ],
+   "same_set": 30,
+   "same_order": 30,
+   "ties_excused": 0,
+   "other_set": 0,
+   "weights_max_abs": 1.902652532748128e-07,
+   "gate_logit_max_abs": 2.057478605266283e-07,
+   "out_max_abs_over_rms": 1.6035424245920974e-05,
+   "smallest_margin": 2.564145774764867e-05,
+   "pass": true,
+   "why": [],
+   "seconds": 15.1,
+   "load_before": 6.45,
+   "load_after": 5.91
+  },
+  "failures": [],
+  "pass": true
+ },
+ {
+  "range": [
+   10,
+   20
+  ],
+  "check_layers": [
+   10,
+   15,
+   19
+  ],
+  "memory_before": {
+   "gtt_total": 133143986176,
+   "gtt_used": 18706432,
+   "mem_available": 127349080064
+  },
+  "load_before": 3.43,
+  "memory_after_exit": {
+   "gtt_total": 133143986176,
+   "gtt_used": 18706432,
+   "mem_available": 127153496064
+  },
+  "rc": 0,
+  "seconds": 28.8,
+  "loaded": {
+   "event": "loaded",
+   "engine": "flerp-qwen35moe-hip",
+   "architecture": "qwen35moe",
+   "layers": 40,
+   "hidden": 2048,
+   "intermediate": 16384,
+   "heads": 16,
+   "kv_heads": 2,
+   "vocab": 248320,
+   "mtp_layers": 1,
+   "context": 2048,
+   "load_s": 25.148,
+   "expert_count": 256,
+   "expert_used_count": 8,
+   "expert_feed_forward_length": 512,
+   "expert_shared_feed_forward_length": 512,
+   "device_bytes": 1007000532,
+   "weight_resident_bytes": 5039484160,
+   "weight_regions": 181,
+   "max_prompt_batch": 2048,
+   "arena_estimate_bytes": {
+    "context": 1070570452,
+    "32768": 2523864020
+   },
+   "loader": "placed",
+   "placed": {
+    "plan_sha256": "ade5982207e9d86c75b3c8cda548af6f3e90a47880a82cd43bf6634eb40590cf",
+    "world": 1,
+    "rank": 0,
+    "blocks": [
+     10,
+     20
+    ],
+    "model_blocks": 40,
+    "plan_device_bytes": 5039488256,
+    "allocated_bytes": 5039488256,
+    "tensor_bytes": 5039484160,
+    "tensors": 181,
+    "unloaded_tensors": 572,
+    "unloaded_bytes": 16662988032,
+    "plan_s": 0.001022322,
+    "alloc_s": 0.181749847,
+    "fill_s": 24.75760143,
+    "read_gb_per_s": 0.20355300469,
+    "single_reader": true,
+    "direct_io": true,
+    "read_calls": 441,
+    "pause_s": 18.113008761,
+    "hip_free_before": 129919143936,
+    "hip_free_after": 124672249856,
+    "hip_total": 133143986176,
+    "rss_file_before_fill": 190173184,
+    "rss_file_after_fill": 210321408
+   }
+  },
+  "events": [
+   {
+    "event": "stage_bench_skipped",
+    "phase": "tokens",
+    "why": "the range does not start at block 0"
+   },
+   {
+    "event": "synthetic_input",
+    "rows": 1024,
+    "hidden": 2048,
+    "sha256": "d33e3d70f4abcc4be7ed574b05bc6c6c8f7225ba5e069a4e67038e3f6e367d99"
+   },
+   {
+    "event": "stage_bench",
+    "phase": "synthetic",
+    "blocks": [
+     10,
+     20
+    ],
+    "chunk_rows": 1024,
+    "hidden": 2048,
+    "chunk_s": [
+     1.083584567,
+     1.053182425,
+     1.05870011
+    ],
+    "chunk_first_run_dumped": true,
+    "chunk_ms_per_block": 105.3182425,
+    "chunk_rows_per_s": 972.291196371,
+    "chunk_out": {
+     "sha256": "f358c62ad4f6b60bfb6022481fce325e8c4d89dafda362f86d69115bf370fb90",
+     "non_finite": 0,
+     "rms": 0.542872078688
+    },
+    "chunk_out_again": {
+     "sha256": "f358c62ad4f6b60bfb6022481fce325e8c4d89dafda362f86d69115bf370fb90",
+     "non_finite": 0,
+     "rms": 0.542872078688
+    },
+    "chunk_out_third": {
+     "sha256": "f358c62ad4f6b60bfb6022481fce325e8c4d89dafda362f86d69115bf370fb90",
+     "non_finite": 0,
+     "rms": 0.542872078688
+    },
+    "chunk_repeats_equal": true,
+    "decode_out_after_chunk": {
+     "sha256": "aaf5b2883517936fc1bd1c5aa7bc7efc6b2e987458193ed90d3fadeb16c982dd",
+     "non_finite": 0,
+     "rms": 0.0737122750449
+    },
+    "decode_dumped_records": 9,
+    "decode_at_context": {
+     "context": 1027,
+     "with_logits_request": {
+      "steps": 0,
+      "first_ms": 0,
+      "mean_ms_after_first": 0
+     },
+     "eager": {
+      "steps": 8,
+      "first_ms": 3.640714,
+      "mean_ms_after_first": 3.66199357143
+     }
+    },
+    "decode_fresh": {
+     "with_logits_request": {
+      "steps": 0,
+      "first_ms": 0,
+      "mean_ms_after_first": 0
+     },
+     "eager": {
+      "steps": 48,
+      "first_ms": 4.104999,
+      "mean_ms_after_first": 3.57663008511
+     },
+     "out_after_with_logits": {
+      "sha256": "c960af17f5c2b581c166fb7a83e042b2c274cad55071fcd2ca18efb465c42f3c",
+      "non_finite": 0,
+      "rms": 0.285089204119
+     }
+    },
+    "decode_ms_per_block": {
+     "with_logits_request": null,
+     "eager": 0.357663008511
+    }
+   },
+   {
+    "event": "moe_dump",
+    "path": "/data/projects/strixflerp/build/gate-scratch-placed/moe-dump-range35-10-20.bin",
+    "records": 15,
+    "bytes": 247080,
+    "layers": [
+     10,
+     15,
+     19
+    ],
+    "rows": [
+     0,
+     1023
+    ]
+   }
+  ],
+  "plan": {
+   "sha256": "ade5982207e9d86c75b3c8cda548af6f3e90a47880a82cd43bf6634eb40590cf",
+   "cuts": [
+    10,
+    20
+   ],
+   "ranks": [
+    {
+     "rank": 0,
+     "blocks": [
+      10,
+      20
+     ],
+     "tensors": 181,
+     "tensor_bytes": 5039484160,
+     "device_bytes": 5039488256
+    }
+   ]
+  },
+  "failures_before_check": [],
+  "block_check": {
+   "records": 15,
+   "layers": [
+    10,
+    15,
+    19
+   ],
+   "same_set": 15,
+   "same_order": 15,
+   "ties_excused": 0,
+   "other_set": 0,
+   "weights_max_abs": 8.994907813031361e-08,
+   "gate_logit_max_abs": 1.249557872728957e-07,
+   "out_max_abs_over_rms": 7.068685132036176e-06,
+   "smallest_margin": 0.00011844989726437875,
+   "pass": true,
+   "why": [],
+   "seconds": 10.0,
+   "load_before": 5.91,
+   "load_after": 5.7
+  },
+  "failures": [],
+  "pass": true
+ }
+]

@@ -1,0 +1,161 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_logits_topk",
+   "modules": [
+    "runtime.strixite.check",
+    "kernel.strixite.hip_common",
+    "kernel.strixite.logits_topk",
+    "kernel.gufo.core_headers",
+    "kernel.gufo.qwen_ops",
+    "runtime.gufo.sampling",
+    "runtime.gufo.platform",
+    "format.gufo.gguf_kquant",
+    "kernel.gufo.qwen_sampling",
+    "kernel.flerp.adapter_rt",
+    "kernel.flerp.logits_topk_gufo",
+    "tool.flerp.gate_logits_topk"
+   ]
+  }
+ },
+ "bindings": {
+  "format.device-view/gguf-kquant/-": "format.gufo.gguf_kquant",
+  "logits.topk/-/-": "kernel.flerp.logits_topk_gufo"
+ },
+ "code_objects": [],
+ "contract_changes": [
+  {
+   "module": "kernel.flerp.logits_topk_gufo",
+   "provided": "logits.topk/-/-.gufo-select",
+   "required": "logits.topk/-/-"
+  }
+ ],
+ "foreign": {
+  "kernel.gufo.core_headers": {
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  },
+  "kernel.gufo.qwen_ops": {
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  },
+  "kernel.gufo.qwen_sampling": {
+   "commands": [
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_sampling/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_sampling/src/src/families/qwen/kernels/sample.hip -o @OUT@"
+   ],
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  }
+ },
+ "include_only": [],
+ "modules": {
+  "format.gufo.gguf_kquant": {
+   "dir": "catalog/gufo/format/gguf_kquant",
+   "files": 7,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.flerp.adapter_rt": {
+   "dir": "catalog/flerp/kernel/adapter_rt",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.flerp.logits_topk_gufo": {
+   "dir": "catalog/flerp/kernel/logits_topk_gufo",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/flerp_adapters/logits_topk_gufo.hip"
+   ],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.core_headers": {
+   "dir": "catalog/gufo/kernel/core_headers",
+   "files": 27,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_ops": {
+   "dir": "catalog/gufo/kernel/qwen_ops",
+   "files": 22,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_sampling": {
+   "dir": "catalog/gufo/kernel/qwen_sampling",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/src/families/qwen/kernels/sample.hip"
+   ],
+   "spdx": "MIT"
+  },
+  "kernel.strixite.hip_common": {
+   "dir": "catalog/strixite/kernel/hip_common",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.logits_topk": {
+   "dir": "catalog/strixite/kernel/logits_topk",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/logits_topk.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "runtime.gufo.platform": {
+   "dir": "catalog/gufo/runtime/platform",
+   "files": 45,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "runtime.gufo.sampling": {
+   "dir": "catalog/gufo/runtime/sampling",
+   "files": 11,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "runtime.strixite.check": {
+   "dir": "catalog/strixite/runtime/check",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "tool.flerp.gate_logits_topk": {
+   "dir": "gate/interface/drivers/logits_topk",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-logits-topk.gufo",
+ "renames": {
+  "kernel.strixite.logits_topk": {
+   "adapter": "kernel.flerp.logits_topk_gufo",
+   "suffix": "_flerp_origin",
+   "symbols": [
+    "logits_topk",
+    "logits_topk_workspace_bytes"
+   ]
+  }
+ },
+ "toolchain": "therock-10.1"
+}

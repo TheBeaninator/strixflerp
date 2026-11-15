@@ -1,0 +1,53 @@
+id        = "format.crucible.ngram16"
+kind      = "format"
+summary   = "PLE n-gram table: the EXL3 n-gram trellis row codec (device and host), and the opt-in 16-bit table built from the original BF16 weights (fetch, convert, error check)"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/layers/ple_row_codec.h",
+  "engine/model/flashnext/ple_host.h",
+  "tools/ngram16/codec.py",
+  "tools/ngram16/common.py",
+  "tools/ngram16/convert.py",
+  "tools/ngram16/error_check.py",
+  "tools/ngram16/fetch.py",
+  "tools/ngram16/fp16_scan.py",
+  "tools/ngram16/make_fixture.py",
+  "tools/ngram16/synth.py",
+]
+authors   = ["jaedync"]
+modified  = false
+upstream  = "n-gram row codec ported from exllamav3 ngram_codec.py (MIT, Turboderp; tools/ngram16/codec.py:1)"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/layers", "src/engine/model/flashnext"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "ple.ngram-rows/exl3-ngram/-"
+api       = "PleGatherKernel row codec (layers/ple_row_codec.h), host gather from the mmapped checkpoint (model/flashnext/ple_host.h)"
+numeric   = "codec bit-exact with exllamav3 ngram_codec.py"
+regime    = "all"
+
+[[provides]]
+interface = "tool.convert-ngram-table/bf16/-"
+api       = "tools/ngram16/fetch.py, convert.py"
+numeric   = "bf16 copy of the original table"
+regime    = "offline"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

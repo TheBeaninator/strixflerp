@@ -1,0 +1,38 @@
+id        = "kernel.crucible.vision"
+kind      = "kernel"
+summary   = "Vision tower kernels (patchify, patch embed, attention, layer norm, GELU); EXL3 linears run through the prefill GEMM"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = ["engine/layers/kernels/vision.h"]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/layers/kernels"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "vision.tower-ops/exl3/f32.crucible"
+api       = "PatchifyKernel, PatchEmbedKernel, AttentionKernel, LayerNormKernel, GeluKernel (layers/kernels/vision.h)"
+numeric   = "fp32"
+regime    = "one image per request"
+
+[[requires]]
+module    = "kernel.crucible.device_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

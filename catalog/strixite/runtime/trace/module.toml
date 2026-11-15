@@ -1,0 +1,32 @@
+id      = "runtime.strixite.trace"
+kind    = "runtime"
+summary = "ROCTX range macros for profiler timelines; expand to nothing unless STRIX_ROCTX is set"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["common/trace.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.trace/-/-"
+api       = "STRIX_TRACE_RANGE, STRIX_TRACE_STAGE"
+numeric   = "n/a"
+regime    = "host, profiling builds"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

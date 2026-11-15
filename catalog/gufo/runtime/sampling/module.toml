@@ -1,0 +1,60 @@
+id        = "runtime.gufo.sampling"
+kind      = "runtime"
+summary   = "Host sampling and constrained decoding: sampler state and penalties, JSON-schema constraint (lexeme and regex compilers), reasoning and session modes"
+notes     = "The matching .hpp files that kernel translation units include are in kernel.gufo.core_headers."
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/core/cancellable_gate.hpp",
+  "src/core/json_constraint.cpp",
+  "src/core/json_schema_lexeme.cpp",
+  "src/core/json_schema_regex.cpp",
+  "src/core/json_schema_regex.hpp",
+  "src/core/mapped_prefetch.hpp",
+  "src/core/reasoning.hpp",
+  "src/core/sampling.cpp",
+  "src/core/session_mode.hpp",
+  "src/core/text_sampling_defaults.hpp",
+  "src/core/utf8.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "sample.next-token/-/f32.gufo"
+api       = "gufo::sampling::SamplerState"
+numeric   = "fp32 logits; penalties as unique-token records"
+regime    = "host"
+
+[[provides]]
+interface = "grammar.matcher-gufo/-/-"
+api       = "gufo::core::JsonConstraint"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "runtime.gufo.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

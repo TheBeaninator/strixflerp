@@ -1,0 +1,173 @@
+# Interface gate: BF16-weight dense GEMV, BF16 in and FP32 out (the MoE router logits). Swap 4 of docs/INTERFACES.md.
+# Pass criteria fixed on 2026-11-10 before the first run. Do not edit them to turn a failure into a pass.
+interface = "linear.dense/bf16/bf16"
+api       = "strix::kernels::linear_bf16w(x, w, y, M, N, K, Act::BF16, Act::F32, stream)"
+driver    = "gate/interface/drivers/dense_bf16"
+toolchain = "therock-10.1"
+
+[criteria]
+# The two kernels add exact products in different orders, so their bits need not agree with each other or with
+# the correctly rounded sum. The criterion is the bound that holds for ANY order of K fp32 additions of exact
+# terms:  |y - exact| <= (K - 1) * 2^-24 * sum |x_k w_k|  (gate_common.hpp, order_bound). An error above 1.0 of
+# that bound is not explainable by summation order and fails. Bit equality with the reference is not required.
+# The driver also emulates each kernel's documented order on the CPU and records whether the provider's bits
+# equal it on every output ("order_emulation"): that is the evidence for "the order is the only difference".
+parity                          = "order-bound"
+max_err_over_bound              = 1.0
+adapter_must_launch_foreign     = true
+# Two cases are outside StrixFold's preconditions on purpose (w not 16-byte aligned; 129 rows) and must fall back
+# to strixite's kernel: one launch each.
+adapter_origin_launches_allowed = 2
+
+[[provider]]
+name   = "strixite"
+module = "kernel.strixite.linear"
+[provider.bind]
+"linear.dense/bf16/bf16" = "kernel.strixite.linear"
+
+[[provider]]
+name    = "strixfold"
+module  = "kernel.flerp.dense_bf16_strixfold"
+wraps   = "kernel.strixfold.dense_bf16"
+adapter = true
+[provider.bind]
+"linear.dense/bf16/bf16" = "kernel.flerp.dense_bf16_strixfold"
+
+[[case]]
+name = "router-decode-1x513x2560"
+kind = "parity"
+M = 1
+N = 513
+K = 2560
+pattern = "gauss"
+seed = 201
+
+[[case]]
+name = "router-verify-4x513x2560"
+kind = "parity"
+M = 4
+N = 513
+K = 2560
+pattern = "gauss"
+seed = 202
+
+[[case]]
+name = "router-9rows"
+kind = "parity"
+M = 9
+N = 513
+K = 2560
+pattern = "gauss"
+seed = 203
+
+[[case]]
+name = "router-16rows"
+kind = "parity"
+M = 16
+N = 513
+K = 2560
+pattern = "gauss"
+seed = 204
+
+[[case]]
+name = "router-128rows"
+kind = "parity"
+M = 128
+N = 513
+K = 2560
+pattern = "gauss"
+seed = 205
+
+[[case]]
+name = "cancel-4x513x2560"
+kind = "parity"
+M = 4
+N = 513
+K = 2560
+pattern = "cancel"
+seed = 206
+
+[[case]]
+name = "wide-range-4x513x2560"
+kind = "parity"
+M = 4
+N = 513
+K = 2560
+pattern = "wide-range"
+seed = 207
+
+[[case]]
+name = "k1280-unsplit-4x513"
+kind = "parity"
+M = 4
+N = 513
+K = 1280
+pattern = "gauss"
+seed = 208
+
+[[case]]
+name = "k640-narrow-tile-4x513"
+kind = "parity"
+M = 4
+N = 513
+K = 640
+pattern = "gauss"
+seed = 209
+
+[[case]]
+name = "k6144-4x33"
+kind = "parity"
+M = 4
+N = 33
+K = 6144
+pattern = "gauss"
+seed = 210
+
+[[case]]
+name = "unaligned-w-2x513x2560"
+kind = "parity"
+M = 2
+N = 513
+K = 2560
+pattern = "gauss"
+seed = 211
+w_shift = 1
+
+[[case]]
+name = "rows-129-over-regime"
+kind = "parity"
+M = 129
+N = 65
+K = 2560
+pattern = "gauss"
+seed = 212
+
+[[case]]
+name = "bench-decode-1x513x2560"
+kind = "bench"
+shape = "M=1, N=513, K=2560 (router logits, one decode token)"
+M = 1
+N = 513
+K = 2560
+iters = 2000
+repeats = 9
+
+[[case]]
+name = "bench-verify-16x513x2560"
+kind = "bench"
+shape = "M=16, N=513, K=2560 (a verify window)"
+M = 16
+N = 513
+K = 2560
+iters = 1000
+repeats = 9
+
+[[case]]
+name = "bench-128x513x2560"
+kind = "bench"
+shape = "M=128, N=513, K=2560 (the widest window StrixFold's kernel is specified for; strixite's prefill takes its WMMA kernel)"
+M = 128
+N = 513
+K = 2560
+iters = 200
+repeats = 9

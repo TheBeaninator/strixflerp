@@ -1,0 +1,38 @@
+id      = "format.strixite.safetensors_loader"
+kind    = "format"
+summary = "Bulk safetensors loader into pinned host memory with concurrent pread workers"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/weight_loader.cpp", "runtime/weight_loader.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/weight_loader.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.device-loader/safetensors/-"
+api       = "strix::WeightLoader, strix::read_file_parallel"
+numeric   = "bytes as stored"
+regime    = "buffered or O_DIRECT; drops the file from the page cache after the read"
+
+[[requires]]
+module = "format.strixite.safetensors"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

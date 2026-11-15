@@ -1,0 +1,37 @@
+# Crucible d6af02c reassembled from the catalogue: Qwen3.8-Flash-Next from the EXL3 pack
+# turboderp/Qwen3.8-Flash-Next-exl3 revision 4.05bpw_h6_ng6 on one Strix Halo. The engine is one HIP translation unit
+# (engine/engine.hip, 642 kernels) built by the origin's own Makefile (flerplib/assemble_make.py): the assembly is the
+# module closure of executor.crucible.flashnext at origin-relative paths plus tool.crucible.build (Makefile, hipcc
+# wrapper). The target is the Makefile's plain-hipcc build (build/engine/crucible.mono): one clang process, no
+# devsplit, no release or state-epoch stamp (those run the origin's Python helpers and write git facts).
+name      = "qwen38-flash-next.crucible"
+model     = "qwen3.8-flash-next (EXL3 4.05bpw_h6_ng6)"
+reference = { engine = "crucible", build = "git archive d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7 of the pinned clone (gate/qwen38-flash-next.crucible.toml [host] reference_tree)", note = "no Crucible build exists on the pod; the gate builds the reference from the pinned export with the same make command" }
+toolchain = "rocm-7.2.4"          # docs/BUILD.md: the tested ROCm on gfx1151
+
+[build]
+system     = "make"
+root       = "tool.crucible.build"
+build_file = "Makefile"
+targets    = ["build/engine/crucible.mono"]
+options    = ["ROCM_PATH={rocm}", "HIPCC={rocm}/bin/hipcc", "GPU_ARCH=gfx1151", "SPLIT=0", "STATE_EPOCH=0"]
+
+[build.installs]
+"strixflerp-qwen38-flash-next.crucible" = "build/engine/crucible.mono"
+
+# Every interface a module of the closure requires by name; the rest is required by module id (include-derived).
+[modules]
+"executor.model/qwen3.8-flash-next/exl3" = "executor.crucible.flashnext"
+
+[include]
+modules = ["tool.crucible.build"]
+
+[binaries]
+"strixflerp-qwen38-flash-next.crucible" = { main = "executor.crucible.flashnext", entry = "engine/engine.hip" }
+
+[deploy]
+topology = "solo"
+
+[gate]
+runner = "gate/crucible_recipe.py"
+config = "gate/qwen38-flash-next.crucible.toml"

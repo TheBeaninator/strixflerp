@@ -1,0 +1,56 @@
+id        = "serve.flerp.http"
+kind      = "serve"
+summary   = "An OpenAI-compatible HTTP server in front of the executor ABI, for whichever executor a recipe binds: /v1/chat/completions and /v1/completions (JSON or SSE), /v1/models, /health, /tokenize; temperature, top_p, top_k, seed, max_tokens, stop; samples on the host where the executor hands back rows and lets the executor draw where it hands back tokens, by its capability flags"
+notes     = "One conversation at a time. A chat reply is split by the bound reply module (text.reply/flerp-v1/-) into reasoning_content, content and tool_calls, with strixite's reply policy (thinking budget stop, nudge, think-end guard, think close before a call) on the shared decode loop's hooks; a recipe binding runtime.flerp.reply_none returns the text whole and refuses tools and budgets. Not served, and refused by name: prompt cache, vision, steering, tool_choice other than auto / none. README.md, 'The front end'."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/serve/main.cpp", "flerp/serve/request.cpp", "flerp/serve/request.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/serve/main.cpp", "src/flerp/serve/request.cpp"]
+includes  = ["src", "../../../../include"]
+
+[[provides]]
+interface = "serve.http/openai/-.executor-abi"
+api       = "main: strixflerp-<recipe> [--host H] [--port N] ... executor.KEY=VALUE text.KEY=VALUE; flerp_host_main for a host that owns process start"
+numeric   = "n/a"
+regime    = "one conversation at a time; requests queue"
+
+[[requires]]
+interface = "executor.abi/flerp-v1/-"
+
+[[requires]]
+interface = "text.model/flerp-v1/-"
+
+[[requires]]
+interface = "sample.host/flerp-v1/-"
+
+[[requires]]
+interface = "text.reply/flerp-v1/-"
+
+[[requires]]
+module    = "runtime.flerp.decode_loop"
+
+[[requires]]
+module    = "serve.strixite.cpp_httplib"
+
+[[requires]]
+module    = "runtime.strixite.json"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "flerp:gate/flerp_serve.py"
+bench     = "none"
+status    = "parity"
+evidence  = "gate/results/qwen38-flash-next.flerp-serve/at-20937dc/summary.json"

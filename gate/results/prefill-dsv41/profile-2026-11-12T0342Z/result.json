@@ -1,0 +1,192 @@
+{
+ "started": "2026-11-12T03:42:52Z",
+ "pair": {
+  "rank0": {
+   "mgmt": "10.10.0.50",
+   "rail": "10.20.0.50",
+   "letter": "F",
+   "rail_nic": null
+  },
+  "rank1": {
+   "mgmt": "10.10.0.53",
+   "rail": "10.20.0.53",
+   "letter": "D",
+   "rail_nic": null
+  },
+  "serve_url": "http://10.10.0.50:18080",
+  "conf": "/data/pod/plans/strixfold/tp2-128k.conf",
+  "source": {
+   "rank0.mgmt": "conf SERVE_HOST",
+   "rank0.rail": "conf MASTER_IP",
+   "rank1.mgmt": "conf NODE1_IP",
+   "rank1.rail": "conf NODE1_RAIL",
+   "serve_url": "conf SERVE_HOST:SERVE_PORT"
+  },
+  "fallback": [],
+  "launcher_rank1_letter": "D",
+  "warnings": []
+ },
+ "health_before": null,
+ "under_hold": "agent FLERP-P4",
+ "lanes_seconds": 120.5,
+ "wrap_applied": {
+  "0": "wrap (WRAP0, as serve_spawn): /usr/bin/env LD_LIBRARY_PATH=/data/models/tools/therock-10.2/lib",
+  "1": "wrap (WRAP1, as serve_spawn): /usr/bin/env LD_LIBRARY_PATH=/data/models/tools/therock-10.2/lib"
+ },
+ "phases": {
+  "prefill": {
+   "0": {
+    "chunks": 8,
+    "ms": {
+     "start": 0.0,
+     "embed": 0.148,
+     "engram": 93.171,
+     "mix_attn": 22.7,
+     "attn": 159.465,
+     "gather_a": 112.195,
+     "mix_ffn": 21.36,
+     "moe": 308.995,
+     "gather_m": 185.689,
+     "post": 0.0,
+     "head": 0.185,
+     "a_in": 0.0,
+     "a_q": 0.0,
+     "a_idx": 0.0,
+     "a_core": 0.0,
+     "a_woa": 0.0,
+     "a_x": 0.0,
+     "m_rt": 0.0,
+     "m_gu": 0.0,
+     "m_x": 0.0
+    }
+   },
+   "1": {
+    "chunks": 8,
+    "ms": {
+     "start": 0.0,
+     "embed": 0.152,
+     "engram": 93.126,
+     "mix_attn": 23.389,
+     "attn": 155.244,
+     "gather_a": 115.907,
+     "mix_ffn": 21.639,
+     "moe": 376.753,
+     "gather_m": 117.565,
+     "post": 0.0,
+     "head": 0.19,
+     "a_in": 0.0,
+     "a_q": 0.0,
+     "a_idx": 0.0,
+     "a_core": 0.0,
+     "a_woa": 0.0,
+     "a_x": 0.0,
+     "m_rt": 0.0,
+     "m_gu": 0.0,
+     "m_x": 0.0
+    }
+   }
+  },
+  "decode": {
+   "rank": 0,
+   "ms": {
+    "start": 0.0,
+    "embed": 0.022,
+    "engram": 2.225,
+    "mix_attn": 1.345,
+    "attn": 3.191,
+    "gather_a": 12.601,
+    "mix_ffn": 1.302,
+    "moe": 32.63,
+    "gather_m": 2.503,
+    "post": 0.019,
+    "head": 1.769,
+    "a_in": 2.033,
+    "a_q": 3.82,
+    "a_idx": 1.227,
+    "a_core": 1.3,
+    "a_woa": 3.176,
+    "a_x": 0.106,
+    "m_rt": 1.823,
+    "m_gu": 0.0,
+    "m_x": 0.0
+   },
+   "rounds": 1
+  },
+  "requests": [
+   {
+    "rank": 0,
+    "request": 0,
+    "name": "p8k",
+    "prompt_tokens": 8163,
+    "prefill_s": 7.28
+   },
+   {
+    "rank": 0,
+    "request": 0,
+    "name": "p8k",
+    "tokens": 2,
+    "reason": "stop",
+    "token_sha": "d9a0d7dc9ef6",
+    "expect_sha": "",
+    "equal": true,
+    "rounds": 1,
+    "drafted": 5,
+    "accepted": 1,
+    "min_rows": 6,
+    "seconds": 7.35,
+    "reply": [
+     23,
+     1
+    ]
+   }
+  ],
+  "summary": {
+   "rank": 0,
+   "requests": 1,
+   "tokens": 2,
+   "steps": 1,
+   "shared_rounds": 0,
+   "drafted": 5,
+   "accepted": 1,
+   "seconds": 7.35,
+   "all_equal": true
+  },
+  "profile": {
+   "0": {
+    "rounds": 1,
+    "rows_a_round": 6.0,
+    "step_ms": 72.42,
+    "send_ms": 0.024,
+    "enqueue_ms": 5.93,
+    "forward_ms": 71.24,
+    "absorb_ms": 0.43,
+    "logits_ms": 0.09,
+    "sample_ms": 0.0,
+    "passes": 1,
+    "streams_a_pass": 1.0,
+    "pass_ms": 35.41,
+    "prefills": 1,
+    "prefill_ms": 7245.2
+   },
+   "1": {
+    "rounds": 1,
+    "enqueue_ms": 8.59,
+    "forward_ms": 62.24,
+    "prefill_engram_ms": {
+     "calls": 16,
+     "rows": 0.0,
+     "upload": 0.49,
+     "mm": 4.86,
+     "exchange": 28.34,
+     "gate": 2.07
+    },
+    "engram_read_ms": 4.493,
+    "engram_hash_ms": 0.006
+   }
+  }
+ },
+ "units_left": {
+  "10.10.0.50": "0",
+  "10.10.0.53": "0"
+ }
+}

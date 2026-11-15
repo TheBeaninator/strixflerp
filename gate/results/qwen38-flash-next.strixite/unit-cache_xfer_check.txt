@@ -1,0 +1,28 @@
+$ /data/projects/strixflerp/build/qwen38-flash-next.strixite/ninja/cache_xfer_check /data/projects/strixflerp/build/gate-scratch/unit/cache_xfer_check
+ok    export answers the whole entry's bytes
+ok    the file header names 48 checkpoint tokens, whole, with intact hashes
+ok    a fresh server imports the body
+ok    the imported entry answers the prompt
+ok    it sits in the RAM tier (not only on disk)
+ok    the state bytes come back identical
+ok    importing what is already there is Ok (a refresh)
+ok    the 8-token turn deltas on the 64-token base
+ok    the delta saves on its base
+ok    the delta body carries the base's file first, then its own
+ok    a fresh server imports the pair
+ok    and resumes the full 72 tokens from it
+ok    a foreign fingerprint is refused (409)
+ok    and puts nothing
+ok    a flipped state byte is Damaged (400)
+ok    a flipped token byte is Damaged (400)
+ok    a body cut mid-state is Damaged (400)
+ok    none of them put anything
+prompt cache: dropped a 72-token delta: its 64-token base is gone
+ok    a delta without its base answers BaseMissing
+ok    and put neither the delta nor a base
+ok    the same delta goes into a server that has its base (an earlier body)
+ok    a prompt no entry covers exports 0 and leaves the buffer
+ok    a RAM-only entry saves
+ok    a RAM-only one-shot entry exports too
+ok    a fresh server imports it and can resume from it
+ok    a prompt longer than any entry exports the base+delta pair below its end

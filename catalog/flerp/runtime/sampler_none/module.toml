@@ -1,0 +1,33 @@
+id        = "runtime.flerp.sampler_none"
+kind      = "runtime"
+summary   = "include/flerp/sampler.h for a recipe whose executor never hands logits to the host: every call answers FLERP_E_UNSUPPORTED"
+notes     = "Bound by a recipe whose executor draws on the device (StrixFold): the front end asks for a host sampler only when rows are offered."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/sampler/sampler_none.c"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = ["src/flerp/sampler/sampler_none.c"]
+includes  = ["../../../../include"]
+c_std     = 11
+
+[[provides]]
+interface = "sample.host/flerp-v1/-"
+api       = "flerp_sampler_new .. flerp_sampler_pick (include/flerp/sampler.h)"
+numeric   = "n/a: samples nothing"
+regime    = "none"
+
+[gate]
+parity    = "flerp:gate/flerp_serve.py"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.flerp-serve-tp2/summary.json"

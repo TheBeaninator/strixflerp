@@ -1,0 +1,462 @@
+// The disk tier of batch serve: which disk states a request can restore, the stage
+// step before an open, the spill of host evictions, and the flush of a stopping engine. CPU only; batched_serve.h
+// does the device copies.
+#pragma once
+#include "batch_conversation_cache.h"
+#include "../runtime/state_disk.h"
+#include "../runtime/rope_policy.h"
+#include <cerrno>
+#include <cstdio>
+#include <fstream>
+#include <string_view>
+#include <sys/stat.h>
+
+namespace crucible {
+// The settings of the disk identity: the switches, the pack, the state format and the MTP slot rows. A saved state's
+// MTP rows must fit the slot that restores it: another MTP bound is another directory.
+inline std::vector<std::string> BatchStateDiskSettings(const std::string& checkpoint, int prefill_rows, bool vision,
+                                                       int mtp_rows, char** environ_list) {
+  auto settings = StateDiskSettings(environ_list, prefill_rows, vision);
+  settings.push_back("pack=" + std::filesystem::path(checkpoint).lexically_normal().filename().string());
+  settings.push_back("format=" + std::to_string(kStateVersion));
+  settings.push_back("kv_code=" + StateKvCode());  // the KV storage code and layout of the K and V rows
+  settings.push_back("mtp_rows=" + std::to_string(mtp_rows));
+  return settings;
+}
+// What a request can restore, as BatchPrefixCache::Lookup decides for the host cache.
+struct DiskQuery {
+  std::span<const int> key;  // the prompt's cache key
+  ConversationPolicy policy;
+  size_t boundary = 0;       // cache_prefix_tokens
+  size_t limit = 0;          // the last prompt-frontier position that this request can use (Lookup's limit)
+  int rows = 0;              // the prefill grid
+  bool replay = false;       // session replay: generated tails are restorable too
+};
+// A generated tail leaves at least one prompt row to run; a prompt frontier passes the host cache's own check.
+inline bool DiskStateFits(const StateMeta& meta, const DiskQuery& query) {
+  const size_t prompt = query.key.size();
+  if (!meta.resume.prompt_only) return query.replay && meta.key.size() + 1 <= prompt;
+  const size_t stable = query.boundary ? query.boundary : prompt;
+  return meta.key.size() <= std::min(stable, query.limit) &&
+         BatchCacheConsumerCompatible(meta.resume, prompt, query.boundary, query.limit, query.rows);
+}
+
+// A stage reason as one log word: fixed words and numbers only (the reader's "io errno=5" becomes "io_errno_5"), "-"
+// for none.
+inline std::string StageReason(std::string_view reason) {
+  if (reason.empty()) return "-";
+  std::string word(reason.substr(0, 24));
+  for (char& c : word)
+    if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_')) c = '_';
+  return word;
+}
+// The serve log line of one stage reply: the prompt length, the floor (what the slots and the host
+// cache restore), the best disk state that the read takes or that the floor beat (0: none), and the read room. No key
+// and no tenant.
+// `job`: the server's tag of the turn (its crucible_turn line has it as state_disk_job; 0: an older server).
+inline std::string StageLine(const StageStatus& status, size_t prompt, size_t floor, uint64_t room, uint64_t job = 0) {
+  char line[256];
+  std::snprintf(line, sizeof line, "state_disk stage state=%s tokens=%zu floor=%zu best=%zu room=%llu reason=%s job=%llu\n",
+                StageName(status.state), prompt, floor, status.tokens, static_cast<unsigned long long>(room),
+                StageReason(status.reason).c_str(), static_cast<unsigned long long>(job));
+  return line;
+}
+
+// Start plan B1a: what a disk read waits for (the turn line's stage_wait_cause): host room (a refused or waiting read:
+// the read room, the protected points, the memory that the writer frees), the reader (a read in progress), the
+// writer (the state is not written yet, or the queue is full), or none.
+inline const char* StageWaitCause(const StageStatus& status) {
+  const std::string_view reason = status.reason;
+  if (status.state == StageState::Reading) return reason == "writing" ? "writer" : reason == "freeing" ? "room" : "reader";
+  if (status.state != StageState::None) return "none";
+  if (reason == "busy") return "writer";
+  if (reason == "room" || reason == "protected" || reason == "spill" || reason == "memory" || reason == "host") return "room";
+  return "none";
+}
+// An earlier change: a read is host memory inside the conversation cache budget (BatchConversationCache::MakeRoom), and
+// the last guard keeps MemAvailable at or above kStageKeepFree after the read: the floor of the daily engine's rollback
+// watcher and of the soak gate (10 GiB now; 12 GiB before). The guard is not the host reserve
+// (the saves' rule, 8 GiB by default) and not a cache budget; a read that it refuses says "room".
+inline constexpr uint64_t kStageKeepFree = uint64_t(10) << 30;  // 10 GiB
+inline constexpr uint64_t kStageCap = uint64_t(16) << 30;  // all staged reads together
+// the pinned bytes beyond the cache budget that a save may hold while the disk writer holds the states that
+// it evicted (BatchConversationCache::SetSpillSlack). The queue and the new bytes together stay within budget + slack,
+// so MemAvailable stays above the floor by design: the soak lowest is baseline - (budget + slack).
+inline constexpr uint64_t kSpillSlack = uint64_t(2) << 30;
+// MemAvailable that a direct spill of a slot state keeps above the floor (BatchConversationCache::DirectRoom).
+// 1,088 MiB: the soak floor plus this is 11,328 MiB, the lowest of production's --host-reserve-mib 11264 and 64 MiB
+// more. The queue model (6 and 8 sessions on 4 slots) loses 7% more prefill than that setting at this margin, and 26%
+// at 1,280 MiB.
+inline constexpr uint64_t kDirectMargin = uint64_t(1088) << 20;
+// The bytes that staged reads may hold in all: `staged` (held now) plus what MemAvailable (`available`, with the idle
+// chunk pool) leaves above the larger of the host reserve and kStageKeepFree. `unallocated`: the bytes of reads that
+// still read and have not taken their memory (StateDisk::UnallocatedReadBytes): MemAvailable still shows them.
+inline uint64_t StageRoom(uint64_t staged, uint64_t available, uint64_t reserve, uint64_t unallocated = 0) {
+  const uint64_t keep = std::max(reserve, kStageKeepFree);
+  available -= std::min(available, unallocated);
+  return std::min(kStageCap, staged + (available > keep ? available - keep : 0));
+}
+// The admit step of a new read: its room, or why it may not start ("budget", "room").
+struct StageAdmit {
+  uint64_t room = UINT64_MAX;
+  const char* refused = nullptr;
+  bool wait = false;  // the read waits for host memory that evicted entries free when the disk writer ends
+};
+// The last guard of a new read of `bytes` (design decision, Oct 20): start it when the room holds it on the real MemAvailable
+// (StageRoom, without the reads that have not allocated); wait while the entries that its eviction gave to the disk
+// writer (`pending`, freed when written) would make the room; else refuse ("room"). Freed bytes never count before
+// they are free, so MemAvailable stays at kStageKeepFree or more during the overlap.
+enum class ReadRoomStep { Start, Wait, Refuse };
+inline ReadRoomStep ReadRoom(uint64_t staged, uint64_t available, uint64_t reserve, uint64_t unallocated,
+                             uint64_t pending, uint64_t bytes) {
+  if (staged + bytes <= StageRoom(staged, available, reserve, unallocated)) return ReadRoomStep::Start;
+  return pending && staged + bytes <= StageRoom(staged, available + pending, reserve, unallocated) ? ReadRoomStep::Wait
+                                                                                                  : ReadRoomStep::Refuse;
+}
+
+// An earlier change: the long turns that wait for a slot (each one's stage commands name its place in the server's FIFO)
+// and the host resume points that a read took from them ("read ahead"). A read for a turn may take the live resume
+// point of a session only when that session's turn waits behind it; the point goes to disk, and the session's own turn
+// reads it back. Tags link each taken point to its restore (or its miss) in the serve log: counters, no key.
+class BatchReadQueue {
+ public:
+  // A waiting turn stages at least every 20 s (server STAGE_REFRESH_SECONDS); a turn not seen for this long has left.
+  static constexpr double kWaitSeconds = 25;  // review MEDIUM-3: a place older than one refresh and 5 s is old
+  static constexpr size_t kMaxTaken = 64;  // taken points whose turn never came (a session that ended) leave first
+  void Saw(std::span<const int> key, size_t position, double now) {
+    std::erase_if(waiting_, [&](const Queued& w) { return now - w.seen > kWaitSeconds; });
+    for (auto& w : waiting_)
+      if (std::ranges::equal(w.key, key)) {
+        w.position = position, w.seen = now;
+        return;
+      }
+    waiting_.push_back({std::vector<int>(key.begin(), key.end()), position, now});
+  }
+  // The turn of `key` opened: it waits no more.
+  void Opened(std::span<const int> key) {
+    std::erase_if(waiting_, [&](const Queued& w) { return std::ranges::equal(w.key, key); });
+  }
+  // May a read for `reader` (at `position`) take the host point `point`? Only the point of a turn that waits behind
+  // the reader, and never a prefix of the reader's own prompt (its own state, or a prefix that it shares).
+  // Only the next turn (`position` 0) takes a point: a place above 0 can be older than the other turns' places.
+  bool Behind(std::span<const int> point, std::span<const int> reader, size_t position, double now) const {
+    if (position != 0 || Prefix(point, reader)) return false;
+    return std::any_of(waiting_.begin(), waiting_.end(), [&](const Queued& w) {
+      return w.position > position && now - w.seen <= kWaitSeconds && !std::ranges::equal(w.key, reader) &&
+             Prefix(point, w.key);
+    });
+  }
+  // A read took `point`: its tag (1, 2, ...).
+  uint64_t Took(std::span<const int> point) {
+    if (taken_.size() >= kMaxTaken) taken_.erase(taken_.begin());
+    taken_.push_back({std::vector<int>(point.begin(), point.end()), ++tags_});
+    return tags_;
+  }
+  // A disk restore of `key`: the tag of the taken point with this key (0: none); it leaves.
+  // A longer state of the same session (the key extends the point) also counts (review MEDIUM-5 c).
+  uint64_t Restored(std::span<const int> key) { return Leave([&](const Taken& t) { return Prefix(t.key, key); }); }
+  // An open of `prompt` with no disk restore of its taken point: the tag and length of a taken point that the prompt
+  // repeats (0: none); it leaves.
+  std::pair<uint64_t, size_t> Missed(std::span<const int> prompt) {
+    size_t tokens = 0;
+    const uint64_t tag = Leave([&](const Taken& t) { return Prefix(t.key, prompt) && (tokens = t.key.size(), true); });
+    return {tag, tokens};
+  }
+  // The tag of a taken point that `prompt` repeats (0: none). It stays.
+  uint64_t TagOf(std::span<const int> prompt) const {
+    const auto found = std::find_if(taken_.begin(), taken_.end(), [&](const Taken& t) { return Prefix(t.key, prompt); });
+    return found == taken_.end() ? 0 : found->tag;
+  }
+  size_t Waiting() const { return waiting_.size(); }
+
+ private:
+  struct Queued { std::vector<int> key; size_t position; double seen; };
+  struct Taken { std::vector<int> key; uint64_t tag; };
+  static bool Prefix(std::span<const int> prefix, std::span<const int> key) {
+    return prefix.size() <= key.size() && std::equal(prefix.begin(), prefix.end(), key.begin());
+  }
+  template<class Match>
+  uint64_t Leave(Match match) {
+    const auto found = std::find_if(taken_.begin(), taken_.end(), match);
+    if (found == taken_.end()) return 0;
+    const uint64_t tag = found->tag;
+    taken_.erase(found);
+    return tag;
+  }
+  std::vector<Queued> waiting_;
+  std::vector<Taken> taken_;
+  uint64_t tags_ = 0;
+};
+
+// Y2 v1: a YaRN state never goes to disk and never comes from it. Every disk write and
+// read of batch serve passes BatchDiskTier, so the check is here, by the state's tenant mark (RopeTenantMode), and
+// state_disk.h does not change. The refusal word is "rope".
+inline bool DiskKeepsRope(const ConversationPolicy& policy) { return RopeTenantMode(policy.tenant) == RopeMode::Plain; }
+
+template<class Snapshot>
+class BatchDiskTier {
+ public:
+  using Ready = typename StateDisk<Snapshot>::ReadyState;
+  BatchDiskTier(StateDiskOptions options, bool compact)
+      : ledger_(LedgerFolder(options.root)), directory_(options.directory), disk_(std::move(options)), compact_(compact) {}
+  bool Enabled() const { return disk_.Enabled(); }
+  bool Compact() const { return compact_; }
+  StateDisk<Snapshot>& Disk() { return disk_; }
+
+  // A host eviction (BatchConversationCache::SetSpill). Only queues: the writer thread does the disk work. `room`: the
+  // host memory that the queued state may hold, less the reads that Stage reserved and the reader has not
+  // allocated yet. Returns whether the writer holds the entry.
+  // `read` (fix 2, item 9): a victim of a read's eviction (BatchConversationCache::MakeRoom). Its bytes are in host
+  // memory already and the read waits until the writer frees them (ReadRoom), so the queue limit does not refuse it
+  // ("busy" lost the read-ahead point of x6h request 19). LastSpill: the reason of the last refusal ("" when queued).
+  template<class Entry>
+  bool Spill(std::span<const int> key, const ConversationPolicy& policy, const std::shared_ptr<const Entry>& entry,
+             uint64_t room = UINT64_MAX, bool read = false) {
+    if (!DiskKeepsRope(policy)) {
+      last_spill_ = "rope";
+      return false;
+    }
+    const uint64_t reading = disk_.UnallocatedReadBytes();
+    room = room == UINT64_MAX ? room : room > reading ? room - reading : 0;
+    last_spill_ = disk_.Spill(key, policy, compact_, entry->retention == CacheRetention::Shared, entry->guarded, entry,
+                              *entry->snapshot, false, room, !read);
+    return last_spill_.empty();
+  }
+  const std::string& LastSpill() const { return last_spill_; }
+  // A state of this key is on disk or waits for the writer: an eviction of its host copy loses nothing.
+  bool Holds(std::span<const int> key, const ConversationPolicy& policy) const {
+    if (!DiskKeepsRope(policy)) return false;
+    return disk_.Present(key, policy, compact_) || disk_.Waiting(key, policy, compact_);
+  }
+  // A turn waits at most this long for a state that the writer has not written yet (fix 2): a write of a 4.5 GB
+  // state takes about 2 s, and the queue holds a few of them; an older queued state is a stuck writer.
+  static constexpr double kPendingSeconds = 120;
+  // Starts the read of the longest disk state for `query` when it is longer than `floor` (what the slots and the
+  // host cache hold). A None status names why (StageLine): "off", "nostate" (no disk state fits and the floor is 0),
+  // "floor" (`tokens`: the best disk state, which the floor holds already; 0: no disk state, but a slot or the host
+  // cache holds a state for this prompt), the admit's refusal, or "room" (the read room). A new read says "start"; a
+  // poll of a read that the turn holds reports it and never starts a second read.
+  // Fix 2 (cause.md items 1, 2, 5): a longer state that the writer has not written yet (a direct spill of the turn's
+  // own slot state) says Reading "writing": the server waits as for a read and polls again; the poll after the write
+  // starts the read of the written state.
+  // `admit(meta)`: called once before a new read; makes room for it (the host cache evicts) and gives the read room.
+  template<class Admit>
+  StageStatus StageWith(const DiskQuery& query, size_t floor, Admit admit) {
+    if (!Enabled()) return {StageState::None, 0, "off"};
+    if (!DiskKeepsRope(query.policy)) return {StageState::None, 0, "rope"};
+    const auto fits = [&](const StateMeta& m) { return DiskStateFits(m, query); };
+    if (auto held = disk_.PollStaged(query.key, query.policy, compact_, floor, fits)) return *held;
+    const auto meta = disk_.Best(query.key, query.policy, compact_, fits);
+    const auto pending = disk_.Pending(query.key, query.policy, compact_, fits, kPendingSeconds);
+    if (pending && pending->key.size() > floor && (!meta || pending->key.size() > meta->key.size()))
+      return {StageState::Reading, pending->key.size(), "writing"};
+    if (!meta) return {StageState::None, 0, floor ? "floor" : "nostate"};
+    if (meta->key.size() <= floor) return {StageState::None, meta->key.size(), "floor"};
+    const StageAdmit admitted = admit(*meta);
+    if (admitted.refused) return {StageState::None, meta->key.size(), admitted.refused};
+    // The server waits as for a read and polls again; no read is staged yet (the next poll admits again).
+    if (admitted.wait) return {StageState::Reading, meta->key.size(), "freeing"};
+    auto status = disk_.Stage(*meta, admitted.room);
+    if (status.state == StageState::None && status.reason == "memory") status.reason = "room";
+    if (status.state == StageState::Reading && status.reason.empty()) status.reason = "start";
+    return status;
+  }
+  // As StageWith, with a fixed read room and no admit step.
+  StageStatus Stage(const DiskQuery& query, size_t floor, uint64_t room) {
+    return StageWith(query, floor, [room](const StateMeta&) { return StageAdmit{room}; });
+  }
+  // The longest read state for `query`, if longer than `beat` (the host cache's state). Call Consume after the
+  // restore.
+  Ready Take(const DiskQuery& query, size_t beat) {
+    if (!Enabled() || !DiskKeepsRope(query.policy)) return {};
+    auto ready = disk_.Ready(query.key, query.policy, compact_, [&](const StateMeta& m) { return DiskStateFits(m, query); });
+    if (!ready.snapshot || ready.meta.key.size() <= beat) return {};
+    return ready;
+  }
+  // The length that Take would give (0: none).
+  size_t Peek(const DiskQuery& query) {
+    const auto ready = Take(query, 0);
+    return ready.snapshot ? ready.meta.key.size() : 0;
+  }
+  void Consume(const Ready& ready) { disk_.Consume(ready); }
+  // A stopping engine: every host entry that is not superseded and is long enough goes to disk. Returns the count
+  // queued; the caller then drains.
+  template<class Cache>
+  size_t FlushHost(Cache& cache) {
+    size_t queued = 0;
+    cache.ForEachEntry([&](std::span<const int> key, const ConversationPolicy& policy, const auto& entry, bool superseded) {
+      if (superseded || key.size() < disk_.MinTokens() || !DiskKeepsRope(policy)) return;
+      queued += disk_.Spill(key, policy, compact_, entry->retention == CacheRetention::Shared, entry->guarded, entry,
+                            *entry->snapshot, true).empty();
+    });
+    return queued;
+  }
+  // A stopping engine: one slot state, saved to host memory by the caller. Waits for its write, so only one such
+  // state holds extra host memory at a time.
+  bool FlushOne(std::span<const int> key, const ConversationPolicy& policy, bool guarded,
+                const std::shared_ptr<const Snapshot>& snapshot, double seconds) {
+    if (key.size() < disk_.MinTokens() || !DiskKeepsRope(policy)) return false;
+    const auto result = disk_.Spill(key, policy, compact_, false, guarded, snapshot, *snapshot, true);
+    return (result.empty() || result == "queued") ? disk_.Drain(seconds) : result == "present";
+  }
+  bool Drain(double seconds) { return disk_.Drain(seconds); }
+  // The miss ledger (start plan B1a). The cache learns whether a spilled state reached the disk (defect 1) and the
+  // disk's word for a refused spill, and it reads the lost list that the last stop wrote.
+  template<class Cache>
+  void Attach(Cache& cache) {
+    cache.SetDurable([this](std::span<const int> key, const ConversationPolicy& policy) {
+      if (disk_.Present(key, policy, compact_)) return 1;
+      return disk_.Waiting(key, policy, compact_) ? 0 : -1;
+    });
+    cache.SetSpillWord([this] { return last_spill_; });
+    if (Enabled()) LoadLedger(cache);
+  }
+  // A stopping engine, after its flush: every host entry that is not superseded leaves with the process. Its record
+  // says whether its file is on disk now.
+  template<class Cache>
+  void NoteStop(Cache& cache) {
+    cache.ForEachEntry([&](std::span<const int> key, const ConversationPolicy& policy, const auto& entry, bool superseded) {
+      if (!superseded) cache.NoteStop(key, policy, entry->prompt, entry->lineage, disk_.Present(key, policy, compact_));
+    });
+  }
+  // The lost list goes to a side folder beside the state root (`<root>.ledger/<identity folder>/lost.ledger`): the
+  // root itself may hold only the tier's own files (StateDisk PrepareRoot), and an identity folder with another file
+  // would never leave (PruneOtherIdentities). False when it was not written (a log line names why).
+  template<class Cache>
+  bool SaveLedger(Cache& cache) {
+    if (!Enabled() || ledger_.empty()) return false;
+    std::error_code error;
+    const auto bytes = cache.LedgerBytes();
+    const auto folder = ledger_ / directory_;
+    for (const auto& path : {ledger_, folder})
+      if (::mkdir(path.c_str(), 0700) != 0 && errno != EEXIST) {
+        std::fprintf(stderr, "state_disk ledger_save result=refused reason=mkdir\n");
+        return false;
+      }
+    const auto file = folder / kLedgerFile, temporary = folder / (std::string(kLedgerFile) + ".tmp");
+    {
+      std::ofstream out(temporary, std::ios::binary | std::ios::trunc);
+      out.write(reinterpret_cast<const char*>(bytes.data()), std::streamsize(bytes.size()));
+      if (!out.good()) {
+        std::fprintf(stderr, "state_disk ledger_save result=refused reason=write\n");
+        return false;
+      }
+    }
+    std::filesystem::rename(temporary, file, error);
+    std::fprintf(stderr, "state_disk ledger_save result=%s records=%zu bytes=%zu\n", error ? "refused" : "saved",
+                 cache.LostRecords(), bytes.size());
+    return !error;
+  }
+  // At start: this identity's lost list, else the newest list of another identity (the epoch before a switch: its
+  // records of states on disk are lost by the switch). Returns the records read.
+  template<class Cache>
+  size_t LoadLedger(Cache& cache) {
+    if (ledger_.empty()) return 0;
+    std::error_code error;
+    std::filesystem::path from = ledger_ / directory_ / kLedgerFile;
+    bool switched = false;
+    if (!std::filesystem::is_regular_file(from, error)) {
+      from.clear();
+      std::filesystem::file_time_type newest{};
+      for (const auto& item : std::filesystem::directory_iterator(ledger_, error)) {
+        const auto file = item.path() / kLedgerFile;
+        if (item.path().filename() == directory_ || !std::filesystem::is_regular_file(file, error)) continue;
+        const auto time = std::filesystem::last_write_time(file, error);
+        if (!error && (from.empty() || time > newest)) from = file, newest = time;
+      }
+      switched = !from.empty();
+    }
+    if (from.empty()) return 0;
+    std::ifstream in(from, std::ios::binary);
+    std::vector<uint8_t> bytes;
+    char chunk[65536];
+    while (in && bytes.size() <= kLedgerFileLimit) {
+      in.read(chunk, sizeof chunk);
+      bytes.insert(bytes.end(), chunk, chunk + in.gcount());
+    }
+    const size_t read = bytes.size() <= kLedgerFileLimit ? cache.LoadLedgerBytes(bytes, switched) : 0;
+    std::fprintf(stderr, "state_disk ledger_load records=%zu switched=%d bytes=%zu\n", read, int(switched), bytes.size());
+    return read;
+  }
+  // The disk states nearest to the prompt for the ledger: the longest state on disk or in the writer's queue whose
+  // key starts the prompt, whether or not this request can restore it.
+  LedgerNear DiskNear(const DiskQuery& query) const {
+    LedgerNear near;
+    const auto any = [](const StateMeta&) { return true; };
+    if (const auto meta = disk_.Best(query.key, query.policy, compact_, any)) near = {meta->key.size(), meta->key.size()};
+    if (const auto queued = disk_.Pending(query.key, query.policy, compact_, any, kPendingSeconds);
+        queued && queued->key.size() > near.shared)
+      near = {queued->key.size(), queued->key.size()};
+    return near;
+  }
+  // The host and lost tiers of the cache with the disk tier (defect 3: disk_shared_tokens also when no disk state is
+  // usable; a key that leaves the prompt counts at the grid of its lost record).
+  template<class Cache>
+  LedgerTiers Ledger(Cache& cache, const DiskQuery& query) {
+    LedgerTiers tiers = cache.LedgerOf(query.key, query.policy);
+    if (!Enabled()) return tiers;
+    const LedgerNear near = DiskNear(query);
+    if (near.shared > tiers.disk.shared) tiers.disk = {near.shared, near.length, nullptr, tiers.disk.lineage};
+    return tiers;
+  }
+  // MEDIUM-5: a slot state that the host cache refused goes straight
+  // to disk, else the state is lost. `refused`: the cache's reason; a state that the cache cannot hold for lack of
+  // room or memory goes, a policy refusal does not (and a resident copy stays in its slot). `bytes`: the whole state
+  // (the daily check counts the whole size, as Skip); `need`: the host memory that its save takes (its bytes less
+  // the chunks that it shares with the slot's base, an earlier change); `room`: the host memory above the reserve. `save` makes
+  // the snapshot (the device copy) only when the writer can take it; the writer holds it until its write ends.
+  // Returns "" for a refusal that the disk does not take, "queued", or why not (Skip, waiting: the same state waits
+  // for the writer already, memory, busy, Spill).
+  // `host` (0: `bytes`) is what the queue pins for a lazy snapshot, the writer reads the rest from the device.
+  template<class Save>
+  std::string SpillDirect(std::span<const int> key, const ConversationPolicy& policy, bool guarded,
+                          std::string_view refused, size_t bytes, size_t need, uint64_t room, Save save, size_t host = 0) {
+    if (!Enabled() || !DirectRefusal(refused)) return {};
+    if (!DiskKeepsRope(policy)) return "rope";
+    if (key.size() < disk_.MinTokens()) return "short";
+    if (auto skip = Skip(key, policy, bytes); !skip.empty()) return skip;
+    if (disk_.Waiting(key, policy, compact_)) return "waiting";
+    const uint64_t reading = disk_.UnallocatedReadBytes();
+    if (need > (room > reading ? room - reading : 0)) return "memory";
+    if (disk_.QueueFull(host ? host : bytes, key, policy, compact_)) return "busy";
+    std::shared_ptr<const Snapshot> snapshot;
+    try {
+      snapshot = save();
+    } catch (const std::bad_alloc&) {
+      return "memory";
+    }
+    if (!snapshot) return "memory";
+    // The room check above used `need`, not the whole snapshot: its shared chunks are in host memory already.
+    const auto result = disk_.Spill(key, policy, compact_, false, guarded, snapshot, *snapshot, false);
+    return result.empty() ? "queued" : result == "queued" ? "waiting" : result;
+  }
+  static bool DirectRefusal(std::string_view refused) {
+    return refused == "protected" || refused == "host" || refused == "memory" || refused == "budget";
+  }
+  // Why a stop flush of a slot state of `bytes` would write nothing ("present": its file is on disk; "daily": the
+  // daily write budget), or "" when it would write. The caller then skips the device copy.
+  std::string Skip(std::span<const int> key, const ConversationPolicy& policy, size_t bytes) {
+    if (!DiskKeepsRope(policy)) return "rope";
+    if (disk_.Present(key, policy, compact_)) return "present";
+    if (disk_.OverDailyBudget(bytes)) return "daily";
+    return {};
+  }
+
+ private:
+  static constexpr const char* kLedgerFile = "lost.ledger";
+  static constexpr size_t kLedgerFileLimit = size_t(2) << 20;
+  static std::filesystem::path LedgerFolder(const std::filesystem::path& root) {
+    std::error_code error;
+    auto path = std::filesystem::weakly_canonical(root, error);
+    if (error) path = root.lexically_normal();
+    if (path.filename().empty()) path = path.parent_path();
+    if (path.filename().empty()) return {};
+    return path.parent_path() / (path.filename().string() + ".ledger");
+  }
+  const std::filesystem::path ledger_;  // the side folder of the lost lists (empty: none)
+  const std::string directory_;         // this identity's folder name
+  StateDisk<Snapshot> disk_;
+  const bool compact_;
+  std::string last_spill_;
+};
+}  // namespace crucible

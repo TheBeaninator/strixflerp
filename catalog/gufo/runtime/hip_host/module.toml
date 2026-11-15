@@ -1,0 +1,48 @@
+id        = "runtime.gufo.hip_host"
+kind      = "runtime"
+summary   = "HIP host services: host allocations, managed allocation, heap placement, weight upload, snapshot transfer, hipBLASLt plan database, bandwidth probe"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/core/hip/bandwidth.cpp",
+  "src/core/hip/detail/hip_graph_decode_executor.hpp",
+  "src/core/hip/hipblaslt_plan_database.cpp",
+  "src/core/hip/host_allocations.cpp",
+  "src/core/hip/host_allocations.hpp",
+  "src/core/hip/weight_upload.cpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "device.memory/hip/-"
+api       = "gufo::hip host_allocations, managed_alloc, weight_upload, snapshot_transfer"
+numeric   = "n/a"
+regime    = "unified memory on gfx1151"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "runtime.gufo.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

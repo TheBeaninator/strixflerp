@@ -1,0 +1,204 @@
+id        = "runtime.hipfire.runtime"
+kind      = "runtime"
+summary   = "The inference orchestrator: KV backends and adaptive KV ladder, session and prefix caches, sampler, speculation (DFlash, DSpark core and block controller, DDTree, n-gram and lookup drafts, speculation economics), device mesh / expert-parallel / TP shards, weight stores and pager, tokenizer, serve"
+notes     = "One crate holds caches, speculation, sampling, mesh and serve; they cannot be harvested as separate modules without splitting the crate. imagedec.rs (image decode) is left out."
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/hipfire-runtime/Cargo.toml",
+  "crates/hipfire-runtime/map.md",
+  "crates/hipfire-runtime/src/admission.rs",
+  "crates/hipfire-runtime/src/arch.rs",
+  "crates/hipfire-runtime/src/arch_mapping.rs",
+  "crates/hipfire-runtime/src/arch_model.rs",
+  "crates/hipfire-runtime/src/arch_spec.rs",
+  "crates/hipfire-runtime/src/augmentor.rs",
+  "crates/hipfire-runtime/src/batch_sampler.rs",
+  "crates/hipfire-runtime/src/bf16_loader.rs",
+  "crates/hipfire-runtime/src/bin/hfq.rs",
+  "crates/hipfire-runtime/src/cache_plan.rs",
+  "crates/hipfire-runtime/src/calibration.rs",
+  "crates/hipfire-runtime/src/cask.rs",
+  "crates/hipfire-runtime/src/chatml.rs",
+  "crates/hipfire-runtime/src/checkpoint_pool.rs",
+  "crates/hipfire-runtime/src/config.rs",
+  "crates/hipfire-runtime/src/coproc/calibration.rs",
+  "crates/hipfire-runtime/src/coproc/mod.rs",
+  "crates/hipfire-runtime/src/coproc/plan.rs",
+  "crates/hipfire-runtime/src/coproc/rates.rs",
+  "crates/hipfire-runtime/src/coproc/schedule.rs",
+  "crates/hipfire-runtime/src/coproc/stage.rs",
+  "crates/hipfire-runtime/src/cpu_router.rs",
+  "crates/hipfire-runtime/src/ddtree.rs",
+  "crates/hipfire-runtime/src/device_mesh.rs",
+  "crates/hipfire-runtime/src/dflash.rs",
+  "crates/hipfire-runtime/src/dflash/lanes.rs",
+  "crates/hipfire-runtime/src/dflash2_spec.rs",
+  "crates/hipfire-runtime/src/dflash_adaptive_block.rs",
+  "crates/hipfire-runtime/src/dflash_generic.rs",
+  "crates/hipfire-runtime/src/dflash_online.rs",
+  "crates/hipfire-runtime/src/dspark_block_controller.rs",
+  "crates/hipfire-runtime/src/dspark_core.rs",
+  "crates/hipfire-runtime/src/e8p_i4_reference.rs",
+  "crates/hipfire-runtime/src/emit_text.rs",
+  "crates/hipfire-runtime/src/eos_filter.rs",
+  "crates/hipfire-runtime/src/ep.rs",
+  "crates/hipfire-runtime/src/ep_row_gather.rs",
+  "crates/hipfire-runtime/src/ep_tile_exchange.rs",
+  "crates/hipfire-runtime/src/eval_common.rs",
+  "crates/hipfire-runtime/src/external_rows.rs",
+  "crates/hipfire-runtime/src/gguf.rs",
+  "crates/hipfire-runtime/src/hfq.rs",
+  "crates/hipfire-runtime/src/hfq_parallel.rs",
+  "crates/hipfire-runtime/src/kv_adaptive.rs",
+  "crates/hipfire-runtime/src/kv_backend.rs",
+  "crates/hipfire-runtime/src/kv_mode.rs",
+  "crates/hipfire-runtime/src/lib.rs",
+  "crates/hipfire-runtime/src/llama.rs",
+  "crates/hipfire-runtime/src/llama_spec.rs",
+  "crates/hipfire-runtime/src/lloyd_lut.rs",
+  "crates/hipfire-runtime/src/loader_api.rs",
+  "crates/hipfire-runtime/src/loop_guard.rs",
+  "crates/hipfire-runtime/src/mesh_placement.rs",
+  "crates/hipfire-runtime/src/mesh_split.rs",
+  "crates/hipfire-runtime/src/model_load.rs",
+  "crates/hipfire-runtime/src/model_source.rs",
+  "crates/hipfire-runtime/src/mq_i4.rs",
+  "crates/hipfire-runtime/src/mq_i4_reference.rs",
+  "crates/hipfire-runtime/src/multi_gpu.rs",
+  "crates/hipfire-runtime/src/multi_gpu/executor.rs",
+  "crates/hipfire-runtime/src/multi_gpu/tp_exchange.rs",
+  "crates/hipfire-runtime/src/multi_gpu/tp_peer_push.rs",
+  "crates/hipfire-runtime/src/multi_gpu/transport.rs",
+  "crates/hipfire-runtime/src/ngram_mod.rs",
+  "crates/hipfire-runtime/src/offload.rs",
+  "crates/hipfire-runtime/src/offload_calibrate.rs",
+  "crates/hipfire-runtime/src/paro.rs",
+  "crates/hipfire-runtime/src/ple_convert.rs",
+  "crates/hipfire-runtime/src/ple_hot_pack.rs",
+  "crates/hipfire-runtime/src/ple_hot_store.rs",
+  "crates/hipfire-runtime/src/ple_prewarm.rs",
+  "crates/hipfire-runtime/src/ple_q4.rs",
+  "crates/hipfire-runtime/src/ple_sidecar.rs",
+  "crates/hipfire-runtime/src/prefill_progress.rs",
+  "crates/hipfire-runtime/src/prefix.rs",
+  "crates/hipfire-runtime/src/prefix_index.rs",
+  "crates/hipfire-runtime/src/prompt_frame.rs",
+  "crates/hipfire-runtime/src/rank_pool.rs",
+  "crates/hipfire-runtime/src/reset_core.rs",
+  "crates/hipfire-runtime/src/rope.rs",
+  "crates/hipfire-runtime/src/safetensors_source.rs",
+  "crates/hipfire-runtime/src/sampler.rs",
+  "crates/hipfire-runtime/src/scheduler.rs",
+  "crates/hipfire-runtime/src/sealed_moe.rs",
+  "crates/hipfire-runtime/src/semantic.rs",
+  "crates/hipfire-runtime/src/serve/mod.rs",
+  "crates/hipfire-runtime/src/serve_contract.rs",
+  "crates/hipfire-runtime/src/serve_fairness.rs",
+  "crates/hipfire-runtime/src/serve_wait.rs",
+  "crates/hipfire-runtime/src/session_cache.rs",
+  "crates/hipfire-runtime/src/session_cache/disk.rs",
+  "crates/hipfire-runtime/src/session_table.rs",
+  "crates/hipfire-runtime/src/sidecar.rs",
+  "crates/hipfire-runtime/src/slot_batch.rs",
+  "crates/hipfire-runtime/src/spec.rs",
+  "crates/hipfire-runtime/src/spec_economics.rs",
+  "crates/hipfire-runtime/src/spec_economics/fn_phase1_v1.rs",
+  "crates/hipfire-runtime/src/spec_economics/fn_width_cost_v1.rs",
+  "crates/hipfire-runtime/src/spec_lookup.rs",
+  "crates/hipfire-runtime/src/spec_ngram.rs",
+  "crates/hipfire-runtime/src/spec_retire.rs",
+  "crates/hipfire-runtime/src/spec_sampling.rs",
+  "crates/hipfire-runtime/src/stop_sequence.rs",
+  "crates/hipfire-runtime/src/swap/mod.rs",
+  "crates/hipfire-runtime/src/swap/snapshot.rs",
+  "crates/hipfire-runtime/src/swap/store.rs",
+  "crates/hipfire-runtime/src/tokenizer.rs",
+  "crates/hipfire-runtime/src/tool_call.rs",
+  "crates/hipfire-runtime/src/tp_shard.rs",
+  "crates/hipfire-runtime/src/triattn.rs",
+  "crates/hipfire-runtime/src/trunk_overlay.rs",
+  "crates/hipfire-runtime/src/verified_cache.rs",
+  "crates/hipfire-runtime/src/weight_backend.rs",
+  "crates/hipfire-runtime/src/weight_host.rs",
+  "crates/hipfire-runtime/src/weight_manifest.rs",
+  "crates/hipfire-runtime/src/weight_pager.rs",
+  "crates/hipfire-runtime/src/weight_store.rs",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "cache.prompt-hipfire/-/-"
+api       = "hipfire_runtime::{session_cache, prefix_index, checkpoint_pool, verified_cache}"
+numeric   = "snapshot restore is cold-exact; live continuation is session-exact (arch-qwen4 map.md)"
+regime    = "RAM tiers"
+
+[[provides]]
+interface = "kvcache.tiering/hipfire-kv/-"
+api       = "hipfire_runtime::{kv_backend, kv_mode, kv_adaptive}"
+numeric   = "KV format chosen per mode; adaptive ladder transcodes older rows to fewer bits"
+regime    = "per session"
+
+[[provides]]
+interface = "speculation.draft/dflash/f32.hipfire"
+api       = "hipfire_runtime::{dflash, dflash2_spec, dflash_online, ddtree}"
+numeric   = "draft-only numerics"
+regime    = "draft blocks"
+
+[[provides]]
+interface = "speculation.draft/dspark/f32.hipfire"
+api       = "hipfire_runtime::{dspark_core, dspark_block_controller}"
+numeric   = "draft-only numerics"
+regime    = "draft blocks"
+
+[[provides]]
+interface = "speculation.window-verify-hipfire/-/-"
+api       = "hipfire_runtime::{spec, spec_sampling, spec_economics, spec_retire}"
+numeric   = "lossless sampled accept; a measured AR floor decides whether speculation runs"
+regime    = "per request"
+
+[[provides]]
+interface = "sample.next-token/-/f32.hipfire"
+api       = "hipfire_runtime::{sampler, batch_sampler}"
+numeric   = "fp32"
+regime    = "host"
+
+[[provides]]
+interface = "collective.mesh-hipfire/-/-"
+api       = "hipfire_runtime::{device_mesh, mesh_split, ep, ep_tile_exchange, tp_shard, multi_gpu}"
+numeric   = "expert-parallel and TP shards over a device mesh"
+regime    = "multi-GPU / multi-node"
+
+[[provides]]
+interface = "serve.daemon/hipfire/-"
+api       = "hipfire_runtime::serve"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+interface = "device.facade-hipfire/hip/-"
+
+[[requires]]
+interface = "dispatch.kernel-table/hipfire/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

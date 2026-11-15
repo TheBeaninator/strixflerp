@@ -1,0 +1,112 @@
+id      = "kernel.strixite.linear_wmma"
+kind    = "kernel"
+summary = "Multi-token (prefill) Q4/Q5/Q6/Q8 and BF16-weight linear on the matrix units"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/linear_wmma.hip", "kernels/linear_wmma.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/linear_wmma.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.prefill/strixw-q4/bf16"
+api       = "strix::kernels::linear_q4_wmma"
+numeric   = "x rounded to bf16, weights exact (raw codes on the matrix units, group scale and min applied in fp32), fp32 accumulate, y rounded once"
+regime    = "prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q4/f32"
+api       = "strix::kernels::linear_q4_wmma"
+numeric   = "x rounded to bf16, weights exact (raw codes on the matrix units, group scale and min applied in fp32), fp32 accumulate, y rounded once"
+regime    = "prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q5/bf16"
+api       = "strix::kernels::linear_q5_wmma"
+numeric   = "x rounded to bf16, weights exact (raw codes on the matrix units, group scale and min applied in fp32), fp32 accumulate, y rounded once"
+regime    = "prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q5/f32"
+api       = "strix::kernels::linear_q5_wmma"
+numeric   = "x rounded to bf16, weights exact (raw codes on the matrix units, group scale and min applied in fp32), fp32 accumulate, y rounded once"
+regime    = "prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q6/bf16"
+api       = "strix::kernels::linear_q6_wmma"
+numeric   = "x rounded to bf16, weights exact (raw codes on the matrix units, group scale and min applied in fp32), fp32 accumulate, y rounded once"
+regime    = "prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q6/f32"
+api       = "strix::kernels::linear_q6_wmma"
+numeric   = "x rounded to bf16, weights exact (raw codes on the matrix units, group scale and min applied in fp32), fp32 accumulate, y rounded once"
+regime    = "prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q8/bf16"
+api       = "strix::kernels::linear_q8_wmma"
+numeric   = "x rounded to bf16, weights exact (raw codes on the matrix units, group scale and min applied in fp32), fp32 accumulate, y rounded once"
+regime    = "prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q8/f32"
+api       = "strix::kernels::linear_q8_wmma"
+numeric   = "x rounded to bf16, weights exact (raw codes on the matrix units, group scale and min applied in fp32), fp32 accumulate, y rounded once"
+regime    = "prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/bf16/bf16"
+api       = "strix::kernels::linear_bf16w_wmma"
+numeric   = "bf16(x) * W^T with exact products, fp32 accumulate; only the summation order differs from linear_bf16w"
+regime    = "prefill: K % 64 == 0 (the router)"
+
+[[provides]]
+interface = "linear.prefill/bf16/f32"
+api       = "strix::kernels::linear_bf16w_wmma"
+numeric   = "bf16(x) * W^T with exact products, fp32 accumulate; only the summation order differs from linear_bf16w"
+regime    = "prefill: K % 64 == 0 (the router)"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q5/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q6/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.wmma_gemm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

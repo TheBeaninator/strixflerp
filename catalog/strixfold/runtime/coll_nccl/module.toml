@@ -1,0 +1,39 @@
+id        = "runtime.strixfold.coll_nccl"
+kind      = "runtime"
+summary   = "Coll over NCCL opened at run time (the CUDA transport); kept because RCCL exports the same API, not exercised on HIP"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/src/families/dsv41/comm.zig", "zig/src/families/dsv41/comm_main.zig"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "collective.allgather-nccl/-/f32"
+api       = "comm.zig Comm.coll"
+numeric   = "bytes only; no header, no mismatch check"
+regime    = "TP2 / TP4 on CUDA"
+
+[[requires]]
+interface = "collective.interface/-/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: in the assembled tree (the family root imports comm.zig) but not reached by the HIP programs; the NCCL path is unverified on gfx1151"

@@ -1,0 +1,55 @@
+id        = "format.strixfold.exl3"
+kind      = "format"
+summary   = "EXL3 pack loader and device layouts for one TP rank: linears in strips, experts in one trellis buffer with pointer, width and scale tables; checkpoint split and rank cache"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/families/dsv41/checkpoint.zig",
+  "zig/src/families/dsv41/plan.zig",
+  "zig/src/families/dsv41/rank_cache.zig",
+  "zig/src/families/dsv41/rank_cache_main.zig",
+  "zig/src/families/dsv41/weights.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "format.device-view/exl3/-"
+api       = "weights.zig Weights, plan.zig Split, rank_cache.zig"
+numeric   = "bytes as the Python loader writes them (digests per device tensor against weights.py)"
+regime    = "load time"
+
+[[provides]]
+interface = "format.loader/exl3-safetensors/-"
+api       = "checkpoint.zig, rank_cache.zig (TFDSRK01)"
+numeric   = "exact"
+regime    = "load time"
+
+[[requires]]
+interface = "device.facade/hip/-"
+
+[[requires]]
+interface = "format.reader-strixfold/safetensors/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

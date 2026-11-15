@@ -1,0 +1,44 @@
+# strixw layout A/B on worker A (10.10.0.54), committed BEFORE any GPU run (owner approved, 40 min window).
+# Question: is upstream's Qwen3.8-Flash-Next strixw (exp_down q4g128) faster than the fleet file (exp_down q4g32),
+# and what does it do to output agreement? OLD is NOT a quality reference: agreement measures change, not correctness.
+
+[pairing]
+# Header reads only (gate/strixw_header.py): all four files carry source_fingerprint d1121c2771a0beb1.
+old_weights_fp = "d1121c2771a0beb1"   # strixw v4, converter ed4c1f4
+new_weights_fp = "d1121c2771a0beb1"   # strixw v3, converter eb57cdb (reader accepts v1..v4)
+fleet_ngram_fp = "d1121c2771a0beb1"   # /data/models/strix-infer/converted/qwen38-fnext-ngram-int8, converter ed4c1f4
+vision_fp      = "d1121c2771a0beb1"   # qwen38-fnext-tpn/vision.strixw
+decision = "fleet ngram.table, vision.strixw, preprocessor_config.json all pair with NEW: NEW's ngram.table is NOT copied; companions are symlinks to OLD's"
+
+[arms]
+OLD = "/cache/models/qwen38-fnext-tpn/weights.strixw"            # exp_gu q4g128 exp_down q4g32 sh_down q8g32 mtp_fc q8g64
+NEW = "/cache/models/qwen38-fnext-upstream-g128/weights.strixw"  # exp_gu q4g128 exp_down q4g128 sh_down q8g64 mtp_fc q4g64
+order = ["NEW", "OLD"]   # one at a time; both are required for a verdict
+
+[server]
+binary = "/data/models/strix-infer/runtime/bin/strix_server.v070tg"
+env = "LD_LIBRARY_PATH=/data/models/strix-infer/runtime/lib"
+# A's live serving args (pgrep -af strix_server, 2026-11-11 23:40Z), unchanged except:
+#   --weights (arm), --port 5310 (scratch, never 5300), --prompt-cache-dir /cache/ab-pc-<arm> (empty per arm, so
+#   neither arm reads the other's or the fleet's entries), and --logprobs on (opt-in per request: requests that do not
+#   ask pay nothing; only the quality requests ask; speed requests never do).
+args = "--ngram /data/models/strix-infer/converted/qwen38-fnext-ngram-int8/ngram.table --tokenizer /data/models/strix-infer/tok/tokenizer.json --generation-config /data/models/strix-infer/tok/generation_config.json --host 0.0.0.0 --capacity 262144 --chunk 8192 --mtp on --prompt-cache-gib 32 --prompt-cache-disk-free-gib 8 --prompt-cache-idle-s 150 --model-id qwen3.8-flash-next --total-slots 2 --cache-xfer on --steer-dir /data/models/strix-infer/steer --prompt-cache-ram-margin-gib 10"
+unit = "systemd-run --user --collect --unit=ab-strixw-<arm> -p LimitMEMLOCK=infinity"
+
+[measure]
+load_time = "unit start -> first /health ok (s); page cache state stated (NEW freshly copied, OLD resident from serving)"
+gpu_memory = "mem_info_gtt_used + mem_info_vram_used after load, idle (bytes), and rocm-smi"
+decode = "timings.predicted_per_second, MTP on as served, temperature 0, max_tokens 256, ~2k ctx x3 and ~32k ctx x2; every request starts with a unique nonce line so no prefix is cached; noise = min/max over repeats"
+prefill = "timings.prompt_per_second with max_tokens 1 on ~8k x2 and ~32k x2, after one warm-up request; cache_n must be 0"
+per_chunk = "journal of the arm unit captured; prefill per-chunk lines recorded if the server logs them"
+quality = "10 fixed chat prompts (incl. tool-call style, code), temperature 0, max_tokens 128, logprobs top 20: exact token-sequence agreement, first divergence index, and on the shared prefix (identically conditioned = teacher-forced on OLD's tokens up to divergence) top-1 agreement and KL(NEW||OLD) over the top-20 support (renormalised), plus at the divergence position"
+quality_limit = "the server takes no token-id prompts and has no echo, so free teacher forcing of arbitrary text is not available; teacher forcing is limited to the common greedy prefix"
+
+[budget]
+hold_ttl_s = 2700
+hard_limit_min = 40
+drop_first = ["decode_32k", "prefill_32k"]
+
+[verdict]
+faster = "NEW decode 2k AND prefill 8k each better than OLD by more than the larger arm's min-max spread"
+acceptable_agreement = "mean shared-prefix top-1 >= 0.98 and median first divergence >= 32 tokens over the 10 prompts"

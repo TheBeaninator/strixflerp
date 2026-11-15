@@ -1,0 +1,32 @@
+id      = "runtime.strixite.paged_state"
+kind    = "runtime"
+summary = "Host-only description of a parked conversation's K/V pages (no HIP handles)"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/paged_state.hpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kvcache.parked-state/-/-"
+api       = "strix::PagedState, strix::PagedChunk"
+numeric   = "n/a"
+regime    = "header only, host"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

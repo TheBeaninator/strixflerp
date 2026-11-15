@@ -1,0 +1,54 @@
+id        = "kernel.strixfold.indexer_score"
+kind      = "kernel"
+summary   = "Indexer scores of a prompt chunk on WMMA: 32 index heads of dim 128 against the FP4 compressed-key cache"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/aux_index.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/aux_index.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 1
+
+[[provides]]
+interface = "attn.indexer-score/kv-fp4-e2m1/bf16"
+api       = "tf_ds_aux_index_rows_h32_d128"
+numeric   = "score = sum_h relu(q_h . k) * w_h in fp32, fixed head order; k decoded exactly from FP4 (E8M0 scale per 32); -inf past the visible count; optional int64 top-k keys and 64-key tile maxima; within index_scores_fp32_bound of the fp64 reference, not Triton bits"
+regime    = "prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[[requires]]
+interface = "kvcache.store/fp4-e2m1/bf16"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.indexer_score.json"

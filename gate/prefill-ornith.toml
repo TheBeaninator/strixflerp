@@ -1,0 +1,72 @@
+# PREFILL-ORNITH (pod card 8ef0a645e7): grouped K-quant prefill kernels (kernel.flerp.moe_kgrouped) for Ornith-1.5
+# 397B, and their executor path (executor.flerp.qwen35moe, FLERP_MOE_GROUPED). Design: docs/PREFILL-ORNITH.md.
+# Committed BEFORE any GPU run of this experiment; not edited to turn a failure into a pass (an amendment, if any, is
+# added below with its date and reason; thresholds are never loosened).
+#
+# Tools: gate/prefill_ornith_bench.hip (one binary: the new kernels, a copy of the current path's kernels with their
+# arithmetic unchanged, a float64 reference written from llama.cpp's dequantize_row_q4_K / q6_K), run on bench box K
+# through pod-kbench k_run (gate/prefill_ornith_run.sh). The 35B whole-model check: gate/prefill_ornith_35b.sh through
+# tools/gpu-queue.sh on control-node's GPU (weights from /data/models, NVMe). No worker, no hold, no multi-node window.
+
+[facts]
+model      = "Ornith-1.5 397B Q4_K_M: qwen35moe, 60 blocks (45 GDN + 15 attention), hidden 4096, 512 experts of width 1024, 10 used + shared expert of 1024"
+types      = "ffn_gate/up_exps Q4_K; ffn_down_exps Q6_K in 30 blocks, Q4_K in 30; shared down Q6_K in 30; attn_qkv Q6_K in 24 of 45 GDN blocks"
+baseline   = "P4 stage 0, 15 blocks, 1,024-row chunk: 7.08 s, 472 ms a block, 144 rows/s a stage (gate/results/ornith15-397b.p4/orn-0.jsonl)"
+current    = "experts by moe_kquant IndexedExperts: grid (token x slot) x rows, every pair reads its expert's rows (moe_kquant.hip:271-300)"
+
+[kernel_correctness]
+# --check: hot routing (4 experts in every token's top 10, so groups cross every BM's tile boundary) on 192 tokens,
+# Ornith dims, synthetic codes; float64 reference on every third token, all 10 slots, plus the shared expert.
+# --check-dense: Linear at rows 192, (n, k) = (12288, 4096) Q6_K, (8192, 4096) Q4_K, (4096, 8192) Q4_K.
+K1 = "routed and shared outputs, down Q6_K and down Q4_K: rel_rms (||new - ref|| / ||ref||) <= 2e-3 and max |new - ref| <= 2e-2 x rms(ref); 0 non-finite"
+K2 = "Linear at the three dense shapes: rel_rms <= 2e-3, max |new - ref| <= 2e-2 x rms(ref)"
+K3 = "row invariance: new routed outputs bit-identical across BM 32 / 64 / 128 and across a chunk cut (192 tokens as 69 + 123): 0 differing floats"
+K4 = "overflow counter (F16 range) 0 in every check and speed case"
+record = "the current path's error against the same reference (routed_old, shared_old): a yardstick, not a criterion"
+
+[kernel_speed]
+# --speed at rows 1,024 / 4,096 / 16,384, uniform routing (and --skew at 4,096), down Q6_K (the heavier half) and
+# Q4_K at 4,096; BM 32 / 64 / 128 each, the best BM reported per row count. 5 timed reps after 2 warm (new), 1-2
+# timed after 1 warm (old, which reads ~83 GB a 1,024 rows). hipEvent times. TFLOP/s = useful FLOPs (pairs x 2 x K x
+# N per matrix) / time; weight GB/s = bytes of the active experts' stacks / time (new); requested GB/s = pairs x
+# expert row bytes / time (old).
+S1 = "routed pass (group + F16 x + gate/up + down) at 1,024 rows: at least 10x faster than the current path's gate/up + down"
+S2 = "routed pass at 16,384 rows: at least 20 TFLOP/s useful"
+S3 = "routed pass at 4,096 rows: at least 12 TFLOP/s useful"
+S4 = "Linear (dense) at 4,096 and 16,384 rows on (12288, 4096) and (4096, 8192): at least 20 TFLOP/s"
+load = "K's own loadavg recorded at the start and end of each case (kbench backend); Tctl recorded; ratios are the judged quantity where absolute rates differ between K and the workers"
+
+[projection]
+# Not measured: computed from S-case times and the P4 baseline, and labelled projected.
+rest   = "rest a block at 1,024 rows = 472 ms (P4) - current routed + shared at 1,024 rows (this bench, K): dense projections, GDN and attention cores, norms, router"
+stage  = "stage ms per chunk = 15 x (new routed + new shared + rest x rows / 1,024); rows/s a stage = rows / that"
+P1     = "projected stage rows/s at a 4,096-row chunk with the grouped experts only (dense path unchanged): at least 1,000 (7x the 144)"
+e2e    = "end to end tok/s at 4 stages pipelined over sub-chunks ~ the slowest stage's rows/s; TTFT at 32K and 256K from it (attention cost at depth added by FLOP count, labelled)"
+
+[fidelity]
+# The 35B proxy (qwen36-35b-a3b Q4_K_M, /data/models, one GPU): the same executor binary, FLERP_MOE_GROUPED=0 (the
+# current path, A) against =1 (B), and --decode-prompt (prompt through the decode step: FP32 activations, the
+# FIDELITY.md yardstick nearest the reference, D). 8 prompts (the 4 of gate/results/qwen36-35b-a3b.flerp-moe plus 4
+# of 600-1,808 tokens). Teacher-forced continuation = A's own greedy ids; logits recorded at the prefill end
+# (position 0) and at the 31 decode positions after it (they read the KV and DeltaNet state the prefill wrote):
+# 256 positions. KL(R || E) over R's top 1,000 tokens that E also kept, with exact log-probabilities (each row's
+# logsumexp is over the whole vocabulary); R's mass on that set recorded. (Method wording amended 2026-11-14, before
+# any run of this gate: the tool keeps a top 1,000 a side, so a union cannot be scored; no threshold changed.)
+F1 = "KL(A || B): mean over the 256 positions <= 0.002 nats, max <= 0.02"
+F2 = "top-1: B's best token is A's at >= 98 % of positions, and every disagreement is at a position where A's top-2 margin is < 0.3 nats"
+F3 = "against the yardstick: mean KL(D || B) <= 1.25 x mean KL(D || A) + 0.0002"
+F4 = "greedy (no forcing, 64 new tokens a prompt): B's ids equal A's for at least 7 of 8 prompts; each divergence recorded with its index and A's margin there"
+F5 = "overflow fallbacks (blocks re-run on the current path because an F16 value would overflow): counted and reported; F1-F4 judged with them in"
+
+[fidelity_speed]
+T1 = "35B prompt pass, 2,048-token prompt in one chunk: B's prompt tok/s at least 3x A's (median of 3, A B A B order)"
+
+[amendment_2026_11_14_reference]
+# Amendment by owner's decision, 2026-11-14, added after the runs; the thresholds above and their history are unchanged.
+# Reason: the current prompt path is itself mean KL 0.0176 from full FP32 (D, gate/results/prefill-ornith/
+# 35b-fp32-verdict-ref-D.json), so a bound against it cannot be met by anything more accurate than it: the arms
+# closest to FP32 (X: 0.0027) diverge from A exactly where A diverges from FP32 (35b-dnA-verdict-ref-A.json).
+# From here the prefill fidelity reference is full FP32 (D, forced on D's greedy ids), and the floor for a prefill
+# champion is mean KL(D || arm) <= 0.0176, today's distance. F1-F4 against A stay as recorded results (failed).
+reference = "D (prompt through the decode step, FP32 activations), forced on D's greedy ids, 8 prompts x 32 positions"
+floor     = "mean KL(D || arm) <= 0.0176"

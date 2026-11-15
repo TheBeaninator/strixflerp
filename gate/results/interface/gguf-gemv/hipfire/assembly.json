@@ -1,0 +1,213 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_gguf_gemv",
+   "modules": [
+    "kernel.gufo.core_headers",
+    "kernel.gufo.qwen_ops",
+    "runtime.gufo.sampling",
+    "runtime.gufo.platform",
+    "format.gufo.gguf_kquant",
+    "kernel.gufo.qwen_linear_decode",
+    "kernel.hipfire.common_headers",
+    "kernel.hipfire.indexer_topk",
+    "format.hipfire.loader",
+    "kernel.hipfire.gemv_ggml",
+    "kernel.flerp.adapter_rt",
+    "kernel.flerp.gguf_gemv_hipfire",
+    "tool.flerp.gate_gguf_gemv"
+   ]
+  }
+ },
+ "bindings": {
+  "format.device-view-hipfire/gguf-kquant/-": "format.hipfire.loader",
+  "format.device-view/gguf-kquant/-": "format.gufo.gguf_kquant",
+  "linear.decode/gguf-kquant/f32": "kernel.flerp.gguf_gemv_hipfire"
+ },
+ "code_objects": [
+  {
+   "adapter": "kernel.flerp.gguf_gemv_hipfire",
+   "command": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemv_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I /data/models/tools/therock-10.2/include @SRC@ -o @OUT@",
+   "module": "kernel.hipfire.gemv_ggml",
+   "symbol": "flerp_co_hipfire_gemv_q8_0",
+   "toolchain": "therock-10.2",
+   "unit": "gemv_q8_0"
+  },
+  {
+   "adapter": "kernel.flerp.gguf_gemv_hipfire",
+   "command": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemv_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I /data/models/tools/therock-10.2/include @SRC@ -o @OUT@",
+   "module": "kernel.hipfire.gemv_ggml",
+   "symbol": "flerp_co_hipfire_gemv_q4k",
+   "toolchain": "therock-10.2",
+   "unit": "gemv_q4k"
+  }
+ ],
+ "contract_changes": [
+  {
+   "module": "kernel.flerp.gguf_gemv_hipfire",
+   "provided": "linear.decode/gguf-kquant/f32.hipfire-rows",
+   "required": "linear.decode/gguf-kquant/f32"
+  }
+ ],
+ "foreign": {
+  "kernel.gufo.core_headers": {
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  },
+  "kernel.gufo.qwen_linear_decode": {
+   "commands": [
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/gemv.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/gemv_quant.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/fused.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/qkv.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/swiglu.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/small_batch_wave64.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -gline-tables-only -Xarch_device -mllvm=-amdgpu-sched-strategy=iterative-ilp -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/small_batch_quant16_wave64.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/verify_gemm_27b.hip -o @OUT@"
+   ],
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  },
+  "kernel.gufo.qwen_ops": {
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  },
+  "kernel.hipfire.common_headers": {
+   "origin": "hipfire",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  },
+  "kernel.hipfire.gemv_ggml": {
+   "origin": "hipfire",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  },
+  "kernel.hipfire.indexer_topk": {
+   "origin": "hipfire",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  }
+ },
+ "include_only": [],
+ "modules": {
+  "format.gufo.gguf_kquant": {
+   "dir": "catalog/gufo/format/gguf_kquant",
+   "files": 7,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "format.hipfire.loader": {
+   "dir": "catalog/hipfire/format/loader",
+   "files": 13,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.flerp.adapter_rt": {
+   "dir": "catalog/flerp/kernel/adapter_rt",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.flerp.gguf_gemv_hipfire": {
+   "dir": "catalog/flerp/kernel/gguf_gemv_hipfire",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/flerp_adapters/gguf_gemv_hipfire.cpp"
+   ],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.core_headers": {
+   "dir": "catalog/gufo/kernel/core_headers",
+   "files": 27,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_linear_decode": {
+   "dir": "catalog/gufo/kernel/qwen_linear_decode",
+   "files": 8,
+   "linked": true,
+   "sources": [
+    "src/src/families/qwen/kernels/gemv.hip",
+    "src/src/families/qwen/kernels/gemv_quant.hip",
+    "src/src/families/qwen/kernels/fused.hip",
+    "src/src/families/qwen/kernels/qkv.hip",
+    "src/src/families/qwen/kernels/swiglu.hip",
+    "src/src/families/qwen/kernels/small_batch_wave64.hip",
+    "src/src/families/qwen/kernels/small_batch_quant16_wave64.hip",
+    "src/src/families/qwen/kernels/verify_gemm_27b.hip"
+   ],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_ops": {
+   "dir": "catalog/gufo/kernel/qwen_ops",
+   "files": 22,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.hipfire.common_headers": {
+   "dir": "catalog/hipfire/kernel/common_headers",
+   "files": 31,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.hipfire.gemv_ggml": {
+   "dir": "catalog/hipfire/kernel/gemv_ggml",
+   "files": 19,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "kernel.hipfire.indexer_topk": {
+   "dir": "catalog/hipfire/kernel/indexer_topk",
+   "files": 25,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0 OR MIT"
+  },
+  "runtime.gufo.platform": {
+   "dir": "catalog/gufo/runtime/platform",
+   "files": 45,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "runtime.gufo.sampling": {
+   "dir": "catalog/gufo/runtime/sampling",
+   "files": 11,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "tool.flerp.gate_gguf_gemv": {
+   "dir": "gate/interface/drivers/gguf_gemv",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-gguf-gemv.hipfire",
+ "renames": {
+  "kernel.gufo.qwen_linear_decode": {
+   "adapter": "kernel.flerp.gguf_gemv_hipfire",
+   "suffix": "_flerp_origin",
+   "symbols": [
+    "LaunchQ8KBlockGEMV"
+   ]
+  }
+ },
+ "toolchain": "therock-10.1"
+}

@@ -1,0 +1,32 @@
+# Panel decode kernels, second pass (decode2): kernel.flerp.linear_q4p / linear_q8p decode GEMV and the Q4 expert
+# gather / gather + SwiGLU / combine with a new wave map, against strixite's row-major kernels. The committed kernel gate
+# (gate/strixw-panel-kernels.toml) is left as it was; this file adds the speed bar it did not meet. COMMITTED BEFORE
+# the first GPU run of the new kernels; never edit it to turn a failure into a pass. Runner:
+# gate/strixw_panel_decode2.py (the same bench, tool.flerp.strixw_panel_kernel_bench). Results:
+# gate/results/strixw-panel-decode2/.
+
+[host]
+where     = "control-node, its own GPU, through tools/gpu-queue.sh (holds of minutes); ionice -c3 nice -n 19; build -j2; CPU <= 4 threads"
+max_load  = 10.0     # wait while the 1-minute load average is above this
+valid_load = 6.0     # speed numbers taken with the 1-minute load above this are invalid and rerun
+read_cap_gb = 2.5    # bytes read from the fleet file per bench run (the bench's count), byte ranges only
+
+[decode2]
+# The wave map: a row group of 8 rows (half a panel) gets NT = 8 / TPW waves per split-K part; lane (row rr, h) of the
+# tg-th wave takes, in each 32-chunk block, the chunks 4 (TPW tg + u) + h, u < TPW: origin lane o = 4 t + h, one
+# accumulator per (x row, u). TPW = 8 is the committed kernel (one wave per row group). The t-steps of the butterfly
+# are summed in LDS by the tg = 0 wave in the origin's order (offsets 16, 8, 4), then the h-steps as shuffles, then
+# the KS parts in ks order. No summation order changes: bit-equal, no tolerance.
+variants  = "TPW = 1, 2, 4, 8 (FLERP_PANEL_TPW), each with lines and bytes per load instruction stated (every variant: 4 full 128-byte lines a load, the origin: one 512-byte run = 4 lines); time per class, bits and M; rocprofv3 FETCH_SIZE on a subset where it decides"
+choice    = "one map per split-K factor (a dispatch table in kernels/panel_gemv.hpp p_tpw), from the sweep"
+reps      = 20       # timed launches per case, origin and panel alternating, caches flushed before each (the bench)
+cases     = "dense decode: every class of gate/strixw-panel-kernels.toml [run] at Q4 and Q8, M = 1..8, outputs BF16 and F32; expert decode: gather, gather + SwiGLU, combine at M = 1..8 x 10 experts"
+
+[criteria]
+equal          = "the whole committed kernel gate (gate/strixw-panel-kernels.toml [run], all 489 cases, bad ids included) rerun with the chosen map: every case byte-equal"
+decode_dense   = "every dense decode class (bits, out pooled): median over its cases of panel % of origin time <= 100.0; and no single case slower outside noise by more than 3% (panel q1 > origin q3 and panel median > 103% of the origin's)"
+decode_expert  = "each expert decode path (gather, gather + SwiGLU, combine): median over M = 1..8 of panel % of origin time <= 100.0; no single M slower outside noise by more than 3% as above"
+noise          = "a difference inside both sides' interquartile ranges is noise; the medians and q1-q3 are reported for every case"
+prefill        = "no regression: the committed criteria speed_prefill_dense and speed_prefill_expert still pass on the same rerun (the prefill kernels are not changed)"
+read           = "each bench run reads <= 2.5 GB of the fleet file"
+fallback       = "if a class cannot meet decode_dense with any map, the result says so with the measurement and names the class as a per-class layout question (row-major kept where decode matters and prefill gain is small); the criterion is then reported FAIL, not relaxed"

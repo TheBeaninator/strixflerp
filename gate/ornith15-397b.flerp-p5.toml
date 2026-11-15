@@ -1,0 +1,102 @@
+# Host facts, run settings and pass criteria of gate/ornith_p5.py: stage P5 of docs/PHASE5-FOURNODE-DESIGN.md (section
+# 6), first tokens from Ornith-1.5 397B as layer stages on four workers. Written and committed before any worker run;
+# not edited to turn a failure into a pass. Run on control-node. The runner takes its own holds (owner below, drain as
+# pod-quad asks, never FORCE), refuses to start a process on a node whose serving is still up, and releases its holds
+# only after every unit it started is stopped.
+
+recipe       = "qwen36-35b-a3b.flerp-moe"          # the generator binary (build/flerp-p5: stage_driver.cpp, --staged tcp)
+serve_recipe = "qwen36-35b-a3b.flerp-serve-stage"  # the front end and flerp-qwen35moe-stage (build/flerp-p5-serve)
+
+[host]
+hold_owner          = "agent FLERP-P5"
+hold_reason         = "FLERP-P5: Ornith-1.5 397B first tokens, layer stages on four workers"
+hold_ttl_s          = 14400
+hold_tries          = 4                 # a refused hold: drain (DRAIN below) and try again, this many times
+hold_drain_s        = 900               # DRAIN= for pod-quad hold (lanes finish their round; sessions are waited out)
+# World 4 rank order, then world 3 = the first three. B stays serving (not in this window).
+nodes               = [{ name = "F", mgmt = "10.10.0.50", rail = "10.20.0.50" },
+                       { name = "D", mgmt = "10.10.0.53", rail = "10.20.0.53" },
+                       { name = "A", mgmt = "10.10.0.54", rail = "10.20.0.54" },
+                       { name = "C", mgmt = "10.10.0.52", rail = "10.20.0.52" }]
+world3_nodes        = ["F", "D", "A"]
+bundle              = "/home/pod/flerp-p5-bundle"   # binaries + ROCm libraries + the stream helper + the manifest (/cache is noexec)
+work                = "/home/pod/flerp-p5-run"      # logs, ids files, MoE dumps (KiB to MiB); never /cache on F or D
+unit_prefix         = "flerp-p5-"                     # + a run id: every process a transient user unit
+serving_pattern     = "tensorfold-native|tf-dsv41-|strix_|strixite|gufo|sglang|llama-server|ds4|vllm"
+gtt_idle_max        = 2147483648                      # a GPU using more than this is serving
+mem_margin_gib      = 8                               # MemAvailable must exceed a rank's plan bytes + arena + this
+arena_gib           = 3
+# where /cache must never be displaced (the engram cache): the fallback file path never writes there
+cache_protected     = { F = "/cache/engram-1017", D = "/cache/engram-1017", A = "/cache/models/qwen38-fnext-tpn-p16" }
+# what the window must leave on /cache: the worker's own serving confs (the copy the pair launcher reads) name dirs
+# under /cache (ENGRAM_DIR ...); the serving set needs this many GiB there (tp2-128k.conf ENGRAM_DIR ~196 GB). At the
+# end of a run, on any node where a serving dir shrank or free space cannot hold the rest, the run's own slices
+# (place request flerp-p5-<node>) are cancelled and evicted through the place interface before the hold is released.
+serving_conf_dir    = "/home/pod/tfp/run/conf"
+serving_need_gib    = 196
+card_comment_s      = 2400
+gguf_py             = "/data/ark/src/github.com__ggml-org__llama.cpp/gguf-py"
+block_check_threads = 4
+
+[swarm]
+# Default source: loom-swarm streamed straight into each rank's GPU allocation (placed_loader.hpp FillSwarm): the
+# helper `loom-swarm stream` (loom-swarm cd2cc13, the stream verb) GETs the pieces covering the rank's plan from the
+# origin, BLAKE3-checks each 16 MiB piece against the manifest and pipes it to the loader; nothing lands on a disk or
+# a tmpfs. The four world-4 ranks want disjoint bytes, so peers add nothing: the origin is the one source.
+helper              = "build/loom-swarm-stream"       # copied into the bundle
+origin              = "10.20.0.31:7150"               # control-node's rail address
+manifest            = "/data/models/ornith-1.5-397b/Ornith-1.5-397B-Q4_K_M.gguf.swarm.json"   # staged by the swarm task (gate/results/ornith15-397b.swarm/README.md)
+conns               = 4
+# Fallback (--source file): the same stream written into a sparse full-size file on the RAM disk /srv/swarm (never
+# /cache on F or D), loaded with --data-file --punch-behind (each piece freed once on the GPU, so the tmpfs copy
+# and the GPU copy never coexist in full), and the file deleted after the load.
+ram_disk            = "/srv/swarm"
+
+[model]
+gguf                = "/data/ark/models/ornith-1.5-397b/Ornith-1.5-397B-Q4_K_M.gguf"   # header only (NFS); bytes from swarm
+gguf35              = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"
+prompt_ids          = "gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json"   # the short three (21, 20, 18 ids)
+prompts             = ["bridge", "code", "rivers"]
+# the ids are the 35B tokenizer's: --plan checks the two headers' token lists are the same (sha256)
+
+[run]
+context             = 2048
+max_tokens          = 32
+port                = 39810                # world 4; world 3 at port + 10; the front end's ranks at port + 20
+http_port           = 39880
+epoch               = 21
+deadline_ms         = 120000
+setup_deadline_ms   = 3600000
+load_timeout_s      = 5400                 # a whole world's load from the origin (about 228 GB at 0.14-0.20 GB/s: 20-27 min)
+run_timeout_s       = 1800
+graph_modes         = "on,on"              # two runs in one load: criterion 1
+dump_rows           = [0, 15]
+# blocks dumped per stage, for gate/moe_block_check.py: each stage's first and last block (world-4 cuts 0,15,30,45,60)
+check_blocks4       = [[0, 14], [15, 29], [30, 44], [45, 59]]
+chat                = [{ name = "rivers-chat", text = "Name three rivers in Europe and one sentence about each." }]
+chat_max_tokens     = 48
+
+[criteria]
+# 1.  World 4 (ranks F D A C, the stage plan's cuts 0, 15, 30, 45, 60): every rank exits 0; each rank's allocated
+#     bytes equal the world-1 range plan of its blocks (gguf_census.py); its `loaded` event says the bytes came from
+#     loom-swarm (swarm true) or, with --source file, from the data file. Two runs of the three prompts (graph on,
+#     twice, one load): per prompt, the generated ids and the sha256 of every logits row equal between the runs; each
+#     row's argmax is the token rank 3 answered.
+# 2.  World 3 (ranks F D A, cuts 0, 20, 40, 60): the same three prompts, graph on: per prompt the ids and the sha256
+#     of every logits row equal world 4's run 1. This is the whole-model invariance check that fits the window.
+# 3.  Block check: on every world-4 stage, the dumped blocks of [run] check_blocks4 (rows of [run] dump_rows of the
+#     first prompt's chunk) pass gate/moe_block_check.py with the bounds below, at least check_records_min records
+#     a stage.
+# 4.  The front end (serve.flerp.http over executor.flerp.qwen35moe_abi at world 4, ranks 1-3 flerp-qwen35moe-stage)
+#     answers /health 200 and the [run] chat greedy (HTTP 200, finish reason stop or length, non-empty text), and
+#     every process exits 0 on SIGTERM. Its text is recorded, not judged for quality.
+# 5.  Every unit the run started is stopped and no flerp process is left on any node before any hold is released;
+#     the fallback's RAM-disk files are deleted.
+# Recorded, not criteria: per rank load seconds and GB/s from the origin; decode tok/s (rank 0's decode wall time per
+# token), TTFT (rank 0's prompt pass wall time for each prompt), per-stage ms a block; relay overhead per token.
+# Not a criterion here (design 6, row P5 iv): fidelity against stage R, which is a plan only (--plan prints it).
+check_records_min   = 4
+check_tie_margin    = 1e-6
+check_weights_max   = 1e-4
+check_gate_max      = 1e-3
+check_out_max       = 1e-3
