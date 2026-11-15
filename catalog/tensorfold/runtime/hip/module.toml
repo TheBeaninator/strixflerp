@@ -1,0 +1,142 @@
+id        = "runtime.tensorfold.hip"
+kind      = "runtime"
+summary   = "The HIP backend runtime: raw HIP driver binding, device caps and arch detect, memory and arena, modules and code objects, typed launches per kernel group, graphs (capture, split, cache), streams, hipBLAS, optional AOTriton attention, admission and policy, per-arch tuning tables"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/hip/abi.zig",
+  "zig/src/hip/admission.zig",
+  "zig/src/hip/admission_tests.zig",
+  "zig/src/hip/affine.zig",
+  "zig/src/hip/affine_gpu_test.zig",
+  "zig/src/hip/affine_tune.zig",
+  "zig/src/hip/agree.zig",
+  "zig/src/hip/arena.zig",
+  "zig/src/hip/args.zig",
+  "zig/src/hip/attention_aotriton.zig",
+  "zig/src/hip/blas.zig",
+  "zig/src/hip/blas_fixed.zig",
+  "zig/src/hip/caps.zig",
+  "zig/src/hip/code_object.zig",
+  "zig/src/hip/collective.zig",
+  "zig/src/hip/context.zig",
+  "zig/src/hip/convolution.zig",
+  "zig/src/hip/dense_tune.zig",
+  "zig/src/hip/device.zig",
+  "zig/src/hip/device_arch.c",
+  "zig/src/hip/device_arch.zig",
+  "zig/src/hip/driver.zig",
+  "zig/src/hip/engine_runtime_tests.zig",
+  "zig/src/hip/graph.zig",
+  "zig/src/hip/graph_cache.zig",
+  "zig/src/hip/graph_split.zig",
+  "zig/src/hip/joint_schema/attention.zig",
+  "zig/src/hip/joint_schema/consume.zig",
+  "zig/src/hip/joint_schema/finish.zig",
+  "zig/src/hip/joint_schema/head.zig",
+  "zig/src/hip/joint_schema/joint_schema.zig",
+  "zig/src/hip/joint_schema/launch.zig",
+  "zig/src/hip/joint_schema/state.zig",
+  "zig/src/hip/joint_schema/weights.zig",
+  "zig/src/hip/kernels.zig",
+  "zig/src/hip/launch.zig",
+  "zig/src/hip/launches.zig",
+  "zig/src/hip/launches/affine.zig",
+  "zig/src/hip/launches/affine_pair.zig",
+  "zig/src/hip/launches/attention.zig",
+  "zig/src/hip/launches/columns.zig",
+  "zig/src/hip/launches/conv.zig",
+  "zig/src/hip/launches/dense.zig",
+  "zig/src/hip/launches/dense_text.zig",
+  "zig/src/hip/launches/draft.zig",
+  "zig/src/hip/launches/draw.zig",
+  "zig/src/hip/launches/elementwise.zig",
+  "zig/src/hip/launches/flashnext.zig",
+  "zig/src/hip/launches/mamba.zig",
+  "zig/src/hip/launches/matrix_item.zig",
+  "zig/src/hip/launches/mlx_entries.zig",
+  "zig/src/hip/launches/moe.zig",
+  "zig/src/hip/launches/nemotron_moe.zig",
+  "zig/src/hip/launches/norms.zig",
+  "zig/src/hip/launches/plan.zig",
+  "zig/src/hip/launches/recurrence.zig",
+  "zig/src/hip/launches/rope.zig",
+  "zig/src/hip/launches/stream_layout.zig",
+  "zig/src/hip/launches/stream_pick.zig",
+  "zig/src/hip/launches/tp.zig",
+  "zig/src/hip/launches/util.zig",
+  "zig/src/hip/launches/vision.zig",
+  "zig/src/hip/memory.zig",
+  "zig/src/hip/module.zig",
+  "zig/src/hip/moe.zig",
+  "zig/src/hip/moe_nemotron.zig",
+  "zig/src/hip/ops/attention.zig",
+  "zig/src/hip/ops/columns.zig",
+  "zig/src/hip/ops/dense_text.zig",
+  "zig/src/hip/ops/draft.zig",
+  "zig/src/hip/ops/draw.zig",
+  "zig/src/hip/ops/elementwise.zig",
+  "zig/src/hip/ops/mamba.zig",
+  "zig/src/hip/ops/moe.zig",
+  "zig/src/hip/ops/norms.zig",
+  "zig/src/hip/ops/ops.zig",
+  "zig/src/hip/ops/plan.zig",
+  "zig/src/hip/ops/project.zig",
+  "zig/src/hip/ops/recurrence.zig",
+  "zig/src/hip/ops/tp.zig",
+  "zig/src/hip/ops/types.zig",
+  "zig/src/hip/ops/vision.zig",
+  "zig/src/hip/policy.zig",
+  "zig/src/hip/raw.zig",
+  "zig/src/hip/reduce.zig",
+  "zig/src/hip/root.zig",
+  "zig/src/hip/runtime.zig",
+  "zig/src/hip/runtime_tests.zig",
+  "zig/src/hip/startup.zig",
+  "zig/src/hip/stream.zig",
+  "zig/src/hip/symbols.zig",
+  "zig/src/hip/tuning/gfx1030.zon",
+  "zig/src/hip/tuning/gfx1100.zon",
+  "zig/src/hip/tuning/gfx1151.zon",
+  "zig/src/hip/tuning/gfx1201.zon",
+  "zig/src/hip/tuning/search.zig",
+  "zig/src/hip/tuning/tuning.zig",
+  "zig/src/hip/upload.zig",
+  "zig/src/hip/vote.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+upstream  = "hip/attention_aotriton.zig follows the AOTriton 0.11.1 v1 forward ABI (MIT; LICENSES/AOTriton-MIT.txt)"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "device.facade-tensorfold/hip/-"
+api       = "hip/root.zig, runtime.zig, launch.zig, graph.zig"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[provides]]
+interface = "tune.table/hip/-"
+api       = "hip/tuning/gfx1151.zon (+ gfx1030, gfx1100, gfx1201), tuning/search.zig"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

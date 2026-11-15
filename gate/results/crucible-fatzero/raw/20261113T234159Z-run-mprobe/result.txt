@@ -1,0 +1,29 @@
+k_run job 20261113T234159Z-run-mprobe on bench box K (192.0.2.56), 2 s; files: /data/pod/kbench/runs/crucible-fatzero/20261113T234159Z-run-mprobe
+acquired bench:K owner=kbench-20261113T234159Z-run-mprobe expires=1794615479 bound=none
+code: no src/ref (scratch dir /var/tmp/kbench/crucible-fatzero/scratch)
+run: exit 0 in 0.05 s; Tctl 22->22 C peak, 7 W mean (7 peak)
+--- stdout (tail) ---
+... [605 chars cut] ...
+/device/mem_info_vram_used 991 MiB
+32505856
+               total        used        free      shared  buff/cache   available
+Mem:             124          29          95           1           1          94
+Swap:              0           0           0
+Filesystem           Size  Used Avail Use% Mounted on
+/run/initramfs/ltsp   63G  1.1G   62G   2% /
+tmpfs                 63G     0   63G   0% /dev/shm
+/run/initramfs/ltsp   63G  1.1G   62G   2% /
+/run/initramfs/ltsp   63G  1.1G   62G   2% /
+242M	/var/tmp/kbench/crucible-fatzero
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+pod       2011  0.1  0.1 31122676 153816 ?     Ssl  22:20   0:06 /opt/llama/llama-server -m /mnt/nv1/llm/qwen3.8-27b/Qwen3.8-27B-Q8_0.gguf --alias qwen38-27b -ngl 999 --host 0.0.0.0 --port 8080 -c 32768 --parallel 2 --jinja --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0
+pod       3912 12.3  0.0  41980 31084 ?        RNs  22:23   9:40 /usr/bin/python3 /usr/local/bin/pod-tempscreen-draw
+root        1005  0.0  0.0 288964 27296 ?        SLsl 22:20   0:00 /sbin/multipathd -d -s
+root        1748  0.0  0.0  29588 13528 ?        Ss   22:20   0:00 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers
+root           1  0.0  0.0  22120 10576 ?        Ss   22:20   0:01 /sbin/init
+root       53290  0.0  0.0  14780 10448 ?        Ss   23:41   0:00 sshd: pod [priv]
+polkitd     2054  0.0  0.0 383716  7952 ?        Ssl  22:20   0:00 /usr/lib/polkit-1/polkitd --no-debug
+
+--- stderr (tail) ---
+cat: /sys/module/amdgpu/parameters/gttsize: Permission denied
+

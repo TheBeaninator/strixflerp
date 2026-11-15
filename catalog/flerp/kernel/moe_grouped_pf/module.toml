@@ -1,0 +1,75 @@
+id        = "kernel.flerp.moe_grouped_pf"
+kind      = "kernel"
+summary   = "kernel.strixite.moe_grouped with a batched-load combine reduce: each thread loads 8 slots' partials before summing them in the origin's order (same fmaf chain, same bits); off unless STRIXFLERP_PF_COMBINE=1, read per call"
+notes     = "Derived from kernel.strixite.moe_grouped (strixite 20937dc, AGPL-3.0-only): kernels/moe_grouped.{hip,hpp} copied whole under flerp/moe_grouped_pf/, changes marked `kernel.flerp.moe_grouped_pf`; the .hpp is unchanged. A whole replacement bound in place of the origin's module (the generated CMake assembler has no source overlay), so it does not require the origin's module; it requires the origin's own requirements. Option 2 of the 2026-11-11 strixw prefill report (combine_reduce part). Gate: gate/qwen38-flash-next.strixite-pf2.toml."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/moe_grouped_pf/kernels/moe_grouped.hip", "flerp/moe_grouped_pf/kernels/moe_grouped.hpp"]
+authors   = ["shawnshekari", "pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc (v0.7.0-pod): kernels/moe_grouped.hip, kernels/moe_grouped.hpp, adapted here (catalog/strixite/kernel/moe_grouped holds them verbatim)"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/moe_grouped_pf/kernels/moe_grouped.hip"]
+includes  = ["src/flerp/moe_grouped_pf"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q4/bf16"
+api       = "strix::kernels::moe_group_routes, linear_q4_experts_gather_grouped, _gather_grouped_swiglu, _combine_grouped"
+numeric   = "MoeMath::F32: fp32 on the vector units, same semantics as the decode kernels, only the summation order differs; MoeMath::WmmaBf16 / WmmaF16*: matrix units with x rounded to bf16 or f16 and fp32 accumulation (lower precision, behind a switch); the three WmmaF16 kernels are bit-identical to each other"
+regime    = "prefill and MTP verify; tiles of 16 (fp32) or 64/128 (WMMA) slots; E <= 1023; WMMA needs K % 64 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q4/f32"
+api       = "strix::kernels::moe_group_routes, linear_q4_experts_gather_grouped, _gather_grouped_swiglu, _combine_grouped"
+numeric   = "MoeMath::F32: fp32 on the vector units, same semantics as the decode kernels, only the summation order differs; MoeMath::WmmaBf16 / WmmaF16*: matrix units with x rounded to bf16 or f16 and fp32 accumulation (lower precision, behind a switch); the three WmmaF16 kernels are bit-identical to each other"
+regime    = "prefill and MTP verify; tiles of 16 (fp32) or 64/128 (WMMA) slots; E <= 1023; WMMA needs K % 64 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q5/bf16"
+api       = "strix::kernels::linear_q5_experts_gather_grouped, _combine_grouped"
+numeric   = "as the Q4 grouped kernels, one kernel template"
+regime    = "K % 128 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q5/f32"
+api       = "strix::kernels::linear_q5_experts_gather_grouped, _combine_grouped"
+numeric   = "as the Q4 grouped kernels, one kernel template"
+regime    = "K % 128 == 0"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q5/-"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.qsplit"
+
+[[requires]]
+module = "kernel.strixite.wmma_gemm"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built inside recipes/qwen38-flash-next.strixite-pf.toml; its criteria are gate/qwen38-flash-next.strixite-pf2.toml"

@@ -1,0 +1,32 @@
+# MTP draft input layer mtp_fc Q8 G64 -> Q4 G64, rerun WITH A CONTROL, worker B (192.0.2.51); committed BEFORE any GPU run
+# (owner approved a short hold, ~10-15 min, hard cap 25). Tool: catalog/flerp/tool/strixw_patch (only mtp_fc differs from OLD).
+#
+# Why: the first run (gate/strixw-mtpq4-ab.toml, results mtpq4-20261112T0010Z) required identical greedy output because
+# drafts are verified. Under strixite that does not hold: logits depend on rows per forward (docs/EXECUTOR-ABI.md
+# "Forward shape"), and a draft head with different logits proposes different chains (mtp-margin 1.5 cuts the chain where
+# the draft's top-1 margin drops), so the trunk sees different forward shapes and greedy tokens can flip on near-ties.
+# The same file served twice may also differ (any run-to-run nondeterminism). So the baseline is OLD against itself.
+
+[arms]
+OLD   = "/cache/models/qwen38-fnext-tpn/weights.strixw"         # fleet file, mtp_fc q8g64
+MTPQ4 = "/cache/models/qwen38-fnext-tpn-mtpq4/weights.strixw"   # rebuilt exactly as last time; tool verification must pass
+order = ["OLD-a", "MTPQ4", "OLD-b"]   # one at a time, separate server starts; OLD-a and OLD-b use the same file
+
+[server]
+binary = "/data/models/strix-infer/runtime/bin/strix_server.v070tg"   # what B serves
+# B's live args (MTP on, mtp-draft 7, mtp-margin 1.5, mtp-vocab 65536 defaults) except --weights (arm), --port 5310,
+# --prompt-cache-dir /cache/ab-pc-<arm> (empty per arm), --logprobs on (quality requests ask top 1), --log-level debug
+# (adds each request's "mtp" rows; logging only).
+runner = "gate/results/strixw-layout/mtpq4-<UTC>/arm.sh; client gate/strixw_mtpq4_ab2.py"
+
+[measure]
+outputs = "20 prompts (the first run's 10 + chat x2, code x3, tool-call x2, long-ish x3), temperature 0, max_tokens 256; token strings + content/reasoning/tool_calls per arm"
+divergence = "first differing token position per prompt for OLD-a vs OLD-b (control), OLD-a vs MTPQ4, OLD-b vs MTPQ4"
+acceptance = "/metrics deltas strix_mtp_accepted_tokens_total / strix_mtp_drafted_tokens_total per phase and per prompt"
+drafts_per_verify = "strixite exposes no per-verify draft-count histogram (http_server.cpp:1011-1031, engine.cpp:987-998). Reported instead: strix_mtp_rejections_total{accepted=0..6+} (rollbacks by drafts accepted before the reject), rollbacks, drafted, and per request at debug level 'tokens per forward' from the journal; mean drafts per verify is not derivable exactly and is not claimed"
+decode = "timings.predicted_per_second, ~2k ctx x3 and ~30k ctx x3, max_tokens 256, unique nonce per request"
+
+[verdict]
+noise = "decode: within the min-max spread of the two OLD arms' 6 runs per size; acceptance: within the OLD-a/OLD-b difference or 0.03, whichever is larger"
+divergence_rule = "if OLD-a and OLD-b differ on any prompt: MTPQ4 vs each OLD has no more differing prompts than OLD-a vs OLD-b, and a median first-divergence position (over differing prompts) not earlier; n = 20 is small, so a difference of 1-2 prompts is stated, not over-read. If OLD-a == OLD-b on all 20: MTPQ4 must be identical too, otherwise it is reported as a real difference"
+keep = "divergence_rule AND acceptance (decode phases + quality) >= OLD within noise AND decode 2k/30k >= OLD within noise -> keep /cache/models/qwen38-fnext-tpn-mtpq4 on B; else delete only that directory"

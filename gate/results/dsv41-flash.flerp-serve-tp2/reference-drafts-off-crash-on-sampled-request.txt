@@ -1,0 +1,37 @@
+# read from F:~/tfp/run/serve128k/pair-20261111T025253Z/rank0.log (the reference deployment f64b5ff2e28b, drafts off) and its user journal, read-only
+18: "argv": [
+40:  "--no-drafts"
+
+== rank0.log lines 564-575 and the last 12
+[tensorfold] done chatcmpl-54dc4ef44b2f25e2c13ededa6c320dd4 prompt=28 cached=0 thinking=False effort=none tokens=192 sha=7cd2352febb3 finish=length rounds=191 accepted=0/0
+[tensorfold] 192.0.2.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.50 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "POST /tokenize HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "POST /tokenize HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "POST /tokenize HTTP/1.1" 200 -
+info: lanes: step 517 rank 0 prompt pass: 38 tokens, slot 0, extent at 4096, 2048 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 42377, cable1 42377, cable2 0, 
+{"prompt_logits": "request", "sha256": "f7d544b78920f1322df2533bba7fa01dcbfa6a8040d6204d8252f59642f5394c", "rows": 38}
+info: prompt cache: 38 tokens, resumed at 0, kept 0; 1 states, 6 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 5, evicted 0, refused 0, failed 0)
+{"verify": 38, "rows": 1, "ids": { 671 }, "drawn": { 10741 }}
+{"verify": 39, "rows": 1, "ids": { 10741 }, "drawn": { 538 }}
+...
+{"verify": 141, "rows": 1, "ids": { 14 }, "drawn": { 305 }}
+{"verify": 142, "rows": 1, "ids": { 305 }, "drawn": { 117515 }}
+{"verify": 143, "rows": 1, "ids": { 117515 }, "drawn": { 5772 }}
+{"verify": 144, "rows": 1, "ids": { 5772 }, "drawn": { 21 }}
+{"verify": 145, "rows": 1, "ids": { 21 }, "drawn": { 16 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 146, "rows": 1, "ids": { 16 }, "drawn": { 2619 }}
+{"verify": 147, "rows": 1, "ids": { 2619 }, "drawn": { 11628 }}
+{"verify": 148, "rows": 1, "ids": { 11628 }, "drawn": { 3100 }}
+Segmentation fault at address 0x1
+???:?:?: 0x1 in ??? (???)
+Unwind error at address `???:0x1` (unwind info unavailable), remaining frames may be incorrect
+
+== journalctl --user
+2026-11-11T02:54:52+00:00 ltsp-f systemd[2708]: tfp-rank0-pair20261111T025253Z.service: Main process exited, code=dumped, status=6/ABRT
+2026-11-11T02:54:52+00:00 ltsp-f systemd[2708]: tfp-rank0-pair20261111T025253Z.service: Failed with result 'core-dump'.
+2026-11-11T02:54:52+00:00 ltsp-f systemd[2708]: tfp-rank0-pair20261111T025253Z.service: Consumed 1min 14.639s CPU time.
+2026-11-11T02:54:53+00:00 ltsp-f systemd[2708]: tfp-lock0-pair20261111T025253Z.service: Main process exited, code=exited, status=143/n/a
+2026-11-11T02:54:53+00:00 ltsp-f systemd[2708]: tfp-lock0-pair20261111T025253Z.service: Failed with result 'exit-code'.

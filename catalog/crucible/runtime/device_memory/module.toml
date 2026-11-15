@@ -1,0 +1,44 @@
+id        = "runtime.crucible.device_memory"
+kind      = "runtime"
+summary   = "Device and host memory policy on the unified-memory APU: pinned host buffers and allocator, SVM migration rules that avoid stopping KFD queues, warm-up page touching"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/gfx1151/migration_wait.h",
+  "engine/gfx1151/pinned_allocator.h",
+  "engine/gfx1151/pinned_buffer.h",
+  "engine/gfx1151/runtime_memory_policy.h",
+  "engine/gfx1151/warmup.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/gfx1151"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "device.memory-crucible/hip/-"
+api       = "PinnedBuffer, PinnedAllocator, runtime_memory_policy.h"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[requires]]
+module    = "kernel.crucible.device_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

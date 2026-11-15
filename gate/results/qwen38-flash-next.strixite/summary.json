@@ -1,0 +1,579 @@
+{
+ "recipe": "qwen38-flash-next.strixite",
+ "host": "control-node",
+ "when_utc": "2026-11-13T00:17:52Z",
+ "stages_run": [
+  "check",
+  "origin",
+  "build",
+  "unit",
+  "gpu"
+ ],
+ "pass": true,
+ "stages": {
+  "check": {
+   "pass": true,
+   "rc": 0,
+   "summary": "flerp check (origin strixite): 107 modules, 18 recipe(s), 0 error(s), 11 warning(s)",
+   "catalogue_rc": 1,
+   "catalogue_summary": "flerp check (catalogue): 342 modules, 18 recipe(s), 7 error(s), 140 warning(s)",
+   "evidence": "check.txt, check-catalogue.txt",
+   "when_utc": "2026-11-12T22:25:00Z"
+  },
+  "origin": {
+   "pass": true,
+   "rc": 0,
+   "checkout_head": "d19945e5bf5e34366a6448eb4bd9b2aac7c381ac",
+   "origin_toml_commit": "d19945e5bf5e34366a6448eb4bd9b2aac7c381ac",
+   "checkout_dirty": false,
+   "summary": "diff-origin origin strixite vs /data/projects/strixite-d19945e: 107 module(s), 272/272 files byte-identical, 0 problem(s), 29 origin files listed as unharvested",
+   "evidence": "diff-origin.txt",
+   "when_utc": "2026-11-12T22:25:00Z"
+  },
+  "build": {
+   "tree": "build/qwen38-flash-next.strixite",
+   "evidence": "build.txt",
+   "references_origin_checkout": false,
+   "configure_s": 1.4,
+   "build_s": 116.2,
+   "binaries": {
+    "strixflerp-qwen38-flash-next.strixite": {
+     "sha256": "b8759f3a879bc9d853fb15e1eb69e25ba2c70f1a6837498420c5d4dc50bbb269",
+     "bytes": 18309304
+    },
+    "convert_qwen4exp": {
+     "sha256": "d2caecb48a35b213f57939354877d5e09816022b342f9824c8272c7629c6760e",
+     "bytes": 723216
+    },
+    "convert_ngram_table": {
+     "sha256": "d7852040ec9d30b62a3c724478bebc77c5ceb0e391aea15b63b3a274c8cea59d",
+     "bytes": 186128
+    },
+    "transcode_ngram_table": {
+     "sha256": "4f481c94a61bf783e346addc82bf6f132e9e56d4f58b6a4f275529e3f1f9a474",
+     "bytes": 133632
+    },
+    "inspect_strixw": {
+     "sha256": "535522a3715ce067e68c5f05f475e1be15ab55ae077464dfcee715c78c5d436f",
+     "bytes": 107904
+    },
+    "check_stream_calls": {
+     "sha256": "0d691ff06a68cac0992a06509e161a4ae3b27236a51db5a266d6cc2b50c93664",
+     "bytes": 488968
+    },
+    "check_logprobs": {
+     "sha256": "0f5a8fdca74712edcebaed40df84112a23ef375dc27988bc09fd79083c3fa0e3",
+     "bytes": 1340416
+    },
+    "sv9_cache_check": {
+     "sha256": "5ddbebb2c68621c4c9243ad9700df45d02d03a73bdbdf5a628765961dc3efb42",
+     "bytes": 984456
+    },
+    "cache_xfer_check": {
+     "sha256": "f1149469db56c1284b26cf62a949ed56f87c551df9367ee80242be854611f9ef",
+     "bytes": 252832
+    },
+    "strix_vision": {
+     "sha256": "104819efa93bdf343f188f35d6ea8b998d0f3546fdda356075312835d4575f05",
+     "bytes": 12001896
+    },
+    "omf_seg": {
+     "sha256": "1d6a3ecd892ca1d1d8a4f4e2fb2743380d8fd5bdf7337210a4255e7c18699da3",
+     "bytes": 15356432
+    },
+    "strix_acts": {
+     "sha256": "c5ce55d6e68c55f4922d3804e42de97ee62eb55c7501fb7692be2c167c80e227",
+     "bytes": 15302384
+    },
+    "steer_check": {
+     "sha256": "b396706b177bd3ef1bf4966712d1195da5958d31133178639aeb67a09ed27ca8",
+     "bytes": 15222408
+    },
+    "tool_grammar_check": {
+     "sha256": "8ad436886211af375300b415da774f42a74260cd934c49a6e2beba9ab8d34dff",
+     "bytes": 387112
+    }
+   },
+   "pass": true,
+   "rc": 0,
+   "when_utc": "2026-11-12T22:26:58Z"
+  },
+  "unit": {
+   "pass": true,
+   "tests": [
+    {
+     "binary": "check_stream_calls",
+     "rc": 0,
+     "seconds": 7.1,
+     "last_line": "46 fixed cases, 20000 random well-formed, 20000 random (x2 with damage), 3 feeds each: 0 failures (0 in the fixed cases)",
+     "evidence": "unit-check_stream_calls.txt"
+    },
+    {
+     "binary": "check_logprobs",
+     "rc": 0,
+     "seconds": 1.4,
+     "last_line": "check_logprobs: ok",
+     "evidence": "unit-check_logprobs.txt"
+    },
+    {
+     "binary": "cache_xfer_check",
+     "rc": 0,
+     "seconds": 12.5,
+     "last_line": "ok    a prompt longer than any entry exports the base+delta pair below its end",
+     "evidence": "unit-cache_xfer_check.txt"
+    },
+    {
+     "binary": "sv9_cache_check",
+     "rc": 0,
+     "seconds": 3.3,
+     "last_line": "SV9-CACHE-CHECK PASS",
+     "evidence": "unit-sv9_cache_check.txt"
+    },
+    {
+     "binary": "tool_grammar_check",
+     "rc": 0,
+     "seconds": 2.2,
+     "last_line": "PASS (0 failures)",
+     "evidence": "unit-tool_grammar_check.txt"
+    }
+   ],
+   "when_utc": "2026-11-13T00:03:26Z"
+  },
+  "gpu": {
+   "evidence": "identity.json",
+   "gpu_before": {
+    "gtt_used_bytes": 37322752,
+    "engine_processes": [],
+    "pod_gpu_waiters": 0
+   },
+   "holds": [
+    {
+     "for": "the origin's GPU test",
+     "from": "2026-11-13T00:03:26Z",
+     "to": "2026-11-13T00:17:47Z",
+     "seconds": 860.9,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "binaries_sha256": {
+    "reference": {
+     "path": "/data/models/strix-infer/runtime/bin/strix_server.v070tg",
+     "sha256": "b3b8b3d8e928ddd54f3f506a44a41af6356410cc3ddc2c701f47a15328282878"
+    },
+    "assembled": {
+     "path": "build/qwen38-flash-next.strixite/ninja/strixflerp-qwen38-flash-next.strixite",
+     "sha256": "b8759f3a879bc9d853fb15e1eb69e25ba2c70f1a6837498420c5d4dc50bbb269"
+    }
+   },
+   "lease": "holding control-gpu as agent",
+   "gpu_tests": [
+    {
+     "binary": "steer_check",
+     "rc": 0,
+     "seconds": 231.5,
+     "last_lines": [
+      "$ /data/projects/strixflerp/build/qwen38-flash-next.strixite/ninja/steer_check --weights /data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw --ngram /data/models/strix-infer/converted/qwen38-fnext-ngram-int8/ngram.table --tokenizer /data/models/strix-infer/tok/tokenizer.json",
+      "unsteered batch repeats bit for bit: yes",
+      "slot 0 unchanged by slot 1's steering (bit for bit): yes",
+      "slot 1 changed by its steering: max |dlogit| 33.7254 yes"
+     ],
+     "evidence": "unit-steer_check.txt"
+    }
+   ],
+   "token_identity": true,
+   "speed_within_noise": true,
+   "criterion": "token-identity",
+   "speed_is_criterion": true,
+   "adapters": [],
+   "adapter_tallies": [],
+   "swaps_ran": true,
+   "token_agreement": [
+    {
+     "mtp": true,
+     "prompt": "short-chat-thinking",
+     "repeat": 0,
+     "generated_tokens": [
+      164,
+      164
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 164
+    },
+    {
+     "mtp": true,
+     "prompt": "long-chat",
+     "repeat": 0,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": true,
+     "prompt": "raw-completion",
+     "repeat": 0,
+     "generated_tokens": [
+      256,
+      256
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 256
+    },
+    {
+     "mtp": true,
+     "prompt": "short-chat-thinking",
+     "repeat": 1,
+     "generated_tokens": [
+      164,
+      164
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 164
+    },
+    {
+     "mtp": true,
+     "prompt": "long-chat",
+     "repeat": 1,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": true,
+     "prompt": "raw-completion",
+     "repeat": 1,
+     "generated_tokens": [
+      256,
+      256
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 256
+    },
+    {
+     "mtp": true,
+     "prompt": "short-chat-thinking",
+     "repeat": 2,
+     "generated_tokens": [
+      164,
+      164
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 164
+    },
+    {
+     "mtp": true,
+     "prompt": "long-chat",
+     "repeat": 2,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": true,
+     "prompt": "raw-completion",
+     "repeat": 2,
+     "generated_tokens": [
+      256,
+      256
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 256
+    },
+    {
+     "mtp": false,
+     "prompt": "short-chat-thinking",
+     "repeat": 0,
+     "generated_tokens": [
+      150,
+      150
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 150
+    },
+    {
+     "mtp": false,
+     "prompt": "long-chat",
+     "repeat": 0,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": false,
+     "prompt": "raw-completion",
+     "repeat": 0,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": false,
+     "prompt": "short-chat-thinking",
+     "repeat": 1,
+     "generated_tokens": [
+      150,
+      150
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 150
+    },
+    {
+     "mtp": false,
+     "prompt": "long-chat",
+     "repeat": 1,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": false,
+     "prompt": "raw-completion",
+     "repeat": 1,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": false,
+     "prompt": "short-chat-thinking",
+     "repeat": 2,
+     "generated_tokens": [
+      150,
+      150
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 150
+    },
+    {
+     "mtp": false,
+     "prompt": "long-chat",
+     "repeat": 2,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    },
+    {
+     "mtp": false,
+     "prompt": "raw-completion",
+     "repeat": 2,
+     "generated_tokens": [
+      255,
+      255
+     ],
+     "first_divergence": null,
+     "tokens_agreeing": 255
+    }
+   ],
+   "pass": true,
+   "comparisons": [
+    {
+     "mtp": true,
+     "token_identity": true,
+     "speed_within_noise": true,
+     "speed": [
+      {
+       "prompt": "short-chat-thinking",
+       "decode_tps_reference": [
+        34.89214457279894,
+        53.694356198841476,
+        57.03104828951607
+       ],
+       "decode_tps_assembled": [
+        51.241754833330845,
+        54.573754049739996,
+        53.957418487110175
+       ],
+       "decode_median": [
+        53.69,
+        53.96
+       ],
+       "decode_rel_diff": 0.0049,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        25.0,
+        17.68
+       ],
+       "prefill_tps_first_run": [
+        91.0,
+        168.2
+       ]
+      },
+      {
+       "prompt": "long-chat",
+       "decode_tps_reference": [
+        66.40201567828616,
+        66.03136678520748,
+        67.48842172786381
+       ],
+       "decode_tps_assembled": [
+        67.12325226036585,
+        68.50402753491842,
+        68.48808160998779
+       ],
+       "decode_median": [
+        66.4,
+        68.49
+       ],
+       "decode_rel_diff": 0.0314,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        25.0,
+        17.68
+       ],
+       "prefill_tps_first_run": [
+        1062.8,
+        1102.2
+       ]
+      },
+      {
+       "prompt": "raw-completion",
+       "decode_tps_reference": [
+        42.604399460815365,
+        50.84251085861326,
+        50.612082770566396
+       ],
+       "decode_tps_assembled": [
+        46.04068594771864,
+        51.14365879392135,
+        51.30752109920143
+       ],
+       "decode_median": [
+        50.61,
+        51.14
+       ],
+       "decode_rel_diff": 0.0105,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        25.0,
+        17.68
+       ],
+       "prefill_tps_first_run": [
+        61.0,
+        55.3
+       ]
+      }
+     ]
+    },
+    {
+     "mtp": false,
+     "token_identity": true,
+     "speed_within_noise": true,
+     "speed": [
+      {
+       "prompt": "short-chat-thinking",
+       "decode_tps_reference": [
+        25.970771325880587,
+        33.544911931499534,
+        32.808937362733246
+       ],
+       "decode_tps_assembled": [
+        28.719236679851562,
+        32.971092085372895,
+        33.01861519184348
+       ],
+       "decode_median": [
+        32.81,
+        32.97
+       ],
+       "decode_rel_diff": 0.0049,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        18.51,
+        16.67
+       ],
+       "prefill_tps_first_run": [
+        86.4,
+        83.1
+       ]
+      },
+      {
+       "prompt": "long-chat",
+       "decode_tps_reference": [
+        31.39456649618558,
+        32.709175839454595,
+        32.86572732187862
+       ],
+       "decode_tps_assembled": [
+        31.366509083724253,
+        32.383287966412695,
+        32.53098900764911
+       ],
+       "decode_median": [
+        32.71,
+        32.38
+       ],
+       "decode_rel_diff": -0.01,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        18.51,
+        16.67
+       ],
+       "prefill_tps_first_run": [
+        1076.6,
+        1037.0
+       ]
+      },
+      {
+       "prompt": "raw-completion",
+       "decode_tps_reference": [
+        27.64492059876093,
+        32.558347768668455,
+        33.45677199313421
+       ],
+       "decode_tps_assembled": [
+        26.983086247934597,
+        33.26018781518917,
+        33.006914254884265
+       ],
+       "decode_median": [
+        32.56,
+        33.01
+       ],
+       "decode_rel_diff": 0.0138,
+       "decode_within_noise": true,
+       "host_loadavg_1m": [
+        18.51,
+        16.67
+       ],
+       "prefill_tps_first_run": [
+        126.5,
+        84.8
+       ]
+      }
+     ]
+    }
+   ],
+   "requests_compared": 18,
+   "held_seconds": 860.9,
+   "gpu_after": {
+    "gtt_used_bytes": 37322752,
+    "engine_processes": []
+   },
+   "when_utc": "2026-11-13T00:17:52Z"
+  }
+ }
+}

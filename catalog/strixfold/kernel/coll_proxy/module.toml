@@ -1,0 +1,52 @@
+id        = "kernel.strixfold.coll_proxy"
+kind      = "kernel"
+summary   = "GPU half of the slot collective: stage copies this rank block into a coherent host slab and publishes it, collect waits for the peer block"
+notes     = "Host side: runtime.strixfold.coll_tcp (tcp_proxy.zig) or runtime.strixfold.coll_rdma (rdma_proxy.zig)."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/coll.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/coll.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 2
+
+[[provides]]
+interface = "collective.device-proxy/-/-"
+api       = "tf_ds_coll_stage, tf_ds_coll_collect"
+numeric   = "exact byte moves; ready / done / consumed generation words with system-scope release / acquire, bounded waits, abort word"
+regime    = "one gather a launch pair; capturable in a HIP graph"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.coll_proxy.json"

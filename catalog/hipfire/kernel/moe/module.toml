@@ -1,0 +1,225 @@
+id        = "kernel.hipfire.moe"
+kind      = "kernel"
+summary   = "Mixture-of-experts: router softmax / top-k renorm, hash router, indexed and batched expert gate-up and down GEMV / GEMM across HFQ, MQ, MFP4 and Q8_0, scatter and combine, expert-parallel row gather (154 sources, 181 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/deepseek4_moe_topk_bias_aware.hip",
+  "kernels/src/deepseek4_moe_topk_bias_aware_batched.hip",
+  "kernels/src/ep_gather_rows_by_owner.hip",
+  "kernels/src/ep_gather_rows_by_slot_owner.hip",
+  "kernels/src/ffn_grouped_activation_pad.hip",
+  "kernels/src/ffn_moe_combine_policy.hip",
+  "kernels/src/ffn_router_renorm.hip",
+  "kernels/src/ffn_situ.hip",
+  "kernels/src/gemm_hfq4g128_moe_down_grouped_wmma.hip",
+  "kernels/src/gemm_hfq4g256_moe_grouped_mmq.gfx1151.hip",
+  "kernels/src/gemm_hfq4g256_moe_grouped_mmq_k4.gfx1151.hip",
+  "kernels/src/gemm_hfq4g256_moe_grouped_mmq_k8.gfx1151.hip",
+  "kernels/src/gemm_hfq4g256_moe_grouped_wmma_k2.hip",
+  "kernels/src/gemm_hfq6g256_moe_grouped_mmq.gfx1151.hip",
+  "kernels/src/gemm_hfq6g256_moe_grouped_wmma.gfx1151.hip",
+  "kernels/src/gemm_hfq6g256_moe_grouped_wmma_k2.hip",
+  "kernels/src/gemm_mfp4g32_e8_moe_grouped_wmma.gfx1151.hip",
+  "kernels/src/gemm_mfp4g32_e8g128_moe_grouped_wmma.gfx1151.hip",
+  "kernels/src/gemm_mixed_moe_grouped_wmma_4w_k2.hip",
+  "kernels/src/gemm_mixed_moe_grouped_wmma_k2.hip",
+  "kernels/src/gemm_mq2g256_lloyd_moe_grouped_mmq.gfx1151.hip",
+  "kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2.hip",
+  "kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_cnd.hip",
+  "kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload.hip",
+  "kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload_nosync.hip",
+  "kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_n32.hip",
+  "kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_8w_k2.hip",
+  "kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_k2.hip",
+  "kernels/src/gemm_mq3g256_lloyd_moe_grouped_mmq.gfx1151.hip",
+  "kernels/src/gemm_mq3g256_lloyd_moe_grouped_wmma_k2.hip",
+  "kernels/src/gemm_mq4g128v2_moe_grouped_top10_multirow.hip",
+  "kernels/src/gemm_mq4g128v2_moe_grouped_top10_o16_r16.gfx1151.hip",
+  "kernels/src/gemm_mq4g128v2_moe_grouped_top10_o8_r16.gfx1151.hip",
+  "kernels/src/gemm_mq4g128v2_moe_grouped_top10_o8_r16_xs.gfx1151.hip",
+  "kernels/src/gemm_mq4g128v2_moe_grouped_top10_o8_r8.gfx1151.hip",
+  "kernels/src/gemm_mq4g128v2_moe_grouped_wmma.gfx1151.hip",
+  "kernels/src/gemm_mq4g256v2_moe_grouped_top10_o2_r8.gfx1151.hip",
+  "kernels/src/gemm_mq4g256v2_moe_grouped_top10_o4_r8_pipe.gfx1151.hip",
+  "kernels/src/gemm_mq4g256v2_moe_grouped_top10_o4_r8_x4.gfx1151.hip",
+  "kernels/src/gemm_mq4g256v2_moe_grouped_top10_simt.hip",
+  "kernels/src/gemm_mq4g256v2_moe_grouped_wmma_k2.hip",
+  "kernels/src/gemm_mq6g256v2_moe_grouped_wmma_k2.hip",
+  "kernels/src/gemm_paro_q4g128_moe_grouped_mmq.gfx1151.hip",
+  "kernels/src/gemm_paro_q4g128_moe_grouped_mmq_k8.gfx1151.hip",
+  "kernels/src/gemm_paro_q4g128_moe_grouped_wmma_k2.hip",
+  "kernels/src/gemm_q8_0_moe_grouped_top10.hip",
+  "kernels/src/gemv_hfq4g128_moe_down_grouped.hip",
+  "kernels/src/gemv_hfq4g128_moe_down_residual_scaled_k8_indexed.hip",
+  "kernels/src/gemv_hfq4g256_moe_down.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_indexed.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_indexed_batched.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_indexed_batched_wave64.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_indexed_wave64.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row1_buffer.gfx1151.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_buffer.gfx1151.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row8.gfx1151.hip",
+  "kernels/src/gemv_hfq4g256_moe_down_k8_indexed_fused_acc.hip",
+  "kernels/src/gemv_hfq4g256_moe_gate_up.hip",
+  "kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip",
+  "kernels/src/gemv_hfq4g256_moe_gate_up_indexed_batched.hip",
+  "kernels/src/gemv_hfq4g256_moe_gate_up_indexed_batched_wave64.hip",
+  "kernels/src/gemv_hfq4g256_moe_gate_up_indexed_rowtile.hip",
+  "kernels/src/gemv_hfq4g256_moe_gate_up_indexed_wave64.hip",
+  "kernels/src/gemv_hfq4g256_moe_gate_up_k8_indexed.hip",
+  "kernels/src/gemv_hfq4g256_moe_gate_up_persistent_rank8.gfx1151.hip",
+  "kernels/src/gemv_hfq4g256_moe_ninepath_d3.hip",
+  "kernels/src/gemv_hfq4g256_moe_ninepath_d4.hip",
+  "kernels/src/gemv_hfq4g256_moe_projection_indexed_gfx1151.hip",
+  "kernels/src/gemv_hfq5g256_moe_down_k8_indexed_batched_expanded.hip",
+  "kernels/src/gemv_hfq5g256_moe_gate_up_indexed.hip",
+  "kernels/src/gemv_hfq5g256_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/gemv_hfq6g256_moe_down_k8_indexed_batched_expanded.hip",
+  "kernels/src/gemv_hfq6g256_moe_gate_up_indexed.hip",
+  "kernels/src/gemv_hfq6g256_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/gemv_mfp4g32_e8_moe_down_k8_indexed_batched_expanded.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8_moe_down_residual_scaled_k8_indexed_batched.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8_moe_gate_up_k8_indexed_batched.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/gemv_mfp4g32_e8g128_moe_down_k8_indexed_batched_expanded.hip",
+  "kernels/src/gemv_mfp4g32_e8g128_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/gemv_mixed_moe_down_k8_indexed_batched_expanded.hip",
+  "kernels/src/gemv_mixed_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/gemv_mq2g256_lloyd_moe_down_expanded_k4.hip",
+  "kernels/src/gemv_mq2g256_lloyd_moe_down_indexed.hip",
+  "kernels/src/gemv_mq2g256_lloyd_moe_down_indexed_batched_k4.hip",
+  "kernels/src/gemv_mq2g256_lloyd_moe_down_indexed_batched_k8all.hip",
+  "kernels/src/gemv_mq2g256_lloyd_moe_down_indexed_r4.hip",
+  "kernels/src/gemv_mq2g256_lloyd_moe_gate_up_indexed.hip",
+  "kernels/src/gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4.hip",
+  "kernels/src/gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4096_lds.hip",
+  "kernels/src/gemv_mq2g256gl_moe_down_indexed.hip",
+  "kernels/src/gemv_mq2g256gl_moe_gate_up_indexed.hip",
+  "kernels/src/gemv_mq2g256gl_moe_gate_up_sym_indexed.hip",
+  "kernels/src/gemv_mq3g256_lloyd_moe_down_indexed.hip",
+  "kernels/src/gemv_mq3g256_lloyd_moe_down_indexed_batched_k4.hip",
+  "kernels/src/gemv_mq3g256_lloyd_moe_down_indexed_r4.hip",
+  "kernels/src/gemv_mq3g256_lloyd_moe_gate_up_indexed.hip",
+  "kernels/src/gemv_mq3g256_lloyd_moe_gate_up_indexed_batched_k4.hip",
+  "kernels/src/gemv_mq3g256_lloyd_moe_ninepath_d4.hip",
+  "kernels/src/gemv_mq3g256gl_moe_down_indexed.hip",
+  "kernels/src/gemv_mq3g256gl_moe_gate_up_indexed.hip",
+  "kernels/src/gemv_mq4g128v2_moe_down_top10_indexed_batched_expanded.hip",
+  "kernels/src/gemv_mq4g128v2_moe_ninepath_d4.hip",
+  "kernels/src/gemv_mq4g256v2_moe_down_k8_indexed_batched_expanded.hip",
+  "kernels/src/gemv_mq4g256v2_moe_gate_up_k8_indexed.hip",
+  "kernels/src/gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/gemv_mq4g256v2_moe_ninepath_d4.hip",
+  "kernels/src/gemv_mq6g256v2_moe_down_k8_indexed_batched_expanded.hip",
+  "kernels/src/gemv_mq6g256v2_moe_gate_up_k8_indexed.hip",
+  "kernels/src/gemv_mq6g256v2_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/gemv_mq6g256v2_moe_ninepath_d4.hip",
+  "kernels/src/gemv_paro_q4g128_moe_down_k8_indexed_batched.hip",
+  "kernels/src/gemv_paro_q4g128_moe_gate_up_indexed.hip",
+  "kernels/src/gemv_paro_q4g128_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/gemv_q8_0_moe_down_residual_scaled_k8_indexed.hip",
+  "kernels/src/gemv_q8_0_moe_down_top10_indexed_batched_expanded.hip",
+  "kernels/src/gemv_q8_0_moe_gate_up_k8_indexed.hip",
+  "kernels/src/grouped_ops.hip",
+  "kernels/src/hash_router_normalize_f32.hip",
+  "kernels/src/hash_router_normalize_f32_batched.hip",
+  "kernels/src/hash_router_normalize_f32_buf.hip",
+  "kernels/src/moe_down_combine_grouped_k8.hip",
+  "kernels/src/moe_down_combine_grouped_top10.hip",
+  "kernels/src/moe_down_combine_k8_batched.hip",
+  "kernels/src/moe_down_combine_k8_batched_vec4.hip",
+  "kernels/src/moe_down_combine_top10_batched.hip",
+  "kernels/src/moe_down_unscatter_k8.hip",
+  "kernels/src/moe_gate_up_unscatter_k8.hip",
+  "kernels/src/moe_gate_up_unscatter_silu_top10.hip",
+  "kernels/src/moe_router_softmax_top10_f32.hip",
+  "kernels/src/moe_router_softmax_top10_f32_fast.hip",
+  "kernels/src/moe_router_softmax_top10_masked_f32.hip",
+  "kernels/src/moe_router_softmax_topk_k8_wave64.hip",
+  "kernels/src/moe_router_softmax_topk_k8_wave64_exact.hip",
+  "kernels/src/moe_scatter_fused_k8.hip",
+  "kernels/src/moe_scatter_histogram_k8.hip",
+  "kernels/src/moe_scatter_offsets_k8.hip",
+  "kernels/src/moe_scatter_permute_k8.hip",
+  "kernels/src/moe_scatter_stable_k8.hip",
+  "kernels/src/moe_softmax_topk_k8.hip",
+  "kernels/src/moe_softmax_topk_k8_batched.hip",
+  "kernels/src/moe_topk_renorm_k8.hip",
+  "kernels/src/moe_topk_renorm_k8_batched.hip",
+  "kernels/src/moe_topk_renorm_top10_batched.hip",
+  "kernels/src/moe_unscatter_silu_clamp_k8.hip",
+  "kernels/src/qwen4_gemm_mq4g256v2_moe_grouped_wmma_k2.hip",
+  "kernels/src/qwen4_gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hip",
+  "kernels/src/qwen4_moe_iu4_sym.gfx1151.hip",
+  "kernels/src/qwen4_moe_rotate128_i4.hip",
+  "kernels/src/qwen4_moe_scatter_fused_k8.hip",
+  "kernels/src/qwen4_moe_scatter_stable_top10.hip",
+  "kernels/src/qwen4_slab_tile_mask.hip",
+  "kernels/src/qwen4_slab_union_plan.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 181
+
+[[provides]]
+interface = "moe.router/-/f32.hipfire"
+api       = "moe_router_softmax*, moe_topk_renorm*, moe_softmax_topk*, hash_router_normalize*, deepseek4_moe_topk*"
+numeric   = "fp32 softmax and top-k renormalization"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[provides]]
+interface = "moe.experts-decode/hipfire-hfq+mq+mfp4/f32"
+api       = "combine, ep_gather_rows_by_owner, ep_gather_rows_by_slot_owner, gemm_hfq4g128_moe_down_grouped_wmma (+177 more units, see units.json)"
+numeric   = "fp32 activations and fp32 accumulate; weights decoded in-kernel; summation order is per kernel variant, so bits differ between variants and from other engines; indexed by expert id, k = 8 forms"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[provides]]
+interface = "moe.experts-prefill/hipfire-hfq+mq+mfp4/f32"
+api       = "gemm_*_moe_* units (grouped MMQ, WMMA)"
+numeric   = "grouped by expert, WMMA or MMQ per variant"
+regime    = "prefill batches, compute-bound (WMMA, MMQ)"
+
+[[provides]]
+interface = "moe.combine/-/f32.hipfire"
+api       = "moe_down_combine*, qwen4_moe_scatter*, ffn_moe_combine_policy"
+numeric   = "weighted sum of expert outputs in slot order"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+module    = "kernel.hipfire.tensor_ops"
+
+[[requires]]
+interface = "format.device-view/hipfire-hfq/-"
+
+[[requires]]
+interface = "format.device-view/hipfire-mq/-"
+
+[[requires]]
+interface = "format.device-view/hipfire-mfp4/-"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.moe.json"

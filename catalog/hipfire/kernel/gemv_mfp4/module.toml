@@ -1,0 +1,65 @@
+id        = "kernel.hipfire.gemv_mfp4"
+kind      = "kernel"
+summary   = "Decode GEMV on MFP4-G32 / MFP3 weights (FP4 codes with per-32 scales, E8 lattice variants), including the indexed MoE gate-up and down forms for gfx1151 (21 sources, 43 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/fused_gate_up_mfp4g32_e8.gfx1151.hip",
+  "kernels/src/fused_qkvza_mfp4g32_e8.gfx1151.hip",
+  "kernels/src/gemv_mfp3g32_e8.hip",
+  "kernels/src/gemv_mfp4g32_e8.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8.hip",
+  "kernels/src/gemv_mfp4g32_e8_ldsx.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8_residual.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_batched.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_grouped.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_grouped_batched.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_lut.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_strip.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_u4.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_u4_buffer.hip",
+  "kernels/src/gemv_mfp4g32_e8_soa_u8.hip",
+  "kernels/src/gemv_mfp4g32_e8_strip.gfx1151.hip",
+  "kernels/src/gemv_mfp4g32_e8g128.hip",
+  "kernels/src/gemv_mfp4g32_lloyd.hip",
+  "kernels/src/gemv_mfp4g32_p.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 43
+
+[[provides]]
+interface = "linear.decode/hipfire-mfp4/f32"
+api       = "fused_gate_up_mfp4g32_e8_gfx1151, fused_qkvza_mfp4g32_e8_gfx1151, gemv_mfp3g32_e8, gemv_mfp4g32_e8g128, gemv_mfp4g32_e8_gfx1151 (+38 more units, see units.json)"
+numeric   = "fp32 activations and fp32 accumulate; weights decoded in-kernel; summation order is per kernel variant, so bits differ between variants and from other engines"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+interface = "format.device-view/hipfire-mfp4/-"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemv_mfp4.json"

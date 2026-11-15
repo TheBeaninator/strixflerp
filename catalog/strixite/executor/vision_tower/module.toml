@@ -1,0 +1,62 @@
+id      = "executor.strixite.vision_tower"
+kind    = "executor"
+summary = "The 0.45B ViT and merger resident on the device from vision.strixw"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/vision_tower.cpp", "runtime/vision_tower.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/vision_tower.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.vision-tower/qwen4exp/bf16"
+api       = "strix::VisionTower"
+numeric   = "bf16 tower weights bit-exact from the checkpoint; fp32 math, one rounding where an op stores"
+regime    = "one image per forward (temporal axis 1)"
+
+[[requires]]
+interface = "format.container/strixw/-"
+
+[[requires]]
+interface = "format.device-loader/strixw/-"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+interface = "norm.rmsnorm-zc/-/bf16"
+
+[[requires]]
+interface = "norm.rmsnorm-gated/-/bf16"
+
+[[requires]]
+interface = "residual.add/-/bf16"
+
+[[requires]]
+interface = "vision.tower-ops/bf16/bf16"
+
+[[requires]]
+module = "runtime.strixite.bf16"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,90 @@
+id        = "kernel.gufo.ds4_backend"
+kind      = "kernel"
+summary   = "The DeepSeek V4 Flash ROCm backend translation unit: runtime, device helpers and the include order that makes one object of every kernel.gufo.ds4_* fragment"
+notes     = "backend.hip.cpp includes 26 detail headers in a fixed order; they share static state, so the family modules are fragments, not separately linkable units."
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/kernels/rocm/backend.h",
+  "src/models/deepseek_v4_flash/kernels/rocm/backend.hip.cpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_device.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_runtime.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/resident_api.h",
+  "src/models/deepseek_v4_flash/runtime/model.h",
+]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/models/deepseek_v4_flash/kernels/rocm/backend.hip.cpp"]
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/detail",
+  "src/src/models/deepseek_v4_flash/runtime",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = [
+  "-x",
+  "hip",
+  "-std=gnu++20",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-Wno-unused-command-line-argument",
+  "-UNDEBUG",
+  "-c",
+  "-D_GNU_SOURCE",
+  "-DDS4_ROCM_BUILD=1",
+  "-DENGINE_ENABLE_HIP=1",
+]
+
+[[provides]]
+interface = "executor.device-graph/deepseek-v4-flash/gguf"
+api       = "ds4_gpu_* C API (backend.h, resident_api.h)"
+numeric   = "single-device resident ROCm route with one authoritative state layout"
+regime    = "solo"
+
+[[requires]]
+module    = "kernel.gufo.ds4_attention"
+
+[[requires]]
+module    = "kernel.gufo.ds4_indexer"
+
+[[requires]]
+module    = "kernel.gufo.ds4_moe"
+
+[[requires]]
+module    = "kernel.gufo.ds4_hc"
+
+[[requires]]
+module    = "kernel.gufo.ds4_linear"
+
+[[requires]]
+module    = "kernel.gufo.ds4_norm_rope"
+
+[[requires]]
+module    = "kernel.gufo.ds4_dspark"
+
+[[requires]]
+module    = "kernel.gufo.ds4_mmq"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.ds4_backend.json"

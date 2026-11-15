@@ -1,0 +1,46 @@
+id      = "kernel.strixite.ple"
+kind    = "kernel"
+summary = "PLE injection: the gate over key, value and streams, then the dilated depthwise conv"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/ple.hip", "kernels/ple.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/ple.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.inject/-/bf16"
+api       = "strix::kernels::ple_gate, strix::kernels::ple_conv"
+numeric   = "fp32 math; vn and the conv state stored in the activation dtype, sigma fp32, X rounded once per element"
+regime    = "two launches; K = 4 taps, dilation 3, 9 carried state rows"
+
+[[provides]]
+interface = "ple.inject/-/f32"
+api       = "strix::kernels::ple_gate, strix::kernels::ple_conv"
+numeric   = "fp32 math; vn and the conv state stored in the activation dtype, sigma fp32, X rounded once per element"
+regime    = "two launches; K = 4 taps, dilation 3, 9 carried state rows"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

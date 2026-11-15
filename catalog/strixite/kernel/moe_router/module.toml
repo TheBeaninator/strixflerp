@@ -1,0 +1,45 @@
+id      = "kernel.strixite.moe_router"
+kind    = "kernel"
+summary = "MoE router: top-k experts per token with softmax-renormalized weights, plus the shared expert's sigmoid gate"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/moe_router.hip", "kernels/moe_router.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/moe_router.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.router/-/bf16"
+api       = "strix::kernels::moe_router, moe_shared_add, moe_shared_add_inject, check_router_error"
+numeric   = "all fp32, coefficients stored fp32 (never rounded to bf16); ties go to the lower expert index; a non-finite logit fails that token and is reported"
+regime    = "k in 1..min(E, 32), E in 1..1024"
+
+[[provides]]
+interface = "moe.router/-/f32"
+api       = "strix::kernels::moe_router, moe_shared_add, moe_shared_add_inject, check_router_error"
+numeric   = "all fp32, coefficients stored fp32 (never rounded to bf16); ties go to the lower expert index; a non-finite logit fails that token and is reported"
+regime    = "k in 1..min(E, 32), E in 1..1024"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

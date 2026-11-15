@@ -1,0 +1,47 @@
+# strixw panel encodings Q4Panel16 / Q8Panel16 (docs/STRIXW-LAYOUT-NEXT.md stages 1-2), committed BEFORE any run on
+# real data. Modules: format.flerp.q4panel, format.flerp.q8panel, format.flerp.strixw_v5, tool.flerp.convert_strixw_panel.
+# No GPU, no worker, no service. Results: gate/results/strixw-panel/.
+
+[fleet]
+old = "/data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw"  # control-node copy (gate/results/strixw-patch/README.md)
+old_bytes = 74579656704
+host_rules = "control-node, ionice -c3 nice -n 19, <= 4 CPU threads (the tool is single-threaded), wait while /proc/loadavg 1-min > 10; byte-range reads only, never a whole-file read, never an output file of the fleet model"
+
+[a_unit]  # laptop and a clean worktree of the commit
+run = "python3 -m unittest tests.test_convert_strixw_panel (builds tests/cpp/strixw_panel_selftest.cpp)"
+shapes = "every Q4/Q8 class shape of gate/results/strixw-layout/header-diff.md (exp_gu 655360x2560 G128, exp_down 1310720x640 G32, sh_gu 1280x2560 G64, sh_down 2560x640 G32, gdn_in 16480x2560 G128, gdn_out 2560x6144 G64, attn_qkv 13952x2560 G64, attn_o 2560x6144 G64, ple_kv 12800x2560 G64, lm_head 248320x2560 G64, mtp_fc 2560x2560 G64) plus the upstream exp_down G128 and sh_down G64, each at Q4 and at Q8"
+pass = [
+  "panel bytes = 8K + 64K/G (Q4) / 16K + 64K/G (Q8) and total = the row-major q + scale + min bytes, for every shape",
+  "every chunk and every (scale, min) pair at the offset the design states, computed in the test from the formula (first min(N, 20480) rows, all K)",
+  "inverse relayout byte-identical to the input planes (random bytes), and via the typed API with quantize_q4/q8 the dequantized values identical",
+  "128-byte alignment (panel bytes and the codes/s-m boundary) for every fleet class; a class where it fails is reported, not hidden",
+  "refusals: N % 16 != 0, K not a multiple of 32, K % G != 0, unsupported G, per-expert rows % 16 != 0",
+  "converter on a synthetic v4 file written by strixite's own writer: v5 output, copied components byte-identical to OLD, converted tensors equal to the layout rebuilt in Python from OLD's planes, metadata identical except layout (p16 suffix on exactly the converted classes), --plan size equal to the written file, refusals (hc_up, embed, unknown or repeated class, v5 input, N % 16, existing --out, corrupt OLD) leave no output",
+]
+
+[b_real_tensors]  # control-node, read-only: convert_strixw_panel --old <fleet> --check-tensors <list>
+tensors = [
+  "model.language_model.layers.0.mlp.experts_gate_up",
+  "model.language_model.layers.0.mlp.experts_down",
+  "model.language_model.layers.0.mlp.shared_expert.gate_up",
+  "model.language_model.layers.0.mlp.shared_expert.down_proj.weight",
+  "model.language_model.layers.0.linear_attn.in_proj",
+  "model.language_model.layers.0.linear_attn.out_proj.weight",
+  "model.language_model.layers.3.self_attn.qkv",
+  "model.language_model.layers.3.self_attn.o_proj.weight",
+  "<the one ple.kv_proj tensor, name from the index>",
+  "lm_head.weight",
+  "mtp.fc_hidden.weight",
+  "mtp.layers.0.mlp.experts_down",
+]
+pass = "every component read hashes to OLD's index value; every tensor: offsets as designed, panel total = q+s+m bytes, inverse byte-identical (RESULT: every tensor round-trips byte-identical)"
+
+[c_plan]  # control-node: convert_strixw_panel --old <fleet> --plan --scratch <dir on control-node>  (header + index only)
+pass = [
+  "every default class (exp_gu exp_down sh_gu sh_down gdn_in gdn_out attn_qkv attn_o ple_kv lm_head mtp_fc) has its tensors converted (header-diff.md counts: 49 49 49 49 36 36 13 13 1 1 2) and every class reports 128-aligned",
+  "hc_up, hc_down, embed, router and the F32/I64 tensors copied",
+  "new_bytes = old_bytes, or the exact difference stated and explained by component alignment (one 4096-aligned component per converted tensor instead of three 256-aligned ones)",
+]
+
+[production]  # not run by this gate: the owner schedules it on a worker's local NVMe
+note = "the exact command, disk and time estimate go in gate/results/strixw-panel/README.md"

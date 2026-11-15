@@ -1,0 +1,75 @@
+id        = "serve.crucible.openai"
+kind      = "serve"
+summary   = "Python OpenAI- and Anthropic-compatible HTTP frontend over the engine process: chat template, tool calls, thinking budget, batch scheduler, vision requests, metrics"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "server/README.md",
+  "server/__init__.py",
+  "server/__main__.py",
+  "server/ablation.py",
+  "server/anthropic.py",
+  "server/api.py",
+  "server/api_key.py",
+  "server/backend.py",
+  "server/batch_backend.py",
+  "server/batch_scheduler.py",
+  "server/content_tokens.py",
+  "server/draft_capture.py",
+  "server/draft_stats.py",
+  "server/engine_messages.py",
+  "server/hosts.py",
+  "server/http.py",
+  "server/json_values.py",
+  "server/leak_canary.py",
+  "server/metrics.py",
+  "server/pixel_files.py",
+  "server/request_id.py",
+  "server/response.py",
+  "server/rope.py",
+  "server/schema_limits.py",
+  "server/sd_notify.py",
+  "server/stop_sequences.py",
+  "server/template.py",
+  "server/think_budget.py",
+  "server/thinking.py",
+  "server/tokenization.py",
+  "server/tool_output.py",
+  "server/tool_requests.py",
+  "server/tool_schema.py",
+  "server/tool_stream.py",
+  "server/update_check.py",
+  "server/version.py",
+  "server/vision.py",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.http-crucible/openai+anthropic/-"
+api       = "python -m server (server/__main__.py, api.py, http.py)"
+numeric   = "n/a"
+regime    = "serving"
+
+[[requires]]
+interface = "serve.engine-crucible/-/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

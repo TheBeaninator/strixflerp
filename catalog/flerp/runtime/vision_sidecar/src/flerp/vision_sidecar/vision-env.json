@@ -1,0 +1,24 @@
+{
+  "schema": "flerp-vision-env/1",
+  "about": "Interpreter and package sets the DeepSeek-V4.1 CPU vision worker may run on (runtime.flerp.vision_sidecar). tools/dsv41-hip/verify_vision.py admits status pass and origin-pin; a candidate only with --allow-candidate. A record becomes pass only with the result of gate/vision_dsv41_cpu.py for it; scope says what that result covers.",
+  "environments": {
+    "origin": {
+      "python": null,
+      "torch": "2.9.0+cpu",
+      "numpy": "2.3.5",
+      "pillow": "12.3.0",
+      "status": "origin-pin",
+      "evidence": null,
+      "scope": "the pull request's pin (strixfold_pr6 766df75: vision_cpu.py:158, verify_vision.py:31-34; its lock file is for CPython 3.13). Never run here: no torch-2.9.0+cpu wheel is on the ark."
+    },
+    "py312-torch2110": {
+      "python": "3.12",
+      "torch": "2.11.0+cpu",
+      "numpy": "2.3.5",
+      "pillow": "12.3.0",
+      "status": "pass",
+      "evidence": "gate/results/vision-dsv41-cpu312/summary.md",
+      "scope": "control-node (AMD Ryzen AI MAX+ 395), 1 and 8 threads, 11 images of 4 to 1,024 rows, 2026-11-11: every BF16 row bit-identical to DeepSeek's inference/vision.py (1bae0e10) run in BF16 on the same torch; the FP32 arithmetic identical to the reference's; the same bytes run to run. Passed under criterion 3a as restated by the owner on 2026-11-11 (bit equality with the reference's BF16 rows); under 3a as first committed (a bound against FP32) the same run failed, because the tower's own BF16 evaluation has outlier rows. Not measured on another CPU or torch build. CPython 3.13 with the same torch gave the same row bytes on the 11 images, but the refusals and the admission were not run under it, so it has no record here."
+    }
+  }
+}

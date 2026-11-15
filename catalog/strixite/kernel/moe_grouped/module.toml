@@ -1,0 +1,73 @@
+id      = "kernel.strixite.moe_grouped"
+kind    = "kernel"
+summary = "MoE experts for multi-token forwards: slots grouped by expert so each expert's weights are read once per tile"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/moe_grouped.hip", "kernels/moe_grouped.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/moe_grouped.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q4/bf16"
+api       = "strix::kernels::moe_group_routes, linear_q4_experts_gather_grouped, _gather_grouped_swiglu, _combine_grouped"
+numeric   = "MoeMath::F32: fp32 on the vector units, same semantics as the decode kernels, only the summation order differs; MoeMath::WmmaBf16 / WmmaF16*: matrix units with x rounded to bf16 or f16 and fp32 accumulation (lower precision, behind a switch); the three WmmaF16 kernels are bit-identical to each other"
+regime    = "prefill and MTP verify; tiles of 16 (fp32) or 64/128 (WMMA) slots; E <= 1023; WMMA needs K % 64 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q4/f32"
+api       = "strix::kernels::moe_group_routes, linear_q4_experts_gather_grouped, _gather_grouped_swiglu, _combine_grouped"
+numeric   = "MoeMath::F32: fp32 on the vector units, same semantics as the decode kernels, only the summation order differs; MoeMath::WmmaBf16 / WmmaF16*: matrix units with x rounded to bf16 or f16 and fp32 accumulation (lower precision, behind a switch); the three WmmaF16 kernels are bit-identical to each other"
+regime    = "prefill and MTP verify; tiles of 16 (fp32) or 64/128 (WMMA) slots; E <= 1023; WMMA needs K % 64 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q5/bf16"
+api       = "strix::kernels::linear_q5_experts_gather_grouped, _combine_grouped"
+numeric   = "as the Q4 grouped kernels, one kernel template"
+regime    = "K % 128 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q5/f32"
+api       = "strix::kernels::linear_q5_experts_gather_grouped, _combine_grouped"
+numeric   = "as the Q4 grouped kernels, one kernel template"
+regime    = "K % 128 == 0"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q5/-"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.qsplit"
+
+[[requires]]
+module = "kernel.strixite.wmma_gemm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

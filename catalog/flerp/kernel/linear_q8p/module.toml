@@ -1,0 +1,70 @@
+id        = "kernel.flerp.linear_q8p"
+kind      = "kernel"
+summary   = "Adapter (Q8Panel16): strixite's Q8 decode GEMV on panel tensors, bit-equal to linear_q8 on the same dequantized weights; a row-major view is handed back to strixite's kernel"
+notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 3. The GEMV template is kernel.flerp.linear_q4p's kernels/panel_gemv.hpp at 16 codes a chunk with linear_q8.hip's split-K rule. Gate: gate/strixw-panel-kernels.toml."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/linear_q8p/kernels/linear_q8p.hip", "flerp/linear_q8p/kernels/linear_q8p.hpp"]
+authors   = ["pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc (v0.7.0-pod): kernels/linear_q8.hip (math, split-K rule; catalog/strixite/kernel/linear_q8 holds it verbatim)"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/linear_q8p/kernels/linear_q8p.hip"]
+includes  = ["src/flerp/linear_q8p"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[adapter]
+for       = "kernel.strixite.linear_q8"
+symbols   = ["linear_q8"]
+
+[[provides]]
+interface = "linear.decode/strixw-q8/bf16"
+api       = "strix::kernels::linear_q8 (a panel-tagged view: linear_q8p; otherwise strixite's, renamed linear_q8_flerp_origin), strix::kernels::linear_q8p"
+numeric   = "linear_q8's bits: each origin lane's chunks in its order through its expressions, its butterfly and split-K sum"
+regime    = "decode, M 1..8 (16 per pass above); panels: K % 32 == 0, wave32"
+
+[[provides]]
+interface = "linear.decode/strixw-q8p16/bf16"
+api       = "strix::kernels::linear_q8p (kernels/linear_q8p.hpp)"
+numeric   = "as linear.decode/strixw-q8/bf16"
+regime    = "Q8Panel16 views only"
+
+[[requires]]
+module    = "kernel.strixite.linear_q8"
+
+[[requires]]
+module    = "kernel.flerp.linear_q4p"
+
+[[requires]]
+module    = "format.flerp.panel_device"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module    = "kernel.strixite.device_info"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "kernel.strixite.norm"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/strixw-panel-kernels.toml"
+bench     = "flerp:gate/strixw-panel-kernels.toml"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built inside recipes/qwen38-flash-next.strixite-p16.toml; kernel gate gate/strixw-panel-kernels.toml (results gate/results/strixw-panel-kernels)"

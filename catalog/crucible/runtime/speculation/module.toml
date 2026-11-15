@@ -1,0 +1,70 @@
+id        = "runtime.crucible.speculation"
+kind      = "runtime"
+summary   = "MTP speculative decoding: draft head policy, low-bit (q4/q2) and dense fp16 draft heads, acceptance prior from the MTP top-2 margin, value-aware draft length, draft vocabulary, verify spans"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/runtime/draft_accept.h",
+  "engine/runtime/draft_adapt.h",
+  "engine/runtime/draft_dense.h",
+  "engine/runtime/draft_head_policy.h",
+  "engine/runtime/draft_ops.h",
+  "engine/runtime/draft_overlap.h",
+  "engine/runtime/draft_policy.h",
+  "engine/runtime/draft_quant.h",
+  "engine/runtime/draft_quant_host.h",
+  "engine/runtime/draft_stop.h",
+  "engine/runtime/draft_value.h",
+  "engine/runtime/draft_vocab.h",
+  "engine/runtime/draft_warmup.h",
+  "engine/runtime/mtp_bulk.h",
+  "engine/runtime/spec_span.h",
+  "engine/runtime/spec_steps.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/runtime"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "speculation.draft/mtp/f32.crucible"
+api       = "draft_ops.h, draft_quant.h (DraftQGemvKernel), draft_dense.h, draft_policy.h, draft_value.h"
+numeric   = "drafts only; verification commits the target tokens (lossless)"
+regime    = "decode and MTP verify, 1..8 rows (R), memory-bound"
+
+[[provides]]
+interface = "speculation.window-verify-lossless-crucible/-/-"
+api       = "draft_accept.h, spec_span.h"
+numeric   = "exact"
+regime    = "decode and MTP verify, 1..8 rows (R), memory-bound"
+
+[[requires]]
+module    = "executor.crucible.flashnext"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[[requires]]
+module    = "kernel.crucible.device_common"
+
+[[requires]]
+module    = "kernel.crucible.exl3_gemv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

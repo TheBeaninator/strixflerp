@@ -1,0 +1,35 @@
+id      = "kernel.strixite.device_info"
+kind    = "kernel"
+summary = "Wavefront size of the current device, queried once, for sizing launch grids"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/device_info.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "device.info/-/-"
+api       = "strix::kernels::device_warp_size"
+numeric   = "n/a"
+regime    = "host, cached"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

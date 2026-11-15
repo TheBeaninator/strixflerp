@@ -1,0 +1,52 @@
+id        = "kernel.flerp.residual_add_gufo"
+kind      = "kernel"
+summary   = "Adapter: strixite's residual_add on gufo's LaunchResidualAdd (fp32, in place through out == a); BF16 stays with strixite"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp_adapters/residual_add_gufo.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp_adapters/residual_add_gufo.cpp"]
+includes  = []
+uses      = ["hip-runtime"]
+defines   = ["ENGINE_ENABLE_HIP=1"]
+
+[adapter]
+for       = "kernel.strixite.residual"
+symbols   = ["residual_add"]
+
+[[provides]]
+interface = "residual.add/-/f32"
+api       = "strix::kernels::residual_add (fp32 calls launch gufo::hip::LaunchResidualAdd)"
+numeric   = "one IEEE fp32 add per element: bit-identical to kernel.strixite.residual"
+regime    = "element-wise; one launch, grid n / 256"
+
+[[provides]]
+interface = "residual.add/-/bf16"
+api       = "strix::kernels::residual_add (bf16 calls go to strixite's kernel, renamed residual_add_flerp_origin)"
+numeric   = "strixite's own kernel: fp32 add, one rounding to bf16"
+regime    = "element-wise"
+
+[[requires]]
+module    = "kernel.strixite.residual"
+
+[[requires]]
+module    = "kernel.gufo.qwen_norm_rope"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/interface/residual-add.toml"
+bench     = "flerp:gate/interface/residual-add.toml"
+status    = "benched"
+evidence  = "gate/results/interface/residual-add/result.json"

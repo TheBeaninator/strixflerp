@@ -1,0 +1,57 @@
+id      = "kernel.strixite.attention"
+kind    = "kernel"
+summary = "Causal softmax attention with GQA, the sigmoid output gate, fused q/k norm + RoPE jobs, the QSA-gathered variant, WMMA prefill variants and 8-bit K/V readers"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/attention.hip", "kernels/attention.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/attention.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.softmax-gqa/-/bf16"
+api       = "strix::kernels::qk_norm_rope, qk_norm_rope_jobs, attention, attention_gathered, attention_wmma, attention_gathered_wmma"
+numeric   = "inputs in the activation dtype, scores, online softmax and P*V in fp32, one rounding at the output; the _wmma variants run the score and P*V products on the matrix units (lower precision, behind a switch)"
+regime    = "decode-oriented; K/V cache [capacity, Hk, D] in the activation dtype or the kv8 8-bit format"
+
+[[provides]]
+interface = "attn.softmax-gqa/-/f32"
+api       = "strix::kernels::qk_norm_rope, qk_norm_rope_jobs, attention, attention_gathered, attention_wmma, attention_gathered_wmma"
+numeric   = "inputs in the activation dtype, scores, online softmax and P*V in fp32, one rounding at the output; the _wmma variants run the score and P*V products on the matrix units (lower precision, behind a switch)"
+regime    = "decode-oriented; K/V cache [capacity, Hk, D] in the activation dtype or the kv8 8-bit format"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.kv8"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.rope"
+
+[[requires]]
+module = "kernel.strixite.rope_math"
+
+[[requires]]
+module = "kernel.strixite.wmma"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

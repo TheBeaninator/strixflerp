@@ -1,0 +1,58 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_logits_topk",
+   "modules": [
+    "runtime.strixite.check",
+    "kernel.strixite.hip_common",
+    "kernel.strixite.logits_topk",
+    "tool.flerp.gate_logits_topk"
+   ]
+  }
+ },
+ "bindings": {
+  "logits.topk/-/-": "kernel.strixite.logits_topk"
+ },
+ "code_objects": [],
+ "contract_changes": [],
+ "foreign": {},
+ "include_only": [],
+ "modules": {
+  "kernel.strixite.hip_common": {
+   "dir": "catalog/strixite/kernel/hip_common",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.logits_topk": {
+   "dir": "catalog/strixite/kernel/logits_topk",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/logits_topk.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "runtime.strixite.check": {
+   "dir": "catalog/strixite/runtime/check",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "tool.flerp.gate_logits_topk": {
+   "dir": "gate/interface/drivers/logits_topk",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-logits-topk.strixite",
+ "renames": {},
+ "toolchain": "therock-10.1"
+}

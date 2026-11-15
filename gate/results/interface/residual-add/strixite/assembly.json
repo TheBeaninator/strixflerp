@@ -1,0 +1,76 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_residual_add",
+   "modules": [
+    "runtime.strixite.check",
+    "kernel.strixite.hip_common",
+    "kernel.strixite.device_info",
+    "kernel.strixite.norm",
+    "kernel.strixite.residual",
+    "tool.flerp.gate_residual_add"
+   ]
+  }
+ },
+ "bindings": {
+  "residual.add/-/f32": "kernel.strixite.residual"
+ },
+ "code_objects": [],
+ "contract_changes": [],
+ "foreign": {},
+ "include_only": [],
+ "modules": {
+  "kernel.strixite.device_info": {
+   "dir": "catalog/strixite/kernel/device_info",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.hip_common": {
+   "dir": "catalog/strixite/kernel/hip_common",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.norm": {
+   "dir": "catalog/strixite/kernel/norm",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/norm.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.residual": {
+   "dir": "catalog/strixite/kernel/residual",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/residual.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "runtime.strixite.check": {
+   "dir": "catalog/strixite/runtime/check",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "tool.flerp.gate_residual_add": {
+   "dir": "gate/interface/drivers/residual_add",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-residual-add.strixite",
+ "renames": {},
+ "toolchain": "therock-10.1"
+}

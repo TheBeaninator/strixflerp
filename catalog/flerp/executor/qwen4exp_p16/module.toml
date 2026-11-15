@@ -1,0 +1,44 @@
+id        = "executor.flerp.qwen4exp_p16"
+kind      = "executor"
+summary   = "executor.strixite.qwen4exp with an LM head in Q8Panel16 / Q4Panel16: the MTP draft-head copy reads the head's panels back and turns them row-major on the host before requantizing; every other weight use already goes through the kernels' adapters"
+notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 5. Derived from executor.strixite.qwen4exp (strixite 20937dc): runtime/qwen4exp.cpp copied under flerp/qwen4exp_p16/, changes marked `executor.flerp.qwen4exp_p16` (make_draft_head_q4 only: the only place the executor reads a projection's planes itself). Compiled in executor.strixite.qwen4exp's target through the recipe's [overlay] (recipes/qwen38-flash-next.strixite-p16.toml), so the server, backend and tools that require the origin link this file and nothing else changes."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/qwen4exp_p16/runtime/qwen4exp.cpp"]
+authors   = ["shawnshekari", "pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc (v0.7.0-pod): runtime/qwen4exp.cpp, adapted here (catalog/strixite/executor/qwen4exp holds it verbatim)"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/qwen4exp_p16/runtime/qwen4exp.cpp"]
+includes  = ["src/flerp/qwen4exp_p16"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.overlay/qwen4exp-panel/-"
+api       = "Qwen4ExpModel::make_draft_head_q4 accepting a panel LM head (in executor.strixite.qwen4exp's target, recipe [overlay])"
+numeric   = "the origin's: the requantized draft head is built from the same Q8 values"
+regime    = "host; the head's panel bytes for the draft rows are read back once"
+
+[[requires]]
+module    = "executor.strixite.qwen4exp"
+
+[[requires]]
+module    = "format.flerp.q8panel"
+
+[[requires]]
+module    = "format.flerp.panel_device"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "compiled as an overlay inside recipes/qwen38-flash-next.strixite-p16.toml; whole-model gate: the token-identity plan of gate/strixw-panel-kernels.toml"

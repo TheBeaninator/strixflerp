@@ -1,0 +1,43 @@
+id        = "kernel.flerp.moe_sg"
+kind      = "kernel"
+summary   = "Stream-grid decode experts for one token: the routed and shared gate/up (SwiGLU) and down projections of a qwen35moe block in one persistent launch, 8-wave blocks claiming 16-row x whole-K units from a global counter, shared expert first, down units waiting on per-job counters; row-major GGUF Q4_K / Q6_K read in place, bit-identical to four IndexedExperts launches"
+notes     = "ORNITH-CRUCIBLE item 1 (gate/ornith-crucible.toml). Recipe of Crucible's kernel.crucible.moe_decode (catalog/crucible/kernel/moe_decode: engine/layers/moe_sg.h, moe_shared_first.h) re-expressed for GGUF K-quants; the row arithmetic is kernel.flerp.moe_kquant's wide reader (RowDotWide), copied with the same lane order. Compiled shapes: hidden/ff 4096/1024 (Ornith-1.5 397B) and 2048/512 (Qwen3.6-35B-A3B). Not yet called by executor.flerp.qwen35moe."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/moe_sg/moe_sg.hip", "flerp/moe_sg/moe_sg.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/moe_sg/moe_sg.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+uses      = ["hip-runtime"]
+defines   = ["ENGINE_ENABLE_HIP=1"]
+
+[[provides]]
+interface = "moe.experts-decode/gguf-kquant/f32.stream-grid"
+api       = "flerp::moe_sg::Experts, Supported, CtlBytes, Grid (flerp/moe_sg/moe_sg.hpp)"
+numeric   = "moe_kquant RowDotWide per output row (lane L owns sub-blocks L, L+32, ..., fp32), SwiGLU (a / (1 + expf(-a))) * b; bit-identical to IndexedExperts' Q4_K / Q6_K wide route"
+regime    = "one token (decode); Q4_K / Q6_K stacks, 16-byte aligned; shared_ff == ff; control words zeroed once, left zeroed by every launch"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "flerp:gate/ornith-crucible.toml"
+bench     = "flerp:gate/ornith-crucible.toml"
+status    = "harvested"
+compile   = "n/a"
+reason    = "kernel gate gate/ornith-crucible.toml (results gate/results/ornith-crucible)"

@@ -1,0 +1,35 @@
+id      = "runtime.strixite.device_buffer"
+kind    = "runtime"
+summary = "Owning, named, move-only device and pinned-host allocations with checked copies"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/device_buffer.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "device.buffer/-/-"
+api       = "strix::DeviceBuffer, strix::PinnedHostBuffer, strix::GpuMemoryTally"
+numeric   = "n/a"
+regime    = "header only; hipMalloc comes out of GTT on gfx1151"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

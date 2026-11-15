@@ -1,0 +1,74 @@
+id        = "kernel.flerp.linear_q4p"
+kind      = "kernel"
+summary   = "Adapter (Q4Panel16): strixite's Q4 decode GEMV and expert gather / gather+SwiGLU / combine on panel tensors, bit-equal to linear_q4 on the same dequantized weights; a row-major view is handed back to strixite's kernel"
+design    = "DESIGN.md"
+notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 3. New code over linear_q4.hip's math (strixite 20937dc): kernels/panel_gemv.hpp replays each origin lane's chunk sequence and the butterfly on whole 16-row panels, the steps split over up to 16 waves (decode2 wave map, a load reads one 512-byte run); kernels/linear_q4p.hip holds the expert kernels and the adapter entry points. Dispatch by the panel tag of runtime/panel_device.hpp (format.flerp.panel_device). Gate: gate/strixw-panel-kernels.toml; decode speed gate/strixw-panel-decode2.toml."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/linear_q4p/kernels/linear_q4p.hip", "flerp/linear_q4p/kernels/linear_q4p.hpp", "flerp/linear_q4p/kernels/panel_gemv.hpp"]
+authors   = ["pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc (v0.7.0-pod): kernels/linear_q4.hip, kernels/linear_q8.hip (the per-chunk math, split-K and reduction replayed; catalog/strixite/kernel/linear_q4, linear_q8 hold them verbatim)"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/linear_q4p/kernels/linear_q4p.hip"]
+includes  = ["src/flerp/linear_q4p"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[adapter]
+for       = "kernel.strixite.linear_q4"
+symbols   = ["linear_q4", "linear_q4_experts_gather", "linear_q4_experts_gather_swiglu", "linear_q4_experts_combine"]
+
+[[provides]]
+interface = "linear.decode/strixw-q4/bf16"
+api       = "strix::kernels::linear_q4 (a panel-tagged view: linear_q4p; otherwise strixite's, renamed linear_q4_flerp_origin), strix::kernels::linear_q4p"
+numeric   = "linear_q4's bits: each origin lane's chunks in its order through its expressions, its butterfly and split-K sum"
+regime    = "decode, M 1..8 (16 per pass above); panels: N per 8-row group, K % 32 == 0, wave32"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q4/bf16"
+api       = "strix::kernels::linear_q4_experts_gather, _gather_swiglu, _combine (panel-tagged: linear_q4p_experts_*), check_expert_error stays strixite's"
+numeric   = "linear_q4's bits, its error word and NaN rule for a bad id"
+regime    = "experts stacked [E*N, K], N per expert % 16 == 0"
+
+[[provides]]
+interface = "linear.decode/strixw-q4p16/bf16"
+api       = "strix::kernels::linear_q4p, linear_q4p_experts_gather, _gather_swiglu, _combine (kernels/linear_q4p.hpp)"
+numeric   = "as linear.decode/strixw-q4/bf16"
+regime    = "Q4Panel16 views only"
+
+[[requires]]
+module    = "kernel.strixite.linear_q4"
+
+[[requires]]
+module    = "format.flerp.panel_device"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+module    = "kernel.strixite.device_info"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "kernel.strixite.norm"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/strixw-panel-kernels.toml"
+bench     = "flerp:gate/strixw-panel-kernels.toml"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built inside recipes/qwen38-flash-next.strixite-p16.toml; kernel gate gate/strixw-panel-kernels.toml (results gate/results/strixw-panel-kernels)"

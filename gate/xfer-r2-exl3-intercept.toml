@@ -1,0 +1,21 @@
+# SHAPE-TRANSFERS R2 (shortlist #2): StrixFold's EXL3 prefill experts pass, per-job fixed cost. First experiment.
+# Committed BEFORE any GPU run. Driver: gate/exl3_pf_bytes.py (unchanged), kit = build/dsv41-flash.strixfold-tp2's
+# deployed hsaco (arm a) and build/exl3-pf-bytes/kit-nodecode (arm b), under rocprofv3 --kernel-trace.
+
+[runs]
+rows    = [128, 256, 512, 1024, 2048]
+k2      = [6, 4]
+arms    = ["a", "b"]
+repeats = 3
+routing = "uniform (gate/prefill_dsv41_bench.py routing): 6 routed of 384 + the shared expert a row; nm 64 below 48*E slot rows, else 128"
+
+[measure]
+trace    = "rocprofv3 --kernel-trace: per-dispatch start/end of pf_experts_gu*/down* kernels; launches a pass counted"
+jobs     = "jobs = sum over experts ceil(count / nm) (the driver's own count); grid = mj * (EI/128) or mj * (D/256) blocks, mj = slots/nm + E"
+fit      = "per phase: kernel us = c0 + c_job * jobs + c_row * rows by least squares over the 5 sizes (both k2 separately); fixed cost a job = c_job (and intercept / jobs at 512 and 1,024 rows, the doc's definition)"
+
+[compare]
+strixite = "catalog/strixite/kernel/moe_grouped: one launch over (expert, slot-tile) work items, tile class by slots (Narrow 64-slot / Wide 128 / Wide256), codes staged packed in LDS; StrixFold already launches one kernel a phase with one block per (job, column tile), so the comparison is per-job setup and tile fill, not launch count"
+
+[continue]
+threshold = "per-job fixed cost >= 15 us (doc section 4 item 2) AND it is setup/occupancy a persistent schedule or narrower tile class removes (not bytes: compare with arm b and the bytes floor of gate/exl3-pf-bytes.toml)"

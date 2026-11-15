@@ -1,0 +1,60 @@
+[     0.0s] ━━━ strix-infer converter · Qwen3.8-Flash-Next (qwen4exp) -> strixw v5 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[     0.0s] layout: exp_gu=q4g128p16,exp_down=q4g32p16,sh_gu=q8g64p16,sh_down=q8g32p16,gdn_in=q4g128p16,gdn_out=q8g64p16,attn_qkv=q8g64p16,attn_o=q8g64p16,hc_down=q8g64,hc_up=q8g64,ple_kv=q8g64p16,lm_head=q8g64p16,mtp_fc=q8g64p16,embed=bf16
+[     0.0s] converter git x, 4 threads
+[     0.0s] reading the checkpoint's headers from /mnt/ark/models/Qwen__Qwen3.8-Flash-Next/raw ...
+[     0.1s]   131 shards, 335.28 GiB of tensor data, fingerprint d1121c2771a0beb1
+
+[     0.1s] ━━━ plan ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[     0.1s] 853 output tensors from 239.07 GiB of source -> 69.46 GiB (29.1% of the source size)
+[     0.1s]   bf16        50 tensors      1.30 GiB
+[     0.1s]   f32        302 tensors       9.9 MiB
+[     0.1s]   i64          3 tensors         280 B
+[     0.1s]   q4         298 tensors     67.49 GiB
+[     0.1s]   q4-chunk   100 tensors     332.0 MiB
+[     0.1s]   q4-fold    100 tensors     336.1 MiB
+[     0.1s]   skipped in total: 96.20 GiB (not in this file)
+[     0.1s]   skipped  128 source tensors (95.37 GiB): n-gram table: its own file (convert_ngram_table)
+[     0.1s]   skipped  333 source tensors (856.3 MiB): vision tower: not loaded (text only)
+[     0.1s] check against /data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw (layout exp_gu=q4g128,exp_down=q4g32,sh_gu=q8g64,sh_down=q8g32,gdn_in=q4g128,gdn_out=q8g64,attn_qkv=q8g64,attn_o=q8g64,hc_down=q8g64,hc_up=q8g64,ple_kv=q8g64,lm_head=q8g64,mtp_fc=q8g64,embed=bf16, source_fingerprint d1121c2771a0beb1; ours d1121c2771a0beb1)
+[    25.4s] OK   model.language_model.embed_tokens.weight                     bf16         [248320 x 2560]    1271398400 B  components = REF's: IDENTICAL  25.3s
+[    41.3s] OK   lm_head.weight                                               q8p16        [248320 x 2560]     675430400 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  15.6s
+[    42.4s] OK   model.language_model.layers.0.linear_attn.in_proj            q4p16        [16480 x 2560]       22412800 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  1.0s
+[    79.8s] OK   model.language_model.layers.0.mlp.experts_gate_up            q4p16        [655360 x 2560]     891289600 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  37.3s
+[    80.4s] OK   model.language_model.layers.0.mlp.shared_expert.gate_up      q8p16        [1280 x 2560]         3481600 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  0.6s
+[   112.0s] OK   model.language_model.layers.0.mlp.experts_down               q4p16        [1310720 x 640]     524288000 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  31.6s
+[   112.3s] OK   model.language_model.layers.0.mlp.shared_expert.down_proj.weight q8p16        [2560 x 640]          1843200 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  0.2s
+[   112.3s] OK   model.language_model.layers.0.mlp.router                     bf16         [513 x 2560]          2626560 B  components = REF's: IDENTICAL  0.0s
+[   113.5s] OK   model.language_model.layers.0.linear_attn.out_proj.weight    q8p16        [2560 x 6144]        16711680 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  1.3s
+[   113.6s] OK   model.language_model.layers.0.linear_attn.A_log              f32          [48]                      192 B  components = REF's: IDENTICAL  0.0s
+[   114.0s] OK   model.language_model.layers.0.attn_hyper_connection.mix_down q8-fold      [324 x 10240]         3525120 B  components = REF's: IDENTICAL  0.4s
+[   114.4s] OK   model.language_model.layers.0.attn_hyper_connection.mix_up   q8-chunk     [10240 x 320]         3481600 B  components = REF's: IDENTICAL  0.5s
+[   116.8s] OK   model.language_model.layers.1.ple.kv_proj                    q8p16        [12800 x 2560]       34816000 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  2.3s
+[   116.8s] OK   model.language_model.layers.1.ple.ple_embedding.layer_multipliers i64          [3]                        24 B  components = REF's: IDENTICAL  0.0s
+[   119.6s] OK   model.language_model.layers.3.self_attn.qkv                  q8p16        [13952 x 2560]       37949440 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  2.8s
+[   120.6s] OK   model.language_model.layers.3.self_attn.o_proj.weight        q8p16        [2560 x 6144]        16711680 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  1.0s
+[   121.0s] OK   mtp.fc_hidden.weight                                         q8p16        [2560 x 2560]         6963200 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  0.4s
+[   147.5s] OK   mtp.layers.0.mlp.experts_down                                q4p16        [1310720 x 640]     524288000 B  panels inverted = REF planes: IDENTICAL; REF planes packed = panels: IDENTICAL  26.4s
+[   147.5s] RESULT: 18 tensors compared, 0 differ
+	Command being timed: "ionice -c3 nice -n 19 /tmp/p16b/cq --src /mnt/ark/models/Qwen__Qwen3.8-Flash-Next/raw --git x --threads 4 --check-against /data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw --tensors model.language_model.layers.0.mlp.experts_gate_up,model.language_model.layers.0.mlp.experts_down,model.language_model.layers.0.mlp.shared_expert.gate_up,model.language_model.layers.0.mlp.shared_expert.down_proj.weight,model.language_model.layers.0.linear_attn.in_proj,model.language_model.layers.0.linear_attn.out_proj.weight,model.language_model.layers.3.self_attn.qkv,model.language_model.layers.3.self_attn.o_proj.weight,model.language_model.layers.1.ple.kv_proj,lm_head.weight,mtp.fc_hidden.weight,mtp.layers.0.mlp.experts_down,model.language_model.layers.0.attn_hyper_connection.mix_down,model.language_model.layers.0.attn_hyper_connection.mix_up,model.language_model.layers.0.mlp.router,model.language_model.embed_tokens.weight,model.language_model.layers.0.linear_attn.A_log,model.language_model.layers.1.ple.ple_embedding.layer_multipliers"
+	User time (seconds): 70.31
+	System time (seconds): 31.36
+	Percent of CPU this job got: 68%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:27.58
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4554060
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 11
+	Minor (reclaiming a frame) page faults: 4553923
+	Voluntary context switches: 28100
+	Involuntary context switches: 2869
+	Swaps: 0
+	File system inputs: 26654744
+	File system outputs: 48
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

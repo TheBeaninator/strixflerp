@@ -1,0 +1,16 @@
+# Recipe gate config for the swapped variant qwen38-flash-next.dense-strixfold: the unmodified recipe's host facts,
+# run settings and unit tests, unchanged. Criteria fixed on 2026-11-10 before the first run.
+inherit = "gate/qwen38-flash-next.strixite.toml"
+
+[host]
+scratch = "build/gate-scratch-dense-strixfold"
+lease_owner = "agent-phase4"      # its own name: the phase 3 lane leases the same GPU as agent
+
+[variant]
+# StrixFold's kernel adds the same exact products in another order, so the router logits differ in their last
+# bits and a near tie can flip an expert: token identity is not promised. The numeric criterion is the module
+# gate (any-order summation bound, gate/interface/dense-bf16.toml), which must have passed for both providers;
+# the recipe gate then measures where the tokens first leave the reference's, request by request.
+module_gate           = "gate/results/interface/dense-bf16/result.json"
+module_gate_providers = ["strixite", "strixfold"]
+speed_is_criterion    = false

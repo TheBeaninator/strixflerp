@@ -1,0 +1,59 @@
+id        = "runtime.crucible.conversation_cache"
+kind      = "runtime"
+summary   = "Conversation and prefix cache: immutable entries owning KV bytes, resume, snapshots in pinned chunks, lazy saves, in-slot checkpoints, exact storage addresses, tenant keys"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/layers/cache_storage.h",
+  "engine/runtime/conversation_admission.h",
+  "engine/runtime/conversation_cache.h",
+  "engine/runtime/conversation_resume.h",
+  "engine/runtime/conversation_snapshot.h",
+  "engine/runtime/lazy_snapshot.h",
+  "engine/runtime/retained_prefix.h",
+  "engine/runtime/slot_checkpoint_io.h",
+  "engine/runtime/slot_checkpoints.h",
+  "engine/runtime/snapshot_bytes.h",
+  "engine/runtime/tenant.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/layers", "src/engine/runtime"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "cache.prompt-crucible/-/-"
+api       = "ConversationCache (conversation_cache.h), snapshot_bytes.h, slot_checkpoints.h"
+numeric   = "exact (bit-identical resume)"
+regime    = "serving"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[[requires]]
+module    = "runtime.crucible.device_memory"
+
+[[requires]]
+module    = "runtime.crucible.speculation"
+
+[[requires]]
+module    = "runtime.crucible.state_disk"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

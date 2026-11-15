@@ -1,0 +1,47 @@
+id      = "tool.strixite.check_logprobs"
+kind    = "tool"
+summary = "Test: logprob math, the engine's capture sites and the response shape against a scripted fake backend"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/check_logprobs.cpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/check_logprobs.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.check-logprobs/-/-"
+api       = "main (check_logprobs)"
+numeric   = "n/a"
+regime    = "host only test; check_logprobs <tokenizer.json>"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.engine"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.logprobs"
+
+[[requires]]
+module = "serve.strixite.openai"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

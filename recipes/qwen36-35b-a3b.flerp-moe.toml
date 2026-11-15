@@ -1,0 +1,88 @@
+# Qwen3.6-35B-A3B (general.architecture qwen35moe: 40 blocks + 1 MTP block, hidden 2048, 256 experts, 8 used, expert
+# and shared expert width 512, Q4_K_M) on one Strix Halo: gufo's Qwen 3.5 executor from the catalogue with the
+# mixture-of-experts feed forward of executor.flerp.qwen35moe laid over it. The single-node step toward
+# Ornith-1.5 397B (SPEC.md phase 5, docs/PHASE5-ORNITH-GAPMAP.md). No origin serves this file with this executor,
+# so the gate's reference is llama.cpp on the CPU: greedy tokens and logits on the same prompt ids.
+# Built like recipes/qwen35-decider-2b.gufo.toml: a source tree and the origin's CMake files under a top-level
+# build file (flerplib/assemble_cmake.py).
+name      = "qwen36-35b-a3b.flerp-moe"
+model     = "Qwen3.6-35B-A3B (qwen35moe)"
+reference = { engine = "llama.cpp", build = "/data/ark/src/github.com__ggml-org__llama.cpp", note = "no origin runs a qwen35moe file with this executor: the gate compares with llama.cpp at 86a24a1 built for the CPU (tokens, log-probabilities, hidden states, router choices), and with the dense recipe qwen35-decider-2b.gufo on its own model" }
+toolchain = "therock-10.1"
+
+[build]
+system     = "cmake"
+root       = "tool.flerp.qwen35moe_generate"
+build_file = "flerp/qwen35moe_tool/CMakeLists.txt"
+targets    = ["flerp-qwen35moe-generate"]
+# The compiler for C++ and HIP is the toolchain's clang, as the catalogue's compile gate built gufo's kernels.
+# libcrypto: control-node has the library and no development package; the gate passes the two FLERP_OPENSSL_*
+# options of the build file (gate/qwen35-decider-2b.gufo.toml [host] names the headers and the library).
+options    = ["-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DCMAKE_PREFIX_PATH={rocm}",
+              "-DCMAKE_C_COMPILER={rocm}/lib/llvm/bin/clang", "-DCMAKE_CXX_COMPILER={rocm}/lib/llvm/bin/clang++",
+              "-DCMAKE_HIP_COMPILER={rocm}/lib/llvm/bin/clang++"]
+
+[build.installs]
+"strixflerp-qwen36-35b-a3b.flerp-moe" = "flerp-qwen35moe-generate"
+
+# interface -> module. Every interface a module of the assembly requires is bound here. The closure is all of
+# catalog/gufo: its include graph ties the cache to the serving code and that to all three engines. The build
+# compiles the Qwen 3.5 part (the gate lists the compiled files by module).
+[modules]
+"executor.model/qwen35moe/gguf"                = "executor.flerp.qwen35moe"
+"moe.gate-logits/gguf-f32/f32"                 = "kernel.flerp.moe_kquant"
+"moe.experts-decode/gguf-kquant/f32.indexed"   = "kernel.flerp.moe_kquant"
+"moe.experts-prefill/gguf-kquant/f16-f32.grouped" = "kernel.flerp.moe_kgrouped"
+"attn.prefill-causal/kv-f16/f32.gqa-wmma"       = "kernel.flerp.attn_wmma_gqa"
+"draft.head-score/gguf-kquant/f32.coarse-exact" = "kernel.flerp.draft_coarse"
+"executor.model/qwen3.5/gguf"                  = "executor.gufo.qwen"
+"format.device-view/gguf-kquant/-"             = "format.gufo.gguf_kquant"
+"format.device-view/gguf-kquant/-.placed"      = "format.flerp.gguf_placed"
+"transport.stage-relay/-/f32"                  = "runtime.flerp.stage_relay"
+"format.loader/gguf/-"                         = "format.gufo.gguf_kquant"
+"executor.device-graph/deepseek-v4-flash/gguf" = "kernel.gufo.ds4_backend"
+"draft.dspark-sampling/-/f32"                  = "kernel.gufo.ds4_dspark"
+"draft.markov/gguf/f32"                        = "kernel.gufo.ds4_indexer"
+"attn.qsa-indexer/-/f32.qfn"                   = "kernel.gufo.qfn_kernels"
+"attn.softmax-gqa/kv-f16/f32.qfn"              = "kernel.gufo.qfn_kernels"
+"collective.device-stage/-/f32"                = "kernel.gufo.qfn_kernels"
+"draft.mtp/gguf-q8_0/f32"                      = "kernel.gufo.qfn_kernels"
+"hc.mix/gguf-q8_0/f32"                         = "kernel.gufo.qfn_kernels"
+"linear.prefill/gguf-q8_0/i8-f32.w8a8"         = "kernel.gufo.qfn_kernels"
+"mixer.gdn/-/f32.qfn"                          = "kernel.gufo.qfn_kernels"
+"moe.combine/-/f32.qfn"                        = "kernel.gufo.qfn_kernels"
+"moe.router/-/f32.qfn"                         = "kernel.gufo.qfn_kernels"
+"ple.inject/gguf-q8_0/f32"                     = "kernel.gufo.qfn_kernels"
+"linear.decode/gguf-kquant/f32.mmvq"           = "kernel.gufo.qfn_mmq"
+"linear.prefill/gguf-kquant/q8_1-f32.mmq"      = "kernel.gufo.qfn_mmq"
+"moe.experts-decode/gguf-kquant/f32.mmid"      = "kernel.gufo.qfn_mmq"
+"attn.softmax-gqa/kv-f16/f32.gufo"             = "kernel.gufo.qwen_attention"
+"draft.dflash/gguf-q8_0/f32"                   = "kernel.gufo.qwen_dflash"
+"mixer.gdn/-/f32.gufo"                         = "kernel.gufo.qwen_gdn"
+"linear.decode/gguf-kquant/f32.gufo"           = "kernel.gufo.qwen_linear_decode"
+"linear.prefill/gguf-kquant/bf16-f32"          = "kernel.gufo.qwen_linear_prefill"
+"norm.rmsnorm/-/f32.gufo"                      = "kernel.gufo.qwen_norm_rope"
+"pos.rope/-/f32.gufo"                          = "kernel.gufo.qwen_norm_rope"
+"logits.topk/-/f32.gufo"                       = "kernel.gufo.qwen_sampling"
+"speculation.accept/-/f32.gufo"                = "kernel.gufo.qwen_sampling"
+"cache.snapshot-copy/-/-"                      = "kernel.gufo.snapshot_copy"
+"cache.prompt-gufo/-/-"                        = "runtime.gufo.cache"
+"speculation.draft/dflash/f32"                 = "runtime.gufo.dflash"
+"speculation.draft/dspark/f32"                 = "runtime.gufo.dspark"
+"executor.provider-api/gufo-ext/-"             = "runtime.gufo.ext_api"
+"device.memory/hip/-"                          = "runtime.gufo.hip_host"
+"speculation.draft/mtp/f32"                    = "runtime.gufo.mtp"
+"sample.next-token/-/f32.gufo"                 = "runtime.gufo.sampling"
+"speculation.window-verify-lossless/-/-"       = "runtime.gufo.speculative"
+"collective.exchange-partial/-/f32.gufo"       = "runtime.gufo.tp_verbs"
+
+[binaries]
+"strixflerp-qwen36-35b-a3b.flerp-moe" = { main = "tool.flerp.qwen35moe_generate", entry = "flerp/qwen35moe_tool/generate.cpp" }
+
+[deploy]
+topology = "solo"
+
+[gate]
+runner = "gate/moe_recipe.py"
+config = "gate/qwen36-35b-a3b.flerp-moe.toml"
+criterion = "token-agreement"

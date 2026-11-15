@@ -1,0 +1,53 @@
+id        = "format.crucible.exl3"
+kind      = "format"
+summary   = "EXL3 checkpoint reader: bounded safetensors header parse + mmap of sharded packs, 256-byte-unit static layout, load task split, decode capability list (integer and half-integer K widths)"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/exl3/decode_support.h",
+  "engine/exl3/load_tasks.h",
+  "engine/exl3/safetensors.h",
+  "engine/exl3/static_layout.h",
+]
+authors   = ["jaedync"]
+modified  = false
+upstream  = "EXL3 format after ExLlamaV3 d3739fd393337b1ff4d6c2a342b12f0c87a9592f (MIT, Turboderp; catalog/crucible/NOTICE)"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/exl3"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "format.loader-crucible/exl3-safetensors/-"
+api       = "crucible safetensors reader (exl3/safetensors.h), StaticLayout, LoadTasks"
+numeric   = "exact (bytes mmapped; tiles kept in EXL3 encoding on the device)"
+regime    = "load time"
+
+[[provides]]
+interface = "format.device-view/exl3/-"
+api       = "trellis tiles 16x16, K 1..8 and 1.5..6.5 (exl3/decode_support.h, kernels/lane_window.h)"
+numeric   = "raw EXL3 tiles"
+regime    = "n/a"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[[requires]]
+module    = "kernel.crucible.hc"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

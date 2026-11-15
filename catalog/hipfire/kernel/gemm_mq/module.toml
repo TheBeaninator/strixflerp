@@ -1,0 +1,132 @@
+id        = "kernel.hipfire.gemm_mq"
+kind      = "kernel"
+summary   = "Prefill GEMM on MQ weights: f16 WMMA, the exact integer routes (IU4 and I8 WMMA with a block_i8_128 activation quantizer), MMQ; residual, QKV, QKVZA and gate-up forms (76 sources, 81 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/block_i8_128_emit.hip",
+  "kernels/src/block_i8_128_quant.hip",
+  "kernels/src/gemm_gate_up_mq2g256v2_wmma.hip",
+  "kernels/src/gemm_gate_up_mq3g256_lloyd_wmma.hip",
+  "kernels/src/gemm_gate_up_mq3g256_lloyd_wmma_mb4.hip",
+  "kernels/src/gemm_gate_up_mq3g256_lloyd_wmma_mb4_nosync.hip",
+  "kernels/src/gemm_gate_up_mq3g256_lloyd_wmma_nosync.hip",
+  "kernels/src/gemm_gate_up_mq3g256v2_wmma.hip",
+  "kernels/src/gemm_gate_up_mq4g256_lloyd_wmma.gfx1151.hip",
+  "kernels/src/gemm_gate_up_mq4g256_lloyd_wmma.hip",
+  "kernels/src/gemm_gate_up_mq4g256_lloyd_wmma_mb4.gfx1151.hip",
+  "kernels/src/gemm_gate_up_mq4g256_lloyd_wmma_mb4.hip",
+  "kernels/src/gemm_gate_up_mq4g256_lloyd_wmma_mb4_nosync.gfx1151.hip",
+  "kernels/src/gemm_gate_up_mq4g256_lloyd_wmma_mb4_nosync.hip",
+  "kernels/src/gemm_gate_up_mq4g256_lloyd_wmma_nosync.gfx1151.hip",
+  "kernels/src/gemm_gate_up_mq4g256_lloyd_wmma_nosync.hip",
+  "kernels/src/gemm_gate_up_mq4g256v2_wmma.hip",
+  "kernels/src/gemm_gate_up_mq4g256v2_wmma_gfx11_bt.hip",
+  "kernels/src/gemm_gate_up_mq5g256v2_wmma.hip",
+  "kernels/src/gemm_gate_up_mq6g256v2_wmma.hip",
+  "kernels/src/gemm_mq2g256v2_residual_wmma.hip",
+  "kernels/src/gemm_mq3g256_lloyd_residual_wmma.hip",
+  "kernels/src/gemm_mq3g256_lloyd_residual_wmma_mb4.hip",
+  "kernels/src/gemm_mq3g256v2_residual_wmma.hip",
+  "kernels/src/gemm_mq3v25_residual_iu4_v2b.gfx11.hip",
+  "kernels/src/gemm_mq3v25_residual_iu4_v2c.gfx11.hip",
+  "kernels/src/gemm_mq4g128v2_batched.hip",
+  "kernels/src/gemm_mq4g128v2_multirow.gfx1151.hip",
+  "kernels/src/gemm_mq4g256_lloyd_residual_wmma.hip",
+  "kernels/src/gemm_mq4g256_lloyd_residual_wmma_mb2.hip",
+  "kernels/src/gemm_mq4g256_lloyd_residual_wmma_mb4.gfx1151.hip",
+  "kernels/src/gemm_mq4g256_lloyd_residual_wmma_mb4.hip",
+  "kernels/src/gemm_mq4g256v2_residual_iu4_v2b.gfx11.hip",
+  "kernels/src/gemm_mq4g256v2_residual_iu4_v2c.gfx11.hip",
+  "kernels/src/gemm_mq4g256v2_residual_mmq.hip",
+  "kernels/src/gemm_mq4g256v2_residual_mmq_i8.gfx11.hip",
+  "kernels/src/gemm_mq4g256v2_residual_mmq_iu4.gfx11.hip",
+  "kernels/src/gemm_mq4g256v2_residual_mmq_iu4_gridspec.gfx11.hip",
+  "kernels/src/gemm_mq4g256v2_residual_wmma.hip",
+  "kernels/src/gemm_mq4g256v2_residual_wmma_gfx11_bt.hip",
+  "kernels/src/gemm_mq4g256v2_wmma_gfx1151_xlds.hip",
+  "kernels/src/gemm_mq5g256v2_residual_wmma.hip",
+  "kernels/src/gemm_mq6g256.hip",
+  "kernels/src/gemm_mq6g256v2_f32_rows.hip",
+  "kernels/src/gemm_mq6g256v2_mmq_i8.gfx11.hip",
+  "kernels/src/gemm_mq6g256v2_residual_wmma.hip",
+  "kernels/src/gemm_mqv2_wmma_gfx11_bt.hip",
+  "kernels/src/gemm_mqv2_wmma_gfx11_mw_lds.hip",
+  "kernels/src/gemm_q8_0_mmq_4w.gfx1151.hip",
+  "kernels/src/gemm_qkv_mq2g256v2_wmma.hip",
+  "kernels/src/gemm_qkv_mq3g256_lloyd_wmma.hip",
+  "kernels/src/gemm_qkv_mq3g256_lloyd_wmma_mb4.hip",
+  "kernels/src/gemm_qkv_mq3g256v2_wmma.hip",
+  "kernels/src/gemm_qkv_mq4g256_lloyd_wmma.gfx1151.hip",
+  "kernels/src/gemm_qkv_mq4g256_lloyd_wmma.hip",
+  "kernels/src/gemm_qkv_mq4g256_lloyd_wmma_mb4.gfx1151.hip",
+  "kernels/src/gemm_qkv_mq4g256_lloyd_wmma_mb4.hip",
+  "kernels/src/gemm_qkv_mq4g256v2_wmma.hip",
+  "kernels/src/gemm_qkv_mq4g256v2_wmma_gfx11_bt.hip",
+  "kernels/src/gemm_qkv_mq5g256v2_wmma.hip",
+  "kernels/src/gemm_qkv_mq6g256v2_wmma.hip",
+  "kernels/src/gemm_qkvza_mq2g256v2_wmma.hip",
+  "kernels/src/gemm_qkvza_mq3g256_lloyd_wmma.hip",
+  "kernels/src/gemm_qkvza_mq3g256_lloyd_wmma_mb4.hip",
+  "kernels/src/gemm_qkvza_mq3g256v2_wmma.hip",
+  "kernels/src/gemm_qkvza_mq4g256_lloyd_wmma.gfx1151.hip",
+  "kernels/src/gemm_qkvza_mq4g256_lloyd_wmma.hip",
+  "kernels/src/gemm_qkvza_mq4g256_lloyd_wmma_mb4.gfx1151.hip",
+  "kernels/src/gemm_qkvza_mq4g256_lloyd_wmma_mb4.hip",
+  "kernels/src/gemm_qkvza_mq4g256v2_wmma.hip",
+  "kernels/src/gemm_qkvza_mq4g256v2_wmma_gfx11_bt.hip",
+  "kernels/src/gemm_qkvza_mq5g256v2_wmma.hip",
+  "kernels/src/gemm_qkvza_mq6g256v2_wmma.hip",
+  "kernels/src/mq4v2_fp8_producer_pack.hip",
+  "kernels/src/qwen4_gemm_mqv2_wmma_gfx11_bt.hip",
+  "kernels/src/requant_g256.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 81
+
+[[provides]]
+interface = "linear.prefill/hipfire-mq/f32"
+api       = "gemm_gate_up_mq2g256v2_wmma, gemm_gate_up_mq3g256v2_wmma, gemm_gate_up_mq3g256_lloyd_wmma_mb4_nosync, gemm_gate_up_mq3g256_lloyd_wmma_mb4, gemm_gate_up_mq3g256_lloyd_wmma_nosync (+76 more units, see units.json)"
+numeric   = "f16 WMMA with fp32 accumulate, or exact-integer (iu4 / i8) WMMA with activations quantized per 128-block and one fp scale per block pair"
+regime    = "prefill batches, compute-bound (WMMA, MMQ)"
+
+[[provides]]
+interface = "act.quantize/i8-128/f32"
+api       = "block_i8_128_quant, act_quant_* units"
+numeric   = "per-128-block int8 activation quantizer feeding the integer GEMMs"
+regime    = "prefill batches, compute-bound (WMMA, MMQ)"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+module    = "kernel.hipfire.tensor_ops"
+
+[[requires]]
+interface = "format.device-view/hipfire-mq/-"
+
+[[requires]]
+interface = "rotate.fwht/-/f32"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemm_mq.json"

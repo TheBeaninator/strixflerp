@@ -1,0 +1,34 @@
+id        = "executor.flerp.fake_abi"
+kind      = "executor"
+summary   = "A stand-in executor behind the executor ABI for testing its callers without a GPU: the next token is a hash of the last token and the position, and the deliveries, draft form, sampled draws, logit bias, ABI version (1 to 3) and version 3 capabilities (state with prefix ids, marks, shared and parked snapshots, steering, image spans, constraints, stop policy, slot calls) it offers are chosen at flerp_open"
+notes     = "No weights and no device. Drafts are output-invariant by construction, so a caller's loop can be checked against itself in every shape the ABI allows."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/executor/fake_abi.c"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = ["src/flerp/executor/fake_abi.c"]
+includes  = ["../../../../include"]
+c_std     = 11
+defines   = ["_POSIX_C_SOURCE=200809L"]
+
+[[provides]]
+interface = "executor.abi/flerp-v1/-"
+api       = "flerp_open .. flerp_stats_json (include/flerp/executor.h)"
+numeric   = "a hash: no model"
+regime    = "host only; one run a verify, 16 rows; snapshots and version 3 calls with features=..."
+
+[gate]
+parity    = "flerp:gate/flerp_serve.py"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/qwen38-flash-next.flerp-serve-fake/summary.json"

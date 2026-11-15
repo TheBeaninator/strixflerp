@@ -1,0 +1,76 @@
+id        = "kernel.strixfold.aux"
+kind      = "kernel"
+summary   = "Indexer top-k selection helpers, torch-order RMSNorm, compress2, complex-FMA RoPE, bf16 scale, mean of 4 streams"
+notes     = "Bodies ported from TensorFold CUDA sources zig/kernels/cuda/dsv41_ops.cu and dsv41_torch.cu (sha256 in the file header)."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/aux.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/aux.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 12
+
+[[provides]]
+interface = "attn.indexer-topk/-/i64-keys"
+api       = "tf_ds_aux_topk_i64, tf_ds_aux_topk_indices, tf_ds_aux_cand_fast, tf_ds_aux_block_max, tf_ds_aux_pool_pick, tf_ds_aux_apply_pool, tf_ds_aux_iota_vis"
+numeric   = "exact: int64 keys = score bits in total order above, ~index below (ties to the lower index, -0 as +0)"
+regime    = "decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "norm.rmsnorm/-/bf16.torch-order"
+api       = "tf_ds_aux_rms_norm"
+numeric   = "torch arithmetic at torch rounding points (explicit _rn intrinsics, no contraction); byte-equal to the served torch forward"
+regime    = "rows x d, memory-bound"
+
+[[provides]]
+interface = "kvcache.compress2/-/bf16"
+api       = "tf_ds_aux_compress2"
+numeric   = "softmax-weighted pair compression as torch computes it (compress2_softmax)"
+regime    = "window rows"
+
+[[provides]]
+interface = "pos.rope/-/bf16.complex-fma"
+api       = "tf_ds_aux_rope"
+numeric   = "complex rotation with the CUDA kernel FMA placement (rope_complex_fma), rounded to bf16"
+regime    = "rows x heads"
+
+[[provides]]
+interface = "draft.hc-mean4/-/bf16"
+api       = "tf_ds_aux_hc_mean4"
+numeric   = "mean of the 4 mHC streams, fp32 then bf16"
+regime    = "draft rows"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.aux.json"

@@ -1,0 +1,1465 @@
+{
+ "module": "kernel.hipfire.moe",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-10T22:59:25Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "HIP version: 7.17.26392-0000000 | AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394)",
+ "units": 181,
+ "passed": 181,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 6.4,
+ "results": [
+  {
+   "unit": "combine",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/combine.hip -o build/compile-gate/kernel.hipfire.moe/combine.hsaco",
+   "rc": 0,
+   "seconds": 0.37,
+   "object_bytes": 11192,
+   "object_sha256": "711a4ef66e27ce6cc4cdab8deab72982356628163c38b192a03a775b15d45eaa"
+  },
+  {
+   "unit": "ep_gather_rows_by_owner",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/ep_gather_rows_by_owner.hip -o build/compile-gate/kernel.hipfire.moe/ep_gather_rows_by_owner.hsaco",
+   "rc": 0,
+   "seconds": 0.37,
+   "object_bytes": 10344,
+   "object_sha256": "a2cf24cf6d3c1a50ebaab84b107d8c0aea5823fe1f1c12c9feb03de24c80d82c"
+  },
+  {
+   "unit": "ep_gather_rows_by_slot_owner",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/ep_gather_rows_by_slot_owner.hip -o build/compile-gate/kernel.hipfire.moe/ep_gather_rows_by_slot_owner.hsaco",
+   "rc": 0,
+   "seconds": 0.39,
+   "object_bytes": 10224,
+   "object_sha256": "8752e2cb151c01fae1b867e56b74b1ac65010c2b984e012a3dae8ad064c2338a"
+  },
+  {
+   "unit": "gemm_hfq4g128_moe_down_grouped_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_hfq4g128_moe_down_grouped_wmma.hip -o build/compile-gate/kernel.hipfire.moe/gemm_hfq4g128_moe_down_grouped_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 10368,
+   "object_sha256": "fa19a9c53868fa3a48b9d6a51998cfffa76dac766356f0e998fb022b828d7a25"
+  },
+  {
+   "unit": "gemm_hfq4g256_moe_grouped_mmq_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_hfq4g256_moe_grouped_mmq_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_hfq4g256_moe_grouped_mmq_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.51,
+   "object_bytes": 18568,
+   "object_sha256": "4e2fdd54e9c51109b0d2dec14eb251e4c844f860ad348c6b488d257dbccf282a"
+  },
+  {
+   "unit": "gemm_hfq4g256_moe_grouped_mmq_k4_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_hfq4g256_moe_grouped_mmq_k4_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_hfq4g256_moe_grouped_mmq_k4_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.55,
+   "object_bytes": 18184,
+   "object_sha256": "e8f5d2522b14bb5b80cebf3b81bd391f181953bcd46ba02a3cfc2be0b02e78f7"
+  },
+  {
+   "unit": "gemm_hfq4g256_moe_grouped_mmq_k8_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_hfq4g256_moe_grouped_mmq_k8_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_hfq4g256_moe_grouped_mmq_k8_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.53,
+   "object_bytes": 17928,
+   "object_sha256": "8d05e95b1967f6a92bcdb3fe6bc51503dab3e421d88e8ea8fa7ba5f61e755740"
+  },
+  {
+   "unit": "gemm_hfq4g256_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_hfq4g256_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_hfq4g256_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11008,
+   "object_sha256": "99cea18770f6923e3e114acfb34692186022dad7963c0c78827fc555a960382b"
+  },
+  {
+   "unit": "gemm_hfq6g256_moe_grouped_mmq_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_hfq6g256_moe_grouped_mmq_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_hfq6g256_moe_grouped_mmq_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 21256,
+   "object_sha256": "a4c7ed4109760457f2abfef0d5631a295fbe80ebd440d889a5eefcf036c53086"
+  },
+  {
+   "unit": "gemm_hfq6g256_moe_grouped_wmma_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_hfq6g256_moe_grouped_wmma_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_hfq6g256_moe_grouped_wmma_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11016,
+   "object_sha256": "862b7df60b8e033c7a75ae53810daf992782deeeec2710b657311ff5c2aa4e18"
+  },
+  {
+   "unit": "gemm_hfq6g256_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_hfq6g256_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_hfq6g256_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 11136,
+   "object_sha256": "6cf950f723e0a5a02df2a69550ca068a4ffbe3d3011679fd635a00293865703a"
+  },
+  {
+   "unit": "gemm_mfp4g32_e8g128_moe_grouped_wmma_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mfp4g32_e8g128_moe_grouped_wmma_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mfp4g32_e8g128_moe_grouped_wmma_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 11008,
+   "object_sha256": "1e7f6a7f75d02cb540d7dd9a2a921aa5c0845d85ecb912c38e073bc0e3c9cb2d"
+  },
+  {
+   "unit": "gemm_mfp4g32_e8_moe_grouped_wmma_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mfp4g32_e8_moe_grouped_wmma_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mfp4g32_e8_moe_grouped_wmma_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 11128,
+   "object_sha256": "f1ea28b1c78b28605744df779c7dc5fde4e2504048c0ae95a3249499966f94cd"
+  },
+  {
+   "unit": "gemm_mixed_moe_grouped_wmma_4w_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mixed_moe_grouped_wmma_4w_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mixed_moe_grouped_wmma_4w_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.6,
+   "object_bytes": 27008,
+   "object_sha256": "a5cf2e381e91450e001ec29a9e878f0c7c7eb75c6654143e9f16039fa0cd6651"
+  },
+  {
+   "unit": "gemm_mixed_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mixed_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mixed_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.6,
+   "object_bytes": 26872,
+   "object_sha256": "1d96c8cfedaffa459013f1782f7c89b8913b5deaf2c8b4949d90911d42e295ec"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_mmq_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_mmq_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_mmq_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 19984,
+   "object_sha256": "bd6296ab347c447c3da4d3ba552e9742cf7a4c38fd864df30edc1ece3f7b53f9"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_mmq_perm_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_mmq_perm_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_mmq_perm_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 17176,
+   "object_sha256": "5a3722fe7472bc30289fa0085c76a45e768922eec3b7a93a19bb84e02f1806ac"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_mmq_prequant_perm_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_mmq_prequant_perm_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_mmq_prequant_perm_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 16936,
+   "object_sha256": "07e92fa4c075cdf575584e3d90c6fd69bb1193c552af8473a92e8c46ae671b63"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_cnd",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_cnd.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_cnd.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 13336,
+   "object_sha256": "1885571c101eb478fd93fcec6ca59bd6be5da271967fd3ad7120cf244581d3e4"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload_nosync",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload_nosync.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload_nosync.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 11176,
+   "object_sha256": "9f0816d59fcc1c759488c4997acab8cbf66a891b72f8526723e73e682c0afd6b"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 11424,
+   "object_sha256": "5c9a26fc9d15675fcae4030adcedae183cf09e608a2eb3ec2cc0eb9837505101"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_n32",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_n32.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_n32.hsaco",
+   "rc": 0,
+   "seconds": 0.88,
+   "object_bytes": 62488,
+   "object_sha256": "63435d832c5bc09fa34afd31923bcc4a832b43ce6fb6d730bf866026772593b6"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 12432,
+   "object_sha256": "0d8419c72d60f7ccef15369c20c9bf721cf65a1aa8428c16874c7a8b9e3b51d1"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_wmma_8w_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_8w_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_8w_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 12432,
+   "object_sha256": "9b5d234bc4d42daa5305f33887556e246b229ce3a0659e91bcaaeecd0ede6446"
+  },
+  {
+   "unit": "gemm_mq2g256_lloyd_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq2g256_lloyd_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 12424,
+   "object_sha256": "083ac0b2014c2ae01ec9fad402cdcb7bb54020c25538729829de7f1665134daf"
+  },
+  {
+   "unit": "gemm_mq3g256_lloyd_moe_grouped_mmq_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq3g256_lloyd_moe_grouped_mmq_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq3g256_lloyd_moe_grouped_mmq_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.52,
+   "object_bytes": 26640,
+   "object_sha256": "6b76bd94ff845f59a7e0aa6afc7c5160c241ca28667ac2364cc20e9b4488a242"
+  },
+  {
+   "unit": "gemm_mq3g256_lloyd_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq3g256_lloyd_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq3g256_lloyd_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 14984,
+   "object_sha256": "5ff611b853f206a1109bfc11844d3cad48ec2bdd7edcbde83a3af84453e57721"
+  },
+  {
+   "unit": "gemm_mq4g128v2_moe_grouped_top10_multirow",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g128v2_moe_grouped_top10_multirow.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g128v2_moe_grouped_top10_multirow.hsaco",
+   "rc": 0,
+   "seconds": 0.6,
+   "object_bytes": 19088,
+   "object_sha256": "7210698f63d6c33010b24fa53e63c56acb9648880ff243b3b97a0bc98d31961e"
+  },
+  {
+   "unit": "gemm_mq4g128v2_moe_grouped_top10_o8_r16_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g128v2_moe_grouped_top10_o8_r16_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g128v2_moe_grouped_top10_o8_r16_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.91,
+   "object_bytes": 42008,
+   "object_sha256": "2823ddbe3cd200cede54ad11ff6af9ee46eae4eabc703e63a9d4a743a68baf2e"
+  },
+  {
+   "unit": "gemm_mq4g128v2_moe_grouped_top10_o8_r16_xs_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g128v2_moe_grouped_top10_o8_r16_xs_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g128v2_moe_grouped_top10_o8_r16_xs_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.72,
+   "object_bytes": 51616,
+   "object_sha256": "14e771b331fcceef3a7973fd864500ebe3def8a6f8f1136defeaa833b75f1876"
+  },
+  {
+   "unit": "gemm_mq4g128v2_moe_grouped_wmma_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g128v2_moe_grouped_wmma_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g128v2_moe_grouped_wmma_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 1.12,
+   "object_bytes": 92984,
+   "object_sha256": "ac733d15f9923c1f8132557d88528d0f573ed5fa2db4a1a37d2e8bb420d0ea60"
+  },
+  {
+   "unit": "gemm_mq4g256v2_moe_grouped_top10_o2_r8_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_top10_o2_r8_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_top10_o2_r8_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.74,
+   "object_bytes": 30344,
+   "object_sha256": "8542d2aee97106504fe31376d1fa07fae6012b9c14797920aa8e5b52ed524e77"
+  },
+  {
+   "unit": "gemm_mq4g256v2_moe_grouped_top10_o4_r8_pipe_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -mllvm -amdgpu-sched-strategy=max-ilp -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_top10_o4_r8_pipe_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_top10_o4_r8_pipe_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.69,
+   "object_bytes": 40096,
+   "object_sha256": "56b5040463721b429ea22ca8ab68f81c88a31b81f023f03438e4b0208a980b69"
+  },
+  {
+   "unit": "gemm_mq4g256v2_moe_grouped_top10_o4_r8_x4_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -mllvm -amdgpu-sched-strategy=max-ilp -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_top10_o4_r8_x4_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_top10_o4_r8_x4_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 1.23,
+   "object_bytes": 74192,
+   "object_sha256": "cb68d6cab4c79b17d06cfc856bde3ccb8312d0b5600d02fc89fc765d61b86a0d"
+  },
+  {
+   "unit": "gemm_mq4g256v2_moe_grouped_top10_simt",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_top10_simt.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_top10_simt.hsaco",
+   "rc": 0,
+   "seconds": 0.62,
+   "object_bytes": 33416,
+   "object_sha256": "460094a01d87a12c8a8e570abd0b00ff7e13b418684eae4bd90ac6e3dbc20903"
+  },
+  {
+   "unit": "gemm_mq4g256v2_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq4g256v2_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11008,
+   "object_sha256": "975d09ad1e88e8cfd254955a186ef9b6034931076bb1e5cab709543e78de1154"
+  },
+  {
+   "unit": "gemm_mq6g256v2_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_mq6g256v2_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_mq6g256v2_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 11264,
+   "object_sha256": "c257e60a813acd03c25069f1aecaf4341c3d4828ece9b003d4c568555dc1afd9"
+  },
+  {
+   "unit": "gemm_paro_q4g128_moe_grouped_mmq_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_paro_q4g128_moe_grouped_mmq_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_paro_q4g128_moe_grouped_mmq_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 14216,
+   "object_sha256": "05eb34d5ac0eef292a0aec0bbfd610680b6f9e1f4c60365d2838ffb82e0d2b64"
+  },
+  {
+   "unit": "gemm_paro_q4g128_moe_grouped_mmq_k8_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_paro_q4g128_moe_grouped_mmq_k8_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemm_paro_q4g128_moe_grouped_mmq_k8_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 13968,
+   "object_sha256": "44bf32ccdfc845a6aae29b09081dfe39fda0b2790da89006bb7c072aefb2e597"
+  },
+  {
+   "unit": "gemm_paro_q4g128_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_paro_q4g128_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/gemm_paro_q4g128_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11008,
+   "object_sha256": "b089f5aaa0484e65465da729e11e471569f362e1841d0c1546823b9a942895a2"
+  },
+  {
+   "unit": "gemm_q8_0_moe_grouped_top10",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemm_q8_0_moe_grouped_top10.hip -o build/compile-gate/kernel.hipfire.moe/gemm_q8_0_moe_grouped_top10.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 9712,
+   "object_sha256": "4d46fc36ccaa4689f42dbafc1a38346b8d5d2573cbb028da435e64741d79ba81"
+  },
+  {
+   "unit": "gemv_hfq4g128_moe_down_grouped",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g128_moe_down_grouped.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g128_moe_down_grouped.hsaco",
+   "rc": 0,
+   "seconds": 0.56,
+   "object_bytes": 24184,
+   "object_sha256": "2a0d59bde51db34bd81cc4ddc648c510e4873befbfdd1dffcc2346da7d06168b"
+  },
+  {
+   "unit": "gemv_hfq4g128_moe_down_residual_scaled_k8_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g128_moe_down_residual_scaled_k8_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g128_moe_down_residual_scaled_k8_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 20128,
+   "object_sha256": "d56d1e701f2bd7e1a4b5c45a3a71fd6cf373e8e37711136f622b1285d65ea87a"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 11696,
+   "object_sha256": "4070dd180a172389a9d2a0521db40048ba66bff6665aae81f3c592bc54173a47"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_indexed_batched_wave64",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_indexed_batched_wave64.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_indexed_batched_wave64.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11576,
+   "object_sha256": "52e5cdb208d6efd01b490013361b001e0462adf5b7751712aafaa9fb34d18ce8"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 11552,
+   "object_sha256": "eea6dbe3bcb8b643ded909ce01c37d2eae7b4dcac11706de63f8c2a2239e99f8"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_indexed_wave64",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_indexed_wave64.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_indexed_wave64.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11560,
+   "object_sha256": "64c7fe26e1699bfd68cd472bd2d8a8e2b6367118307fa9502823ae147feb6b2e"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_any_k",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_any_k.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_any_k.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 10920,
+   "object_sha256": "4b48c2c0acb26ece7cf97eb8175fbe46bf8990b17f179a40ad99c3d30c6cd4d7"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.39,
+   "object_bytes": 11712,
+   "object_sha256": "b14da5ec42f66b670d7f2e949bde9954925211b3d5f0ee8e9252205995f143cc"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_hybrid_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_hybrid_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_hybrid_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 11848,
+   "object_sha256": "1e9419137cb1b7227be51b2b41f460c1fb4e0037e01bf55658adf4a169e44ed7"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row1_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row1_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row1_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 10056,
+   "object_sha256": "93ee53b950b05a28d26a086caba7103fd65aea78f85cd3cca042fe15ad1491d4"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 11080,
+   "object_sha256": "e71508de3a2f914db60bdcbfabaf85d51ce5e035620cb09187041ac821aaa2a8"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_clustered_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_clustered_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_clustered_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 11088,
+   "object_sha256": "950caa8f857d7f871dc0bba9856466885834d5f4f28b748ee0a1c0f679c39bf8"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row8_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row8_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row8_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 13496,
+   "object_sha256": "6b144fb5ca0e400aac0997bbf88c0bb2b15e223f933aba3e84ae8785847e7b31"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11808,
+   "object_sha256": "f42fdb3bd506a73eb1a4bfcb374fa900900f70e07e0022382906e390642afb25"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_fused_acc",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_fused_acc.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_fused_acc.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 13968,
+   "object_sha256": "0f2c958324a69b4a607b411feb09965800feaed8c0d1468ab62e7d07e32e7dd5"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down_k8_indexed_last_combine",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_last_combine.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down_k8_indexed_last_combine.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 14232,
+   "object_sha256": "a88746177074e1f32b49f4de5a6e31b655a3c8f035c9f98d176c1ddc4ee4da1d"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_down",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_down.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 12176,
+   "object_sha256": "ae2f411d25f173bb4b74aaf66b795f0d1e525f858c15fe6857f193250c19c9c8"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_indexed_k2048_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_indexed_k2048_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_indexed_k2048_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 10904,
+   "object_sha256": "4107b217e3980dcf3cb97e0287d7c139ab6ec7f2075e4539f7d738eb1a6a4bc4"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 11792,
+   "object_sha256": "a1f4b4f4992fcabffcd7e059579acfca4925d891af07b4417a262a31bc7186ef"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_batched_wave64",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_batched_wave64.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_batched_wave64.hsaco",
+   "rc": 0,
+   "seconds": 0.39,
+   "object_bytes": 11808,
+   "object_sha256": "f96d0c32e085e44700be69607948870f4a8a0afdac64a3a1a19d78222c90db8b"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_all_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_all_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_all_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 11448,
+   "object_sha256": "845cc44a7cd1a399debed57351534922f054d692b8d794b52b564dfb618eb05d"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11184,
+   "object_sha256": "fcf21ed32db6b4263b9a71845f631259dcd38f2ebd76d2e8b2df3561ef01a3c8"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11424,
+   "object_sha256": "66a6a260d20c0999dc1420f8e064efaeb1ecafed29e332b08901dfce75d79dbd"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_hybrid_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_hybrid_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_hybrid_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 11312,
+   "object_sha256": "4b826f02b9c1c5480e29130c62f7578e1990d0fe1f799c2ff29a0ca38e3e599e"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_low_vgpr_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_low_vgpr_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_low_vgpr_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11440,
+   "object_sha256": "813e5de18c95957321021efe9ae3d08c88646001d01c516e22bc5531d47838b9"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_all_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_all_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_all_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11200,
+   "object_sha256": "63ff993e26e4ab317b297c3f0881b317d2732c37a51303a81d797d5e35374945"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11192,
+   "object_sha256": "d24fc82bb6f26f6a5ca2cb800b792f7a49ec3c2d432754e6fa5a5faed584dd1c"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_vgpr_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_vgpr_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_vgpr_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11440,
+   "object_sha256": "9434854d54ae7d82a296e528b05cc100ad2ce90195d3fed07fec8d50d4e64739"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2048_route_all_buffer_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_route_all_buffer_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2048_route_all_buffer_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 11456,
+   "object_sha256": "866e2228f1cea264219710895572aafaa5b7f9664cc3e215374def7038b429d4"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_k2816",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2816.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_k2816.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 12944,
+   "object_sha256": "6e9708cf76f360d1d8b0b48763e2983e23307f1c27ac9466899dc09c1dca2e9b"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_rowtile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_rowtile.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_rowtile.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 13968,
+   "object_sha256": "c1f2af25893db64476a7348ac13333e529a4082f8be1f7330e42916ece460cb2"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.55,
+   "object_bytes": 11392,
+   "object_sha256": "eda312a5f9a57fb999bd670dc5a5704291028101ae0dc1fc3a71727a182e6b99"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_wave64_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -mwavefrontsize64 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_wave64_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_wave64_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11920,
+   "object_sha256": "7650b983683190c301931cef129f704cd8e058a8bf610190a5956b3d22418f26"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_wave64",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_wave64.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_wave64.hsaco",
+   "rc": 0,
+   "seconds": 0.53,
+   "object_bytes": 11536,
+   "object_sha256": "65c2780364b2bf8a4486c2c2032ba9737c518ad0c78952e0521a6f9865e216dd"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_indexed_wg2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_wg2.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_indexed_wg2.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11400,
+   "object_sha256": "79b45b90ebab94243688956b76b952e2b8b8524cf3a0528c1337692fbb17eb82"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_paired_waves_k2048_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_paired_waves_k2048_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_paired_waves_k2048_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 12088,
+   "object_sha256": "125ca172b200db1dfe7847c609999d3f9067a01bebfd77931523479be25672a8"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up_persistent_rank8_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_persistent_rank8_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up_persistent_rank8_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 14648,
+   "object_sha256": "40c2079420d02da98252652ea6a846501071770544d2e8d87f8bcb2ed7072881"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_gate_up",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_gate_up.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11760,
+   "object_sha256": "5b36051c00e8de4f4c9930ff6ac8b1349b7d1ae51ad1e60891bafdfa6e169707"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_ninepath_d3",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_ninepath_d3.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_ninepath_d3.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 13816,
+   "object_sha256": "1bd06c0b75e72338d04bfabe10162b41bf1b418baaa461c9019fb112bccdb5ae"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_ninepath_d4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_ninepath_d4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_ninepath_d4.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 10104,
+   "object_sha256": "ebf26d2ccbb71d569a61347a72a2bec089ce66f6bdddbf57ce6a49a7c1a1a0cb"
+  },
+  {
+   "unit": "gemv_hfq4g256_moe_up_indexed_k2048_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_up_indexed_k2048_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq4g256_moe_up_indexed_k2048_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 10904,
+   "object_sha256": "a3301296d0409de89dae243d8122c37086b437cd7a2d41405caa7ae87017dfde"
+  },
+  {
+   "unit": "gemv_hfq5g256_moe_down_k8_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq5g256_moe_down_k8_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq5g256_moe_down_k8_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 9632,
+   "object_sha256": "cc3e7b2e8803a0001c767673df5af725d6fb74ce29d60890d504af66823398cf"
+  },
+  {
+   "unit": "gemv_hfq5g256_moe_gate_up_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq5g256_moe_gate_up_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq5g256_moe_gate_up_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 9872,
+   "object_sha256": "766ef681cb7da5c7f7438d88995fd27525e0f62daa463aa1063c9d6fa02e8193"
+  },
+  {
+   "unit": "gemv_hfq5g256_moe_gate_up_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq5g256_moe_gate_up_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq5g256_moe_gate_up_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 9472,
+   "object_sha256": "49b082838550502a76362d368dab2f832e7630cc81c7e7e02ef7c4c64c4bfbf6"
+  },
+  {
+   "unit": "gemv_hfq6g256_moe_down_k8_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq6g256_moe_down_k8_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq6g256_moe_down_k8_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 9632,
+   "object_sha256": "c288456f1b123f950b3f9bebd57686e1b22d028ffab87ea039b729a8900dbf2f"
+  },
+  {
+   "unit": "gemv_hfq6g256_moe_gate_up_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq6g256_moe_gate_up_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq6g256_moe_gate_up_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 9872,
+   "object_sha256": "65595f41fa64320fc05979ad3a86672dcaba2f4d85475f35ed69796057226fe3"
+  },
+  {
+   "unit": "gemv_hfq6g256_moe_gate_up_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_hfq6g256_moe_gate_up_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_hfq6g256_moe_gate_up_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 9472,
+   "object_sha256": "acec2c32be64fe722d1b392384fe556200d37cbf380ba549d68a0da2d9a5a266"
+  },
+  {
+   "unit": "gemv_mfp4g32_e8g128_moe_down_k8_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8g128_moe_down_k8_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8g128_moe_down_k8_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 12200,
+   "object_sha256": "90e8f7ca273a7459c8f2bc95ccba7cc8fe66ce5a5f6331ad9fbf207c7c390b77"
+  },
+  {
+   "unit": "gemv_mfp4g32_e8g128_moe_gate_up_k8_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8g128_moe_gate_up_k8_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8g128_moe_gate_up_k8_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 12320,
+   "object_sha256": "d209d52607c797b341062131ed1f892725194320367a2ae8a4cb7176f2082590"
+  },
+  {
+   "unit": "gemv_mfp4g32_e8_moe_down_k8_indexed_batched_expanded_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8_moe_down_k8_indexed_batched_expanded_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8_moe_down_k8_indexed_batched_expanded_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.6,
+   "object_bytes": 11424,
+   "object_sha256": "4f54e19010c01a9c96f4f1acb84aa064cee1833a983233b3432f9807582e7848"
+  },
+  {
+   "unit": "gemv_mfp4g32_e8_moe_gate_up_k8_indexed_batched_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8_moe_gate_up_k8_indexed_batched_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8_moe_gate_up_k8_indexed_batched_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 11544,
+   "object_sha256": "252091a3c41f782bb3f6d5197f048b66430333d02c8eb655e20bae00fdd3c1b4"
+  },
+  {
+   "unit": "gemv_mfp4g32_e8_soa_moe_gate_up_k8_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8_soa_moe_gate_up_k8_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mfp4g32_e8_soa_moe_gate_up_k8_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 11552,
+   "object_sha256": "970f6f42b45604ff27f854d6c70a2381e9e0a328f7930d38bde110b428f5ec60"
+  },
+  {
+   "unit": "gemv_mixed_moe_down_k8_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mixed_moe_down_k8_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mixed_moe_down_k8_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.66,
+   "object_bytes": 28184,
+   "object_sha256": "43fbc3a90c475552ff5b7ef4b7f8e2347c1d0c9f13d083f44a0e5df6497b3a54"
+  },
+  {
+   "unit": "gemv_mixed_moe_gate_up_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mixed_moe_gate_up_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mixed_moe_gate_up_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.78,
+   "object_bytes": 33680,
+   "object_sha256": "0edd7f7c4287e18ac1b06c65771179aef8fb2a2919b99d31ff833259b41dd164"
+  },
+  {
+   "unit": "gemv_mq2g256gl_moe_down_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256gl_moe_down_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256gl_moe_down_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 11552,
+   "object_sha256": "2fcde099636b23a62fd1dda32c9a4577ebdf6e1aa154ff796393d2436ef64f45"
+  },
+  {
+   "unit": "gemv_mq2g256gl_moe_gate_up_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256gl_moe_gate_up_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256gl_moe_gate_up_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 11528,
+   "object_sha256": "13a1d35111c80fdd005dbb1b1a94c0e1ccfbe22763d395dea2bb57d6584506c5"
+  },
+  {
+   "unit": "gemv_mq2g256_lloyd_moe_down_expanded_k4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_expanded_k4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_expanded_k4.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 12040,
+   "object_sha256": "7fe2d953aebb94f3e15555e8139fa7d6db62bd754addae5212e44ad98efbf27c"
+  },
+  {
+   "unit": "gemv_mq2g256_lloyd_moe_down_indexed_batched_k4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_indexed_batched_k4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_indexed_batched_k4.hsaco",
+   "rc": 0,
+   "seconds": 0.5,
+   "object_bytes": 12352,
+   "object_sha256": "c64941f140d8b32c5f1e563b3aa51c0f10c0c1d02cc7c672c2f48be163a7f79b"
+  },
+  {
+   "unit": "gemv_mq2g256_lloyd_moe_down_indexed_batched_k8all",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_indexed_batched_k8all.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_indexed_batched_k8all.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 11328,
+   "object_sha256": "ff47910c162a4fcf87b7bfc62075c8539992fbf4a0ef5041bb10c4a3f16cf424"
+  },
+  {
+   "unit": "gemv_mq2g256_lloyd_moe_down_indexed_r4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_indexed_r4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_indexed_r4.hsaco",
+   "rc": 0,
+   "seconds": 0.61,
+   "object_bytes": 19280,
+   "object_sha256": "1e3d42634b8543c6487c359b6a37ad675b027ade96210ecb91d9eeac278907df"
+  },
+  {
+   "unit": "gemv_mq2g256_lloyd_moe_down_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_down_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.63,
+   "object_bytes": 26920,
+   "object_sha256": "993d155f83363b233ecf6bd56fbe69ac7fb96c000852926eadadd9f087cbf06a"
+  },
+  {
+   "unit": "gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4096_lds",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4096_lds.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4096_lds.hsaco",
+   "rc": 0,
+   "seconds": 0.53,
+   "object_bytes": 13360,
+   "object_sha256": "4df4be2923703e3e1de409af64e2b15cb9e558ab6e9e38eb865c87098571d7f5"
+  },
+  {
+   "unit": "gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 12576,
+   "object_sha256": "975788e16742b149d56b4bbf5b9290ca4e366807822b4f8442937d3225eaffed"
+  },
+  {
+   "unit": "gemv_mq3g256gl_moe_down_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq3g256gl_moe_down_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq3g256gl_moe_down_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 12192,
+   "object_sha256": "19cad1b222672e04c17f33a00bda0bd169c8030141d7e20c3c1d38b762c60588"
+  },
+  {
+   "unit": "gemv_mq3g256gl_moe_gate_up_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq3g256gl_moe_gate_up_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq3g256gl_moe_gate_up_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.5,
+   "object_bytes": 12040,
+   "object_sha256": "ba2f6efaf85c361bc99d832e42e45ecb21041371b79069e065a55a2117f87d5e"
+  },
+  {
+   "unit": "gemv_mq3g256_lloyd_moe_down_indexed_batched_k4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_down_indexed_batched_k4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_down_indexed_batched_k4.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 11968,
+   "object_sha256": "9e96d277338e919414f619c0ff849bde4368a2c9304459bec3998616b97297c7"
+  },
+  {
+   "unit": "gemv_mq3g256_lloyd_moe_down_indexed_r4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_down_indexed_r4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_down_indexed_r4.hsaco",
+   "rc": 0,
+   "seconds": 0.57,
+   "object_bytes": 20048,
+   "object_sha256": "992b1d522feb3fa1b8026cbcec6c4531a2c0bfac8e47dd8d7eec8a97b44ca6a2"
+  },
+  {
+   "unit": "gemv_mq3g256_lloyd_moe_down_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_down_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_down_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.55,
+   "object_bytes": 11944,
+   "object_sha256": "ffb7dabd6a946fa3c493cc57dc263f27d0915681f9d43d8be8c6d27f42961b87"
+  },
+  {
+   "unit": "gemv_mq3g256_lloyd_moe_gate_up_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_gate_up_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_gate_up_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 11792,
+   "object_sha256": "dcf94deed132f599690e3581a39a90cdd810bc644dacaf86e772caa19d979dc4"
+  },
+  {
+   "unit": "gemv_mq3g256_lloyd_moe_ninepath_d4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_ninepath_d4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq3g256_lloyd_moe_ninepath_d4.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 10624,
+   "object_sha256": "07904ac501ddaa6c8815c6e376d7d26f6c6bdcfcb5e958bf6590261fe47cc390"
+  },
+  {
+   "unit": "gemv_mq4g128v2_moe_down_top10_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g128v2_moe_down_top10_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g128v2_moe_down_top10_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.57,
+   "object_bytes": 16600,
+   "object_sha256": "8b61250ad85857e3bd6335cd4d3a03916d13ec91361b39576335021a03bfa6b3"
+  },
+  {
+   "unit": "gemv_mq4g128v2_moe_down_top10_k640",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g128v2_moe_down_top10_k640.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g128v2_moe_down_top10_k640.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 9600,
+   "object_sha256": "61de5bfb92d57e5cbb3a13776cfb4793e39e37deeceead52cfd6a3c82345eb8e"
+  },
+  {
+   "unit": "gemv_mq4g128v2_moe_ninepath_d4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g128v2_moe_ninepath_d4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g128v2_moe_ninepath_d4.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 17016,
+   "object_sha256": "e426ff841b6fb1ea0172f27aad3717981f6079c79843b6a7991dc2ace72b425d"
+  },
+  {
+   "unit": "gemv_mq4g256v2_moe_down_k8_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_down_k8_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_down_k8_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 13216,
+   "object_sha256": "77864e2c2c90af58e8265857aabd5e4754fab1a7e8c1ace56c4779cd959730e6"
+  },
+  {
+   "unit": "gemv_mq4g256v2_moe_gate_up_k8_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 11800,
+   "object_sha256": "4d6803d8eab6fbe495b620fd2cac5dfec4a3f421a7b7954816d624b2f7f9c4dd"
+  },
+  {
+   "unit": "gemv_mq4g256v2_moe_gate_up_k8_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_gate_up_k8_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_gate_up_k8_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 14088,
+   "object_sha256": "4fa0628217c35487f00cf72bb05aac8b7f6534c3b1d77a05f8eb5e5378c82112"
+  },
+  {
+   "unit": "gemv_mq4g256v2_moe_gate_up_top10_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_gate_up_top10_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_gate_up_top10_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 19640,
+   "object_sha256": "e27b4a57bbb2dd7e949d699d1c963459dd2507c9afd76a9907304b35a4bc3044"
+  },
+  {
+   "unit": "gemv_mq4g256v2_moe_ninepath_d4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_ninepath_d4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g256v2_moe_ninepath_d4.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 10232,
+   "object_sha256": "a77ff8cc3d91d487d7af7a46f673940f689b059d35e99ab0ef47a1a1563c3d8e"
+  },
+  {
+   "unit": "gemv_mq4g256_moe_gate_up_indexed_k2816",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq4g256_moe_gate_up_indexed_k2816.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq4g256_moe_gate_up_indexed_k2816.hsaco",
+   "rc": 0,
+   "seconds": 0.5,
+   "object_bytes": 12944,
+   "object_sha256": "556df3495c75e14a3d85f14d89b01cf187048ba120aabb503e8c3ec0743c02ec"
+  },
+  {
+   "unit": "gemv_mq6g256v2_moe_down_k8_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq6g256v2_moe_down_k8_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq6g256v2_moe_down_k8_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.52,
+   "object_bytes": 13344,
+   "object_sha256": "611dd861ffd9e1f3331d2d6877d21973dda7be48abad11c954e967b5e9d86cd4"
+  },
+  {
+   "unit": "gemv_mq6g256v2_moe_gate_up_k8_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq6g256v2_moe_gate_up_k8_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq6g256v2_moe_gate_up_k8_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 9880,
+   "object_sha256": "69b5bb994b094f9fe4ee0ff7516117ec782c1b57431c57dcfd14cae22ff497e9"
+  },
+  {
+   "unit": "gemv_mq6g256v2_moe_gate_up_k8_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq6g256v2_moe_gate_up_k8_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq6g256v2_moe_gate_up_k8_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 14344,
+   "object_sha256": "d1bc0e97fcaff096b3c156415efd6565b618eba1612959b8305ca655c0f4b2ea"
+  },
+  {
+   "unit": "gemv_mq6g256v2_moe_ninepath_d4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_mq6g256v2_moe_ninepath_d4.hip -o build/compile-gate/kernel.hipfire.moe/gemv_mq6g256v2_moe_ninepath_d4.hsaco",
+   "rc": 0,
+   "seconds": 0.52,
+   "object_bytes": 10232,
+   "object_sha256": "fe2507c04646854f432f3b8cbdfbc60b3e4ac929f869747ffc390089fa2d2c66"
+  },
+  {
+   "unit": "gemv_paro_q4g128_moe_down_k8_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_paro_q4g128_moe_down_k8_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_paro_q4g128_moe_down_k8_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 10896,
+   "object_sha256": "51c7d452cbe90d04fdd977f5ceb448c9a03a97c0b106814c7a3f6cdcd1b9ef8b"
+  },
+  {
+   "unit": "gemv_paro_q4g128_moe_gate_up_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_paro_q4g128_moe_gate_up_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_paro_q4g128_moe_gate_up_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.58,
+   "object_bytes": 10760,
+   "object_sha256": "54a77eacdbe4be50aadfda48dda151323ae572a111c54d1f76f17a58ab3238cb"
+  },
+  {
+   "unit": "gemv_paro_q4g128_moe_gate_up_k8_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_paro_q4g128_moe_gate_up_k8_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/gemv_paro_q4g128_moe_gate_up_k8_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 9752,
+   "object_sha256": "088e49c7853b141bfd1301344773573881caa5a9aa2a459882e3989c1d1f540e"
+  },
+  {
+   "unit": "gemv_q8_0_moe_down_residual_scaled_k8_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_q8_0_moe_down_residual_scaled_k8_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_q8_0_moe_down_residual_scaled_k8_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 10264,
+   "object_sha256": "d596d29d16191d89605548246e6acddf6727347f30e2ba03c4716d9417b92b73"
+  },
+  {
+   "unit": "gemv_q8_0_moe_down_top10_indexed_batched_expanded",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_q8_0_moe_down_top10_indexed_batched_expanded.hip -o build/compile-gate/kernel.hipfire.moe/gemv_q8_0_moe_down_top10_indexed_batched_expanded.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 9504,
+   "object_sha256": "25b935ace27ae916319d13f7b8ff0c42089447c68f7cc3759ead3b27ae29acc1"
+  },
+  {
+   "unit": "gemv_q8_0_moe_gate_up_k8_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/gemv_q8_0_moe_gate_up_k8_indexed.hip -o build/compile-gate/kernel.hipfire.moe/gemv_q8_0_moe_gate_up_k8_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 10104,
+   "object_sha256": "b64668ded96c887f6dc4bf2821ee0a221c962d704024a0f8126c4595b2d441ed"
+  },
+  {
+   "unit": "grouped_kernel",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/grouped_kernel.hip -o build/compile-gate/kernel.hipfire.moe/grouped_kernel.hsaco",
+   "rc": 0,
+   "seconds": 0.65,
+   "object_bytes": 58992,
+   "object_sha256": "fb1acdcb266e41cc6293ab450714ed80b4a78ea0de7ea87b7b19dd165240a5e1"
+  },
+  {
+   "unit": "grouped",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/grouped.hip -o build/compile-gate/kernel.hipfire.moe/grouped.hsaco",
+   "rc": 0,
+   "seconds": 0.5,
+   "object_bytes": 17688,
+   "object_sha256": "c25cea40dba1bd9dc5d3e37b8ba8e464660a92cbe7df02b457b52c5a2ba0a90d"
+  },
+  {
+   "unit": "hash_router_normalize_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/hash_router_normalize_batched.hip -o build/compile-gate/kernel.hipfire.moe/hash_router_normalize_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 9600,
+   "object_sha256": "6b86318a8f4cc354be058b15d40891cc1113f707f5a87b1790cf8a7d8cc63ac7"
+  },
+  {
+   "unit": "hash_router_normalize_buf",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/hash_router_normalize_buf.hip -o build/compile-gate/kernel.hipfire.moe/hash_router_normalize_buf.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 9208,
+   "object_sha256": "7d7755454762023d2503596c71c039a7ac3c5aa6982f725ff010fabf1347113d"
+  },
+  {
+   "unit": "hash_router_normalize",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/hash_router_normalize.hip -o build/compile-gate/kernel.hipfire.moe/hash_router_normalize.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 9200,
+   "object_sha256": "b5b66fecf265388397bcf6d4c5ac530b4c729ca4f1b861ca9795ae1ae7b3fae0"
+  },
+  {
+   "unit": "moe_down_combine_grouped_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_down_combine_grouped_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_down_combine_grouped_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 10096,
+   "object_sha256": "e9da0738cca2ec6443f499c32c06aff497535a67078c83d8fdbea21344a643d4"
+  },
+  {
+   "unit": "moe_down_combine_grouped_top10",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_down_combine_grouped_top10.hip -o build/compile-gate/kernel.hipfire.moe/moe_down_combine_grouped_top10.hsaco",
+   "rc": 0,
+   "seconds": 0.86,
+   "object_bytes": 71520,
+   "object_sha256": "9a2a85e1f23f9a035712a81bddfc82f5d58bcd9b0afd9861650d4a43bf08f3eb"
+  },
+  {
+   "unit": "moe_down_combine_k8_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_down_combine_k8_batched.hip -o build/compile-gate/kernel.hipfire.moe/moe_down_combine_k8_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 9968,
+   "object_sha256": "87690ddc2bcf3f75baf9e387eec38cac4a303b0dc3bdee930455490294ed4c15"
+  },
+  {
+   "unit": "moe_down_combine_k8_batched_vec4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_down_combine_k8_batched_vec4.hip -o build/compile-gate/kernel.hipfire.moe/moe_down_combine_k8_batched_vec4.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 9464,
+   "object_sha256": "72949fc4cc1c62befac8f7ddcb070062bc9c39561e32350b8b463b231108f808"
+  },
+  {
+   "unit": "moe_down_combine_top10_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_down_combine_top10_batched.hip -o build/compile-gate/kernel.hipfire.moe/moe_down_combine_top10_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.59,
+   "object_bytes": 21368,
+   "object_sha256": "0f33168a50c61ef17852b2e5bc1c5bd9ad19fa07d48ff21e86785a6b82ee3ab5"
+  },
+  {
+   "unit": "moe_down_unscatter_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_down_unscatter_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_down_unscatter_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 9192,
+   "object_sha256": "75026ec4f91fdcfd7069d30e10ba416fb0ad4eb6ffdc11898a5dd4294550c4f2"
+  },
+  {
+   "unit": "moe_gate_up_unscatter_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_gate_up_unscatter_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_gate_up_unscatter_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 9576,
+   "object_sha256": "9477e9f504824c1773862c4ceb44a1178f273bff9f676d54524c6954162cad13"
+  },
+  {
+   "unit": "moe_gate_up_unscatter_silu_top10",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_gate_up_unscatter_silu_top10.hip -o build/compile-gate/kernel.hipfire.moe/moe_gate_up_unscatter_silu_top10.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 23280,
+   "object_sha256": "4e1eeacb8dad656753b1c345349322e3cc197c4427ff29f695eda99914c55de5"
+  },
+  {
+   "unit": "moe_gate_up_unscatter_top10",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_gate_up_unscatter_top10.hip -o build/compile-gate/kernel.hipfire.moe/moe_gate_up_unscatter_top10.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 9584,
+   "object_sha256": "7a97cd91b06fdaf42addf86f2a800545b7807f5db6966143b0855bcb3eae4f43"
+  },
+  {
+   "unit": "moe_router_softmax_top10_f32_fast",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_router_softmax_top10_f32_fast.hip -o build/compile-gate/kernel.hipfire.moe/moe_router_softmax_top10_f32_fast.hsaco",
+   "rc": 0,
+   "seconds": 0.91,
+   "object_bytes": 22016,
+   "object_sha256": "0379073bb2a42aa3f8e225d906ba59be90323e8f6e1ead468a454ff889696dd9"
+  },
+  {
+   "unit": "moe_router_softmax_top10_f32",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_router_softmax_top10_f32.hip -o build/compile-gate/kernel.hipfire.moe/moe_router_softmax_top10_f32.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 21360,
+   "object_sha256": "62bfe14f7180ccb226560ab2e648f46131760e454d381d0f30c57ebb19e7797d"
+  },
+  {
+   "unit": "moe_router_softmax_top10_masked_f32",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_router_softmax_top10_masked_f32.hip -o build/compile-gate/kernel.hipfire.moe/moe_router_softmax_top10_masked_f32.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 21504,
+   "object_sha256": "866093da9eb60d262f7b6173451d8bd32c6e8844ca1de2a94c96332e8ba7ca26"
+  },
+  {
+   "unit": "moe_router_softmax_topk_k8_wave64_exact_shared_silu_mq_rotate",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -mwavefrontsize64 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_router_softmax_topk_k8_wave64_exact_shared_silu_mq_rotate.hip -o build/compile-gate/kernel.hipfire.moe/moe_router_softmax_topk_k8_wave64_exact_shared_silu_mq_rotate.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 17848,
+   "object_sha256": "3ab9f774bad0065beae9000c2b8a6d8bbff3f332ee09aef30e3cad2435b6e1f9"
+  },
+  {
+   "unit": "moe_router_softmax_topk_k8_wave64_exact",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -mwavefrontsize64 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_router_softmax_topk_k8_wave64_exact.hip -o build/compile-gate/kernel.hipfire.moe/moe_router_softmax_topk_k8_wave64_exact.hsaco",
+   "rc": 0,
+   "seconds": 0.53,
+   "object_bytes": 14216,
+   "object_sha256": "abd4f09d967d54dcd40b46db30b699b537dc2ebab46585e35dc1c9bb6b7c1730"
+  },
+  {
+   "unit": "moe_router_softmax_topk_k8_wave64",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -mwavefrontsize64 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_router_softmax_topk_k8_wave64.hip -o build/compile-gate/kernel.hipfire.moe/moe_router_softmax_topk_k8_wave64.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 13312,
+   "object_sha256": "206f84be75a6e759af1366a27bb32bd0f891cac2cb5149764f13c379bb2cd17b"
+  },
+  {
+   "unit": "moe_scatter_fused_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_scatter_fused_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_scatter_fused_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 11872,
+   "object_sha256": "ff3202b42245655f9b88c1686286e16667d65a8d75050cf9cb0aab8c73392c28"
+  },
+  {
+   "unit": "moe_scatter_fused_top10",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_scatter_fused_top10.hip -o build/compile-gate/kernel.hipfire.moe/moe_scatter_fused_top10.hsaco",
+   "rc": 0,
+   "seconds": 0.53,
+   "object_bytes": 12392,
+   "object_sha256": "f8b3127a72ac9991adb2f34d3eba3def18f304d814acd0bc492147cf773cb8f6"
+  },
+  {
+   "unit": "moe_scatter_histogram_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_scatter_histogram_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_scatter_histogram_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 9320,
+   "object_sha256": "d27eedaa6b146f8b480d1c73e856d614c4a0dd86a74441c81cacb1aad18cd091"
+  },
+  {
+   "unit": "moe_scatter_offsets_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_scatter_offsets_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_scatter_offsets_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 9704,
+   "object_sha256": "33214059621a6da440e6858e2fa4073eaa4cc01e0b3721d96e79a280b4f323b8"
+  },
+  {
+   "unit": "moe_scatter_permute_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_scatter_permute_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_scatter_permute_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 10216,
+   "object_sha256": "26f66c46ab886ea29a87d43ab1c03ab3939c9ec09a82cca6dedb3eaa7ec2aadb"
+  },
+  {
+   "unit": "moe_scatter_stable_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_scatter_stable_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_scatter_stable_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 21576,
+   "object_sha256": "ac0acddb138cba562f9bc7bf953eedb48b605bd646e88633c7b9b81468743dff"
+  },
+  {
+   "unit": "moe_softmax_topk_k8_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_softmax_topk_k8_batched.hip -o build/compile-gate/kernel.hipfire.moe/moe_softmax_topk_k8_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 11776,
+   "object_sha256": "e48c613fc76311f7b7d548356aa7cfc0ed4196132d8f5731b99983e06b56748b"
+  },
+  {
+   "unit": "moe_softmax_topk_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_softmax_topk_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_softmax_topk_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 11632,
+   "object_sha256": "e7de55f3c6ac73dbe83fdb35cc9cea08227937ec36d35c4e534baaa50ac2dc54"
+  },
+  {
+   "unit": "moe_topk_renorm_k8_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_topk_renorm_k8_batched.hip -o build/compile-gate/kernel.hipfire.moe/moe_topk_renorm_k8_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.73,
+   "object_bytes": 29536,
+   "object_sha256": "f5d9354bb4e1c11fe5ac65c604f6b813b50644c0e87c93bfa2d17c406865eef6"
+  },
+  {
+   "unit": "moe_topk_renorm_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_topk_renorm_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_topk_renorm_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.5,
+   "object_bytes": 18912,
+   "object_sha256": "98b7f6bd5b8b3baacdffd5ffe77c330c00d3fd67f390653692592ebfac9d042b"
+  },
+  {
+   "unit": "moe_topk_renorm_top10_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_topk_renorm_top10_batched.hip -o build/compile-gate/kernel.hipfire.moe/moe_topk_renorm_top10_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 15456,
+   "object_sha256": "c79152638c89d016e974c6cf4392b495e271fefb12315d8296b2bea4b918f446"
+  },
+  {
+   "unit": "moe_unscatter_silu_clamp_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/moe_unscatter_silu_clamp_k8.hip -o build/compile-gate/kernel.hipfire.moe/moe_unscatter_silu_clamp_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 9456,
+   "object_sha256": "f9f573b1bbf2e6064fe006aba7b07216f5dc1b2e17f9cc4a810b0d14c09fbb4e"
+  },
+  {
+   "unit": "qwen4_gemm_mq4g256v2_moe_grouped_wmma_k2",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/qwen4_gemm_mq4g256v2_moe_grouped_wmma_k2.hip -o build/compile-gate/kernel.hipfire.moe/qwen4_gemm_mq4g256v2_moe_grouped_wmma_k2.hsaco",
+   "rc": 0,
+   "seconds": 1.43,
+   "object_bytes": 150960,
+   "object_sha256": "ea53459e5f3f9c1e214882771aa6b93559eaafbf00d8bbf052f82502ecf42ec0"
+  },
+  {
+   "unit": "qwen4_gemv_mq4g256v2_moe_gate_up_k8_indexed_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/qwen4_gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hip -o build/compile-gate/kernel.hipfire.moe/qwen4_gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.69,
+   "object_bytes": 19640,
+   "object_sha256": "fedd8ed9b15fa9b9d26cca2dbf33d23c60131bca0f73738efb4851d3c3bc9736"
+  },
+  {
+   "unit": "qwen4_moe_iu4_sym_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/qwen4_moe_iu4_sym_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/qwen4_moe_iu4_sym_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.82,
+   "object_bytes": 55784,
+   "object_sha256": "40aaf3697cbe9524a6e3ed2a35b790c574daa23446a353b9c8a1a3d1b091f166"
+  },
+  {
+   "unit": "qwen4_moe_rotate128_i4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/qwen4_moe_rotate128_i4.hip -o build/compile-gate/kernel.hipfire.moe/qwen4_moe_rotate128_i4.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 11240,
+   "object_sha256": "ef0dfb073f551dfb547d64eb704dc9be71d0ac19d2fad8fdd419a39f2c5c902c"
+  },
+  {
+   "unit": "qwen4_moe_scatter_fused_k8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/qwen4_moe_scatter_fused_k8.hip -o build/compile-gate/kernel.hipfire.moe/qwen4_moe_scatter_fused_k8.hsaco",
+   "rc": 0,
+   "seconds": 0.5,
+   "object_bytes": 12128,
+   "object_sha256": "a4598295fc79518a9d55ef1e199c60c6e2e7e68e5c011d03fa9f2a9869a13e14"
+  },
+  {
+   "unit": "qwen4_moe_scatter_stable_top10",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/qwen4_moe_scatter_stable_top10.hip -o build/compile-gate/kernel.hipfire.moe/qwen4_moe_scatter_stable_top10.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 14888,
+   "object_sha256": "052ae3a7e28b36e3c18b3860c08a896761831ea25d6d6d44f2f6855bd87287ee"
+  },
+  {
+   "unit": "qwen4_slab_tile_mask",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/qwen4_slab_tile_mask.hip -o build/compile-gate/kernel.hipfire.moe/qwen4_slab_tile_mask.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 8544,
+   "object_sha256": "edc06f2c7bfd85362fe4edd4dd94cd79bbcb75cdda554d7f8ccac5a9394808f2"
+  },
+  {
+   "unit": "qwen4_slab_union_plan",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/qwen4_slab_union_plan.hip -o build/compile-gate/kernel.hipfire.moe/qwen4_slab_union_plan.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 12648,
+   "object_sha256": "becdd18024a7e81ade2d0c113e7f46e96507f86d39c72efac41b8e2b979badbe"
+  },
+  {
+   "unit": "router",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/router.hip -o build/compile-gate/kernel.hipfire.moe/router.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 14568,
+   "object_sha256": "bb0cd8b5fb8bd3dcc62b6dcd34bbc86e2553a643618cde098483cb93d9158c8c"
+  },
+  {
+   "unit": "situ",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/situ.hip -o build/compile-gate/kernel.hipfire.moe/situ.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 15904,
+   "object_sha256": "616b5b43401518874d45b90051fd01af84a97b4abbeba5e94b42029137320fc8"
+  },
+  {
+   "unit": "v4f_moe_topk_bias_aware_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/v4f_moe_topk_bias_aware_batched.hip -o build/compile-gate/kernel.hipfire.moe/v4f_moe_topk_bias_aware_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 10896,
+   "object_sha256": "79d31d63ffe8aaf9c4f55ecb1664770bb1aed7cc14ef57ebc263acdd5ffbbfcc"
+  },
+  {
+   "unit": "v4f_moe_topk_bias_aware",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/v4f_moe_topk_bias_aware.hip -o build/compile-gate/kernel.hipfire.moe/v4f_moe_topk_bias_aware.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 10752,
+   "object_sha256": "2dfbca1a4b9ba44837df5a792b98d74a971c434cdbe2bc17661a6d67ab3a9d3b"
+  },
+  {
+   "unit": "file_gemm_mq4g128v2_moe_grouped_top10_o16_r16_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/file_gemm_mq4g128v2_moe_grouped_top10_o16_r16_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/file_gemm_mq4g128v2_moe_grouped_top10_o16_r16_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 1.22,
+   "object_bytes": 80792,
+   "object_sha256": "340715239f79f3b3e72a7cd71898f21781b4b7f0136f41d54f8394caaa0a625a"
+  },
+  {
+   "unit": "file_gemm_mq4g128v2_moe_grouped_top10_o8_r8_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/file_gemm_mq4g128v2_moe_grouped_top10_o8_r8_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/file_gemm_mq4g128v2_moe_grouped_top10_o8_r8_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.61,
+   "object_bytes": 27544,
+   "object_sha256": "4daa21c00e7233886480137e0a4fe06abe2e272672a56b1c26dfa12f69983a0c"
+  },
+  {
+   "unit": "file_gemv_hfq4g256_moe_gate_up_k8_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/file_gemv_hfq4g256_moe_gate_up_k8_indexed.hip -o build/compile-gate/kernel.hipfire.moe/file_gemv_hfq4g256_moe_gate_up_k8_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 13824,
+   "object_sha256": "a339fe248ef1307b93495b52ed39fd4e95635fc3d4e86788978db3f95c078cfb"
+  },
+  {
+   "unit": "file_gemv_mfp4g32_e8_moe_down_residual_scaled_k8_indexed_batched_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/file_gemv_mfp4g32_e8_moe_down_residual_scaled_k8_indexed_batched_gfx1151.hip -o build/compile-gate/kernel.hipfire.moe/file_gemv_mfp4g32_e8_moe_down_residual_scaled_k8_indexed_batched_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11440,
+   "object_sha256": "24bbc352e30adcd775b53a0eb7429f09dd151b3a20fa971dc9118362421e7901"
+  },
+  {
+   "unit": "file_gemv_mq2g256_lloyd_moe_gate_up_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/file_gemv_mq2g256_lloyd_moe_gate_up_indexed.hip -o build/compile-gate/kernel.hipfire.moe/file_gemv_mq2g256_lloyd_moe_gate_up_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.5,
+   "object_bytes": 16928,
+   "object_sha256": "9d69a08a495a0d828f2502ee38971e2d55d4d5ff58c1ee415418213db8182665"
+  },
+  {
+   "unit": "file_gemv_mq2g256gl_moe_gate_up_sym_indexed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/file_gemv_mq2g256gl_moe_gate_up_sym_indexed.hip -o build/compile-gate/kernel.hipfire.moe/file_gemv_mq2g256gl_moe_gate_up_sym_indexed.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 13328,
+   "object_sha256": "59432177e5208ed54ff05fc0d13cf1a8d43a7cdce1308f2400ef9b4fabf2d491"
+  },
+  {
+   "unit": "file_gemv_mq3g256_lloyd_moe_gate_up_indexed_batched_k4",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/moe/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/tensor_ops/src/kernels/src -I catalog/hipfire/kernel/gemm_mq/src/kernels/src -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.moe/file_gemv_mq3g256_lloyd_moe_gate_up_indexed_batched_k4.hip -o build/compile-gate/kernel.hipfire.moe/file_gemv_mq3g256_lloyd_moe_gate_up_indexed_batched_k4.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 12192,
+   "object_sha256": "f374e1beca74b329b3864797d8b4e9390d5e502efa6c60d524d58010a7b2bc9a"
+  }
+ ]
+}

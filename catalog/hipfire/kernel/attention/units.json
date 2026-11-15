@@ -1,0 +1,992 @@
+{
+ "origin_registry": "crates/rdna-compute/src/kernels.rs (+ other rdna-compute/src/*.rs constants)",
+ "note": "a unit is the concatenation of its parts, compiled as one HIP source, as hipfire builds it; path parts are relative to catalog/hipfire",
+ "units": [
+  {
+   "name": "attention_band_mask",
+   "const": "ATTENTION_BAND_MASK_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_band_mask.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_bf16_kv_batched",
+   "const": "ATTENTION_BF16_KV_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_KV_BF16 1\n"
+    },
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_kv_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_bf16_kv",
+   "const": "ATTENTION_BF16_KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_KV_BF16 1\n"
+    },
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_causal_batched",
+   "const": "ATTENTION_CAUSAL_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_causal_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_decode_batched_history",
+   "const": "ATTENTION_DECODE_BATCHED_HISTORY_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_decode_batched_history.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym2_tile_batched",
+   "const": "ATTENTION_FLASH_ASYM2_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym2_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym2_tile",
+   "const": "ATTENTION_FLASH_ASYM2_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym2_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym3_tile_batched",
+   "const": "ATTENTION_FLASH_ASYM3_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym3_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym3_tile_hd512_batched",
+   "const": "ATTENTION_FLASH_ASYM3_TILE_HD512_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym3_tile_hd512_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym3_tile_hd512",
+   "const": "ATTENTION_FLASH_ASYM3_TILE_HD512_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym3_tile_hd512.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym3_tile",
+   "const": "ATTENTION_FLASH_ASYM3_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym3_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym4_tile_batched",
+   "const": "ATTENTION_FLASH_ASYM4_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym4_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym4_tile",
+   "const": "ATTENTION_FLASH_ASYM4_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym4_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym4_wmma_tile_batched",
+   "const": "ATTENTION_FLASH_ASYM4_WMMA_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym4_wmma_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_asym_reduce_batched",
+   "const": "ATTENTION_FLASH_ASYM_REDUCE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_asym_reduce_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_bf16_tile_batched",
+   "const": "ATTENTION_FLASH_BF16_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_bf16_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_bf16_tile",
+   "const": "ATTENTION_FLASH_BF16_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_bf16_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_decode_vmm_rows_a3b",
+   "const": "ATTENTION_FLASH_DECODE_VMM_ROWS_A3B_SRC",
+   "registry": "crates/rdna-compute/src/attention.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_decode_vmm_rows_a3b.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_decode_vmm_rows",
+   "const": "ATTENTION_FLASH_DECODE_VMM_ROWS_SRC",
+   "registry": "crates/rdna-compute/src/attention.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_decode_vmm_rows.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_f16_tile_batched",
+   "const": "ATTENTION_FLASH_F16_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_f16_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_f16_tile",
+   "const": "ATTENTION_FLASH_F16_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_f16_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_fwht2_tile_batched",
+   "const": "ATTENTION_FLASH_FWHT2_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_fwht2_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_fwht2_tile",
+   "const": "ATTENTION_FLASH_FWHT2_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_fwht2_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_fwht3_tile_batched",
+   "const": "ATTENTION_FLASH_FWHT3_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_fwht3_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_fwht3_tile",
+   "const": "ATTENTION_FLASH_FWHT3_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_fwht3_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_fwht4_tile_batched",
+   "const": "ATTENTION_FLASH_FWHT4_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_fwht4_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_fwht4_tile",
+   "const": "ATTENTION_FLASH_FWHT4_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_fwht4_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_gqa_fused",
+   "const": "ATTENTION_FLASH_GQA_FUSED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_gqa_fused.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_gqa",
+   "const": "ATTENTION_FLASH_GQA_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_gqa.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_lloyd_reduce_batched",
+   "const": "ATTENTION_FLASH_LLOYD_REDUCE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_lloyd_reduce_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_lloyd_reduce",
+   "const": "ATTENTION_FLASH_LLOYD_REDUCE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_lloyd_reduce.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_reduce_skip",
+   "const": "ATTENTION_FLASH_Q8_0_REDUCE_SKIP_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_reduce_skip.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_reduce",
+   "const": "ATTENTION_FLASH_Q8_0_REDUCE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_reduce.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_tile_batched",
+   "const": "ATTENTION_FLASH_Q8_0_TILE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_tile_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_tile_dpp_gfx1151",
+   "const": "ATTENTION_FLASH_Q8_0_TILE_DPP_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GFX1151_ATTENTION_TILE_DPP_REDUCE 1\n"
+    },
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_tile_gqa_gemma_gfx1151",
+   "const": "ATTENTION_FLASH_Q8_0_TILE_GQA_GEMMA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_tile_gqa_gemma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_tile_gqa_gfx1151",
+   "const": "ATTENTION_FLASH_Q8_0_TILE_GQA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_tile_gqa.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_tile_hd64",
+   "const": "ATTENTION_FLASH_Q8_0_TILE_HD64_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_tile_hd64.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_tile_rows",
+   "const": "ATTENTION_FLASH_Q8_0_TILE_ROWS_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_tile_rows.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_tile",
+   "const": "ATTENTION_FLASH_Q8_0_TILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_tile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_q8_0_tile_swa",
+   "const": "ATTENTION_FLASH_Q8_0_TILE_SWA_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_q8_0_tile_swa.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash_reduce_dsplit_gfx1151",
+   "const": "ATTENTION_FLASH_REDUCE_DSPLIT_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash_reduce_dsplit.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_flash",
+   "const": "ATTENTION_FLASH_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_flash.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_fp8_e4m3_kv_batched",
+   "const": "ATTENTION_FP8_E4M3_KV_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_KV_FP8_E4M3 1\n"
+    },
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_kv_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_fp8_e4m3_kv",
+   "const": "ATTENTION_FP8_E4M3_KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_KV_FP8_E4M3 1\n"
+    },
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_gqa_warp_dv",
+   "const": "ATTENTION_GQA_WARP_DV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_gqa_warp_dv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_gqa_warp",
+   "const": "ATTENTION_GQA_WARP_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_gqa_warp.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_hfq4_kv",
+   "const": "ATTENTION_HFQ4_KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_hfq4_kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_hfq8_kv",
+   "const": "ATTENTION_HFQ8_KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_hfq8_kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_int8c_f16_kv",
+   "const": "ATTENTION_INT8C_F16_KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_int8c_f16_kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_int8c_kv",
+   "const": "ATTENTION_INT8C_KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_int8c_kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_int8_kv",
+   "const": "ATTENTION_INT8_KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_int8_kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_partition_merge_f32",
+   "const": "ATTENTION_PARTITION_MERGE_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_partition_merge_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q4kv",
+   "const": "ATTENTION_Q4KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q4kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8kv",
+   "const": "ATTENTION_Q8KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_fa2_gqa_fwht3k_gfx11",
+   "const": "ATTENTION_Q8_0_FA2_GQA_FWHT3K_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_FA2_KMODE 3\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/turbo_common.h"
+    },
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_fa2_gqa.gfx11.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_fa2_gqa_fwht4k_gfx11",
+   "const": "ATTENTION_Q8_0_FA2_GQA_FWHT4K_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_FA2_KMODE 4\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/turbo_common.h"
+    },
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_fa2_gqa.gfx11.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_fa2_gqa_gfx1151",
+   "const": "ATTENTION_Q8_0_FA2_GQA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_fa2_gqa.gfx1151.hip"
+    }
+   ],
+   "flags": [
+    "-mcumode"
+   ]
+  },
+  {
+   "name": "attention_q8_0_fa2_gqa_gfx11",
+   "const": "ATTENTION_Q8_0_FA2_GQA_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_fa2_gqa.gfx11.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_flash_prefill",
+   "const": "ATTENTION_Q8_0_FLASH_PREFILL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_flash_prefill.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_flash_prefill_wmma",
+   "const": "ATTENTION_Q8_0_FLASH_PREFILL_WMMA_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_flash_prefill_wmma.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_flash_prefill_wmma_swa_gfx1151",
+   "const": "ATTENTION_Q8_0_FLASH_PREFILL_WMMA_SWA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_flash_prefill_wmma_swa.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_flash_prefill_wmma_swa",
+   "const": "ATTENTION_Q8_0_FLASH_PREFILL_WMMA_SWA_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_flash_prefill_wmma_swa.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_kv_batched",
+   "const": "ATTENTION_Q8_0_KV_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_kv_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_kv",
+   "const": "ATTENTION_Q8_0_KV_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_kv.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_kv_swa",
+   "const": "ATTENTION_Q8_0_KV_SWA_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_kv_swa.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_kv_timed",
+   "const": "ATTENTION_Q8_0_KV_TIMED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_kv_timed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_q8_0_prefill_gqa_wmma_gfx11",
+   "const": "ATTENTION_Q8_0_PREFILL_GQA_WMMA_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_q8_0_prefill_gqa_wmma.gfx11.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_rows_softmax",
+   "const": "ATTENTION_ROWS_SOFTMAX_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_rows_softmax.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention",
+   "const": "ATTENTION_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_t5_bias_f32",
+   "const": "ATTENTION_T5_BIAS_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_t5_bias_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "attention_verify_wmma_gfx1151",
+   "const": "ATTENTION_VERIFY_WMMA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/attention_verify_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "causal_conv_depthwise_rows",
+   "const": "CAUSAL_CONV_DEPTHWISE_ROWS_SRC",
+   "registry": "crates/rdna-compute/src/gated_delta_vector.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/causal_conv_depthwise_rows.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "latent_attention_absorb",
+   "const": "LATENT_ATTENTION_ABSORB_SRC",
+   "registry": "crates/rdna-compute/src/latent_attention_absorb.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/latent_attention_absorb.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "latent_attention_decode",
+   "const": "LATENT_ATTENTION_DECODE_SRC",
+   "registry": "crates/rdna-compute/src/latent_attention_decode.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/latent_attention_decode.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "latent_attention_decompress",
+   "const": "LATENT_ATTENTION_DECOMPRESS_SRC",
+   "registry": "crates/rdna-compute/src/latent_attention.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/latent_attention_decompress.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "latent_attention_flash",
+   "const": "LATENT_ATTENTION_FLASH_SRC",
+   "registry": "crates/rdna-compute/src/latent_attention_flash.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/latent_attention_flash.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "latent_attention_gate",
+   "const": "LATENT_ATTENTION_GATE_SRC",
+   "registry": "crates/rdna-compute/src/latent_attention.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/latent_attention_gate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "latent_attention_serial",
+   "const": "LATENT_ATTENTION_SERIAL_SRC",
+   "registry": "crates/rdna-compute/src/latent_attention.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/latent_attention_serial.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "latent_attention_split",
+   "const": "LATENT_ATTENTION_SPLIT_SRC",
+   "registry": "crates/rdna-compute/src/latent_attention.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/latent_attention_split.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qkv_split_interleaved",
+   "const": "QKV_SPLIT_INTERLEAVED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/qkv_split_interleaved.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qk_rmsnorm_rope_flux",
+   "const": "QK_RMSNORM_ROPE_FLUX_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/qk_rmsnorm_rope_flux.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "wo_per_group_batched_f32",
+   "const": "WO_PER_GROUP_BATCHED_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/wo_per_group_batched_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "wo_per_group_batched_hfq4g256",
+   "const": "WO_PER_GROUP_BATCHED_HFQ4G256_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/wo_per_group_batched_hfq4g256.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "wo_per_group_batched_q8_0_multirow",
+   "const": "WO_PER_GROUP_BATCHED_Q8_0_MULTIROW_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/wo_per_group_batched_q8_0_multirow.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "wo_per_group_batched_q8_0",
+   "const": "WO_PER_GROUP_BATCHED_Q8_0_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/wo_per_group_batched_q8_0.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "wo_per_group_batched_q8_0_wmma_4w",
+   "const": "WO_PER_GROUP_BATCHED_Q8_0_WMMA_4W_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/attention/src/kernels/src/wo_per_group_batched_q8_0_wmma_4w.hip"
+    }
+   ],
+   "flags": []
+  }
+ ]
+}

@@ -1,0 +1,87 @@
+id      = "runtime.strixite.qweight"
+kind    = "runtime"
+summary = "A dense projection's weight in whichever Q format the layout gave it, dispatching to the matching linear kernel"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/qweight.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.dispatch/strixw/-"
+api       = "strix::QWeightView, strix::QChunkMajorView, strix::kernels::linear_qw"
+numeric   = "that of the kernel it dispatches to"
+regime    = "header only; format read from the strixw file, never guessed"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q5/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q6/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+interface = "linear.decode/strixw-q4/bf16"
+
+[[requires]]
+interface = "moe.experts-decode/strixw-q4/bf16"
+
+[[requires]]
+interface = "moe.experts-decode/strixw-q5/bf16"
+
+[[requires]]
+interface = "linear.decode/strixw-q5/bf16"
+
+[[requires]]
+interface = "linear.decode/strixw-q6/bf16"
+
+[[requires]]
+interface = "linear.decode/strixw-q8/bf16"
+
+[[requires]]
+interface = "linear.prefill/strixw-q4/bf16"
+
+[[requires]]
+interface = "linear.prefill/strixw-q5/bf16"
+
+[[requires]]
+interface = "linear.prefill/strixw-q6/bf16"
+
+[[requires]]
+interface = "linear.prefill/strixw-q8/bf16"
+
+[[requires]]
+interface = "linear.prefill/bf16/bf16"
+
+[[requires]]
+interface = "moe.experts-prefill/strixw-q4/bf16"
+
+[[requires]]
+interface = "moe.experts-prefill/strixw-q5/bf16"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,44 @@
+id        = "tool.flerp.convert_qwen4exp_p16"
+kind      = "tool"
+summary   = "Converter CLI from the HF BF16 checkpoint to strixw v5 with p16 panel classes (default: the fleet's layout with p16 on every Q4/Q8 class but the HC mixes); --plan [--plan-scratch DIR] for exact sizes, --check-against REF --tensors .. for byte proofs on real data"
+design    = "DESIGN.md"
+notes     = "Adapted copy of strixite's tools/convert_qwen4exp.cpp (20937dc), changes marked `flerp`. Built with the host C++ compiler by src/flerp/convert_qwen4exp_p16/build.sh (no HIP)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/convert_qwen4exp_p16/convert_qwen4exp_p16_main.cpp", "flerp/convert_qwen4exp_p16/build.sh"]
+authors   = ["shawnshekari", "pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc: tools/convert_qwen4exp.cpp"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/convert_qwen4exp_p16/convert_qwen4exp_p16_main.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "tool.convert-qwen4exp-p16/-/-"
+api       = "convert_qwen4exp_p16 --src DIR --git HASH (--out DIR | --plan [--plan-scratch DIR] | --check-against REF --tensors NAME,..|all) [--layout ..] [--threads N] [--vision] ..."
+numeric   = "n/a"
+regime    = "host only"
+
+[[requires]]
+module    = "format.flerp.convert_qwen4exp_p16"
+
+[[requires]]
+module    = "runtime.strixite.args"
+
+[[requires]]
+module    = "runtime.strixite.json"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host tool built by its build.sh; evidence as format.flerp.convert_qwen4exp_p16"

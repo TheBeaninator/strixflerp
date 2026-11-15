@@ -1,0 +1,61 @@
+id        = "runtime.strixfold_pr6.vision_sidecar"
+kind      = "runtime"
+summary   = "DeepSeek-V4.1 image encoder as a per-image Python child: the checkpoint ViT and aligner on CPU torch, the pipe protocol to it with one deadline and cancellation, an LRU of encoded rows"
+notes     = "vision_cpu.zig embeds vision_cpu.py and vision_hip.py (@embedFile) and passes them to `python -I -c`. vision_cpu.py is written after DeepSeek V4.1 Flash 1017 inference/vision.py (revision 1bae0e10, git blob 77af0bde; MIT, Copyright (c) 2023 DeepSeek; text in src/tools/dsv41-hip/assets/DEEPSEEK_VISION_LICENSE): it is not a copy of that file. It refuses any torch but 2.9.0+cpu (vision_cpu.py:158). picture.zig and pil.zig (executor.strixfold.dsv41_vision) and model.zig (executor.strixfold.dsv41) are imported and not changed. docs/VISION-DSV41.md has the path end to end."
+
+[provenance]
+origin    = "strixfold_pr6"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "766df75"
+branch    = "feat/hip-cpu-image-input (pull request #6, aercanozcan)"
+paths     = [
+  "tools/dsv41-hip/VISION.md",
+  "tools/dsv41-hip/assets/DEEPSEEK_VISION_LICENSE",
+  "tools/dsv41-hip/requirements-vision.lock.txt",
+  "zig/src/families/dsv41/vision_cache.zig",
+  "zig/src/families/dsv41/vision_cpu.py",
+  "zig/src/families/dsv41/vision_cpu.zig",
+  "zig/src/families/dsv41/vision_hip.py",
+  "zig/src/families/dsv41/vision_pipe.zig",
+]
+authors   = ["aercanozcan", "DeepSeek (the reference inference/vision.py that vision_cpu.py follows)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "vision.tower/deepseek-v4.1/bf16.cpu-torch"
+api       = "vision_cpu.zig Vision (open, hook, rowsBatch, close)"
+numeric   = "ViT and aligner in bf16 tensors with fp32 inside rms / rotary, torch MATH attention over query pieces of 128 rows; said by the PR to equal the reference; not measured here"
+regime    = "one child process an uncached image, on the lane thread; at most 9,216 patches and 1,024 rows an image"
+
+[[provides]]
+interface = "vision.worker-pipe/vcpu-v1/bf16"
+api       = "vision_cpu.zig start / finish, vision_pipe.zig Transfer; vision_cpu.py main"
+numeric   = "bytes only: 32-byte grid + bf16 patches in, \"VCPU\" + rows + byte count + bf16 rows out"
+regime    = "one image a process; one deadline (TF_DS_VISION_TIMEOUT, 240 s) over spawn, write and read"
+
+[[requires]]
+module    = "executor.strixfold.dsv41_vision"
+
+[[requires]]
+module    = "executor.strixfold.dsv41"
+
+[[requires]]
+module    = "runtime.strixfold.lanes"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "never compiled or run here: no recipe assembles it. It needs the overlay rule of docs/SPEC-PROPOSALS.md section 12 before `flerp assemble` can place its files over the strixfold modules"

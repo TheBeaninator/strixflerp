@@ -1,0 +1,41 @@
+id      = "runtime.strixite.paged_buffer"
+kind    = "runtime"
+summary = "Device array that takes physical pages as it is used, inside one reserved address range"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/paged_buffer.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "device.paged-buffer/-/-"
+api       = "strix::PagedDeviceBuffer, strix::VmmReservation, strix::PageHandle"
+numeric   = "n/a"
+regime    = "hipMemAddressReserve + hipMemCreate; pages are never unmapped at runtime and only map back into their own reservation (gfx1151 hazards)"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

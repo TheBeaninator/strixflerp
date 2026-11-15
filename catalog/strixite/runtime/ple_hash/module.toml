@@ -1,0 +1,35 @@
+id      = "runtime.strixite.ple_hash"
+kind    = "runtime"
+summary = "PLE n-gram ids on the host: 16 integer hashes per token selecting n-gram table rows"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/ple_hash.cpp", "runtime/ple_hash.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/ple_hash.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.ngram-ids/-/-"
+api       = "strix::ple_ngram_ids, strix::PleHistory, strix::PleHashParams"
+numeric   = "integer hashing, validated against the HF reference ids"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,56 @@
+id        = "executor.tensorfold.glm_ocr"
+kind      = "executor"
+summary   = "GLM-OCR on HIP"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/families/glm_ocr/checkpoint.zig",
+  "zig/src/families/glm_ocr/config.zig",
+  "zig/src/families/glm_ocr/fixtures/config.json",
+  "zig/src/families/glm_ocr/fixtures/preprocessor_config.json",
+  "zig/src/families/glm_ocr/fixtures/processor.json",
+  "zig/src/families/glm_ocr/hip.zig",
+  "zig/src/families/glm_ocr/hip_engine.zig",
+  "zig/src/families/glm_ocr/hip_input.zig",
+  "zig/src/families/glm_ocr/hip_lanes.zig",
+  "zig/src/families/glm_ocr/hip_native.zig",
+  "zig/src/families/glm_ocr/hip_ops.zig",
+  "zig/src/families/glm_ocr/hip_snapshot.zig",
+  "zig/src/families/glm_ocr/hip_text.zig",
+  "zig/src/families/glm_ocr/hip_vision.zig",
+  "zig/src/families/glm_ocr/hip_weights.zig",
+  "zig/src/families/glm_ocr/host_test.zig",
+  "zig/src/families/glm_ocr/positions.zig",
+  "zig/src/families/glm_ocr/processor.zig",
+  "zig/src/families/glm_ocr/root.zig",
+  "zig/src/families/glm_ocr/schema.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model/glm-ocr/bf16.tensorfold"
+api       = "families/glm_ocr"
+numeric   = "per family receipts (docs/receipts upstream)"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

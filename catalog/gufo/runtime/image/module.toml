@@ -1,0 +1,39 @@
+id        = "runtime.gufo.image"
+kind      = "runtime"
+summary   = "Image input helpers: the image and pixel types the Qwen vision headers name, decoding (PNG, JPEG, WebP), fetching by URL, resizing"
+notes     = "Harvested for phase 5: executor.gufo.qwen names these types through the vision headers. A text-only recipe carries the header and does not compile image.cpp."
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = ["src/core/image.cpp", "src/core/image.hpp"]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "media.image-decode-gufo/-/-"
+api       = "gufo::core image.hpp"
+numeric   = "n/a"
+regime    = "host; needs libpng, libjpeg, libwebp and libcurl"
+
+[[requires]]
+module    = "runtime.gufo.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

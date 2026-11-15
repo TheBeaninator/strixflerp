@@ -1,0 +1,56 @@
+id        = "kernel.flerp.gguf_gemv_hipfire"
+kind      = "kernel"
+summary   = "Adapter (launch-gguf-gemv): gufo's LaunchQ8KBlockGEMV on hipfire's gemv_q8_0 and gemv_q4k code objects; other GGUF types stay with gufo"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp_adapters/gguf_gemv_hipfire.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp_adapters/gguf_gemv_hipfire.cpp"]
+includes  = []
+uses      = ["hip-runtime"]
+defines   = ["ENGINE_ENABLE_HIP=1"]
+
+[adapter]
+for       = "kernel.gufo.qwen_linear_decode"
+symbols   = ["LaunchQ8KBlockGEMV"]
+
+[[adapter.code_object]]
+module    = "kernel.hipfire.gemv_ggml"
+unit      = "gemv_q8_0"
+symbol    = "flerp_co_hipfire_gemv_q8_0"
+
+[[adapter.code_object]]
+module    = "kernel.hipfire.gemv_ggml"
+unit      = "gemv_q4k"
+symbol    = "flerp_co_hipfire_gemv_q4k"
+
+[[provides]]
+interface = "linear.decode/gguf-kquant/f32.hipfire-rows"
+api       = "gufo::hip::LaunchQ8KBlockGEMV (Q8_0 and Q4_K launch hipfire's gemv_q8_0 / gemv_q4k; other types go to gufo's kernel, renamed LaunchQ8KBlockGEMV_flerp_origin)"
+numeric   = "hipfire's: weights decoded in-kernel, (scale * q) * x added element by element per lane, 32 lanes reduced by shfl_down; same weights as gufo, different summation order"
+regime    = "Q8_0 (K % 32 == 0) and Q4_K (K % 256 == 0), M and K below 2^31; one launch, one 32-thread block per row"
+
+[[requires]]
+module    = "kernel.gufo.qwen_linear_decode"
+
+[[requires]]
+module    = "kernel.hipfire.gemv_ggml"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/interface/gguf-gemv.toml"
+bench     = "flerp:gate/interface/gguf-gemv.toml"
+status    = "benched"
+evidence  = "gate/results/interface/gguf-gemv/result.json"

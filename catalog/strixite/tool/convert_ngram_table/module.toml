@@ -1,0 +1,47 @@
+id      = "tool.strixite.convert_ngram_table"
+kind    = "tool"
+summary = "Converter CLI: the checkpoint's n-gram shards to ngram.table"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/convert_ngram_table.cpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/convert_ngram_table.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.convert-ngram-table/-/-"
+api       = "main (convert_ngram_table)"
+numeric   = "n/a"
+regime    = "host only"
+
+[[requires]]
+interface = "format.convert/strixw/-"
+
+[[requires]]
+interface = "format.container/ngram-table/-"
+
+[[requires]]
+interface = "format.reader/safetensors/-"
+
+[[requires]]
+module = "runtime.strixite.args"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,39 @@
+id      = "kernel.strixite.logits_bias"
+kind    = "kernel"
+summary = "A request's logit_bias added to its logits rows in place, ahead of logits_topk"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/logits_bias.hip", "kernels/logits_bias.hpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/logits_bias.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "logits.bias/-/-"
+api       = "strix::kernels::logits_bias"
+numeric   = "one fp32 add per entry"
+regime    = "one thread per entry; entries must not collide"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

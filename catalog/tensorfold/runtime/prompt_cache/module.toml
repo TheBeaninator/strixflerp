@@ -1,0 +1,42 @@
+id        = "runtime.tensorfold.prompt_cache"
+kind      = "runtime"
+summary   = "Exact prompt reuse: states at prompt-pass chunk ends, on-disk Imprint"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/core/keepalive.zig",
+  "zig/src/core/prompt_cache.zig",
+  "zig/src/core/prompt_cache_test.zig",
+  "zig/src/core/prompt_imprint.zig",
+  "zig/src/core/prompt_imprint_test.zig",
+  "zig/src/core/segments.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "cache.prompt-tensorfold/-/-"
+api       = "core/prompt_cache.zig, prompt_imprint.zig"
+numeric   = "exact reuse"
+regime    = "chunk-end granularity"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

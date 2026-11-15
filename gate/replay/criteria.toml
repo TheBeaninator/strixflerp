@@ -1,0 +1,38 @@
+# FLERP-CRITERIA 009c3634b8: replacement criteria and feature cut, decided by the pod (agent, 2026-11-12).
+# Base: steward default STEW-RECO v2 (#47692): features IN unless the census shows no caller; one-conversation-at-a-time
+# identity for classes not self-identical; 2 seqs per strixite worker, 4 pair streams. Adjusted to
+# /data/pod/reports/2026-11/flerp-corpus-v1.md (207 chats on B, 151 on the pair) and flerp-selfid.md (origin self-identical
+# one at a time 8/8; two long-prompt conversations in flight 2/8). Written before the flerp-swap replays it judges (SPEC.md section 8).
+
+[identity]
+volatile_fields = ["id", "created", "timings", "system_fingerprint", "choices[].message.tool_calls[].id"]   # tool-call ids are call_<random> per reply (flerp-selfid.md)
+seed = "recorded"            # FreeFitty sends a seed on every chat; replay keeps it
+default = "token_and_byte"   # same token ids and same body bytes minus volatile_fields, from an empty cache
+
+# One row per request class (flerp-corpus-v1.md / flerp-selfid.md). "one_at_a_time" = identity required only when the
+# request is served alone; "token_and_byte" = identity in any schedule.
+[classes]
+long_prompt          = "token_and_byte"   # 132 in corpus; selfid 6/6 alone
+cache_hit            = "token_and_byte"   # 75 in corpus; selfid 2/2 alone
+tools                = "token_and_byte"   # every recorded strixite chat carries 23 tools
+plain                = "token_and_byte"   # 0 in corpus
+tool_choice_none     = "token_and_byte"   # 0 in corpus; FreeFitty sends it on refocus
+steered              = "token_and_byte"   # 0 in corpus
+images               = "token_and_byte"   # 0 in corpus
+two_in_flight        = "one_at_a_time"    # NOT self-identical: 2/8 long-prompt tokens equal alone vs beside another (selfid, e.g. strixite-00037); 192/207 arrived co-scheduled
+pair_dsv41           = "one_at_a_time"    # 151 pair chats in corpus; no pair self-replay window yet
+
+[features]
+tools          = "in"    # 82/82
+steer          = "in"    # FreeFitty's experts send it; served by the fleet build (/steer answers vectors)
+steer_scope    = "out"   # cannot occur: fleet /steer has no "scope", so FreeFitty never sends it (flerp-usage F11); 0 in corpus
+images         = "in"    # 0 in an hour, but FreeFitty sends image_url parts and vision is on fleet-wide; cheap to keep
+streaming      = "in"    # 0 on the rail face, but pod-chat streams to :5300 on mgmt (flerp-usage F17/F21)
+json_schema    = "out"   # no caller in the corpus, in FreeFitty source, or in 24 h of journals
+logprobs       = "out"   # the fleet build refuses it with 400 (flerp-usage); no caller
+cache_routes   = "in"    # /cache/probe seen on B; /cache/export probed on the pair; FreeFitty uses export/import
+shared_messages = "in"   # 150/151 pair chats carry shared_messages
+
+[concurrency]
+strixite_seqs_per_worker = 2   # fleet total-slots 2; 192/207 recorded chats arrived with another in flight
+pair_streams = 4               # pair --parallel 4 / --streams 4 (flerp-usage F12)

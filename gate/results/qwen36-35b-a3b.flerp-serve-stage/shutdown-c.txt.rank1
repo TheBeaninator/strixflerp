@@ -1,0 +1,5 @@
+$ ionice -c3 nice -n 19 taskset -c 0-3 /data/projects/strixflerp/build/qwen36-35b-a3b.flerp-serve-stage/flerp-qwen35moe-stage weights=/data/ark/models/Mapika__decider-2b-GGUF/gguf/decider-2b-v12-Q4_K_M.gguf context=4096 world=2 placement=even epoch=9 single_reader=on pause_ms=100 peers=127.0.0.1:39770 rank=1
+{"event":"loaded","mode":"stage","rank":1,"load_s":18.3526,"placed":{"plan_sha256":"58bea5424f1e6d4c65c1917479481ea2f9165a945dbd85467fa1d10e6dbf7e91","blocks":[12,24],"allocated_bytes":840314496,"plan_device_bytes":840314496,"tensor_bytes":840310400,"fill_s":18.167,"pause_s":16.1148,"single_reader":true,"direct_io":true,"hip_free_before":127766183936,"hip_free_after":126719885312,"hip_total":133143986176},"t_unix":1.79445e+09}
+{"event":"connected","rank":1,"world":2,"cuts":[0,12,24],"t_unix":1.79445e+09}
+{"event":"terminated","rank":1,"when":"waiting for a call","t_unix":1.79445e+09}
+{"event":"exit","rank":1,"rc":0}

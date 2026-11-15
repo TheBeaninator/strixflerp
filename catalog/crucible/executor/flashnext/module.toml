@@ -1,0 +1,127 @@
+id        = "executor.crucible.flashnext"
+kind      = "executor"
+summary   = "Qwen3.8-Flash-Next EXL3 executor: the Engine (engine/engine.hip, one translation unit holding every kernel), model loader, layer loop, prefill engine with chunking, interleave and stage arena, batched and packed-verify forwards, switch registry"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/engine.hip",
+  "engine/model/flashnext/active_config.h",
+  "engine/model/flashnext/draft_chain_switch.h",
+  "engine/model/flashnext/fixed_state.h",
+  "engine/model/flashnext/model.h",
+  "engine/model/flashnext/mtp_sidecar.h",
+  "engine/model/flashnext/multimodal.h",
+  "engine/model/flashnext/prefill_launch.h",
+  "engine/model/flashnext/vision.h",
+  "engine/runtime/batch_forward.h",
+  "engine/runtime/batch_spec_forward.h",
+  "engine/runtime/bounds.h",
+  "engine/runtime/device_zero.h",
+  "engine/runtime/dump_io.h",
+  "engine/runtime/layer_loop.h",
+  "engine/runtime/prefill_engine.inc",
+  "engine/runtime/prefill_front_check.h",
+  "engine/runtime/prefill_interleave.h",
+  "engine/runtime/prefill_plan_budget.h",
+  "engine/runtime/prefill_prune.h",
+  "engine/runtime/prefill_rows.h",
+  "engine/runtime/prompt.h",
+  "engine/runtime/rope_mode.h",
+  "engine/runtime/rope_policy.h",
+  "engine/runtime/sequence_state.h",
+  "engine/runtime/stage_arena.h",
+  "engine/runtime/stage_plan.h",
+  "engine/switches.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/engine/engine.hip"]
+includes  = ["src/engine", "src/engine/model/flashnext", "src/engine/runtime"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "executor.model/qwen3.8-flash-next/exl3"
+api       = "crucible::Engine (engine/engine.hip), Loader (model/flashnext/model.h); driven by the JSON-line protocol of serve.crucible.engine_serve"
+numeric   = "per docs/FLASHNEXT_FORWARD.md; CRUCIBLE_EXACT selects the exact numerics mode"
+regime    = "one GPU, 1..4 sessions"
+
+[[requires]]
+module    = "format.crucible.exl3"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[[requires]]
+module    = "format.crucible.ngram16"
+
+[[requires]]
+module    = "kernel.crucible.device_common"
+
+[[requires]]
+module    = "kernel.crucible.exl3_gemm"
+
+[[requires]]
+module    = "kernel.crucible.exl3_gemv"
+
+[[requires]]
+module    = "kernel.crucible.gdn"
+
+[[requires]]
+module    = "kernel.crucible.hc"
+
+[[requires]]
+module    = "kernel.crucible.moe_decode"
+
+[[requires]]
+module    = "kernel.crucible.moe_prefill"
+
+[[requires]]
+module    = "kernel.crucible.ops"
+
+[[requires]]
+module    = "kernel.crucible.qsa"
+
+[[requires]]
+module    = "kernel.crucible.vision"
+
+[[requires]]
+module    = "runtime.crucible.ablation"
+
+[[requires]]
+module    = "runtime.crucible.batch"
+
+[[requires]]
+module    = "runtime.crucible.conversation_cache"
+
+[[requires]]
+module    = "runtime.crucible.device_memory"
+
+[[requires]]
+module    = "runtime.crucible.sampling"
+
+[[requires]]
+module    = "runtime.crucible.speculation"
+
+[[requires]]
+module    = "runtime.crucible.state_disk"
+
+[[requires]]
+module    = "tool.crucible.engine_cli"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "the whole engine is one translation unit; it builds in the recipe qwen38-flash-next.crucible (origin Makefile), not in the per-module compile gate"

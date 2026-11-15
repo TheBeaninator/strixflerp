@@ -1,0 +1,79 @@
+id        = "kernel.flerp.wmma_q4p"
+kind      = "kernel"
+summary   = "Adapter (Q4Panel16 / Q8Panel16): strixite's dense Q4 / Q8 prefill WMMA GEMM (the F16 kernel) reading panels with whole 128-byte lines into the same LDS tile, bit-equal to linear_wmma; row-major views and Q5 / Q6 / BF16 stay strixite's"
+notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 4. Derived from kernel.strixite.linear_wmma + kernel.strixite.wmma_gemm (strixite 20937dc): linear_wmma.hip's linear_wmma_f16_kernel and launch copied into kernels/wmma_q4p.hip, WmmaWCodes adapted into kernels/wmma_panel.hpp (WmmaWCodesP; kernel.flerp.moe_grouped_p uses it too). LDS staging kept: kernels/wmma_q4p.hip's header says why (the fragment layout of wmma.hpp:6-8). Gate: gate/strixw-panel-kernels.toml."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/wmma_q4p/kernels/wmma_panel.hpp", "flerp/wmma_q4p/kernels/wmma_q4p.hip", "flerp/wmma_q4p/kernels/wmma_q4p.hpp"]
+authors   = ["shawnshekari", "pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc (v0.7.0-pod): kernels/linear_wmma.hip, kernels/wmma_gemm.hpp, adapted here (catalog/strixite/kernel/linear_wmma, wmma_gemm hold them verbatim)"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/wmma_q4p/kernels/wmma_q4p.hip"]
+includes  = ["src/flerp/wmma_q4p"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[adapter]
+for       = "kernel.strixite.linear_wmma"
+symbols   = ["linear_q4_wmma", "linear_q8_wmma"]
+
+[[provides]]
+interface = "linear.prefill/strixw-q4/bf16"
+api       = "strix::kernels::linear_q4_wmma (a panel-tagged view: linear_qp_wmma; otherwise strixite's, renamed linear_q4_wmma_flerp_origin)"
+numeric   = "linear_wmma's F16 kernel bits: the same F16 weight tile in LDS, the same x tile and WMMA sequence"
+regime    = "prefill; K % 64 == 0, wave32; panels: N per 16-row panel"
+
+[[provides]]
+interface = "linear.prefill/strixw-q8/bf16"
+api       = "strix::kernels::linear_q8_wmma (a panel-tagged view: linear_qp_wmma; otherwise strixite's, renamed linear_q8_wmma_flerp_origin)"
+numeric   = "as linear.prefill/strixw-q4/bf16"
+regime    = "as linear.prefill/strixw-q4/bf16"
+
+[[provides]]
+interface = "linear.prefill/strixw-q4p16/bf16"
+api       = "strix::kernels::linear_qp_wmma (kernels/wmma_q4p.hpp), strix::kernels::WmmaWCodesP (kernels/wmma_panel.hpp)"
+numeric   = "as linear.prefill/strixw-q4/bf16"
+regime    = "Q4Panel16 / Q8Panel16 views only"
+
+[[requires]]
+module    = "kernel.strixite.linear_wmma"
+
+[[requires]]
+module    = "kernel.strixite.wmma_gemm"
+
+[[requires]]
+module    = "format.flerp.panel_device"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module    = "kernel.strixite.device_info"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "kernel.strixite.norm"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/strixw-panel-kernels.toml"
+bench     = "flerp:gate/strixw-panel-kernels.toml"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built inside recipes/qwen38-flash-next.strixite-p16.toml; kernel gate gate/strixw-panel-kernels.toml (results gate/results/strixw-panel-kernels)"

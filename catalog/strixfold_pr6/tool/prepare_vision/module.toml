@@ -1,0 +1,40 @@
+id        = "tool.strixfold_pr6.prepare_vision"
+kind      = "tool"
+summary   = "Cut the vision tower (266 tensors) and the 43 image routing biases out of the pinned LibertAI EXL3 checkpoint, with every source and output pinned by sha256; and the admission check the launcher runs"
+notes     = "Python 3 (hashlib.file_digest: 3.11 or newer), standard library only for prepare_vision.py; verify_vision.py starts the worker's interpreter and asserts torch 2.9.0+cpu, numpy 2.3.5, Pillow 12.3.0. [build] lang is \"zig\" only because SPEC.md has no value for a script; nothing is compiled."
+
+[provenance]
+origin    = "strixfold_pr6"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "766df75"
+branch    = "feat/hip-cpu-image-input (pull request #6, aercanozcan)"
+paths     = [
+  "tools/dsv41-hip/prepare_vision.py",
+  "tools/dsv41-hip/verify_vision.py",
+  "tools/dsv41-hip/vision-checkpoint.json",
+]
+authors   = ["aercanozcan"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.vision-extract/safetensors/bf16"
+api       = "prepare_vision.py --model --out --bias-out; verify_vision.py --bias ..."
+numeric   = "byte copies of tensor ranges; outputs equal the pinned sha256 or are not published"
+regime    = "host; reads the 42 shards the index names for these tensors"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "never run here"

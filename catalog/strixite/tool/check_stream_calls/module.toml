@@ -1,0 +1,44 @@
+id      = "tool.strixite.check_stream_calls"
+kind    = "tool"
+summary = "Test: streamed tool calls against the buffered parser, on the model's tokenizer.json"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/check_stream_calls.cpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/check_stream_calls.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.check-stream-calls/-/-"
+api       = "main (check_stream_calls)"
+numeric   = "n/a"
+regime    = "host only test; check_stream_calls <tokenizer.json> [random cases] [seed]"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.output_parser"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,25 @@
+# Recipe gate config for the swapped variant qwen38-flash-next.three-engines (top-k from gufo, router logits from
+# StrixFold, router top-k from gufo, in one binary): the unmodified recipe's host facts, run settings and unit
+# tests, unchanged. Criteria fixed on 2026-11-10 before the first run.
+inherit = "gate/qwen38-flash-next.strixite.toml"
+
+[host]
+scratch = "build/gate-scratch-three-engines"
+lease_owner = "agent-phase4"      # its own name: the phase 3 lane leases the same GPU as agent
+
+[variant]
+# Two of the three swaps change the last bits of the router's numbers, so the criterion is token agreement: the
+# three module gates must have passed for the providers used here, and the tokens are measured.
+speed_is_criterion    = false
+
+[[variant.module_gates]]
+evidence  = "gate/results/interface/logits-topk/result.json"
+providers = ["strixite", "gufo"]
+
+[[variant.module_gates]]
+evidence  = "gate/results/interface/dense-bf16/result.json"
+providers = ["strixite", "strixfold"]
+
+[[variant.module_gates]]
+evidence  = "gate/results/interface/moe-router/result.json"
+providers = ["strixite", "gufo"]

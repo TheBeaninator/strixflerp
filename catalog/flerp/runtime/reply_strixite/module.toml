@@ -1,0 +1,59 @@
+id        = "runtime.flerp.reply_strixite"
+kind      = "runtime"
+summary   = "Qwen3.8-Flash-Next's reply forms behind include/flerp/reply.h: a C shim over strixite's OutputParser (reasoning, content, tool calls; streamed calls) and ThinkWatch (the thinking nudge), the engine's fed texts (thinking budget stop, think close before a call, nudges), and response_format json_object / json_schema compiled with strixite's grammar modules into per-row token masks (serve/structured_output.hpp)"
+notes     = "No parser of its own. The nudge watch runs the origin's served policy (server_config.cpp defaults)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/reply/reply_strixite.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/reply/reply_strixite.cpp"]
+includes  = ["../../../../include"]
+
+[[provides]]
+interface = "text.reply/flerp-v1/-"
+api       = "flerp_reply_open .. flerp_reply_nudge_fired (include/flerp/reply.h)"
+numeric   = "n/a"
+regime    = "one thread; the checkpoint's tokenizer.json"
+
+[[requires]]
+module    = "runtime.strixite.output_parser"
+
+[[requires]]
+module    = "runtime.strixite.think_nudge"
+
+[[requires]]
+module    = "runtime.strixite.structured_output"
+
+[[requires]]
+module    = "runtime.strixite.json_schema"
+
+[[requires]]
+module    = "runtime.strixite.token_mask"
+
+[[requires]]
+module    = "runtime.strixite.grammar"
+
+[[requires]]
+module    = "runtime.strixite.tokenizer"
+
+[[requires]]
+module    = "runtime.strixite.json"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/qwen38-flash-next.flerp-serve-fake/reply-nogpu.txt"

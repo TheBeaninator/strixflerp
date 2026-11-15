@@ -1,0 +1,35 @@
+{
+ "gate": "vision-dsv41-cpu312",
+ "module": "runtime.flerp.vision_sidecar",
+ "env": "py312-torch2110",
+ "pass": true,
+ "partial": false,
+ "criteria": {
+  "1 shape": true,
+  "2 arithmetic": true,
+  "3a bf16 rows = R16": true,
+  "3b bf16 vs R16": true,
+  "4 determinism": true,
+  "5 protocol": true
+ },
+ "failures": [],
+ "config_sha256": "d9088dda6be4b34f86e171819dfc07ccaa315a6a5078f8da487f321c747cb2e1",
+ "run_config_sha256": "9dd87b9c8cebe560d7aa188661cf59be135d223890aeefd0ed4160a9ddf5c530",
+ "restated": {
+  "date": "2026-11-11",
+  "by": "the owner's decision",
+  "first_committed": "2c20dd2",
+  "first_run": "1cdfa3e",
+  "first_config_sha256": "9dd87b9c8cebe560",
+  "bf16_rel_rms_max": 0.085,
+  "bf16_row_cosine_min": 0.9855,
+  "first_failures": [
+   "3a bf16 bound: tiny: rel rms 0.0235, lowest row cosine 0.979462",
+   "3a bf16 bound: text: rel rms 0.0388, lowest row cosine 0.867161",
+   "3a bf16 bound: cap: rel rms 0.0268, lowest row cosine 0.898884",
+   "3a bf16 bound: over: rel rms 0.0291, lowest row cosine 0.934885"
+  ],
+  "reason": "The old bound measured the tower's own BF16 behaviour: the reference (DeepSeek inference/vision.py in BF16) produces the same outlier rows, bit for bit. Restated as bit equality of the worker's BF16 rows with the reference's."
+ },
+ "written": "2026-11-11T20:54:08Z"
+}

@@ -1,0 +1,506 @@
+{
+ "stages": {
+  "check": {
+   "pass": true,
+   "rc": 0,
+   "evidence": "check.txt",
+   "failures": [],
+   "when_utc": "2026-11-12T00:45:27Z"
+  },
+  "build": {
+   "evidence": "build.txt, assembly.json",
+   "rc": 0,
+   "build_s": 295.4,
+   "binaries": {
+    "strixflerp-qwen36-35b-a3b.flerp-serve-stage": {
+     "sha256": "f2385c89ba29da24c290a96af4961c9f973c55028c0b3eb0c9149019e146cc99",
+     "bytes": 82512744
+    },
+    "flerp-qwen35moe-stage": {
+     "sha256": "fe4db210a6938b5e4220bc41dee69434dcdd99644535461a654002f28bf1ddaf",
+     "bytes": 76584912
+    },
+    "flerp-executor-conformance": {
+     "sha256": "2e81a3e9b85af17be11a509ba6e54c4e49429e6dd10dfeaf58fa70e808397e73",
+     "bytes": 76493000
+    },
+    "flerp-qwen35moe-generate": {
+     "sha256": "69abf7c23c7b999dbc852047db39a6ee02dbf42b008a00787d2722a0de204e01",
+     "bytes": 78113376
+    }
+   },
+   "failures": [],
+   "pass": true,
+   "when_utc": "2026-11-12T00:50:23Z"
+  },
+  "conformance": {
+   "evidence": "conformance.txt, conformance-<run>.json, conformance-lease.txt",
+   "runs": {
+    "world1": {
+     "rc": 0,
+     "seconds": 138.6,
+     "memory_before": {
+      "gtt_total": 133143986176,
+      "gtt_used": 18661376,
+      "mem_available": 127970021376,
+      "free_bytes": 127970021376,
+      "need_bytes": 49073060352
+     },
+     "caps": {
+      "positions": 4096,
+      "max_forward": 4096,
+      "max_verify_rows": 1,
+      "logits_row": 248320,
+      "candidates": 0,
+      "seqs": 1,
+      "snapshots": 0,
+      "max_draft": 0,
+      "deliveries": 5,
+      "flags": 0
+     },
+     "cases": {
+      "bridge": {
+       "plain_equal_p1": true,
+       "loop_ids": 127
+      },
+      "code": {
+       "plain_equal_p1": true,
+       "loop_ids": 127
+      },
+      "rivers": {
+       "plain_equal_p1": true,
+       "loop_ids": 127
+      },
+      "records": {
+       "plain_equal_p1": true,
+       "loop_ids": 127
+      }
+     },
+     "load_s": 104.582,
+     "failures": []
+    },
+    "loopback2": {
+     "rc": 0,
+     "seconds": 140.2,
+     "memory_before": {
+      "gtt_total": 133143986176,
+      "gtt_used": 18661376,
+      "mem_available": 127476469760,
+      "free_bytes": 127476469760,
+      "need_bytes": 51220544000
+     },
+     "caps": {
+      "positions": 4096,
+      "max_forward": 4096,
+      "max_verify_rows": 1,
+      "logits_row": 248320,
+      "candidates": 0,
+      "seqs": 1,
+      "snapshots": 0,
+      "max_draft": 0,
+      "deliveries": 5,
+      "flags": 0
+     },
+     "cases": {
+      "bridge": {
+       "plain_equal_p1": true,
+       "loop_ids": 127
+      },
+      "code": {
+       "plain_equal_p1": true,
+       "loop_ids": 127
+      },
+      "rivers": {
+       "plain_equal_p1": true,
+       "loop_ids": 127
+      },
+      "records": {
+       "plain_equal_p1": true,
+       "loop_ids": 127
+      }
+     },
+     "load_s": 102.108,
+     "failures": []
+    }
+   },
+   "end_ids": "248046,248044",
+   "holds": [
+    {
+     "for": "conformance world1",
+     "from": "2026-11-12T00:55:27Z",
+     "to": "2026-11-12T01:00:06Z",
+     "seconds": 278.8,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "failures": [],
+   "pass": true,
+   "when_utc": "2026-11-12T01:00:06Z"
+  },
+  "serve1": {
+   "evidence": "serve-world1.txt, serve-world1.json, serve-world1-lease.txt",
+   "holds": [
+    {
+     "for": "serve world1",
+     "from": "2026-11-12T01:00:06Z",
+     "to": "2026-11-12T01:02:26Z",
+     "seconds": 140.0,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "memory_before": {
+    "gtt_total": 133143986176,
+    "gtt_used": 18661376,
+    "mem_available": 127673610240,
+    "free_bytes": 127673610240,
+    "need_bytes": 49073060352
+   },
+   "startup_s": 104.0,
+   "shutdown": {
+    "rc": {
+     "0": 0
+    },
+    "seconds": 0.2
+   },
+   "failures": [],
+   "health": {
+    "status": "ok",
+    "model": "qwen36-35b-a3b",
+    "front_end": "serve.flerp.http",
+    "executor": "executor.flerp.qwen35moe_abi: Qwen3.6-35B-A3B-Q4_K_M.gguf, 40 blocks, world 1, cuts 0,40, context 4096, decode graph on, one seq, greedy tokens or full rows",
+    "executor_abi": 2,
+    "deliveries": [
+     "full",
+     "tokens"
+    ],
+    "sampled_by": "host",
+    "sampler": "greedy (runtime.flerp.sampler_greedy: argmax of each row, temperature 0 only)",
+    "text": "gufo Qwen tokenizer (248320 tokens) and compiled Qwen ChatML formatter; the file's template qwen-chatml-compiled-v1 sha256 e84f32a23fdda27689f868aa4a1a5621f41133e51a48d7f3efcbea2839574259; /data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf",
+    "draft_form": "none",
+    "drafts": 0,
+    "context": 4096,
+    "conversations_at_once": 1,
+    "busy": false,
+    "requests_served": 0,
+    "slots": 1,
+    "busy_slots": 0,
+    "queued": 0,
+    "context_length": 4096
+   },
+   "pass": true,
+   "when_utc": "2026-11-12T01:02:26Z"
+  },
+  "reference": {
+   "evidence": "reference.txt, reference.json, reference-lease.txt",
+   "holds": [
+    {
+     "for": "reference",
+     "from": "2026-11-12T01:02:26Z",
+     "to": "2026-11-12T01:04:28Z",
+     "seconds": 122.1,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "memory_before": {
+    "gtt_total": 133143986176,
+    "gtt_used": 18661376,
+    "mem_available": 128031809536,
+    "free_bytes": 128031809536,
+    "need_bytes": 49073060352
+   },
+   "rc": 0,
+   "failures": [],
+   "chats": {
+    "bridge-chat": {
+     "equal": true,
+     "tokens": 128
+    },
+    "code-chat": {
+     "equal": true,
+     "tokens": 128
+    },
+    "rivers-chat": {
+     "equal": true,
+     "tokens": 128
+    },
+    "records-chat": {
+     "equal": true,
+     "tokens": 128
+    },
+    "multi-turn": {
+     "equal": true,
+     "tokens": 39
+    }
+   },
+   "pass": true,
+   "when_utc": "2026-11-12T01:04:28Z"
+  },
+  "serve2": {
+   "evidence": "serve-loopback2.txt, serve-loopback2.json, serve-loopback2-lease.txt",
+   "holds": [
+    {
+     "for": "serve loopback2",
+     "from": "2026-11-12T01:04:28Z",
+     "to": "2026-11-12T01:06:51Z",
+     "seconds": 143.0,
+     "pod_waiters_at_release": 1
+    }
+   ],
+   "yields": [],
+   "memory_before": {
+    "gtt_total": 133143986176,
+    "gtt_used": 18661376,
+    "mem_available": 127900385280,
+    "free_bytes": 127900385280,
+    "need_bytes": 51220544000
+   },
+   "startup_s": 106.0,
+   "shutdown": {
+    "rc": {
+     "0": 0
+    },
+    "seconds": 0.3
+   },
+   "failures": [],
+   "health": {
+    "status": "ok",
+    "model": "qwen36-35b-a3b",
+    "front_end": "serve.flerp.http",
+    "executor": "executor.flerp.qwen35moe_abi: Qwen3.6-35B-A3B-Q4_K_M.gguf, 40 blocks, world 2 (loopback, one process), cuts 0,20,40, context 4096, decode graph on, one seq, greedy tokens or full rows",
+    "executor_abi": 2,
+    "deliveries": [
+     "full",
+     "tokens"
+    ],
+    "sampled_by": "host",
+    "sampler": "greedy (runtime.flerp.sampler_greedy: argmax of each row, temperature 0 only)",
+    "text": "gufo Qwen tokenizer (248320 tokens) and compiled Qwen ChatML formatter; the file's template qwen-chatml-compiled-v1 sha256 e84f32a23fdda27689f868aa4a1a5621f41133e51a48d7f3efcbea2839574259; /data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf",
+    "draft_form": "none",
+    "drafts": 0,
+    "context": 4096,
+    "conversations_at_once": 1,
+    "busy": false,
+    "requests_served": 0,
+    "slots": 1,
+    "busy_slots": 0,
+    "queued": 0,
+    "context_length": 4096
+   },
+   "pass": true,
+   "when_utc": "2026-11-12T01:06:51Z"
+  },
+  "tcp": {
+   "evidence": "serve-tcp2.txt, serve-tcp2.json, serve-tcp2-lease.txt",
+   "holds": [
+    {
+     "for": "serve tcp2",
+     "from": "2026-11-12T01:07:06Z",
+     "to": "2026-11-12T01:09:32Z",
+     "seconds": 146.1,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "memory_before": {
+    "gtt_total": 133143986176,
+    "gtt_used": 18661376,
+    "mem_available": 127852748800,
+    "free_bytes": 127852748800,
+    "need_bytes": 51220548096
+   },
+   "startup_s": 105.5,
+   "shutdown": {
+    "rc": {
+     "0": 0,
+     "1": 0
+    },
+    "seconds": 0.2
+   },
+   "failures": [],
+   "health": {
+    "status": "ok",
+    "model": "qwen36-35b-a3b",
+    "front_end": "serve.flerp.http",
+    "executor": "executor.flerp.qwen35moe_abi: Qwen3.6-35B-A3B-Q4_K_M.gguf, 40 blocks, world 2 (TCP 127.0.0.1:39760), cuts 0,20,40, context 4096, decode graph on, one seq, greedy tokens or full rows",
+    "executor_abi": 2,
+    "deliveries": [
+     "full",
+     "tokens"
+    ],
+    "sampled_by": "host",
+    "sampler": "greedy (runtime.flerp.sampler_greedy: argmax of each row, temperature 0 only)",
+    "text": "gufo Qwen tokenizer (248320 tokens) and compiled Qwen ChatML formatter; the file's template qwen-chatml-compiled-v1 sha256 e84f32a23fdda27689f868aa4a1a5621f41133e51a48d7f3efcbea2839574259; /data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf",
+    "draft_form": "none",
+    "drafts": 0,
+    "context": 4096,
+    "conversations_at_once": 1,
+    "busy": false,
+    "requests_served": 0,
+    "slots": 1,
+    "busy_slots": 0,
+    "queued": 0,
+    "context_length": 4096
+   },
+   "pass": true,
+   "when_utc": "2026-11-12T01:09:32Z"
+  },
+  "shutdown": {
+   "evidence": "shutdown-<case>.txt, shutdown.json, shutdown-lease.txt",
+   "cases": {
+    "a": {
+     "startup_s": 46.5,
+     "completion": 200,
+     "rc": [
+      0,
+      0
+     ],
+     "failures": []
+    },
+    "b": {
+     "startup_s": 39.0,
+     "after_rank1": {
+      "status": 500,
+      "code": "executor_failed"
+     },
+     "health_after": {
+      "status": 503,
+      "body": {
+       "status": "failed",
+       "model": "qwen36-35b-a3b",
+       "front_end": "serve.flerp.http",
+       "executor": "executor.flerp.qwen35moe_abi: decider-2b-v12-Q4_K_M.gguf, 24 blocks, world 2 (TCP 127.0.0.1:39770), cuts 0,12,24, context 4096, decode graph on, one seq, greedy tokens or full rows",
+       "executor_abi": 2,
+       "deliveries": [
+        "full",
+        "tokens"
+       ],
+       "sampled_by": "host",
+       "sampler": "greedy (runtime.flerp.sampler_greedy: argmax of each row, temperature 0 only)",
+       "text": "gufo Qwen tokenizer (248320 tokens) and compiled Qwen ChatML formatter; the file's template qwen-chatml-compiled-v1 sha256 273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80; /data/ark/models/Mapika__decider-2b-GGUF/gguf/decider-2b-v12-Q4_K_M.gguf",
+       "draft_form": "none",
+       "drafts": 0,
+       "context": 4096,
+       "conversations_at_once": 1,
+       "busy": false,
+       "requests_served": 1,
+       "slots": 1,
+       "busy_slots": 0,
+       "queued": 0,
+       "context_length": 4096
+      }
+     },
+     "rc": [
+      0,
+      0
+     ],
+     "failures": []
+    },
+    "c": {
+     "startup_s": 39.0,
+     "completion": 200,
+     "rc": [
+      0,
+      0
+     ],
+     "failures": []
+    }
+   },
+   "holds": [
+    {
+     "for": "shutdown cases",
+     "from": "2026-11-12T01:09:32Z",
+     "to": "2026-11-12T01:11:38Z",
+     "seconds": 125.4,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "failures": [],
+   "pass": true,
+   "when_utc": "2026-11-12T01:11:38Z"
+  }
+ },
+ "disk_reads": [
+  {
+   "run": "conformance world1 rank 0",
+   "bytes": 21155768832,
+   "seconds": 101.11,
+   "when": "2026-11-12T00:57:45Z"
+  },
+  {
+   "run": "conformance loopback2 rank 0",
+   "bytes": 21155768832,
+   "seconds": 101.197,
+   "when": "2026-11-12T01:00:06Z"
+  },
+  {
+   "run": "serve world1 rank 0",
+   "bytes": 21155768832,
+   "seconds": 101.387,
+   "when": "2026-11-12T01:02:26Z"
+  },
+  {
+   "run": "reference rank 0",
+   "bytes": 21155768832,
+   "seconds": 101.607,
+   "when": "2026-11-12T01:04:28Z"
+  },
+  {
+   "run": "serve loopback2 rank 0",
+   "bytes": 21155768832,
+   "seconds": 101.877,
+   "when": "2026-11-12T01:06:51Z"
+  },
+  {
+   "run": "serve tcp2 rank 0",
+   "bytes": 10512323840,
+   "seconds": 50.6628,
+   "when": "2026-11-12T01:09:32Z"
+  },
+  {
+   "run": "serve tcp2 rank 1",
+   "bytes": 10643444992,
+   "seconds": 50.898,
+   "when": "2026-11-12T01:09:32Z"
+  },
+  {
+   "run": "shutdown a rank 0",
+   "bytes": 840302208,
+   "seconds": 17.9165,
+   "when": "2026-11-12T01:10:19Z"
+  },
+  {
+   "run": "shutdown a rank 1",
+   "bytes": 840310400,
+   "seconds": 26.1421,
+   "when": "2026-11-12T01:10:19Z"
+  },
+  {
+   "run": "shutdown b rank 0",
+   "bytes": 840302208,
+   "seconds": 18.2748,
+   "when": "2026-11-12T01:10:58Z"
+  },
+  {
+   "run": "shutdown b rank 1",
+   "bytes": 840310400,
+   "seconds": 18.0311,
+   "when": "2026-11-12T01:10:58Z"
+  },
+  {
+   "run": "shutdown c rank 0",
+   "bytes": 840302208,
+   "seconds": 18.3022,
+   "when": "2026-11-12T01:11:38Z"
+  },
+  {
+   "run": "shutdown c rank 1",
+   "bytes": 840310400,
+   "seconds": 18.167,
+   "when": "2026-11-12T01:11:38Z"
+  }
+ ]
+}

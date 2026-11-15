@@ -1,0 +1,150 @@
+# The front end gate without a GPU: serve.flerp.http over the stand-in executor (executor.flerp.fake_abi), on
+# control-node (the tokenizer file lives there). Host facts are the phase 1 recipe gate's. What each stage requires is
+# stated in gate/flerp_serve.py; this file fixes the shapes of executor the front end is run against and what each
+# must answer. Written before the first run; do not edit it to turn a failure into a pass.
+inherit = "gate/qwen38-flash-next.strixite.toml"
+
+[host]
+port    = 5396
+scratch = "build/gate-scratch-serve-fake"
+
+[serve]
+stages = ["check", "build", "nogpu"]
+binary = "strixflerp-qwen38-flash-next.flerp-serve-fake"
+
+[fake]
+# The stand-in's model: tokens from ids 1000..29999, the end of turn (<|im_end|>, 248046) after 40 tokens.
+args       = ["executor.vocab=248077", "executor.lo=1000", "executor.hi=30000", "executor.reply=40", "executor.end=248046"]
+reply      = 40
+max_tokens = 64
+hello_ids  = [9419, 1814]             # "Hello world" in Qwen3.8-Flash-Next's tokenizer; /tokenize must add <|im_end|>'s id
+
+# An executor like strixite's: rows to the host, a logit bias, no draft head.
+[[fake.server]]
+name       = "rows"
+args       = []
+sampled_by = "host"
+draft_form = "none"
+delivery   = "candidates"
+logprobs   = true
+
+# ... with a draft head that steps (strixite's MTP form).
+[[fake.server]]
+name       = "rows-step"
+args       = ["executor.draft=step"]
+sampled_by = "host"
+draft_form = "step"
+delivery   = "candidates"
+logprobs   = true
+
+# ... with a draft head that holds its drafts (StrixFold's form) on an executor that still hands rows.
+[[fake.server]]
+name       = "rows-held"
+args       = ["executor.draft=held"]
+sampled_by = "host"
+draft_form = "held"
+delivery   = "candidates"
+logprobs   = true
+
+# Full rows and no candidates: the host sampler reads whole rows.
+[[fake.server]]
+name       = "full-step"
+args       = ["executor.deliveries=full,tokens", "executor.draft=step"]
+sampled_by = "host"
+draft_form = "step"
+delivery   = "full"
+logprobs   = true
+
+# Candidates and nothing else: no logprobs, and a sample that needs the whole row is refused.
+[[fake.server]]
+name       = "candidates-only"
+args       = ["executor.deliveries=candidates"]
+sampled_by = "host"
+draft_form = "none"
+delivery   = "candidates"
+logprobs   = false
+  [[fake.server.sampling_case]]
+  name = "top_k-off-needs-full-rows"
+  temperature = 0.8
+  top_k = 0
+  status = 400
+
+# An executor like StrixFold's: tokens only, drawn on the device, held drafts, a keyed sampler that needs top_k
+# and bounds it, no masks. ABI version 2: the front end refuses from flerp_caps before anything runs.
+[[fake.server]]
+name       = "tokens-held-sampled"
+args       = ["executor.deliveries=tokens", "executor.draft=held", "executor.sampled=on", "executor.needs_top_k=on",
+              "executor.top_k_max=8", "executor.masks=off"]
+sampled_by = "executor"
+draft_form = "held"
+delivery   = "tokens"
+masks      = false
+logprobs   = false
+  [[fake.server.sampling_case]]
+  name = "top_k-missing"
+  temperature = 0.8
+  top_k = 0
+  status = 400
+  [[fake.server.sampling_case]]
+  name = "top_k-above-max"
+  temperature = 0.8
+  top_k = 50
+  status = 400
+  [[fake.server.sampling_case]]
+  name = "top_p-not-taken"
+  temperature = 0.8
+  top_k = 3
+  top_p = 0.5
+  status = 400
+  [[fake.server.sampling_case]]
+  name = "min_p-not-taken"
+  temperature = 0.8
+  top_k = 3
+  min_p = 0.1
+  status = 400
+  [[fake.server.sampling_case]]
+  name = "top_k-in-range"
+  temperature = 0.8
+  top_k = 8
+  seed = 7
+  status = 200
+
+# Tokens only, greedy only, ABI version 1 (no flerp_caps.sampling): a sampled request is refused from the flags.
+[[fake.server]]
+name       = "tokens-greedy-v1"
+args       = ["executor.deliveries=tokens", "executor.abi=1", "executor.masks=off"]
+sampled_by = "executor"
+draft_form = "none"
+delivery   = "tokens"
+abi        = 1
+masks      = false
+logprobs   = false
+sampled    = false
+
+# Tokens only with sampled draws behind ABI version 1: the front end cannot know the sampler's limits, so the
+# executor's own refusal must reach the client as a 400.
+[[fake.server]]
+name       = "tokens-sampled-v1"
+args       = ["executor.deliveries=tokens", "executor.abi=1", "executor.masks=off", "executor.sampled=on",
+              "executor.needs_top_k=on", "executor.draft=step"]
+sampled_by = "executor"
+draft_form = "step"
+delivery   = "tokens"
+abi        = 1
+masks      = false
+logprobs   = false
+  [[fake.server.sampling_case]]
+  name = "top_k-missing-refused-by-the-executor"
+  temperature = 0.8
+  top_k = 0
+  status = 400
+
+# An executor that offers rows, driven with --delivery tokens: the front end takes its draws (greedy only here).
+[[fake.server]]
+name       = "rows-taken-as-tokens"
+args       = ["executor.draft=step", "--delivery", "tokens"]
+sampled_by = "executor"
+draft_form = "step"
+delivery   = "tokens"
+logprobs   = false
+sampled    = false

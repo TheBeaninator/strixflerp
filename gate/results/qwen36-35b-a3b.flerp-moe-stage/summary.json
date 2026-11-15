@@ -1,0 +1,470 @@
+{
+ "stages": {
+  "loopback": {
+   "evidence": "loopback.txt, loopback.json, loopback-lease.txt",
+   "holds": [
+    {
+     "for": "loopback",
+     "from": "2026-11-11T23:47:01Z",
+     "to": "2026-11-11T23:52:08Z",
+     "seconds": 306.4,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "memory_before": {
+    "gtt_total": 133143986176,
+    "gtt_used": 18661376,
+    "mem_available": 127053422592,
+    "free_bytes": 127053422592,
+    "need_bytes": 57662994944
+   },
+   "failures": [],
+   "matrix": [
+    {
+     "transport": "loopback",
+     "config": "1:even:on",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "1:even:off",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "2:even:on",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "2:even:off",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "2:0,7,40:on",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "2:0,7,40:off",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "4:even:on",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "4:even:off",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "4:0,1,4,38,40:on",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "loopback",
+     "config": "4:0,1,4,38,40:off",
+     "prompts_equal": 4,
+     "prompts": 4
+    }
+   ],
+   "faults": [
+    {
+     "fault": "drop",
+     "fired": true,
+     "rank0_call_failed": true,
+     "all_poisoned": true
+    },
+    {
+     "fault": "stale-epoch",
+     "fired": true,
+     "rank0_call_failed": true,
+     "all_poisoned": true
+    },
+    {
+     "fault": "replay",
+     "fired": true,
+     "rank0_call_failed": true,
+     "all_poisoned": true
+    },
+    {
+     "fault": "bad-bytes",
+     "fired": true,
+     "rank0_call_failed": true,
+     "all_poisoned": true
+    },
+    {
+     "fault": "wrong-epoch-at-handshake",
+     "fired": true
+    }
+   ],
+   "load": {
+    "load_s": 102.307,
+    "bytes": 21155768832,
+    "fill_s": 101.304,
+    "pause_s": 73.3511
+   },
+   "seconds": 306.4,
+   "pass": true,
+   "when_utc": "2026-11-11T23:52:08Z"
+  },
+  "tcp": {
+   "evidence": "tcp.txt, tcp.json, tcp-lease.txt",
+   "runs": [
+    {
+     "world": 2,
+     "cuts": [
+      0,
+      7,
+      40
+     ],
+     "seconds": 139.9
+    },
+    {
+     "world": 4,
+     "cuts": [
+      0,
+      10,
+      20,
+      31,
+      40
+     ],
+     "seconds": 144.3
+    }
+   ],
+   "holds": [
+    {
+     "for": "tcp 2:0,7,40",
+     "from": "2026-11-11T23:52:29Z",
+     "to": "2026-11-11T23:57:13Z",
+     "seconds": 284.3,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "matrix": [
+    {
+     "transport": "tcp",
+     "config": "2:0,7,40:on",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "tcp",
+     "config": "2:0,7,40:off",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "tcp",
+     "config": "4:even:on",
+     "prompts_equal": 4,
+     "prompts": 4
+    },
+    {
+     "transport": "tcp",
+     "config": "4:even:off",
+     "prompts_equal": 4,
+     "prompts": 4
+    }
+   ],
+   "failures": [],
+   "pass": true,
+   "when_utc": "2026-11-11T23:57:13Z"
+  },
+  "faults": {
+   "evidence": "faults.txt, faults.json, faults-lease.txt",
+   "holds": [
+    {
+     "for": "faults",
+     "from": "2026-11-11T23:59:05Z",
+     "to": "2026-11-12T00:16:45Z",
+     "seconds": 1059.8,
+     "pod_waiters_at_release": 0
+    }
+   ],
+   "yields": [],
+   "memory_before": {
+    "gtt_total": 133143986176,
+    "gtt_used": 18661376,
+    "mem_available": 126695358464,
+    "free_bytes": 126695358464,
+    "need_bytes": 33475693824
+   },
+   "cases": {
+    "control": {
+     "pass": true,
+     "rc": {
+      "0": 0,
+      "1": 0,
+      "2": 0
+     },
+     "seconds_to_fail": null
+    },
+    "kill": {
+     "pass": true,
+     "rc": {
+      "0": 3,
+      "1": -9,
+      "2": 3
+     },
+     "seconds_to_fail": {
+      "0": 0.019,
+      "2": 0.019
+     }
+    },
+    "sigkill": {
+     "pass": true,
+     "rc": {
+      "0": 3,
+      "1": 3,
+      "2": -9
+     },
+     "seconds_to_fail": {
+      "0": 0.025,
+      "1": 0.025
+     }
+    },
+    "drop": {
+     "pass": true,
+     "rc": {
+      "0": 3,
+      "1": 3,
+      "2": 3
+     },
+     "seconds_to_fail": {
+      "0": 10.019,
+      "1": 10.019,
+      "2": 10.02
+     }
+    },
+    "stale-epoch": {
+     "pass": true,
+     "rc": {
+      "0": 3,
+      "1": 3,
+      "2": 3
+     },
+     "seconds_to_fail": {
+      "0": 0.0,
+      "1": 0.0,
+      "2": 0.0
+     }
+    },
+    "replay": {
+     "pass": true,
+     "rc": {
+      "0": 3,
+      "1": 3,
+      "2": 3
+     },
+     "seconds_to_fail": {
+      "0": 0.006,
+      "1": 0.01,
+      "2": 0.003
+     }
+    },
+    "epoch": {
+     "pass": true,
+     "rc": {
+      "0": 3,
+      "1": 3,
+      "2": 3
+     },
+     "seconds_to_fail": {
+      "0": 0.292,
+      "1": 0.291,
+      "2": 0.291
+     }
+    }
+   },
+   "failures": [],
+   "pass": true,
+   "when_utc": "2026-11-12T00:16:45Z"
+  }
+ },
+ "disk_reads": [
+  {
+   "run": "loopback",
+   "bytes": 21155768832,
+   "seconds": 101.304,
+   "when": "2026-11-11T23:52:08Z"
+  },
+  {
+   "run": "tcp.txt rank 0",
+   "bytes": 3978967552,
+   "seconds": 18.5856,
+   "when": "2026-11-11T23:54:49Z"
+  },
+  {
+   "run": "tcp.txt rank 1",
+   "bytes": 17176801280,
+   "seconds": 83.282,
+   "when": "2026-11-11T23:54:49Z"
+  },
+  {
+   "run": "tcp.txt rank 0",
+   "bytes": 5472839680,
+   "seconds": 25.9503,
+   "when": "2026-11-11T23:57:13Z"
+  },
+  {
+   "run": "tcp.txt rank 1",
+   "bytes": 5039484160,
+   "seconds": 24.6485,
+   "when": "2026-11-11T23:57:13Z"
+  },
+  {
+   "run": "tcp.txt rank 2",
+   "bytes": 5449435904,
+   "seconds": 27.5355,
+   "when": "2026-11-11T23:57:13Z"
+  },
+  {
+   "run": "tcp.txt rank 3",
+   "bytes": 5194009088,
+   "seconds": 23.3135,
+   "when": "2026-11-11T23:57:13Z"
+  },
+  {
+   "run": "faults.txt rank 0",
+   "bytes": 565698432,
+   "seconds": 6.45211,
+   "when": "2026-11-11T23:59:54Z"
+  },
+  {
+   "run": "faults.txt rank 1",
+   "bytes": 545693184,
+   "seconds": 23.6186,
+   "when": "2026-11-11T23:59:54Z"
+  },
+  {
+   "run": "faults.txt rank 2",
+   "bytes": 569220992,
+   "seconds": 6.53718,
+   "when": "2026-11-11T23:59:54Z"
+  },
+  {
+   "run": "faults.txt rank 0",
+   "bytes": 565698432,
+   "seconds": 6.52798,
+   "when": "2026-11-12T00:00:33Z"
+  },
+  {
+   "run": "faults.txt rank 1",
+   "bytes": 545693184,
+   "seconds": 23.4066,
+   "when": "2026-11-12T00:00:33Z"
+  },
+  {
+   "run": "faults.txt rank 2",
+   "bytes": 569220992,
+   "seconds": 6.51412,
+   "when": "2026-11-12T00:00:33Z"
+  },
+  {
+   "run": "faults.txt rank 0",
+   "bytes": 565698432,
+   "seconds": 6.46482,
+   "when": "2026-11-12T00:01:12Z"
+  },
+  {
+   "run": "faults.txt rank 1",
+   "bytes": 545693184,
+   "seconds": 23.3946,
+   "when": "2026-11-12T00:01:12Z"
+  },
+  {
+   "run": "faults.txt rank 2",
+   "bytes": 569220992,
+   "seconds": 6.48447,
+   "when": "2026-11-12T00:01:12Z"
+  },
+  {
+   "run": "faults.txt rank 0",
+   "bytes": 565698432,
+   "seconds": 6.51664,
+   "when": "2026-11-12T00:02:01Z"
+  },
+  {
+   "run": "faults.txt rank 1",
+   "bytes": 545693184,
+   "seconds": 23.4586,
+   "when": "2026-11-12T00:02:01Z"
+  },
+  {
+   "run": "faults.txt rank 2",
+   "bytes": 569220992,
+   "seconds": 6.51651,
+   "when": "2026-11-12T00:02:01Z"
+  },
+  {
+   "run": "faults.txt rank 0",
+   "bytes": 565698432,
+   "seconds": 6.57038,
+   "when": "2026-11-12T00:02:39Z"
+  },
+  {
+   "run": "faults.txt rank 1",
+   "bytes": 545693184,
+   "seconds": 23.4088,
+   "when": "2026-11-12T00:02:39Z"
+  },
+  {
+   "run": "faults.txt rank 2",
+   "bytes": 569220992,
+   "seconds": 6.46828,
+   "when": "2026-11-12T00:02:39Z"
+  },
+  {
+   "run": "faults.txt rank 0",
+   "bytes": 565698432,
+   "seconds": 6.86318,
+   "when": "2026-11-12T00:10:06Z"
+  },
+  {
+   "run": "faults.txt rank 1",
+   "bytes": 545693184,
+   "seconds": 23.3067,
+   "when": "2026-11-12T00:10:06Z"
+  },
+  {
+   "run": "faults.txt rank 2",
+   "bytes": 569220992,
+   "seconds": 6.5836,
+   "when": "2026-11-12T00:10:06Z"
+  },
+  {
+   "run": "faults.txt rank 0",
+   "bytes": 565698432,
+   "seconds": 6.79522,
+   "when": "2026-11-12T00:16:45Z"
+  },
+  {
+   "run": "faults.txt rank 1",
+   "bytes": 545693184,
+   "seconds": 23.5695,
+   "when": "2026-11-12T00:16:45Z"
+  },
+  {
+   "run": "faults.txt rank 2",
+   "bytes": 569220992,
+   "seconds": 6.51287,
+   "when": "2026-11-12T00:16:45Z"
+  }
+ ]
+}

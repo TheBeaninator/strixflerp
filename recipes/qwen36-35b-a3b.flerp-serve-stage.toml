@@ -1,0 +1,99 @@
+# Qwen3.6-35B-A3B (qwen35moe, Q4_K_M) served by the common front end through the executor ABI, as one stage or as N
+# stages joined by runtime.flerp.stage_relay: stage P3 of docs/PHASE5-FOURNODE-DESIGN.md (section 3.9). The model and
+# the kernel bindings are qwen36-35b-a3b.flerp-moe's (stages P1, P2); the front end (serve.flerp.http) is linked with
+# executor.flerp.qwen35moe_abi, gufo's Qwen tokenizer and chat template (runtime.flerp.text_gufo) and a greedy host
+# sampler. Ranks 1..N-1 of a TCP world run flerp-qwen35moe-stage; world 1 and the loopback need no other process.
+# The reference is stage P1's recorded tokens and, for prompts P1 did not run, stage P2's generator built in the
+# same tree (flerp-qwen35moe-generate --staged loopback, world 1).
+#
+# Serving: strixflerp-qwen36-35b-a3b.flerp-serve-stage --generation-config F (temperature 0: the greedy sampler
+# refuses any other) executor.weights=FILE.gguf [executor.world=2 executor.peers=loopback | HOST:PORT]
+# text.weights=FILE.gguf
+name      = "qwen36-35b-a3b.flerp-serve-stage"
+model     = "Qwen3.6-35B-A3B (qwen35moe)"
+reference = { engine = "flerp", build = "gate/results/qwen36-35b-a3b.flerp-moe-placed/equal.json", note = "stage P1's recorded greedy tokens on the four gate prompts; other prompts against stage P2's generator (tool.flerp.qwen35moe_generate --staged loopback 1:even:on) built from this recipe's tree" }
+toolchain = "therock-10.1"
+
+[build]
+system     = "cmake"
+root       = "tool.flerp.qwen35moe_stage"
+build_file = "flerp/qwen35moe_stage/CMakeLists.txt"
+targets    = ["strixflerp-qwen36-35b-a3b.flerp-serve-stage", "flerp-qwen35moe-stage", "flerp-executor-conformance", "flerp-qwen35moe-generate"]
+headers    = ["include/flerp/executor.h", "include/flerp/decode_loop.h", "include/flerp/text.h", "include/flerp/sampler.h", "include/flerp/reply.h"]
+options    = ["-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DCMAKE_PREFIX_PATH={rocm}",
+              "-DCMAKE_C_COMPILER={rocm}/lib/llvm/bin/clang", "-DCMAKE_CXX_COMPILER={rocm}/lib/llvm/bin/clang++",
+              "-DCMAKE_HIP_COMPILER={rocm}/lib/llvm/bin/clang++"]
+
+[build.installs]
+"strixflerp-qwen36-35b-a3b.flerp-serve-stage" = "strixflerp-qwen36-35b-a3b.flerp-serve-stage"
+"flerp-qwen35moe-stage"                       = "flerp-qwen35moe-stage"
+"flerp-executor-conformance"                  = "flerp-executor-conformance"
+"flerp-qwen35moe-generate"                    = "flerp-qwen35moe-generate"
+
+# interface -> module: qwen36-35b-a3b.flerp-moe's bindings, and the three of the front end.
+[modules]
+"executor.model/qwen35moe/gguf"                = "executor.flerp.qwen35moe"
+"moe.gate-logits/gguf-f32/f32"                 = "kernel.flerp.moe_kquant"
+"moe.experts-decode/gguf-kquant/f32.indexed"   = "kernel.flerp.moe_kquant"
+"moe.experts-prefill/gguf-kquant/f16-f32.grouped" = "kernel.flerp.moe_kgrouped"
+"attn.prefill-causal/kv-f16/f32.gqa-wmma"       = "kernel.flerp.attn_wmma_gqa"
+"draft.head-score/gguf-kquant/f32.coarse-exact" = "kernel.flerp.draft_coarse"
+"executor.model/qwen3.5/gguf"                  = "executor.gufo.qwen"
+"format.device-view/gguf-kquant/-"             = "format.gufo.gguf_kquant"
+"format.device-view/gguf-kquant/-.placed"      = "format.flerp.gguf_placed"
+"transport.stage-relay/-/f32"                  = "runtime.flerp.stage_relay"
+"format.loader/gguf/-"                         = "format.gufo.gguf_kquant"
+"executor.device-graph/deepseek-v4-flash/gguf" = "kernel.gufo.ds4_backend"
+"draft.dspark-sampling/-/f32"                  = "kernel.gufo.ds4_dspark"
+"draft.markov/gguf/f32"                        = "kernel.gufo.ds4_indexer"
+"attn.qsa-indexer/-/f32.qfn"                   = "kernel.gufo.qfn_kernels"
+"attn.softmax-gqa/kv-f16/f32.qfn"              = "kernel.gufo.qfn_kernels"
+"collective.device-stage/-/f32"                = "kernel.gufo.qfn_kernels"
+"draft.mtp/gguf-q8_0/f32"                      = "kernel.gufo.qfn_kernels"
+"hc.mix/gguf-q8_0/f32"                         = "kernel.gufo.qfn_kernels"
+"linear.prefill/gguf-q8_0/i8-f32.w8a8"         = "kernel.gufo.qfn_kernels"
+"mixer.gdn/-/f32.qfn"                          = "kernel.gufo.qfn_kernels"
+"moe.combine/-/f32.qfn"                        = "kernel.gufo.qfn_kernels"
+"moe.router/-/f32.qfn"                         = "kernel.gufo.qfn_kernels"
+"ple.inject/gguf-q8_0/f32"                     = "kernel.gufo.qfn_kernels"
+"linear.decode/gguf-kquant/f32.mmvq"           = "kernel.gufo.qfn_mmq"
+"linear.prefill/gguf-kquant/q8_1-f32.mmq"      = "kernel.gufo.qfn_mmq"
+"moe.experts-decode/gguf-kquant/f32.mmid"      = "kernel.gufo.qfn_mmq"
+"attn.softmax-gqa/kv-f16/f32.gufo"             = "kernel.gufo.qwen_attention"
+"draft.dflash/gguf-q8_0/f32"                   = "kernel.gufo.qwen_dflash"
+"mixer.gdn/-/f32.gufo"                         = "kernel.gufo.qwen_gdn"
+"linear.decode/gguf-kquant/f32.gufo"           = "kernel.gufo.qwen_linear_decode"
+"linear.prefill/gguf-kquant/bf16-f32"          = "kernel.gufo.qwen_linear_prefill"
+"norm.rmsnorm/-/f32.gufo"                      = "kernel.gufo.qwen_norm_rope"
+"pos.rope/-/f32.gufo"                          = "kernel.gufo.qwen_norm_rope"
+"logits.topk/-/f32.gufo"                       = "kernel.gufo.qwen_sampling"
+"speculation.accept/-/f32.gufo"                = "kernel.gufo.qwen_sampling"
+"cache.snapshot-copy/-/-"                      = "kernel.gufo.snapshot_copy"
+"cache.prompt-gufo/-/-"                        = "runtime.gufo.cache"
+"speculation.draft/dflash/f32"                 = "runtime.gufo.dflash"
+"speculation.draft/dspark/f32"                 = "runtime.gufo.dspark"
+"executor.provider-api/gufo-ext/-"             = "runtime.gufo.ext_api"
+"device.memory/hip/-"                          = "runtime.gufo.hip_host"
+"speculation.draft/mtp/f32"                    = "runtime.gufo.mtp"
+"sample.next-token/-/f32.gufo"                 = "runtime.gufo.sampling"
+"speculation.window-verify-lossless/-/-"       = "runtime.gufo.speculative"
+"collective.exchange-partial/-/f32.gufo"       = "runtime.gufo.tp_verbs"
+
+"executor.abi/flerp-v1/-"                      = "executor.flerp.qwen35moe_abi"
+"text.model/flerp-v1/-"                        = "runtime.flerp.text_gufo"
+"sample.host/flerp-v1/-"                       = "runtime.flerp.sampler_greedy"
+"text.reply/flerp-v1/-"                        = "runtime.flerp.reply_none"
+
+[binaries]
+"strixflerp-qwen36-35b-a3b.flerp-serve-stage" = { main = "serve.flerp.http", entry = "flerp/serve/main.cpp" }
+"flerp-qwen35moe-stage"                       = { main = "tool.flerp.qwen35moe_stage", entry = "flerp/qwen35moe_stage/main.cpp" }
+"flerp-executor-conformance"                  = { main = "executor.flerp.conformance", entry = "flerp/executor/conformance.c" }
+"flerp-qwen35moe-generate"                    = { main = "tool.flerp.qwen35moe_generate", entry = "flerp/qwen35moe_tool/generate.cpp" }
+
+[deploy]
+topology = "solo"        # world 1 and the loopback; a TCP world is one process a stage on one host here (the gate)
+
+[gate]
+runner = "gate/moe_serve_stage.py"
+config = "gate/qwen36-35b-a3b.flerp-serve-stage.toml"
+criterion = "token-agreement"

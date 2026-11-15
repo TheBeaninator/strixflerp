@@ -1,0 +1,41 @@
+id      = "runtime.strixite.tokenizer"
+kind    = "runtime"
+summary = "BPE tokenizer reading the checkpoint's tokenizer.json"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/tokenizer.cpp", "serve/tokenizer.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/tokenizer.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "text.tokenizer/-/-"
+api       = "strix::Tokenizer"
+numeric   = "splits and normalizes as the model's reference tokenizer"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.unicode"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

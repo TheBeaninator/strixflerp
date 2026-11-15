@@ -1,0 +1,35 @@
+{
+ "criteria_file": "gate/strixw-panel-decode2.toml",
+ "cases": 489,
+ "verdicts": [
+  {
+   "criterion": "equal",
+   "pass": true,
+   "detail": "489 of 489 cases byte-equal (bad ids included)"
+  },
+  {
+   "criterion": "decode_dense",
+   "pass": false,
+   "detail": "median panel % per group: attn_o 99.1, attn_qkv 99.2, gdn_in 98.0, gdn_out 98.5, lm_head 96.5, mtp_fc 99.0, ple_kv 99.2, sh_down 86.5, sh_gu 99.4; slower outside noise by > 3%: sh_gu Q8 dense-decode M4 bf16 105.3%; sh_gu Q8 dense-decode M5 bf16 108.2%; sh_gu Q8 dense-decode M6 bf16 109.0%; sh_gu Q8 dense-decode M7 bf16 111.8%; sh_gu Q8 dense-decode M8 bf16 113.3%; sh_gu Q8 dense-decode M3 f32 103.9%; sh_gu Q8 dense-decode M4 f32 104.6%; sh_gu Q8 dense-decode M5 f32 107.6%; sh_gu Q8 dense-decode M6 f32 109.9%; sh_gu Q8 dense-decode M7 f32 111.4%; sh_gu Q8 dense-decode M8 f32 112.6%; attn_o Q8 dense-decode M5 bf16 103.3%; attn_o Q8 dense-decode M5 f32 103.6%"
+  },
+  {
+   "criterion": "decode_expert",
+   "pass": true,
+   "detail": "median panel % per group: expert-decode-combine 98.4, expert-decode-gather 98.7, expert-decode-gather-swiglu 98.8; slower outside noise by > 3%: none"
+  },
+  {
+   "criterion": "prefill",
+   "pass": true,
+   "detail": "speed_prefill_dense PASS; speed_prefill_expert PASS"
+  },
+  {
+   "criterion": "read",
+   "pass": true,
+   "detail": "2.232 GB read"
+  }
+ ],
+ "load": [
+  "load_before 5.35 5.21 6.04 2/1192 834990\n",
+  "load_after 4.62 4.96 5.82 3/1198 937102\n"
+ ]
+}

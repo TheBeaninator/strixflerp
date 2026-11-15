@@ -1,0 +1,49 @@
+id        = "kernel.gufo.ds4_norm_rope"
+kind      = "kernel"
+summary   = "DeepSeek V4 Flash RMS norm with the row held in registers, and the fused head RMS norm plus rotated tail"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_norm.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_norm_rope.hip.hpp",
+]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/detail",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "norm.rmsnorm/-/f32.ds4"
+api       = "ds4_gpu_rms_norm_* launchers"
+numeric   = "fp32; fused form scales the whole row, tail included, exactly as the standalone norm"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "pos.rope-heads/-/f32.ds4-tail"
+api       = "ds4_gpu_rope_tail_tensor, ds4_gpu_head_rms_norm_rope_tail_*"
+numeric   = "rotation of the head tail dims in fp32"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.gufo.ds4_backend"
+reason    = "header fragment of one translation unit; compiles only inside kernel.gufo.ds4_backend"

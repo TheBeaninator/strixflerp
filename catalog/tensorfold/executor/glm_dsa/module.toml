@@ -1,0 +1,51 @@
+id        = "executor.tensorfold.glm_dsa"
+kind      = "executor"
+summary   = "GLM DSA (sparse attention) host pieces"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/families/glm_dsa/backend.zig",
+  "zig/src/families/glm_dsa/config.zig",
+  "zig/src/families/glm_dsa/engine.zig",
+  "zig/src/families/glm_dsa/follow.zig",
+  "zig/src/families/glm_dsa/glm_dsa.zig",
+  "zig/src/families/glm_dsa/gpu.zig",
+  "zig/src/families/glm_dsa/kernels.zig",
+  "zig/src/families/glm_dsa/layer.zig",
+  "zig/src/families/glm_dsa/layer_prompt.zig",
+  "zig/src/families/glm_dsa/model.zig",
+  "zig/src/families/glm_dsa/moe.zig",
+  "zig/src/families/glm_dsa/prompt.zig",
+  "zig/src/families/glm_dsa/residency.zig",
+  "zig/src/families/glm_dsa/snap.zig",
+  "zig/src/families/glm_dsa/weights.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model-tensorfold/glm-dsa/-"
+api       = "families/glm_dsa"
+numeric   = "per family receipts (docs/receipts upstream)"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

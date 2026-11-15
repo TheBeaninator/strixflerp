@@ -1,0 +1,38 @@
+id      = "tool.strixite.inspect_strixw"
+kind    = "tool"
+summary = "Prints a strixw file's header, components and tensors"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/inspect_strixw.cpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/inspect_strixw.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.inspect-strixw/-/-"
+api       = "main (inspect_strixw)"
+numeric   = "n/a"
+regime    = "host only"
+
+[[requires]]
+interface = "format.container/strixw/-"
+
+[[requires]]
+module = "runtime.strixite.args"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

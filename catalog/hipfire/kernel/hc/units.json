@@ -1,0 +1,337 @@
+{
+ "origin_registry": "crates/rdna-compute/src/kernels.rs (+ other rdna-compute/src/*.rs constants)",
+ "note": "a unit is the concatenation of its parts, compiled as one HIP source, as hipfire builds it; path parts are relative to catalog/hipfire",
+ "units": [
+  {
+   "name": "hc_apply_alpha_batched",
+   "const": "HC_APPLY_ALPHA_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_apply_alpha_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_apply_alpha",
+   "const": "HC_APPLY_ALPHA_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_apply_alpha.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_compute_control_batched",
+   "const": "HC_COMPUTE_CONTROL_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_compute_control_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_compute_control",
+   "const": "HC_COMPUTE_CONTROL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/common_headers/src/kernels/src/device_wait_deadline.h"
+    },
+    {
+     "path": "kernel/hc/src/kernels/src/hc_compute_control.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_compute_control_t1024",
+   "const": "HC_COMPUTE_CONTROL_T1024_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define THREADS_PER_BLOCK 1024\n"
+    },
+    {
+     "text": "#define HC_CTRL_FINALIZE_KERNEL hc_compute_control_vec4_finalize_t1024\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/device_wait_deadline.h"
+    },
+    {
+     "path": "kernel/hc/src/kernels/src/hc_compute_control.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_finalize_control",
+   "const": "HC_FINALIZE_CONTROL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_finalize_control.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_finalize_input_map",
+   "const": "HC_FINALIZE_INPUT_MAP_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_finalize_input_map.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_head_compute_pre",
+   "const": "HC_HEAD_COMPUTE_PRE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_head_compute_pre.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_input_map_batched",
+   "const": "HC_INPUT_MAP_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_input_map_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_input_map",
+   "const": "HC_INPUT_MAP_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_input_map.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_mean_capture",
+   "const": "HC_MEAN_CAPTURE_SRC",
+   "registry": "crates/rdna-compute/src/tensor_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_mean_capture.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_mix_4stream_batched",
+   "const": "HC_MIX_4STREAM_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_mix_4stream_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_mix_4stream",
+   "const": "HC_MIX_4STREAM_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_mix_4stream.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_pre_post_sigmoid_scale",
+   "const": "HC_PRE_POST_SIGMOID_SCALE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_pre_post_sigmoid_scale.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_sinkhorn_4x4_batched",
+   "const": "HC_SINKHORN_4X4_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_sinkhorn_4x4_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_sinkhorn_4x4",
+   "const": "HC_SINKHORN_4X4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_sinkhorn_4x4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_split_finalize_batched",
+   "const": "HC_SPLIT_FINALIZE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_split_finalize_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hc_streams_init_from_embed_batched",
+   "const": "HC_STREAMS_INIT_FROM_EMBED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_streams_init_from_embed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hyper_read_up_fused_twin",
+   "const": "HYPER_READ_UP_FUSED_TWIN_SRC",
+   "registry": "crates/rdna-compute/src/tensor_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hyper_read_up_fused_twin.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hyper_read_up_wmma_gfx1151_v2",
+   "const": "HYPER_READ_UP_WMMA_GFX1151_V2_SRC",
+   "registry": "crates/rdna-compute/src/tensor_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hyper_read_up_v2.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hyper_read_up_wmma",
+   "const": "HYPER_READ_UP_WMMA_SRC",
+   "registry": "crates/rdna-compute/src/tensor_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hyper_read_up_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_hc_down_fused_gfx1151",
+   "const": "QWEN4_HC_DOWN_FUSED_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/qwen4_hc_down_fused.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_hc_streams_init_from_embed_batched",
+   "const": "QWEN4_HC_STREAMS_INIT_FROM_EMBED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/qwen4_hc_streams_init_from_embed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "stream_mix_aggregate",
+   "const": "STREAM_MIX_AGGREGATE_SRC",
+   "registry": "crates/rdna-compute/src/stream_mix.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/stream_mix_aggregate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "stream_mix_broadcast",
+   "const": "STREAM_MIX_BROADCAST_SRC",
+   "registry": "crates/rdna-compute/src/stream_mix.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/stream_mix_broadcast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "stream_mix_mean",
+   "const": "STREAM_MIX_MEAN_SRC",
+   "registry": "crates/rdna-compute/src/stream_mix.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/stream_mix_mean.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "stream_mix_mix",
+   "const": "STREAM_MIX_MIX_SRC",
+   "registry": "crates/rdna-compute/src/stream_mix.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/stream_mix_mix.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "stream_mix_route_helmert",
+   "const": "STREAM_MIX_ROUTE_HELMERT_SRC",
+   "registry": "crates/rdna-compute/src/stream_mix.rs",
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/stream_mix_route_helmert.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_hc_row_fold",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/hc/src/kernels/src/hc_row_fold.hip"
+    }
+   ],
+   "flags": []
+  }
+ ]
+}

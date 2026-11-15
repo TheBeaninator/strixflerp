@@ -1,0 +1,35 @@
+$ /data/projects/strixflerp/build/qwen38-flash-next.strixite/ninja/sv9_cache_check /data/models/strix-infer/tok/tokenizer.json /data/models/strix-infer/tok/preprocessor_config.json /data/models/strix-infer/tok/config.json /data/projects/strixflerp/build/gate-scratch/unit/sv9_cache_check
+info: PNG bytes 8883 / 8925 / 8883 / 8809; A2 re-encode byte-identical to A: 1
+ok    fixture: A, B and C are content-different
+ok    check 3: A2 has A's bytes exactly
+ok    check 7: A, B and C have the same grid (equal size)
+ok    check 7: equal merged-token counts (> 1)
+ok    check 1: equal-size different images digest differently
+ok    check 3: identical bytes digest identically
+ok    fixture: the expanded prompt carries both pad runs
+ok    fixture: the first block sits between the markers, right after the text run
+ok    check 1: the pad run became negative pseudo-id rows
+ok    fixture: the block between the markers is the merged pads
+ok    check 1: the second block holds an equal-size different image - different key stream
+ok    check 3: A2 (same bytes) in place of A leaves the key stream identical
+info: L 401 merged 192 TP 7 common_ac 208 common_ca 7
+ok    check 1: the differing pair splits inside the second block
+ok    check 2: a different FIRST image shares only the leading text and vision_start
+ok    check 2: equal length, equal position walk - same shape, different key
+ok    check 4: put of the full key stream
+ok    check 4: the stored stream hits itself (whole entry)
+ok    check 3: the same-bytes stream hits the stored entry - a hit is allowed
+ok    check 2 (cache): the equal-size different image does NOT hit - no entry, no prefix hit (the v0.3.0 pad-id key would have matched end to end)
+ok    check 5 (cache): the swapped-order stream does not hit the stored (A,B) entry
+ok    check 5: the different-content streams are not entries
+ok    fixture: the pre-image stream is the text plus vision_start
+ok    check 4: put of the pre-image text entry
+ok    check 4: the pre-image text hits its own entry
+ok    check 4: a different first image resumes exactly at the text entry - never past it
+info: full entry in_ram 1 on_disk 0
+ok    check 6: the reopened cache starts cold and the image entry is a file
+ok    check 6: after a reopen the stored stream still hits from disk
+ok    check 6: after a reopen the equal-size different image stops at the text entry - the file header hashes the content pseudo-ids, no hit past them
+ok    check 6: after a reopen the text prefix still hits its own entry
+ok    check 6: after a reopen the stop-at-text still holds
+SV9-CACHE-CHECK PASS

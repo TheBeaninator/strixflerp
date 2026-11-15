@@ -1,0 +1,713 @@
+{
+ "module": "kernel.hipfire.attention",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-10T22:57:41Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "HIP version: 7.17.26392-0000000 | AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394)",
+ "units": 87,
+ "passed": 87,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 3.5,
+ "results": [
+  {
+   "unit": "attention_band_mask",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_band_mask.hip -o build/compile-gate/kernel.hipfire.attention/attention_band_mask.hsaco",
+   "rc": 0,
+   "seconds": 0.37,
+   "object_bytes": 9080,
+   "object_sha256": "5fff466f7f23636fe161c2b7b92698c792134bf1185dbf2aa174f3b79b15e6f0"
+  },
+  {
+   "unit": "attention_bf16_kv_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_bf16_kv_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_bf16_kv_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 25056,
+   "object_sha256": "036d8b3a0a93b680664e72500871a81c2c1d7d3ecd121ca0c23436a91b821691"
+  },
+  {
+   "unit": "attention_bf16_kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_bf16_kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_bf16_kv.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 19760,
+   "object_sha256": "1013636ec4af11d97c4069261cc7ca6d67f4672f4488d22c6d747578bf64838b"
+  },
+  {
+   "unit": "attention_causal_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_causal_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_causal_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11496,
+   "object_sha256": "74643f7170fb2a3021e26930b0f9f1d82fdeddda46346ced5fe7272c3d11e3a8"
+  },
+  {
+   "unit": "attention_decode_batched_history",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_decode_batched_history.hip -o build/compile-gate/kernel.hipfire.attention/attention_decode_batched_history.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 11512,
+   "object_sha256": "2174287f3863e36f0c80e46f642e00c7e918a5ae833c7ca942fc0f10a534fe4b"
+  },
+  {
+   "unit": "attention_flash_asym2_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym2_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym2_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 13560,
+   "object_sha256": "cef647978ae45fc1e3227301466b3e824850ed387c811f42b2c439ad0a803cc1"
+  },
+  {
+   "unit": "attention_flash_asym2_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym2_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym2_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 13032,
+   "object_sha256": "037dacc8fda5fb6271cd53bb0cad100925f559b1712c4dc585a88c9fbb99836f"
+  },
+  {
+   "unit": "attention_flash_asym3_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym3_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym3_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 14072,
+   "object_sha256": "abedcba24d30bca012d9fd3895ff6b767ddeffc1071b7f11509620f70cefc705"
+  },
+  {
+   "unit": "attention_flash_asym3_tile_hd512_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym3_tile_hd512_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym3_tile_hd512_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 14592,
+   "object_sha256": "e3592429bded07ecff0dbdf127aadcd309fbae21c2ece09a992eac14ed92da1c"
+  },
+  {
+   "unit": "attention_flash_asym3_tile_hd512",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym3_tile_hd512.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym3_tile_hd512.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 13680,
+   "object_sha256": "6ae27c5fdf9eb42d374e4162441e865b1c176bd3952844bc9f1a28431f9157cc"
+  },
+  {
+   "unit": "attention_flash_asym3_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym3_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym3_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 13288,
+   "object_sha256": "983561b494c82e8484999277dd4e5fc4be679d9faa1dcc4e812116b193815215"
+  },
+  {
+   "unit": "attention_flash_asym4_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym4_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym4_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 13688,
+   "object_sha256": "b39efaffcf505b9009fc7e89f9b30b31f94e19fb46ec86d6307f77f3aa65ff45"
+  },
+  {
+   "unit": "attention_flash_asym4_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym4_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym4_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.65,
+   "object_bytes": 13160,
+   "object_sha256": "be73b9523b45dca454b86b5c21ef394d886e9b6919fd2e989f9b674b78804c31"
+  },
+  {
+   "unit": "attention_flash_asym4_wmma_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym4_wmma_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym4_wmma_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.72,
+   "object_bytes": 17536,
+   "object_sha256": "8c22aa9351bf356442684074b3be7a3eaa5e7d483f3eff47d16235f3cff5ae67"
+  },
+  {
+   "unit": "attention_flash_asym_reduce_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_asym_reduce_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_asym_reduce_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 9984,
+   "object_sha256": "b210c7e1352a5e4341f0bc67d12ebe5f81530b302beb76e97123d3c50c1f1e8c"
+  },
+  {
+   "unit": "attention_flash_bf16_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_bf16_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_bf16_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 12800,
+   "object_sha256": "220b8316773add3b5a3e74eceee5bac1267c5baec96a12aac1ae66d705b55f37"
+  },
+  {
+   "unit": "attention_flash_bf16_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_bf16_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_bf16_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 13040,
+   "object_sha256": "e25644de6fb5ba427fce9a4ef7f8388fa63ffbc46a92aeb281c1b7c9501f592d"
+  },
+  {
+   "unit": "attention_flash_decode_vmm_rows_a3b",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_decode_vmm_rows_a3b.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_decode_vmm_rows_a3b.hsaco",
+   "rc": 0,
+   "seconds": 0.29,
+   "object_bytes": 6416,
+   "object_sha256": "3bbf7d5a2b9dc9f7d31d9144595a3b5df72ee68fb25dd7fda5a618a47ed0c26c"
+  },
+  {
+   "unit": "attention_flash_decode_vmm_rows",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_decode_vmm_rows.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_decode_vmm_rows.hsaco",
+   "rc": 0,
+   "seconds": 0.27,
+   "object_bytes": 6416,
+   "object_sha256": "3bbf7d5a2b9dc9f7d31d9144595a3b5df72ee68fb25dd7fda5a618a47ed0c26c"
+  },
+  {
+   "unit": "attention_flash_f16_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_f16_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_f16_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.55,
+   "object_bytes": 12792,
+   "object_sha256": "0ddf9b2ad995804ebbbe22c650606456a59580ada59d90d05ef3279192a5419c"
+  },
+  {
+   "unit": "attention_flash_f16_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_f16_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_f16_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 12776,
+   "object_sha256": "21a5ea8e3438e174b7d7e978a999f9bb88a99e369d51ca4c1c90321570e4ea51"
+  },
+  {
+   "unit": "attention_flash_fwht2_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_fwht2_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_fwht2_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.52,
+   "object_bytes": 16888,
+   "object_sha256": "f9717c6d24a2a6ed92918efc9b4e506d43e4506fecf9db4b46e35261085f9ca3"
+  },
+  {
+   "unit": "attention_flash_fwht2_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_fwht2_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_fwht2_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 17512,
+   "object_sha256": "de55adb8473cf7348c94f11a2c7a4ebac498a08f71aab28196b6644996f1c544"
+  },
+  {
+   "unit": "attention_flash_fwht3_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_fwht3_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_fwht3_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 17656,
+   "object_sha256": "4da9da6bfc0d6af50027d4cc8fc0a684144de374130c52b96febf1ac0a64c0db"
+  },
+  {
+   "unit": "attention_flash_fwht3_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_fwht3_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_fwht3_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.5,
+   "object_bytes": 19688,
+   "object_sha256": "0fb1555b8f72d7bbd0c331b9fc713bae4dc87e5698b2a574d8bc8b712fc0bfb6"
+  },
+  {
+   "unit": "attention_flash_fwht4_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_fwht4_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_fwht4_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.51,
+   "object_bytes": 16888,
+   "object_sha256": "a8cf0c0a4ee10ebe9f75fd53390c1c997722cd48daa3fad9181ced909e2645d1"
+  },
+  {
+   "unit": "attention_flash_fwht4_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_fwht4_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_fwht4_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 17768,
+   "object_sha256": "06aeee230591b2b2faa4dbe2646b23ebf9ce3b6b4dfdcb417b547bfcb90c74c4"
+  },
+  {
+   "unit": "attention_flash_gqa_fused",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_gqa_fused.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_gqa_fused.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 11376,
+   "object_sha256": "07bbdfbbf5e1f5a93bf97cc28894beaa7c06c3f6a1a1ead94fee8794f913dd51"
+  },
+  {
+   "unit": "attention_flash_gqa",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_gqa.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_gqa.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 10864,
+   "object_sha256": "8a7061aeb25f3189d3188a0704c168e80e5c1ecae8165e3b09558ce8931ae56a"
+  },
+  {
+   "unit": "attention_flash_lloyd_reduce_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_lloyd_reduce_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_lloyd_reduce_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 12408,
+   "object_sha256": "b0341551b80158f34c7bc0d674dcc7009f465ee10c0ea1b7ea53a1d2b0f1f39e"
+  },
+  {
+   "unit": "attention_flash_lloyd_reduce",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_lloyd_reduce.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_lloyd_reduce.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 12520,
+   "object_sha256": "312858bbd89282f8c8e5636fafe4ccd47d5d1f518bb68075c6b0e390d3789d8d"
+  },
+  {
+   "unit": "attention_flash_q8_0_reduce_skip",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_reduce_skip.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_reduce_skip.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 14328,
+   "object_sha256": "0fabf7eea58c1fdb618e5b3066c2112ef351524c0f7879777e9b56f9cf7be093"
+  },
+  {
+   "unit": "attention_flash_q8_0_reduce",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_reduce.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_reduce.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11248,
+   "object_sha256": "58e9a5c1cf5b4f5fdc3e4b7ef9ee83cf79a049341f1bbcb45865cb071203a500"
+  },
+  {
+   "unit": "attention_flash_q8_0_tile_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.51,
+   "object_bytes": 17152,
+   "object_sha256": "baa5cb408787de5c99d89510d5ef8aefda3154359bdb92f92b6f2a0064ece481"
+  },
+  {
+   "unit": "attention_flash_q8_0_tile_dpp_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_dpp_gfx1151.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_dpp_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 16112,
+   "object_sha256": "2d9b435461b697433aa3611de77fb465a0fb2b05b1b564e0492afe82755d9a7a"
+  },
+  {
+   "unit": "attention_flash_q8_0_tile_gqa_gemma_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_gqa_gemma_gfx1151.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_gqa_gemma_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.62,
+   "object_bytes": 28576,
+   "object_sha256": "5a9d3aace3b6eeaa3c7de06d3fa66d624949d18e432635839f238cf4f5df5ffd"
+  },
+  {
+   "unit": "attention_flash_q8_0_tile_gqa_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_gqa_gfx1151.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_gqa_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 24456,
+   "object_sha256": "398afe4505b73010199f7b267abc8d1fee1c96b4a128ac6e0de05f348bc6b997"
+  },
+  {
+   "unit": "attention_flash_q8_0_tile_hd64",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_hd64.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_hd64.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 13560,
+   "object_sha256": "73f5b508c2c0d59e1dd6d78f5b829e711d07efd6ff827a751983c9e636da8c94"
+  },
+  {
+   "unit": "attention_flash_q8_0_tile_rows",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_rows.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_rows.hsaco",
+   "rc": 0,
+   "seconds": 0.62,
+   "object_bytes": 31424,
+   "object_sha256": "04aed4092255b0d8dac7a91ec9549476212ed84464a82e9aa25876ba3f399513"
+  },
+  {
+   "unit": "attention_flash_q8_0_tile",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile.hsaco",
+   "rc": 0,
+   "seconds": 0.51,
+   "object_bytes": 16496,
+   "object_sha256": "012ad68e98ff20b6d0e0df1e8001de1b9ddf719f9928524483ab6faced23939a"
+  },
+  {
+   "unit": "attention_flash_q8_0_tile_swa",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_swa.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_q8_0_tile_swa.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 16888,
+   "object_sha256": "1faf01028274bb117dff6d3f534c4b72b2112a206c5e175bd1cb8088e5e5d35e"
+  },
+  {
+   "unit": "attention_flash_reduce_dsplit_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash_reduce_dsplit_gfx1151.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash_reduce_dsplit_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.63,
+   "object_bytes": 31752,
+   "object_sha256": "f8fd197476f0c98eee18198874dccda5a3d08af3c6e3393b0ac34f67dd7a1f79"
+  },
+  {
+   "unit": "attention_flash",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_flash.hip -o build/compile-gate/kernel.hipfire.attention/attention_flash.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 14280,
+   "object_sha256": "e446f4ca3d7770ea7cbc4c2ca38915fd42a2eaaf4e553934cc38e66736489c89"
+  },
+  {
+   "unit": "attention_fp8_e4m3_kv_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_fp8_e4m3_kv_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_fp8_e4m3_kv_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 25832,
+   "object_sha256": "ca1eb128929662f2d5c5547c8c9c2cc6b86bbbdad40e73ed8aee257a9faba79a"
+  },
+  {
+   "unit": "attention_fp8_e4m3_kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_fp8_e4m3_kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_fp8_e4m3_kv.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 19640,
+   "object_sha256": "7a87199f34a44071ae6c37f970eb89f6b80b0333243f95a393f7bdaea569b238"
+  },
+  {
+   "unit": "attention_gqa_warp_dv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_gqa_warp_dv.hip -o build/compile-gate/kernel.hipfire.attention/attention_gqa_warp_dv.hsaco",
+   "rc": 0,
+   "seconds": 0.39,
+   "object_bytes": 9832,
+   "object_sha256": "06319cdeff0b40993786827cb9c675be0c6b602e4b6ff9b58aff528170ce1290"
+  },
+  {
+   "unit": "attention_gqa_warp",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_gqa_warp.hip -o build/compile-gate/kernel.hipfire.attention/attention_gqa_warp.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 9824,
+   "object_sha256": "7b7e32f08526cdefe527b48306dd3ca9813af3a283da39cfff8e9df44f99585f"
+  },
+  {
+   "unit": "attention_hfq4_kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_hfq4_kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_hfq4_kv.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 11872,
+   "object_sha256": "47220f0e24c4260141f09a4e8e14ca83c27da07dc04fd9a069922bcb3933241b"
+  },
+  {
+   "unit": "attention_hfq8_kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_hfq8_kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_hfq8_kv.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11872,
+   "object_sha256": "3095e96625956eee999e67c553e01bab75aa6f8d001844ac3a8f12e6d925c623"
+  },
+  {
+   "unit": "attention_int8c_f16_kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_int8c_f16_kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_int8c_f16_kv.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 11624,
+   "object_sha256": "181a3afd7310d010f304afe054a9e9ed1a7ae29f3497c5d158904b8be7cb921e"
+  },
+  {
+   "unit": "attention_int8c_kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_int8c_kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_int8c_kv.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 11616,
+   "object_sha256": "1364ce9dab22801a4c38582f979c83cb23b6c7723c510db952de83858cd0fa34"
+  },
+  {
+   "unit": "attention_int8_kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_int8_kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_int8_kv.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 11744,
+   "object_sha256": "c53f2b177e05e30334930166695090e5777b8dc2bd26847d96a0e38964f02e7f"
+  },
+  {
+   "unit": "attention_partition_merge_f32",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_partition_merge_f32.hip -o build/compile-gate/kernel.hipfire.attention/attention_partition_merge_f32.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 9080,
+   "object_sha256": "f9ebabcbc444d218a301a5cbf1600ee4cff80037617edc290a59e6a65f3619a3"
+  },
+  {
+   "unit": "attention_q4kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q4kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_q4kv.hsaco",
+   "rc": 0,
+   "seconds": 0.39,
+   "object_bytes": 11736,
+   "object_sha256": "fbeb8764a3d66af9831281805c5fec3a9a71653d68a7a9346959457fdfdbeab6"
+  },
+  {
+   "unit": "attention_q8kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8kv.hsaco",
+   "rc": 0,
+   "seconds": 0.59,
+   "object_bytes": 11608,
+   "object_sha256": "34dd34254083cc6924c47bbd4454f90df6c4c24d512f96bb9db4e027a00e818c"
+  },
+  {
+   "unit": "attention_q8_0_fa2_gqa_fwht3k_gfx11",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_fa2_gqa_fwht3k_gfx11.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_fa2_gqa_fwht3k_gfx11.hsaco",
+   "rc": 0,
+   "seconds": 0.75,
+   "object_bytes": 32872,
+   "object_sha256": "d50ab40ee15cdca10a8f921e2f85b90cc23c46df4c838514ddaabb28ca944e2b"
+  },
+  {
+   "unit": "attention_q8_0_fa2_gqa_fwht4k_gfx11",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_fa2_gqa_fwht4k_gfx11.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_fa2_gqa_fwht4k_gfx11.hsaco",
+   "rc": 0,
+   "seconds": 0.68,
+   "object_bytes": 32360,
+   "object_sha256": "701fbcb93a2475d175f01d897dfb7f4d9bfa079aa99d0c8b16d74929eea68b23"
+  },
+  {
+   "unit": "attention_q8_0_fa2_gqa_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -mcumode -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_fa2_gqa_gfx1151.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_fa2_gqa_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.74,
+   "object_bytes": 31216,
+   "object_sha256": "e0aae0dbe2528df6289b552ed77292a77d41ba797ae01eb76bb21dcab5a72578"
+  },
+  {
+   "unit": "attention_q8_0_fa2_gqa_gfx11",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_fa2_gqa_gfx11.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_fa2_gqa_gfx11.hsaco",
+   "rc": 0,
+   "seconds": 0.58,
+   "object_bytes": 19432,
+   "object_sha256": "de45e22a01499e7ef5184db03f7377f8e5b0faa0862d63a891135c7822314e1f"
+  },
+  {
+   "unit": "attention_q8_0_flash_prefill",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_flash_prefill.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_flash_prefill.hsaco",
+   "rc": 0,
+   "seconds": 0.69,
+   "object_bytes": 15728,
+   "object_sha256": "10a1a904915d9a6dafcb7f2254d617b256e3fe82fa7fe362701d98dae27beb7a"
+  },
+  {
+   "unit": "attention_q8_0_flash_prefill_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_flash_prefill_wmma.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_flash_prefill_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 18304,
+   "object_sha256": "4f75935505cf121b96cde5a1398a8e75abe8110922641d8df79903cc9d3f8542"
+  },
+  {
+   "unit": "attention_q8_0_flash_prefill_wmma_swa_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_flash_prefill_wmma_swa_gfx1151.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_flash_prefill_wmma_swa_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 17032,
+   "object_sha256": "59b2e53bb9402b1e9069fe372a568f95f8687d1889bb1d203e6717c7ef9a13e9"
+  },
+  {
+   "unit": "attention_q8_0_flash_prefill_wmma_swa",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_flash_prefill_wmma_swa.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_flash_prefill_wmma_swa.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 17032,
+   "object_sha256": "59b2e53bb9402b1e9069fe372a568f95f8687d1889bb1d203e6717c7ef9a13e9"
+  },
+  {
+   "unit": "attention_q8_0_kv_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_kv_batched.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_kv_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.43,
+   "object_bytes": 19704,
+   "object_sha256": "77e45ae3c5324ff9b67e45846403d2237ea19efddcb7b64d5ed5652c9ef82609"
+  },
+  {
+   "unit": "attention_q8_0_kv",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_kv.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_kv.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 13920,
+   "object_sha256": "1416d6a9123bb66ce281a2de2f884e2f487b326c40910d69967800f0a077ae2a"
+  },
+  {
+   "unit": "attention_q8_0_kv_swa",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_kv_swa.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_kv_swa.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 12904,
+   "object_sha256": "35abafbdd0fe02bf9abafaa142d2bd8e6e43b59a69aeae8b3d78f4f5621b05aa"
+  },
+  {
+   "unit": "attention_q8_0_kv_timed",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_kv_timed.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_kv_timed.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 13032,
+   "object_sha256": "288988f2e28ed78772a6af29b62d503cccd3c85bfd822074a8314d6f3946bad9"
+  },
+  {
+   "unit": "attention_q8_0_prefill_gqa_wmma_gfx11",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_q8_0_prefill_gqa_wmma_gfx11.hip -o build/compile-gate/kernel.hipfire.attention/attention_q8_0_prefill_gqa_wmma_gfx11.hsaco",
+   "rc": 0,
+   "seconds": 0.68,
+   "object_bytes": 40704,
+   "object_sha256": "0efa523edec003dc7f94e07d5e20d5da78f3d10d01a1b7409411d88d5df0f4cf"
+  },
+  {
+   "unit": "attention_rows_softmax",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_rows_softmax.hip -o build/compile-gate/kernel.hipfire.attention/attention_rows_softmax.hsaco",
+   "rc": 0,
+   "seconds": 0.52,
+   "object_bytes": 10736,
+   "object_sha256": "ec10287a31d5421d39b528338abdde5ec2908ea990fd78988bc524e3919df24a"
+  },
+  {
+   "unit": "attention",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention.hip -o build/compile-gate/kernel.hipfire.attention/attention.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 11608,
+   "object_sha256": "44c03938d397a10136adc567a828a5777f60a4d9ee0df8b4f1a6ac4a3cac14aa"
+  },
+  {
+   "unit": "attention_t5_bias_f32",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_t5_bias_f32.hip -o build/compile-gate/kernel.hipfire.attention/attention_t5_bias_f32.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 11752,
+   "object_sha256": "2f3bb21555fb0a937505715d11db61aa443463f130e3dd86d258859a629da49e"
+  },
+  {
+   "unit": "attention_verify_wmma_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/attention_verify_wmma_gfx1151.hip -o build/compile-gate/kernel.hipfire.attention/attention_verify_wmma_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.88,
+   "object_bytes": 76040,
+   "object_sha256": "4a4509883e6641ff5abbec7cac7aa46b4dea36c65088f7e50531b7142815ed69"
+  },
+  {
+   "unit": "causal_conv_depthwise_rows",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/causal_conv_depthwise_rows.hip -o build/compile-gate/kernel.hipfire.attention/causal_conv_depthwise_rows.hsaco",
+   "rc": 0,
+   "seconds": 0.44,
+   "object_bytes": 12544,
+   "object_sha256": "54c18e1455a3119b72f2a33be9dd55ca88b1e7a118f11021623e246ef8825b94"
+  },
+  {
+   "unit": "latent_attention_absorb",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/latent_attention_absorb.hip -o build/compile-gate/kernel.hipfire.attention/latent_attention_absorb.hsaco",
+   "rc": 0,
+   "seconds": 0.59,
+   "object_bytes": 28776,
+   "object_sha256": "fb4d17264a2d33b7569c3638c42660a8736f11286175935c67a371dd06bb42ac"
+  },
+  {
+   "unit": "latent_attention_decode",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/latent_attention_decode.hip -o build/compile-gate/kernel.hipfire.attention/latent_attention_decode.hsaco",
+   "rc": 0,
+   "seconds": 0.61,
+   "object_bytes": 27488,
+   "object_sha256": "8676e62bbfbe1240de140391649878990fefe003f07f0e662699edf6d174372e"
+  },
+  {
+   "unit": "latent_attention_decompress",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/latent_attention_decompress.hip -o build/compile-gate/kernel.hipfire.attention/latent_attention_decompress.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 22512,
+   "object_sha256": "3bd9cdd92b21c0a5aa652cb84a775dbb1e76575133f8940073989c546e7e187d"
+  },
+  {
+   "unit": "latent_attention_flash",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/latent_attention_flash.hip -o build/compile-gate/kernel.hipfire.attention/latent_attention_flash.hsaco",
+   "rc": 0,
+   "seconds": 1.44,
+   "object_bytes": 119016,
+   "object_sha256": "968972de5b47cd7d5441d0dd97aa962138016423d08c03a84bb982d42bb73b64"
+  },
+  {
+   "unit": "latent_attention_gate",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/latent_attention_gate.hip -o build/compile-gate/kernel.hipfire.attention/latent_attention_gate.hsaco",
+   "rc": 0,
+   "seconds": 0.39,
+   "object_bytes": 9456,
+   "object_sha256": "9299b03aa83f86231c7261b7657d2605cc3efd2c745286e9c0ea4dfc411717bb"
+  },
+  {
+   "unit": "latent_attention_serial",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/latent_attention_serial.hip -o build/compile-gate/kernel.hipfire.attention/latent_attention_serial.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 14448,
+   "object_sha256": "142135b8e29cf22d66e4d2bc5ed0cf76cf30a3c6f8c207b291c2f46eb6d47786"
+  },
+  {
+   "unit": "latent_attention_split",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/latent_attention_split.hip -o build/compile-gate/kernel.hipfire.attention/latent_attention_split.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 13288,
+   "object_sha256": "e38d86da9e0640c31ab26b0db6ffc60aef4d518ea3f2844662e837ede0cfb6f5"
+  },
+  {
+   "unit": "qkv_split_interleaved",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/qkv_split_interleaved.hip -o build/compile-gate/kernel.hipfire.attention/qkv_split_interleaved.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 9200,
+   "object_sha256": "93cce1701a7d4113da491a453db291644367f8ef7242a445b705add105fbf5f2"
+  },
+  {
+   "unit": "qk_rmsnorm_rope_flux",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/qk_rmsnorm_rope_flux.hip -o build/compile-gate/kernel.hipfire.attention/qk_rmsnorm_rope_flux.hsaco",
+   "rc": 0,
+   "seconds": 0.57,
+   "object_bytes": 52664,
+   "object_sha256": "576a843d30939bd06a89dcd5ec9c248ff451c560a17759a317da37593e2bb2e5"
+  },
+  {
+   "unit": "wo_per_group_batched_f32",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_f32.hip -o build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_f32.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 9064,
+   "object_sha256": "3983ca859e06e4636286870add2d0abc304fa71a7a96581411f24ff4b0839017"
+  },
+  {
+   "unit": "wo_per_group_batched_hfq4g256",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_hfq4g256.hip -o build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_hfq4g256.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 11000,
+   "object_sha256": "46162b9af2938d735d62cfa3248d2d6412fd2ba78fa0c0805c97903fd39c8db1"
+  },
+  {
+   "unit": "wo_per_group_batched_q8_0_multirow",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_q8_0_multirow.hip -o build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_q8_0_multirow.hsaco",
+   "rc": 0,
+   "seconds": 0.46,
+   "object_bytes": 13824,
+   "object_sha256": "231d540fc87c2cf359cde56bc78f3a7e94c1ec69489e8299b80f03db9f9621b2"
+  },
+  {
+   "unit": "wo_per_group_batched_q8_0",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_q8_0.hip -o build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_q8_0.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 9584,
+   "object_sha256": "7852ea496c665648aea10a241694ece82989f09b4a4476593a497d3c1e270c12"
+  },
+  {
+   "unit": "wo_per_group_batched_q8_0_wmma_4w",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/attention/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_q8_0_wmma_4w.hip -o build/compile-gate/kernel.hipfire.attention/wo_per_group_batched_q8_0_wmma_4w.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 12800,
+   "object_sha256": "39e996d51d92f9c11d9fdee7e8de76977625ae2f40d6915c664368b4a9aa13ed"
+  }
+ ]
+}

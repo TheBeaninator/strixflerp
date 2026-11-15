@@ -1,0 +1,70 @@
+# The front end gate on control-node's GPU: serve.flerp.http with the strixite executor behind include/flerp/executor.h
+# against the origin's own server (host.reference_server of the phase 1 gate). Host
+# facts, the native server's flags and the GPU rules are the phase 1 recipe gate's. What the stage requires is
+# stated in gate/flerp_serve.py. Written before the first run; do not edit it to turn a failure into a pass.
+inherit = "gate/qwen38-flash-next.strixite.toml"
+
+[host]
+port    = 5395                         # not the other gates' 5391 and 5393, not the pod's 5300
+scratch = "build/gate-scratch-serve"
+
+[serve]
+stages       = ["check", "build", "gpu"]
+binary       = "strixflerp-qwen38-flash-next.flerp-serve"
+mtp          = ["on", "off"]           # a native load and a front end load for each
+# The native server samples the plain argmax, as in the conformance gate: its two serving policies that act on a
+# sampled token are off (the end of turn banned inside a think block, a think block closed ahead of a tool call).
+native_args  = ["--think-end-guard", "off", "--think-close-on-call", "off"]
+prompt_cut   = "<|im_start|>"          # the engine's turn point: where its prompt forward ends
+yield_wait_s = 1800                    # how long a load waits for the pod's own GPU jobs before the stage gives up
+
+# One more load: the front end takes the executor's own draws (--delivery tokens) for these greedy requests.
+[serve.tokens_delivery]
+mtp      = "on"
+requests = ["raw-256", "long-chat-256"]
+
+# Requests of the phase 1 gate by name (greedy, seed 1234 unless `body` says otherwise), in an order where none
+# shares a prompt prefix with the one before it, so each is a full prefill on the native server.
+[[serve.request]]
+name       = "raw-256"                 # /v1/completions
+prompt     = "raw-completion"
+max_tokens = 256
+stream     = true
+
+[[serve.request]]
+name       = "chat-256"                # /v1/chat/completions, thinking on: the native reply is split into
+prompt     = "short-chat-thinking"     # reasoning and content, so its text is not compared; its tokens are
+max_tokens = 256
+stream     = true
+logprobs   = true                      # and again with logprobs (full rows): the same tokens
+
+[[serve.request]]
+name       = "raw-stop"                # a stop string: 12 characters two thirds into the native raw-256 text
+prompt     = "raw-completion"
+max_tokens = 256
+stop_from  = "raw-256"
+
+[[serve.request]]
+name       = "long-chat-256"           # a prompt of a few thousand tokens, thinking off
+prompt     = "long-chat"
+max_tokens = 256
+stream     = true
+
+[[serve.request]]
+name       = "raw-bias"                # logit_bias -100 on the first token the native raw-256 generated
+prompt     = "raw-completion"
+max_tokens = 64
+bias_from  = "raw-256"
+
+[[serve.request]]
+name       = "chat-sampled"            # sampled, seeded, thinking off
+prompt     = "short-chat-thinking"
+max_tokens = 128
+stream     = true
+body       = { enable_thinking = false, temperature = 0.7, top_k = 20, top_p = 0.95, seed = 4242 }
+
+[[serve.request]]
+name       = "raw-sampled"             # sampled, seeded
+prompt     = "raw-completion"
+max_tokens = 128
+body       = { temperature = 0.8, top_k = 20, top_p = 0.9, seed = 99 }

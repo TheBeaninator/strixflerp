@@ -1,0 +1,49 @@
+id        = "kernel.flerp.moe_kquant"
+kind      = "kernel"
+summary   = "Mixture-of-experts kernels on GGUF expert stacks (last dimension the expert): router logits with the shared gate logit beside them, and the projections of the experts each token selected, ids read on the device; any number of tokens, every size an argument"
+notes     = "The weight dot product is gufo's QuantWarpBlockDot (kernel.gufo.qwen_ops, src/families/qwen/hip_common/quant_ops.hpp), the row reader of its decode GEMV: one wave a row, the same summation order at any number of tokens. F32, BF16 and F16 stacks have a plain wave dot written here. Q4_K and Q6_K stacks (both stacks of one type, stacks and x 16-byte aligned) take a wide reader written here (SHAPE-TRANSFERS R1 arm a): the same lanes, decode and summation order as QuantWarpBlockDot, so the same bits, with 16-byte loads of codes and activations (gate/xfer-r1-fold.toml, gate/results/xfer-r1-fold). No decision is taken on the host, so the launches can be captured in a HIP graph."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/moe_kquant/moe_kquant.hip", "flerp/moe_kquant/moe_kquant.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/moe_kquant/moe_kquant.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+uses      = ["hip-runtime"]
+defines   = ["ENGINE_ENABLE_HIP=1"]
+
+[[provides]]
+interface = "moe.gate-logits/gguf-f32/f32"
+api       = "flerp::moe::GateLogits (flerp/moe_kquant/moe_kquant.hpp)"
+numeric   = "fp32: one wave a logit, each lane sums every 32nd product, then a lane reduction; when hidden is a multiple of 1,024 (up to 8,192) and the weights and x are 16-byte aligned the same order runs with 16-byte loads staged through LDS, bit-equal (DECODE-KERN3, gate/decode-kern3.toml)"
+regime    = "any tokens (32768 a launch), any expert count and hidden size; one launch for the router rows and the shared expert's gate row"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-kquant/f32.indexed"
+api       = "flerp::moe::IndexedExperts, ExpertBytes, SupportsExpertType (flerp/moe_kquant/moe_kquant.hpp)"
+numeric   = "gufo's K-quant row dot (QuantWarpBlockDot, fp32 activations, fp32 accumulate) per selected expert row (Q4_K and Q6_K through a wide-load reader of the same order, bit-equal); SwiGLU as silu(gate) * up in fp32 with expf; an id outside the stack reads the last expert"
+regime    = "any tokens x slots (32768 rows a launch); Q8_0, Q8_K, Q3_K..Q6_K, IQ4_NL, IQ4_XS, IQ3_S, F32, BF16, F16 stacks; a quantized row must be whole blocks; reads each selected expert once a token, so prompt passes are memory-bound"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by CMake (recipes/qwen36-35b-a3b.flerp-moe.toml); that recipe built and ran on gfx1151 on 2026-11-11 and its gate did not pass (one criterion against llama.cpp, gate/results/qwen36-35b-a3b.flerp-moe/summary.md), so nothing here moves past harvested"

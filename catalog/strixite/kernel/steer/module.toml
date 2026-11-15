@@ -1,0 +1,45 @@
+id      = "kernel.strixite.steer"
+kind    = "kernel"
+summary = "Activation steering: add a scaled vector to rows of the residual streams"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/steer.hip", "kernels/steer.hpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/steer.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "steer.add-rows/-/bf16"
+api       = "strix::kernels::steer_add_rows"
+numeric   = "fp32 add, one rounding to the activation dtype"
+regime    = "x[r, k] += scale * v[k]"
+
+[[provides]]
+interface = "steer.add-rows/-/f32"
+api       = "strix::kernels::steer_add_rows"
+numeric   = "fp32 add, one rounding to the activation dtype"
+regime    = "x[r, k] += scale * v[k]"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

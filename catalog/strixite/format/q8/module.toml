@@ -1,0 +1,39 @@
+id      = "format.strixite.q8"
+kind    = "format"
+summary = "Q8: 8-bit asymmetric per-group weight format (one code per byte)"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/q8.cpp", "formats/q8.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/q8.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.host/strixw-q8/-"
+api       = "strix::Q8Weight, quantize_q8, dequantize_q8, append_rows_q8, to_chunk_major"
+numeric   = "s = bf16((max - min) / 255), q = clamp(round_half_even((w - m) / s), 0, 255), all fp32"
+regime    = "8.5 bits per weight at G = 64"
+
+[[requires]]
+module = "format.strixite.q4"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

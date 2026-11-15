@@ -1,0 +1,35 @@
+id      = "runtime.strixite.memory_governor"
+kind    = "runtime"
+summary = "RAM floor check: how much room MemAvailable leaves above a margin"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/memory_governor.hpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.memory-governor/-/-"
+api       = "strix::MemoryGovernor"
+numeric   = "n/a"
+regime    = "header only"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

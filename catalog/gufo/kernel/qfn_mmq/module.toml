@@ -1,0 +1,99 @@
+id        = "kernel.gufo.qfn_mmq"
+kind      = "kernel"
+summary   = "Quantized matrix kernels for Qwen3.8-Flash-Next derived from llama.cpp ggml-cuda (mmq / mmvq / mmid / quantize), built with HIP; plus the wave64 MoE kernel"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/VENDOR.md",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/common.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/ggml-common.h",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/ggml-hip.h",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/ggml-impl.h",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/ggml.h",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mma.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmid.hip.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmid.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmq.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmvq.hip.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/mmvq.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/moe_wave64.hip.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_ggml_stubs.h",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_ggml_stubs.hip.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq.h",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq.hip.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq_prelude.h",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/quantize.hip.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/quantize.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/unary.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/vecdotq.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/vendors/hip.h",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+upstream  = "llama.cpp 5c0e9468378eba6bf3cc1989ff5d62fbbe4d9e3a ggml/src/ggml-cuda (MIT, The ggml authors); see src/.../mmq/VENDOR.md"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/models/qwen38_flash_next/kernels/rocm/mmq/mmid.hip.cpp",
+  "src/src/models/qwen38_flash_next/kernels/rocm/mmq/mmvq.hip.cpp",
+  "src/src/models/qwen38_flash_next/kernels/rocm/mmq/moe_wave64.hip.cpp",
+  "src/src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_ggml_stubs.hip.cpp",
+  "src/src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq.hip.cpp",
+  "src/src/models/qwen38_flash_next/kernels/rocm/mmq/quantize.hip.cpp",
+]
+includes  = ["src", "src/src/models/qwen38_flash_next/kernels/rocm/mmq"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = [
+  "-x",
+  "hip",
+  "-std=gnu++17",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-Wno-unused-value",
+  "-Wno-unused-command-line-argument",
+  "-fPIC",
+  "-UNDEBUG",
+  "-c",
+  "-DGGML_HIP_NO_VMM",
+  "-DENGINE_ENABLE_HIP=1",
+]
+source_options = { "src/src/models/qwen38_flash_next/kernels/rocm/mmq/moe_wave64.hip.cpp" = ["-mwavefrontsize64"] }
+variants  = 6
+
+[[provides]]
+interface = "linear.prefill/gguf-kquant/q8_1-f32.mmq"
+api       = "qfn_mmq_* C ABI (qfn_mmq.h): mul_mat_q, quantize_q8_1"
+numeric   = "ggml mmq: activations quantized to Q8_1 (int8 per 32-block with fp scale and sum), integer dot products, fp32 scale; compiled -ffast-math"
+regime    = "prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "linear.decode/gguf-kquant/f32.mmvq"
+api       = "qfn_mmq_* C ABI: mul_mat_vec_q"
+numeric   = "ggml mmvq vec-dot per row"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-kquant/f32.mmid"
+api       = "qfn_mmq_* C ABI: mul_mat_id, moe_wave64"
+numeric   = "ggml mul_mat_id grouping by expert"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.qfn_mmq.json"

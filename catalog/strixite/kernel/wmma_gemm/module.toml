@@ -1,0 +1,38 @@
+id      = "kernel.strixite.wmma_gemm"
+kind    = "kernel"
+summary = "Device building blocks of the tiled WMMA GEMMs: LDS staging, software pipelining, scaled-code accumulation"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/wmma_gemm.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "gemm.wmma-blocks/-/bf16"
+api       = "strix::kernels::{wmma_step, wmma_step_scaled, wmma_step_f16, wmma_stage_codes}"
+numeric   = "x rounded to bf16 (or f16), Q4/Q8 weights enter exactly as scaled codes, fp32 accumulate"
+regime    = "included by .hip files only; K step kWmmaKC, lower-precision path"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.wmma"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

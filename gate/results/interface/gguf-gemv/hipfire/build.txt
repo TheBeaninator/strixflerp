@@ -1,0 +1,23 @@
+$ cmake -G Ninja -S /data/projects/strixflerp/build/gate-interface/gguf-gemv/hipfire -B /data/projects/strixflerp/build/gate-interface/gguf-gemv/hipfire/ninja
+-- ROCm at /data/tools/therock-10.1.0a20260823
+-- Performing Test FLERP_HOST_STDLIB_OK
+-- Performing Test FLERP_HOST_STDLIB_OK - Success
+-- Configuring done (2.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /data/projects/strixflerp/build/gate-interface/gguf-gemv/hipfire/ninja
+$ ninja -C /data/projects/strixflerp/build/gate-interface/gguf-gemv/hipfire/ninja -j 8
+ninja: Entering directory `/data/projects/strixflerp/build/gate-interface/gguf-gemv/hipfire/ninja'
+[1/6] Building CXX object CMakeFiles/m_tool_flerp_gate_gguf_gemv.dir/data/projects/strixflerp/gate/interface/drivers/gguf_gemv/src/driver.cpp.o
+[2/6] hipfire compile recipe: gemv_q8_0
+/data/projects/strixflerp/build/gate-interface/gguf-gemv/hipfire/units/flerp_co_hipfire_gemv_q8_0.hip:10:28: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in 'gemv_q8_0': desired occupancy was 20, final occupancy is 16 [-Wpass-failed]
+   10 | extern "C" __global__ void gemv_q8_0(
+      |                            ^
+1 warning generated when compiling for gfx1151.
+[3/6] hipfire compile recipe: gemv_q4k
+/data/projects/strixflerp/build/gate-interface/gguf-gemv/hipfire/units/flerp_co_hipfire_gemv_q4k.hip:26:28: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in 'gemv_q4k': desired occupancy was 20, final occupancy is 16 [-Wpass-failed]
+   26 | extern "C" __global__ void gemv_q4k(
+      |                            ^
+1 warning generated when compiling for gfx1151.
+[4/6] embed code object flerp_co_hipfire_gemv_q4k
+[5/6] embed code object flerp_co_hipfire_gemv_q8_0
+[6/6] Linking CXX executable driver

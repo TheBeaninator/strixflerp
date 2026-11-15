@@ -1,0 +1,49 @@
+id        = "tool.flerp.strixw_patch"
+kind      = "tool"
+summary   = "Copies a weights.strixw with one tensor class re-encoded from the source checkpoint (only mtp_fc=q4g<G>): every other component copied byte for byte, the class quantized by strixite's quantize_q4, offsets, hashes, index and header from strixite's StrixwWriter, output re-read and hash-verified by StrixwFile"
+design    = "DESIGN.md"
+notes     = "Built with the host C++ compiler by src/flerp/strixw_patch/build.sh (no HIP). Proof on the real files: gate/results/strixw-patch/README.md."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/strixw_patch/strixw_patch.cpp", "flerp/strixw_patch/build.sh"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/strixw_patch/strixw_patch.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "tool.strixw-patch/-/-"
+api       = "strixw_patch --old OLD --source CKPT --override mtp_fc=q4g64 (--out NEW [--threads N] | --plan [--scratch DIR]); strixw_patch --source CKPT --override mtp_fc=q4g64 --check-against REF"
+numeric   = "copied components bit-identical (hash checked against OLD's index on the way); mtp_fc = quantize_q4 of the checkpoint's BF16, the converter's Q4 path"
+regime    = "host, one component in memory at a time (largest ~840 MB), O_DIRECT reads where the filesystem allows"
+
+[[requires]]
+module    = "format.strixite.strixw"
+
+[[requires]]
+module    = "format.strixite.q4"
+
+[[requires]]
+module    = "format.strixite.safetensors"
+
+[[requires]]
+module    = "format.strixite.convert_qwen4exp"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host tool built by its build.sh, not by a recipe; tests/test_strixw_patch.py (synthetic files, output byte-identical to the converter's) and gate/results/strixw-patch (real mtp_fc byte-identical to the upstream file) are its evidence; the full 74 GB output has not been written yet"

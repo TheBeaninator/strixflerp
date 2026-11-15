@@ -1,0 +1,70 @@
+id        = "runtime.gufo.tp_verbs"
+kind      = "runtime"
+summary   = "TP2 over native InfiniBand / RoCE v2 verbs: two-rank RC communicator (one RDMA write with immediate per partial), GID selection, the TP partition of the model, and the serving-side TP control, executor and disk store"
+notes     = "RDMA_TEMP_STATE.md (repo root) says this branch is an unqualified merge checkpoint with one open correctness bug in prefix/checkpoint reuse."
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "RDMA_TEMP_STATE.md",
+  "src/cli/serve/tp_control.cpp",
+  "src/cli/serve/tp_control.hpp",
+  "src/cli/serve/tp_disk_store.cpp",
+  "src/cli/serve/tp_disk_store.hpp",
+  "src/cli/serve/tp_executor.cpp",
+  "src/cli/serve/tp_executor.hpp",
+  "src/cli/serve/tp_snapshot_gate.hpp",
+  "src/models/qwen38_flash_next/distributed/rdma_gid.cpp",
+  "src/models/qwen38_flash_next/distributed/rdma_gid.hpp",
+  "src/models/qwen38_flash_next/distributed/tp_partition.cpp",
+  "src/models/qwen38_flash_next/distributed/tp_partition.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/communicator.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/verbs.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/verbs.hpp",
+]
+authors   = ["neuhaus", "gufo contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "collective.exchange-partial/-/f32.gufo"
+api       = "gufo::models::qwen38_flash_next::rocm::Communicator (ExchangePartial, StartPartial / FinishPartial, QueuePartial), CreateIbrverbsCommunicator"
+numeric   = "bytes only; every collective carries and validates its operation ordinal; fixed send and receive windows mapped by both ranks"
+regime    = "TP2; event-driven completion channel"
+
+[[requires]]
+interface = "collective.device-stage/-/f32"
+
+[[requires]]
+module    = "executor.gufo.qwen38_flash_next"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "runtime.gufo.ext_api"
+
+[[requires]]
+module    = "runtime.gufo.platform"
+
+[[requires]]
+module    = "serve.gufo.http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

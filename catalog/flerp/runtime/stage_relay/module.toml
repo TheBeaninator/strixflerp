@@ -1,0 +1,33 @@
+id        = "runtime.flerp.stage_relay"
+kind      = "runtime"
+summary   = "Framed point-to-point relay between the stages of a model split by blocks: FP32 hidden rows down a ring of ranks, the last rank's reply back to rank 0, control calls mirrored down the chain; every frame checked (magic, epoch, ordinal, op, rows, bytes, plan hash), the first failure poisons and closes both links, abort is idempotent; TCP (rank r listens on port + r) or an in-process loopback"
+notes     = "Written here for phase 5 (docs/PHASE5-FOURNODE-DESIGN.md section 3.3, stage P2). C++ and POSIX sockets only: no HIP, no code of the catalogue. The contract is runtime.strixfold.coll's (coll.zig:7-15): every rank issues the same call sequence, every frame is checked, the first failure poisons, abort is idempotent. First version: the data chain and the reply link are one ring; control frames (RESET, CLOSE) travel down the chain with the data, each rank forwarding before acting, in place of a separate control link from rank 0 to every rank. VERIFY is a valid op on the wire but nothing issues it yet; KEEP, KEEP_PREFIX, DROP and the snapshot calls are not written. Stage P3 added Recv(header_deadline) (a stage waiting between its caller's calls gives a long one; the payload keeps the config's deadline) and Interrupt() (async-signal-safe: shuts the links down so a blocked call fails; for a SIGTERM handler). tests/cpp/stage_relay_selftest.cpp (run by tests/test_stage_relay.py) checks it without a GPU."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/stage_relay/relay.cpp", "flerp/stage_relay/relay.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/stage_relay/relay.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "transport.stage-relay/-/f32"
+api       = "flerp::stage_relay::Relay (Send, Recv, Handshake, Abort, Interrupt, SetFault), ConnectRing, LoopbackRing, MakeTcpLink, MakeMemoryPipe (flerp/stage_relay/relay.hpp)"
+numeric   = "n/a: bytes move unchanged"
+regime    = "a ring of 1 to N ranks, frames in order on each link (a caller may send several before it reads a reply: TCP buffers them, the loopback pipe queues them), frames of at most max_rows rows; a receive or send with no progress within the deadline fails"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by CMake (recipes/qwen36-35b-a3b.flerp-moe.toml); its stage gate is gate/moe_stage.py"

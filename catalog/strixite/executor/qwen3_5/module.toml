@@ -1,0 +1,71 @@
+id      = "executor.strixite.qwen3_5"
+kind    = "executor"
+summary = "Qwen3.5 text model: 24 layers (GDN or full attention + SwiGLU MLP), BF16 weights, the stage-1 correctness baseline"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/qwen3_5.cpp", "runtime/qwen3_5.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/qwen3_5.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.forward/qwen3.5/bf16"
+api       = "strix::Qwen35Model, strix::Qwen35Session"
+numeric   = "bf16 linears through the simple linear_bf16w kernel"
+regime    = "not served; kept as the baseline forward"
+
+[[requires]]
+interface = "format.reader/safetensors/-"
+
+[[requires]]
+interface = "attn.softmax-gqa/-/bf16"
+
+[[requires]]
+interface = "embed.lookup/bf16/bf16"
+
+[[requires]]
+interface = "embed.lookup/strixw-q8/bf16"
+
+[[requires]]
+interface = "mixer.gdn/-/bf16"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+interface = "linear.dense/bf16/bf16"
+
+[[requires]]
+interface = "norm.rmsnorm-zc/-/bf16"
+
+[[requires]]
+interface = "norm.rmsnorm-gated/-/bf16"
+
+[[requires]]
+interface = "residual.add/-/bf16"
+
+[[requires]]
+interface = "pos.rope/-/bf16"
+
+[[requires]]
+interface = "act.swiglu/-/bf16"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

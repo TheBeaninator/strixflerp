@@ -1,0 +1,42 @@
+id        = "format.strixfold.engram"
+kind      = "format"
+summary   = "Engram n-gram embedding shards: row ids per position (hash rule), FP8 row decode, O_DIRECT / io_uring row reads from the original FP8 tables on NVMe"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/families/dsv41/engram.zig",
+  "zig/src/families/dsv41/engram_aio.zig",
+  "zig/src/families/dsv41/engram_check_main.zig",
+  "zig/src/families/dsv41/engram_io.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:families/dsv41"
+
+[[provides]]
+interface = "format.loader/engram-fp8/-"
+api       = "engram.zig, engram_io.zig, engram_aio.zig"
+numeric   = "row ids as numpy computes them; FP8 (E4M3) rows decoded exactly"
+regime    = "one read per (position, table) a decode round; NVMe-bound"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

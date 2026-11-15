@@ -1,0 +1,29 @@
+# Option 2 (combine_reduce part) of the 2026-11-11 strixw prefill report: kernel.flerp.moe_grouped_pf with
+# STRIXFLERP_PF_COMBINE=1 (batched partial loads, same summation order) against the same build with it unset.
+# Criteria fixed before the first GPU run; do not edit them to turn a failure into a pass.
+inherit = "gate/qwen38-flash-next.strixite-pf3.toml"
+
+[trace]
+prompt    = 32768
+variants  = ["base", "combine"]
+timeout_s = 1800
+
+[server_stage]
+variants = []                          # prefill-only kernel: decode is the T = 1 bench number (reported)
+
+[[variant]]
+name  = "base"
+chunk = 8192
+
+[[variant]]
+name   = "combine"
+chunk  = 8192
+env    = { STRIXFLERP_PF_COMBINE = "1" }
+expect = "identical"                   # logits sha256 and greedy ids equal to base at every prompt and round
+min_gain_pct = 0.5                     # combine_reduce is ~3% of a chunk: +0.5% at 32k and 128k, outside base's range
+
+[criteria]
+base             = "base"
+speed_prompts    = [32768, 131072]
+decode_tolerance = 0.05
+# Also read: the timeline's combine_reduce_kernel ms (base vs combine) must fall; reported in summary.md.

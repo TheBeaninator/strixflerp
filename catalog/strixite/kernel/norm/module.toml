@@ -1,0 +1,57 @@
+id      = "kernel.strixite.norm"
+kind    = "kernel"
+summary = "RMSNorm kernels (zero-centred, grouped, gated) and the Act activation-dtype enum every kernel takes"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/norm.hip", "kernels/norm.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/norm.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "norm.rmsnorm-zc/-/bf16"
+api       = "strix::kernels::rmsnorm_zc, strix::kernels::group_rmsnorm_zc"
+numeric   = "fp32 math with fp32 weights; casts to the activation dtype at the reference's points, so bf16 output is within one bf16 rounding step of transformers"
+regime    = "rows x d contiguous, in place allowed"
+
+[[provides]]
+interface = "norm.rmsnorm-zc/-/f32"
+api       = "strix::kernels::rmsnorm_zc, strix::kernels::group_rmsnorm_zc"
+numeric   = "fp32 math with fp32 weights; casts to the activation dtype at the reference's points, so bf16 output is within one bf16 rounding step of transformers"
+regime    = "rows x d contiguous, in place allowed"
+
+[[provides]]
+interface = "norm.rmsnorm-gated/-/bf16"
+api       = "strix::kernels::rmsnorm_gated"
+numeric   = "out = cast(w * cast(x * rsqrt(mean(x^2) + eps)) * gate(z)), fp32 math"
+regime    = "GDN output norm: rows = tokens x value heads, d = 128; gate SiLU or Sigmoid chosen per call"
+
+[[provides]]
+interface = "norm.rmsnorm-gated/-/f32"
+api       = "strix::kernels::rmsnorm_gated"
+numeric   = "out = cast(w * cast(x * rsqrt(mean(x^2) + eps)) * gate(z)), fp32 math"
+regime    = "GDN output norm: rows = tokens x value heads, d = 128; gate SiLU or Sigmoid chosen per call"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

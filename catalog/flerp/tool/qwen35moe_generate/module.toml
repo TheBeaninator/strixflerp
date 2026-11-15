@@ -1,0 +1,48 @@
+id        = "tool.flerp.qwen35moe_generate"
+kind      = "tool"
+summary   = "A greedy token generator over executor.flerp.qwen35moe (HIP, or the CPU reference with --cpu) that prints token ids as JSON lines, with a traced mode (top logits a position, hidden states after named blocks, router choices), and the top of the CMake build graph for that one program"
+notes     = "generate.cpp is tool.flerp.gufo_qwen_generate's with --trace added. CMakeLists.txt is that module's build file statement for statement up to gufo's own directories, then swaps the adapted sources into gufo_qwen27b and adds the MoE kernel libraries; no_image.cpp is that module's. stage_driver.cpp (--staged, stage P2 of docs/PHASE5-FOURNODE-DESIGN.md) runs the model as N stages joined by runtime.flerp.stage_relay: in one process over one load (loopback) or one rank a process over TCP; it stands in for the design's tool.flerp.qwen35moe_stage until the ABI adapter (P3). ORNITH-O1O2 (gate/ornith-o1o2.toml): stage rows through fixed pinned host buffers (--rows pinned, the default; Crucible device_memory pinned_buffer.h), a token-only reply (--reply token: the last stage's executor already picks the id on the GPU, lowest id on a tie), and prompt sub-chunks sent back to back (--prompt-subchunks S, StrixFold stagger.zig)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/qwen35moe_tool/CMakeLists.txt", "flerp/qwen35moe_tool/generate.cpp", "flerp/qwen35moe_tool/mtp_probe.cpp", "flerp/qwen35moe_tool/mtp_probe.hpp", "flerp/qwen35moe_tool/stage_driver.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/qwen35moe_tool/generate.cpp", "src/flerp/qwen35moe_tool/mtp_probe.cpp", "src/flerp/qwen35moe_tool/stage_driver.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "tool.generate-ids/flerp-qwen35moe/-"
+api       = "flerp-qwen35moe-generate --model FILE.gguf [--cpu] [--tokenize] [--context N] [--max-tokens N] [--trace] [--trace-top N] [--trace-layers L,..] [--placed [--world W --rank R | --blocks B0:B1]] [--plan-only] [--stage-bench --chunk-rows N --decode-steps N --dump F --dump-layers L,.. --dump-rows R,..] (--prompt-file F | --ids-file F)...; --staged loopback --configs W:CUTS:GRAPH;.. [--fault-config W:CUTS:GRAPH] | --staged tcp --world W --rank R --cuts even|c0,..,cW --port P --epoch E [--graph-modes on,off | --run-specs G:R:S,..] [--fault KIND:N]; staged common: [--rows pinned|pageable] [--reply full|token] [--prompt-subchunks S]"
+numeric   = "the executor's own: QwenGpuExecutor::Generate at temperature 0 (unmodified argmax), production execution policy; --trace makes the same forwards and copies each logits row to the host"
+regime    = "one process, one model, prompts one after another"
+
+[[requires]]
+interface = "executor.model/qwen35moe/gguf"
+
+[[requires]]
+interface = "format.loader/gguf/-"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-.placed"
+
+[[requires]]
+module    = "tool.flerp.gufo_qwen_generate"
+
+[[requires]]
+interface = "transport.stage-relay/-/f32"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by CMake (recipes/qwen36-35b-a3b.flerp-moe.toml); that recipe built and ran on gfx1151 on 2026-11-11 and its gate did not pass (one criterion against llama.cpp, gate/results/qwen36-35b-a3b.flerp-moe/summary.md), so nothing here moves past harvested"

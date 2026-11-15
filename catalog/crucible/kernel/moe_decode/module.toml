@@ -1,0 +1,51 @@
+id        = "kernel.crucible.moe_decode"
+kind      = "kernel"
+summary   = "Decode routed experts: one-launch MoE stage, stream-grid expert body with b128/b64 weight loads and no LDS transpose, row-sparse experts for verify forwards, shared-expert-first scheduling"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/layers/expert_count.h",
+  "engine/layers/moe_b128.h",
+  "engine/layers/moe_b128_switch.h",
+  "engine/layers/moe_chunk_map.h",
+  "engine/layers/moe_rows.h",
+  "engine/layers/moe_sg.h",
+  "engine/layers/moe_shared_first.h",
+  "engine/layers/moe_stage.h",
+  "engine/layers/moe_window_policy.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/layers"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/f16-f32.crucible"
+api       = "MoeStageKernel, MoeSgKernel, MoeFusedKernel, MoeRows*Kernel"
+numeric   = "exact: each routed slot keeps its R=1 order; stable combine by router slot"
+regime    = "decode and MTP verify, 1..8 rows (R), memory-bound"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[[requires]]
+module    = "kernel.crucible.ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

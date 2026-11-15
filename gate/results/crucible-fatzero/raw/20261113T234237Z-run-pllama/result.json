@@ -1,0 +1,23 @@
+{
+ "op": "k_run",
+ "job": "20261113T234237Z-run-pllama",
+ "card": "crucible-fatzero",
+ "rc": 0,
+ "result": {
+  "rc": 0,
+  "wall": 5.298,
+  "thermal": {
+   "tctl_start": 21.0,
+   "tctl_peak": 21.5,
+   "w_mean": 5.9,
+   "w_peak": 8.1,
+   "hot_frac": 0.0
+  }
+ },
+ "summary": [
+  "acquired bench:K owner=kbench-20261113T234237Z-run-pllama expires=1794615517 bound=none",
+  "code: no src/ref (scratch dir /var/tmp/kbench/crucible-fatzero/scratch)",
+  "run: exit 0 in 5.30 s; Tctl 21->22 C peak, 6 W mean (8 peak)",
+  "--- stdout (tail) ---\n... [534 chars cut] ...\ner)\nRestart=on-failure\nUser=pod\nstop-rc=0\n53773 bash -c export PATH=/data/models/tools/zig-0.17.0:/opt/rocm/bin:/usr/local/bin:/usr/bin:/bin HOME=${HOME:-/tmp} LANG=C.UTF-8; cd /var/tmp/kbench/crucible-fatzero/scratch && s=$(date +%s.%N);  timeout 120 bash -c 'systemctl status worker-llama --no-pager 2>&1 | head -5; systemctl show -p Restart,User worker-llama; sudo -n systemctl stop worker-llama; echo stop-rc=$?; sleep 5; pgrep -af llama-server || echo no-llama; cat /sys/class/drm/card*/device/mem_info_gtt_used | awk '\"'\"'{print \"gtt_used_MiB\", $1/1048576}'\"'\"'; free -g | head -2'; rc=$?; e=$(date +%s.%N); echo \"KBT $s $e $rc\" >&2\n53775 timeout 120 bash -c systemctl status worker-llama --no-pager 2>&1 | head -5; systemctl show -p Restart,User worker-llama; sudo -n systemctl stop worker-llama; echo stop-rc=$?; sleep 5; pgrep -af llama-server || echo no-llama; cat /sys/class/drm/card*/device/mem_info_gtt_used | awk '{print \"gtt_used_MiB\", $1/1048576}'; free -g | head -2\n53776 bash -c systemctl status worker-llama --no-pager 2>&1 | head -5; systemctl show -p Restart,User worker-llama; sudo -n systemctl stop worker-llama; echo stop-rc=$?; sleep 5; pgrep -af llama-server || echo no-llama; cat /sys/class/drm/card*/device/mem_info_gtt_used | awk '{print \"gtt_used_MiB\", $1/1048576}'; free -g | head -2\ngtt_used_MiB 17.7969\n               total        used        free      shared  buff/cache   available\nMem:             124           2         122           1           1         122\n"
+ ]
+}

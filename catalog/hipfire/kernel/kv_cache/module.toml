@@ -1,0 +1,86 @@
+id        = "kernel.hipfire.kv_cache"
+kind      = "kernel"
+summary   = "KV cache writers and transcoders: F32 / F16 / BF16, Q8_0, int8, HFQ4 / HFQ8, asymmetric K with FWHT or Givens rotation at 2 / 3 / 4 bits, Lloyd-coded V, fold and compaction, sliding-window ring (44 sources, 42 gfx1151 compile units)"
+notes     = "2 of the sources have no compile unit here (assembled by Rust code in the origin, or broken in the origin): see docs/harvest/data/hipfire/not_gfx1151.json."
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/kv_cache_write.hip",
+  "kernels/src/kv_cache_write_asym_k_fwht2.hip",
+  "kernels/src/kv_cache_write_asym_k_fwht2_batched.hip",
+  "kernels/src/kv_cache_write_asym_k_fwht3.hip",
+  "kernels/src/kv_cache_write_asym_k_fwht3_batched.hip",
+  "kernels/src/kv_cache_write_asym_k_fwht4.hip",
+  "kernels/src/kv_cache_write_asym_k_fwht4_batched.hip",
+  "kernels/src/kv_cache_write_asym_k_givens2.hip",
+  "kernels/src/kv_cache_write_asym_k_givens2_batched.hip",
+  "kernels/src/kv_cache_write_asym_k_givens3.hip",
+  "kernels/src/kv_cache_write_asym_k_givens3_batched.hip",
+  "kernels/src/kv_cache_write_asym_k_givens3_hd512.hip",
+  "kernels/src/kv_cache_write_asym_k_givens3_hd512_batched.hip",
+  "kernels/src/kv_cache_write_asym_k_givens4.hip",
+  "kernels/src/kv_cache_write_asym_k_givens4_batched.hip",
+  "kernels/src/kv_cache_write_bf16.hip",
+  "kernels/src/kv_cache_write_f16.hip",
+  "kernels/src/kv_cache_write_f32_batched.hip",
+  "kernels/src/kv_cache_write_fwht256_2bit.hip",
+  "kernels/src/kv_cache_write_fwht256_2bit_batched.hip",
+  "kernels/src/kv_cache_write_fwht256_4bit.hip",
+  "kernels/src/kv_cache_write_fwht256_4bit_batched.hip",
+  "kernels/src/kv_cache_write_fwht3_hd512.hip",
+  "kernels/src/kv_cache_write_fwht3_hd512_batched.hip",
+  "kernels/src/kv_cache_write_hfq4.hip",
+  "kernels/src/kv_cache_write_hfq8.hip",
+  "kernels/src/kv_cache_write_int8.hip",
+  "kernels/src/kv_cache_write_int8c.hip",
+  "kernels/src/kv_cache_write_int8c_f16.hip",
+  "kernels/src/kv_cache_write_q4.hip",
+  "kernels/src/kv_cache_write_q8.hip",
+  "kernels/src/kv_cache_write_q8_0.hip",
+  "kernels/src/kv_cache_write_q8_0_batched.hip",
+  "kernels/src/kv_compact_gather.hip",
+  "kernels/src/kv_fold_asym2.hip",
+  "kernels/src/kv_fold_asym3.hip",
+  "kernels/src/kv_fold_asym4.hip",
+  "kernels/src/kv_fold_q8.hip",
+  "kernels/src/kv_transcode_k_fwht4_to_fwht2.hip",
+  "kernels/src/kv_transcode_k_fwht4_to_fwht3.hip",
+  "kernels/src/kv_transcode_v_lloyd_down.hip",
+  "kernels/src/kv_transcode_v_q8_to_lloyd4.hip",
+  "kernels/src/swa_ring_write_batched.hip",
+  "kernels/src/swa_ring_write_buf.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 42
+
+[[provides]]
+interface = "kvcache.store/hipfire-kv/f32"
+api       = "kv_cache_write_asym_k_fwht2_batched, kv_cache_write_asym_k_fwht2, kv_cache_write_asym_k_fwht3_batched, kv_cache_write_asym_k_fwht3, kv_cache_write_asym_k_fwht4_batched (+37 more units, see units.json)"
+numeric   = "quantization per format: Q8_0 = f16 scale + 32 int8 per 32 elements; fp16 by true RNE; rotated low-bit K after a FWHT / Givens rotation; transcodes down a bit ladder as context grows"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.kv_cache.json"

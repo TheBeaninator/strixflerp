@@ -1,0 +1,70 @@
+id        = "kernel.tensorfold.hip_flashnext"
+kind      = "kernel"
+summary   = "Qwen Flash Next on HIP: QSA indexer, sparse attention and its lane split, n-gram (PLE) rows, stream kernels"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/hip/flashnext/flashnext.hip",
+  "zig/kernels/hip/flashnext/indexer.hpp",
+  "zig/kernels/hip/flashnext/ngram.hpp",
+  "zig/kernels/hip/flashnext/sparse.hpp",
+  "zig/kernels/hip/flashnext/sparse_lanes.hpp",
+  "zig/kernels/hip/flashnext/streams.hpp",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/flashnext/flashnext.hip"]
+includes  = ["src/zig/kernels/hip/"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--genco",
+  "-D__HIP_PLATFORM_AMD__=1",
+  "-DUSE_ROCM=1",
+  "-DHIPBLAS_V2",
+  "-fPIC",
+  "-DCUDA_HAS_FP16=1",
+  "-DHIP_ENABLE_WARP_SYNC_BUILTINS=1",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-DTF_WAVE=32",
+  "-DTF_DOT2_F16=1",
+  "-DTF_DOT2_BF16=1",
+  "-DTF_SDOT4=1",
+  "-DTF_SDOT8=1",
+  "-DTF_MATRIX=1",
+  "-DTF_DOT2_SIGNED_ZERO=1",
+]
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32.tensorfold"
+api       = "flashnext/indexer.hpp"
+numeric   = "fp32 scores, top-k"
+regime    = "decode and prefill"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-f16/f32.tensorfold"
+api       = "flashnext/sparse.hpp, sparse_lanes.hpp"
+numeric   = "fp32 softmax"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "kernel.tensorfold.hip_ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"

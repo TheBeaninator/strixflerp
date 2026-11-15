@@ -1,0 +1,52 @@
+id      = "kernel.strixite.linear_q8"
+kind    = "kernel"
+summary = "Q8 GEMV for decode: linear_q4's structure at one code per byte"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/linear_q8.hip", "kernels/linear_q8.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/linear_q8.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/strixw-q8/bf16"
+api       = "strix::kernels::linear_q8"
+numeric   = "fp32 accumulate (s * sum(x*q) + m * sum(x) per chunk), one rounding on store; bf16 -> f32 stores unrounded"
+regime    = "decode: 16 codes per 16-byte load, 1-8 waves per output row; M == 1 has its own instantiation"
+
+[[provides]]
+interface = "linear.decode/strixw-q8/f32"
+api       = "strix::kernels::linear_q8"
+numeric   = "fp32 accumulate (s * sum(x*q) + m * sum(x) per chunk), one rounding on store; bf16 -> f32 stores unrounded"
+regime    = "decode: 16 codes per 16-byte load, 1-8 waves per output row; M == 1 has its own instantiation"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

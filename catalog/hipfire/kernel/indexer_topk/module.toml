@@ -1,0 +1,78 @@
+id        = "kernel.hipfire.indexer_topk"
+kind      = "kernel"
+summary   = "Sparse-attention indexer: ReLU scores (scalar and WMMA), compressed-key scoring, top-k (bounded, parallel, two-stage), top-k KV gather; Qwen4 QSA scoring, split-K decode and filter-select (25 sources, 24 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/deepseek4_topk_kv_gather_batched.hip",
+  "kernels/src/deepseek4_topk_kv_gather_buf.hip",
+  "kernels/src/deepseek4_topk_kv_gather_identity_batched.hip",
+  "kernels/src/deepseek4_topk_kv_gather_identity_buf.hip",
+  "kernels/src/deepseek4_topk_kv_gather_tiled.gfx1151.hip",
+  "kernels/src/indexer_compressed_k_score.hip",
+  "kernels/src/indexer_kv_gather.hip",
+  "kernels/src/indexer_relu_score_batched.hip",
+  "kernels/src/indexer_relu_score_buf.hip",
+  "kernels/src/indexer_relu_score_wmma_batched.hip",
+  "kernels/src/indexer_relu_score_wmma_batched_klds.gfx1151.hip",
+  "kernels/src/indexer_top_k.hip",
+  "kernels/src/indexer_top_k_batched.hip",
+  "kernels/src/indexer_top_k_batched_bounded.gfx1151.hip",
+  "kernels/src/indexer_top_k_buf.hip",
+  "kernels/src/indexer_top_k_buf_bounded.gfx1151.hip",
+  "kernels/src/indexer_top_k_buf_parallel.gfx1151.hip",
+  "kernels/src/indexer_top_k_buf_unrolled.gfx1151.hip",
+  "kernels/src/indexer_topk_twostage.hip",
+  "kernels/src/qsa_bf16_scores.hip",
+  "kernels/src/qsa_decode_splitk.hip",
+  "kernels/src/qsa_decode_splitkv_q8.hip",
+  "kernels/src/qsa_filter_select.hip",
+  "kernels/src/qsa_pooled_bf16_mirror.hip",
+  "kernels/src/topk8_select.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 24
+
+[[provides]]
+interface = "attn.indexer-score/kv-f32/f32.hipfire"
+api       = "indexer_relu_score_*, indexer_compressed_k_score"
+numeric   = "fp32 relu(q . k) summed over heads"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[provides]]
+interface = "attn.indexer-topk/-/f32.hipfire"
+api       = "indexer_top_k*, indexer_topk_twostage, topk8_select"
+numeric   = "exact top-k on fp32 scores"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/bf16+f32.hipfire"
+api       = "qsa_bf16_scores, qsa_filter_select, qsa_decode_splitk*"
+numeric   = "exact serial-FMA BF16 pooled-key scoring; exact sampled-threshold selection with certified compaction and radix repair"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.indexer_topk.json"

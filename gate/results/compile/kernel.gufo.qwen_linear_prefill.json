@@ -1,0 +1,73 @@
+{
+ "module": "kernel.gufo.qwen_linear_prefill",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-10T22:57:15Z",
+ "toolchain": "therock-10.1",
+ "toolchain_root": "/data/tools/therock-10.1.0a20260823",
+ "compiler": "AMD clang version 23.0.0git (https://github.com/ROCm/llvm-project.git 0bace1908348b840e6aa1b4b6e12151dae208158) | Target: x86_64-unknown-linux-gnu",
+ "units": 7,
+ "passed": 7,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 19.3,
+ "results": [
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_gemm.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_prefill/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_prefill/src/src/families/qwen/kernels/prefill_gemm.hip -o build/compile-gate/kernel.gufo.qwen_linear_prefill/0-prefill_gemm.hip.o",
+   "rc": 0,
+   "seconds": 4.34,
+   "object_bytes": 201704,
+   "object_sha256": "c1903670fd340b67a36f75957fa8792273e7b9163e8a8539246dcb0fad8f49e1"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_quant_gemm.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -fno-slp-vectorize -I catalog/gufo/kernel/qwen_linear_prefill/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_prefill/src/src/families/qwen/kernels/prefill_quant_gemm.hip -o build/compile-gate/kernel.gufo.qwen_linear_prefill/1-prefill_quant_gemm.hip.o",
+   "rc": 0,
+   "seconds": 19.31,
+   "object_bytes": 2636592,
+   "object_sha256": "f6649cd975733160fab3b50a2a20925ab128e79d9e1b463b2520fab1bd95f640"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_quant_wave64.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -fno-slp-vectorize -I catalog/gufo/kernel/qwen_linear_prefill/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_prefill/src/src/families/qwen/kernels/prefill_quant_wave64.hip -o build/compile-gate/kernel.gufo.qwen_linear_prefill/2-prefill_quant_wave64.hip.o",
+   "rc": 0,
+   "seconds": 4.11,
+   "object_bytes": 135920,
+   "object_sha256": "575ef48a86bfb6bc93937eb2fde6fef2bb184d116faf426bd253d2d11337044e"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_fp16.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_prefill/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_prefill/src/src/families/qwen/kernels/prefill_fp16.hip -o build/compile-gate/kernel.gufo.qwen_linear_prefill/3-prefill_fp16.hip.o",
+   "rc": 0,
+   "seconds": 11.39,
+   "object_bytes": 1228200,
+   "object_sha256": "27b69a256cdcd23edf2c83e4d09799c591e068b6f947e67ddd15a16d8e252f57"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/hipblas_gemm.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_prefill/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_prefill/src/src/families/qwen/kernels/hipblas_gemm.hip -o build/compile-gate/kernel.gufo.qwen_linear_prefill/4-hipblas_gemm.hip.o",
+   "rc": 0,
+   "seconds": 2.18,
+   "object_bytes": 19848,
+   "object_sha256": "fd599bcf3e3fc3ec1877094914bbc9deb55cebfd4e5e1657a1253dcd531e18bd"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/hipblaslt_gemm.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_prefill/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_prefill/src/src/families/qwen/kernels/hipblaslt_gemm.hip -o build/compile-gate/kernel.gufo.qwen_linear_prefill/5-hipblaslt_gemm.hip.o",
+   "rc": 0,
+   "seconds": 6.41,
+   "object_bytes": 72952,
+   "object_sha256": "10606937404b3b1779623f22f923897c2b94283129834f7204b08898027309d8"
+  },
+  {
+   "unit": "src/src/families/qwen/kernels/prefill_swiglu.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_prefill/src -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_prefill/src/src/families/qwen/kernels/prefill_swiglu.hip -o build/compile-gate/kernel.gufo.qwen_linear_prefill/6-prefill_swiglu.hip.o",
+   "rc": 0,
+   "seconds": 2.01,
+   "object_bytes": 17736,
+   "object_sha256": "0f72c075edd99e9d3798eb09e3cfe386ca7577b63f3cf103d99a3e1cb3a66f7c"
+  }
+ ]
+}

@@ -1,0 +1,67 @@
+# Host facts, run settings and pass criteria of gate/moe_p4.py: stage P4 of docs/PHASE5-FOURNODE-DESIGN.md (section
+# 6), the stages over the real rail between two workers. Written and committed before the first run on the workers;
+# not edited to turn a failure into a pass. Run on control-node, inside one pod-quad hold of both workers (owner
+# approved 2026-11-12, pod card FLERP-P4 42b1cc91ec); the script takes and releases no hold.
+
+recipe = "qwen36-35b-a3b.flerp-moe"     # source of the binary; assembled to build/flerp-p4 with the per-rank --host
+
+[host]
+hold_owner          = "agent FLERP-P4"
+ranks               = [{ name = "F", mgmt = "192.0.2.50", rail = "198.51.100.50" },
+                       { name = "D", mgmt = "192.0.2.53", rail = "198.51.100.53" }]
+bundle              = "/home/pod/flerp-p4-bundle" # the binary and its ROCm libraries (build/flerp-p4/bundle, md5 checked; /cache is noexec)
+work                = "/cache/flerp-p4/run"         # rank logs, ids files, MoE dumps on each worker
+unit_prefix         = "flerp-p4-"                   # every process a transient user unit with this prefix
+reader_flags        = ["--single-reader", "--pause-ms", "100"]
+# one reader on control-node's disk at a time: rank r + 1 (or the next node's load) starts after rank r printed `loaded`
+gguf_py             = "/data/ark/src/github.com__ggml-org__llama.cpp/gguf-py"
+block_check_threads = 4
+
+[model]
+gguf                = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"   # read at load time over NFS
+prompt_ids          = "gate/results/qwen36-35b-a3b.flerp-moe/prompt-ids.json"
+p1_results          = "gate/results/qwen36-35b-a3b.flerp-moe-placed/equal.json"
+ornith_gguf         = "/data/ark/models/ornith-1.5-397b/Ornith-1.5-397B-Q4_K_M.gguf"                 # never copied to /cache
+
+[run]
+context             = 4096
+max_tokens          = 128
+port                = 39710
+epoch               = 11
+deadline_ms         = 60000
+run_timeout_s       = 1800
+tcp_configs         = ["even", "0,7,40"]           # world 2; each with --graph-modes on,off
+m1_bytes            = 163840
+m1_reps             = 300
+m1_warm             = 30
+m1_port             = 39790
+ornith_context      = 2048
+chunk_rows          = 1024
+decode_steps        = 48
+check_rows          = [0, 1023]
+ornith_stages       = [[0, 15], [15, 30]]         # the world-4 plan's stages 0 and 1 (census: 57.03 and 54.36 GiB)
+ornith_check        = [[0, 7, 14], [15, 22, 29]]
+# reduce to [b, b + 5] per stage if a probe read of the file from the worker says a stage's load would pass 20 min
+ornith_max_load_s   = 1200
+
+[criteria]
+# 1.  For each of [run] tcp_configs, world 2 over the rail (rank 0 on F at 198.51.100.50, rank 1 on D at 198.51.100.53),
+#     graph on and off, on each of the four gate prompts: both ranks exit 0; the generated ids equal P1's world-1
+#     ids (128); 128 logits rows are recorded and the sha256 of every row equals P1's sha256 of that row; the argmax
+#     of every row is the token rank 1 answered (gate/moe_stage.py judge_matrix, unchanged).
+# 2.  Each rank's load is its block range's world-1 range plan (allocated bytes == the plan's), by the single
+#     direct reader.
+# 3.  Ornith, per stage of [run] ornith_stages (or the reduced range, said so): the range loads (exit 0, allocated
+#     bytes == the plan's), both stage-bench phases that the range allows run with finite non-zero outputs and a
+#     chunk that repeats byte-equal three times (gate/moe_placed.py judge_bench), and gate/moe_block_check.py on the
+#     dumped blocks of [run] ornith_check passes criterion 9 of gate/qwen36-35b-a3b.flerp-moe-placed.toml with the
+#     same bounds (records at least 12 a stage: a stage after block 0 has one phase).
+# Recorded, not criteria: per stage ms a block (decode, each chunk); relay overhead per decode token and per chunk
+# over the rail (gate/moe_stage.py tcp_overheads); load seconds and read GB/s per rank and path; M1 median, p10,
+# p90 ms of a 160 KiB two-way exchange, against the design rule (the overlay is worth building only if 0.57 x the
+# expert ms per block > 2 x the gather ms).
+check_records_min   = 12
+check_tie_margin    = 1e-6
+check_weights_max   = 1e-4
+check_gate_max      = 1e-3
+check_out_max       = 1e-3

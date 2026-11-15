@@ -1,0 +1,17 @@
+# The Ornith serving behaviour before the champions (FLERP-P5 confirm run 11132252: pinned rows, token reply, no drafts,
+# per-token prompt path). `--config ornith397.baseline-p5` or `--config none` reproduces it.
+name        = "ornith397.baseline-p5"
+description = "Ornith-1.5 397B as FLERP-P5 confirmed it: no drafts, per-token MoE prompt path"
+model       = "ornith-1.5-397b"
+areas       = ["decode-single", "throughput", "ttft"]
+includes    = []
+
+[stage]
+rows       = "pinned"
+reply      = "token"
+drafts     = 0
+draft_head = false
+with_mtp   = false
+
+[env]
+FLERP_MOE_GROUPED = "0"

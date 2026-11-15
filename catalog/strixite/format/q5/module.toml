@@ -1,0 +1,39 @@
+id      = "format.strixite.q5"
+kind    = "format"
+summary = "Q5: 5-bit two-plane weight format (Q4 low plane plus a 1-bit high plane)"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/q5.cpp", "formats/q5.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/q5.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.host/strixw-q5/-"
+api       = "strix::Q5Weight, quantize_q5, dequantize_q5, append_rows_q5"
+numeric   = "s = bf16((max - min) / 31), q = clamp(round_half_even((w - m) / s), 0, 31), all fp32"
+regime    = "5.25 bits per weight at G = 128; K % 128 == 0"
+
+[[requires]]
+module = "format.strixite.q4"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

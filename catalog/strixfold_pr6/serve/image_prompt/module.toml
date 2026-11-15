@@ -1,0 +1,43 @@
+id        = "serve.strixfold_pr6.image_prompt"
+kind      = "serve"
+summary   = "The PR's changes to the server's prompt path: each image keeps its identity through the chat template (tool results may be reordered), spans are placed by identity, /tokenize counts the expanded rows"
+notes     = "Overlay only: the PR's versions of two files of serve.strixfold.http (overlay.json)."
+
+[provenance]
+origin    = "strixfold_pr6"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "766df75"
+branch    = "feat/hip-cpu-image-input (pull request #6, aercanozcan)"
+paths     = [
+  "zig/src/server/prompt.zig",
+  "zig/src/server/tokens.zig",
+]
+authors   = ["aercanozcan", "StrixFold contributors", "TensorFold contributors"]
+modified  = false
+upstream  = "overlay on serve.strixfold.http (origin strixfold): 2 of these paths are theirs too; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "serve.image-spans/-/-"
+api       = "server/prompt.zig renderImages, imageIdentities, spans; tokens.zig tokenize"
+numeric   = "n/a"
+regime    = "PNG / JPEG base64 data URLs in image_url parts, tool results included"
+
+[[requires]]
+module    = "serve.strixfold.http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "never compiled or run here: no recipe assembles it. It needs the overlay rule of docs/SPEC-PROPOSALS.md section 12 before `flerp assemble` can place its files over the strixfold modules"

@@ -1,0 +1,50 @@
+id        = "kernel.flerp.moe_router_gufo"
+kind      = "kernel"
+summary   = "Adapter (router-slots): strixite's moe_router on gufo's RouterTopK, plus strixite's non-finite rule as a fix-up launch; shared-slot and BF16 calls stay with strixite"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp_adapters/moe_router_gufo.hip"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp_adapters/moe_router_gufo.hip"]
+includes  = []
+arch      = "gfx1151"
+uses      = ["hip-runtime"]
+defines   = ["ENGINE_ENABLE_HIP=1", "QFN_ROCM_BUILD=1"]
+
+[adapter]
+for       = "kernel.strixite.moe_router"
+symbols   = ["moe_router"]
+
+[[provides]]
+interface = "moe.router/-/bf16.gufo-probs"
+api       = "strix::kernels::moe_router (FP32 logits without a shared slot: the foreign router; anything else: strixite's kernel, renamed moe_router_flerp_origin); moe_shared_add, moe_shared_add_inject, check_router_error stay strixite's"
+numeric   = "gufo's: full softmax in fp32 (-ffast-math), top-k on the probabilities with lower index on a tie, weights p_j / sum of the k p's; ids as strixite's unless two logits collapse to one probability, weights equal to fp32 rounding, not bit for bit"
+regime    = "E <= 1024, k <= 32, any M; 2 launches a call"
+
+[[requires]]
+module    = "kernel.strixite.moe_router"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "kernel.gufo.qfn_kernels"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/interface/moe-router.toml"
+bench     = "flerp:gate/interface/moe-router.toml"
+status    = "benched"
+evidence  = "gate/results/interface/moe-router/result.json"

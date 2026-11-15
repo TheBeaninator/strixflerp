@@ -1,0 +1,47 @@
+id        = "format.flerp.panel_device"
+kind      = "format"
+summary   = "Q4Panel16 / Q8Panel16 tensors on the device: the panel view the panel kernels take, its device addressing, and the tag that carries a panel tensor inside strixite's Q4DeviceView / Q8DeviceView (scale = min = null, G = encoding id << 32 | G) so no row-major kernel can read it"
+notes     = "docs/STRIXW-LAYOUT-NEXT.md stage 5 (the view, dispatched by encoding). Header only. Byte layout: format.flerp.q4panel / q8panel."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/panel_device/runtime/panel_device.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/flerp/panel_device"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.device-view/strixw-q4p16/-"
+api       = "flerp::PanelView, q4_panel_view, q8_panel_view, is_panel, panel_of, panel_chunk, panel_sm (runtime/panel_device.hpp)"
+numeric   = "bytes as stored"
+regime    = "header only; N <= 16 x panels (a row prefix), G 32/64/128"
+
+[[provides]]
+interface = "format.device-view/strixw-q8p16/-"
+api       = "as format.device-view/strixw-q4p16/- at one code per byte"
+numeric   = "bytes as stored"
+regime    = "header only"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "header only, compiled inside recipes/qwen38-flash-next.strixite-p16.toml; the kernels that use it are gated by gate/strixw-panel-kernels.toml"

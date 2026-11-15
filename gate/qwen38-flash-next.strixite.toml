@@ -1,0 +1,70 @@
+# Host facts and run settings for the phase 1 recipe gate, on control-node. The pass criteria below were fixed
+# before the first run; do not edit them to turn a failure into a pass.
+
+[host]
+origin              = "strixite"
+reference_checkout  = "/data/projects/strixite-d19945e"                    # git tree at ORIGIN.toml's commit
+# the fleet's own serving binary (engines.conf strixite_v070pod), not a rebuild: the gate compares against what serves
+reference_server    = "/data/models/strix-infer/runtime/bin/strix_server.v070tg"
+weights             = "/data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw"
+ngram               = "/data/models/strix-infer/converted/qwen38-fnext-ngram-int8/ngram.table"
+tokenizer           = "/data/models/strix-infer/tok/tokenizer.json"
+generation_config   = "/data/models/strix-infer/tok/generation_config.json"
+preprocessor_config = "/data/models/strix-infer/tok/preprocessor_config.json"
+model_config        = "/data/models/strix-infer/tok/config.json"
+port                = 5391                                                 # not 5300, the pod's serving port
+scratch             = "build/gate-scratch"      # under build/: pod-sync deletes anything else it does not know
+build_jobs          = 24
+# control-node's own GPU only. Free = no engine program running here (matched on the program name, not its
+# arguments) and GTT use under 1 GiB (idle is about 19 MB).
+gpu_busy_pattern    = "^(strix_|strixflerp-|steer_check|omf_seg|gufo|ds4|sglang|llama-server|tfp)"
+gpu_free_gtt_bytes  = 1073741824
+lease_resource      = "control-gpu"
+lease_owner         = "agent"
+lease_ttl_s         = 5400
+
+[server]
+# Same flags for both servers. Small capacity and one slot keep the load short; no prompt cache, so no state
+# crosses requests through disk or the RAM tier; no vision tower; the thinking nudge off for a like-for-like run.
+args = ["--capacity", "16384", "--total-slots", "1", "--chunk", "8192", "--prompt-cache-gib", "0",
+        "--vision", "off", "--think-nudge", "off", "--model-id", "qwen3.8-flash-next",
+        # as the pod's serving line. It is also required: at 20937dc the server exits at startup without it
+        # ("steer library:  is not a directory" - the default "off" reaches SteerLibrary as an empty path).
+        "--steer-dir", "/data/models/strix-infer/steer"]
+
+[run]
+mtp                   = [true, false]     # MTP drafting on, then off: four server loads in all
+repeats               = 3
+seed                  = 1234
+max_tokens            = 256
+long_prompt_sentences = 110               # a few thousand prompt tokens
+tps_tolerance         = 0.05              # medians within 5%, or inside the reference's own min..max
+startup_timeout_s     = 900
+request_timeout_s     = 600
+settle_s              = 5
+
+# strixite's own test programs, built from the assembled tree. {scratch} is a fresh directory per test.
+[[unit_test]]
+binary = "check_stream_calls"
+args   = ["{tokenizer}"]
+
+[[unit_test]]
+binary = "check_logprobs"
+args   = ["{tokenizer}"]
+
+[[unit_test]]
+binary = "cache_xfer_check"
+args   = ["{scratch}"]
+
+[[unit_test]]
+binary = "sv9_cache_check"
+args   = ["{tokenizer}", "{preprocessor_config}", "{model_config}", "{scratch}"]
+
+[[unit_test]]
+binary = "tool_grammar_check"            # added with the d19945e cut: the origin's test of its tool-call grammar
+args   = ["{tokenizer}"]
+
+[[unit_test]]
+binary = "steer_check"
+gpu    = true
+args   = ["--weights", "{weights}", "--ngram", "{ngram}", "--tokenizer", "{tokenizer}"]

@@ -1,0 +1,79 @@
+2026-11-12T03:42:52Z RUN pod-quad status
+reserved: 192.0.2.50 192.0.2.53
+  kind: hold (whole-GPU workers, no model)
+  owner: agent FLERP-P4
+  reason: FLERP-P4 42b1cc91ec strixflerp P4 + profiler, owner approved
+  age: 0h00m
+  expires: in 2h59m (2026-11-12T06:42:37Z)
+leases (pod-lease status):
+  RESOURCE  OWNER                   LEFT   PRIO  WHY                                                         PROBE
+  worker:F  agent FLERP-P4  2h59m  0     FLERP-P4 42b1cc91ec strixflerp P4 + profiler, owner approved  -
+  worker:D  agent FLERP-P4  2h59m  0     FLERP-P4 42b1cc91ec strixflerp P4 + profiler, owner approved  -
+healthy: no (http://192.0.2.50:8090)
+(rc 0)
+2026-11-12T03:42:52Z RUN KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh down
+down: by hand (caller: actor agent, /bin/sh -c KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh down )
+(rc 0)
+2026-11-12T03:42:53Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 mkdir -p /home/pod/tfp/strixflerp-profile/conf /home/pod/tfp/strixflerp-profile/run /home/pod/tfp/strixflerp-profile/learn
+
+(rc 0)
+2026-11-12T03:42:54Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/profile-2026-11-12T0342Z/profile.conf pod@192.0.2.50:/home/pod/tfp/strixflerp-profile/conf/profile.conf
+
+(rc 0)
+2026-11-12T03:42:54Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.53 mkdir -p /home/pod/tfp/strixflerp-profile/conf /home/pod/tfp/strixflerp-profile/run /home/pod/tfp/strixflerp-profile/learn
+
+(rc 0)
+2026-11-12T03:42:54Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/profile-2026-11-12T0342Z/profile.conf pod@192.0.2.53:/home/pod/tfp/strixflerp-profile/conf/profile.conf
+
+(rc 0)
+2026-11-12T03:42:54Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/profile-2026-11-12T0342Z/lane-requests.json pod@192.0.2.50:/home/pod/tfp/strixflerp-profile/conf/lane-requests.json
+
+(rc 0)
+2026-11-12T03:42:55Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 rm -rf /home/pod/tfp/strixflerp-profile/lane-tools && mkdir -p /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual && for f in /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip/*; do b=$(basename $f); [ $b = qual ] || ln -s $f /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/$b; done && for f in /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip/qual/*; do b=$(basename $f); [ $b = lane_rank.sh ] || ln -s $f /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual/$b; done && test -L /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/serve_lib.sh && test -L /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/pidexec.sh
+
+(rc 0)
+2026-11-12T03:42:55Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/profile-2026-11-12T0342Z/lane_rank.scratch.sh pod@192.0.2.50:/home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual/lane_rank.sh
+
+(rc 0)
+2026-11-12T03:42:56Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 grep -cF 'wrap ($wv, as serve_spawn)' /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual/lane_rank.sh
+1
+(rc 0)
+2026-11-12T03:42:56Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.53 rm -rf /home/pod/tfp/strixflerp-profile/lane-tools && mkdir -p /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual && for f in /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip/*; do b=$(basename $f); [ $b = qual ] || ln -s $f /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/$b; done && for f in /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip/qual/*; do b=$(basename $f); [ $b = lane_rank.sh ] || ln -s $f /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual/$b; done && test -L /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/serve_lib.sh && test -L /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/pidexec.sh
+
+(rc 0)
+2026-11-12T03:42:57Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/prefill-dsv41/profile-2026-11-12T0342Z/lane_rank.scratch.sh pod@192.0.2.53:/home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual/lane_rank.sh
+
+(rc 0)
+2026-11-12T03:42:57Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.53 grep -cF 'wrap ($wv, as serve_spawn)' /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual/lane_rank.sh
+1
+(rc 0)
+2026-11-12T03:42:57Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.53 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-profile-r1 --property=KillMode=process bash -c 'cd /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual && ./lane_rank.sh /home/pod/tfp/strixflerp-profile/conf/profile.conf 1 /home/pod/tfp/strixflerp-profile/run/lane --profile 2'
+Running as unit: strixflerp-profile-r1.service; invocation ID: b729323b1f144a87a0b9efd62ccb093b
+(rc 0)
+2026-11-12T03:43:00Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-profile-r0 --property=KillMode=process bash -c 'cd /home/pod/tfp/strixflerp-profile/lane-tools/dsv41-hip/qual && ./lane_rank.sh /home/pod/tfp/strixflerp-profile/conf/profile.conf 0 /home/pod/tfp/strixflerp-profile/run/lane --requests /home/pod/tfp/strixflerp-profile/conf/lane-requests.json --parallel 1 --logits-sha 1 --profile 2'
+Running as unit: strixflerp-profile-r0.service; invocation ID: 3e4468c272424728bb30340bf4b3f2a7
+(rc 0)
+2026-11-12T03:45:04Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-profile-r0 2>/dev/null; true
+
+(rc 0)
+2026-11-12T03:45:05Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.53 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-profile-r1 2>/dev/null; true
+
+(rc 0)
+2026-11-12T03:45:06Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-profile-r0 strixflerp-profile-r1 2>/dev/null; true
+
+(rc 0)
+2026-11-12T03:45:06Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.53 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-profile-r0 strixflerp-profile-r1 2>/dev/null; true
+
+(rc 0)
+2026-11-12T03:45:07Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 rm -rf /home/pod/tfp/strixflerp-profile
+
+(rc 0)
+2026-11-12T03:45:07Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.53 rm -rf /home/pod/tfp/strixflerp-profile
+
+(rc 0)
+2026-11-12T03:45:07Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user is-active strixflerp-profile-r0 strixflerp-profile-r1 2>/dev/null | grep -c '^active' || true
+0
+(rc 0)
+2026-11-12T03:45:08Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.53 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user is-active strixflerp-profile-r0 strixflerp-profile-r1 2>/dev/null | grep -c '^active' || true
+0
+(rc 0)

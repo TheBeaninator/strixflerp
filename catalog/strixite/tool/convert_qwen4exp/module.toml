@@ -1,0 +1,41 @@
+id      = "tool.strixite.convert_qwen4exp"
+kind    = "tool"
+summary = "Converter CLI: HF checkpoint to weights.strixw (and vision.strixw with --vision)"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/convert_qwen4exp.cpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/convert_qwen4exp.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.convert-qwen4exp/-/-"
+api       = "main (convert_qwen4exp)"
+numeric   = "n/a"
+regime    = "host only"
+
+[[requires]]
+interface = "format.convert/strixw/-"
+
+[[requires]]
+module = "runtime.strixite.args"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

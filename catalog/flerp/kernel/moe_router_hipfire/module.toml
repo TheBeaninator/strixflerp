@@ -1,0 +1,55 @@
+id        = "kernel.flerp.moe_router_hipfire"
+kind      = "kernel"
+summary   = "Adapter (router-slots): strixite's moe_router on hipfire's moe_softmax_topk_renorm_k8 code object, one launch per token, plus strixite's non-finite rule; k != 8, shared-slot and BF16 calls stay with strixite"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp_adapters/moe_router_hipfire.hip"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp_adapters/moe_router_hipfire.hip"]
+includes  = []
+arch      = "gfx1151"
+uses      = ["hip-runtime"]
+
+[adapter]
+for       = "kernel.strixite.moe_router"
+symbols   = ["moe_router"]
+
+[[adapter.code_object]]
+module    = "kernel.hipfire.moe"
+unit      = "moe_softmax_topk_k8"
+symbol    = "flerp_co_hipfire_moe_topk_k8"
+
+[[provides]]
+interface = "moe.router/-/bf16.hipfire-k8"
+api       = "strix::kernels::moe_router (FP32 logits without a shared slot: the foreign router; anything else: strixite's kernel, renamed moe_router_flerp_origin); moe_shared_add, moe_shared_add_inject, check_router_error stay strixite's"
+numeric   = "hipfire's: fp32 softmax, top-8 on the probabilities, renormalized; a tie goes to the lower thread (expert index mod 256), not to the lower expert index; weights equal to fp32 rounding, not bit for bit"
+regime    = "k = 8, E 8..1024, M <= 4096; M + 1 launches a call"
+
+[[requires]]
+module    = "kernel.strixite.moe_router"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "kernel.hipfire.moe"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/interface/moe-router.toml"
+bench     = "flerp:gate/interface/moe-router.toml"
+status    = "builds"
+evidence  = "gate/results/interface/moe-router/result.json"
+reason    = "builds and runs; fails the interface gate's tie cases (lower thread wins a tie, not the lower expert index) and its kernel is compiled for k = 8 where the checkpoint routes 10: not bound by any recipe"

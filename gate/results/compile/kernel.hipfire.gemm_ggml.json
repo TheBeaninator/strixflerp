@@ -1,0 +1,137 @@
+{
+ "module": "kernel.hipfire.gemm_ggml",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-10T22:58:34Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "HIP version: 7.17.26392-0000000 | AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394)",
+ "units": 15,
+ "passed": 15,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 0.5,
+ "results": [
+  {
+   "unit": "gemm_bq1g128_prefill",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_bq1g128_prefill.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_bq1g128_prefill.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 11872,
+   "object_sha256": "1a30a431d26d8160ce4f110e7761576b48ef73b6545c25a8b3fce1696c015481"
+  },
+  {
+   "unit": "gemm_bq1g128_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_bq1g128_wmma.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_bq1g128_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 12128,
+   "object_sha256": "c9347a9b2c55cb969494ec4620deb048eb5dd7c148776f1dd2a5e0980ddf528b"
+  },
+  {
+   "unit": "gemm_gate_up_q8_0_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_gate_up_q8_0_wmma.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_gate_up_q8_0_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 10984,
+   "object_sha256": "5b6e4f74b29eec0d4230196ea3c441988bf40d0249aae00bacf36bda67326094"
+  },
+  {
+   "unit": "gemm_q8_0_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_batched.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.54,
+   "object_bytes": 33120,
+   "object_sha256": "e559fe7693322ab04d15fbfafe1a4ff0dcf2391a6a37271bcd052faacffe4785"
+  },
+  {
+   "unit": "gemm_q8_0_batched_wide_exact",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_batched_wide_exact.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_batched_wide_exact.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 15984,
+   "object_sha256": "a9434c1e93705770d666722a65a76c7dc9d0b012ed1cf6e4f28ebddaa41926cd"
+  },
+  {
+   "unit": "gemm_q8_0_residual_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_residual_wmma.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_residual_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 10344,
+   "object_sha256": "04cfccbacb3f17fcebd152ce170638dcf650e623b800816c6672df5773aa632e"
+  },
+  {
+   "unit": "gemm_q8_0_wmma_4w",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_wmma_4w.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_wmma_4w.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 12384,
+   "object_sha256": "c9128635fe87b2b3211562ec4c835489b0d7589a98a0ab48080077d651322db2"
+  },
+  {
+   "unit": "gemm_q8_0_wmma_gfx1151_xlds",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_wmma_gfx1151_xlds.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_wmma_gfx1151_xlds.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 16752,
+   "object_sha256": "9748916f71b02c14b817abc0bf1aab26724e0e723504bcccf7128159504b0320"
+  },
+  {
+   "unit": "gemm_q8_0_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_wmma.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 10200,
+   "object_sha256": "23e912fa88f7537e0d36213a15884f1450ebf580fa15ba0557aea1fde21d16d0"
+  },
+  {
+   "unit": "gemm_q8_0_wmma_x64",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_wmma_x64.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_q8_0_wmma_x64.hsaco",
+   "rc": 0,
+   "seconds": 0.47,
+   "object_bytes": 12512,
+   "object_sha256": "6fe23e9fd74139bd42ec01bf69f6ed1d0e842c11db21c6383b58c5c88c46ef10"
+  },
+  {
+   "unit": "gemm_qkvza_q8_0_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_qkvza_q8_0_wmma.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_qkvza_q8_0_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.39,
+   "object_bytes": 12128,
+   "object_sha256": "731ecb83d4072b93b050b0c92f16705a10318510cb8be1f25d86d58ae10b3bc2"
+  },
+  {
+   "unit": "gemm_qkvza_tq2g128",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_qkvza_tq2g128.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_qkvza_tq2g128.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 16992,
+   "object_sha256": "e02fb066fa7c99b76b29ce4fdf966e387c405083f7a230e42341a57f28ef330f"
+  },
+  {
+   "unit": "gemm_qkv_q8_0_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_qkv_q8_0_wmma.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_qkv_q8_0_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 11488,
+   "object_sha256": "56794eaa41386c3f80c8c1faa72797bd3ae5ee14825b512e475660cfc378feaf"
+  },
+  {
+   "unit": "gemm_tq2g128_prefill",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_tq2g128_prefill.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_tq2g128_prefill.hsaco",
+   "rc": 0,
+   "seconds": 0.45,
+   "object_bytes": 12000,
+   "object_sha256": "31ce7d351ab7257044e6ef9710714696538a8a8bb8212ef293ac8b0ca4fb53e5"
+  },
+  {
+   "unit": "gemm_tq2g128_wmma",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemm_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.gemm_ggml/gemm_tq2g128_wmma.hip -o build/compile-gate/kernel.hipfire.gemm_ggml/gemm_tq2g128_wmma.hsaco",
+   "rc": 0,
+   "seconds": 0.49,
+   "object_bytes": 12128,
+   "object_sha256": "401a62af002b9790ce3e561213668f77d3f6a7fa1b7082e6f5d657df05e76215"
+  }
+ ]
+}

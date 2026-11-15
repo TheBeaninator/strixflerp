@@ -1,0 +1,43 @@
+id        = "format.flerp.q8panel"
+kind      = "format"
+summary   = "Q8Panel16: strixw Q8 in panels of 16 rows, format.flerp.q4panel's layout at one code per byte (16-byte chunks of 16 codes), with the typed relayout and its inverse"
+design    = "DESIGN.md"
+notes     = "docs/STRIXW-LAYOUT-NEXT.md candidate A at 8 bits (Q8P16), stage 1. 16-byte chunks, not Q8ChunkMajor's 32-byte ones, so the lane load is 16 B at both widths. Order-only."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/q8panel/q8panel.cpp", "flerp/q8panel/q8panel.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/q8panel/q8panel.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "format.host/strixw-q8p16/-"
+api       = "flerp::Q8Panel16, q8_panel16_bytes, to_panel16, from_panel16 (flerp/q8panel/q8panel.hpp); geometry and byte relayout from format.flerp.q4panel"
+numeric   = "exact: the same codes, scales and mins as the row-major Q8Weight"
+regime    = "N % 16 == 0, K % 32 == 0, G in 32/64/128 dividing K; panel = 16K + 64K/G bytes"
+
+[[requires]]
+module    = "format.flerp.q4panel"
+
+[[requires]]
+module    = "format.strixite.q8"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host code built by tool.flerp.convert_strixw_panel's build.sh; evidence as format.flerp.q4panel"

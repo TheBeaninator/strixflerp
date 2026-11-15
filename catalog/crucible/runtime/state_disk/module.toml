@@ -1,0 +1,48 @@
+id        = "runtime.crucible.state_disk"
+kind      = "runtime"
+summary   = "NVMe tier for conversation states: block storage, file formats with checksums, state epoch (code identity) and the switches that are part of a state identity, SHA-256"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/runtime/sha256.h",
+  "engine/runtime/state_blocks.h",
+  "engine/runtime/state_disk.h",
+  "engine/runtime/state_epoch.h",
+  "engine/runtime/state_format.h",
+  "engine/runtime/state_switches.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/runtime"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "kvcache.tiering/crucible-state/-"
+api       = "state_disk.h, state_format.h"
+numeric   = "exact"
+regime    = "serving"
+
+[[requires]]
+module    = "executor.crucible.flashnext"
+
+[[requires]]
+module    = "runtime.crucible.conversation_cache"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

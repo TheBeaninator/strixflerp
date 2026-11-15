@@ -1,0 +1,56 @@
+id        = "kernel.flerp.residual_add_hipfire"
+kind      = "kernel"
+summary   = "Adapter: strixite's residual_add on hipfire's add_inplace_f32 code object (fp32, in place); BF16 stays with strixite"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp_adapters/residual_add_hipfire.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp_adapters/residual_add_hipfire.cpp"]
+includes  = []
+uses      = ["hip-runtime"]
+
+[adapter]
+for       = "kernel.strixite.residual"
+symbols   = ["residual_add"]
+
+[[adapter.code_object]]
+module    = "kernel.hipfire.tensor_ops"
+unit      = "add_inplace"
+symbol    = "flerp_co_hipfire_add_inplace"
+
+[[provides]]
+interface = "residual.add/-/f32"
+api       = "strix::kernels::residual_add (fp32 calls launch the embedded add_inplace_f32)"
+numeric   = "one IEEE fp32 add per element: bit-identical to kernel.strixite.residual"
+regime    = "element-wise, n < 2^31; one launch, grid n / 256"
+
+[[provides]]
+interface = "residual.add/-/bf16"
+api       = "strix::kernels::residual_add (bf16 calls go to strixite's kernel, renamed residual_add_flerp_origin)"
+numeric   = "strixite's own kernel: fp32 add, one rounding to bf16"
+regime    = "element-wise"
+
+[[requires]]
+module    = "kernel.strixite.residual"
+
+[[requires]]
+module    = "kernel.hipfire.tensor_ops"
+
+[[requires]]
+module    = "kernel.flerp.adapter_rt"
+
+[gate]
+parity    = "flerp:gate/interface/residual-add.toml"
+bench     = "flerp:gate/interface/residual-add.toml"
+status    = "benched"
+evidence  = "gate/results/interface/residual-add/result.json"

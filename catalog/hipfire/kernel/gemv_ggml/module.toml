@@ -1,0 +1,66 @@
+id        = "kernel.hipfire.gemv_ggml"
+kind      = "kernel"
+summary   = "Decode GEMV on GGUF blocks (Q4_K, Q6_K, Q8_0 and its wide / staged variants, Q4F16, TQ2, BQ1) and the fused QKV / gate-up forms on Q4_K and Q8_0 (19 sources, 23 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/fused_gate_up_q4k.hip",
+  "kernels/src/fused_gate_up_q8_0.hip",
+  "kernels/src/fused_qkv_q4k.hip",
+  "kernels/src/fused_qkv_q8_0.hip",
+  "kernels/src/fused_qkvza_q8_0.hip",
+  "kernels/src/gemv_bq1g128.hip",
+  "kernels/src/gemv_q4as8.hip",
+  "kernels/src/gemv_q4f16_g32.hip",
+  "kernels/src/gemv_q4f16_g64.hip",
+  "kernels/src/gemv_q4f16_g64_wide.hip",
+  "kernels/src/gemv_q4k.hip",
+  "kernels/src/gemv_q4lut.hip",
+  "kernels/src/gemv_q4wave.hip",
+  "kernels/src/gemv_q6k.hip",
+  "kernels/src/gemv_q8_0.hip",
+  "kernels/src/gemv_q8_0_wide.hip",
+  "kernels/src/gemv_tq2g128.hip",
+  "kernels/src/qwen4_gemv_q8_0.hip",
+  "kernels/src/qwen4_gemv_q8_0_wide.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 23
+
+[[provides]]
+interface = "linear.decode/gguf-kquant/f32.hipfire"
+api       = "fused_gate_up_q4k, fused_gate_up_q8_0, fused_qkvza_q8_0, fused_qkv_q4k_qwen2_bias, fused_qkv_q4k (+18 more units, see units.json)"
+numeric   = "fp32 activations and fp32 accumulate; weights decoded in-kernel; summation order is per kernel variant, so bits differ between variants and from other engines; Q8_0 block = f16 scale + 32 int8, Q4_K block = 144 bytes per 256 weights"
+regime    = "decode, 1 row (multirow / batched variants up to 8..16 rows), memory-bound"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+module    = "kernel.hipfire.indexer_topk"
+
+[[requires]]
+interface = "format.device-view-hipfire/gguf-kquant/-"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemv_ggml.json"

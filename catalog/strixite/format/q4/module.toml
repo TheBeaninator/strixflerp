@@ -1,0 +1,36 @@
+id      = "format.strixite.q4"
+kind    = "format"
+summary = "Q4: 4-bit asymmetric per-group weight format (two codes per byte, BF16 scale and min per group)"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/q4.cpp", "formats/q4.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/q4.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.host/strixw-q4/-"
+api       = "strix::Q4Weight, quantize_q4, dequantize_q4, append_rows_q4"
+numeric   = "w = q * scale + min per group; quantization bit-identical to the reference quantizer"
+regime    = "G in 32/64/128, K % G == 0"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

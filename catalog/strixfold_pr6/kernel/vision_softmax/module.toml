@@ -1,0 +1,39 @@
+id        = "kernel.strixfold_pr6.vision_softmax"
+kind      = "kernel"
+summary   = "Row softmax over one tile of fp32 attention scores (kernel normalize_scores), for the optional HIP attention of the vision worker; and the script that compiles it"
+notes     = "Launched from Python by ctypes (runtime.strixfold_pr6.vision_sidecar, vision_hip.py), between two hipblasSgemmStridedBatched calls a tile. build_vision_worker.sh is the origin's compile command (amdclang++ -x hip --offload-device-only -O3); it was not run here. The PR says this path changes the reduction order and is not qualified (VISION.md:84-86)."
+
+[provenance]
+origin    = "strixfold_pr6"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "766df75"
+branch    = "feat/hip-cpu-image-input (pull request #6, aercanozcan)"
+paths     = [
+  "tools/dsv41-hip/build_vision_worker.sh",
+  "zig/src/families/dsv41/vision_softmax.hip",
+]
+authors   = ["aercanozcan"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/src/families/dsv41/vision_softmax.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "vision.attn-softmax/-/f32"
+api       = "normalize_scores(float *scores, int keys); grid = rows of the tile, block 256"
+numeric   = "max and sum by a 256-lane tree reduction per row, expf, one multiply by 1/sum"
+regime    = "keys up to 9,216; tile of 128 query rows x 16 heads"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "never compiled here; the origin compiles it with build_vision_worker.sh, not with catalog/strixfold's [compile] recipe"

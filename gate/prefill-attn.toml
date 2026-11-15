@@ -1,0 +1,34 @@
+# PREFILL-ORNITH attention (card 8ef0a645e7, owner 2026-11-14): a flash-style prompt attention for qwen35moe's attention
+# blocks at depth. kernel.flerp.attn_wmma_gqa = gufo's WmmaCausalAttention (tiled online softmax over the KV on
+# v_wmma_f32_16x16x16_f16, ~20 TFLOP/s on the 27B by the origin's own note) with the head counts templated, so the 35B
+# (16 / 2 heads) and Ornith (32 / 2) leave the scalar online fallback they take today (LaunchBatchedAttention ->
+# LaunchCausalDecodeAttention once the scores exceed LDS). Committed BEFORE any GPU run; not edited to turn a failure
+# into a pass. Reference: full FP32 (gate/prefill-ornith.toml amendment 5a4ef60).
+
+[kernel]
+# K via pod-kbench, gate/prefill_attn_bench.hip: synthetic q, K, V (FP16 cache plane as the executor writes it), the
+# kernel's own launcher. Correctness against a float64 causal softmax on a sample of (query, head) rows.
+A1 = "Ornith shape (32 query heads, 2 KV heads, 256): 64 queries at depth 4,096 and 1,024 queries at depth 0, both the plain and the head-major (batch >= 1,024) path: rel_rms <= 2e-3 and max <= 2e-2 x rms(ref), 0 non-finite"
+A2 = "35B shape (16 / 2 / 256): the same cases, same bounds"
+A3 = "gate applied: sigmoid(gate) x output matches the reference within the same bounds"
+S1 = "Ornith shape, a 4,096-row chunk at depths 4K / 32K / 128K: record TFLOP/s (causal FLOPs 4 x heads x 256 x visible keys a row); at 32K at least 10 TFLOP/s"
+note = "no kernel-level bench of today's fallback (its sources need the gufo tree's wave64 units); today's cost is read from the 35B end to end (about 18 of 30 s at 16K tokens, ~1.2 TFLOP/s effective)"
+
+[model]
+# 35B, control-node queue, NVMe weights, one load a phase; arms of gate/prefill_ornith_35b.py plus G = F + this
+# attention (FLERP_ATTN_GQA=1). Speed on the 16,384-token prompt at the 4,096-row chunk bound (bulk stays off) and the
+# 2,048-token prompt; fidelity against FP32 (D) on the 8 prompts x 32 positions.
+M1 = "16,384-token prompt: G's prompt tok/s >= 2 x F's (median of 3, one load)"
+M2 = "2,048-token prompt: G's prompt tok/s >= 0.95 x F's"
+M3 = "against FP32: mean KL(D || G) <= 0.0176 (the prefill floor) and <= 1.25 x mean KL(D || F) + 0.0002"
+
+[g4]
+# Chunk-size drift (G4 of gate/prefill-ornith-dense.toml), added 2026-11-14 before the run it judges. Run 1 (8,192
+# tokens, chunks of 4,096 vs one of 8,192, card 66ab70d4b6) found A, F, G, X bit-identical (every logits sha256 and
+# every hidden-state tap equal), so the grouped GEMMs and the DeltaNet state carry are chunk-invariant there. The X
+# drift seen at 16,384 tokens is hypothesised to be the fallback attention switching kernels when the whole chunk's
+# visible length crosses the LDS score limit (BatchedAttentionScoresFitLds): one 16,384-row chunk takes the online
+# kernel for every row, 4,096-row chunks take the LDS kernel for the early ones. G never uses that fallback.
+D1 = "16,384 tokens, chunks of 4,096 vs one of 16,384, forced positions 0-3: G's logits sha256 equal at all 4 positions"
+D2 = "record F and X the same way (expected to drift under the hypothesis), and each arm's prompt seconds at both chunkings"
+D3 = "big chunks go into prefill-best only if D1 holds and G's prompt time at 16,384-row chunks is below its time at 4,096"

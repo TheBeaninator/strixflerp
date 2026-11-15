@@ -1,0 +1,47 @@
+id        = "serve.flerp.strixfold_host"
+kind      = "serve"
+summary   = "The Zig side of a front end binary whose executor is StrixFold's: the root file that owns process start-up and calls the front end's main, and the build file that links serve.flerp.http's C++ units (as flerp assemble lists them) with the Zig-exported executor adapter and text module"
+notes     = "flerp.serve.build.zig runs the origin's build graph unchanged and adds the step flerp-serve. It names no source of the front end: [build] c_link has flerp assemble write flerp/link.zig from the module manifests. Built on control-node; it has not run (the executor needs the worker pair)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp.serve.build.zig", "flerp_serve_strixfold.zig"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "zig"
+sources   = ["src/flerp_serve_strixfold.zig"]
+includes  = []
+
+[[provides]]
+interface = "serve.program/flerp-abi/-.zig-host"
+api       = "main (flerp_serve_strixfold.zig): strixflerp-<recipe> with serve.flerp.http's arguments"
+numeric   = "n/a"
+regime    = "TP2 rank 0, as the executor adapter"
+
+[[requires]]
+module    = "serve.flerp.http"
+
+[[requires]]
+module    = "executor.flerp.strixfold_abi"
+
+[[requires]]
+module    = "runtime.flerp.text_strixfold"
+
+[[requires]]
+interface = "build.graph/zig/-"
+
+[[requires]]
+interface = "text.chat-template-strixfold/jinja/-"
+
+[gate]
+parity    = "flerp:gate/flerp_serve_pair.py"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.flerp-serve-tp2/summary.json"

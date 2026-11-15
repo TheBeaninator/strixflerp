@@ -1,0 +1,34 @@
+id        = "kernel.flerp.adapter_rt"
+kind      = "kernel"
+summary   = "Adapter runtime, header only: load and launch an embedded device code object; count foreign and origin launches; strixite's non-finite router contract as a fix-up kernel"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/adapter_rt.hpp", "flerp/router_nonfinite.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+uses      = ["hip-runtime"]
+
+[[provides]]
+interface = "adapter.runtime/-/-"
+api       = "flerp::CodeObject, flerp::Tally, flerp::router::nonfinite_fixup"
+numeric   = "none: moves no data"
+regime    = "host side; one hipModuleLaunchKernel per launch"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "header-only"
+evidence  = "gate/results/interface/residual-add/result.json"
+reason    = "header only: built and run through every adapter of the interface gates"

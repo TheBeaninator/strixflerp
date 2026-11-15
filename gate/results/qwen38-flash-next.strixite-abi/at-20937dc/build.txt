@@ -1,0 +1,17 @@
+$ /usr/bin/python3 flerp assemble qwen38-flash-next.strixite-abi
+warning: [modules] format.convert/strixw/- is bound but nothing in the assembly requires it
+assembled qwen38-flash-next.strixite-abi: 92 modules (70 with sources), 2 binaries -> build/qwen38-flash-next.strixite-abi
+build: cmake -G Ninja -S build/qwen38-flash-next.strixite-abi -B build/qwen38-flash-next.strixite-abi/ninja && ninja -C build/qwen38-flash-next.strixite-abi/ninja
+$ nice -n 19 cmake -G Ninja -S /data/projects/strixflerp/build/qwen38-flash-next.strixite-abi -B /data/projects/strixflerp/build/qwen38-flash-next.strixite-abi/ninja
+-- ROCm at /data/tools/therock-10.1.0a20260823
+-- Performing Test FLERP_HOST_STDLIB_OK
+-- Performing Test FLERP_HOST_STDLIB_OK - Success
+-- Configuring done (2.3s)
+-- Generating done (0.4s)
+-- Build files have been written to: /data/projects/strixflerp/build/qwen38-flash-next.strixite-abi/ninja
+$ nice -n 19 ninja -C /data/projects/strixflerp/build/qwen38-flash-next.strixite-abi/ninja -j 24 flerp-executor-conformance.strixite strixflerp-qwen38-flash-next.strixite-abi
+ninja: Entering directory `/data/projects/strixflerp/build/qwen38-flash-next.strixite-abi/ninja'
+[1/4] Building C object CMakeFiles/m_runtime_flerp_decode_loop.dir/data/projects/strixflerp/catalog/flerp/runtime/decode_loop/src/flerp/decode_loop.c.o
+[2/4] Building C object CMakeFiles/m_executor_flerp_conformance.dir/data/projects/strixflerp/catalog/flerp/executor/conformance/src/flerp/executor/conformance.c.o
+[3/4] Building CXX object CMakeFiles/m_executor_flerp_strixite_abi.dir/data/projects/strixflerp/catalog/flerp/executor/strixite_abi/src/flerp/executor/strixite_abi.cpp.o
+[4/4] Linking CXX executable flerp-executor-conformance.strixite

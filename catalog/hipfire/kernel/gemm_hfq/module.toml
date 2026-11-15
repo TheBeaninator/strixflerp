@@ -1,0 +1,125 @@
+id        = "kernel.hipfire.gemm_hfq"
+kind      = "kernel"
+summary   = "Prefill GEMM on HFQ weights: WMMA, dot2 and MMQ bodies; residual, QKV, QKVZA and gate-up multi-output forms (81 sources, 81 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/gemm_gate_up_hfp4g32_wmma.hip",
+  "kernels/src/gemm_gate_up_hfq3g256.hip",
+  "kernels/src/gemm_gate_up_hfq3g256_dot2.hip",
+  "kernels/src/gemm_gate_up_hfq3g256_fp16.hip",
+  "kernels/src/gemm_gate_up_hfq3g256_wmma.hip",
+  "kernels/src/gemm_gate_up_hfq3g256_wmma_mb4.hip",
+  "kernels/src/gemm_gate_up_hfq4g256.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_dot2.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_fp16.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_fp16_wave64.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_wmma.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_wmma_2tile.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_wmma_k4.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_wmma_ldscoop.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_wmma_ldscoop_nosync.hip",
+  "kernels/src/gemm_gate_up_hfq4g256_wmma_ldsx.hip",
+  "kernels/src/gemm_gate_up_hfq6g256.hip",
+  "kernels/src/gemm_gate_up_hfq6g256_dot2.hip",
+  "kernels/src/gemm_gate_up_hfq6g256_fp16.hip",
+  "kernels/src/gemm_gate_up_hfq6g256_wmma.hip",
+  "kernels/src/gemm_hfp4g32_residual_wmma.hip",
+  "kernels/src/gemm_hfq3g256_residual.hip",
+  "kernels/src/gemm_hfq3g256_residual_dot2.hip",
+  "kernels/src/gemm_hfq3g256_residual_fp16.hip",
+  "kernels/src/gemm_hfq3g256_residual_wmma.hip",
+  "kernels/src/gemm_hfq3g256_residual_wmma_mb4.hip",
+  "kernels/src/gemm_hfq4g128.hip",
+  "kernels/src/gemm_hfq4g128_mmq.gfx1151.hip",
+  "kernels/src/gemm_hfq4g256.hip",
+  "kernels/src/gemm_hfq4g256_residual.hip",
+  "kernels/src/gemm_hfq4g256_residual_fp16.hip",
+  "kernels/src/gemm_hfq4g256_residual_fp16_wave64.hip",
+  "kernels/src/gemm_hfq4g256_residual_kt.hip",
+  "kernels/src/gemm_hfq4g256_residual_mmq.hip",
+  "kernels/src/gemm_hfq4g256_residual_mw.hip",
+  "kernels/src/gemm_hfq4g256_residual_wave64.hip",
+  "kernels/src/gemm_hfq4g256_residual_wmma.hip",
+  "kernels/src/gemm_hfq4g256_residual_wmma2.hip",
+  "kernels/src/gemm_hfq4g256_residual_wmma_k2.hip",
+  "kernels/src/gemm_hfq4g256_residual_wmma_k2x32.hip",
+  "kernels/src/gemm_hfq4g256_residual_wmma_k4.hip",
+  "kernels/src/gemm_hfq4g256_residual_wmma_ksplit.hip",
+  "kernels/src/gemm_hfq4g256_residual_wmma_ksplit_det.hip",
+  "kernels/src/gemm_hfq4g256_wave64.hip",
+  "kernels/src/gemm_hfq4g256_wmma.hip",
+  "kernels/src/gemm_hfq4g64.hip",
+  "kernels/src/gemm_hfq6g256_residual.hip",
+  "kernels/src/gemm_hfq6g256_residual_fp16.hip",
+  "kernels/src/gemm_hfq6g256_residual_wmma_k2.hip",
+  "kernels/src/gemm_qkv_hfp4g32_wmma.hip",
+  "kernels/src/gemm_qkv_hfq3g256.hip",
+  "kernels/src/gemm_qkv_hfq3g256_dot2.hip",
+  "kernels/src/gemm_qkv_hfq3g256_fp16.hip",
+  "kernels/src/gemm_qkv_hfq3g256_wmma.hip",
+  "kernels/src/gemm_qkv_hfq3g256_wmma_mb4.hip",
+  "kernels/src/gemm_qkv_hfq4g256.hip",
+  "kernels/src/gemm_qkv_hfq4g256_dot2.hip",
+  "kernels/src/gemm_qkv_hfq4g256_fp16.hip",
+  "kernels/src/gemm_qkv_hfq4g256_fp16_wave64.hip",
+  "kernels/src/gemm_qkv_hfq4g256_wave64.hip",
+  "kernels/src/gemm_qkv_hfq4g256_wmma.hip",
+  "kernels/src/gemm_qkv_hfq6g256.hip",
+  "kernels/src/gemm_qkv_hfq6g256_dot2.hip",
+  "kernels/src/gemm_qkv_hfq6g256_fp16.hip",
+  "kernels/src/gemm_qkv_hfq6g256_wmma.hip",
+  "kernels/src/gemm_qkvza_hfp4g32_wmma.hip",
+  "kernels/src/gemm_qkvza_hfq3g256.hip",
+  "kernels/src/gemm_qkvza_hfq3g256_dot2.hip",
+  "kernels/src/gemm_qkvza_hfq3g256_fp16.hip",
+  "kernels/src/gemm_qkvza_hfq3g256_wmma.hip",
+  "kernels/src/gemm_qkvza_hfq3g256_wmma_mb4.hip",
+  "kernels/src/gemm_qkvza_hfq4g256.hip",
+  "kernels/src/gemm_qkvza_hfq4g256_dot2.hip",
+  "kernels/src/gemm_qkvza_hfq4g256_fp16.hip",
+  "kernels/src/gemm_qkvza_hfq4g256_fp16_wave64.hip",
+  "kernels/src/gemm_qkvza_hfq4g256_wave64.hip",
+  "kernels/src/gemm_qkvza_hfq4g256_wmma.hip",
+  "kernels/src/gemm_qkvza_hfq6g256.hip",
+  "kernels/src/gemm_qkvza_hfq6g256_dot2.hip",
+  "kernels/src/gemm_qkvza_hfq6g256_fp16.hip",
+  "kernels/src/gemm_qkvza_hfq6g256_wmma.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 81
+
+[[provides]]
+interface = "linear.prefill/hipfire-hfq/f32"
+api       = "gemm_gate_up_hfp4g32_wmma, gemm_gate_up_hfq3g256_dot2, gemm_gate_up_hfq3g256_fp16, gemm_gate_up_hfq3g256, gemm_gate_up_hfq3g256_wmma_mb4 (+76 more units, see units.json)"
+numeric   = "weights decoded to f16 tiles for WMMA (fp32 accumulate) or integer MMQ with activation quantization, per variant"
+regime    = "prefill batches, compute-bound (WMMA, MMQ)"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[[requires]]
+interface = "format.device-view/hipfire-hfq/-"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.gemm_hfq.json"

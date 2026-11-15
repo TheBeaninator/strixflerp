@@ -1,0 +1,65 @@
+id        = "kernel.crucible.moe_prefill"
+kind      = "kernel"
+summary   = "Prefill MoE: stable expert-major dispatch without atomics (count, prefix, scatter), grouped expert GEMM items of 192 rows x 128 columns on WMMA, pair path (8-wave, two K sets), stable combine"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/layers/kernels/prefill_moe.h",
+  "engine/layers/prefill_moe.h",
+  "engine/layers/prefill_moe_kset.h",
+  "engine/layers/prefill_moe_pair.h",
+  "engine/layers/prefill_moe_tile.h",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/layers", "src/engine/layers/kernels"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "moe.experts-prefill/exl3/f16-f32.crucible"
+api       = "PrefillMoe*Kernel (layers/prefill_moe.h, prefill_moe_tile.h), MoeCount/Prefix/ScatterKernel (layers/kernels/prefill_moe.h)"
+numeric   = "per router slot exact; expert-major order stable, no atomics on output order"
+regime    = "prompt chunks (up to 2048 rows a chunk), compute-bound on WMMA"
+
+[[provides]]
+interface = "moe.dispatch-crucible-stable/-/-"
+api       = "MoeCountKernel, MoePrefixExpertsKernel, MoeScatterKernel"
+numeric   = "exact (integer counting sort by expert)"
+regime    = "prompt chunks (up to 2048 rows a chunk), compute-bound on WMMA"
+
+[[requires]]
+module    = "executor.crucible.flashnext"
+
+[[requires]]
+module    = "format.crucible.exl3"
+
+[[requires]]
+module    = "kernel.crucible.device_common"
+
+[[requires]]
+module    = "kernel.crucible.exl3_gemm"
+
+[[requires]]
+module    = "kernel.crucible.moe_decode"
+
+[[requires]]
+module    = "kernel.crucible.ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

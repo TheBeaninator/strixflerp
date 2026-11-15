@@ -1,0 +1,47 @@
+id      = "runtime.strixite.output_parser"
+kind    = "runtime"
+summary = "Incremental parser of the model's output into content, reasoning and tool calls"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/output_parser.cpp", "serve/output_parser.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/output_parser.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "text.output-parser/-/-"
+api       = "strix::OutputParser, strix::OutputEvent, strix::ToolCallOut"
+numeric   = "n/a"
+regime    = "host; streaming and buffered give the same events"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.serve_log"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[[requires]]
+module = "runtime.strixite.unicode"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,304 @@
+# strixflerp
+
+One inference engine for AMD Strix Halo (gfx1151, ROCm/HIP), built as a catalogue of modules. An engine for a model
+is a recipe: a list of modules assembled at build time into one binary. `SPEC.md` is the contract; this file says
+what is in the tree.
+
+## State
+
+235 modules from four origins and from this tree, 13 recipes; `./flerp check` reports 0 errors (85 warnings).
+Every gate below ran on control-node's GPU (gfx1151) unless it says otherwise, and its evidence is under
+`gate/results/`.
+
+| what | state | evidence |
+|---|---|---|
+| strixite recipe (`qwen38-flash-next.strixite`) | **passed**: 269 of 269 vendored files byte-identical to the reference tree; the assembled server gives the reference server's tokens and MTP step records on 18 requests (MTP on and off) at the same decode speed | `gate/results/qwen38-flash-next.strixite/` |
+| kernel harvest of StrixFold, gufo, hipfire | **compiles**: 1,112 compile units in 46 modules build for gfx1151 with their origin's own command (StrixFold 11, gufo 55, hipfire 1,046) | `gate/results/compile/` |
+| five interface gates | four pass, `moe-router` fails for hipfire (table below) | `gate/results/interface/` |
+| four swapped recipes | **passed** under their criteria (table below) | `gate/results/qwen38-flash-next.<variant>/` |
+| StrixFold recipe (`dsv41-flash.strixfold-tp2`) | assembles and builds; 314 files byte-identical to the origin; the kernel kit (169 objects) equals the deployed one byte for byte. On workers F and A (2026-11-11) the assembled server gave the reference deployment's token ids, prompt logits hashes, drawn tokens and window schedule, drafts on and off; the pair stage as a whole is recorded as **failed** because the ABI conformance run inside it did not pass | `gate/results/dsv41-flash.strixfold-tp2/` |
+| executor ABI (`include/flerp/executor.h`, version 2) | strixite adapter **passed**: making the engine's forwards through the shared decode loop, it gives the native server's tokens and step records on 8 requests (MTP on and off, 1,430 tokens). StrixFold adapter: **one run on the pair, not passed**: every driver check true and its tokens equal to the native server's, then the process died of SIGSEGV at close; the changes made since have not run | `gate/results/qwen38-flash-next.strixite-abi/`, `gate/results/dsv41-flash.strixfold-tp2/`, `docs/EXECUTOR-ABI.md` |
+| front end, no GPU (`qwen38-flash-next.flerp-serve-fake`) | **passed**: 551 checks against a stand-in executor in 9 shapes (rows or tokens only, stepped or held drafts, sampled draws or none, ABI 1 or 2): routes, refusals, the same tokens from every delivery and draft form, streams, stops, bias, logprobs, seeds | `gate/results/qwen38-flash-next.flerp-serve-fake/` |
+| front end over strixite (`qwen38-flash-next.flerp-serve`) | **passed** on control-node's GPU against the origin's server: 16 request runs (table below) with prompt ids, tokens, step records, finish and usage equal, streamed and not | `gate/results/qwen38-flash-next.flerp-serve/` |
+| front end over StrixFold (`dsv41-flash.flerp-serve-tp2`) | **builds**. One run on workers F and A (2026-11-11, drafts on): the origin server's prompt ids and reply tokens on three greedy requests and one sampled request, streams and refusals as required; **not passed**: the process dies of SIGSEGV after it has closed the executor, drafts off did not reach the front end (the origin's reference server crashed on a sampled request), and the stage's token comparison miscounted the origin's end-of-sequence id (fixed since, not rerun) | `gate/results/dsv41-flash.flerp-serve-tp2/` |
+| gufo Qwen 3.5 recipe (`qwen35-decider-2b.gufo`, phase 5 step 1) | **gated on control-node's GPU, 2026-11-11**: assembled build token-identical to the reference build on 4 prompts x 2 repeats, 121.6 against 122.8 tok/s. The reference is the origin's commit built with the recipe's own top-level build file, not an upstream binary. 542 of 542 vendored files byte-identical to the origin's commit; the assembled tree and an export of the origin compile the same 131 files; from the assembled build, gufo's CPU reference gives llama.cpp's first 8 greedy tokens on one prompt, and the executor refuses a qwen35moe file by name (`Missing required Qwen tensor: blk.0.ffn_gate.weight`) | `gate/results/qwen35-decider-2b.gufo/`, `docs/PHASE5-ORNITH-GAPMAP.md` |
+| qwen35moe on one node (`qwen36-35b-a3b.flerp-moe`, phase 5 step 2) | **ran on control-node's GPU, 2026-11-11; not passed**: one of the criteria written before the first run failed on 2 of 4 prompts. `executor.flerp.qwen35moe` (gufo's Qwen 3.5 executor with a mixture-of-experts feed forward, sizes from the GGUF header) on Qwen3.6-35B-A3B Q4_K_M against llama.cpp 86a24a1 (CPU) on the same prompt ids. Held: the dense model through the new binary gives the dense recipe's recorded tokens on all 4 prompts; the MoE runs repeat themselves; greedy ids equal llama.cpp's for 115, 128 (all), 74 and 88 of 128 tokens, each first difference where llama.cpp's two best tokens are within 0.05 to 0.47 nats and this side took the other one. Failed: log-probabilities at the first generated position over llama.cpp's top 20 tokens differ by up to 0.18, 0.26, 0.97 and 0.83 nats against a tolerance of 0.5 (on the best token by 0.02 at most; the large differences are on tokens llama.cpp puts below -8). Recorded beside it: the GPU decode step agrees with the executor's CPU reference to 0.003 nats on one prompt, while the origin's prompt chunks and llama.cpp each sit about 0.6 nats from that reference; 56 tok/s decode, 1,808 prompt tokens in 7.8 s, 21.7 GB of weights and 1.9 GB of state on the device | `gate/results/qwen36-35b-a3b.flerp-moe/`, `docs/PHASE5-ORNITH-GAPMAP.md` |
+| fidelity of the qwen35moe recipe (`--stages reference,fidelity`) | **ran 2026-11-11; failed its criteria** (committed before the run). Each engine against a full-precision CPU reference, 4 prompts x 4 positions: mean KL 0.0010 nats for the prompt pass, 0.0001 with the prompt through the decode step, 0.0007 for llama.cpp; the best token is the reference's at all 16 positions for all three. Failed: the long prompt's first two positions through the prompt pass are over 3 times llama.cpp's KL, and a coverage rule of the measurement itself. The gap is activation quantization in the origin's prompt chunks, shown by a switch that removes it. The reference's MoE block agrees with an independent numpy evaluation on 126 real inputs | `gate/results/qwen36-35b-a3b.flerp-moe/fidelity.md`, `docs/FIDELITY.md` |
+
+Not there: a passing run of the front end over the StrixFold executor or of the StrixFold adapter, more than one
+conversation at a time in the front end, parity gates for the modules still at status `harvested`, a passing gate
+for the qwen35moe recipe, and anything of Ornith-1.5 397B itself: its file was not loaded, its sizes (512 experts,
+10 used, width 1024, hidden 4096) were not run, and the split over four nodes is not written
+(`docs/PHASE5-ORNITH-GAPMAP.md`).
+
+## Layout
+
+| path | what |
+|---|---|
+| `SPEC.md` | the specification every module, recipe and gate is written against |
+| `flerp`, `flerplib/` | the command line (Python 3.12, standard library only) |
+| `toolchains.toml` | the toolchains a module or recipe may name, with their paths on control-node |
+| `catalog/<origin>/<kind>/<name>/` | one module: `module.toml` and its sources under `src/`, copied verbatim |
+| `catalog/<origin>/ORIGIN.toml` | where an origin came from: repo, commit, licence, toolchain, how it compiles kernels, what was left out |
+| `catalog/flerp/` | code written here: kernel adapters, the executor ABI adapters, their conformance driver and a stand-in executor, the shared decode loop, the text and sampler modules, the front end |
+| `include/flerp/` | the C interfaces written here: `executor.h` (the executor ABI), `text.h` (a model's tokenizer and chat template), `sampler.h` (a host sampler), `decode_loop.h` (the decode loop over the ABI) |
+| `recipes/` | recipes |
+| `gate/` | gate runners and their configuration; `gate/results/` holds the evidence of runs on gfx1151 |
+| `gate/interface/` | interface gates: one config per interface (providers, cases, pass criteria), the driver programs and the CPU references |
+| `docs/` | `INTERFACES.md` (where engines overlap, swap verdicts), `EXECUTOR-ABI.md`, `HARVEST.md`, `SOURCES.md`, `SPEC-PROPOSALS.md`, `PHASE5-GLM52-GAPMAP.md` and `PHASE5-ORNITH-GAPMAP.md` (what the catalogue lacks for two models no origin serves here), `FIDELITY.md` (a full-precision reference as a recipe's measure, and what it found) |
+| `tools/` | `pod-sync.sh`, `pod-run.sh`, `pod-pull.sh` (the only route to control-node), `gpu-queue.sh`, `harvest-strixite.py`, `make-variant-recipes.py` |
+| `tests/` | unit tests: `flerplib`, the recipes, the decode loop over the stand-in executor (needs a C compiler), the gates' comparisons |
+
+## The catalogue
+
+| origin | what it is | commit | licence | modules | status |
+|---|---|---|---|---|---|
+| `strixite` | C++ engine, strixw Q4/Q8 weights; v0.7.0 with the pod's patches | 20937dc | AGPL-3.0-only (3 vendored third-party modules keep theirs, 1 adds Unicode-3.0) | 105: 30 kernel, 16 format, 4 executor, 38 runtime, 5 serve, 12 tool | 104 builds, 1 benched |
+| `strixfold` | Zig engine with HIP kernels, EXL3 weights, DeepSeek-V4.1-Flash on two nodes | f64b5ff | Apache-2.0 | 35: 13 kernel, 3 format, 2 executor, 14 runtime, 1 serve, 2 tool | 31 builds, 4 harvested |
+| `strixfold_pr6` | Shoestring-dev/Strixfold pull request #6 (aercanozcan, open, unreviewed): image input for DeepSeek-V4.1 on HIP by a CPU torch child process; a sub-origin holding only what the PR adds or modifies (`docs/VISION-DSV41.md`) | 766df75 | Apache-2.0 (one module AND MIT) | 6: 1 kernel, 1 executor, 2 runtime, 1 serve, 1 tool | 6 harvested, not run: nothing was compiled or executed, and no recipe names them. Since then the two Python parts ran on control-node's CPU: the extraction matched its pins, and the worker, as the derived `runtime.flerp.vision_sidecar` on Python 3.12 + torch 2.11.0+cpu, gives rows bit-identical to DeepSeek's `vision.py` in BF16 (`gate/results/vision-dsv41-cpu312/summary.md`; its criterion 3a was restated after a first failed verdict); the Zig side, the HIP attention and an image through an engine have not run |
+| `tensorfold` | upstream TensorFold (ashhart/TensorFold main), the engine StrixFold forked at 1.0.2: Zig, its own HIP backend (MLX affine / BF16; Qwen3.5, Flash Next, Nemotron, OCR families), CUDA kernels kept to read their recipes (`docs/TENSORFOLD.md`) | 000b534 | Apache-2.0 (EXL3 modules AND MIT, one AND BSD-3-Clause, Kimi parts under the Kimi licences) | 46: 20 kernel (12 HIP, 8 CUDA), 3 format, 12 executor, 8 runtime, 1 serve, 2 tool | 46 harvested, nothing compiled or run |
+| `gufo` | C++ engine, GGUF K-quants | f070a17 | MIT | 38: 21 kernel, 1 format, 4 executor, 11 runtime, 1 serve | 12 builds, 26 harvested (the Qwen 3.5 executor and what it links also build inside the recipe `qwen35-decider-2b.gufo`) |
+| `hipfire` | Rust engine whose kernels are HIP source strings; v0.4.5 | efa8fbb | Apache-2.0 OR MIT | 34: 25 kernel, 2 format, 2 executor, 5 runtime | 23 builds, 11 harvested |
+| `flerp` | written here | in-tree | MIT | 23: 9 kernel (7 adapters, their shared runtime header, the MoE kernels on GGUF expert stacks), 5 executor (2 ABI adapters, the conformance driver, a stand-in executor, the qwen35moe executor derived from gufo's), 5 runtime (the decode loop, 2 text modules, 2 host samplers), 2 serve (the front end, its Zig host), 2 tool (token generators over gufo's Qwen 3.5 executor and over the qwen35moe one, each with the top of its CMake graph) | 6 benched, 5 parity, 7 builds, 5 harvested (the three qwen35moe modules build and run inside their recipe; its gate has not passed) |
+
+SGLang and halogen run on the pod and are listed with an `ORIGIN.toml` and no modules: one has no standalone
+kernel source to take, the other is closed.
+
+Kernels and formats are required by interface (`linear.decode/strixw-q4/bf16`), so a recipe chooses the provider.
+Helpers, runtime and serve modules are required by module id, because their APIs are their origin's own. For the
+C-family origins `requires` follows the `#include` graph and `flerp check` keeps it true. `./flerp interfaces`
+shows where the engines overlap; `docs/INTERFACES.md` has the verdict for each overlap.
+
+`tools/harvest-strixite.py <checkout>` redoes the strixite harvest; the manifests are the source of truth.
+
+## Commands
+
+```
+./flerp list [--kind K] [--origin O] [--licence EXPR] [--provides GLOB]
+./flerp show <module-id>
+./flerp interfaces [GLOB]
+./flerp check [--origin O] [-w]
+./flerp licence-report <recipe>
+./flerp assemble <recipe> [--licence EXPR] [-o DIR]
+./flerp diff-origin <module-id> <checkout>        ./flerp diff-origin --origin O <checkout>
+./flerp gate interface <name> [--only PROVIDER]   ./flerp gate module <module-id>
+./flerp gate recipe <recipe> [--stages ...]
+python3 -m unittest
+```
+
+`--licence` takes comma-separated globs over SPDX ids; a leading `!` denies (`'AGPL-3.0-only,MIT,BSD-*'`,
+`'!LicenseRef-*'`).
+
+`flerp assemble` writes `build/<recipe>/` and prints the command that builds it. For a strixite-hosted recipe
+that is `CMakeLists.txt` and `assembly.json`: each module with sources is one OBJECT library compiled with the
+include roots of its own requirement closure, each binary links the objects of its entry module's closure, and
+compiler and flags are strixite's (TheRock's clang, `.hip` files with `-x hip --offload-arch=gfx1151`, C++20,
+`-O3 -march=znver5 -flto`, lld). Modules of gufo, StrixFold and hipfire inside such a recipe are compiled by their
+origin's own command. For a Zig-hosted recipe (`[build] system = "zig"`) it is a source tree, `assembly.json` and
+`build.sh`, which runs the origin's own build graph. A recipe that takes a CMake-built origin's executor whole
+(`[build] system = "cmake"`, gufo) is a source tree too: the origin's own `CMakeLists.txt` files build it, under a
+top-level build file of a `flerp` module that stands in for the origin's root.
+
+## Recipes and their gates
+
+| recipe | what it assembles | gate result |
+|---|---|---|
+| `qwen38-flash-next.strixite` | the strixite server and its twelve tool and test programs, all from `catalog/strixite` | passed (token identity with the reference binary, same speed) |
+| `qwen38-flash-next.topk-gufo` | the same with gufo's top-20 logits kernel | passed: tokens identical on 18 requests |
+| `qwen38-flash-next.dense-strixfold` | the same with StrixFold's BF16 dense GEMV for the router logits | passed under token agreement: 15 of 18 requests leave the reference's tokens, the earliest at token 5 |
+| `qwen38-flash-next.router-gufo` | the same with gufo's MoE router top-k | passed under token agreement: 15 of 18 leave, the earliest at token 5 |
+| `qwen38-flash-next.three-engines` | all three swaps in one binary | passed under token agreement: 12 of 18 leave, the earliest at token 5 |
+| `qwen38-flash-next.strixite-abi` | the strixite executor behind `executor.h`, the conformance driver, the native server | passed (conformance: same forwards, same tokens and step records as the native server) |
+| `dsv41-flash.strixfold-tp2` | StrixFold's DSV4.1 server for two nodes, built by its own Zig build graph | check, origin and build pass; on the pair the server matches the reference; the stage failed on the ABI conformance run |
+| `dsv41-flash.strixfold-tp2-abi` | the same plus the StrixFold ABI adapter and the conformance driver | builds; its one run on the pair did not pass (the driver's checks did; the process crashed at close) |
+| `dsv41-flash.strixfold-tp2-zip2` | the StrixFold server with the prompt schedule of `executor.flerp.dsv41_zip2` laid over the executor (two adapted files): units of two 2,048-row chunks zipped, behind `TF_DS_PREFILL_ZIP2`, off by default | check and build pass; the kit equals the deployed one; the origin's host tests pass as on the origin; **never loaded**: the pair measurement (`gate/prefill_dsv41_zip2.py`) has not run (`docs/PREFILL-DSV41.md` section 9) |
+| `qwen38-flash-next.flerp-serve` | `serve.flerp.http` with the strixite executor adapter, strixite's text and sampler | passed (`gate/flerp_serve.py`: check, build, gpu) |
+| `qwen38-flash-next.flerp-serve-fake` | `serve.flerp.http` with the stand-in executor | passed (check, build, nogpu) |
+| `dsv41-flash.flerp-serve-tp2` | `serve.flerp.http` with the StrixFold executor adapter and text module, built by the origin's Zig build graph | check and build pass; the pair stage (`gate/flerp_serve_pair.py`) ran once with drafts on and did not pass |
+| `qwen35-decider-2b.gufo` | gufo's Qwen 3.5 text executor (HIP) and a token generator over it, built by the origin's CMake files; a dense qwen35 GGUF (decider-2b v12, Q4_K_M) | check, origin, build, reference, cpu, llama and gpu pass (`gate/gufo_recipe.py`) |
+| `qwen36-35b-a3b.flerp-moe` | the same executor with `executor.flerp.qwen35moe` laid over it, `kernel.flerp.moe_kquant`, gufo's router and MoE epilogue kernels, and a token generator with a traced mode; a qwen35moe GGUF (Qwen3.6-35B-A3B, Q4_K_M) on one node | check, origin, build, cpu and llama pass; gpu ran and failed one criterion (`gate/moe_recipe.py`; log-probabilities at the first generated position against llama.cpp, 2 of 4 prompts over the tolerance) |
+
+`./flerp gate recipe <recipe>` runs on control-node and writes `gate/results/<recipe>/`. For a strixite-hosted
+recipe the stages are:
+
+1. `check`: the origin and the recipe check clean.
+2. `origin`: every vendored file is byte-identical to the reference git tree, and the tree is covered.
+3. `build`: assemble, configure, build.
+4. `unit`: strixite's host test programs from the assembled tree.
+5. `gpu`: strixite's GPU test, then the same greedy requests against the reference server and the assembled one,
+   one loaded at a time, MTP drafting on and off. Token ids and MTP step records are read from each server's
+   capture files.
+
+The unmodified recipe and an exact swap must give the reference's tokens. A swap that changes summation order
+runs under `token-agreement`: its interface gate must have passed, every adapter must have launched its foreign
+kernel in every server, and the gate reports where the tokens first leave the reference's. "Passed" for those
+three recipes means that, not equal text: strixite's greedy text turns on last-bit differences, and the reference
+server parts from itself between MTP on and off at token 43 of one gate prompt (SPEC.md section 1, fact 3).
+
+A gate loads a model only when control-node's GPU is idle and no job of the pod is waiting for it, holds the
+`control-gpu` lease while a model is loaded, and gives it back between loads when a pod job starts to wait.
+
+For the gufo recipe the stages are `check`, `origin`, `build` (the tree of the module closure, 545 files, built
+by the origin's CMake files: 131 files of 20 modules compile), `reference` (the same program from a git export of
+the origin: no build of f070a17 exists on control-node, and the origin's root does not configure there for want
+of libpng, libjpeg, libwebp, libcurl, sndfile, soxr and FFmpeg development files), `cpu` (prompt ids, a
+qwen35moe probe, gufo's CPU reference; no GPU), `llama` (llama.cpp built for the CPU from the ark's source, the
+same prompt ids; a record) and `gpu` (reference binary against assembled binary, greedy ids equal prompt for
+prompt, decode speed within 5%). The executor is dense only: what Ornith-1.5 397B (qwen35moe) needs beyond it is
+listed with file and line in `docs/PHASE5-ORNITH-GAPMAP.md`.
+
+## Cross-engine swaps
+
+An interface gate (`./flerp gate interface <name>`, config `gate/interface/<name>.toml`) runs every provider of
+one interface on control-node's GPU through the consumer's launch API, compares each with a CPU reference written
+here (`gate/interface/reference/`), compares the providers with each other, and times back-to-back launches at
+decode-sized and larger shapes. Results are in `gate/results/interface/<name>/` (`summary.md`, `result.json`).
+
+| gate | interface | providers | result |
+|---|---|---|---|
+| `residual-add` | fp32 residual add in place | strixite, gufo, hipfire | all three bit-identical to the reference |
+| `logits-topk` | top-20 logits candidates | strixite, gufo | both bit-identical on every required case; gufo differs on +inf logits (reported) |
+| `gguf-gemv` | decode GEMV on GGUF Q8_0 and Q4_K | gufo, hipfire | both within the any-order summation bound; not bit-equal to each other |
+| `dense-bf16` | BF16-weight GEMV, BF16 in, FP32 out (router logits) | strixite, StrixFold | both within the bound; same bits at K = 1280, last bits differ at K = 2560 |
+| `moe-router` | MoE router top-k | strixite, gufo, hipfire | strixite and gufo pass; hipfire fails the tie cases |
+
+A foreign kernel reaches strixite's executor through an adapter (`catalog/flerp/kernel/`, SPEC.md section 5):
+gufo's sources are compiled by gufo's own command into a static library, StrixFold's and hipfire's by their own
+`hipcc` commands into code objects embedded in the binary, and the adapter takes over the launch symbol by a
+compile-time rename, with no change to vendored files. The swapped recipes are written from the unmodified
+recipe by `tools/make-variant-recipes.py`. `docs/INTERFACES.md` has the verdict and the evidence path for each
+swap, and the ones that were tried and do not hold up.
+
+## The executor ABI
+
+`include/flerp/executor.h` is one C ABI for a model-family executor, written from strixite's `LmBackend` and
+StrixFold's lane backend. `catalog/flerp/executor/` holds an adapter for each, a conformance driver that uses
+only the headers, and a stand-in executor with no model behind it; `docs/EXECUTOR-ABI.md` maps every call of both
+origins onto the ABI, names what does not map, says what version 2 added, and says what the runs showed.
+
+## The front end
+
+`serve.flerp.http` (`catalog/flerp/serve/http/`) is an OpenAI-compatible HTTP server that reaches the model only
+through `include/flerp/`. Its sources name no engine; a recipe makes it a server for a model by binding three
+interfaces:
+
+| recipe | executor (`executor.abi/flerp-v1/-`) | text (`text.model/flerp-v1/-`) | host sampler (`sample.host/flerp-v1/-`) | built by |
+|---|---|---|---|---|
+| `qwen38-flash-next.flerp-serve` | `executor.flerp.strixite_abi` | `runtime.flerp.text_strixite`: strixite's tokenizer and chat template | `runtime.flerp.sampler_strixite`: strixite's `Sampler` | CMake |
+| `dsv41-flash.flerp-serve-tp2` | `executor.flerp.strixfold_abi` (Zig) | `runtime.flerp.text_strixfold`: StrixFold's `HfText` (Zig) | `runtime.flerp.sampler_none` | the origin's Zig build graph, which compiles the front end's C++ from a list `flerp assemble` writes (`[build] c_link`) |
+| `qwen38-flash-next.flerp-serve-fake` | `executor.flerp.fake_abi`: no model | as the first | as the first | CMake |
+
+How it handles the two kinds of executor, decided at startup from `flerp_caps`:
+
+- **Rows offered** (strixite: full logits rows, or each row's top 20 candidates): the front end samples on the
+  host with the recipe's sampler module, from candidates when the sampler needs no more, from full rows otherwise
+  and for logprobs. A logit bias goes to the executor (`FLERP_CAP_MASKS`).
+- **Tokens only** (StrixFold: drawn on the device): the request's sampling parameters go to the executor with the
+  seq, and the front end takes the tokens it draws. Logprobs and a logit bias are refused (HTTP 400, code
+  `executor_cannot`), and so is a sampling parameter the executor's sampler does not take, read from
+  `flerp_caps.sampling` and `.top_k_max` (ABI version 2).
+- **Drafts** stay behind the ABI. The front end runs `flerp_decode_loop` (`runtime.flerp.decode_loop`, the loop
+  the conformance driver runs): strixite's acceptance rule over a stepped draft head (`--drafts`, `--draft-margin`:
+  the engine's `mtp-draft` and `mtp-margin`) or over drafts the executor holds, and one token a forward with
+  `--drafts 0` or no draft head.
+
+Served: `POST /v1/chat/completions` and `POST /v1/completions` (JSON, or SSE with `"stream": true`),
+`GET /v1/models`, `GET /health`, `POST /tokenize`; `temperature`, `top_p`, `top_k`, `min_p` (where the sampler
+has it), `seed`, `max_tokens`, `stop`; `logit_bias` and chat `logprobs` / `top_logprobs` (not streamed) where the
+executor allows. `"flerp_trace": true` adds the prompt's token ids, the reply's, the ids that entered the sequence
+and one `{drafted, accepted, emitted}` record a decode step to the response; the gates read those.
+
+One conversation at a time: requests queue and run one after another on the thread that opened the executor.
+The executor's other slots are not used.
+
+A chat reply is split by the recipe's reply module (`text.reply/flerp-v1/-`, `include/flerp/reply.h`; strixite:
+`runtime.flerp.reply_strixite`, a shim over its `OutputParser` and `ThinkWatch`) into `reasoning_content`,
+`content` and `tool_calls` (streamed as strixite streams them: a call's id and name first, then its arguments in
+pieces), finish reason `tool_calls`. Tools render with `tool_choice` `"auto"`; `"none"` renders none. strixite's
+reply policy runs on the decode loop's hooks, each switchable as on the origin (`--think-nudge`,
+`--think-end-guard`, `--literal-tags`, `--think-close-on-call`, `--thinking`, all on): a thinking budget (four
+spellings) ends the think block with the origin's stop text, a think block going in circles gets the nudge, the end
+of turn is refused inside a think block or a call, a call begun inside the think block gets the close fed ahead of
+it, and with no room to think (a small `max_tokens`, no thinking asked) the prompt is rendered without the think
+block. `response_format` `json_object` / `json_schema` is compiled by the reply module with strixite's grammar
+modules into per-row masks the executor applies (`FLERP_CAP_MASKS`); drafts the grammar refuses are not verified.
+A recipe that binds `runtime.flerp.reply_none` returns the reply whole in `content` and refuses tools, budgets
+and `response_format`. Tests without a GPU: `tests/test_flerp_reply.py` (a scripted stand-in executor,
+`tests/cpp/script_fake.c`, and the model's tokenizer).
+
+Not served by this front end, each refused by name (HTTP 400 or 501, code `not_served`): the prompt cache
+(`cache_prompt`, the `/cache` routes), vision and other media, activation steering, grammars other than
+`response_format`, `tool_choice` other than `"auto"` / `"none"`, the legacy `functions`, `n` above 1, `echo`,
+`suffix`, `best_of`, logprobs on `/v1/completions` and on a stream, the Anthropic and responses APIs.
+
+```
+strixflerp-<recipe> [--host H] [--port N] [--model-id ID] [--drafts N] [--draft-margin M] [--prompt-cut TOKEN]
+                    [--delivery auto|tokens] [--generation-config FILE] [--think-nudge on|off] [--think-end-guard on|off]
+                    [--literal-tags on|off] [--think-close-on-call on|off] [--thinking on|off]
+                    executor.KEY=VALUE ... text.KEY=VALUE ...
+```
+
+`executor.*` and `text.*` are the keys of the bound modules (`docs/EXECUTOR-ABI.md`; `text.tokenizer` for
+strixite's text module, `text.model_dir` for StrixFold's). `--prompt-cut "<|im_start|>"` ends a prompt's forward
+where strixite's engine ends it; strixite's tokens depend on it (SPEC.md section 1, fact 3).
+
+### Gate on control-node's GPU (2026-11-11T02:25Z)
+
+`./flerp gate recipe qwen38-flash-next.flerp-serve` loads the origin's server (`/data/projects/strixite-v070`) with
+MTP on and off, then the front end with the executor's MTP head on and off and the settings the native server
+logged, shape-matched (`--prompt-cut "<|im_start|>"`, the engine's draft depth and margin). Each request's HTTP
+response (`flerp_trace`) is compared with the native server's capture of the same request.
+
+| request | what | MTP on: tokens, equal | MTP off: tokens, equal | decode tok/s native / front end, MTP on | MTP off |
+|---|---|---|---|---|---|
+| raw-256 | `/v1/completions`, greedy; also streamed | 256, yes | 255, yes | 44.9 / 50.9 | 27.5 / 19.2 |
+| chat-256 | chat, thinking on, greedy; also streamed, and with logprobs | 164, yes | 150, yes | 51.5 / 38.3 | 32.4 / 32.0 |
+| raw-stop | a stop string taken from the native reply | 167, yes | 172, yes | 49.4 / 49.7 | 23.9 / 32.3 |
+| long-chat-256 | 4,971 prompt tokens, thinking off; also streamed | 255, yes | 255, yes | 67.8 / 64.7 | 32.4 / 30.9 |
+| raw-bias | `logit_bias` -100 on the native reply's first token | 64, yes | 63, yes | 52.6 / 52.4 | 32.7 / 33.0 |
+| chat-sampled | temperature 0.7, top_k 20, top_p 0.95, seed 4242; also streamed | 128, yes | 127, yes | 64.0 / 63.4 | 32.9 / 33.1 |
+| raw-sampled | temperature 0.8, top_k 20, top_p 0.9, seed 99 | 127, yes | 127, yes | 39.8 / 39.0 | 32.7 / 33.3 |
+
+- "Equal" is all of: the prompt's token ids, the tokens that entered the sequence, the `{drafted, accepted,
+  emitted}` step records (so the forwards: 2 to 8 rows a verify with MTP on), the finish reason and the usage
+  counts. All 14 hold; the 8 streamed repeats carry the same ids and steps, and their chunks join to the
+  non-streamed text. On `/v1/completions` the text equals the native text.
+- The sampled requests are identical because the recipe binds the origin's sampler module
+  (`runtime.flerp.sampler_strixite` over `strix::Sampler`) and the loop samples rows in the engine's order.
+- With `--delivery tokens` (the executor's own greedy draws, MTP on) raw-256 and long-chat-256 again equal the
+  native capture. The logprobs request (full rows) gives the tokens of the same request without logprobs.
+- Not equal, and not required: the text of the chat-sampled reply differs from the native server's `content` with
+  the same tokens (the origin's output parser shapes a chat reply; the difference was not examined). The text of
+  chat-256 was not compared: the native reply is split into reasoning and content.
+- Decode tok/s is one request each, each server's own `timings.predicted_per_second`: a record, not a benchmark.
+  Most pairs are within a few percent; the outliers go both ways (raw-256 off 27.5 / 19.2, raw-stop off 23.9 /
+  32.3, chat-256 on 51.5 / 38.3, and the streamed repeats of the same requests gave 32.5 and 57.5).
+
+## Working on the pod
+
+```
+tools/pod-sync.sh                 # this tree -> control-node:/data/projects/strixflerp
+tools/pod-run.sh './flerp gate recipe qwen38-flash-next.strixite'
+tools/pod-run.sh 'nohup setsid tools/gpu-queue.sh build/jobs.txt > /dev/null 2>&1 &'   # GPU gates, in turn
+tools/pod-pull.sh                 # gate/results back
+```
+
+control-node's GPU is shared with the pod's own jobs. `tools/gpu-queue.sh` starts a job only when the GPU is idle
+and no `pod-gpu --wait` job is waiting.
+
+## With FreeFitty and buzz-rap
+
+strixflerp is the engine of a three-part stack that sounds like a rap crew's line-up:
+[FreeFitty](https://github.com/TheBeaninator/freefitty) runs durable agents as threads over a cluster of
+engines like this one, holding nothing between turns, and [buzz-rap](https://github.com/TheBeaninator/buzz-rap)
+gives those agents their own identities in a [Buzz](https://github.com/block/buzz) workspace, so people talk to them
+in channels and direct messages from the Buzz apps. strixflerp serves the models, FreeFitty schedules the agents,
+buzz-rap puts them where people are.
+
+## Licence
+
+The tree's own tooling (the `flerp` tool, `flerplib`, `gate`, `tools`, `tests`, `include`) is MIT (`LICENSE`).
+Every module, including this tree's own under `catalog/flerp/`, carries its licence as an SPDX id in its
+`module.toml`, and each origin's licence file is in `catalog/<origin>/`. Some modules are AGPL-3.0-only (those
+derived from strixite), so a recipe that assembles one of them builds an AGPL-3.0 binary; `flerp list --licence
+<expr>` shows which. `catalog/halogen` lists a closed engine and holds no code.

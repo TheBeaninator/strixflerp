@@ -1,0 +1,154 @@
+id        = "executor.hipfire.arch_qwen4"
+kind      = "executor"
+summary   = "Native Qwen4 / Qwen3.8-Flash-Next (arch 16): strict config and admission, typed weights and GPU state, bounded PLE rows, the Qwen4Bundle owner, GPU forward and exact AR lanes, native MTP transactions, expert slabs / tiers / hot sets, mesh TP and slow-link prefill"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/hipfire-arch-qwen4/Cargo.toml",
+  "crates/hipfire-arch-qwen4/map.md",
+  "crates/hipfire-arch-qwen4/src/admission.rs",
+  "crates/hipfire-arch-qwen4/src/artifact.rs",
+  "crates/hipfire-arch-qwen4/src/bundle.rs",
+  "crates/hipfire-arch-qwen4/src/bundle/pp.rs",
+  "crates/hipfire-arch-qwen4/src/bundle/pp_lanes.rs",
+  "crates/hipfire-arch-qwen4/src/cache_quality.rs",
+  "crates/hipfire-arch-qwen4/src/chunk_dump.rs",
+  "crates/hipfire-arch-qwen4/src/config.rs",
+  "crates/hipfire-arch-qwen4/src/d2_default.rs",
+  "crates/hipfire-arch-qwen4/src/decode_share.rs",
+  "crates/hipfire-arch-qwen4/src/decode_share_loan.rs",
+  "crates/hipfire-arch-qwen4/src/decode_share_shadows.rs",
+  "crates/hipfire-arch-qwen4/src/dflash_target.rs",
+  "crates/hipfire-arch-qwen4/src/ep.rs",
+  "crates/hipfire-arch-qwen4/src/ep_seal.rs",
+  "crates/hipfire-arch-qwen4/src/ep_trunk_split.rs",
+  "crates/hipfire-arch-qwen4/src/expert_arena.rs",
+  "crates/hipfire-arch-qwen4/src/expert_hotset.rs",
+  "crates/hipfire-arch-qwen4/src/expert_keep.rs",
+  "crates/hipfire-arch-qwen4/src/expert_residency.rs",
+  "crates/hipfire-arch-qwen4/src/expert_slab_aggregate.rs",
+  "crates/hipfire-arch-qwen4/src/expert_slab_table.rs",
+  "crates/hipfire-arch-qwen4/src/expert_slabs.rs",
+  "crates/hipfire-arch-qwen4/src/expert_tier_owners.rs",
+  "crates/hipfire-arch-qwen4/src/expert_tier_plan.rs",
+  "crates/hipfire-arch-qwen4/src/gpu_forward.rs",
+  "crates/hipfire-arch-qwen4/src/gpu_forward/cpu_slab_owner.rs",
+  "crates/hipfire-arch-qwen4/src/gpu_forward/cpu_splice.rs",
+  "crates/hipfire-arch-qwen4/src/gpu_forward/panel_stage.rs",
+  "crates/hipfire-arch-qwen4/src/gpu_forward/slab_stage.rs",
+  "crates/hipfire-arch-qwen4/src/gpu_forward_lanes.rs",
+  "crates/hipfire-arch-qwen4/src/host_link.rs",
+  "crates/hipfire-arch-qwen4/src/kv_backend.rs",
+  "crates/hipfire-arch-qwen4/src/lab_window.rs",
+  "crates/hipfire-arch-qwen4/src/lane.rs",
+  "crates/hipfire-arch-qwen4/src/lane/census.rs",
+  "crates/hipfire-arch-qwen4/src/lane/groups.rs",
+  "crates/hipfire-arch-qwen4/src/lane_exec.rs",
+  "crates/hipfire-arch-qwen4/src/lane_token_ring.rs",
+  "crates/hipfire-arch-qwen4/src/lib.rs",
+  "crates/hipfire-arch-qwen4/src/measured_identity.rs",
+  "crates/hipfire-arch-qwen4/src/measured_resources.rs",
+  "crates/hipfire-arch-qwen4/src/mesh_bindings.rs",
+  "crates/hipfire-arch-qwen4/src/mesh_tp.rs",
+  "crates/hipfire-arch-qwen4/src/mtp_gpu.rs",
+  "crates/hipfire-arch-qwen4/src/mtp_lanes.rs",
+  "crates/hipfire-arch-qwen4/src/mtp_spec.rs",
+  "crates/hipfire-arch-qwen4/src/mtp_spec/adapter_recovery_tests.rs",
+  "crates/hipfire-arch-qwen4/src/ops.rs",
+  "crates/hipfire-arch-qwen4/src/ple.rs",
+  "crates/hipfire-arch-qwen4/src/ple_stage.rs",
+  "crates/hipfire-arch-qwen4/src/program.rs",
+  "crates/hipfire-arch-qwen4/src/projection.rs",
+  "crates/hipfire-arch-qwen4/src/reference_forward.rs",
+  "crates/hipfire-arch-qwen4/src/reference_mtp.rs",
+  "crates/hipfire-arch-qwen4/src/session_pair.rs",
+  "crates/hipfire-arch-qwen4/src/slowlink_admission.rs",
+  "crates/hipfire-arch-qwen4/src/slowlink_load.rs",
+  "crates/hipfire-arch-qwen4/src/slowlink_prefill.rs",
+  "crates/hipfire-arch-qwen4/src/slowlink_prefill/sp.rs",
+  "crates/hipfire-arch-qwen4/src/slowlink_sp.rs",
+  "crates/hipfire-arch-qwen4/src/state.rs",
+  "crates/hipfire-arch-qwen4/src/state_parity.rs",
+  "crates/hipfire-arch-qwen4/src/state_precision_accounting_tests.rs",
+  "crates/hipfire-arch-qwen4/src/sym_verdict_cache.rs",
+  "crates/hipfire-arch-qwen4/src/trunk_overlay.rs",
+  "crates/hipfire-arch-qwen4/src/weights.rs",
+  "crates/hipfire-arch-qwen4/src/wide_verify_oracle.rs",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model/qwen3.8-flash-next/hipfire-mq"
+api       = "hipfire_arch_qwen4::{Qwen4Bundle, gpu_forward, lane, mtp_spec}"
+numeric   = "fp32 activations on MQ4 / MQ6 weights; exact AR lanes never touch the bundle state; MTP ships a measured AR floor"
+regime    = "solo, expert-parallel mesh"
+
+[[provides]]
+interface = "speculation.draft/mtp/f32.hipfire"
+api       = "hipfire_arch_qwen4::{mtp_gpu, mtp_lanes, mtp_spec}"
+numeric   = "draft-only numerics, deterministic PM draft heads"
+regime    = "draft steps"
+
+[[requires]]
+interface = "linear.decode/hipfire-mq/f32"
+
+[[requires]]
+interface = "linear.prefill/hipfire-mq/f32"
+
+[[requires]]
+interface = "moe.experts-decode/hipfire-hfq+mq+mfp4/f32"
+
+[[requires]]
+interface = "moe.router/-/f32.hipfire"
+
+[[requires]]
+interface = "hc.mix/hipfire/f32"
+
+[[requires]]
+interface = "mixer.gdn/-/f32.hipfire"
+
+[[requires]]
+interface = "attn.qsa-indexer/-/bf16+f32.hipfire"
+
+[[requires]]
+interface = "attn.softmax-gqa/kv-f16+bf16+q8_0+rotated/f32.hipfire"
+
+[[requires]]
+interface = "norm.rmsnorm/-/f32.hipfire"
+
+[[requires]]
+interface = "pos.rope/-/f32.hipfire"
+
+[[requires]]
+interface = "format.loader/hipfire-hfq/-"
+
+[[requires]]
+interface = "device.facade-hipfire/hip/-"
+
+[[requires]]
+interface = "dispatch.kernel-table/hipfire/-"
+
+[[requires]]
+interface = "cache.prompt-hipfire/-/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

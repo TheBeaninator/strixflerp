@@ -1,0 +1,40 @@
+id      = "runtime.strixite.stb"
+kind    = "runtime"
+summary = "stb_image 2.30 and stb_image_write 1.16, vendored unchanged by the origin, with the one implementation translation unit"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = [
+    "third_party/stb/stb_image.h",
+    "third_party/stb/stb_image_write.h",
+    "third_party/stb/README.md",
+    "third_party/stb_impl/stb_impl.cpp",
+]
+authors  = ["Sean Barrett and contributors", "shawnshekari"]
+modified = false
+
+[licence]
+spdx = "MIT OR Unlicense"
+
+[build]
+lang      = "c++"
+sources   = ["src/third_party/stb_impl/stb_impl.cpp"]
+includes  = ["src/third_party/stb"]
+toolchain = "therock-10.1"
+system    = true
+defines   = ["STRIX_STB_IMPL_TEST_ONLY"]
+options   = ["-Wno-missing-field-initializers"]
+
+[[provides]]
+interface = "vision.image-decode/stb/-"
+api       = "stbi_load_from_memory, stbi_write_png"
+numeric   = "n/a"
+regime    = "PNG, JPEG, GIF, BMP, TGA; stb_image_write is compiled in for the tests' encode side"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

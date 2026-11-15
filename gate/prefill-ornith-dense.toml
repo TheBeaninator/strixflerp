@@ -1,0 +1,36 @@
+# PREFILL-ORNITH step 2 (card 8ef0a645e7, owner 2026-11-14): the prompt chunk's dense projections through
+# kernel.flerp.moe_kgrouped Linear (F16 and exact, selectable), and bulk chunks (FLERP_MAX_PROMPT_BATCH up to 16,384,
+# the arena's row buffers sized once and reused: the stage arena). Committed BEFORE any GPU run of this step; not
+# edited to turn a failure into a pass. gate/prefill-ornith.toml stands as written; its F1-F4 are judged again here.
+#
+# Arms (generate --arms, one model load a phase): A current path; B experts F16; E experts exact; F experts + dense
+# F16; X experts + dense exact; D the prompt through the decode step (FP32 activations, the yardstick). Dense on
+# Linear covers attn_q/k/v/output, attn_qkv, attn_gate (z), ssm_alpha/beta, ssm_out on Q4_K / Q6_K; the shared expert
+# is already in the grouped experts. Other types keep the current kernels.
+
+[kernel]
+# K via pod-kbench: Linear F16 and exact at the 35B dense shapes (hidden 2048) and Ornith's small ones (attn_k/v 512,
+# ssm_alpha/beta 64 rows), rows 4,096 and 16,384; and K1/K2 correctness of both at those shapes.
+L1 = "Linear F16 and exact: rel_rms <= 2e-3 and max <= 2e-2 x rms(ref) against float64 at every new shape"
+L2 = "record TFLOP/s per shape (no threshold: S4 of gate/prefill-ornith.toml already judged the large shapes)"
+
+[speed]
+# 35B, control-node queue, NVMe weights, one load a phase, 3 interleaved reps, median.
+Q1 = "2,048-token prompt: F's prompt tok/s >= 1.3 x B's"
+Q2 = "16,384-token prompt (FLERP_MAX_PROMPT_BATCH=16384 against 4096, same arm F, one load each): bulk tok/s >= 1.1 x the 4,096-row chunks"
+Q3 = "record A, B, E, F, X prompt tok/s at 2,048 tokens and F, X at 16,384 tokens; the projection to Ornith uses them"
+
+[fidelity]
+# Method of gate/prefill-ornith.toml [fidelity] (8 prompts, prefill end + 31 forced decode positions, KL over the
+# reference's kept top 1,000 with exact log-probabilities), both references:
+G1 = "against A (forced on A's greedy ids): F1-F4 of gate/prefill-ornith.toml for F and X, bounds unchanged"
+G2 = "against FP32 (D, forced on D's greedy ids): mean KL(D || X) <= 0.5 x mean KL(D || A), and X's top-1 agreement with D >= 99 %"
+G3 = "against FP32: mean KL(D || F) <= 1.25 x mean KL(D || A) + 0.0002"
+G4 = "bulk chunks: X's logits at 16,384-row chunks against 4,096-row chunks on the 16,384-token prompt: KL <= 1e-4 at every recorded position"
+hypothesis = "the current prompt path's distance from FP32 comes from its Q8_1 dense activations (FIDELITY.md); X removes it, so G2 holds if the hypothesis does"
+
+[amendment_2026_11_14_reference]
+# Amendment by owner's decision, 2026-11-14, added after the runs; thresholds above unchanged. G1 (F1-F4 against A)
+# stays a recorded failure; the prefill reference is full FP32 (G2, G3) as in gate/prefill-ornith.toml's amendment,
+# with the champion floor mean KL(D || arm) <= 0.0176. G4 (chunk-size drift) is open: bulk chunks stay off until it
+# is explained.

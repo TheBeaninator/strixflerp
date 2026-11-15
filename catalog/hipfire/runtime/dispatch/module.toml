@@ -1,0 +1,116 @@
+id        = "runtime.hipfire.dispatch"
+kind      = "runtime"
+summary   = "Kernel dispatch families and pipelines: GEMV / GEMM / attention / fused QKV / MoE / rotation tables choosing a kernel by format, arch and shape; batched layer pipelines, CPU split and offload plans"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/hipfire-dispatch/Cargo.toml",
+  "crates/hipfire-dispatch/map.md",
+  "crates/hipfire-dispatch/src/context.rs",
+  "crates/hipfire-dispatch/src/coverage_tests.rs",
+  "crates/hipfire-dispatch/src/cpu_exec.rs",
+  "crates/hipfire-dispatch/src/cpu_split.rs",
+  "crates/hipfire-dispatch/src/cpwait.rs",
+  "crates/hipfire-dispatch/src/families/attention.rs",
+  "crates/hipfire-dispatch/src/families/fused_qkv.rs",
+  "crates/hipfire-dispatch/src/families/gemm.rs",
+  "crates/hipfire-dispatch/src/families/gemv.rs",
+  "crates/hipfire-dispatch/src/families/kv_tier.rs",
+  "crates/hipfire-dispatch/src/families/mod.rs",
+  "crates/hipfire-dispatch/src/families/moe.rs",
+  "crates/hipfire-dispatch/src/families/moe_buckets.rs",
+  "crates/hipfire-dispatch/src/families/moe_expert_iu4.rs",
+  "crates/hipfire-dispatch/src/families/rotation.rs",
+  "crates/hipfire-dispatch/src/lib.rs",
+  "crates/hipfire-dispatch/src/macros.rs",
+  "crates/hipfire-dispatch/src/model_ext/deepseek4.rs",
+  "crates/hipfire-dispatch/src/model_ext/mod.rs",
+  "crates/hipfire-dispatch/src/model_ext/qwen35.rs",
+  "crates/hipfire-dispatch/src/offload_split.rs",
+  "crates/hipfire-dispatch/src/ops/delta_net.rs",
+  "crates/hipfire-dispatch/src/ops/mla.rs",
+  "crates/hipfire-dispatch/src/ops/mod.rs",
+  "crates/hipfire-dispatch/src/ops/pm_xbatch.rs",
+  "crates/hipfire-dispatch/src/ops/verify_twins.rs",
+  "crates/hipfire-dispatch/src/pipeline/batched.rs",
+  "crates/hipfire-dispatch/src/pipeline/batched_attention.rs",
+  "crates/hipfire-dispatch/src/pipeline/batched_deltanet.rs",
+  "crates/hipfire-dispatch/src/pipeline/batched_moe.rs",
+  "crates/hipfire-dispatch/src/pipeline/draft_head.rs",
+  "crates/hipfire-dispatch/src/pipeline/gated_mlp.rs",
+  "crates/hipfire-dispatch/src/pipeline/hybrid.rs",
+  "crates/hipfire-dispatch/src/pipeline/latent_attention.rs",
+  "crates/hipfire-dispatch/src/pipeline/layer_ops.rs",
+  "crates/hipfire-dispatch/src/pipeline/mla/attention.rs",
+  "crates/hipfire-dispatch/src/pipeline/mla/compressor.rs",
+  "crates/hipfire-dispatch/src/pipeline/mla/expert_ffn.rs",
+  "crates/hipfire-dispatch/src/pipeline/mla/hc.rs",
+  "crates/hipfire-dispatch/src/pipeline/mla/mod.rs",
+  "crates/hipfire-dispatch/src/pipeline/mla/project.rs",
+  "crates/hipfire-dispatch/src/pipeline/mla/query_kv.rs",
+  "crates/hipfire-dispatch/src/pipeline/mla/rows.rs",
+  "crates/hipfire-dispatch/src/pipeline/mod.rs",
+  "crates/hipfire-dispatch/src/pipeline/moe_dump.rs",
+  "crates/hipfire-dispatch/src/pipeline/moe_program.rs",
+  "crates/hipfire-dispatch/src/pipeline/norm_fold.rs",
+  "crates/hipfire-dispatch/src/pipeline/projection_split.rs",
+  "crates/hipfire-dispatch/src/pipeline/qt44_qt53_prefill.rs",
+  "crates/hipfire-dispatch/src/pipeline/router_observer.rs",
+  "crates/hipfire-dispatch/src/pipeline/sandwich.rs",
+  "crates/hipfire-dispatch/src/pipeline/sealed_moe.rs",
+  "crates/hipfire-dispatch/src/pipeline/slab_moe_decode.rs",
+  "crates/hipfire-dispatch/src/pipeline/slab_route.rs",
+  "crates/hipfire-dispatch/src/pipeline/slowlink_prefill.rs",
+  "crates/hipfire-dispatch/src/pipeline/sp_layer.rs",
+  "crates/hipfire-dispatch/src/pipeline/step_graph.rs",
+  "crates/hipfire-dispatch/src/pipeline/steps.rs",
+  "crates/hipfire-dispatch/src/pipeline/stream_mix.rs",
+  "crates/hipfire-dispatch/src/pipeline/superop.rs",
+  "crates/hipfire-dispatch/src/resource/mod.rs",
+  "crates/hipfire-dispatch/src/sp_plan.rs",
+  "crates/hipfire-dispatch/src/tables/attention_table.rs",
+  "crates/hipfire-dispatch/src/tables/fused_qkv_table.rs",
+  "crates/hipfire-dispatch/src/tables/gemm_table.rs",
+  "crates/hipfire-dispatch/src/tables/gemv_table.rs",
+  "crates/hipfire-dispatch/src/tables/mod.rs",
+  "crates/hipfire-dispatch/src/tables/moe_table.rs",
+  "crates/hipfire-dispatch/src/tables/rotation_table.rs",
+  "crates/hipfire-dispatch/src/tests.rs",
+  "crates/hipfire-dispatch/src/traits.rs",
+  "crates/hipfire-dispatch/src/types.rs",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "dispatch.kernel-table/hipfire/-"
+api       = "hipfire_dispatch::families::{gemv, gemm, attention, fused_qkv, moe, rotation, kv_tier}, tables::*"
+numeric   = "runtime dispatch by (format, arch, shape); this is the layer strixflerp replaces with static assembly"
+regime    = "per launch"
+
+[[requires]]
+interface = "verify.kernel-abi/hipfire-v1/-"
+
+[[requires]]
+interface = "device.facade-hipfire/hip/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

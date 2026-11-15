@@ -1,0 +1,97 @@
+# StrixFold f64b5ff (the pod's fork), reassembled from the catalogue: DeepSeek-V4.1-Flash-1017, EXL3 2.9 bpw,
+# two-node tensor parallel on Strix Halo. The host is Zig: the assembly is a source tree built by the origin's own
+# build graph (flerplib/assemble_zig.py, docs/SPEC-PROPOSALS.md section 9).
+name      = "dsv41-flash.strixfold-tp2"
+model     = "deepseek-v4.1-flash-1017"
+reference = { engine = "strixfold", build = "/data/pod/plans/strixfold/fork", deployment = "~/tfp/deploy/f64b5ff2e28b on workers F and A" }
+toolchain = "therock-10.2"
+
+[build]
+system    = "zig"
+zig       = "zig-0.17"
+root      = "tool.strixfold.zig_build"
+steps     = ["native-hip"]
+# The reference build's options, string for string: hipcc hashes its arguments into each code object's compile
+# unit id, so a different spelling of a path gives different bytes (docs/HARVEST.md, "the kit hashes").
+options   = ["-Dhipcc={hipcc}", "-Drocm={rocm}", "-Dhip-triton-kit={prebuilt:kernel.strixfold.triton_kit}"]
+
+[build.prebuilt]          # where a [[prebuilt]] kit lives on the build host; verified against the catalogue record
+"kernel.strixfold.triton_kit" = "/data/pod/plans/af9276f296/tri-kit-gfx1151"
+
+# The cache directory names the reference build (control-node:/data/pod/plans/d74bd09137/wt at f64b5ff, the build the
+# deployment f64b5ff2e28b on F and A was copied from) compiled each code object into, read from its Zig cache by
+# gate/strixfold_recut.py. With them the kit comes out byte for byte: manifest sha256
+# 7693647972ab1b22dbff5d75f44ac080b573b9f0bf27d2bcc8c896b385f08455.
+# Without this table the build is the origin's own and its eleven HIP objects differ in the compile unit id only.
+[build.hipcc_output_pins]
+"aux.hsaco"       = "380fe3022018f1f2e7c4a0baa7b003b9"
+"aux_attn.hsaco"  = "3cd34797b74697091aeab05f833baabd"
+"aux_gate.hsaco"  = "3269571ff8b65d0646a8e3c6734bd327"
+"aux_hc.hsaco"    = "f03d451ebbf7727a7d239957dcd82c97"
+"aux_index.hsaco" = "1b7c1d54dcd0ba5810f6ac2388e89b9b"
+"aux_rope.hsaco"  = "16644ab823b5764a2d5534d2b30129e4"
+"coll.hsaco"      = "0a2cd47d5ce079d33d3366a942dacaed"
+"dense.hsaco"     = "786e0ed4272755e9e475aca211c4803d"
+"exl3.hsaco"      = "07a30cc1a8e799ae23e6ecc131e0ad88"
+"exl3_pf.hsaco"   = "2932d80ebd21e9d47f57a525bbea61cc"
+"glue.hsaco"      = "72f373089b360010a07a1b88f71456d7"
+
+[build.installs]          # binary -> what the origin's step installs under zig-out
+"strixflerp-dsv41-flash.strixfold-tp2" = "native-hip/bin/tensorfold-native"
+
+# interface -> module. Every interface a module of the assembly requires is bound here.
+[modules]
+"format.loader/engram-fp8/-"               = "format.strixfold.engram"
+"format.device-view/exl3/-"                = "format.strixfold.exl3"
+"format.reader-strixfold/safetensors/-"    = "format.strixfold.safetensors"
+"executor.model/deepseek-v4.1-flash/exl3"  = "executor.strixfold.dsv41"
+"attn.indexer-topk/-/i64-keys"             = "kernel.strixfold.aux"
+"collective.device-proxy/-/-"              = "kernel.strixfold.coll_proxy"
+"linear.dense/bf16/bf16-f32.row-invariant" = "kernel.strixfold.dense_bf16"
+"linear.decode/exl3/f16-f32.row-invariant" = "kernel.strixfold.exl3"
+"linear.prefill/exl3/f16-f32"              = "kernel.strixfold.exl3"
+"moe.experts-decode/exl3/bf16"             = "kernel.strixfold.exl3"
+"moe.experts-prefill/exl3/bf16.jobs"       = "kernel.strixfold.exl3_pf_experts"
+"residual.add2/-/f32-bf16"                 = "kernel.strixfold.glue"
+"attn.indexer-score/kv-fp4-e2m1/bf16"      = "kernel.strixfold.indexer_score"
+"hc.mix-prefill/dsv41-mhc-f32/bf16"        = "kernel.strixfold.mhc_mix"
+"moe.gate-logits/f16/bf16-f32"             = "kernel.strixfold.moe_gate"
+"pos.rope-heads/-/bf16.hip"                = "kernel.strixfold.rope_heads"
+"attn.sparse-sink/kv-fp4-e2m1/bf16"        = "kernel.strixfold.sparse_attn"
+"draft.markov/f16/bf16"                    = "kernel.strixfold.triton_kit"
+"hc.mix-decode/dsv41-mhc-f32/bf16"         = "kernel.strixfold.triton_kit"
+"kvcache.store/fp4-e2m1/bf16"              = "kernel.strixfold.triton_kit"
+"moe.router/-/bf16-f32"                    = "kernel.strixfold.triton_kit"
+"norm.rmsnorm/-/bf16.triton-bits"          = "kernel.strixfold.triton_kit"
+"pos.rope-heads/-/bf16.triton-bits"        = "kernel.strixfold.triton_kit"
+"collective.interface/-/-"                 = "runtime.strixfold.coll"
+"collective.allgather-nccl/-/f32"          = "runtime.strixfold.coll_nccl"
+"collective.allgather-rdma/-/f32"          = "runtime.strixfold.coll_rdma"
+"collective.allgather-tcp/-/f32"           = "runtime.strixfold.coll_tcp"
+"text.chat-template-strixfold/jinja/-"     = "runtime.strixfold.core"
+"text.tokenizer-strixfold/-/-"             = "runtime.strixfold.core"
+"speculation.draft/dspark/bf16"            = "runtime.strixfold.dspark_draft"
+"executor.host/hip/-"                      = "runtime.strixfold.engine_host"
+"device.facade/hip/-"                      = "runtime.strixfold.gpu_facade"
+"grammar.matcher-strixfold/-/-"            = "runtime.strixfold.grammar"
+"verify.kit-manifest/hsaco/-"              = "runtime.strixfold.kit"
+"executor.lane-backend/-/-"                = "runtime.strixfold.lanes"
+"cache.prompt-strixfold/-/-"               = "runtime.strixfold.prompt_cache"
+"sample.next-token/-/f64"                  = "runtime.strixfold.sampling"
+"tool.checkpoint-cli/-/-"                  = "tool.strixfold.checkpoint_cli"
+
+# The build graph itself. Rank 1's process (tf-dsv41-lanes), the layer gate (tf-dsv41-layer) and the kit tool
+# (tf-hip-kit) are installed by the same step next to the server; the kit goes to
+# zig-out/native-hip/share/tensorfold/hip/gfx1151/dsv41.
+[include]
+modules = ["tool.strixfold.zig_build"]
+
+[binaries]
+"strixflerp-dsv41-flash.strixfold-tp2" = { main = "serve.strixfold.http", entry = "zig/src/server/main.zig" }
+
+[deploy]
+topology = "tp2"
+
+[gate]
+runner = "gate/strixfold_recipe.py"
+config = "gate/dsv41-flash.strixfold-tp2.toml"

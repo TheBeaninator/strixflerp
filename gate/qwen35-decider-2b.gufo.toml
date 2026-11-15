@@ -1,0 +1,76 @@
+# Host facts and run settings for the gufo Qwen 3.5 recipe gate, on control-node. The pass criteria below were fixed
+# before the first run; do not edit them to turn a failure into a pass.
+
+[host]
+origin              = "gufo"
+reference_checkout  = "/data/ark-inbox/src/github.com__neuhaus__gufo"      # git tree; exported at ORIGIN.toml's commit
+scratch             = "build/gate-scratch-gufo"     # under build/: pod-sync deletes anything else it does not know
+build_jobs          = 2                             # control-node's memory is shared with the pod's jobs
+# Builds and CPU runs raise their own OOM score so the kernel takes them, not a job of the pod, when memory runs out.
+oom_score_adj       = 1000
+# libcrypto without a development package: the library is the system's (OpenSSL 3.0.13), the headers are the ones
+# node ships (OpenSSL 3.5.8: not the library's release). The binary takes seven EVP digest functions from it, all
+# at symbol version OPENSSL_3.0.0 (nm -D, 2026-11-11): gufo's SHA-256 for file and cache identities, nothing a
+# token depends on. Headers of 3.0.13 are in /data/netboot/chroot/usr/include (two directories). The gate links a
+# directory that holds only openssl/.
+openssl_headers     = "/opt/node/include/node/openssl"
+openssl_crypto      = "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+# control-node's own GPU only. Free = no engine program running here (matched on the program name, not its
+# arguments) and GTT use under 1 GiB (idle is about 19 MB).
+gpu_busy_pattern    = "^(strix_|strixflerp-|flerp-gufo-|steer_check|omf_seg|gufo|ds4|sglang|llama-server|tfp)"
+gpu_free_gtt_bytes  = 1073741824
+lease_resource      = "control-gpu"
+lease_owner         = "agent"
+lease_ttl_s         = 900
+gpu_wait_s          = 1800
+
+[model]
+# decider-2b v12: general.architecture qwen35, 24 blocks, hidden 2048, file type Q4_K_M (1.19 GiB).
+gguf                = "/data/models/decider-2b/decider-2b-v12-Q4_K_M.gguf"
+architecture        = "qwen35"
+# The target of phase 5 is qwen35moe. The executor is asked to open one (on the CPU path, nothing is loaded on
+# the GPU) and what it answers is recorded. Not a pass criterion.
+moe_probe_gguf      = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"
+
+[run]
+max_tokens          = 128
+repeats             = 2                 # each binary generates every prompt this many times, in separate processes
+context             = 4096
+long_prompt_sentences = 40              # about 1,500 prompt tokens: past one prefill chunk
+tps_tolerance       = 0.05              # medians within 5%, or inside the reference's own min..max
+run_timeout_s       = 600
+# gufo's own CPU reference, first prompts only; reported, not required. The first attempt (16 tokens, 2 prompts,
+# every core) was stopped by hand after two minutes without a token at a load average of 42 on a host that serves
+# the pod (2026-11-11T06:08Z); it now runs on 8 threads for fewer tokens and gives up at its timeout.
+cpu_tokens          = 8
+cpu_prompts         = 1
+cpu_threads         = 8
+cpu_timeout_s       = 900
+
+# Raw text, no chat template. The engine's tokenizer encodes them; the gate compares the ids across engines.
+[[prompt]]
+name = "bridge"
+text = "The following is a careful step by step explanation of how a suspension bridge carries its load.\n\n1."
+
+[[prompt]]
+name = "code"
+text = "def merge_sorted(a, b):\n    \"\"\"Merge two sorted lists into one sorted list.\"\"\"\n"
+
+[[prompt]]
+name = "rivers"
+text = "Question: Name three rivers in Europe and the sea each one flows into.\nAnswer:"
+
+[[prompt]]
+name = "records"
+long = true          # the filler of [run] long_prompt_sentences, then the text
+text = "\n\nThe first five record numbers whose sentence mentions a harbour are:"
+
+[llama]
+# An independent engine on the same file: llama.cpp built for the CPU from the ark's source, serving on loopback.
+# Reported (prompt ids, first position where the greedy tokens part); token identity across engines is not required.
+source              = "/data/ark/src/github.com__ggml-org__llama.cpp"
+port                = 5397
+threads             = 8
+build_timeout_s     = 3600
+startup_timeout_s   = 600
+request_timeout_s   = 1800

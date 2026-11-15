@@ -1,0 +1,88 @@
+id        = "kernel.gufo.qwen_norm_rope"
+kind      = "kernel"
+summary   = "RMSNorm (whole row and per head), RoPE, fused Q/K norm + RoPE + KV-cache write, residual add, embedding lookup; single-token and batched forms"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/families/qwen/kernels/embed.hip",
+  "src/families/qwen/kernels/norm.hip",
+  "src/families/qwen/kernels/prefill_embed.hip",
+  "src/families/qwen/kernels/prefill_norm.hip",
+  "src/families/qwen/kernels/prefill_residual.hip",
+  "src/families/qwen/kernels/prefill_rope.hip",
+  "src/families/qwen/kernels/residual.hip",
+  "src/families/qwen/kernels/rope.hip",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/families/qwen/kernels/norm.hip",
+  "src/src/families/qwen/kernels/prefill_norm.hip",
+  "src/src/families/qwen/kernels/rope.hip",
+  "src/src/families/qwen/kernels/prefill_rope.hip",
+  "src/src/families/qwen/kernels/residual.hip",
+  "src/src/families/qwen/kernels/prefill_residual.hip",
+  "src/src/families/qwen/kernels/embed.hip",
+  "src/src/families/qwen/kernels/prefill_embed.hip",
+]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = ["-x", "hip", "-std=gnu++20", "-O2", "-UNDEBUG", "-DENGINE_ENABLE_HIP=1", "-c"]
+variants  = 8
+
+[[provides]]
+interface = "norm.rmsnorm/-/f32.gufo"
+api       = "gufo::hip::LaunchRMSNorm, LaunchPerHeadRMSNorm, LaunchBatchedRMSNorm"
+numeric   = "out = x / sqrt(mean(x^2) + eps) * weight in fp32; optional BF16 output in the batched form"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "pos.rope/-/f32.gufo"
+api       = "gufo::hip::LaunchRoPE, LaunchBatchedRoPE"
+numeric   = "fp32 rotation"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "attn.qk-norm-rope-store/kv-f16/f32"
+api       = "gufo::hip::LaunchFusedQKNormRoPEKvWrite, LaunchBatchedFusedQKNormRoPEKvWrite"
+numeric   = "per-head RMSNorm, RoPE and the K/V write into every selected cache representation in one launch"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "residual.add/-/f32.out-of-place"
+api       = "gufo::hip::LaunchResidualAdd, LaunchBatchedResidualAdd"
+numeric   = "fp32 add"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "embed.lookup/gguf-kquant/f32"
+api       = "gufo::hip::LaunchEmbeddingLookup, LaunchBatchedEmbeddingLookup"
+numeric   = "row dequantized to fp32"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-"
+
+[gate]
+parity    = "origin-test:tests/kernels"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.qwen_norm_rope.json"

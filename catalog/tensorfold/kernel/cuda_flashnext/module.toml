@@ -1,0 +1,51 @@
+id        = "kernel.tensorfold.cuda_flashnext"
+kind      = "kernel"
+summary   = "Qwen Flash Next CUDA kernels: GDN (fused, lanes, TPR), QSA tile, sparse attention lanes, hyper-connections dense, pages, MTP, batching"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/cuda/flashnext_attn.cu",
+  "zig/kernels/cuda/flashnext_attn_lanes.cuh",
+  "zig/kernels/cuda/flashnext_batch.cu",
+  "zig/kernels/cuda/flashnext_fact.cu",
+  "zig/kernels/cuda/flashnext_fexp.cu",
+  "zig/kernels/cuda/flashnext_gdn.cu",
+  "zig/kernels/cuda/flashnext_gdn_fused.cuh",
+  "zig/kernels/cuda/flashnext_gdn_lanes.cuh",
+  "zig/kernels/cuda/flashnext_gdn_tpr.cuh",
+  "zig/kernels/cuda/flashnext_hc.cu",
+  "zig/kernels/cuda/flashnext_hc_dense.cuh",
+  "zig/kernels/cuda/flashnext_hcf.cu",
+  "zig/kernels/cuda/flashnext_mtp.cu",
+  "zig/kernels/cuda/flashnext_pages.cuh",
+  "zig/kernels/cuda/flashnext_qsa_tile.cuh",
+  "zig/kernels/cuda/flashnext_train.cu",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.tensorfold-cuda"
+api       = "flashnext_gdn.cu, flashnext_gdn_fused.cuh, flashnext_gdn_lanes.cuh, flashnext_gdn_tpr.cuh"
+numeric   = "fp32 state"
+regime    = "decode and prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source: harvested to read its recipe; not built for gfx1151"

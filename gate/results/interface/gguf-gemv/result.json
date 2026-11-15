@@ -1,0 +1,1263 @@
+{
+ "name": "gguf-gemv",
+ "interface": "linear.decode/gguf-kquant/f32",
+ "api": "gufo::hip::LaunchQ8KBlockGEMV(A, type, x, y, M, K, stream)",
+ "host": "control-node",
+ "config_sha256": "15f9e3b9ae327270db4cb461954ab93577c7fc1fcc91cc2bc5fdc9e46740be45",
+ "criteria": {
+  "parity": "order-bound",
+  "max_err_over_bound": 1.0,
+  "adapter_must_launch_foreign": true,
+  "adapter_origin_launches_allowed": 0
+ },
+ "cases": [
+  {
+   "name": "q8_0-1row-k2560",
+   "kind": "parity",
+   "type": "q8_0",
+   "M": 1,
+   "K": 2560,
+   "seed": 401,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q8_0-2rows-k2560",
+   "kind": "parity",
+   "type": "q8_0",
+   "M": 2,
+   "K": 2560,
+   "seed": 402,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q8_0-odd-2559rows-k2560",
+   "kind": "parity",
+   "type": "q8_0",
+   "M": 2559,
+   "K": 2560,
+   "seed": 403,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q8_0-2560x2560",
+   "kind": "parity",
+   "type": "q8_0",
+   "M": 2560,
+   "K": 2560,
+   "seed": 404,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q8_0-10240x2560",
+   "kind": "parity",
+   "type": "q8_0",
+   "M": 10240,
+   "K": 2560,
+   "seed": 405,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q8_0-2560x6144-wide-range",
+   "kind": "parity",
+   "type": "q8_0",
+   "M": 2560,
+   "K": 6144,
+   "seed": 406,
+   "pattern": "wide-range"
+  },
+  {
+   "name": "q8_0-640x256",
+   "kind": "parity",
+   "type": "q8_0",
+   "M": 640,
+   "K": 256,
+   "seed": 407,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q4k-1row-k2560",
+   "kind": "parity",
+   "type": "q4_k",
+   "M": 1,
+   "K": 2560,
+   "seed": 401,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q4k-2rows-k2560",
+   "kind": "parity",
+   "type": "q4_k",
+   "M": 2,
+   "K": 2560,
+   "seed": 402,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q4k-odd-2559rows-k2560",
+   "kind": "parity",
+   "type": "q4_k",
+   "M": 2559,
+   "K": 2560,
+   "seed": 403,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q4k-2560x2560",
+   "kind": "parity",
+   "type": "q4_k",
+   "M": 2560,
+   "K": 2560,
+   "seed": 404,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q4k-10240x2560",
+   "kind": "parity",
+   "type": "q4_k",
+   "M": 10240,
+   "K": 2560,
+   "seed": 405,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q4k-2560x6144-wide-range",
+   "kind": "parity",
+   "type": "q4_k",
+   "M": 2560,
+   "K": 6144,
+   "seed": 406,
+   "pattern": "wide-range"
+  },
+  {
+   "name": "q4k-640x256",
+   "kind": "parity",
+   "type": "q4_k",
+   "M": 640,
+   "K": 256,
+   "seed": 407,
+   "pattern": "gauss"
+  },
+  {
+   "name": "q8_0-bench-2560x2560",
+   "kind": "bench",
+   "shape": "M=2560, K=2560 q8_0 (7.0 MB of weights: a decode projection)",
+   "type": "q8_0",
+   "M": 2560,
+   "K": 2560,
+   "iters": 1000,
+   "repeats": 9
+  },
+  {
+   "name": "q8_0-bench-16384x2560",
+   "kind": "bench",
+   "shape": "M=16384, K=2560 q8_0 (44.6 MB: the large shape; a GEMV has one x row, prefill is a GEMM)",
+   "type": "q8_0",
+   "M": 16384,
+   "K": 2560,
+   "iters": 200,
+   "repeats": 9
+  },
+  {
+   "name": "q4k-bench-2560x2560",
+   "kind": "bench",
+   "shape": "M=2560, K=2560 q4_k (3.7 MB of weights: a decode projection)",
+   "type": "q4_k",
+   "M": 2560,
+   "K": 2560,
+   "iters": 1000,
+   "repeats": 9
+  },
+  {
+   "name": "q4k-bench-16384x2560",
+   "kind": "bench",
+   "shape": "M=16384, K=2560 q4_k (23.6 MB: the large shape; a GEMV has one x row, prefill is a GEMM)",
+   "type": "q4_k",
+   "M": 16384,
+   "K": 2560,
+   "iters": 200,
+   "repeats": 9
+  }
+ ],
+ "providers": {
+  "gufo": {
+   "module": "kernel.gufo.qwen_linear_decode",
+   "wraps": null,
+   "adapter": false,
+   "bind": {
+    "linear.decode/gguf-kquant/f32": "kernel.gufo.qwen_linear_decode",
+    "format.device-view/gguf-kquant/-": "format.gufo.gguf_kquant"
+   },
+   "cases_pattern": null,
+   "launches": null,
+   "build": {
+    "tree": "build/gate-interface/gguf-gemv/gufo",
+    "foreign_modules": {
+     "kernel.gufo.core_headers": {
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     },
+     "kernel.gufo.qwen_linear_decode": {
+      "commands": [
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/gemv.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/gemv_quant.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/fused.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/qkv.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/swiglu.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/small_batch_wave64.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -gline-tables-only -Xarch_device -mllvm=-amdgpu-sched-strategy=iterative-ilp -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/small_batch_quant16_wave64.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/verify_gemm_27b.hip -o @OUT@"
+      ],
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     },
+     "kernel.gufo.qwen_ops": {
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     }
+    },
+    "code_objects": [],
+    "renames": {},
+    "contract_changes": [
+     {
+      "module": "kernel.gufo.qwen_linear_decode",
+      "provided": "linear.decode/gguf-kquant/f32.gufo",
+      "required": "linear.decode/gguf-kquant/f32"
+     }
+    ],
+    "built": true,
+    "build_s": 3.2,
+    "rc": 0,
+    "driver_sha256": "918fe0a33ea2374d6012052de60fc51f8d1c9d66d51b6b3da0f6760f22eac3bb"
+   },
+   "run": {
+    "ran": true,
+    "rc": 0,
+    "seconds": 1.0,
+    "host_loadavg_before": [
+     9.21,
+     13.32,
+     17.2
+    ],
+    "host_loadavg_after": [
+     9.21,
+     13.32,
+     17.2
+    ],
+    "gpu_before": {
+     "gtt_used_bytes": 37322752,
+     "engine_processes": []
+    },
+    "adapter_tallies": []
+   },
+   "pass": true,
+   "cases": [
+    {
+     "case": "q8_0-1row-k2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 1,
+     "K": 2560,
+     "bit_identical": true,
+     "mismatched": 0,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0,
+     "max_rel": 0,
+     "err_over_bound": 1.32723964e-05,
+     "max_abs_vs_exact": 4.27718206e-07,
+     "rows_emulated": 1,
+     "order_emulation": "gufo-block-sums (mul-add, mul-add)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-2rows-k2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 2,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 5.96046448e-07,
+     "max_rel": 3.01194096e-07,
+     "err_over_bound": 1.94887513e-05,
+     "max_abs_vs_exact": 6.14920959e-07,
+     "rows_emulated": 2,
+     "order_emulation": "gufo-block-sums (fma, fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-odd-2559rows-k2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 2559,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2160,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 5.7220459e-06,
+     "max_rel": 3.99090359e-05,
+     "err_over_bound": 0.000201964844,
+     "max_abs_vs_exact": 6.43857105e-06,
+     "rows_emulated": 64,
+     "order_emulation": "none",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-2560x2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 2560,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2018,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 2.86102295e-06,
+     "max_rel": 0.00365727549,
+     "err_over_bound": 9.88210956e-05,
+     "max_abs_vs_exact": 2.96944562e-06,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-block-sums (fma, fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-10240x2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 10240,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 8038,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 3.81469727e-06,
+     "max_rel": 0.000324177739,
+     "err_over_bound": 0.00011194102,
+     "max_abs_vs_exact": 3.60842494e-06,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-block-sums (fma, fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-2560x6144-wide-range",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 2560,
+     "K": 6144,
+     "bit_identical": false,
+     "mismatched": 2008,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0.09375,
+     "max_rel": 8.37667264e-05,
+     "err_over_bound": 9.34032218e-05,
+     "max_abs_vs_exact": 0.0790372902,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-block-sums (fma, fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-640x256",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 640,
+     "K": 256,
+     "bit_identical": false,
+     "mismatched": 507,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 9.53674316e-07,
+     "max_rel": 0.000207821127,
+     "err_over_bound": 0.0027402556,
+     "max_abs_vs_exact": 9.80256978e-07,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-block-sums (fma, fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-1row-k2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 1,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 1,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 1.43051147e-06,
+     "max_rel": 4.73190225e-07,
+     "err_over_bound": 1.1250608e-05,
+     "max_abs_vs_exact": 1.35471421e-06,
+     "rows_emulated": 1,
+     "order_emulation": "gufo-sub16 (fma dot, fma scale)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-2rows-k2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 2,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 1.90734863e-06,
+     "max_rel": 2.02311224e-07,
+     "err_over_bound": 1.97087448e-05,
+     "max_abs_vs_exact": 2.36047628e-06,
+     "rows_emulated": 2,
+     "order_emulation": "gufo-sub16 (fma dot, fma scale)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-odd-2559rows-k2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 2559,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 1997,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 5.7220459e-06,
+     "max_rel": 0.000163201731,
+     "err_over_bound": 4.32060734e-05,
+     "max_abs_vs_exact": 5.49765415e-06,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-sub16 (fma dot, fma scale)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-2560x2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 2560,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 1908,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 3.81469727e-06,
+     "max_rel": 0.00036468063,
+     "err_over_bound": 3.73372564e-05,
+     "max_abs_vs_exact": 4.03804696e-06,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-sub16 (fma dot, fma scale)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-10240x2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 10240,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 8175,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 4.76837158e-06,
+     "max_rel": 0.000291636961,
+     "err_over_bound": 3.76473891e-05,
+     "max_abs_vs_exact": 4.41017528e-06,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-sub16 (fma dot, fma scale)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-2560x6144-wide-range",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 2560,
+     "K": 6144,
+     "bit_identical": false,
+     "mismatched": 2019,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0.09375,
+     "max_rel": 0.000945816159,
+     "err_over_bound": 3.52364984e-05,
+     "max_abs_vs_exact": 0.100869732,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-sub16 (fma dot, fma scale)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-640x256",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 640,
+     "K": 256,
+     "bit_identical": false,
+     "mismatched": 481,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 1.13248825e-06,
+     "max_rel": 0.015942659,
+     "err_over_bound": 0.000774072031,
+     "max_abs_vs_exact": 1.33681864e-06,
+     "rows_emulated": 64,
+     "order_emulation": "gufo-sub16 (fma dot, fma scale)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-bench-2560x2560",
+     "kind": "bench",
+     "type": "q8_0",
+     "M": 2560,
+     "K": 2560,
+     "median_us": 13.48461,
+     "min_us": 13.180378,
+     "max_us": 13.838615,
+     "iters": 1000,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 6983680,
+     "gb_per_s": 517.900036,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "q8_0-bench-16384x2560",
+     "kind": "bench",
+     "type": "q8_0",
+     "M": 16384,
+     "K": 2560,
+     "median_us": 196.55949,
+     "min_us": 191.26183,
+     "max_us": 200.18754,
+     "iters": 200,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 44640256,
+     "gb_per_s": 227.108119,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "q4k-bench-2560x2560",
+     "kind": "bench",
+     "type": "q4_k",
+     "M": 2560,
+     "K": 2560,
+     "median_us": 14.215129,
+     "min_us": 13.635223,
+     "max_us": 14.339831,
+     "iters": 1000,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 3706880,
+     "gb_per_s": 260.770057,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "q4k-bench-16384x2560",
+     "kind": "bench",
+     "type": "q4_k",
+     "M": 16384,
+     "K": 2560,
+     "median_us": 77.98903,
+     "min_us": 72.501815,
+     "max_us": 78.90239,
+     "iters": 200,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 23668736,
+     "gb_per_s": 303.488016,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    }
+   ],
+   "problems": [],
+   "parity": {
+    "class": "differs from the CPU reference",
+    "cases": 14,
+    "bit_identical_cases": 1,
+    "max_abs": 0.09375,
+    "max_rel": 0.015942659,
+    "max_err_over_bound": 0.0027402556
+   },
+   "order_evidence": {
+    "cases": 14,
+    "reproduced": 13,
+    "by_emulation": {
+     "gufo-block-sums (mul-add, mul-add)": [
+      "q8_0-1row-k2560"
+     ],
+     "gufo-block-sums (fma, fma)": [
+      "q8_0-2rows-k2560",
+      "q8_0-2560x2560",
+      "q8_0-10240x2560",
+      "q8_0-2560x6144-wide-range",
+      "q8_0-640x256"
+     ],
+     "none": [
+      "q8_0-odd-2559rows-k2560"
+     ],
+     "gufo-sub16 (fma dot, fma scale)": [
+      "q4k-1row-k2560",
+      "q4k-2rows-k2560",
+      "q4k-odd-2559rows-k2560",
+      "q4k-2560x2560",
+      "q4k-10240x2560",
+      "q4k-2560x6144-wide-range",
+      "q4k-640x256"
+     ]
+    },
+    "order_only": false
+   }
+  },
+  "hipfire": {
+   "module": "kernel.flerp.gguf_gemv_hipfire",
+   "wraps": "kernel.hipfire.gemv_ggml",
+   "adapter": true,
+   "bind": {
+    "linear.decode/gguf-kquant/f32": "kernel.flerp.gguf_gemv_hipfire",
+    "format.device-view/gguf-kquant/-": "format.gufo.gguf_kquant",
+    "format.device-view-hipfire/gguf-kquant/-": "format.hipfire.loader"
+   },
+   "cases_pattern": null,
+   "launches": null,
+   "build": {
+    "tree": "build/gate-interface/gguf-gemv/hipfire",
+    "foreign_modules": {
+     "kernel.gufo.core_headers": {
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     },
+     "kernel.gufo.qwen_linear_decode": {
+      "commands": [
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/gemv.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/gemv_quant.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/fused.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/qkv.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/swiglu.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/small_batch_wave64.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -mwavefrontsize64 -gline-tables-only -Xarch_device -mllvm=-amdgpu-sched-strategy=iterative-ilp -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/small_batch_quant16_wave64.hip -o @OUT@",
+       "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -DLaunchQ8KBlockGEMV=LaunchQ8KBlockGEMV_flerp_origin -I catalog/gufo/kernel/qwen_linear_decode/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_linear_decode/src/src/families/qwen/kernels/verify_gemm_27b.hip -o @OUT@"
+      ],
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     },
+     "kernel.gufo.qwen_ops": {
+      "origin": "gufo",
+      "product": "host-object",
+      "toolchain": "therock-10.1"
+     },
+     "kernel.hipfire.common_headers": {
+      "origin": "hipfire",
+      "product": "code-object",
+      "toolchain": "therock-10.2"
+     },
+     "kernel.hipfire.gemv_ggml": {
+      "origin": "hipfire",
+      "product": "code-object",
+      "toolchain": "therock-10.2"
+     },
+     "kernel.hipfire.indexer_topk": {
+      "origin": "hipfire",
+      "product": "code-object",
+      "toolchain": "therock-10.2"
+     }
+    },
+    "code_objects": [
+     {
+      "adapter": "kernel.flerp.gguf_gemv_hipfire",
+      "command": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemv_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I /data/models/tools/therock-10.2/include @SRC@ -o @OUT@",
+      "module": "kernel.hipfire.gemv_ggml",
+      "symbol": "flerp_co_hipfire_gemv_q8_0",
+      "toolchain": "therock-10.2",
+      "unit": "gemv_q8_0"
+     },
+     {
+      "adapter": "kernel.flerp.gguf_gemv_hipfire",
+      "command": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/gemv_ggml/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I /data/models/tools/therock-10.2/include @SRC@ -o @OUT@",
+      "module": "kernel.hipfire.gemv_ggml",
+      "symbol": "flerp_co_hipfire_gemv_q4k",
+      "toolchain": "therock-10.2",
+      "unit": "gemv_q4k"
+     }
+    ],
+    "renames": {
+     "kernel.gufo.qwen_linear_decode": {
+      "adapter": "kernel.flerp.gguf_gemv_hipfire",
+      "suffix": "_flerp_origin",
+      "symbols": [
+       "LaunchQ8KBlockGEMV"
+      ]
+     }
+    },
+    "contract_changes": [
+     {
+      "module": "kernel.flerp.gguf_gemv_hipfire",
+      "provided": "linear.decode/gguf-kquant/f32.hipfire-rows",
+      "required": "linear.decode/gguf-kquant/f32"
+     }
+    ],
+    "built": true,
+    "build_s": 5.6,
+    "rc": 0,
+    "driver_sha256": "b9c9a763b146031ad9ae2dae332caec7fb8d44f3cc558b01484b7658d58ac0e2"
+   },
+   "run": {
+    "ran": true,
+    "rc": 0,
+    "seconds": 1.1,
+    "host_loadavg_before": [
+     9.21,
+     13.32,
+     17.2
+    ],
+    "host_loadavg_after": [
+     9.21,
+     13.32,
+     17.2
+    ],
+    "gpu_before": {
+     "gtt_used_bytes": 37322752,
+     "engine_processes": []
+    },
+    "adapter_tallies": [
+     {
+      "adapter": "kernel.flerp.gguf_gemv_hipfire",
+      "provider": "kernel.hipfire.gemv_ggml:gemv_q8_0,gemv_q4k",
+      "foreign_launches": 21626,
+      "origin_launches": 0
+     }
+    ]
+   },
+   "pass": true,
+   "cases": [
+    {
+     "case": "q8_0-1row-k2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 1,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 1,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 1.90734863e-06,
+     "max_rel": 1.58291716e-07,
+     "err_over_bound": 4.59139717e-05,
+     "max_abs_vs_exact": 1.47963043e-06,
+     "rows_emulated": 1,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-2rows-k2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 2,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 2.50339508e-06,
+     "max_rel": 1.2650152e-06,
+     "err_over_bound": 7.87421582e-05,
+     "max_abs_vs_exact": 2.48452057e-06,
+     "rows_emulated": 2,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-odd-2559rows-k2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 2559,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2194,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 3.81469727e-06,
+     "max_rel": 7.03809534e-05,
+     "err_over_bound": 0.000120985416,
+     "max_abs_vs_exact": 3.73345119e-06,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-2560x2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 2560,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2183,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 4.17232513e-06,
+     "max_rel": 0.00121126225,
+     "err_over_bound": 0.000136955424,
+     "max_abs_vs_exact": 4.15597022e-06,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-10240x2560",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 10240,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 8675,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 4.05311584e-06,
+     "max_rel": 0.000876393705,
+     "err_over_bound": 0.000135520013,
+     "max_abs_vs_exact": 4.16929513e-06,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-2560x6144-wide-range",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 2560,
+     "K": 6144,
+     "bit_identical": false,
+     "mismatched": 2236,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0.15625,
+     "max_rel": 0.000188541616,
+     "err_over_bound": 0.000177043186,
+     "max_abs_vs_exact": 0.149807933,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-640x256",
+     "kind": "parity",
+     "type": "q8_0",
+     "M": 640,
+     "K": 256,
+     "bit_identical": false,
+     "mismatched": 453,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 4.76837158e-07,
+     "max_rel": 0.000800452886,
+     "err_over_bound": 0.00181239481,
+     "max_abs_vs_exact": 5.23652838e-07,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-1row-k2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 1,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 1,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 1.1920929e-06,
+     "max_rel": 3.94325187e-07,
+     "err_over_bound": 1.05295531e-05,
+     "max_abs_vs_exact": 1.26789016e-06,
+     "rows_emulated": 1,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-2rows-k2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 2,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 1,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 4.76837158e-07,
+     "max_rel": 7.08558989e-08,
+     "err_over_bound": 3.78337935e-06,
+     "max_abs_vs_exact": 4.53127651e-07,
+     "rows_emulated": 2,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-odd-2559rows-k2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 2559,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2188,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 7.62939453e-06,
+     "max_rel": 0.000389406361,
+     "err_over_bound": 5.16246371e-05,
+     "max_abs_vs_exact": 6.68180776e-06,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-2560x2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 2560,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 2168,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 7.62939453e-06,
+     "max_rel": 0.000711415045,
+     "err_over_bound": 6.17223378e-05,
+     "max_abs_vs_exact": 7.26614581e-06,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-10240x2560",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 10240,
+     "K": 2560,
+     "bit_identical": false,
+     "mismatched": 8822,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 7.62939453e-06,
+     "max_rel": 0.000912176817,
+     "err_over_bound": 6.05168701e-05,
+     "max_abs_vs_exact": 7.5639897e-06,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-2560x6144-wide-range",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 2560,
+     "K": 6144,
+     "bit_identical": false,
+     "mismatched": 2249,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 0.1875,
+     "max_rel": 0.00135520871,
+     "err_over_bound": 5.69300479e-05,
+     "max_abs_vs_exact": 0.182719471,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q4k-640x256",
+     "kind": "parity",
+     "type": "q4_k",
+     "M": 640,
+     "K": 256,
+     "bit_identical": false,
+     "mismatched": 439,
+     "nan_payload_only": 0,
+     "nan_class_differs": 0,
+     "max_abs": 9.53674316e-07,
+     "max_rel": 0.00531568987,
+     "err_over_bound": 0.000660250536,
+     "max_abs_vs_exact": 8.59757758e-07,
+     "rows_emulated": 64,
+     "order_emulation": "hipfire-lanes (fma)",
+     "ran": true,
+     "required": "order-bound",
+     "pass": true
+    },
+    {
+     "case": "q8_0-bench-2560x2560",
+     "kind": "bench",
+     "type": "q8_0",
+     "M": 2560,
+     "K": 2560,
+     "median_us": 16.834461,
+     "min_us": 15.407784,
+     "max_us": 17.102724,
+     "iters": 1000,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 6983680,
+     "gb_per_s": 414.844289,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "q8_0-bench-16384x2560",
+     "kind": "bench",
+     "type": "q8_0",
+     "M": 16384,
+     "K": 2560,
+     "median_us": 206.06086,
+     "min_us": 203.03527,
+     "max_us": 209.6829,
+     "iters": 200,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 44640256,
+     "gb_per_s": 216.636269,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "q4k-bench-2560x2560",
+     "kind": "bench",
+     "type": "q4_k",
+     "M": 2560,
+     "K": 2560,
+     "median_us": 17.018833,
+     "min_us": 16.146563,
+     "max_us": 17.264686,
+     "iters": 1000,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 3706880,
+     "gb_per_s": 217.810469,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    },
+    {
+     "case": "q4k-bench-16384x2560",
+     "kind": "bench",
+     "type": "q4_k",
+     "M": 16384,
+     "K": 2560,
+     "median_us": 89.914125,
+     "min_us": 85.991225,
+     "max_us": 93.564315,
+     "iters": 200,
+     "repeats": 9,
+     "kernel_launches_per_call": 1,
+     "bytes_per_call": 23668736,
+     "gb_per_s": 263.237128,
+     "ran": true,
+     "required": "ran",
+     "pass": true
+    }
+   ],
+   "problems": [],
+   "parity": {
+    "class": "differs from the CPU reference",
+    "cases": 14,
+    "bit_identical_cases": 0,
+    "max_abs": 0.1875,
+    "max_rel": 0.00531568987,
+    "max_err_over_bound": 0.00181239481
+   },
+   "order_evidence": {
+    "cases": 14,
+    "reproduced": 14,
+    "by_emulation": {
+     "hipfire-lanes (fma)": [
+      "q8_0-1row-k2560",
+      "q8_0-2rows-k2560",
+      "q8_0-odd-2559rows-k2560",
+      "q8_0-2560x2560",
+      "q8_0-10240x2560",
+      "q8_0-2560x6144-wide-range",
+      "q8_0-640x256",
+      "q4k-1row-k2560",
+      "q4k-2rows-k2560",
+      "q4k-odd-2559rows-k2560",
+      "q4k-2560x2560",
+      "q4k-10240x2560",
+      "q4k-2560x6144-wide-range",
+      "q4k-640x256"
+     ]
+    },
+    "order_only": true
+   }
+  }
+ },
+ "lease": "holding control-gpu as agent-phase4",
+ "gpu_after": {
+  "gtt_used_bytes": 37322752,
+  "engine_processes": []
+ },
+ "pairwise": [
+  {
+   "a": "gufo",
+   "b": "hipfire",
+   "cases_identical": 0,
+   "cases_differing": 14,
+   "bit_identical": false,
+   "max_abs_gap": 0.1875,
+   "differing": [
+    {
+     "case": "q8_0-1row-k2560",
+     "elements_differing": 1,
+     "elements": 1,
+     "max_abs_gap": 1.9073486328125e-06
+    },
+    {
+     "case": "q8_0-2rows-k2560",
+     "elements_differing": 2,
+     "elements": 2,
+     "max_abs_gap": 3.0994415283203125e-06
+    },
+    {
+     "case": "q8_0-odd-2559rows-k2560",
+     "elements_differing": 2321,
+     "elements": 2559,
+     "max_abs_gap": 5.7220458984375e-06
+    },
+    {
+     "case": "q8_0-2560x2560",
+     "elements_differing": 2201,
+     "elements": 2560,
+     "max_abs_gap": 4.76837158203125e-06
+    },
+    {
+     "case": "q8_0-10240x2560",
+     "elements_differing": 8716,
+     "elements": 10240,
+     "max_abs_gap": 5.4836273193359375e-06
+    },
+    {
+     "case": "q8_0-2560x6144-wide-range",
+     "elements_differing": 2249,
+     "elements": 2560,
+     "max_abs_gap": 0.1484375
+    },
+    {
+     "case": "q8_0-640x256",
+     "elements_differing": 504,
+     "elements": 640,
+     "max_abs_gap": 9.5367431640625e-07
+    },
+    {
+     "case": "q4k-1row-k2560",
+     "elements_differing": 1,
+     "elements": 1,
+     "max_abs_gap": 2.6226043701171875e-06
+    },
+    {
+     "case": "q4k-2rows-k2560",
+     "elements_differing": 2,
+     "elements": 2,
+     "max_abs_gap": 1.9073486328125e-06
+    },
+    {
+     "case": "q4k-odd-2559rows-k2560",
+     "elements_differing": 2149,
+     "elements": 2559,
+     "max_abs_gap": 7.62939453125e-06
+    },
+    {
+     "case": "q4k-2560x2560",
+     "elements_differing": 2144,
+     "elements": 2560,
+     "max_abs_gap": 7.62939453125e-06
+    },
+    {
+     "case": "q4k-10240x2560",
+     "elements_differing": 8895,
+     "elements": 10240,
+     "max_abs_gap": 7.62939453125e-06
+    },
+    {
+     "case": "q4k-2560x6144-wide-range",
+     "elements_differing": 2275,
+     "elements": 2560,
+     "max_abs_gap": 0.1875
+    },
+    {
+     "case": "q4k-640x256",
+     "elements_differing": 494,
+     "elements": 640,
+     "max_abs_gap": 1.9073486328125e-06
+    }
+   ]
+  }
+ ],
+ "when_utc": "2026-11-11T00:09:19Z",
+ "pass": true,
+ "complete": true
+}

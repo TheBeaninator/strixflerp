@@ -1,0 +1,36 @@
+# Not a catalogue module: the driver program of an interface gate, assembled by gate/interface.py with the
+# interface bound to each provider in turn.
+id        = "tool.flerp.gate_logits_topk"
+kind      = "tool"
+summary   = "Interface gate driver: logits.topk/-/- through strixite's logits_topk"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["driver.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/driver.cpp"]
+includes  = ["../../common", "../../reference"]
+uses      = ["hip-runtime"]
+
+[[provides]]
+interface = "gate.driver/-/-.logits-topk"
+api       = "main"
+numeric   = "n/a"
+regime    = "gate"
+
+[[requires]]
+interface = "logits.topk/-/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"

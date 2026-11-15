@@ -1,0 +1,37 @@
+id      = "serve.strixite.cpp_httplib"
+kind    = "serve"
+summary = "cpp-httplib 0.56.0, vendored unchanged by the origin"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = [
+    "third_party/cpp-httplib/httplib.h",
+    "third_party/cpp-httplib/LICENSE",
+    "third_party/cpp-httplib/README.md",
+]
+authors  = ["Yuji Hirose"]
+modified = false
+
+[licence]
+spdx = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/third_party/cpp-httplib"]
+toolchain = "therock-10.1"
+system    = true
+
+[[provides]]
+interface = "serve.http-lib/-/-"
+api       = "httplib::Server"
+numeric   = "n/a"
+regime    = "header only"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

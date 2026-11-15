@@ -1,0 +1,212 @@
+{
+ "attention_flash_fp8_e4m3_tile": {
+  "class": "arch",
+  "compiler": "error: \"attention_flash_fp8_e4m3_tile requires --offload-arch=gfx1201\"",
+  "module": "kernel.hipfire.attention",
+  "reason": "the source refuses any arch but gfx1201 (#error)",
+  "toolchain": "rocm-7.2.4"
+ },
+ "attention_flash_fp8_e4m3_tile_batched": {
+  "class": "arch",
+  "compiler": "error: \"attention_flash_fp8_e4m3_tile_batched requires --offload-arch=gfx1201\"",
+  "module": "kernel.hipfire.attention",
+  "reason": "the source refuses any arch but gfx1201 (#error)",
+  "toolchain": "rocm-7.2.4"
+ },
+ "attention_flash_fwht3_tile_hd512": {
+  "class": "origin-broken",
+  "compiler": "error: use of undeclared identifier 'fwht_shfl_forward_512'",
+  "module": "kernel.hipfire.attention",
+  "reason": "the origin unit calls fwht_shfl_forward_512, which no file in the tree at efa8fbb defines (turbo_common.h has the 128 and 256 forms); its only launcher is gemma4_ext.rs, a left-out family",
+  "toolchain": "rocm-7.2.4"
+ },
+ "attention_flash_fwht3_tile_hd512_batched": {
+  "class": "origin-broken",
+  "compiler": "error: use of undeclared identifier 'fwht_shfl_forward_512'",
+  "module": "kernel.hipfire.attention",
+  "reason": "the origin unit calls fwht_shfl_forward_512, which no file in the tree at efa8fbb defines (turbo_common.h has the 128 and 256 forms); its only launcher is gemma4_ext.rs, a left-out family",
+  "toolchain": "rocm-7.2.4"
+ },
+ "file_ggml_convert_shim": {
+  "class": "arch",
+  "compiler": "fatal error: 'ggml-cuda/dequantize.cuh' file not found",
+  "module": "kernel.hipfire.gemv_ggml",
+  "reason": "ggml shim shipped only as a gfx1201 prebuilt object (kernels/ggml_mmvq_shim_gfx1201.co); needs CUDA shim headers that are not in the tree",
+  "toolchain": "rocm-7.2.4"
+ },
+ "file_ggml_mmvq_fused_shim": {
+  "class": "arch",
+  "compiler": "fatal error: 'cuda_fp16.h' file not found",
+  "module": "kernel.hipfire.gemv_ggml",
+  "reason": "ggml shim shipped only as a gfx1201 prebuilt object (kernels/ggml_mmvq_shim_gfx1201.co); needs CUDA shim headers that are not in the tree",
+  "toolchain": "rocm-7.2.4"
+ },
+ "file_ggml_mmvq_shim": {
+  "class": "arch",
+  "compiler": "fatal error: 'cuda_fp16.h' file not found",
+  "module": "kernel.hipfire.gemv_ggml",
+  "reason": "ggml shim shipped only as a gfx1201 prebuilt object (kernels/ggml_mmvq_shim_gfx1201.co); needs CUDA shim headers that are not in the tree",
+  "toolchain": "rocm-7.2.4"
+ },
+ "fused_gate_up_hfq4g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemv_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "fused_gate_up_hfq6g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemv_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "fused_qkv_hfq4g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemv_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "fused_qkv_hfq6g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemv_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "fused_qkvza_hfq4g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemv_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "fused_qkvza_hfq6g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemv_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_gate_up_hfq4g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_gate_up_hfq6g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_hfq4g256_residual_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_hfq4g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_hfq6g256_residual_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_qkv_hfq4g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_qkv_hfq6g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_qkvza_hfq4g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemm_qkvza_hfq6g256_wave64_dp4a": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemm_hfq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "gemv_mq8g256": {
+  "class": "arch",
+  "compiler": "error: '__builtin_amdgcn_sdot4' needs target feature dot1-insts",
+  "module": "kernel.hipfire.gemv_mq",
+  "reason": "uses __builtin_amdgcn_sdot4 (dot1-insts), which gfx1151 does not have",
+  "toolchain": "rocm-7.2.4"
+ },
+ "kv_cache_write_fp8_e4m3": {
+  "class": "arch",
+  "compiler": "error: \"kv_cache_write_fp8_e4m3 requires --offload-arch=gfx1201 (OCP E4M3FN cvt)\"",
+  "module": "kernel.hipfire.kv_cache",
+  "reason": "the source refuses any arch but gfx1201 (#error)",
+  "toolchain": "rocm-7.2.4"
+ },
+ "kv_cache_write_fp8_e4m3_batched": {
+  "class": "arch",
+  "compiler": "error: \"kv_cache_write_fp8_e4m3_batched requires --offload-arch=gfx1201 (OCP E4M3FN cvt)\"",
+  "module": "kernel.hipfire.kv_cache",
+  "reason": "the source refuses any arch but gfx1201 (#error)",
+  "toolchain": "rocm-7.2.4"
+ },
+ "kv_cache_write_fp8_e4m3_vmm": {
+  "class": "arch",
+  "compiler": "error: \"kv_cache_write_fp8_e4m3_batched_vmm requires --offload-arch=gfx1201 (OCP E4M3FN cvt)\"",
+  "module": "kernel.hipfire.kv_cache",
+  "reason": "the source refuses any arch but gfx1201 (#error)",
+  "toolchain": "rocm-7.2.4"
+ },
+ "kv_cache_write_fp8_lanes": {
+  "class": "arch",
+  "compiler": "error: \"kv_cache_write_fp8_e4m3_lanes requires --offload-arch=gfx1201 (OCP E4M3FN cvt)\"",
+  "module": "kernel.hipfire.kv_cache",
+  "reason": "the source refuses any arch but gfx1201 (#error)",
+  "toolchain": "rocm-7.2.4"
+ },
+ "kv_cache_write_fwht3_hd512": {
+  "class": "origin-broken",
+  "compiler": "error: use of undeclared identifier 'fwht_shfl_forward_512'",
+  "module": "kernel.hipfire.kv_cache",
+  "reason": "the origin unit calls fwht_shfl_forward_512, which no file in the tree at efa8fbb defines (turbo_common.h has the 128 and 256 forms); its only launcher is gemma4_ext.rs, a left-out family",
+  "toolchain": "rocm-7.2.4"
+ },
+ "kv_cache_write_fwht3_hd512_batched": {
+  "class": "origin-broken",
+  "compiler": "error: use of undeclared identifier 'fwht_shfl_forward_512'",
+  "module": "kernel.hipfire.kv_cache",
+  "reason": "the origin unit calls fwht_shfl_forward_512, which no file in the tree at efa8fbb defines (turbo_common.h has the 128 and 256 forms); its only launcher is gemma4_ext.rs, a left-out family",
+  "toolchain": "rocm-7.2.4"
+ },
+ "qwen4_hc_down_fused": {
+  "class": "arch",
+  "compiler": "error: \"qwen4_hc_down_fused.hip: gfx1201 only\"",
+  "module": "kernel.hipfire.hc",
+  "reason": "the source refuses any arch but gfx1201 (#error)",
+  "toolchain": "rocm-7.2.4"
+ }
+}

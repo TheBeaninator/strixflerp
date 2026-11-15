@@ -1,0 +1,74 @@
+id        = "runtime.strixfold.lanes"
+kind      = "runtime"
+summary   = "TensorFold 1.0 lane core: the round loop over concurrent streams, the backend vtable it drives (forward, draft, verify windows, keep / drop), draft depth and acceptance, events"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "zig/src/core/draft_depth.zig",
+  "zig/src/core/engine_api.zig",
+  "zig/src/core/lane_host.zig",
+  "zig/src/core/lane_host_reuse_test.zig",
+  "zig/src/core/lane_host_test.zig",
+  "zig/src/core/lanes/accept.zig",
+  "zig/src/core/lanes/allocate.zig",
+  "zig/src/core/lanes/backend.zig",
+  "zig/src/core/lanes/config.zig",
+  "zig/src/core/lanes/depth.zig",
+  "zig/src/core/lanes/engine.zig",
+  "zig/src/core/lanes/engine_test.zig",
+  "zig/src/core/lanes/events.zig",
+  "zig/src/core/lanes/fake.zig",
+  "zig/src/core/lanes/fill.zig",
+  "zig/src/core/lanes/gpu_full.zig",
+  "zig/src/core/lanes/gpu_full_test.zig",
+  "zig/src/core/lanes/gpu_rule.zig",
+  "zig/src/core/lanes/lanes.zig",
+  "zig/src/core/lanes/plan_lanes.zig",
+  "zig/src/core/lanes/proposer.zig",
+  "zig/src/core/lanes/shape.zig",
+  "zig/src/core/lanes/stream.zig",
+  "zig/src/core/lanes/table.zig",
+  "zig/src/core/lanes/trail.zig",
+  "zig/src/core/lanes/windows.zig",
+  "zig/src/core/stagger.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:core"
+
+[[provides]]
+interface = "executor.lane-backend/-/-"
+api       = "core/lanes/backend.zig Backend vtable (Feed, Window, ...)"
+numeric   = "n/a"
+regime    = "N streams a round; drawn tokens stay on the GPU behind handles"
+
+[[provides]]
+interface = "speculation.window-verify-keyed/-/-"
+api       = "core/lanes/accept.zig, depth.zig, proposer.zig, windows.zig"
+numeric   = "output-invariant: a verify row draws as the serial run at its position (keyed sampler), so drafts never change the emitted tokens"
+regime    = "draft depth chosen from a cost profile"
+
+[[requires]]
+interface = "sample.next-token/-/f64"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

@@ -1,0 +1,39 @@
+id        = "kernel.gufo.snapshot_copy"
+kind      = "kernel"
+summary   = "Device copy kernel for slot snapshots (KV and recurrent state transfer between live buffers and snapshot storage)"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = ["src/core/hip/snapshot_copy.hip"]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/core/hip/snapshot_copy.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = ["-x", "hip", "-std=gnu++20", "-O2", "-UNDEBUG", "-DENGINE_ENABLE_HIP=1", "-c"]
+
+[[provides]]
+interface = "cache.snapshot-copy/-/-"
+api       = "gufo::hip snapshot copy launchers (src/core/hip/snapshot_copy.hpp)"
+numeric   = "exact byte copy"
+regime    = "snapshot save / restore"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.snapshot_copy.json"

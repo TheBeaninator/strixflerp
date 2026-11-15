@@ -1,0 +1,48 @@
+id      = "kernel.strixite.gdn"
+kind    = "kernel"
+summary = "Gated DeltaNet mixer: causal depthwise conv front end and the delta-rule recurrence"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/gdn.hip", "kernels/gdn.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/gdn.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "mixer.gdn/-/bf16"
+api       = "strix::kernels::gdn_front, strix::kernels::delta_rule"
+numeric   = "conv, silu and gates in fp32 on activation-dtype inputs; qkv_out rounded once; beta and g always fp32"
+regime    = "conv width 4 with a 3-row carried state; decode (T = 1) and chunked prompts give the same result"
+
+[[provides]]
+interface = "mixer.gdn/-/f32"
+api       = "strix::kernels::gdn_front, strix::kernels::delta_rule"
+numeric   = "conv, silu and gates in fp32 on activation-dtype inputs; qkv_out rounded once; beta and g always fp32"
+regime    = "conv width 4 with a 3-row carried state; decode (T = 1) and chunked prompts give the same result"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[[requires]]
+module = "kernel.strixite.wmma"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,186 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_residual_add",
+   "modules": [
+    "runtime.strixite.check",
+    "kernel.strixite.hip_common",
+    "kernel.strixite.device_info",
+    "kernel.strixite.norm",
+    "kernel.strixite.residual",
+    "kernel.gufo.core_headers",
+    "kernel.gufo.qwen_ops",
+    "runtime.gufo.sampling",
+    "runtime.gufo.platform",
+    "format.gufo.gguf_kquant",
+    "kernel.gufo.qwen_norm_rope",
+    "kernel.flerp.adapter_rt",
+    "kernel.flerp.residual_add_gufo",
+    "tool.flerp.gate_residual_add"
+   ]
+  }
+ },
+ "bindings": {
+  "format.device-view/gguf-kquant/-": "format.gufo.gguf_kquant",
+  "residual.add/-/f32": "kernel.flerp.residual_add_gufo"
+ },
+ "code_objects": [],
+ "contract_changes": [],
+ "foreign": {
+  "kernel.gufo.core_headers": {
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  },
+  "kernel.gufo.qwen_norm_rope": {
+   "commands": [
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/norm.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_norm.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/rope.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_rope.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/residual.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_residual.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/embed.hip -o @OUT@",
+    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_norm_rope/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_norm_rope/src/src/families/qwen/kernels/prefill_embed.hip -o @OUT@"
+   ],
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  },
+  "kernel.gufo.qwen_ops": {
+   "origin": "gufo",
+   "product": "host-object",
+   "toolchain": "therock-10.1"
+  }
+ },
+ "include_only": [],
+ "modules": {
+  "format.gufo.gguf_kquant": {
+   "dir": "catalog/gufo/format/gguf_kquant",
+   "files": 7,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.flerp.adapter_rt": {
+   "dir": "catalog/flerp/kernel/adapter_rt",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.flerp.residual_add_gufo": {
+   "dir": "catalog/flerp/kernel/residual_add_gufo",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/flerp_adapters/residual_add_gufo.cpp"
+   ],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.core_headers": {
+   "dir": "catalog/gufo/kernel/core_headers",
+   "files": 27,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_norm_rope": {
+   "dir": "catalog/gufo/kernel/qwen_norm_rope",
+   "files": 8,
+   "linked": true,
+   "sources": [
+    "src/src/families/qwen/kernels/norm.hip",
+    "src/src/families/qwen/kernels/prefill_norm.hip",
+    "src/src/families/qwen/kernels/rope.hip",
+    "src/src/families/qwen/kernels/prefill_rope.hip",
+    "src/src/families/qwen/kernels/residual.hip",
+    "src/src/families/qwen/kernels/prefill_residual.hip",
+    "src/src/families/qwen/kernels/embed.hip",
+    "src/src/families/qwen/kernels/prefill_embed.hip"
+   ],
+   "spdx": "MIT"
+  },
+  "kernel.gufo.qwen_ops": {
+   "dir": "catalog/gufo/kernel/qwen_ops",
+   "files": 22,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.strixite.device_info": {
+   "dir": "catalog/strixite/kernel/device_info",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.hip_common": {
+   "dir": "catalog/strixite/kernel/hip_common",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.norm": {
+   "dir": "catalog/strixite/kernel/norm",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/norm.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.residual": {
+   "dir": "catalog/strixite/kernel/residual",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/residual.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "runtime.gufo.platform": {
+   "dir": "catalog/gufo/runtime/platform",
+   "files": 45,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "runtime.gufo.sampling": {
+   "dir": "catalog/gufo/runtime/sampling",
+   "files": 11,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "runtime.strixite.check": {
+   "dir": "catalog/strixite/runtime/check",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "tool.flerp.gate_residual_add": {
+   "dir": "gate/interface/drivers/residual_add",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-residual-add.gufo",
+ "renames": {
+  "kernel.strixite.residual": {
+   "adapter": "kernel.flerp.residual_add_gufo",
+   "suffix": "_flerp_origin",
+   "symbols": [
+    "residual_add"
+   ]
+  }
+ },
+ "toolchain": "therock-10.1"
+}

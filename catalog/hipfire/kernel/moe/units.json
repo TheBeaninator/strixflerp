@@ -1,0 +1,2461 @@
+{
+ "origin_registry": "crates/rdna-compute/src/kernels.rs (+ other rdna-compute/src/*.rs constants)",
+ "note": "a unit is the concatenation of its parts, compiled as one HIP source, as hipfire builds it; path parts are relative to catalog/hipfire",
+ "units": [
+  {
+   "name": "combine",
+   "const": "COMBINE_SRC",
+   "registry": "crates/rdna-compute/src/ffn_activation.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/ffn_moe_combine_policy.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "ep_gather_rows_by_owner",
+   "const": "EP_GATHER_ROWS_BY_OWNER_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/ep_gather_rows_by_owner.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "ep_gather_rows_by_slot_owner",
+   "const": "EP_GATHER_ROWS_BY_SLOT_OWNER_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/ep_gather_rows_by_slot_owner.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_hfq4g128_moe_down_grouped_wmma",
+   "const": "GEMM_HFQ4G128_MOE_DOWN_GROUPED_WMMA_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_hfq4g128_moe_down_grouped_wmma.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_hfq4g256_moe_grouped_mmq_gfx1151",
+   "const": "GEMM_HFQ4G256_MOE_GROUPED_MMQ_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_hfq4g256_moe_grouped_mmq.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_hfq4g256_moe_grouped_mmq_k4_gfx1151",
+   "const": "GEMM_HFQ4G256_MOE_GROUPED_MMQ_K4_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_hfq4g256_moe_grouped_mmq_k4.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_hfq4g256_moe_grouped_mmq_k8_gfx1151",
+   "const": "GEMM_HFQ4G256_MOE_GROUPED_MMQ_K8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_hfq4g256_moe_grouped_mmq_k8.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_hfq4g256_moe_grouped_wmma_k2",
+   "const": "GEMM_HFQ4G256_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_hfq4g256_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_hfq6g256_moe_grouped_mmq_gfx1151",
+   "const": "GEMM_HFQ6G256_MOE_GROUPED_MMQ_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_hfq6g256_moe_grouped_mmq.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_hfq6g256_moe_grouped_wmma_gfx1151",
+   "const": "GEMM_HFQ6G256_MOE_GROUPED_WMMA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_hfq6g256_moe_grouped_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_hfq6g256_moe_grouped_wmma_k2",
+   "const": "GEMM_HFQ6G256_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_hfq6g256_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8g128_moe_grouped_wmma_gfx1151",
+   "const": "GEMM_MFP4G32_E8G128_MOE_GROUPED_WMMA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mfp4g32_e8g128_moe_grouped_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mfp4g32_e8_moe_grouped_wmma_gfx1151",
+   "const": "GEMM_MFP4G32_E8_MOE_GROUPED_WMMA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mfp4g32_e8_moe_grouped_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mixed_moe_grouped_wmma_4w_k2",
+   "const": "GEMM_MIXED_MOE_GROUPED_WMMA_4W_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mixed_moe_grouped_wmma_4w_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mixed_moe_grouped_wmma_k2",
+   "const": "GEMM_MIXED_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mixed_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_mmq_gfx1151",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_MMQ_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_mmq.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_mmq_perm_gfx1151",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_MMQ_PERM_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define MQ2_GROUPED_MMQ_PERM_DECODE 1\n"
+    },
+    {
+     "text": "#define MQ2_GROUPED_MMQ_KERNEL_NAME gemm_mq2g256_lloyd_moe_grouped_mmq_perm_gfx1151\n"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_mmq.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_mmq_prequant_perm_gfx1151",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_MMQ_PREQUANT_PERM_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define MQ2_GROUPED_MMQ_PERM_DECODE 1\n"
+    },
+    {
+     "text": "#define MQ2_GROUPED_MMQ_PREQUANT_CODEBOOK 1\n"
+    },
+    {
+     "text": "#define MQ2_GROUPED_MMQ_KERNEL_NAME gemm_mq2g256_lloyd_moe_grouped_mmq_prequant_perm_gfx1151\n"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_mmq.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_cnd",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_WMMA_4W_K2_CND_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_cnd.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload_nosync",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_WMMA_4W_K2_MMQLOAD_NOSYNC_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload_nosync.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_WMMA_4W_K2_MMQLOAD_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_mmqload.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_n32",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_WMMA_4W_K2_N32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2_n32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_WMMA_4W_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_4w_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_wmma_8w_k2",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_WMMA_8W_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_8w_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq2g256_lloyd_moe_grouped_wmma_k2",
+   "const": "GEMM_MQ2G256_LLOYD_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq2g256_lloyd_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq3g256_lloyd_moe_grouped_mmq_gfx1151",
+   "const": "GEMM_MQ3G256_LLOYD_MOE_GROUPED_MMQ_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq3g256_lloyd_moe_grouped_mmq.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq3g256_lloyd_moe_grouped_wmma_k2",
+   "const": "GEMM_MQ3G256_LLOYD_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq3g256_lloyd_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq4g128v2_moe_grouped_top10_multirow",
+   "const": "GEMM_MQ4G128V2_MOE_GROUPED_TOP10_MULTIROW_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g128v2_moe_grouped_top10_multirow.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq4g128v2_moe_grouped_top10_o8_r16_gfx1151",
+   "const": "GEMM_MQ4G128V2_MOE_GROUPED_TOP10_O8_R16_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g128v2_moe_grouped_top10_o8_r16.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq4g128v2_moe_grouped_top10_o8_r16_xs_gfx1151",
+   "const": "GEMM_MQ4G128V2_MOE_GROUPED_TOP10_O8_R16_XS_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g128v2_moe_grouped_top10_o8_r16_xs.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq4g128v2_moe_grouped_wmma_gfx1151",
+   "const": "GEMM_MQ4G128V2_MOE_GROUPED_WMMA_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g128v2_moe_grouped_wmma.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq4g256v2_moe_grouped_top10_o2_r8_gfx1151",
+   "const": "GEMM_MQ4G256V2_MOE_GROUPED_TOP10_O2_R8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g256v2_moe_grouped_top10_o2_r8.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq4g256v2_moe_grouped_top10_o4_r8_pipe_gfx1151",
+   "const": "GEMM_MQ4G256V2_MOE_GROUPED_TOP10_O4_R8_PIPE_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g256v2_moe_grouped_top10_o4_r8_pipe.gfx1151.hip"
+    }
+   ],
+   "flags": [
+    "-mllvm",
+    "-amdgpu-sched-strategy=max-ilp"
+   ]
+  },
+  {
+   "name": "gemm_mq4g256v2_moe_grouped_top10_o4_r8_x4_gfx1151",
+   "const": "GEMM_MQ4G256V2_MOE_GROUPED_TOP10_O4_R8_X4_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g256v2_moe_grouped_top10_o4_r8_x4.gfx1151.hip"
+    }
+   ],
+   "flags": [
+    "-mllvm",
+    "-amdgpu-sched-strategy=max-ilp"
+   ]
+  },
+  {
+   "name": "gemm_mq4g256v2_moe_grouped_top10_simt",
+   "const": "GEMM_MQ4G256V2_MOE_GROUPED_TOP10_SIMT_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g256v2_moe_grouped_top10_simt.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq4g256v2_moe_grouped_wmma_k2",
+   "const": "GEMM_MQ4G256V2_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g256v2_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_mq6g256v2_moe_grouped_wmma_k2",
+   "const": "GEMM_MQ6G256V2_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq6g256v2_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_paro_q4g128_moe_grouped_mmq_gfx1151",
+   "const": "GEMM_PARO_Q4G128_MOE_GROUPED_MMQ_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_paro_q4g128_moe_grouped_mmq.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_paro_q4g128_moe_grouped_mmq_k8_gfx1151",
+   "const": "GEMM_PARO_Q4G128_MOE_GROUPED_MMQ_K8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_paro_q4g128_moe_grouped_mmq_k8.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_paro_q4g128_moe_grouped_wmma_k2",
+   "const": "GEMM_PARO_Q4G128_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_paro_q4g128_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemm_q8_0_moe_grouped_top10",
+   "const": "GEMM_Q8_0_MOE_GROUPED_TOP10_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_q8_0_moe_grouped_top10.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g128_moe_down_grouped",
+   "const": "GEMV_HFQ4G128_MOE_DOWN_GROUPED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g128_moe_down_grouped.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g128_moe_down_residual_scaled_k8_indexed",
+   "const": "GEMV_HFQ4G128_MOE_DOWN_RESIDUAL_SCALED_K8_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g128_moe_down_residual_scaled_k8_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_indexed_batched",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_indexed_batched_wave64",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_INDEXED_BATCHED_WAVE64_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_indexed_batched_wave64.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_indexed",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_indexed_wave64",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_INDEXED_WAVE64_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_indexed_wave64.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_any_k",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_ANY_K_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_MOE_DOWN_ANY_K 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_DOWN_KERNEL gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_any_k\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_DOWN_KERNEL gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_buffer_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_hybrid_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_HYBRID_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX1151_MOE_DOWN_HYBRID_BUFFER 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_DOWN_KERNEL gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_hybrid_buffer_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row1_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_ROW1_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row1_buffer.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_ROW2_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_buffer.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_clustered_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_ROW2_CLUSTERED_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_DOWN_ROW2_CLUSTERED 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_DOWN_ROW2_KERNEL gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_clustered_gfx1151\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row2_buffer.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row8_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_ROW8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded_row8.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_batched_expanded",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_fused_acc",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_FUSED_ACC_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_fused_acc.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down_k8_indexed_last_combine",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_K8_INDEXED_LAST_COMBINE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_MOE_DOWN_LAST_COMBINE 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_DOWN_KERNEL gemv_hfq4g256_moe_down_k8_indexed_last_combine\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_down",
+   "const": "GEMV_HFQ4G256_MOE_DOWN_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_down.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_indexed_k2048_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_INDEXED_K2048_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_MOE_PROJECTION_KERNEL gemv_hfq4g256_moe_gate_k8_indexed_k2048_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_PROJECTION 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_projection_indexed_gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_batched",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_batched_wave64",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_BATCHED_WAVE64_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed_batched_wave64.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_all_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_ALL_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_X_BUFFER 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_all_buffer_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_buffer_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_hybrid_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_HYBRID_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX1151_MOE_GATE_UP_HYBRID_BUFFER 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_hybrid_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_low_vgpr_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_LOW_VGPR_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_LOW_VGPR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_low_vgpr_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_all_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_PAIR_ALL_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_PAIR_VGPR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_X_BUFFER 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_pair_all_buffer_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_PAIR_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_PAIR_VGPR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_pair_buffer_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_pair_vgpr_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_PAIR_VGPR_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_PAIR_VGPR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_pair_vgpr_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2048_route_all_buffer_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2048_ROUTE_ALL_BUFFER_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_K2048 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_X_BUFFER 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_RDNA3_MOE_GATE_UP_ROUTE_BUFFER 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2048_route_all_buffer_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_k2816",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_K2816_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_FIXED_GROUPS 11\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_k2816\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_rowtile",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_ROWTILE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed_rowtile.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#if defined(__gfx1151__)\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_MIN_BLOCKS 12\n"
+    },
+    {
+     "text": "#endif\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_wave64_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_WAVE64_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "// HIPFIRE_COMPILER_FLAGS: -mwavefrontsize64\n"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed_wave64.hip"
+    }
+   ],
+   "flags": [
+    "-mwavefrontsize64"
+   ]
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_wave64",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_WAVE64_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed_wave64.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_indexed_wg2",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_INDEXED_WG2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_WG_WAVES 2\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_wg2\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_paired_waves_k2048_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_PAIRED_WAVES_K2048_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_MOE_PROJECTION_KERNEL gemv_hfq4g256_moe_gate_up_k8_indexed_paired_waves_k2048_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_PAIRED_WAVES 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_projection_indexed_gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up_persistent_rank8_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_PERSISTENT_RANK8_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_persistent_rank8.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_gate_up",
+   "const": "GEMV_HFQ4G256_MOE_GATE_UP_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_ninepath_d3",
+   "const": "GEMV_HFQ4G256_MOE_NINEPATH_D3_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_ninepath_d3.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_ninepath_d4",
+   "const": "GEMV_HFQ4G256_MOE_NINEPATH_D4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_ninepath_d4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq4g256_moe_up_indexed_k2048_gfx1151",
+   "const": "GEMV_HFQ4G256_MOE_UP_INDEXED_K2048_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_MOE_PROJECTION_KERNEL gemv_hfq4g256_moe_up_k8_indexed_k2048_gfx1151\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_PROJECTION 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_BUFFER_LOADS_OPT_IN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_WEIGHT_CPOL_AUX 0\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_projection_indexed_gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq5g256_moe_down_k8_indexed_batched_expanded",
+   "const": "GEMV_HFQ5G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq5g256_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq5g256_moe_gate_up_indexed_batched",
+   "const": "GEMV_HFQ5G256_MOE_GATE_UP_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq5g256_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq5g256_moe_gate_up_indexed",
+   "const": "GEMV_HFQ5G256_MOE_GATE_UP_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq5g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq6g256_moe_down_k8_indexed_batched_expanded",
+   "const": "GEMV_HFQ6G256_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq6g256_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq6g256_moe_gate_up_indexed_batched",
+   "const": "GEMV_HFQ6G256_MOE_GATE_UP_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq6g256_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_hfq6g256_moe_gate_up_indexed",
+   "const": "GEMV_HFQ6G256_MOE_GATE_UP_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq6g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mfp4g32_e8g128_moe_down_k8_indexed_batched_expanded",
+   "const": "GEMV_MFP4G32_E8G128_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mfp4g32_e8g128_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mfp4g32_e8g128_moe_gate_up_k8_indexed_batched",
+   "const": "GEMV_MFP4G32_E8G128_MOE_GATE_UP_K8_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mfp4g32_e8g128_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mfp4g32_e8_moe_down_k8_indexed_batched_expanded_gfx1151",
+   "const": "GEMV_MFP4G32_E8_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mfp4g32_e8_moe_down_k8_indexed_batched_expanded.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mfp4g32_e8_moe_gate_up_k8_indexed_batched_gfx1151",
+   "const": "GEMV_MFP4G32_E8_MOE_GATE_UP_K8_INDEXED_BATCHED_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mfp4g32_e8_moe_gate_up_k8_indexed_batched.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mfp4g32_e8_soa_moe_gate_up_k8_indexed_batched",
+   "const": "GEMV_MFP4G32_E8_SOA_MOE_GATE_UP_K8_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mfp4g32_e8_soa_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mixed_moe_down_k8_indexed_batched_expanded",
+   "const": "GEMV_MIXED_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mixed_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mixed_moe_gate_up_indexed_batched",
+   "const": "GEMV_MIXED_MOE_GATE_UP_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mixed_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256gl_moe_down_indexed",
+   "const": "GEMV_MQ2G256GL_MOE_DOWN_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256gl_moe_down_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256gl_moe_gate_up_indexed",
+   "const": "GEMV_MQ2G256GL_MOE_GATE_UP_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256gl_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256_lloyd_moe_down_expanded_k4",
+   "const": "GEMV_MQ2G256_LLOYD_MOE_DOWN_EXPANDED_K4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256_lloyd_moe_down_expanded_k4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256_lloyd_moe_down_indexed_batched_k4",
+   "const": "GEMV_MQ2G256_LLOYD_MOE_DOWN_INDEXED_BATCHED_K4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256_lloyd_moe_down_indexed_batched_k4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256_lloyd_moe_down_indexed_batched_k8all",
+   "const": "GEMV_MQ2G256_LLOYD_MOE_DOWN_INDEXED_BATCHED_K8ALL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256_lloyd_moe_down_indexed_batched_k8all.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256_lloyd_moe_down_indexed_r4",
+   "const": "GEMV_MQ2G256_LLOYD_MOE_DOWN_INDEXED_R4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256_lloyd_moe_down_indexed_r4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256_lloyd_moe_down_indexed",
+   "const": "GEMV_MQ2G256_LLOYD_MOE_DOWN_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256_lloyd_moe_down_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4096_lds",
+   "const": "GEMV_MQ2G256_LLOYD_MOE_GATE_UP_INDEXED_BATCHED_K4096_LDS_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4096_lds.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4",
+   "const": "GEMV_MQ2G256_LLOYD_MOE_GATE_UP_INDEXED_BATCHED_K4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256_lloyd_moe_gate_up_indexed_batched_k4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq3g256gl_moe_down_indexed",
+   "const": "GEMV_MQ3G256GL_MOE_DOWN_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq3g256gl_moe_down_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq3g256gl_moe_gate_up_indexed",
+   "const": "GEMV_MQ3G256GL_MOE_GATE_UP_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq3g256gl_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq3g256_lloyd_moe_down_indexed_batched_k4",
+   "const": "GEMV_MQ3G256_LLOYD_MOE_DOWN_INDEXED_BATCHED_K4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq3g256_lloyd_moe_down_indexed_batched_k4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq3g256_lloyd_moe_down_indexed_r4",
+   "const": "GEMV_MQ3G256_LLOYD_MOE_DOWN_INDEXED_R4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq3g256_lloyd_moe_down_indexed_r4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq3g256_lloyd_moe_down_indexed",
+   "const": "GEMV_MQ3G256_LLOYD_MOE_DOWN_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq3g256_lloyd_moe_down_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq3g256_lloyd_moe_gate_up_indexed",
+   "const": "GEMV_MQ3G256_LLOYD_MOE_GATE_UP_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq3g256_lloyd_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq3g256_lloyd_moe_ninepath_d4",
+   "const": "GEMV_MQ3G256_LLOYD_MOE_NINEPATH_D4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq3g256_lloyd_moe_ninepath_d4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g128v2_moe_down_top10_indexed_batched_expanded",
+   "const": "GEMV_MQ4G128V2_MOE_DOWN_TOP10_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq4g128v2_moe_down_top10_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g128v2_moe_down_top10_k640",
+   "const": "GEMV_MQ4G128V2_MOE_DOWN_TOP10_K640_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define QT53_DOWN_ENTRY gemv_mq4g128v2_moe_down_top10_k640\n"
+    },
+    {
+     "text": "#define QT53_DOWN_K640 1\n"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq4g128v2_moe_down_top10_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g128v2_moe_ninepath_d4",
+   "const": "GEMV_MQ4G128V2_MOE_NINEPATH_D4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq4g128v2_moe_ninepath_d4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g256v2_moe_down_k8_indexed_batched_expanded",
+   "const": "GEMV_MQ4G256V2_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq4g256v2_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g256v2_moe_gate_up_k8_indexed_batched",
+   "const": "GEMV_MQ4G256V2_MOE_GATE_UP_K8_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g256v2_moe_gate_up_k8_indexed",
+   "const": "GEMV_MQ4G256V2_MOE_GATE_UP_K8_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq4g256v2_moe_gate_up_k8_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g256v2_moe_gate_up_top10_indexed_batched",
+   "const": "GEMV_MQ4G256V2_MOE_GATE_UP_TOP10_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define gemv_mq4g256v2_moe_gate_up_k8_indexed_batched gemv_mq4g256v2_moe_gate_up_top10_indexed_batched\n"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g256v2_moe_ninepath_d4",
+   "const": "GEMV_MQ4G256V2_MOE_NINEPATH_D4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq4g256v2_moe_ninepath_d4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq4g256_moe_gate_up_indexed_k2816",
+   "const": "GEMV_MQ4G256_MOE_GATE_UP_INDEXED_K2816_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_FIXED_GROUPS 11\n"
+    },
+    {
+     "text": "#define HIPFIRE_MOE_GATE_UP_KERNEL gemv_mq4g256_moe_gate_up_k8_indexed_k2816\n"
+    },
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq6g256v2_moe_down_k8_indexed_batched_expanded",
+   "const": "GEMV_MQ6G256V2_MOE_DOWN_K8_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_GFX12_WEIGHT_CACHE_ELIGIBLE 1\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/gfx12_weight_cache_policy.inc"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq6g256v2_moe_down_k8_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq6g256v2_moe_gate_up_k8_indexed_batched",
+   "const": "GEMV_MQ6G256V2_MOE_GATE_UP_K8_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq6g256v2_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq6g256v2_moe_gate_up_k8_indexed",
+   "const": "GEMV_MQ6G256V2_MOE_GATE_UP_K8_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq6g256v2_moe_gate_up_k8_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_mq6g256v2_moe_ninepath_d4",
+   "const": "GEMV_MQ6G256V2_MOE_NINEPATH_D4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq6g256v2_moe_ninepath_d4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_paro_q4g128_moe_down_k8_indexed_batched",
+   "const": "GEMV_PARO_Q4G128_MOE_DOWN_K8_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_paro_q4g128_moe_down_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_paro_q4g128_moe_gate_up_indexed",
+   "const": "GEMV_PARO_Q4G128_MOE_GATE_UP_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_paro_q4g128_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_paro_q4g128_moe_gate_up_k8_indexed_batched",
+   "const": "GEMV_PARO_Q4G128_MOE_GATE_UP_K8_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_paro_q4g128_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q8_0_moe_down_residual_scaled_k8_indexed",
+   "const": "GEMV_Q8_0_MOE_DOWN_RESIDUAL_SCALED_K8_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_q8_0_moe_down_residual_scaled_k8_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q8_0_moe_down_top10_indexed_batched_expanded",
+   "const": "GEMV_Q8_0_MOE_DOWN_TOP10_INDEXED_BATCHED_EXPANDED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_q8_0_moe_down_top10_indexed_batched_expanded.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gemv_q8_0_moe_gate_up_k8_indexed",
+   "const": "GEMV_Q8_0_MOE_GATE_UP_K8_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_q8_0_moe_gate_up_k8_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "grouped_kernel",
+   "const": "GROUPED_KERNEL_SRC",
+   "registry": "crates/rdna-compute/src/grouped_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/grouped_ops.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "grouped",
+   "const": "GROUPED_SRC",
+   "registry": "crates/rdna-compute/src/ffn_activation.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/ffn_grouped_activation_pad.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hash_router_normalize_batched",
+   "const": "HASH_ROUTER_NORMALIZE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/hash_router_normalize_f32_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hash_router_normalize_buf",
+   "const": "HASH_ROUTER_NORMALIZE_BUF_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/hash_router_normalize_f32_buf.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "hash_router_normalize",
+   "const": "HASH_ROUTER_NORMALIZE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/hash_router_normalize_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_down_combine_grouped_k8",
+   "const": "MOE_DOWN_COMBINE_GROUPED_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_down_combine_grouped_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_down_combine_grouped_top10",
+   "const": "MOE_DOWN_COMBINE_GROUPED_TOP10_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_down_combine_grouped_top10.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_down_combine_k8_batched",
+   "const": "MOE_DOWN_COMBINE_K8_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_down_combine_k8_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_down_combine_k8_batched_vec4",
+   "const": "MOE_DOWN_COMBINE_K8_BATCHED_VEC4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_down_combine_k8_batched_vec4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_down_combine_top10_batched",
+   "const": "MOE_DOWN_COMBINE_TOP10_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_down_combine_top10_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_down_unscatter_k8",
+   "const": "MOE_DOWN_UNSCATTER_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_down_unscatter_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_gate_up_unscatter_k8",
+   "const": "MOE_GATE_UP_UNSCATTER_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_gate_up_unscatter_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_gate_up_unscatter_silu_top10",
+   "const": "MOE_GATE_UP_UNSCATTER_SILU_TOP10_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_gate_up_unscatter_silu_top10.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_gate_up_unscatter_top10",
+   "const": "MOE_GATE_UP_UNSCATTER_TOP10_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define moe_gate_up_unscatter_k8 moe_gate_up_unscatter_top10\n"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/moe_gate_up_unscatter_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_router_softmax_top10_f32_fast",
+   "const": "MOE_ROUTER_SOFTMAX_TOP10_F32_FAST_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_router_softmax_top10_f32_fast.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_router_softmax_top10_f32",
+   "const": "MOE_ROUTER_SOFTMAX_TOP10_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_router_softmax_top10_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_router_softmax_top10_masked_f32",
+   "const": "MOE_ROUTER_SOFTMAX_TOP10_MASKED_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_router_softmax_top10_masked_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_router_softmax_topk_k8_wave64_exact_shared_silu_mq_rotate",
+   "const": "MOE_ROUTER_SOFTMAX_TOPK_K8_WAVE64_EXACT_SHARED_SILU_MQ_ROTATE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_ROUTER_SHARED_SILU_MQ_ROTATE 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_ROUTER_EXACT_KERNEL moe_router_softmax_topk_k8_wave64_exact_shared_silu_mq_rotate\n"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/moe_router_softmax_topk_k8_wave64_exact.hip"
+    }
+   ],
+   "flags": [
+    "-mwavefrontsize64"
+   ]
+  },
+  {
+   "name": "moe_router_softmax_topk_k8_wave64_exact",
+   "const": "MOE_ROUTER_SOFTMAX_TOPK_K8_WAVE64_EXACT_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_router_softmax_topk_k8_wave64_exact.hip"
+    }
+   ],
+   "flags": [
+    "-mwavefrontsize64"
+   ]
+  },
+  {
+   "name": "moe_router_softmax_topk_k8_wave64",
+   "const": "MOE_ROUTER_SOFTMAX_TOPK_K8_WAVE64_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_router_softmax_topk_k8_wave64.hip"
+    }
+   ],
+   "flags": [
+    "-mwavefrontsize64"
+   ]
+  },
+  {
+   "name": "moe_scatter_fused_k8",
+   "const": "MOE_SCATTER_FUSED_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_scatter_fused_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_scatter_fused_top10",
+   "const": "MOE_SCATTER_FUSED_TOP10_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define moe_scatter_fused_k8 moe_scatter_fused_top10\n"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_moe_scatter_fused_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_scatter_histogram_k8",
+   "const": "MOE_SCATTER_HISTOGRAM_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_scatter_histogram_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_scatter_offsets_k8",
+   "const": "MOE_SCATTER_OFFSETS_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_scatter_offsets_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_scatter_permute_k8",
+   "const": "MOE_SCATTER_PERMUTE_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_scatter_permute_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_scatter_stable_k8",
+   "const": "MOE_SCATTER_STABLE_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_scatter_stable_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_softmax_topk_k8_batched",
+   "const": "MOE_SOFTMAX_TOPK_K8_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_softmax_topk_k8_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_softmax_topk_k8",
+   "const": "MOE_SOFTMAX_TOPK_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_softmax_topk_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_topk_renorm_k8_batched",
+   "const": "MOE_TOPK_RENORM_K8_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_topk_renorm_k8_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_topk_renorm_k8",
+   "const": "MOE_TOPK_RENORM_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_topk_renorm_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_topk_renorm_top10_batched",
+   "const": "MOE_TOPK_RENORM_TOP10_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_topk_renorm_top10_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "moe_unscatter_silu_clamp_k8",
+   "const": "MOE_UNSCATTER_SILU_CLAMP_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/moe_unscatter_silu_clamp_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_gemm_mq4g256v2_moe_grouped_wmma_k2",
+   "const": "QWEN4_GEMM_MQ4G256V2_MOE_GROUPED_WMMA_K2_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_gemm_mq4g256v2_moe_grouped_wmma_k2.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_gemv_mq4g256v2_moe_gate_up_k8_indexed_batched",
+   "const": "QWEN4_GEMV_MQ4G256V2_MOE_GATE_UP_K8_INDEXED_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_gemv_mq4g256v2_moe_gate_up_k8_indexed_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_moe_iu4_sym_gfx1151",
+   "const": "QWEN4_MOE_IU4_SYM_GFX1151_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_moe_iu4_sym.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_moe_rotate128_i4",
+   "const": "QWEN4_MOE_ROTATE128_I4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_moe_rotate128_i4.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_moe_scatter_fused_k8",
+   "const": "QWEN4_MOE_SCATTER_FUSED_K8_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_moe_scatter_fused_k8.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_moe_scatter_stable_top10",
+   "const": "QWEN4_MOE_SCATTER_STABLE_TOP10_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_moe_scatter_stable_top10.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_slab_tile_mask",
+   "const": "QWEN4_SLAB_TILE_MASK_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_slab_tile_mask.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_slab_union_plan",
+   "const": "QWEN4_SLAB_UNION_PLAN_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/qwen4_slab_union_plan.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "router",
+   "const": "ROUTER_SRC",
+   "registry": "crates/rdna-compute/src/ffn_activation.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/ffn_router_renorm.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "situ",
+   "const": "SITU_SRC",
+   "registry": "crates/rdna-compute/src/ffn_activation.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/ffn_situ.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "v4f_moe_topk_bias_aware_batched",
+   "const": "V4F_MOE_TOPK_BIAS_AWARE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/deepseek4_moe_topk_bias_aware_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "v4f_moe_topk_bias_aware",
+   "const": "V4F_MOE_TOPK_BIAS_AWARE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/deepseek4_moe_topk_bias_aware.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_gemm_mq4g128v2_moe_grouped_top10_o16_r16_gfx1151",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g128v2_moe_grouped_top10_o16_r16.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_gemm_mq4g128v2_moe_grouped_top10_o8_r8_gfx1151",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemm_mq4g128v2_moe_grouped_top10_o8_r8.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_gemv_hfq4g256_moe_gate_up_k8_indexed",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_hfq4g256_moe_gate_up_k8_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_gemv_mfp4g32_e8_moe_down_residual_scaled_k8_indexed_batched_gfx1151",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mfp4g32_e8_moe_down_residual_scaled_k8_indexed_batched.gfx1151.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_gemv_mq2g256_lloyd_moe_gate_up_indexed",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256_lloyd_moe_gate_up_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_gemv_mq2g256gl_moe_gate_up_sym_indexed",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq2g256gl_moe_gate_up_sym_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "file_gemv_mq3g256_lloyd_moe_gate_up_indexed_batched_k4",
+   "const": null,
+   "registry": null,
+   "parts": [
+    {
+     "path": "kernel/moe/src/kernels/src/gemv_mq3g256_lloyd_moe_gate_up_indexed_batched_k4.hip"
+    }
+   ],
+   "flags": []
+  }
+ ]
+}

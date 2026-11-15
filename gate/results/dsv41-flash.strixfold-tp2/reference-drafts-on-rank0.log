@@ -1,0 +1,322 @@
+info: rank cache: 95.1 GiB of expert entries read whole in 68.1 s
+info: collectives: tcp_host over 1 data link(s) from port 29636, stripe >= 0 MiB, RTO floor 8000 us, progress deadline 15000 ms, GPU waits fail after 10 s (logged past 2 s), dma staging, gathers >= 8 MiB pipelined in 4 MiB chunks
+info: collectives: tcp_proxy with 8 slots of 4352 KiB (coherent slab 68 MiB), proxy thread on CPU 6; larger gathers through tcp_host
+info: dsv41: w-tri's HIP kernels in place of Triton: hip (TF_DS_AUX)
+info: config.json declares a vision tower; not opened (text capability)
+[tensorfold] warning: non-loopback server has no API key; requests are open
+[tensorfold] open-file limit raised: soft 1024 -> 1048576
+[tensorfold] HIP gfx1151 device 0 (AMD Radeon 8060S Graphics, memory shared with the host): model 102.76 GiB; 1 stream at once, 0.00 GiB each at a 131072-token window, of 3.4 GiB left after a 12.4 GiB reserve; prompts in 2048-row chunks
+[tensorfold] serving dsv41 at http://192.0.2.50:18080/v1 (sampling: greedy; drafts: on; context: 131054; loaded in 86.7s)
+[tensorfold] 192.0.2.50 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.50 "GET /health HTTP/1.1" 200 -
+info: lanes: step 0 rank 0 prompt pass: 16 tokens, slot 0, extent at 0, 2048 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 2, cable1 2, cable2 0, host 11
+{"prompt_logits": "request", "sha256": "b1cdb895d1bda1d5b7bc2bb343aed6731566a1931aec7bc3f7471a9dd13cded3", "rows": 16}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "POST /cache/export HTTP/1.1" 400 -
+info: prompt cache: 16 tokens, resumed at 0, kept 0; 0 states, 0 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 1, evicted 0, refused 0, failed 0)
+{"verify": 16, "rows": 6, "ids": { 671, 6102, 294, 8760, 344, 11111 }, "drawn": { 6102, 294, 8760, 344, 11111, 16 }}
+{"verify": 22, "rows": 6, "ids": { 16, 1, 10257, 294, 8760, 16 }, "drawn": { 1, 201, 1, 8760, 344, 1 }}
+[tensorfold] done chatcmpl-6988d778b9afb7b21413b621187e0b25 prompt=16 cached=0 thinking=False effort=none tokens=8 sha=6243895c315c finish=stop rounds=2 accepted=6/10
+[tensorfold] 192.0.2.50 "POST /v1/chat/completions HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+info: lanes: step 6 rank 0 prompt pass: 38 tokens, slot 0, extent at 0, 2048 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 273, cable1 273, cable2 0, host 11
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"prompt_logits": "request", "sha256": "f7d544b78920f1322df2533bba7fa01dcbfa6a8040d6204d8252f59642f5394c", "rows": 38}
+info: prompt cache: 38 tokens, resumed at 0, kept 0; 0 states, 0 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 2, evicted 0, refused 0, failed 0)
+{"verify": 38, "rows": 3, "ids": { 671, 10741, 6026 }, "drawn": { 10741, 51539, 2619 }}
+{"verify": 40, "rows": 3, "ids": { 51539, 538, 2619 }, "drawn": { 2619, 223, 3130 }}
+{"verify": 41, "rows": 6, "ids": { 2619, 21, 4343, 223, 1069, 4786 }, "drawn": { 21, 4343, 305, 1069, 4786, 77460 }}
+{"verify": 44, "rows": 6, "ids": { 305, 223, 1069, 4786, 77460, 61244 }, "drawn": { 223, 1069, 4786, 77460, 7054, 7919 }}
+{"verify": 49, "rows": 6, "ids": { 7054, 223, 3130, 28, 504, 304 }, "drawn": { 223, 3130, 28, 1484, 304, 223 }}
+{"verify": 53, "rows": 6, "ids": { 1484, 304, 223, 907, 28, 2642 }, "drawn": { 304, 223, 907, 28, 2642, 1137 }}
+{"verify": 59, "rows": 6, "ids": { 1137, 15, 223, 907, 28, 1484 }, "drawn": { 15, 223, 3130, 28, 2642, 1114 }}
+{"verify": 62, "rows": 6, "ids": { 3130, 28, 1484, 304, 223, 736 }, "drawn": { 28, 1484, 6787, 223, 736, 28 }}
+{"verify": 65, "rows": 6, "ids": { 6787, 223, 736, 28, 1484, 438 }, "drawn": { 223, 736, 28, 1484, 438, 223 }}
+{"verify": 71, "rows": 6, "ids": { 223, 21, 4343, 201, 15, 223 }, "drawn": { 21, 4343, 201, 15, 223, 736 }}
+{"verify": 77, "rows": 6, "ids": { 736, 28, 1484, 6787, 223, 907 }, "drawn": { 28, 1484, 6787, 223, 907, 28 }}
+{"verify": 83, "rows": 6, "ids": { 28, 2642, 438, 223, 1069, 4786 }, "drawn": { 2642, 438, 223, 1069, 4786, 271 }}
+{"verify": 89, "rows": 5, "ids": { 271, 22298, 27124, 295, 27124 }, "drawn": { 666, 27124, 295, 4174, 295 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 90, "rows": 6, "ids": { 666, 22298, 27124, 295, 4174, 28 }, "drawn": { 22298, 27124, 295, 4174, 57840, 5866 }}
+{"verify": 95, "rows": 6, "ids": { 57840, 19, 16, 2619, 671, 5799 }, "drawn": { 19, 16, 2619, 47645, 127746, 3100 }}
+{"verify": 99, "rows": 5, "ids": { 47645, 560, 666, 2136, 455 }, "drawn": { 560, 666, 2136, 983, 98109 }}
+{"verify": 103, "rows": 3, "ids": { 983, 18290, 943 }, "drawn": { 18290, 1407, 223 }}
+{"verify": 105, "rows": 2, "ids": { 1407, 943 }, "drawn": { 4104, 4104 }}
+{"verify": 106, "rows": 3, "ids": { 4104, 5407, 343 }, "drawn": { 5407, 343, 18895 }}
+{"verify": 109, "rows": 6, "ids": { 18895, 28123, 14, 33395, 14, 10322 }, "drawn": { 28123, 14, 22004, 14, 10322, 14 }}
+{"verify": 112, "rows": 6, "ids": { 22004, 37514, 11321, 14, 10322, 14 }, "drawn": { 37514, 11321, 14, 33395, 14, 8760 }}
+{"verify": 116, "rows": 6, "ids": { 33395, 14, 10322, 14, 30609, 14 }, "drawn": { 14, 10322, 14, 8760, 25055, 8760 }}
+{"verify": 120, "rows": 6, "ids": { 8760, 14, 305, 270, 17705, 11 }, "drawn": { 14, 305, 270, 17705, 11, 1936 }}
+{"verify": 126, "rows": 3, "ids": { 1936, 10998, 270 }, "drawn": { 118605, 270, 2303 }}
+{"verify": 127, "rows": 6, "ids": { 118605, 1055, 270, 21428, 339, 20 }, "drawn": { 1055, 270, 5264, 5566, 20, 16 }}
+{"verify": 130, "rows": 6, "ids": { 5264, 14438, 339, 20, 16, 2619 }, "drawn": { 14438, 339, 20, 16, 2619, 28008 }}
+{"verify": 136, "rows": 6, "ids": { 28008, 5876, 666, 2136, 983, 18290 }, "drawn": { 5876, 666, 2136, 983, 344, 1407 }}
+{"verify": 141, "rows": 5, "ids": { 344, 270, 28731, 12334, 295 }, "drawn": { 270, 1957, 12334, 295, 270 }}
+{"verify": 143, "rows": 6, "ids": { 1957, 33679, 416, 12334, 295, 4174 }, "drawn": { 33679, 416, 12334, 295, 4174, 305 }}
+{"verify": 149, "rows": 3, "ids": { 305, 20102, 1407 }, "drawn": { 20102, 1407, 850 }}
+{"verify": 152, "rows": 4, "ids": { 850, 5407, 1099, 1117 }, "drawn": { 6102, 1099, 1117, 915 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 153, "rows": 4, "ids": { 6102, 5756, 1099, 1117 }, "drawn": { 11234, 1099, 1117, 915 }}
+{"verify": 154, "rows": 3, "ids": { 11234, 1099, 1117 }, "drawn": { 1099, 1117, 915 }}
+{"verify": 157, "rows": 5, "ids": { 915, 12334, 295, 270, 2058 }, "drawn": { 12334, 295, 270, 2058, 343 }}
+{"verify": 162, "rows": 3, "ids": { 343, 56, 35393 }, "drawn": { 56, 35393, 14 }}
+{"verify": 165, "rows": 6, "ids": { 14, 95883, 19030, 14, 305, 69135 }, "drawn": { 95883, 19030, 3602, 57340, 117515, 965 }}
+{"verify": 168, "rows": 5, "ids": { 3602, 14, 69135, 14, 305 }, "drawn": { 14, 57340, 14, 305, 117515 }}
+{"verify": 170, "rows": 6, "ids": { 57340, 14, 305, 117515, 2008, 21 }, "drawn": { 14, 305, 117515, 2008, 21, 16 }}
+{"verify": 176, "rows": 6, "ids": { 16, 2619, 11628, 3100, 666, 2136 }, "drawn": { 2619, 11628, 3100, 666, 2136, 983 }}
+{"verify": 182, "rows": 6, "ids": { 983, 344, 270, 28731, 12334, 295 }, "drawn": { 344, 270, 28731, 12334, 295, 4174 }}
+{"verify": 188, "rows": 2, "ids": { 4174, 305 }, "drawn": { 14, 81129 }}
+{"verify": 189, "rows": 3, "ids": { 14, 32095, 1407 }, "drawn": { 32095, 13583, 11951 }}
+{"verify": 191, "rows": 4, "ids": { 13583, 2549, 11951, 305 }, "drawn": { 2549, 11951, 305, 88827 }}
+{"verify": 195, "rows": 6, "ids": { 88827, 1055, 270, 107004, 976, 14438 }, "drawn": { 1055, 270, 107004, 976, 14438, 16 }}
+{"verify": 201, "rows": 3, "ids": { 16, 1, 7117 }, "drawn": { 1, 30, 671 }}
+[tensorfold] done chatcmpl-eb4f0d68a333fa92f58fdadd035de897 prompt=38 cached=0 thinking=False effort=none tokens=165 sha=cc96cfade06d finish=stop rounds=45 accepted=120/176
+[tensorfold] 192.0.2.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+info: lanes: step 98 rank 0 prompt pass: 3176 tokens, slot 0, extent at 0, 4096 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 4586, cable1 4586, cable2 0, host 11
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"prompt_logits": "request", "sha256": "29120f8daa1ef0ebaa796b71e4ffc889b792e4311e538f67c0949795fb8f3e54", "rows": 3176}
+info: prompt cache: 3176 tokens, resumed at 0, kept 1; 1 states, 6 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 3, evicted 0, refused 0, failed 0)
+{"verify": 3176, "rows": 5, "ids": { 671, 1257, 3818, 10087, 6501 }, "drawn": { 1257, 3818, 3676, 6501, 15174 }}
+{"verify": 3179, "rows": 3, "ids": { 3676, 3737, 6501 }, "drawn": { 3737, 6501, 15174 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 3182, "rows": 6, "ids": { 15174, 6731, 260, 82453, 14, 477 }, "drawn": { 6731, 260, 82453, 477, 418, 26453 }}
+{"verify": 3186, "rows": 5, "ids": { 477, 979, 19, 16, 2619 }, "drawn": { 223, 666, 16, 2619, 24694 }}
+{"verify": 3187, "rows": 6, "ids": { 223, 19, 14, 223, 20, 14 }, "drawn": { 19, 14, 223, 21, 14, 223 }}
+{"verify": 3191, "rows": 6, "ids": { 21, 14, 223, 553, 14, 223 }, "drawn": { 14, 223, 553, 14, 223, 907 }}
+{"verify": 3197, "rows": 6, "ids": { 907, 14, 305, 223, 1449, 339 }, "drawn": { 14, 305, 223, 1449, 339, 15 }}
+{"verify": 3203, "rows": 6, "ids": { 15, 22866, 223, 19, 28, 582 }, "drawn": { 22866, 223, 19, 28, 582, 1805 }}
+{"verify": 3209, "rows": 3, "ids": { 1805, 80968, 80968 }, "drawn": { 80968, 80968, 515 }}
+{"verify": 3212, "rows": 6, "ids": { 515, 8599, 538, 270, 82453, 304 }, "drawn": { 8599, 538, 270, 97209, 77136, 270 }}
+{"verify": 3216, "rows": 6, "ids": { 97209, 319, 269, 679, 304, 270 }, "drawn": { 319, 269, 679, 304, 270, 82453 }}
+{"verify": 3222, "rows": 6, "ids": { 82453, 77136, 763, 603, 24694, 223 }, "drawn": { 77136, 763, 14258, 15, 223, 20 }}
+{"verify": 3225, "rows": 6, "ids": { 14258, 15, 22866, 223, 21, 28 }, "drawn": { 15, 22866, 223, 21, 28, 582 }}
+{"verify": 3231, "rows": 6, "ids": { 582, 1805, 269, 679, 82453, 515 }, "drawn": { 1805, 269, 679, 82453, 515, 8599 }}
+{"verify": 3237, "rows": 6, "ids": { 8599, 538, 270, 52520, 402, 304 }, "drawn": { 538, 270, 52520, 402, 80968, 270 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 3242, "rows": 6, "ids": { 80968, 304, 270, 47155, 98742, 603 }, "drawn": { 304, 270, 47155, 98742, 14258, 15 }}
+{"verify": 3247, "rows": 6, "ids": { 14258, 15, 22866, 223, 553, 28 }, "drawn": { 15, 22866, 223, 553, 28, 582 }}
+{"verify": 3253, "rows": 6, "ids": { 582, 1805, 82453, 23334, 82, 515 }, "drawn": { 1805, 82453, 23334, 82, 515, 8599 }}
+{"verify": 3259, "rows": 6, "ids": { 8599, 538, 270, 269, 679, 23334 }, "drawn": { 538, 270, 269, 679, 23334, 82 }}
+{"verify": 3265, "rows": 6, "ids": { 82, 304, 270, 23334, 82, 52520 }, "drawn": { 304, 270, 23334, 82, 52520, 402 }}
+{"verify": 3271, "rows": 6, "ids": { 402, 603, 24694, 223, 779, 28 }, "drawn": { 14258, 15, 223, 907, 28, 270 }}
+{"verify": 3272, "rows": 6, "ids": { 14258, 15, 22866, 223, 907, 28 }, "drawn": { 15, 22866, 223, 907, 28, 582 }}
+{"verify": 3278, "rows": 6, "ids": { 582, 1805, 269, 679, 23334, 82 }, "drawn": { 1805, 269, 679, 23334, 82, 515 }}
+{"verify": 3284, "rows": 6, "ids": { 515, 8599, 538, 270, 23334, 82 }, "drawn": { 8599, 538, 270, 23334, 82, 82453 }}
+{"verify": 3290, "rows": 6, "ids": { 82453, 304, 270, 80005, 58726, 319 }, "drawn": { 304, 270, 80005, 58726, 319, 14258 }}
+{"verify": 3296, "rows": 6, "ids": { 14258, 15, 22866, 223, 1449, 28 }, "drawn": { 15, 22866, 223, 1449, 28, 582 }}
+{"verify": 3302, "rows": 6, "ids": { 582, 1805, 82453, 77136, 763, 515 }, "drawn": { 1805, 82453, 58726, 763, 515, 8599 }}
+{"verify": 3305, "rows": 6, "ids": { 58726, 319, 515, 8599, 538, 270 }, "drawn": { 319, 515, 8599, 538, 270, 97209 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 3311, "rows": 6, "ids": { 97209, 319, 98742, 304, 270, 77136 }, "drawn": { 319, 98742, 304, 270, 77136, 763 }}
+{"verify": 3317, "rows": 6, "ids": { 763, 77136, 763, 603, 24694, 223 }, "drawn": { 77136, 763, 2148, 4, 223, 1557 }}
+{"verify": 3320, "rows": 4, "ids": { 2148, 1, 7117, 223 }, "drawn": { 1, 0, 1, 1 }}
+[tensorfold] done chatcmpl-72833c64ea7ac11462a37b9a90518323 prompt=3176 cached=0 thinking=False effort=none tokens=146 sha=2712a6d7ab15 finish=stop rounds=31 accepted=115/145
+[tensorfold] 192.0.2.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+info: lanes: step 164 rank 0 prompt pass: 28 tokens, slot 0, extent at 4096, 2048 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 7517, cable1 7517, cable2 0, host 739
+{"prompt_logits": "request", "sha256": "289e5c0eb66fc1128b58278272be56a7e3e3feac97d91f12beb42933eab0affc", "rows": 28}
+info: prompt cache: 28 tokens, resumed at 0, kept 0; 1 states, 6 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 4, evicted 0, refused 0, failed 0)
+{"verify": 28, "rows": 3, "ids": { 5, 115222, 288 }, "drawn": { 115222, 288, 8819 }}
+{"verify": 31, "rows": 6, "ids": { 8819, 327, 14035, 76996, 271, 372 }, "drawn": { 327, 14035, 76996, 271, 9544, 455 }}
+{"verify": 36, "rows": 6, "ids": { 9544, 734, 260, 15255, 2019, 396 }, "drawn": { 734, 260, 6219, 2019, 396, 20977 }}
+{"verify": 39, "rows": 3, "ids": { 6219, 15255, 2019 }, "drawn": { 9963, 9963, 396 }}
+{"verify": 40, "rows": 3, "ids": { 9963, 1812, 15255 }, "drawn": { 294, 270, 734 }}
+{"verify": 41, "rows": 3, "ids": { 294, 270, 29446 }, "drawn": { 270, 16453, 3132 }}
+{"verify": 43, "rows": 3, "ids": { 16453, 29446, 10159 }, "drawn": { 29446, 3132, 979 }}
+{"verify": 45, "rows": 6, "ids": { 3132, 979, 9854, 36490, 201, 3465 }, "drawn": { 538, 9854, 36490, 201, 3465, 29446 }}
+{"verify": 46, "rows": 3, "ids": { 538, 270, 1234 }, "drawn": { 29446, 29446, 116157 }}
+{"verify": 47, "rows": 6, "ids": { 29446, 5803, 979, 9854, 36490, 201 }, "drawn": { 5803, 979, 9854, 36490, 201, 3465 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 53, "rows": 6, "ids": { 3465, 29446, 4731, 14035, 25256, 6036 }, "drawn": { 29446, 4731, 14035, 6036, 19, 14 }}
+{"verify": 57, "rows": 6, "ids": { 6036, 14, 291, 3395, 361, 16786 }, "drawn": { 14, 291, 3395, 361, 26495, 361 }}
+{"verify": 62, "rows": 6, "ids": { 26495, 115685, 1234, 24216, 16893, 24216 }, "drawn": { 115685, 1234, 24216, 16893, 1055, 46237 }}
+{"verify": 67, "rows": 6, "ids": { 1055, 834, 24216, 2310, 77319, 361 }, "drawn": { 834, 24216, 2310, 77319, 361, 1529 }}
+{"verify": 73, "rows": 6, "ids": { 1529, 438, 16461, 361, 1008, 438 }, "drawn": { 438, 16461, 361, 1008, 438, 597 }}
+{"verify": 79, "rows": 6, "ids": { 597, 438, 223, 18, 201, 361 }, "drawn": { 438, 223, 18, 29406, 361, 9080 }}
+{"verify": 83, "rows": 6, "ids": { 29406, 361, 1901, 1008, 818, 9080 }, "drawn": { 361, 1823, 1008, 818, 9080, 6036 }}
+{"verify": 85, "rows": 2, "ids": { 1823, 84219 }, "drawn": { 17103, 1901 }}
+{"verify": 86, "rows": 3, "ids": { 17103, 1952, 16893 }, "drawn": { 1952, 16893, 14 }}
+{"verify": 89, "rows": 2, "ids": { 14, 5177 }, "drawn": { 3165, 270 }}
+{"verify": 90, "rows": 5, "ids": { 3165, 5177, 270, 8577, 294 }, "drawn": { 5177, 270, 8577, 5161, 270 }}
+{"verify": 94, "rows": 6, "ids": { 5161, 4885, 201, 361, 1901, 1008 }, "drawn": { 4885, 201, 361, 1901, 1008, 818 }}
+{"verify": 100, "rows": 6, "ids": { 818, 9080, 6036, 11, 305, 597 }, "drawn": { 9080, 6036, 11, 305, 597, 818 }}
+{"verify": 106, "rows": 6, "ids": { 818, 9080, 7011, 3395, 528, 855 }, "drawn": { 9080, 7011, 3395, 528, 855, 260 }}
+{"verify": 112, "rows": 6, "ids": { 260, 3166, 63, 8593, 291, 11293 }, "drawn": { 3166, 63, 8593, 291, 11293, 23902 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 118, "rows": 6, "ids": { 23902, 775, 1529, 10108, 6036, 3166 }, "drawn": { 775, 1529, 10108, 6036, 3166, 9876 }}
+{"verify": 124, "rows": 6, "ids": { 9876, 775, 1008, 7004, 223, 19 }, "drawn": { 775, 1008, 7004, 223, 19, 201 }}
+{"verify": 130, "rows": 6, "ids": { 201, 528, 3006, 1137, 775, 1529 }, "drawn": { 528, 3006, 1137, 775, 1529, 10108 }}
+{"verify": 136, "rows": 6, "ids": { 10108, 7011, 11293, 9876, 775, 597 }, "drawn": { 7011, 11293, 9876, 775, 597, 7004 }}
+{"verify": 142, "rows": 6, "ids": { 7004, 223, 19, 29406, 361, 1823 }, "drawn": { 223, 19, 29406, 361, 1823, 4114 }}
+{"verify": 148, "rows": 3, "ids": { 4114, 2310, 344 }, "drawn": { 2310, 344, 40086 }}
+{"verify": 151, "rows": 4, "ids": { 40086, 29, 30656, 270 }, "drawn": { 29, 30656, 270, 17347 }}
+{"verify": 155, "rows": 6, "ids": { 17347, 294, 270, 915, 201, 361 }, "drawn": { 294, 270, 915, 201, 361, 1529 }}
+{"verify": 161, "rows": 6, "ids": { 1529, 102394, 6036, 3166, 28, 9876 }, "drawn": { 102394, 6036, 3166, 28, 9876, 361 }}
+{"verify": 167, "rows": 6, "ids": { 361, 1529, 102394, 7011, 11293, 28 }, "drawn": { 1529, 102394, 7011, 11293, 28, 9876 }}
+{"verify": 173, "rows": 6, "ids": { 9876, 5191, 361, 1354, 1529, 201 }, "drawn": { 5191, 361, 1354, 1529, 201, 20759 }}
+{"verify": 179, "rows": 3, "ids": { 20759, 666, 16221 }, "drawn": { 795, 16221, 28 }}
+{"verify": 180, "rows": 6, "ids": { 795, 12873, 271, 9854, 36490, 201 }, "drawn": { 12873, 271, 9854, 36490, 201, 29650 }}
+{"verify": 186, "rows": 6, "ids": { 29650, 29446, 4731, 14035, 10425, 19 }, "drawn": { 29446, 4731, 14035, 10425, 19, 14 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 192, "rows": 6, "ids": { 14, 223, 22, 14, 223, 23 }, "drawn": { 223, 22, 14, 223, 25, 14 }}
+{"verify": 197, "rows": 6, "ids": { 25, 14, 223, 20, 3031, 764 }, "drawn": { 14, 223, 553, 3031, 764, 21 }}
+{"verify": 200, "rows": 6, "ids": { 553, 3031, 764, 20, 14, 223 }, "drawn": { 3031, 764, 20, 14, 223, 21 }}
+{"verify": 206, "rows": 6, "ids": { 21, 14, 223, 23, 14, 223 }, "drawn": { 14, 223, 26, 14, 223, 26 }}
+{"verify": 209, "rows": 6, "ids": { 26, 14, 223, 27, 9876, 29650 }, "drawn": { 14, 223, 27, 14, 61, 764 }}
+{"verify": 213, "rows": 6, "ids": { 14, 223, 779, 9876, 29650, 764 }, "drawn": { 223, 779, 9876, 61, 764, 19 }}
+{"verify": 217, "rows": 2, "ids": { 61, 19 }, "drawn": { 19, 14 }}
+[tensorfold] done chatcmpl-868d440a14c7843baa1b429d5babf9bf prompt=28 cached=0 thinking=False effort=none tokens=192 sha=7cd2352febb3 finish=length rounds=46 accepted=145/188
+[tensorfold] 192.0.2.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+info: lanes: step 258 rank 0 prompt pass: 38 tokens, slot 0, extent at 4096, 2048 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 11920, cable1 11920, cable2 0, host 739
+{"prompt_logits": "request", "sha256": "f7d544b78920f1322df2533bba7fa01dcbfa6a8040d6204d8252f59642f5394c", "rows": 38}
+info: prompt cache: 38 tokens, resumed at 0, kept 0; 1 states, 6 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 5, evicted 0, refused 0, failed 0)
+{"verify": 38, "rows": 3, "ids": { 671, 10741, 6026 }, "drawn": { 10741, 51539, 2619 }}
+{"verify": 40, "rows": 3, "ids": { 51539, 538, 2619 }, "drawn": { 2619, 223, 3130 }}
+{"verify": 41, "rows": 6, "ids": { 2619, 21, 4343, 223, 1069, 4786 }, "drawn": { 21, 4343, 305, 1069, 4786, 77460 }}
+{"verify": 44, "rows": 6, "ids": { 305, 223, 1069, 4786, 77460, 61244 }, "drawn": { 223, 1069, 4786, 77460, 7054, 7919 }}
+{"verify": 49, "rows": 6, "ids": { 7054, 223, 3130, 28, 504, 304 }, "drawn": { 223, 3130, 28, 1484, 304, 223 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 53, "rows": 6, "ids": { 1484, 304, 223, 907, 28, 2642 }, "drawn": { 304, 223, 907, 28, 2642, 1137 }}
+{"verify": 59, "rows": 6, "ids": { 1137, 15, 223, 907, 28, 1484 }, "drawn": { 15, 223, 3130, 28, 2642, 1114 }}
+{"verify": 62, "rows": 6, "ids": { 3130, 28, 1484, 304, 223, 736 }, "drawn": { 28, 1484, 6787, 223, 736, 28 }}
+{"verify": 65, "rows": 6, "ids": { 6787, 223, 736, 28, 1484, 438 }, "drawn": { 223, 736, 28, 1484, 438, 223 }}
+{"verify": 71, "rows": 6, "ids": { 223, 21, 4343, 201, 15, 223 }, "drawn": { 21, 4343, 201, 15, 223, 736 }}
+{"verify": 77, "rows": 6, "ids": { 736, 28, 1484, 6787, 223, 907 }, "drawn": { 28, 1484, 6787, 223, 907, 28 }}
+{"verify": 83, "rows": 6, "ids": { 28, 2642, 438, 223, 1069, 4786 }, "drawn": { 2642, 438, 223, 1069, 4786, 271 }}
+{"verify": 89, "rows": 5, "ids": { 271, 22298, 27124, 295, 27124 }, "drawn": { 666, 27124, 295, 4174, 295 }}
+{"verify": 90, "rows": 6, "ids": { 666, 22298, 27124, 295, 4174, 28 }, "drawn": { 22298, 27124, 295, 4174, 57840, 5866 }}
+{"verify": 95, "rows": 6, "ids": { 57840, 19, 16, 2619, 671, 5799 }, "drawn": { 19, 16, 2619, 47645, 127746, 3100 }}
+{"verify": 99, "rows": 5, "ids": { 47645, 560, 666, 2136, 455 }, "drawn": { 560, 666, 2136, 983, 98109 }}
+{"verify": 103, "rows": 3, "ids": { 983, 18290, 943 }, "drawn": { 18290, 1407, 223 }}
+{"verify": 105, "rows": 2, "ids": { 1407, 943 }, "drawn": { 4104, 4104 }}
+{"verify": 106, "rows": 3, "ids": { 4104, 5407, 343 }, "drawn": { 5407, 343, 18895 }}
+{"verify": 109, "rows": 6, "ids": { 18895, 28123, 14, 33395, 14, 10322 }, "drawn": { 28123, 14, 22004, 14, 10322, 14 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 112, "rows": 6, "ids": { 22004, 37514, 11321, 14, 10322, 14 }, "drawn": { 37514, 11321, 14, 33395, 14, 8760 }}
+{"verify": 116, "rows": 6, "ids": { 33395, 14, 10322, 14, 30609, 14 }, "drawn": { 14, 10322, 14, 8760, 25055, 8760 }}
+{"verify": 120, "rows": 6, "ids": { 8760, 14, 305, 270, 17705, 11 }, "drawn": { 14, 305, 270, 17705, 11, 1936 }}
+{"verify": 126, "rows": 3, "ids": { 1936, 10998, 270 }, "drawn": { 118605, 270, 2303 }}
+{"verify": 127, "rows": 6, "ids": { 118605, 1055, 270, 21428, 339, 20 }, "drawn": { 1055, 270, 5264, 5566, 20, 16 }}
+{"verify": 130, "rows": 6, "ids": { 5264, 14438, 339, 20, 16, 2619 }, "drawn": { 14438, 339, 20, 16, 2619, 28008 }}
+{"verify": 136, "rows": 6, "ids": { 28008, 5876, 666, 2136, 983, 18290 }, "drawn": { 5876, 666, 2136, 983, 344, 1407 }}
+{"verify": 141, "rows": 5, "ids": { 344, 270, 28731, 12334, 295 }, "drawn": { 270, 1957, 12334, 295, 270 }}
+{"verify": 143, "rows": 6, "ids": { 1957, 33679, 416, 12334, 295, 4174 }, "drawn": { 33679, 416, 12334, 295, 4174, 305 }}
+{"verify": 149, "rows": 3, "ids": { 305, 20102, 1407 }, "drawn": { 20102, 1407, 850 }}
+{"verify": 152, "rows": 4, "ids": { 850, 5407, 1099, 1117 }, "drawn": { 6102, 1099, 1117, 915 }}
+{"verify": 153, "rows": 4, "ids": { 6102, 5756, 1099, 1117 }, "drawn": { 11234, 1099, 1117, 915 }}
+{"verify": 154, "rows": 3, "ids": { 11234, 1099, 1117 }, "drawn": { 1099, 1117, 915 }}
+{"verify": 157, "rows": 5, "ids": { 915, 12334, 295, 270, 2058 }, "drawn": { 12334, 295, 270, 2058, 343 }}
+{"verify": 162, "rows": 3, "ids": { 343, 56, 35393 }, "drawn": { 56, 35393, 14 }}
+{"verify": 165, "rows": 6, "ids": { 14, 95883, 19030, 14, 305, 69135 }, "drawn": { 95883, 19030, 3602, 57340, 117515, 965 }}
+{"verify": 168, "rows": 5, "ids": { 3602, 14, 69135, 14, 305 }, "drawn": { 14, 57340, 14, 305, 117515 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 170, "rows": 6, "ids": { 57340, 14, 305, 117515, 2008, 21 }, "drawn": { 14, 305, 117515, 2008, 21, 16 }}
+{"verify": 176, "rows": 6, "ids": { 16, 2619, 11628, 3100, 666, 2136 }, "drawn": { 2619, 11628, 3100, 666, 2136, 983 }}
+{"verify": 182, "rows": 6, "ids": { 983, 344, 270, 28731, 12334, 295 }, "drawn": { 344, 270, 28731, 12334, 295, 4174 }}
+{"verify": 188, "rows": 2, "ids": { 4174, 305 }, "drawn": { 14, 81129 }}
+{"verify": 189, "rows": 3, "ids": { 14, 32095, 1407 }, "drawn": { 32095, 13583, 11951 }}
+{"verify": 191, "rows": 4, "ids": { 13583, 2549, 11951, 305 }, "drawn": { 2549, 11951, 305, 88827 }}
+{"verify": 195, "rows": 6, "ids": { 88827, 1055, 270, 107004, 976, 14438 }, "drawn": { 1055, 270, 107004, 976, 14438, 16 }}
+{"verify": 201, "rows": 3, "ids": { 16, 1, 7117 }, "drawn": { 1, 30, 671 }}
+[tensorfold] done chatcmpl-f5c00600f6bbafbb799df70d09fd165b prompt=38 cached=0 thinking=False effort=none tokens=165 sha=cc96cfade06d finish=stop rounds=45 accepted=120/176
+[tensorfold] 192.0.2.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+info: lanes: step 350 rank 0 prompt pass: 3176 tokens, slot 0, extent at 0, 4096 rows; resumes state 1 at 2048 in place; 0 other stream(s) live; collectives (stream idle): staged 16233, cable1 16233, cable2 0, host 739
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"prompt_logits": "request", "sha256": "29120f8daa1ef0ebaa796b71e4ffc889b792e4311e538f67c0949795fb8f3e54", "rows": 3176}
+info: prompt cache: 3176 tokens, resumed at 2048, kept 0; 1 states, 6 MiB and 0 MiB spare of 4096 MiB (hits 1, misses 5, evicted 0, refused 0, failed 0)
+{"verify": 3176, "rows": 5, "ids": { 671, 1257, 3818, 10087, 6501 }, "drawn": { 1257, 3818, 3676, 6501, 15174 }}
+{"verify": 3179, "rows": 3, "ids": { 3676, 3737, 6501 }, "drawn": { 3737, 6501, 15174 }}
+{"verify": 3182, "rows": 6, "ids": { 15174, 6731, 260, 82453, 14, 477 }, "drawn": { 6731, 260, 82453, 477, 418, 26453 }}
+{"verify": 3186, "rows": 5, "ids": { 477, 979, 19, 16, 2619 }, "drawn": { 223, 666, 16, 2619, 24694 }}
+{"verify": 3187, "rows": 6, "ids": { 223, 19, 14, 223, 20, 14 }, "drawn": { 19, 14, 223, 21, 14, 223 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 3191, "rows": 6, "ids": { 21, 14, 223, 553, 14, 223 }, "drawn": { 14, 223, 553, 14, 223, 907 }}
+{"verify": 3197, "rows": 6, "ids": { 907, 14, 305, 223, 1449, 339 }, "drawn": { 14, 305, 223, 1449, 339, 15 }}
+{"verify": 3203, "rows": 6, "ids": { 15, 22866, 223, 19, 28, 582 }, "drawn": { 22866, 223, 19, 28, 582, 1805 }}
+{"verify": 3209, "rows": 3, "ids": { 1805, 80968, 80968 }, "drawn": { 80968, 80968, 515 }}
+{"verify": 3212, "rows": 6, "ids": { 515, 8599, 538, 270, 82453, 304 }, "drawn": { 8599, 538, 270, 97209, 77136, 270 }}
+{"verify": 3216, "rows": 6, "ids": { 97209, 319, 269, 679, 304, 270 }, "drawn": { 319, 269, 679, 304, 270, 82453 }}
+{"verify": 3222, "rows": 6, "ids": { 82453, 77136, 763, 603, 24694, 223 }, "drawn": { 77136, 763, 14258, 15, 223, 20 }}
+{"verify": 3225, "rows": 6, "ids": { 14258, 15, 22866, 223, 21, 28 }, "drawn": { 15, 22866, 223, 21, 28, 582 }}
+{"verify": 3231, "rows": 6, "ids": { 582, 1805, 269, 679, 82453, 515 }, "drawn": { 1805, 269, 679, 82453, 515, 8599 }}
+{"verify": 3237, "rows": 6, "ids": { 8599, 538, 270, 52520, 402, 304 }, "drawn": { 538, 270, 52520, 402, 80968, 270 }}
+{"verify": 3242, "rows": 6, "ids": { 80968, 304, 270, 47155, 98742, 603 }, "drawn": { 304, 270, 47155, 98742, 14258, 15 }}
+{"verify": 3247, "rows": 6, "ids": { 14258, 15, 22866, 223, 553, 28 }, "drawn": { 15, 22866, 223, 553, 28, 582 }}
+{"verify": 3253, "rows": 6, "ids": { 582, 1805, 82453, 23334, 82, 515 }, "drawn": { 1805, 82453, 23334, 82, 515, 8599 }}
+{"verify": 3259, "rows": 6, "ids": { 8599, 538, 270, 269, 679, 23334 }, "drawn": { 538, 270, 269, 679, 23334, 82 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 3265, "rows": 6, "ids": { 82, 304, 270, 23334, 82, 52520 }, "drawn": { 304, 270, 23334, 82, 52520, 402 }}
+{"verify": 3271, "rows": 6, "ids": { 402, 603, 24694, 223, 779, 28 }, "drawn": { 14258, 15, 223, 907, 28, 270 }}
+{"verify": 3272, "rows": 6, "ids": { 14258, 15, 22866, 223, 907, 28 }, "drawn": { 15, 22866, 223, 907, 28, 582 }}
+{"verify": 3278, "rows": 6, "ids": { 582, 1805, 269, 679, 23334, 82 }, "drawn": { 1805, 269, 679, 23334, 82, 515 }}
+{"verify": 3284, "rows": 6, "ids": { 515, 8599, 538, 270, 23334, 82 }, "drawn": { 8599, 538, 270, 23334, 82, 82453 }}
+{"verify": 3290, "rows": 6, "ids": { 82453, 304, 270, 80005, 58726, 319 }, "drawn": { 304, 270, 80005, 58726, 319, 14258 }}
+{"verify": 3296, "rows": 6, "ids": { 14258, 15, 22866, 223, 1449, 28 }, "drawn": { 15, 22866, 223, 1449, 28, 582 }}
+{"verify": 3302, "rows": 6, "ids": { 582, 1805, 82453, 77136, 763, 515 }, "drawn": { 1805, 82453, 58726, 763, 515, 8599 }}
+{"verify": 3305, "rows": 6, "ids": { 58726, 319, 515, 8599, 538, 270 }, "drawn": { 319, 515, 8599, 538, 270, 97209 }}
+{"verify": 3311, "rows": 6, "ids": { 97209, 319, 98742, 304, 270, 77136 }, "drawn": { 319, 98742, 304, 270, 77136, 763 }}
+{"verify": 3317, "rows": 6, "ids": { 763, 77136, 763, 603, 24694, 223 }, "drawn": { 77136, 763, 2148, 4, 223, 1557 }}
+{"verify": 3320, "rows": 4, "ids": { 2148, 1, 7117, 223 }, "drawn": { 1, 0, 1, 1 }}
+[tensorfold] done chatcmpl-7b418afcecc9fda0a3aee5bdb4d3226e prompt=3176 cached=2048 thinking=False effort=none tokens=146 sha=2712a6d7ab15 finish=stop rounds=31 accepted=115/145
+[tensorfold] 192.0.2.31 "POST /v1/chat/completions HTTP/1.1" 200 -
+info: lanes: step 415 rank 0 prompt pass: 28 tokens, slot 0, extent at 4096, 2048 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 19164, cable1 19164, cable2 0, host 1035
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"prompt_logits": "request", "sha256": "289e5c0eb66fc1128b58278272be56a7e3e3feac97d91f12beb42933eab0affc", "rows": 28}
+info: prompt cache: 28 tokens, resumed at 0, kept 0; 1 states, 6 MiB and 0 MiB spare of 4096 MiB (hits 1, misses 6, evicted 0, refused 0, failed 0)
+{"verify": 28, "rows": 3, "ids": { 5, 115222, 288 }, "drawn": { 115222, 288, 8819 }}
+{"verify": 31, "rows": 6, "ids": { 8819, 327, 14035, 76996, 271, 372 }, "drawn": { 327, 14035, 76996, 271, 9544, 455 }}
+{"verify": 36, "rows": 6, "ids": { 9544, 734, 260, 15255, 2019, 396 }, "drawn": { 734, 260, 6219, 2019, 396, 20977 }}
+{"verify": 39, "rows": 3, "ids": { 6219, 15255, 2019 }, "drawn": { 9963, 9963, 396 }}
+{"verify": 40, "rows": 3, "ids": { 9963, 1812, 15255 }, "drawn": { 294, 270, 734 }}
+{"verify": 41, "rows": 3, "ids": { 294, 270, 29446 }, "drawn": { 270, 16453, 3132 }}
+{"verify": 43, "rows": 3, "ids": { 16453, 29446, 10159 }, "drawn": { 29446, 3132, 979 }}
+{"verify": 45, "rows": 6, "ids": { 3132, 979, 9854, 36490, 201, 3465 }, "drawn": { 538, 9854, 36490, 201, 3465, 29446 }}
+{"verify": 46, "rows": 3, "ids": { 538, 270, 1234 }, "drawn": { 29446, 29446, 116157 }}
+{"verify": 47, "rows": 6, "ids": { 29446, 5803, 979, 9854, 36490, 201 }, "drawn": { 5803, 979, 9854, 36490, 201, 3465 }}
+{"verify": 53, "rows": 6, "ids": { 3465, 29446, 4731, 14035, 25256, 6036 }, "drawn": { 29446, 4731, 14035, 6036, 19, 14 }}
+{"verify": 57, "rows": 6, "ids": { 6036, 14, 291, 3395, 361, 16786 }, "drawn": { 14, 291, 3395, 361, 26495, 361 }}
+{"verify": 62, "rows": 6, "ids": { 26495, 115685, 1234, 24216, 16893, 24216 }, "drawn": { 115685, 1234, 24216, 16893, 1055, 46237 }}
+{"verify": 67, "rows": 6, "ids": { 1055, 834, 24216, 2310, 77319, 361 }, "drawn": { 834, 24216, 2310, 77319, 361, 1529 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 73, "rows": 6, "ids": { 1529, 438, 16461, 361, 1008, 438 }, "drawn": { 438, 16461, 361, 1008, 438, 597 }}
+{"verify": 79, "rows": 6, "ids": { 597, 438, 223, 18, 201, 361 }, "drawn": { 438, 223, 18, 29406, 361, 9080 }}
+{"verify": 83, "rows": 6, "ids": { 29406, 361, 1901, 1008, 818, 9080 }, "drawn": { 361, 1823, 1008, 818, 9080, 6036 }}
+{"verify": 85, "rows": 2, "ids": { 1823, 84219 }, "drawn": { 17103, 1901 }}
+{"verify": 86, "rows": 3, "ids": { 17103, 1952, 16893 }, "drawn": { 1952, 16893, 14 }}
+{"verify": 89, "rows": 2, "ids": { 14, 5177 }, "drawn": { 3165, 270 }}
+{"verify": 90, "rows": 5, "ids": { 3165, 5177, 270, 8577, 294 }, "drawn": { 5177, 270, 8577, 5161, 270 }}
+{"verify": 94, "rows": 6, "ids": { 5161, 4885, 201, 361, 1901, 1008 }, "drawn": { 4885, 201, 361, 1901, 1008, 818 }}
+[tensorfold] 192.0.2.50 "GET /health HTTP/1.1" 200 -
+{"verify": 100, "rows": 6, "ids": { 818, 9080, 6036, 11, 305, 597 }, "drawn": { 9080, 6036, 11, 305, 597, 818 }}
+{"verify": 106, "rows": 6, "ids": { 818, 9080, 7011, 3395, 528, 855 }, "drawn": { 9080, 7011, 3395, 528, 855, 260 }}
+{"verify": 112, "rows": 6, "ids": { 260, 3166, 63, 8593, 291, 11293 }, "drawn": { 3166, 63, 8593, 291, 11293, 23902 }}
+{"verify": 118, "rows": 6, "ids": { 23902, 775, 1529, 10108, 6036, 3166 }, "drawn": { 775, 1529, 10108, 6036, 3166, 9876 }}
+{"verify": 124, "rows": 6, "ids": { 9876, 775, 1008, 7004, 223, 19 }, "drawn": { 775, 1008, 7004, 223, 19, 201 }}
+{"verify": 130, "rows": 6, "ids": { 201, 528, 3006, 1137, 775, 1529 }, "drawn": { 528, 3006, 1137, 775, 1529, 10108 }}
+{"verify": 136, "rows": 6, "ids": { 10108, 7011, 11293, 9876, 775, 597 }, "drawn": { 7011, 11293, 9876, 775, 597, 7004 }}
+{"verify": 142, "rows": 6, "ids": { 7004, 223, 19, 29406, 361, 1823 }, "drawn": { 223, 19, 29406, 361, 1823, 4114 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 148, "rows": 3, "ids": { 4114, 2310, 344 }, "drawn": { 2310, 344, 40086 }}
+{"verify": 151, "rows": 4, "ids": { 40086, 29, 30656, 270 }, "drawn": { 29, 30656, 270, 17347 }}
+{"verify": 155, "rows": 6, "ids": { 17347, 294, 270, 915, 201, 361 }, "drawn": { 294, 270, 915, 201, 361, 1529 }}
+{"verify": 161, "rows": 6, "ids": { 1529, 102394, 6036, 3166, 28, 9876 }, "drawn": { 102394, 6036, 3166, 28, 9876, 361 }}
+{"verify": 167, "rows": 6, "ids": { 361, 1529, 102394, 7011, 11293, 28 }, "drawn": { 1529, 102394, 7011, 11293, 28, 9876 }}
+{"verify": 173, "rows": 6, "ids": { 9876, 5191, 361, 1354, 1529, 201 }, "drawn": { 5191, 361, 1354, 1529, 201, 20759 }}
+{"verify": 179, "rows": 3, "ids": { 20759, 666, 16221 }, "drawn": { 795, 16221, 28 }}
+{"verify": 180, "rows": 6, "ids": { 795, 12873, 271, 9854, 36490, 201 }, "drawn": { 12873, 271, 9854, 36490, 201, 29650 }}
+{"verify": 186, "rows": 6, "ids": { 29650, 29446, 4731, 14035, 10425, 19 }, "drawn": { 29446, 4731, 14035, 10425, 19, 14 }}
+{"verify": 192, "rows": 6, "ids": { 14, 223, 22, 14, 223, 23 }, "drawn": { 223, 22, 14, 223, 25, 14 }}
+{"verify": 197, "rows": 6, "ids": { 25, 14, 223, 20, 3031, 764 }, "drawn": { 14, 223, 553, 3031, 764, 21 }}
+{"verify": 200, "rows": 6, "ids": { 553, 3031, 764, 20, 14, 223 }, "drawn": { 3031, 764, 20, 14, 223, 21 }}
+{"verify": 206, "rows": 6, "ids": { 21, 14, 223, 23, 14, 223 }, "drawn": { 14, 223, 26, 14, 223, 26 }}
+{"verify": 209, "rows": 6, "ids": { 26, 14, 223, 27, 9876, 29650 }, "drawn": { 14, 223, 27, 14, 61, 764 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+{"verify": 213, "rows": 6, "ids": { 14, 223, 779, 9876, 29650, 764 }, "drawn": { 223, 779, 9876, 61, 764, 19 }}
+{"verify": 217, "rows": 2, "ids": { 61, 19 }, "drawn": { 19, 14 }}
+[tensorfold] done chatcmpl-956aebd82c9f566ab66d030775c6bba0 prompt=28 cached=0 thinking=False effort=none tokens=192 sha=7cd2352febb3 finish=length rounds=46 accepted=145/188
+[tensorfold] 192.0.2.31 "POST /v1/chat/completions HTTP/1.1" 200 -

@@ -1,0 +1,209 @@
+{
+ "module": "kernel.hipfire.indexer_topk",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-10T22:59:17Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "HIP version: 7.17.26392-0000000 | AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394)",
+ "units": 24,
+ "passed": 24,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 4.4,
+ "results": [
+  {
+   "unit": "indexer_compressed_k_score",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_compressed_k_score.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_compressed_k_score.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 9072,
+   "object_sha256": "3066ba4ca9ed6b423f661c72a68434f2f1fa7e5a98822cad7fa47cb96c5006ec"
+  },
+  {
+   "unit": "indexer_kv_gather",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_kv_gather.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_kv_gather.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 9824,
+   "object_sha256": "0f34f5d0baceea23c84dd4999de63a57890c4bf676d29dd5ac04de47dcc2a00a"
+  },
+  {
+   "unit": "indexer_relu_score_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_relu_score_batched.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_relu_score_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 9592,
+   "object_sha256": "4b3fde91a419c23e4b2f5e6793ecd6aa8ef37007dffd231e5264a5f7df44af06"
+  },
+  {
+   "unit": "indexer_relu_score_buf",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_relu_score_buf.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_relu_score_buf.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 9072,
+   "object_sha256": "bd27d27cf95730412bfb77ad8a2c940400f5e5225c1e1aa2cff8ec4c01af68a4"
+  },
+  {
+   "unit": "indexer_relu_score_wmma_batched_klds_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_relu_score_wmma_batched_klds_gfx1151.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_relu_score_wmma_batched_klds_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 13328,
+   "object_sha256": "9fa68843d986d8b6da9aafb6d2346f9df2967caaccb76cf5c0ea3b1c75f7c270"
+  },
+  {
+   "unit": "indexer_relu_score_wmma_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_relu_score_wmma_batched.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_relu_score_wmma_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 12288,
+   "object_sha256": "7a61472433e2b965b4de6c28fb5a0d675b2280ab245eca0194f3465b8f34bfcf"
+  },
+  {
+   "unit": "indexer_topk_twostage",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_topk_twostage.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_topk_twostage.hsaco",
+   "rc": 0,
+   "seconds": 0.51,
+   "object_bytes": 26160,
+   "object_sha256": "35f062880a4a1c2725f384c914d65707e60752a4a084dfc44bf15befb0f2e155"
+  },
+  {
+   "unit": "indexer_top_k_batched_bounded_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_batched_bounded_gfx1151.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_batched_bounded_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.4,
+   "object_bytes": 11912,
+   "object_sha256": "0a159caf578710dc29668c970f680bdf579c96548823b92bf328f6cfda33392b"
+  },
+  {
+   "unit": "indexer_top_k_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_batched.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 12360,
+   "object_sha256": "e28c3f1a1e7380324ee1ad1b08a8a8c2bb435f3e1781af167c862f10cca74389"
+  },
+  {
+   "unit": "indexer_top_k_buf_bounded_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_buf_bounded_gfx1151.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_buf_bounded_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 12528,
+   "object_sha256": "aa72b89a4420464d4b42553bfccf2762ece58a1537054f3790e9b0891e465521"
+  },
+  {
+   "unit": "indexer_top_k_buf_parallel_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_buf_parallel_gfx1151.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_buf_parallel_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.41,
+   "object_bytes": 9584,
+   "object_sha256": "bb01e1b2cacebf6a138a5eb12db2ba05f2b1f9f8a14c21d1c86479f711a823b2"
+  },
+  {
+   "unit": "indexer_top_k_buf",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_buf.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_buf.hsaco",
+   "rc": 0,
+   "seconds": 0.39,
+   "object_bytes": 10976,
+   "object_sha256": "211611ed4b2c6f4c464e26668c5bf9ef9161f8646ab77acf4c54f70188225e33"
+  },
+  {
+   "unit": "indexer_top_k_buf_unrolled_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_buf_unrolled_gfx1151.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k_buf_unrolled_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 4.4,
+   "object_bytes": 362608,
+   "object_sha256": "13c3931690c9a890f4b6a061f5bd15a4c34f73369fc5c0c95c9ec772abcd8b3f"
+  },
+  {
+   "unit": "indexer_top_k",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k.hip -o build/compile-gate/kernel.hipfire.indexer_topk/indexer_top_k.hsaco",
+   "rc": 0,
+   "seconds": 0.38,
+   "object_bytes": 9688,
+   "object_sha256": "f0d9b7a39bc0a7827e3be917a815e6f6188d2f59046259f6c4fb23d7c0f157f9"
+  },
+  {
+   "unit": "qsa_bf16_scores",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/qsa_bf16_scores.hip -o build/compile-gate/kernel.hipfire.indexer_topk/qsa_bf16_scores.hsaco",
+   "rc": 0,
+   "seconds": 0.61,
+   "object_bytes": 39208,
+   "object_sha256": "9089c1f39ddca3a44ced040372930776aea1413c221d64aa9e62969b419025ec"
+  },
+  {
+   "unit": "qsa_decode_splitkv_q8",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/qsa_decode_splitkv_q8.hip -o build/compile-gate/kernel.hipfire.indexer_topk/qsa_decode_splitkv_q8.hsaco",
+   "rc": 0,
+   "seconds": 0.48,
+   "object_bytes": 23008,
+   "object_sha256": "66f17bcb2358326011f311694cab36cc1b69e72a98678e7212d65320a8f29e41"
+  },
+  {
+   "unit": "qsa_decode_splitk",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/qsa_decode_splitk.hip -o build/compile-gate/kernel.hipfire.indexer_topk/qsa_decode_splitk.hsaco",
+   "rc": 0,
+   "seconds": 0.71,
+   "object_bytes": 38240,
+   "object_sha256": "d806b8823e1f40c9442ec8a0e925e9e57f4b9e708bf1c4e69848a56fec56c3e2"
+  },
+  {
+   "unit": "qsa_filter_select",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/qsa_filter_select.hip -o build/compile-gate/kernel.hipfire.indexer_topk/qsa_filter_select.hsaco",
+   "rc": 0,
+   "seconds": 0.42,
+   "object_bytes": 20880,
+   "object_sha256": "5f60f49688b0bc779e8346fe6d09f70c0a903e398c1e8284827f0d22ad0f869e"
+  },
+  {
+   "unit": "qsa_pooled_bf16_mirror",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/qsa_pooled_bf16_mirror.hip -o build/compile-gate/kernel.hipfire.indexer_topk/qsa_pooled_bf16_mirror.hsaco",
+   "rc": 0,
+   "seconds": 0.37,
+   "object_bytes": 9832,
+   "object_sha256": "68e6c12be0bc6f0ef36c8454ec921bc6a34ed112238bdfd1a639447bb9d7b79c"
+  },
+  {
+   "unit": "v4f_topk_kv_gather_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_batched.hip -o build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.36,
+   "object_bytes": 8832,
+   "object_sha256": "20001994278b9bb1432d4e010109e077b7b12d7545c6cd8b64feca4587e50a8b"
+  },
+  {
+   "unit": "v4f_topk_kv_gather_buf",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_buf.hip -o build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_buf.hsaco",
+   "rc": 0,
+   "seconds": 0.35,
+   "object_bytes": 8952,
+   "object_sha256": "90ab1e8fad21805a682ae650986335eced64b0108058c40ced1a259f953cfa0f"
+  },
+  {
+   "unit": "v4f_topk_kv_gather_identity_batched",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_identity_batched.hip -o build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_identity_batched.hsaco",
+   "rc": 0,
+   "seconds": 0.35,
+   "object_bytes": 8728,
+   "object_sha256": "52caaa4b96325e8df9050a953cb23c25a8a764f3f2b13d558681408f7311e72e"
+  },
+  {
+   "unit": "v4f_topk_kv_gather_identity_buf",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_identity_buf.hip -o build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_identity_buf.hsaco",
+   "rc": 0,
+   "seconds": 0.35,
+   "object_bytes": 8592,
+   "object_sha256": "467d435cbb9a314691827531e35cac1f141579084c430f30c71d20ac25911ce8"
+  },
+  {
+   "unit": "v4f_topk_kv_gather_tiled_gfx1151",
+   "cmd": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --hip-path=/data/models/tools/therock-10.2 --genco -O3 --no-offload-compress -fuse-cuid=none -mcode-object-version=6 -I catalog/hipfire/kernel/indexer_topk/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/kernels/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/src/ggml-cuda -I catalog/hipfire/kernel/common_headers/src/third_party/ggml/include -I /data/models/tools/therock-10.2/include build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_tiled_gfx1151.hip -o build/compile-gate/kernel.hipfire.indexer_topk/v4f_topk_kv_gather_tiled_gfx1151.hsaco",
+   "rc": 0,
+   "seconds": 0.36,
+   "object_bytes": 10632,
+   "object_sha256": "320a268f748e774dba88274b857b6ef020a10d6d594ac7d2a8475a2bcf7b56fe"
+  }
+ ]
+}

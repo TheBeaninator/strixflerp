@@ -1,0 +1,120 @@
+2026-11-11T21:47:13Z RUN OWNER=agent REASON='strixflerp PAIR-STALL c18e4b0bd2 diagnostic window (agreed with the pair owner)' TTL=2100 pod-quad hold 192.0.2.50 192.0.2.54
+2026-11-11 21:47:16  pod-quad: workers free after 2s: 192.0.2.50 192.0.2.54
+2026-11-11 21:47:16  pod-quad: held: 192.0.2.50 192.0.2.54 (owner agent, expires in 0h35m; pod-quad renew to extend)
+(rc 0)
+2026-11-11T21:47:16Z RUN KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh down
+down: by hand (caller: actor agent, /bin/sh -c KANBAN_ACTOR=agent /data/pod/tools/strixfold-pair.sh down )
+(rc 0)
+2026-11-11T21:47:20Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 mkdir -p /home/pod/tfp/strixflerp-stall/conf /home/pod/tfp/strixflerp-stall/run /home/pod/tfp/strixflerp-stall/samples /cache/strixflerp-stall
+
+(rc 0)
+2026-11-11T21:47:21Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/pair_stall_sampler.py pod@192.0.2.50:/home/pod/tfp/strixflerp-stall/pair_stall_sampler.py
+
+(rc 0)
+2026-11-11T21:47:21Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/pair-stall/2026-11-11T2147Z/S.conf pod@192.0.2.50:/home/pod/tfp/strixflerp-stall/conf/S.conf
+
+(rc 0)
+2026-11-11T21:47:21Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/pair-stall/2026-11-11T2147Z/L.conf pod@192.0.2.50:/home/pod/tfp/strixflerp-stall/conf/L.conf
+
+(rc 0)
+2026-11-11T21:47:21Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/pair-stall/2026-11-11T2147Z/E.conf pod@192.0.2.50:/home/pod/tfp/strixflerp-stall/conf/E.conf
+
+(rc 0)
+2026-11-11T21:47:22Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 mkdir -p /home/pod/tfp/strixflerp-stall/conf /home/pod/tfp/strixflerp-stall/run /home/pod/tfp/strixflerp-stall/samples /cache/strixflerp-stall
+
+(rc 0)
+2026-11-11T21:47:22Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/pair_stall_sampler.py pod@192.0.2.54:/home/pod/tfp/strixflerp-stall/pair_stall_sampler.py
+
+(rc 0)
+2026-11-11T21:47:22Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/pair-stall/2026-11-11T2147Z/S.conf pod@192.0.2.54:/home/pod/tfp/strixflerp-stall/conf/S.conf
+
+(rc 0)
+2026-11-11T21:47:22Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/pair-stall/2026-11-11T2147Z/L.conf pod@192.0.2.54:/home/pod/tfp/strixflerp-stall/conf/L.conf
+
+(rc 0)
+2026-11-11T21:47:23Z RUN rsync -a -e ssh -o BatchMode=yes -o ConnectTimeout=8 /data/projects/strixflerp/gate/results/pair-stall/2026-11-11T2147Z/E.conf pod@192.0.2.54:/home/pod/tfp/strixflerp-stall/conf/E.conf
+
+(rc 0)
+2026-11-11T21:47:23Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); mkdir -p /cache/strixflerp-stall/learned-S; systemctl --user stop strixflerp-stall-sampler 2>/dev/null; systemd-run --user --collect --unit=strixflerp-stall-sampler --property=Nice=5 python3 -I /home/pod/tfp/strixflerp-stall/pair_stall_sampler.py --rank 0 --run /home/pod/tfp/strixflerp-stall/run/stallx-S-214723 --out /home/pod/tfp/strixflerp-stall/samples/S-rank0.jsonl --interval 2 --max-seconds 1786
+Running as unit: strixflerp-stall-sampler.service; invocation ID: 9815822e068244e09742d6bdc7273fa9
+(rc 0)
+2026-11-11T21:47:24Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); mkdir -p /cache/strixflerp-stall/learned-S; systemctl --user stop strixflerp-stall-sampler 2>/dev/null; systemd-run --user --collect --unit=strixflerp-stall-sampler --property=Nice=5 python3 -I /home/pod/tfp/strixflerp-stall/pair_stall_sampler.py --rank 1 --run /home/pod/tfp/strixflerp-stall/run/stallx-S-214723 --out /home/pod/tfp/strixflerp-stall/samples/S-rank1.jsonl --interval 2 --max-seconds 1786
+Running as unit: strixflerp-stall-sampler.service; invocation ID: b0a9708ef6754c71923207ac9a719a8e
+(rc 0)
+2026-11-11T21:47:24Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemd-run --user --collect --unit=strixflerp-stall-up --property=KillMode=process bash -c 'cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip && RUN_ID=stallx-S-214723 TF_SERVE_CONF=/home/pod/tfp/strixflerp-stall/conf/S.conf ./first_light.sh up'
+Running as unit: strixflerp-stall-up.service; invocation ID: 758234f840be4f39968d90c48a58a1ec
+(rc 0)
+2026-11-11T21:48:58Z arm S up in 93.0 s; files by origin {"rank0": {"mgmt-nfs": 27, "root-or-ram": 12, "rail-nfs": 4, "scratch": 1}, "rank1": {"mgmt-nfs": 27, "root-or-ram": 12, "rail-nfs": 4, "scratch": 1}}; rank 1 sockets ['198.51.100.54:53936 198.51.100.50:29644', '198.51.100.54:42794 198.51.100.50:29636', '198.51.100.54:59922 198.51.100.50:29620']
+2026-11-11T21:51:24Z arm S standard-cache pass 1: 37 rank 1 frames, longest 2450 ms
+2026-11-11T21:53:54Z arm S: <HTTPError 500: 'Internal Server Error'>
+2026-11-11T21:53:56Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-stall-up 2>/dev/null; cd /home/pod/tfp/deploy/f64b5ff2e28b/tools/dsv41-hip && RUN_ID=stallx-S-214723 TF_SERVE_CONF=/home/pod/tfp/strixflerp-stall/conf/S.conf ./first_light.sh down
+rank 0: not running
+rank 1: not running
+GPU lock released on ltsp-a
+GPU lock released on ltsp-f
+(rc 0)
+2026-11-11T21:54:05Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 set -e; rm -rf /home/pod/tfp/strixflerp-stall/therock; mkdir -p /home/pod/tfp/strixflerp-stall/therock/lib; cd /data/models/tools/therock-10.2/lib; cp --parents -p libamd_comgr.so.3.5.0 libamdhip64.so.7.17.26392-0000000 libhipblas.so.3.8 libhipblaslt.so.1.5 libhsa-amd-aqlprofile64.so.1.0.0 libhsa-runtime64.so.1.21.0 liborigami.so.1.0 librocblas.so.5.8 librocm_kpack.so.0.1.0 librocprofiler-register.so.0.6.0 librocroller.so.1.0.0 librocsolver.so.0.13 libroctx64.so.4.1.0 libtensilelite-host.so.1.0 llvm/lib/libLLVM.so.24.0git llvm/lib/libclang-cpp.so.24.0git llvm/lib/x86_64-unknown-linux-gnu/libomp.so rocm_sysdeps/lib/librocm_sysdeps_bz2.so rocm_sysdeps/lib/librocm_sysdeps_drm.so.2 rocm_sysdeps/lib/librocm_sysdeps_drm_amdgpu.so.1 rocm_sysdeps/lib/librocm_sysdeps_elf.so.1 rocm_sysdeps/lib/librocm_sysdeps_liblzma.so.5.8.1 rocm_sysdeps/lib/librocm_sysdeps_numa.so.1 rocm_sysdeps/lib/librocm_sysdeps_z.so.1.3.2 rocm_sysdeps/lib/librocm_sysdeps_zstd.so.1.5.7 /home/pod/tfp/strixflerp-stall/therock/lib/; find ./ -maxdepth 1 -type l -exec cp -P -t /home/pod/tfp/strixflerp-stall/therock/lib/ {} + ; find ./llvm/lib -maxdepth 1 -type l -exec cp -P -t /home/pod/tfp/strixflerp-stall/therock/lib/llvm/lib {} + ; find ./llvm/lib/x86_64-unknown-linux-gnu -maxdepth 1 -type l -exec cp -P -t /home/pod/tfp/strixflerp-stall/therock/lib/llvm/lib/x86_64-unknown-linux-gnu {} + ; find ./rocm_sysdeps/lib -maxdepth 1 -type l -exec cp -P -t /home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib {} + ; cp -r ../.kpack /home/pod/tfp/strixflerp-stall/therock/.kpack; du -sb /home/pod/tfp/strixflerp-stall/therock | cut -f1; awk '/^MemAvailable:/ {print $2}' /proc/meminfo
+21.0’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/liborigami.so.1.0’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/librocblas.so.5.8’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/librocm_kpack.so.0.1.0’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/librocprofiler-register.so.0.6.0’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/librocroller.so.1.0.0’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/librocsolver.so.0.13’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/libroctx64.so.4.1.0’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/libtensilelite-host.so.1.0’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/llvm/lib/libLLVM.so.24.0git’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/llvm/lib’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/llvm/lib/libclang-cpp.so.24.0git’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/llvm/lib/x86_64-unknown-linux-gnu/libomp.so’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/llvm/lib/x86_64-unknown-linux-gnu’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib/librocm_sysdeps_bz2.so’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib/librocm_sysdeps_drm.so.2’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib/librocm_sysdeps_drm_amdgpu.so.1’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib/librocm_sysdeps_elf.so.1’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib/librocm_sysdeps_liblzma.so.5.8.1’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib/librocm_sysdeps_numa.so.1’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib/librocm_sysdeps_z.so.1.3.2’: Operation not supported
+cp: preserving permissions for ‘/home/pod/tfp/strixflerp-stall/therock/lib/rocm_sysdeps/lib/librocm_sysdeps_zstd.so.1.5.7’: Operation not supported
+(rc 1)
+2026-11-11T21:54:07Z L: could not stage the libraries on 192.0.2.50
+2026-11-11T21:54:07Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 rm -rf /home/pod/tfp/strixflerp-stall/therock
+
+(rc 0)
+2026-11-11T21:54:07Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 rm -rf /home/pod/tfp/strixflerp-stall/therock
+
+(rc 0)
+2026-11-11T21:54:07Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-stall-up 2>/dev/null; true
+
+(rc 0)
+2026-11-11T21:54:08Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-stall-sampler 2>/dev/null; for u in $(systemctl --user list-units 'tfp-*stallx*' --state=active --no-legend --plain | cut -d' ' -f1); do systemctl --user stop $u; echo stopped $u; done; true
+
+(rc 0)
+2026-11-11T21:54:08Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user stop strixflerp-stall-sampler 2>/dev/null; for u in $(systemctl --user list-units 'tfp-*stallx*' --state=active --no-legend --plain | cut -d' ' -f1); do systemctl --user stop $u; echo stopped $u; done; true
+
+(rc 0)
+2026-11-11T21:54:08Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 rm -rf /home/pod/tfp/strixflerp-stall /cache/strixflerp-stall
+
+(rc 0)
+2026-11-11T21:54:09Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 rm -rf /home/pod/tfp/strixflerp-stall /cache/strixflerp-stall
+
+(rc 0)
+2026-11-11T21:54:09Z RUN OWNER=agent pod-quad release
+2026-11-11 21:54:09  pod-quad: nothing held
+(rc 0)
+2026-11-11T21:54:11Z RUN pod-quad held 192.0.2.50
+
+(rc 1)
+2026-11-11T21:54:11Z RUN pod-quad held 192.0.2.54
+
+(rc 1)
+2026-11-11T21:54:11Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.50 export XDG_RUNTIME_DIR=/run/user/$(id -u); ls -d /home/pod/tfp/strixflerp-stall /cache/strixflerp-stall 2>&1 | head -2; systemctl --user list-units 'strixflerp-stall*' --no-legend --plain | head
+ls: cannot access '/home/pod/tfp/strixflerp-stall': No such file or directory
+ls: cannot access '/cache/strixflerp-stall': No such file or directory
+(rc 0)
+2026-11-11T21:54:11Z RUN ssh -o BatchMode=yes -o ConnectTimeout=8 pod@192.0.2.54 export XDG_RUNTIME_DIR=/run/user/$(id -u); ls -d /home/pod/tfp/strixflerp-stall /cache/strixflerp-stall 2>&1 | head -2; systemctl --user list-units 'strixflerp-stall*' --no-legend --plain | head
+ls: cannot access '/home/pod/tfp/strixflerp-stall': No such file or directory
+ls: cannot access '/cache/strixflerp-stall': No such file or directory
+(rc 0)
+2026-11-11T21:54:11Z hold released; waiting for the pod's keeper to bring serving back (no start from here)

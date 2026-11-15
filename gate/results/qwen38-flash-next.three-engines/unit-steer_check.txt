@@ -1,0 +1,8 @@
+$ /data/projects/strixflerp/build/qwen38-flash-next.three-engines/ninja/steer_check --weights /data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw --ngram /data/models/strix-infer/converted/qwen38-fnext-ngram-int8/ngram.table --tokenizer /data/models/strix-infer/tok/tokenizer.json
+flerp-adapter kernel.flerp.moe_router_gufo provider=kernel.gufo.qfn_kernels:RouterTopK foreign_launches=1 origin_launches=0 (first launch through the provider)
+flerp-adapter kernel.flerp.dense_bf16_strixfold provider=kernel.strixfold.dense_bf16:tf_ds_dense_gemv foreign_launches=1 origin_launches=0 (first launch through the provider)
+flerp-adapter kernel.flerp.dense_bf16_strixfold provider=kernel.strixfold.dense_bf16:tf_ds_dense_gemv foreign_launches=864 origin_launches=0 (exit)
+flerp-adapter kernel.flerp.moe_router_gufo provider=kernel.gufo.qfn_kernels:RouterTopK foreign_launches=1152 origin_launches=0 (exit)
+unsteered batch repeats bit for bit: yes
+slot 0 unchanged by slot 1's steering (bit for bit): yes
+slot 1 changed by its steering: max |dlogit| 34.7915 yes

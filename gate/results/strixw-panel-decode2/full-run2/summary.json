@@ -1,0 +1,558 @@
+{
+ "criteria_file": "gate/strixw-panel-kernels.toml",
+ "cases": 489,
+ "skipped": 6,
+ "bytes_read": 2231897600,
+ "verdicts": [
+  {
+   "criterion": "equal",
+   "pass": true,
+   "detail": "489 of 489 cases byte-equal"
+  },
+  {
+   "criterion": "bad_id",
+   "pass": true,
+   "detail": "21 of 21 out-of-range-id cases byte-equal"
+  },
+  {
+   "criterion": "coverage",
+   "pass": true,
+   "detail": "missing: none"
+  },
+  {
+   "criterion": "read",
+   "pass": false,
+   "detail": "2.232 GB read"
+  },
+  {
+   "criterion": "speed_decode_dense",
+   "pass": true,
+   "detail": "median panel % of origin time per class: attn_o 98.5, attn_qkv 98.7, gdn_in 98.1, gdn_out 99.2, lm_head 96.5, mtp_fc 99.0, ple_kv 99.6, sh_down 90.7, sh_gu 95.6"
+  },
+  {
+   "criterion": "speed_prefill_dense",
+   "pass": true,
+   "detail": "sh_gu M2048 bf16 94.2%; sh_gu M8192 bf16 98.2%; sh_gu M2048 f32 92.1%; sh_gu M8192 f32 96.8%; sh_down M2048 bf16 92.6%; sh_down M8192 bf16 96.2%; sh_down M2048 f32 95.2%; sh_down M8192 f32 96.2%; gdn_in M2048 bf16 99.1%; gdn_in M8192 bf16 98.4%; gdn_in M2048 f32 99.0%; gdn_in M8192 f32 99.9%; gdn_out M2048 bf16 72.1%; gdn_out M8192 bf16 89.4%; gdn_out M2048 f32 67.1%; gdn_out M8192 f32 91.0%; attn_qkv M2048 bf16 93.6%; attn_qkv M8192 bf16 97.8%; attn_qkv M2048 f32 90.8%; attn_qkv M8192 f32 96.8%; attn_o M2048 bf16 68.8%; attn_o M8192 bf16 90.9%; attn_o M2048 f32 67.3%; attn_o M8192 f32 88.4%; ple_kv M2048 bf16 94.0%; ple_kv M8192 bf16 96.7%; ple_kv M2048 f32 93.2%; ple_kv M8192 f32 96.7%; lm_head M2048 bf16 96.2%; mtp_fc M2048 bf16 92.0%; mtp_fc M8192 bf16 97.8%; mtp_fc M2048 f32 93.6%; mtp_fc M8192 f32 97.9%"
+  },
+  {
+   "criterion": "speed_prefill_expert",
+   "pass": true,
+   "detail": "expert-prefill-swiglu-f16h narrow M2048 94.3% (noise); expert-prefill-combine-f16h-shared narrow M2048 93.5% (faster); expert-prefill-combine-f16h-shared wide M8192 95.2% (faster); expert-prefill-swiglu-f16h wide256 M8192 97.2% (noise)"
+  }
+ ],
+ "equality": [
+  {
+   "class": "attn_o",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "attn_o",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "attn_o",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "attn_o",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "attn_qkv",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "attn_qkv",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "attn_qkv",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "attn_qkv",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-decode-combine",
+   "cases": 9,
+   "equal": 9,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine narrow",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine wide",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine wide256",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine-f16h narrow",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine-f16h wide",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine-f16h wide256",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine-f16h-shared narrow",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine-f16h-shared wide",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_down",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-combine-f16h-shared wide256",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-decode-gather",
+   "cases": 9,
+   "equal": 9,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-decode-gather-swiglu",
+   "cases": 9,
+   "equal": 9,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-gather narrow",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-gather wide",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-gather wide256",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-swiglu narrow",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-swiglu wide",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-swiglu wide256",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-swiglu-f16h narrow",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-swiglu-f16h wide",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "exp_gu",
+   "bits": 4,
+   "codes": "real",
+   "path": "expert-prefill-swiglu-f16h wide256",
+   "cases": 4,
+   "equal": 4,
+   "diff_bytes": 0
+  },
+  {
+   "class": "gdn_in",
+   "bits": 4,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "gdn_in",
+   "bits": 4,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "gdn_in",
+   "bits": 8,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "gdn_in",
+   "bits": 8,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "gdn_out",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "gdn_out",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "gdn_out",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "gdn_out",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "lm_head",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "lm_head",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 3,
+   "equal": 3,
+   "diff_bytes": 0
+  },
+  {
+   "class": "lm_head",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "lm_head",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 3,
+   "equal": 3,
+   "diff_bytes": 0
+  },
+  {
+   "class": "mtp_fc",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "mtp_fc",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "mtp_fc",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "mtp_fc",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "ple_kv",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "ple_kv",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "ple_kv",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "ple_kv",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "sh_down",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "sh_down",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "sh_down",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "sh_down",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "sh_gu",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "sh_gu",
+   "bits": 4,
+   "codes": "synthetic",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  },
+  {
+   "class": "sh_gu",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-decode",
+   "cases": 16,
+   "equal": 16,
+   "diff_bytes": 0
+  },
+  {
+   "class": "sh_gu",
+   "bits": 8,
+   "codes": "real",
+   "path": "dense-prefill-wmma",
+   "cases": 6,
+   "equal": 6,
+   "diff_bytes": 0
+  }
+ ]
+}

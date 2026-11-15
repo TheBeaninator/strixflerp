@@ -1,0 +1,59 @@
+id        = "kernel.gufo.ds4_indexer"
+kind      = "kernel"
+summary   = "DeepSeek V4 Flash sparse-attention indexer: 64 heads of width 128 scored one 128-thread block a score, exact MSD radix top-k, plus the DSpark Markov correction"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_indexer.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_indexer_score.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_indexer_topk.hip.hpp",
+]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/detail",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.indexer-score/kv-f32/f32"
+api       = "ds4_gpu_indexer_score_* launchers"
+numeric   = "fp32, each head owns its slot (no inter-warp sync inside the loop)"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "attn.indexer-topk/-/f32.radix"
+api       = "ds4_gpu_indexer_topk_* launchers"
+numeric   = "exact MSD radix selection: +0 and -0 tie, then the lower index wins"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "draft.markov/gguf/f32"
+api       = "DSpark Markov correction kernels in ds4_rocm_indexer.hip.hpp"
+numeric   = "argmax(logits + W2 * W1[prev]) without materializing the full correction"
+regime    = "draft steps"
+
+[[requires]]
+module    = "kernel.gufo.ds4_dspark"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.gufo.ds4_backend"
+reason    = "header fragment of one translation unit; compiles only inside kernel.gufo.ds4_backend"

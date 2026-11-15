@@ -1,0 +1,1568 @@
+{
+ "binaries": {
+  "strixflerp-dsv41-flash.strixfold-tp2-zip2": {
+   "entry": "zig/src/server/main.zig",
+   "installed": "native-hip/bin/tensorfold-native",
+   "main": "serve.strixfold.http",
+   "modules": [
+    "runtime.strixfold.sampling",
+    "runtime.strixfold.lanes",
+    "runtime.strixfold.grammar",
+    "format.strixfold.safetensors",
+    "runtime.strixfold.core",
+    "runtime.strixfold.kit",
+    "kernel.strixfold.dsv41_abi",
+    "runtime.strixfold.gpu_facade",
+    "runtime.strixfold.coll",
+    "kernel.strixfold.coll_proxy",
+    "runtime.strixfold.coll_tcp",
+    "runtime.strixfold.fabric",
+    "runtime.strixfold.coll_rdma",
+    "runtime.strixfold.coll_nccl",
+    "format.strixfold.exl3",
+    "format.strixfold.engram",
+    "kernel.strixfold.triton_kit",
+    "runtime.strixfold.dspark_draft",
+    "runtime.strixfold.prompt_cache",
+    "kernel.strixfold.exl3",
+    "kernel.strixfold.exl3_pf_experts",
+    "kernel.strixfold.moe_gate",
+    "kernel.strixfold.sparse_attn",
+    "kernel.strixfold.indexer_score",
+    "kernel.strixfold.aux",
+    "kernel.strixfold.mhc_mix",
+    "kernel.strixfold.rope_heads",
+    "kernel.strixfold.dense_bf16",
+    "kernel.strixfold.glue",
+    "executor.strixfold.dsv41_vision",
+    "executor.strixfold.dsv41",
+    "executor.flerp.dsv41_zip2",
+    "runtime.strixfold.engine_host",
+    "tool.strixfold.checkpoint_cli",
+    "serve.strixfold.http"
+   ]
+  }
+ },
+ "bindings": {
+  "attn.indexer-score/kv-fp4-e2m1/bf16": "kernel.strixfold.indexer_score",
+  "attn.indexer-topk/-/i64-keys": "kernel.strixfold.aux",
+  "attn.sparse-sink/kv-fp4-e2m1/bf16": "kernel.strixfold.sparse_attn",
+  "cache.prompt-strixfold/-/-": "runtime.strixfold.prompt_cache",
+  "collective.allgather-nccl/-/f32": "runtime.strixfold.coll_nccl",
+  "collective.allgather-rdma/-/f32": "runtime.strixfold.coll_rdma",
+  "collective.allgather-tcp/-/f32": "runtime.strixfold.coll_tcp",
+  "collective.device-proxy/-/-": "kernel.strixfold.coll_proxy",
+  "collective.interface/-/-": "runtime.strixfold.coll",
+  "device.facade/hip/-": "runtime.strixfold.gpu_facade",
+  "draft.markov/f16/bf16": "kernel.strixfold.triton_kit",
+  "executor.host/hip/-": "runtime.strixfold.engine_host",
+  "executor.lane-backend/-/-": "runtime.strixfold.lanes",
+  "executor.model/deepseek-v4.1-flash/exl3": "executor.flerp.dsv41_zip2",
+  "format.device-view/exl3/-": "format.strixfold.exl3",
+  "format.loader/engram-fp8/-": "format.strixfold.engram",
+  "format.reader-strixfold/safetensors/-": "format.strixfold.safetensors",
+  "grammar.matcher-strixfold/-/-": "runtime.strixfold.grammar",
+  "hc.mix-decode/dsv41-mhc-f32/bf16": "kernel.strixfold.triton_kit",
+  "hc.mix-prefill/dsv41-mhc-f32/bf16": "kernel.strixfold.mhc_mix",
+  "kvcache.store/fp4-e2m1/bf16": "kernel.strixfold.triton_kit",
+  "linear.decode/exl3/f16-f32.row-invariant": "kernel.strixfold.exl3",
+  "linear.dense/bf16/bf16-f32.row-invariant": "kernel.strixfold.dense_bf16",
+  "linear.prefill/exl3/f16-f32": "kernel.strixfold.exl3",
+  "moe.experts-decode/exl3/bf16": "kernel.strixfold.exl3",
+  "moe.experts-prefill/exl3/bf16.jobs": "kernel.strixfold.exl3_pf_experts",
+  "moe.gate-logits/f16/bf16-f32": "kernel.strixfold.moe_gate",
+  "moe.router/-/bf16-f32": "kernel.strixfold.triton_kit",
+  "norm.rmsnorm/-/bf16.triton-bits": "kernel.strixfold.triton_kit",
+  "pos.rope-heads/-/bf16.hip": "kernel.strixfold.rope_heads",
+  "pos.rope-heads/-/bf16.triton-bits": "kernel.strixfold.triton_kit",
+  "residual.add2/-/f32-bf16": "kernel.strixfold.glue",
+  "sample.next-token/-/f64": "runtime.strixfold.sampling",
+  "speculation.draft/dspark/bf16": "runtime.strixfold.dspark_draft",
+  "text.chat-template-strixfold/jinja/-": "runtime.strixfold.core",
+  "text.tokenizer-strixfold/-/-": "runtime.strixfold.core",
+  "tool.checkpoint-cli/-/-": "tool.strixfold.checkpoint_cli",
+  "verify.kit-manifest/hsaco/-": "runtime.strixfold.kit"
+ },
+ "files": {
+  ".zig-version": {
+   "module": "tool.strixfold.zig_build",
+   "sha256": "02d38e98e88f4a8dc2ea40dbb769338601066fc94920b52882a14f21ad97f7ee"
+  },
+  "build.zig": {
+   "module": "tool.strixfold.zig_build",
+   "sha256": "40271b3cab1dabfcad1aaf9d90a524042535132c949da3b5ae62ccb6f24ea242"
+  },
+  "build.zig.zon": {
+   "module": "tool.strixfold.zig_build",
+   "sha256": "a2ca306e9eff744b370630b0b61df0c883a7398e41c2bed777613d3556b4581c"
+  },
+  "tools/draft_vocab.py": {
+   "module": "runtime.strixfold.dspark_draft",
+   "sha256": "399270dde9798467182cf9df3b9fcea648a9505e6d26b212ad6bb34397d80a78"
+  },
+  "tools/draft_vocab_extend.py": {
+   "module": "runtime.strixfold.dspark_draft",
+   "sha256": "f3cb72595405a1909b3f1c7978e32717c2a55d2f1f7d2011224452c22fa6c1ed"
+  },
+  "tools/dsv41-hip/KERNELS.md": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "e889a4bdb7672dc4fb2033c50d335cf0b7f89604e81ff59ad684a8c3c6e22cba"
+  },
+  "tools/dsv41-hip/kernel_registry.py": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "49e87ab01c74d158788149d9ae7efc317da08536c0c9a14f220b28ffe5f0067c"
+  },
+  "tools/dsv41-hip/kernels.json": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "4148cf17123555122b2727f66310cd4556b65dffd4cc9c1b24022bc1ecd952f4"
+  },
+  "tools/dsv41-hip/numerics/PROVENANCE.md": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "7cee58b35eae7883b428f6828841e154a02f56790b54a0cfdc8af17a1d97c4ff"
+  },
+  "tools/dsv41-hip/numerics/controls.json": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "b16c82d017b1e448eef59e59475dda73be7490a861aa798bf4a304080433cea4"
+  },
+  "tools/dsv41-hip/numerics/layer_points-1.6.0.json": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "4599cc2a1ac4e5a3acad2e7f6d015ec8e9bd99355e2325e677f447fdfed36e76"
+  },
+  "tools/dsv41-hip/numerics/layer_points.json": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "c89080523127e4c4f4f6094c6de99a31a5af054fe3351dd786d7d8d3510c89be"
+  },
+  "tools/dsv41-hip/numerics/numerics-1.6.0.json": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "99f9a85c4513962dc73d28e4cc1fc47ced12700d173a082fda406c0065476c41"
+  },
+  "tools/dsv41-hip/numerics/numerics.json": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "a4db4f12058368cf595402a98629112835038cde9a341ba28686b64a3b97a1d3"
+  },
+  "tools/dsv41-hip/numerics/op_points.json": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "33109397cd0667e882ac10a4403898bdc6f613fae46d6619fd6fe8b2bd08ec9d"
+  },
+  "tools/dsv41-hip/rdma_check.py": {
+   "module": "runtime.strixfold.coll_rdma",
+   "sha256": "28a30c56ee390e18fce04829508918edd18d3fd7ef76925181151cd6d5e095eb"
+  },
+  "tools/dsv41-hip/tri/README.md": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "425b333de97bbaa65539a4cda5bcf68347b9c8e4f146e46d1ccb24d7bc4a7e1a"
+  },
+  "tools/dsv41-hip/tri/SHA256SUMS": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "84b0b22d71fcc586b3fbacad7e881ac13c0637c332f1cb2df829392c550e266d"
+  },
+  "tools/dsv41-hip/tri/aot_build.py": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "b55592ef873b02174c29bc46a4c84834679d2cd6553669065ade805a6e09a73f"
+  },
+  "tools/dsv41-hip/tri/common.py": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "c6ab4b61740cb89e371338d0977d8127450e550787cd50970cf406dd97ac5d11"
+  },
+  "tools/dsv41-hip/tri/fetch_upstream.sh": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "84e44563a9c66c195cad78d486dddf6dc8b8a65fdee0e187489ee0e8d58d2c2a"
+  },
+  "tools/dsv41-hip/tri/kit_table.py": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "af460b6f26badf11e680e358fd4fb8863c3b5a042eb27081ff3366486dadb095"
+  },
+  "tools/dsv41-hip/tri/make_port.py": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "22187dd209c8b8a885eb620d21fe915920467cb118155127afe3a87ce59da9f8"
+  },
+  "tools/dsv41-hip/tri/tri_kernels.py": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "2aad25612d9e967ad2374c162bf9d0367ddc8e7e9945ec006bfaf77a3ece0a5e"
+  },
+  "tools/dsv41-hip/tri/variants.py": {
+   "module": "kernel.strixfold.triton_kit",
+   "sha256": "4163d02dab022307f6ec8e678c59bb8c6fd9eadd09799923078c68b912ccee09"
+  },
+  "tools/dsv41-hip/zig_build.sh": {
+   "module": "tool.strixfold.zig_build",
+   "sha256": "d726b7f37d4e5245406bf78f542b31dad9d575029f21c5d127c2f1e8c2b593eb"
+  },
+  "zig/build/cuda.zig": {
+   "module": "tool.strixfold.zig_build",
+   "sha256": "9adc08971813f0b7aa92d21f4698071812ed07bacda07d57d97ac6cb83da5a36"
+  },
+  "zig/build/dist.zig": {
+   "module": "tool.strixfold.zig_build",
+   "sha256": "19e49c4c64acfc2a17a31415a9dbc1534de1dbb01ca356366e59725cf4582d42"
+  },
+  "zig/build/hip_dsv41.zig": {
+   "module": "tool.strixfold.zig_build",
+   "sha256": "a918a936441faf9790ca077c61e6a73b944cf3aa691a2e9e23fb707e84f9646a"
+  },
+  "zig/kernels/hip/dsv41/abi.h": {
+   "module": "kernel.strixfold.dsv41_abi",
+   "sha256": "db8422340c4fd84d4581c2761dcd1fecdfc3ae914b30ae977dc36e7a73d1ce2d"
+  },
+  "zig/kernels/hip/dsv41/aux.hip": {
+   "module": "kernel.strixfold.aux",
+   "sha256": "0f587d060e0c9493e34bef08f53e4b36aff2c7c8847691efeeb9203a02f595d1"
+  },
+  "zig/kernels/hip/dsv41/aux_attn.hip": {
+   "module": "kernel.strixfold.sparse_attn",
+   "sha256": "c538fe13611fce8cde5318cc171607f4cdabd85c5cc8a276b86fbe749357a851"
+  },
+  "zig/kernels/hip/dsv41/aux_gate.hip": {
+   "module": "kernel.strixfold.moe_gate",
+   "sha256": "268fa4b1b4f1457355e629c94f4dd947b7894026f38ed76a45ec551a7ba5c011"
+  },
+  "zig/kernels/hip/dsv41/aux_hc.hip": {
+   "module": "kernel.strixfold.mhc_mix",
+   "sha256": "eaaff9db71b943fdc3e5712710b5fed7f7a6705b407c245d43b1e651d25e6db0"
+  },
+  "zig/kernels/hip/dsv41/aux_index.hip": {
+   "module": "kernel.strixfold.indexer_score",
+   "sha256": "192de1fe8e82f86ba17924e1a2aa2e5e0cbd91ea9810192bde4acb24d33194db"
+  },
+  "zig/kernels/hip/dsv41/aux_rope.hip": {
+   "module": "kernel.strixfold.rope_heads",
+   "sha256": "4626fd28ce13ddb41c012b52826e509e18771422334c2cfa0d76397d8654e8fd"
+  },
+  "zig/kernels/hip/dsv41/coll.hip": {
+   "module": "kernel.strixfold.coll_proxy",
+   "sha256": "cd32c7006d0b5611db712cc8a506627036a529a33d40714770b27e9d618407ae"
+  },
+  "zig/kernels/hip/dsv41/dense.hip": {
+   "module": "kernel.strixfold.dense_bf16",
+   "sha256": "8a965c8310893644fa8ca5872e27008bb270fc4c5e82b6e1da049b70980c06b4"
+  },
+  "zig/kernels/hip/dsv41/exl3.hip": {
+   "module": "kernel.strixfold.exl3",
+   "sha256": "a7ca8eab12c1c539cb45d0be0af4be605d4bbb2860c9ef014614e90f01cc7219"
+  },
+  "zig/kernels/hip/dsv41/exl3_pf.hip": {
+   "module": "kernel.strixfold.exl3_pf_experts",
+   "sha256": "1309366028442cc76ee6761c07fe7e2faf5f3557cea8be84b4e77a78e7d2a823"
+  },
+  "zig/kernels/hip/dsv41/glue.hip": {
+   "module": "kernel.strixfold.glue",
+   "sha256": "d407121f0f01cc457074244394f632e3db62278a64b5b03bb1096f6e186aa5cf"
+  },
+  "zig/kernels/hip/dsv41/registry.json": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "33af02a7e6708eefd6ac9aafca8dd7e2ec2beb8580c0278c2cf0667629be3510"
+  },
+  "zig/src/cli/cli.zig": {
+   "module": "tool.strixfold.checkpoint_cli",
+   "sha256": "2957bc5637eb6a127288dfdcb1cf12b4145b2de234228843febf97a421ef9593"
+  },
+  "zig/src/cli/hub.zig": {
+   "module": "tool.strixfold.checkpoint_cli",
+   "sha256": "3364a1b95d4fee0b25b2066dbc025396c7fc5d241d6a74f64d36daf5a5eb8cfb"
+  },
+  "zig/src/cli/info.zig": {
+   "module": "tool.strixfold.checkpoint_cli",
+   "sha256": "1d099b7b6412c581e567f9d338f63009d912d827888bc76089160ca2648715b8"
+  },
+  "zig/src/cli/models.zig": {
+   "module": "tool.strixfold.checkpoint_cli",
+   "sha256": "fe855119e75a706d03986a42ec0de81c5f95ba435c419690ad86bbe9743b3d5b"
+  },
+  "zig/src/cli/pull.zig": {
+   "module": "tool.strixfold.checkpoint_cli",
+   "sha256": "1f9c24ac05ea97908798b5502f64ec9c7367dc52ab0a2c726aac2d961913acbc"
+  },
+  "zig/src/core/affine_mm.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "f3ddceddb36ed207b0b5e7f8b05be900a25afae3c9592733df5b8eb40c35efbd"
+  },
+  "zig/src/core/checkpoint.zig": {
+   "module": "format.strixfold.safetensors",
+   "sha256": "97d781593257722e0347b17088ad3e29a820866cc3f27861d205c602d673b61e"
+  },
+  "zig/src/core/copy_index.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "b8b0c344744955b07567bb19afea646dee4dda92f32890ce929fbf8dd19a57f5"
+  },
+  "zig/src/core/direct_io.zig": {
+   "module": "format.strixfold.safetensors",
+   "sha256": "3a7b9ece096b983178e4d1c90d98a383399f0b8eec39e75cf3dbffbf24116e36"
+  },
+  "zig/src/core/draft_depth.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "c323092fdfa8a5030a4df8f71043399b4f4309bef905dd9a24fe0f5556e57deb"
+  },
+  "zig/src/core/engine_api.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "e91d0b9643d91f85f8775601795a92a8932beadc286ea0b4c06a0d59011b4961"
+  },
+  "zig/src/core/fence.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "c3c14eee4cc3476b0e9efd67501209d0727c7dbf70b4789af3f412eb5d9af9a5"
+  },
+  "zig/src/core/frags.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "d99f4222d78bd4c59401f8268b543fc4d6d362e396ee5352870fad303787f9e3"
+  },
+  "zig/src/core/hc.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "eed8756f2c1b57f481df1f0ff5570e506021a599ce8f56ec85667431f6a4a898"
+  },
+  "zig/src/core/ids_json.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "28a7929491c9b426a62841cfde15645a2a01a0199b97f088de34fd379e6d1a7c"
+  },
+  "zig/src/core/keepalive.zig": {
+   "module": "runtime.strixfold.prompt_cache",
+   "sha256": "7cbe49afc5478a7dd599e08d29e0d07d483cf0d14f5de380fabc88d2e9a4784f"
+  },
+  "zig/src/core/lane_host.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "1537daf3691c8ce07475d025d4f38f836563df9988b170dcef25b66f4701c339"
+  },
+  "zig/src/core/lane_host_reuse_test.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "a1543c4853c140cd52b786f41f5d3b9002f44ac28ac52a61d702a926e885fe3f"
+  },
+  "zig/src/core/lane_host_test.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "c586a761dd2daa8ea603463b4c7d2218044511c35769fb32829038ff4acb305f"
+  },
+  "zig/src/core/lanes/accept.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "004325e7ab03aedc750aae013de26760021cbad7af1b06a7386fb6e0fe8abb43"
+  },
+  "zig/src/core/lanes/allocate.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "7b48fbec78d47765a90ab9b0ce29c68b2c53948414697ae0a522ecda2d9c8b8e"
+  },
+  "zig/src/core/lanes/backend.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "723cf9740bd8b46fc1ef529e3f2a8556e1883835cf4e7fe2567e94b8fb24d378"
+  },
+  "zig/src/core/lanes/config.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "8b0d3336d32bffaba593ff95297241648636c7902bdc7f64a7eca08b53cf5bd7"
+  },
+  "zig/src/core/lanes/depth.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "3f988adf263b1de68c3512cef5fa39457516762e49dc53c1abb4c572f33cdf96"
+  },
+  "zig/src/core/lanes/engine.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "41439e0fd796e1570b653166bcf9264ded57b89475259443d9d592cc85fdca9c"
+  },
+  "zig/src/core/lanes/engine_test.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "eae365b7cb9eca1ed3a1f3661bb0caf4f4c7563da599dd491edab34f704c8fe2"
+  },
+  "zig/src/core/lanes/events.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "a291d5ffc8fd84d6107734103ce351dd0ab4721875f0246cd86054c221f24100"
+  },
+  "zig/src/core/lanes/fake.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "4723b758a8e845afb1d555a59564cb075cb8f49e0de050450abb30a1f5da0ead"
+  },
+  "zig/src/core/lanes/fill.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "910b50f4c36222ac5a7182b21845919fd2ef07e9f040c8c79bafedbc1d6355b1"
+  },
+  "zig/src/core/lanes/gpu_full.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "1d78d225005e08c9def59174cbb493743fc2a165e6ee504c2b1b2d511d46ed8c"
+  },
+  "zig/src/core/lanes/gpu_full_test.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "9bf20464568c14e3e9185976beccd396f7ed2300acd3969c27072eba531ca783"
+  },
+  "zig/src/core/lanes/gpu_rule.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "75e6fbf310a138992cd2724d30b2c0bacecb163f989e26717546bb22374bc8ed"
+  },
+  "zig/src/core/lanes/grammar/constraint.zig": {
+   "module": "runtime.strixfold.grammar",
+   "sha256": "26a80a49d4eb8f15cd41da9f16db84e8fc523538acd94307a7ee99cfc744fa65"
+  },
+  "zig/src/core/lanes/grammar/grammar.zig": {
+   "module": "runtime.strixfold.grammar",
+   "sha256": "3cf380e24dc2376d81014e00940d32d4a682d6dc1b4c575749e1176a1111a02d"
+  },
+  "zig/src/core/lanes/grammar/grammar_test.zig": {
+   "module": "runtime.strixfold.grammar",
+   "sha256": "8408ac0d0ad2099ea3a550ece146a32662f6fbf04de5c6abe1268c705ef17c89"
+  },
+  "zig/src/core/lanes/grammar/machine.zig": {
+   "module": "runtime.strixfold.grammar",
+   "sha256": "064cd2751944ab23a4136a65f9e083df040e5b288a075533413ff70084276735"
+  },
+  "zig/src/core/lanes/grammar/program.zig": {
+   "module": "runtime.strixfold.grammar",
+   "sha256": "fe9bf2789ba63916010f2ef533ac82a86ebb7040789bbc53a4cb2cf0cda2ae3b"
+  },
+  "zig/src/core/lanes/grammar/regex.zig": {
+   "module": "runtime.strixfold.grammar",
+   "sha256": "702120f5f98bef07a5216911c22c821ef5cddfd6a23a2af7a4be3a5627b9f517"
+  },
+  "zig/src/core/lanes/grammar/trie.zig": {
+   "module": "runtime.strixfold.grammar",
+   "sha256": "f4b338ac4c4328d3b78f2193cdda1a8226ac2f38f507bf9c0415f96ba8c78cc6"
+  },
+  "zig/src/core/lanes/grammar/vocab.zig": {
+   "module": "runtime.strixfold.grammar",
+   "sha256": "72625b8f50f438abe97d3244acab4cf0a1b1f8d1bd11e6e0e50d9b6b6a680b1e"
+  },
+  "zig/src/core/lanes/lanes.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "adf1c6638130418c96c1f4c1db9b486fa9d4888882045f3a4f4cfc85c9e0b668"
+  },
+  "zig/src/core/lanes/plan_lanes.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "26fd403fc67799ce963dbaf4ef8d6512a33708e7e61ad5b88ae1a43f1f5d9c55"
+  },
+  "zig/src/core/lanes/proposer.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "6e16ac6f6c8ded2a1135ea948a3019375c2cb966aac18e2b2d5e6a10b6e3f0b2"
+  },
+  "zig/src/core/lanes/sampling.zig": {
+   "module": "runtime.strixfold.sampling",
+   "sha256": "dc1ff85151bb552e889e39309baa1a98c655db31417547352184f32eb419830b"
+  },
+  "zig/src/core/lanes/shape.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "8f56bb33f18b585434e56b55e8d5bb4adaa214e6366397bf0d9bbeaad09fdcba"
+  },
+  "zig/src/core/lanes/stream.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "83e8e8c545e848bae9698c423d8c5615985dc5aebba49a3f7282f29b21821198"
+  },
+  "zig/src/core/lanes/table.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "7d7621db0a70831289b2ebe0f313048f2b74fdbee694ecbf9091c55c2fcc4055"
+  },
+  "zig/src/core/lanes/trail.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "c6b41f1baf92f15507f9022fe45fc9e53e1476f1cc5b75e2eb5f92737c4fd090"
+  },
+  "zig/src/core/lanes/windows.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "6b5ab1c45db219b8d9510766e658871df70a42e31ce2660cc04aacd78328bafe"
+  },
+  "zig/src/core/moe_route.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "aa0c7c3a3977c00b58bb1bc38a0611bac03e4673411925a2e19c903187f89dee"
+  },
+  "zig/src/core/npy.zig": {
+   "module": "format.strixfold.safetensors",
+   "sha256": "b9a4d01a60f293133019bc9752a6e6bcfc113aabdb36ff499a3cf03b820f1adf"
+  },
+  "zig/src/core/prompt_cache.zig": {
+   "module": "runtime.strixfold.prompt_cache",
+   "sha256": "958136fc48b4f3d5a7b36a87caaf97eb9c504594ce89b7e10ae0931f7b20e38c"
+  },
+  "zig/src/core/prompt_cache_test.zig": {
+   "module": "runtime.strixfold.prompt_cache",
+   "sha256": "647b431c8c60c97979e1cf675ac2295168f690cdc8da52588ad8edb15c62ca0b"
+  },
+  "zig/src/core/prompt_imprint.zig": {
+   "module": "runtime.strixfold.prompt_cache",
+   "sha256": "ee48e34ef5609d205dabfaa5396f3517d3a7a81dbcc0af1283d3a8696a17849a"
+  },
+  "zig/src/core/prompt_imprint_test.zig": {
+   "module": "runtime.strixfold.prompt_cache",
+   "sha256": "490fbcdc3b905c1982e4dd8fbb521ef54484742443e6178b58ac16c397325350"
+  },
+  "zig/src/core/root.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "ffcf279a324ad3a236fdb6aac3aed63ce295aa02dcd0037fc86d922dd19e5917"
+  },
+  "zig/src/core/row_projection.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "04b192318b3f488868542632057bc43bc49a10a91874c698d425433eef3b050a"
+  },
+  "zig/src/core/safetensors.zig": {
+   "module": "format.strixfold.safetensors",
+   "sha256": "599713662c3796e71763527abd65962728f9ca119da4dd974da02e643049059f"
+  },
+  "zig/src/core/segments.zig": {
+   "module": "runtime.strixfold.prompt_cache",
+   "sha256": "ce04a5a3e1d7a6735ab8af65bd230b27833c51915adea54d9bf9cf322398d8c7"
+  },
+  "zig/src/core/stagger.zig": {
+   "module": "runtime.strixfold.lanes",
+   "sha256": "483903f36aae2cb628eabffdf99f2db1b2daaaea8a49f08e1713fe94c3bb3821"
+  },
+  "zig/src/core/template/access.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "daff878afce1304e8816c732d3f756c7ec9690e659dd0826b2f33c5f5cac5b66"
+  },
+  "zig/src/core/template/ast.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "de15f2d37aa5c493160caaabb8ded47b07bb67c50f2c88b697143288ab2f882f"
+  },
+  "zig/src/core/template/eval.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "82c783f3b69bbf21c3daa256411aaaccdd496f9d4795474d2964ba2efccb402f"
+  },
+  "zig/src/core/template/filters.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "28dfaf688f7df03692ddbf32a4fbfb18343b2577cc19313357d5260fee4ec10b"
+  },
+  "zig/src/core/template/lexer.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "a7ffed9d8bead16a1d4ee485027a3036b7d7ebec0c78f69b848e19d80d23332e"
+  },
+  "zig/src/core/template/methods.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "22b61cf5dc253840ce31fafa9b74c26d144f2be21245cdbabb4880f7b117124c"
+  },
+  "zig/src/core/template/parity.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "e7e51c88635b0adeb10f5c4742fa7c599372d3e4c0e0ac9aff77e68c1f01853c"
+  },
+  "zig/src/core/template/parser.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "3d2a92f70b83a84b61d38d60a15d56912b61cfcd07e3dabfea4c2e96659cfc5d"
+  },
+  "zig/src/core/template/pyjson.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "a6c1b6a5ba17a29128fb507e2319bb71b4a35109d91062214ebfbea8590a19fc"
+  },
+  "zig/src/core/template/scope.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "f2d3f565f6474185467ed82ca1ab5a58657492f1db226f56b5d316c996e20ca3"
+  },
+  "zig/src/core/template/template.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "52c319874b4648cad3b2570731e772afa2ea0759d9370bb53b7888665a3d8e50"
+  },
+  "zig/src/core/template/tests.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "0eb5768c703194d4f3b0083f4b8c690280276b3412e4ecfed505875f5cbad16d"
+  },
+  "zig/src/core/template/unicode.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "7dae651da09baa107663d4175ba7eec15f34ee07e57298aec45c6c78ab3e19e3"
+  },
+  "zig/src/core/template/unicode_data.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "9fb5fdf74c6237048d491d4e960c22b35f2210af37aa3b2e47bb850c2281580b"
+  },
+  "zig/src/core/template/value.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "fc21507b873b851c6eade7951baec35c82790334644da27fde0cbee04019e2c7"
+  },
+  "zig/src/core/tokenizer/check.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "c947d13fb742cb5a79d4e9d4162a42f52968e505e4ad63ab6000fc1dd1ff8f09"
+  },
+  "zig/src/core/tokenizer/model.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "812d90676463e829cccffc2050565aef337aed4faa5ba2cb6a87c87e80b7166b"
+  },
+  "zig/src/core/tokenizer/regex.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "fc2d6d8225ca450aba074f2c68c32611f37b0f6f4915aa0f143d653a984d898b"
+  },
+  "zig/src/core/tokenizer/steps.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "a9ac6a6b891b29c1652e36b181cb85ccbf92c14b60daddc064b46e822965822f"
+  },
+  "zig/src/core/tokenizer/tiktoken.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "38a08bae194fb3c4293ee5c5f7986ad723f27a78493706e8b8890f6478648f4d"
+  },
+  "zig/src/core/tokenizer/tokenizer.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "622e87d7ee5f329d3bf38d4cb5689b1ad7986deb2a616a5296f46457ab020ef7"
+  },
+  "zig/src/core/tokenizer/unicode.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "93babef3489d305dc7934c1d650b7b9663bbd93f6f858131612913cbd83db171"
+  },
+  "zig/src/core/tokenizer/unicode_data.zig": {
+   "module": "runtime.strixfold.core",
+   "sha256": "288ab80c28fcbd318548b21b9b8f702195da1e0f44a641d0778268251db29796"
+  },
+  "zig/src/fabric/collective.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "93c872f6818357233bf9a19ad77aaa3c293019d7aed34267c681f98b9a62c427"
+  },
+  "zig/src/fabric/cost.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "26005cf99bae7be72623d6b198c62019bc7fb65861ae83c7662c5d09244c66cc"
+  },
+  "zig/src/fabric/decoder.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "42f1e8a90a17190f5db78733bed0ce8e6e5b3cea2d25f8c90854508fd5b88b4a"
+  },
+  "zig/src/fabric/fabric.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "69c383209bd8f5001f9e15e91f60610256d073da3d05dd280822404a4fe18eac"
+  },
+  "zig/src/fabric/fake.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "e2c9a7c4ebcb71af87f4bba043e587b474b93bdc6ab9d60fbe1f3896b4061842"
+  },
+  "zig/src/fabric/frames.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "374862969f1cf4c2c5b4dd580edd5327ca814c9e960f963ce7ce823c18a1515c"
+  },
+  "zig/src/fabric/layout.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "976a126bb1cb7884376feeab34d322d945aac048895c541f990ed6c5983ea66f"
+  },
+  "zig/src/fabric/link_fake.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "73d2afb4afb7699e84c0c17b183df3bc9577bcbe557757361242c27a118921b0"
+  },
+  "zig/src/fabric/mailbox.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "3351be23bf6393d6ad1cf45d09b74c1529bf5765b926933ad6f38e6dbde9e397"
+  },
+  "zig/src/fabric/manifest.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "34b4fb61af03a1224d4dc690bccfdf2159da9938ebad21e4f57ec44f24c8410a"
+  },
+  "zig/src/fabric/mcdma.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "003f45f80a0f328f2d7fb3d9eb397299934316c3b94bb6b0c134c7c9141613ad"
+  },
+  "zig/src/fabric/mcdma_abi.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "f766208080e9977739ec4977e2440305a96a76c705b52c26ac3a3c992c1422af"
+  },
+  "zig/src/fabric/packet.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "f1673110b0e7812ef1b8ffce9086a247430963d0bc9c6e9f7ab25bf63b4dbcdc"
+  },
+  "zig/src/fabric/prefill_source.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "6ed85758038dbd21e68afe5f501dfebb3f61f0aaec867b809e9d4f5b85587aeb"
+  },
+  "zig/src/fabric/producer.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "a3832ac23c6f3651f33dba9ed9b6169b1f234760d4e4f75f33159192be688623"
+  },
+  "zig/src/fabric/rdma.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "683671d806107ba7eb803ccf764e695f4bed6cfa75854c7fbb109778d1973ced"
+  },
+  "zig/src/fabric/registration.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "6d756c748f08e8dbba75ab920e57d64f148873a453898eaa762ea575d6c1ce60"
+  },
+  "zig/src/fabric/sendrecv.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "b933ad55fcd2e5ede12905d7fae7a1d80fb2a1b8ebafd4b5a4841421d6e7e752"
+  },
+  "zig/src/fabric/sendrecv_fake.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "c7872b39065c73a70475757f5041b37d3ea914969de1230e67d15a66a00964f0"
+  },
+  "zig/src/fabric/verbs.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "9924bdba59ed3008c3701a6a8cb7e65fb3b099586ec99bc07c18bea60bea5504"
+  },
+  "zig/src/fabric/verbs_abi.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "a59b5939b91903dfd602683eb8f29542e1d6efc241fc69f9fc8624fc30973599"
+  },
+  "zig/src/fabric/verbs_link.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "e7fdfdb165c828e4ea9fb6da75fc1015688d939fec52ec9e540793f44b0a6fca"
+  },
+  "zig/src/fabric/verbs_qp.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "8fe47c318746b4c0bad314e5d358052d27f95aa0eb6898b95b96f492b2e30e2b"
+  },
+  "zig/src/fabric/wire.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "82378dc8adab257dd5e1abd9e914eb19f7b770d15078b7bd49f43ee472a8e584"
+  },
+  "zig/src/fabric/words.zig": {
+   "module": "runtime.strixfold.fabric",
+   "sha256": "714549f9273921a660deafa90814e98a57538c243394d028aec8151aff82e74c"
+  },
+  "zig/src/families/dsv41/blas.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "1c663ca74a1cc8be625fe23614cdb1451b565e7299b310476d895c0adb86422e"
+  },
+  "zig/src/families/dsv41/check_main.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "55dd68221f3ba5243f6f84e38f7af4744196d3f6dafb403eacd59fa74c9e9340"
+  },
+  "zig/src/families/dsv41/checkpoint.zig": {
+   "module": "format.strixfold.exl3",
+   "sha256": "717932a25bea1e90a18941d04ff7b3d31468d0a11a3c76a26d93c0388d0acdc7"
+  },
+  "zig/src/families/dsv41/coll.zig": {
+   "module": "runtime.strixfold.coll",
+   "sha256": "5b9a00d918c33ed00bcdc7ca2fe074290b4c16d58243afb7f718923b32ba7d2f"
+  },
+  "zig/src/families/dsv41/comm.zig": {
+   "module": "runtime.strixfold.coll_nccl",
+   "sha256": "578784d60587dd0af87cc4f604e277496e044a0a69fa6263187b3b293a15b827"
+  },
+  "zig/src/families/dsv41/comm_main.zig": {
+   "module": "runtime.strixfold.coll_nccl",
+   "sha256": "fef85b6d8d21b60b2366e281cec714e58789d11a664d7f8f3182f206af64c70c"
+  },
+  "zig/src/families/dsv41/config.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "67121723ad7b274de83d6d149d972f6c5442af7deb9440871c8010700dc97584"
+  },
+  "zig/src/families/dsv41/cpu.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "1c0449adc3f8912b85d5426a16e989eb9fa9f223f4ec9fc7a470229d050ba214"
+  },
+  "zig/src/families/dsv41/cublas.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "babffd81a974c9201b93645939ff0f7ec1c9efca3e0b76b850b280e4a4946eaa"
+  },
+  "zig/src/families/dsv41/cublaslt.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "e5db0e72968b38f06b1633753442f9b061f8b2a0695b5cdbfc92247948022816"
+  },
+  "zig/src/families/dsv41/dense.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "fd55eada8744685e0a56f75853f9fb1c974bd165a6ac0764473d53a321fa741d"
+  },
+  "zig/src/families/dsv41/draft.zig": {
+   "module": "runtime.strixfold.dspark_draft",
+   "sha256": "037694577bb882c4c56ef4835cc42dd333860a88a61cbf925fcd3e72b02b1ed7"
+  },
+  "zig/src/families/dsv41/draft2d.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "c4489a29f9cbeea5668fd22d8b0cc58b4f7af73d7d21f9aa09eabdaf955d17d5"
+  },
+  "zig/src/families/dsv41/dsv41.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "bf37e3a419327857f087497eb8ad1bcf12d85245dc0b048a2204c9f9127a204d"
+  },
+  "zig/src/families/dsv41/elf.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "a21f67caa2f9683d343a2ca06589a93297db2b84b7762d5c3e1784e9f7006e86"
+  },
+  "zig/src/families/dsv41/engram.zig": {
+   "module": "format.strixfold.engram",
+   "sha256": "01c063a405dc1f4d310e77d0e1145e33ec89d9fd3fedfca6fac6b91e8aa9675b"
+  },
+  "zig/src/families/dsv41/engram_aio.zig": {
+   "module": "format.strixfold.engram",
+   "sha256": "d37a3fcec45e82f5e8f2bbc86689f95f1bed2997f36ca197a604e57ee3ce32f5"
+  },
+  "zig/src/families/dsv41/engram_check_main.zig": {
+   "module": "format.strixfold.engram",
+   "sha256": "25db24e4f9a5e219f446ca7bee92a6a0224b56b6b661bb8c2bee2ec9a3b0b558"
+  },
+  "zig/src/families/dsv41/engram_io.zig": {
+   "module": "format.strixfold.engram",
+   "sha256": "e1e04ddd84b2e52d45b2b12aaa2f0dc8bd702b92771aabeb928c4f573d8dbacc"
+  },
+  "zig/src/families/dsv41/exact.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "f899503d0c268e76f2416065b286d23c88a8dabbd65c092e6649b6d8d0245636"
+  },
+  "zig/src/families/dsv41/exl3_experts.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "fe674e14c10830090e690756f28f52ae2b584a8f8ed908ded80c6f1b8b6d4f9f"
+  },
+  "zig/src/families/dsv41/exl3_experts2d.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "52c1586b5e1418708f87baf11862b080ad3f1e09518f3f6ca2710904e18af00d"
+  },
+  "zig/src/families/dsv41/exl3_experts2d_rec.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "212f0d108db8a680784deea056b74a04706a3a8c821b79bf7e7ffd7408673a7a"
+  },
+  "zig/src/families/dsv41/exl3_experts_rec.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "6f41cc2581f56459264fb266c2b57306dcf1512161d8594551e13079a9f7243b"
+  },
+  "zig/src/families/dsv41/exl3_linear.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "b0cc7a8cff84678620d33c2cefb9d9f1905fc4884916c2211000258485362af1"
+  },
+  "zig/src/families/dsv41/exl3_prefill.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "6fbe0f95993929ee965ed8cd214f14fc627bf81618c1543da98b2d04d41caa26"
+  },
+  "zig/src/families/dsv41/fan.zig": {
+   "module": "runtime.strixfold.coll",
+   "sha256": "22a7fe6da4f16383c757a71d73b2685aab0735b755c8b6ae0c0f8082e164f6b7"
+  },
+  "zig/src/families/dsv41/fixtures/derived_launches.json": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "2ee5dbcb252f5e0e1a6e71bdd455b9a513b99137486b7a483334bee31d3dac7c"
+  },
+  "zig/src/families/dsv41/fixtures/launches.json": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "205cc2c2df1376d48880c9ce7d664a1b2c7de61484fef85534175b27211eb50f"
+  },
+  "zig/src/families/dsv41/fmha.zig": {
+   "module": "executor.strixfold.dsv41_vision",
+   "sha256": "b5653313cd8638d659917380c56d53e3b50ff25723aeb10430c25147460a31cb"
+  },
+  "zig/src/families/dsv41/hip_load.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "e2087c4862433f1bdd4babe7e58fef4b1f530a903fe700294a7724d174da388a"
+  },
+  "zig/src/families/dsv41/hipblas.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "11f4216fbc611d2f57f21c9e26de8b0145e81d7392e5d8e723f8e60ced752f09"
+  },
+  "zig/src/families/dsv41/hipblas_abi_check.c": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "2b19e045f4845081891ebab014465db7675e1d8961bf4f672077ab0e5de938ef"
+  },
+  "zig/src/families/dsv41/lanes.zig": {
+   "module": "executor.flerp.dsv41_zip2",
+   "over": {
+    "module": "executor.strixfold.dsv41",
+    "sha256": "49146bf7bb64a77a78e3c5e63b0bfec2ee3f78f06975a69ecdb9c3f77d3d5b15"
+   },
+   "sha256": "a972fe7b1047839808c51f40bd71129c54ec3ec30b91a052f4e0d5f6322218f5"
+  },
+  "zig/src/families/dsv41/lanes_main.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "5acc2128ce4dc4dfcfb03747829fb110364b30ba55f42d27dfe838cdeb24e098"
+  },
+  "zig/src/families/dsv41/layer_main.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "0fd542e4cd3daed1abaa34e0cccd847d2a7058a4530674559f24884025847eca"
+  },
+  "zig/src/families/dsv41/link.zig": {
+   "module": "runtime.strixfold.coll",
+   "sha256": "ccead9d9c3fe2c994f4a5beeb7c6ff21705b89e5465efacc582a8da58a80abe9"
+  },
+  "zig/src/families/dsv41/load_main.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "bee21a2ee4017afc7486d0457fd41413b80deefcb366d0f13d8ce410fa8b56e4"
+  },
+  "zig/src/families/dsv41/markov_tokens.zig": {
+   "module": "runtime.strixfold.dspark_draft",
+   "sha256": "f372d738988fdcea8f51c0ad94742e77505079d8c6464933450af4b30afe1143"
+  },
+  "zig/src/families/dsv41/model.zig": {
+   "module": "executor.flerp.dsv41_zip2",
+   "over": {
+    "module": "executor.strixfold.dsv41",
+    "sha256": "b539b25d18bcf6e6bda9fd9b6db0f7e0b89a351636074fb7f5b2712dde21ce8d"
+   },
+   "sha256": "ad8a0e165d17c7661325b4a99dadc1cbcdfb55b70bc23727378d3a35ed245eeb"
+  },
+  "zig/src/families/dsv41/native.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "0e45394f1c8a67f4a68a79b1c157c0d4e498669cf5fa5d30fcfe3c7c07850931"
+  },
+  "zig/src/families/dsv41/ops.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "2e1d39931dc185e6672ced09dfe454a73203d9248677cb3c9e561b561312ab90"
+  },
+  "zig/src/families/dsv41/picture.zig": {
+   "module": "executor.strixfold.dsv41_vision",
+   "sha256": "4d608a9d0945401a046828bb89217fb8d5749c6a7bc0559334898989680ff6cb"
+  },
+  "zig/src/families/dsv41/pil.zig": {
+   "module": "executor.strixfold.dsv41_vision",
+   "sha256": "f22f6edc0b51051c22230fc6218e1a49d7fd0b5f75068d8aebbce730a9a1de92"
+  },
+  "zig/src/families/dsv41/plan.zig": {
+   "module": "format.strixfold.exl3",
+   "sha256": "dde3aec9704b64ab4e6b25db286e5619d7e77ffea0c524b65a4be3bc1a3792dd"
+  },
+  "zig/src/families/dsv41/prompt.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "1c388076c18493f260eaa1eaffb1436b38d66ba8bacf6360d63f6a0a0e5c87d9"
+  },
+  "zig/src/families/dsv41/prompt2d.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "38901f915a6824a246ea511621eb89fb195a10278d55d44d845728f307a75e16"
+  },
+  "zig/src/families/dsv41/rank_cache.zig": {
+   "module": "format.strixfold.exl3",
+   "sha256": "2b726b27f56c24f204708731e938ee05272b7bcd499be1eb1e0eb4750514e1cf"
+  },
+  "zig/src/families/dsv41/rank_cache_main.zig": {
+   "module": "format.strixfold.exl3",
+   "sha256": "bc45f0e07230607091784dd21179c2c897c2e08aaccf62be7b5a5bb5b75a4db8"
+  },
+  "zig/src/families/dsv41/rdma.zig": {
+   "module": "runtime.strixfold.coll_rdma",
+   "sha256": "4867749ceae91b7a976f9cad8ac4e11716ec805261ac66e7ec7e843af1a4cfab"
+  },
+  "zig/src/families/dsv41/rdma_bench_main.zig": {
+   "module": "runtime.strixfold.coll_rdma",
+   "sha256": "850ad06c895eed0ef7a80226b39168a62fe9ca21bfe5e323da01700905018ef3"
+  },
+  "zig/src/families/dsv41/rdma_proxy.zig": {
+   "module": "runtime.strixfold.coll_rdma",
+   "sha256": "ee00e234f9d21adf73ee6388c51f38395eec00f71a14276c0e4202f5d1e49bb9"
+  },
+  "zig/src/families/dsv41/rdma_seq.zig": {
+   "module": "runtime.strixfold.coll_rdma",
+   "sha256": "92a2ee7d6805bcf60fbb43139ab75e96e4d0edf877ff2aa94e783aa27a8084d6"
+  },
+  "zig/src/families/dsv41/ring2d.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "2a38ad5f4fde9abd2c1b6a8fb0bfa114b646bffa0aaa95b818975e05fb700b3e"
+  },
+  "zig/src/families/dsv41/ring2d_check_main.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "ae53c11652658e2ef0d5970c08ed4b3b8050ba5bebe8ba5569b436452d8a3aa7"
+  },
+  "zig/src/families/dsv41/round.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "962a4f79b0564b2201a9872a18b40d9236ca4d2e8f051063c5d740e649d74560"
+  },
+  "zig/src/families/dsv41/round2d.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "9426e5770ec2323ca16e1cbab453374cc489e7a3fff983e273bf25c40d3b1897"
+  },
+  "zig/src/families/dsv41/sampling.zig": {
+   "module": "runtime.strixfold.sampling",
+   "sha256": "ca4931440dfc2db4faf31e760a0c0125481f465d56193d1e24ca2f9e267e37ef"
+  },
+  "zig/src/families/dsv41/scheduler_costs.zig": {
+   "module": "runtime.strixfold.dspark_draft",
+   "sha256": "e32ce8beb1774186468bdcf9826cd6dc416c4f695695b66a4bd157e1657363d1"
+  },
+  "zig/src/families/dsv41/state_file.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "de13be859a0537a4894ce31bafff125ae15d0b4c8c559a3a22831a1659a91301"
+  },
+  "zig/src/families/dsv41/tcp_coll.zig": {
+   "module": "runtime.strixfold.coll_tcp",
+   "sha256": "d4ff12e004071883f082e88358b53d7921371fb93ca6d8331c6ad8aa3b002409"
+  },
+  "zig/src/families/dsv41/tcp_proxy.zig": {
+   "module": "runtime.strixfold.coll_tcp",
+   "sha256": "3ad4ab02924f465a212e479f3e9617ef411422b8fc4e274c5bd128e887a653c9"
+  },
+  "zig/src/families/dsv41/tcp_wire.zig": {
+   "module": "runtime.strixfold.coll_tcp",
+   "sha256": "12fa4a90d5c2faf744811c4636df0eef9ca8d88a45ce6315b2c6f2cd436f564c"
+  },
+  "zig/src/families/dsv41/text.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "8fb48fbcbb28b3274e55648176a171fb776b6d4a67e80c4d9b9e6be06c1943f1"
+  },
+  "zig/src/families/dsv41/tri.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "998aff59d08ff2514eda0415b6bd04bf2b030b0f539d68b045595cf0a51d4be8"
+  },
+  "zig/src/families/dsv41/tri_attn.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "00568fc26386484af412eec0b556d0a86cf8c35658c034c3dd1040b02aee3421"
+  },
+  "zig/src/families/dsv41/tri_aux.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "1ad83012ca7deb604cf940a875687e0d083d9519c2441930d33fe653a7445345"
+  },
+  "zig/src/families/dsv41/tri_basic.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "fb68b84c629063f294c5143240f995050ffce600fa19a438e84e988fef197036"
+  },
+  "zig/src/families/dsv41/tri_hc.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "1d68adf6b65f500bfd0b1655b95af3a89eb5731892ac97ab304c3b2918613c13"
+  },
+  "zig/src/families/dsv41/tri_index.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "2b4150f7cc92a82e7f16e271a4dc7ced6fed6cd50e33539ce38608cc5fa1372d"
+  },
+  "zig/src/families/dsv41/tri_markov.zig": {
+   "module": "runtime.strixfold.dspark_draft",
+   "sha256": "1b008beaf110eac247f707e9610ab7a82e9f01c850636b629b0cd90131bf52fd"
+  },
+  "zig/src/families/dsv41/tri_norm.zig": {
+   "module": "executor.strixfold.dsv41",
+   "sha256": "de4b7882284743b2fac1262081158c7b17678fb26579a3b159bedb34499197f4"
+  },
+  "zig/src/families/dsv41/vision.zig": {
+   "module": "executor.strixfold.dsv41_vision",
+   "sha256": "a233baeba8ffc4b43206a8191ec352795f0c1f5491255a2344ce5eabdf6d2b7b"
+  },
+  "zig/src/families/dsv41/vit.zig": {
+   "module": "executor.strixfold.dsv41_vision",
+   "sha256": "5c31a966e664d60c80c5ecc9312f8a0cd13ea0e08b4058abea91618d37c5f797"
+  },
+  "zig/src/families/dsv41/weights.zig": {
+   "module": "format.strixfold.exl3",
+   "sha256": "08cc1fe6789b89e48bec01f501daf53b560c0b32796579fb13f19b7ee6b41e58"
+  },
+  "zig/src/gpu/hip/abi.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "6ca0d14ba512db2ea27d3a8f8e6f9dc5d3f4b3b50ddf25e443ac41004813ba7d"
+  },
+  "zig/src/gpu/hip/aot.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "47df4a127844f10e207ca77ed66c8a44d474b84440b76e7e2962515c7bc88c48"
+  },
+  "zig/src/gpu/hip/caps.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "028ba0622e2bd2bca9e23357bac88eb9044f9620767c9782738744f28fa86470"
+  },
+  "zig/src/gpu/hip/code_object.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "602e9dcbfa1e43f91397ac4fbda912d4fa1240873042e3bae6b54112dab08d44"
+  },
+  "zig/src/gpu/hip/context.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "c82083bf5f9464e0c1ec6099f41a1be3bafad84e77c8d9a94d660a1de87df495"
+  },
+  "zig/src/gpu/hip/device_arch.c": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "2c620ae0bedb0f114eb74318608fc3957828bfc12a224e780cee71bfd4339feb"
+  },
+  "zig/src/gpu/hip/driver.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "bea65a29f84a9fb10dc80b2debe4e6c032991b0e3268db0d215173d958e047dc"
+  },
+  "zig/src/gpu/hip/graph.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "0096993ca8b751a4d2d794b3a76a24edf608448dd68da262df6157bbc0d87118"
+  },
+  "zig/src/gpu/hip/hip_abi_check.c": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "4b9b36798747028079c4e1620b0352ac6aede9089cece05c29aa1419dbf8835c"
+  },
+  "zig/src/gpu/hip/kit.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "b32c717767fa4bcf0478fc4d347d4eec116f8b9eace265e1dc3a413d473c25c4"
+  },
+  "zig/src/gpu/hip/launch.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "69351b3c8e92803ef7163274fc3b66db5af3475d5475bbe82c555b1a46e223c7"
+  },
+  "zig/src/gpu/hip/memory.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "cd51ce8571e18d936dd9679abe3ff1ab725afafa9a9610558e58325e601b42b8"
+  },
+  "zig/src/gpu/hip/module.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "65ce95a971d764a5faebf64ccf568810761d6cda9e43215ccaf59f8ea7960e6a"
+  },
+  "zig/src/gpu/hip/root.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "4c89c8f11d6a69cfeaa85b7b05011c151c46835de7465c706aeeeac3a4ef85aa"
+  },
+  "zig/src/gpu/hip/stream.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "b354792e2dc622ad32085e8b3e2b629428ed93c95d2a07e11e7c4b41a9fb3289"
+  },
+  "zig/src/gpu/hip_facade.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "f7b8ad64ea3943ed1f5a16507cfcdf0467135ceadc960cdc24dd03d482de5ea0"
+  },
+  "zig/src/gpu/hsaco.zig": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "c22f1523b42566b163242b2b6b502c7b0b123fc0f21e58164adb3646b4507f36"
+  },
+  "zig/src/gpu/interface.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "4bd83ec2948fc4c83776b340e173027fe9f035902e52ff2d7465a0807aef24a0"
+  },
+  "zig/src/gpu/kernel.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "b2771613f6533ad5800205901f0b2f40c94e74c697656eaecc4e79785dd3b69e"
+  },
+  "zig/src/gpu/kit_tool.zig": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "044c2aca81fc2683dc0d52946219b560467c6948270b83957648a8338a773cfa"
+  },
+  "zig/src/gpu/manifest.zig": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "49d95719ac974f7fee1b7eed10d9c6de3470228c324dc3b0fcc483fde2a77a1a"
+  },
+  "zig/src/gpu/msgpack.zig": {
+   "module": "runtime.strixfold.kit",
+   "sha256": "5fbf3a238f105825fe3407985a0668628ac9db398021bbc720fcb6fd58a9195d"
+  },
+  "zig/src/gpu/staging.zig": {
+   "module": "runtime.strixfold.gpu_facade",
+   "sha256": "3828a911d717d0ac497a63b791a3770365816621c9c960a981c869a3cfc2ce95"
+  },
+  "zig/src/native/cache_fit.zig": {
+   "module": "runtime.strixfold.engine_host",
+   "sha256": "78fcfd18e7eb231de32f2b7b56ddb6d2975e54acf694e5c2501c0e32373a5937"
+  },
+  "zig/src/native/cuda_memory.zig": {
+   "module": "runtime.strixfold.engine_host",
+   "sha256": "cd415b3df9b1976a2945402099616f5c8e08226734818d11461fe72c312050c9"
+  },
+  "zig/src/native/hip.zig": {
+   "module": "runtime.strixfold.engine_host",
+   "sha256": "76f6dce0a047277e272f3c9409e52ec0c248f0c01211ee1ebc6c6e38bc0472b1"
+  },
+  "zig/src/native/none.zig": {
+   "module": "runtime.strixfold.engine_host",
+   "sha256": "5b7471b981dc11cdd1a0947e8ebf31246c0fc32279af1c976557c5ccd9986491"
+  },
+  "zig/src/server/anthropic.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "cab524a0ea988939a40fb8adef8364fed7627a890393b5d16578d442f806c884"
+  },
+  "zig/src/server/anthropic_translate.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "e2f7845d38e4c99feeed3600a38149dc986b68bc774d3cc2a1ffb71924c91886"
+  },
+  "zig/src/server/auth.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "8be7f3bc83881268d79081f12378386a1959c3772b107d10ab3a3555299e792a"
+  },
+  "zig/src/server/cache_routes.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "f60d6e4a6d0e04fe1a006d57a06434d77654fa705abdb18dbb2b4d448692202f"
+  },
+  "zig/src/server/chat.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "5b10033a1fcbbf14c166d92cf36a3b79596185deb3cc143025127a602573fa5d"
+  },
+  "zig/src/server/chunk_plan.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "3b8ffa8b838df0d11162e14e598e940283aa15d1291251be136acfb1f5381809"
+  },
+  "zig/src/server/cli.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "67c2e2b610fd2629d57b595d4ee2165130465b9cea5c87c3f479727214bcb685"
+  },
+  "zig/src/server/clock.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "13b472f7c5c4ce573ef6542617d0e6f4feaa86ab6fe795ce25d5e3a0f5ea752c"
+  },
+  "zig/src/server/compact.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "7157c44cfafe307bbe3e8fb9bdb10e4b4c3068dab93aea8f5fbf87c0489b41f1"
+  },
+  "zig/src/server/compact_mem.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "b789c27acce5545a89a5c79cfc70228b9c166f3365b818e9ec155606c8f7472f"
+  },
+  "zig/src/server/compact_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "05d40b51a31a4b848db7b39d93125953b608dee1eccbec165c875b48e3762ecd"
+  },
+  "zig/src/server/dashboard.html": {
+   "module": "serve.strixfold.http",
+   "sha256": "fdf1272c548e7333b97dd529b21604bd9183f5fb23cdcf5a6a28d5243c719ec8"
+  },
+  "zig/src/server/dashboard_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "c14f2b7a0186a755daeb0699b22a1888f157518c513330db137f37bbacf110b8"
+  },
+  "zig/src/server/decisions.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "2b979bf0ae7af91c3522c1aac3f08d210f3f9f240489ff2a5bf445aad5542c40"
+  },
+  "zig/src/server/decisions_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "2ad024c5c6bdfa938c780cd8947c60f2e414e76ef79a93fbb65aee59f373d608"
+  },
+  "zig/src/server/effort_values_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "e302f78e685c6c4badd36114b2e58058b7bae14124b71006dc612a4497d26d96"
+  },
+  "zig/src/server/engines.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "34d357c8054029cc3ffacc0e7ce207a00b041cf637b35e58b9a7e02f3f680265"
+  },
+  "zig/src/server/errors.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "ff4b153112a0385f71a269971b99b88d5da6cd23fd8c0db67a4cb0442c39f0e8"
+  },
+  "zig/src/server/fields.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "350ce9e01e640c4314460b45e650d9a02deabe9c688def1a98e2898301531cb8"
+  },
+  "zig/src/server/grammar.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "2eceee422c42d1a0d5d39061bec616d63b792b435c8efcc92169514ddbe9d8e0"
+  },
+  "zig/src/server/hf_text.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "f33ae4bec55cb268d254994cd26875a02dbc1b2ac274ede27cd2a8e20b515728"
+  },
+  "zig/src/server/http_body.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "142af62203e710c0753bc1f993afd9e617ce2913a195678a2da737be7df66622"
+  },
+  "zig/src/server/http_conn.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "b213574a58fb51b199a768466f493dc2490317169f059a2087f9ed19f59196f2"
+  },
+  "zig/src/server/hub.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "072323967c3094b533f8c2a735255ce2ec39a16584e8283697c9de20b16450ea"
+  },
+  "zig/src/server/ids.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "991c67bab18dba7227e523d786f2e778b7bb1c95b68f704d782990defc25acfa"
+  },
+  "zig/src/server/json.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "343d18cb52ac15c786754c402435609697b45b808d192c2e2c4ed1a49fffb0f8"
+  },
+  "zig/src/server/json_parse.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "c8b1601849f32b7efef398871cdbca5d60736772e3135fb592cb7729d53b4940"
+  },
+  "zig/src/server/json_write.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "3d28843cc4efdb8050a60be4f9f28013f1af5b159ee09651d93a549f3a6e8205"
+  },
+  "zig/src/server/late_system_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "f01cf2e1e010e21b55545c2f750b00fd5aff3c1ff9a25d2b1f1a344253a7174d"
+  },
+  "zig/src/server/listener.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "e2162e1566336a2f085ece8337bd0d9c45e8d448ba0f1135de35e826c41b7fbd"
+  },
+  "zig/src/server/live.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "59060c63f861e58fffbbdc58d7d56b8f381b20aa3d0b3f6e780133775110cada"
+  },
+  "zig/src/server/log.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "cc3f1b482a6696e80e2cbc95445482a1d17b630541fbbe7612d2ae2531d9cf8d"
+  },
+  "zig/src/server/main.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "8d34c5b8b1675adc29e26a2388c6e422607965e4d97b540be588dd581e9a6075"
+  },
+  "zig/src/server/messages.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "bbf472b6030e9d6dd29b397e6f1e78e2aff9a604fb57f1680f882e1d9c1d1f40"
+  },
+  "zig/src/server/metrics.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "93b1e73e9570a0c2375dd7f65816f1c5dece936d6e34d0ff310b8049627a6270"
+  },
+  "zig/src/server/model_text.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "ac2ad73b942ae1c2363f3afde9fc0d0a73ab273643a184c698960d673bae11cc"
+  },
+  "zig/src/server/openai.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "01ffd178339d6510330046869b5366539903e3b735d3d505342a275416ec6701"
+  },
+  "zig/src/server/prompt.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "f1d2d61ea6b9831fe9d3e2ee5b52d13734a665daf898a5b57e51359971b0b5eb"
+  },
+  "zig/src/server/pyrepr.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "dc5b2d5d1baafc1880b3173eaf4475dea2c5e04ef9bf82d276a0f797d7879e77"
+  },
+  "zig/src/server/reply_dsv41.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "f7bf75baa8e7f8f05837598f9a678c734e1bc917c32ccf644525dec9c7b07b2e"
+  },
+  "zig/src/server/reply_parity.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "3690b248ca25964f7c23aadf03eb451df8d696acad2ace4e5f7f4a7d9c2c6793"
+  },
+  "zig/src/server/reply_text.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "cf6c9af94342e3f1ea44238962318e3f9b3b9d1e3c312d913170b58337ffcf0e"
+  },
+  "zig/src/server/request_log.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "0c9c7d8b6abdc2ed3c7a44ad13a1f69c958aae0a6c553476baa1a0d131e79d87"
+  },
+  "zig/src/server/responses.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "92a47fb5c13999e007910b74c4cc3b820a5aa81d54c51bc9fb76a90078aed514"
+  },
+  "zig/src/server/responses_translate.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "90f44a72d05b5608c9a420ad95c1fe7935e45b0f86a734c285365c457a568a9b"
+  },
+  "zig/src/server/root.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "56584ecdd2b1537f01b1d408bad5f80a9ed1af810f1178a97dc75db3256081e0"
+  },
+  "zig/src/server/routes.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "463569f9874640b6068f87332bd8fc8931700d6cd045c85ec13674ae5e09e801"
+  },
+  "zig/src/server/serve.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "e6ab3a510d66f70cf9c6b965e0e026d78a55309683a66e5f9e6ae8d5efe541ac"
+  },
+  "zig/src/server/server.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "b9586d442c2dec5a84d7855433c7c20b98ad3f52b357fc55c5bb365660c12209"
+  },
+  "zig/src/server/sse.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "5e17cda7fb66667b0dfb502b6a3366c7a5185444b4fa323f4414ecce3aea3371"
+  },
+  "zig/src/server/status_routes.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "88388e0aca62354cb4f16d9b1313493458263593e5c1d03de4934d89f2c0e5b5"
+  },
+  "zig/src/server/stream_preflight_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "f2253101c329ea3751ed5b7370053732e5cde74d66e3b425a92febe4b1454c16"
+  },
+  "zig/src/server/structure_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "afd7eedeaa8636ba59d7945d77fafc52b5f216de74f6aa8b3633f3296711792b"
+  },
+  "zig/src/server/telemetry_reply_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "056a8226329590a52cb1d2c37098982c0b7d18d9af2902c919a8b22b0ea0153b"
+  },
+  "zig/src/server/tokens.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "9e5d55dff5ef7499494fdcf29b0e3583d5aeee6bb4c3340c1c3ee7d15b130d85"
+  },
+  "zig/src/server/tool_params.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "7011f7ea27bf7554d8cec24dfdbfd11b19ff9f84afda21429aaa223673e7270d"
+  },
+  "zig/src/server/tool_parse.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "211918aed38ccbf5081f9427374d2a33c7e5b903a1481ebd8859950e8a3b5bb0"
+  },
+  "zig/src/server/tool_parse_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "53e8a544a1604af7f01715148800af0cdcad09874c94f15123cd723fee0c0fa4"
+  },
+  "zig/src/server/tool_specs.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "84a29900271433521d89a00d24012514dc286856b63f4e0c3c35751cb5cb8f0a"
+  },
+  "zig/src/server/tool_stream.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "94c35581c722d4392de0494c497f97704388d386f3dc30f133e0050aa56d7d32"
+  },
+  "zig/src/server/tool_streaming.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "16f04080bc003db5a2c8bc5e27723de271094197115b5bd11bde95252bdb4859"
+  },
+  "zig/src/server/top_k_test.zig": {
+   "module": "serve.strixfold.http",
+   "sha256": "218581f30c42b459d8cb809cce21b4d918329e77dfda4ef70e0b837ef74393a5"
+  }
+ },
+ "hipcc_output_pins": {
+  "aux.hsaco": "380fe3022018f1f2e7c4a0baa7b003b9",
+  "aux_attn.hsaco": "3cd34797b74697091aeab05f833baabd",
+  "aux_gate.hsaco": "3269571ff8b65d0646a8e3c6734bd327",
+  "aux_hc.hsaco": "f03d451ebbf7727a7d239957dcd82c97",
+  "aux_index.hsaco": "1b7c1d54dcd0ba5810f6ac2388e89b9b",
+  "aux_rope.hsaco": "16644ab823b5764a2d5534d2b30129e4",
+  "coll.hsaco": "0a2cd47d5ce079d33d3366a942dacaed",
+  "dense.hsaco": "786e0ed4272755e9e475aca211c4803d",
+  "exl3.hsaco": "07a30cc1a8e799ae23e6ecc131e0ad88",
+  "exl3_pf.hsaco": "2932d80ebd21e9d47f57a525bbea61cc",
+  "glue.hsaco": "72f373089b360010a07a1b88f71456d7"
+ },
+ "modules": {
+  "executor.flerp.dsv41_zip2": {
+   "dir": "catalog/flerp/executor/dsv41_zip2",
+   "files": 2,
+   "spdx": "Apache-2.0"
+  },
+  "executor.strixfold.dsv41": {
+   "dir": "catalog/strixfold/executor/dsv41",
+   "files": 44,
+   "spdx": "Apache-2.0"
+  },
+  "executor.strixfold.dsv41_vision": {
+   "dir": "catalog/strixfold/executor/dsv41_vision",
+   "files": 5,
+   "spdx": "Apache-2.0"
+  },
+  "format.strixfold.engram": {
+   "dir": "catalog/strixfold/format/engram",
+   "files": 4,
+   "spdx": "Apache-2.0"
+  },
+  "format.strixfold.exl3": {
+   "dir": "catalog/strixfold/format/exl3",
+   "files": 5,
+   "spdx": "Apache-2.0"
+  },
+  "format.strixfold.safetensors": {
+   "dir": "catalog/strixfold/format/safetensors",
+   "files": 4,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.aux": {
+   "dir": "catalog/strixfold/kernel/aux",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.coll_proxy": {
+   "dir": "catalog/strixfold/kernel/coll_proxy",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.dense_bf16": {
+   "dir": "catalog/strixfold/kernel/dense_bf16",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.dsv41_abi": {
+   "dir": "catalog/strixfold/kernel/dsv41_abi",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.exl3": {
+   "dir": "catalog/strixfold/kernel/exl3",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.exl3_pf_experts": {
+   "dir": "catalog/strixfold/kernel/exl3_pf_experts",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.glue": {
+   "dir": "catalog/strixfold/kernel/glue",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.indexer_score": {
+   "dir": "catalog/strixfold/kernel/indexer_score",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.mhc_mix": {
+   "dir": "catalog/strixfold/kernel/mhc_mix",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.moe_gate": {
+   "dir": "catalog/strixfold/kernel/moe_gate",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.rope_heads": {
+   "dir": "catalog/strixfold/kernel/rope_heads",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.sparse_attn": {
+   "dir": "catalog/strixfold/kernel/sparse_attn",
+   "files": 1,
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.triton_kit": {
+   "dir": "catalog/strixfold/kernel/triton_kit",
+   "files": 9,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.coll": {
+   "dir": "catalog/strixfold/runtime/coll",
+   "files": 3,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.coll_nccl": {
+   "dir": "catalog/strixfold/runtime/coll_nccl",
+   "files": 2,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.coll_rdma": {
+   "dir": "catalog/strixfold/runtime/coll_rdma",
+   "files": 5,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.coll_tcp": {
+   "dir": "catalog/strixfold/runtime/coll_tcp",
+   "files": 3,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.core": {
+   "dir": "catalog/strixfold/runtime/core",
+   "files": 32,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.dspark_draft": {
+   "dir": "catalog/strixfold/runtime/dspark_draft",
+   "files": 6,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.engine_host": {
+   "dir": "catalog/strixfold/runtime/engine_host",
+   "files": 4,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.fabric": {
+   "dir": "catalog/strixfold/runtime/fabric",
+   "files": 25,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.gpu_facade": {
+   "dir": "catalog/strixfold/runtime/gpu_facade",
+   "files": 19,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.grammar": {
+   "dir": "catalog/strixfold/runtime/grammar",
+   "files": 8,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.kit": {
+   "dir": "catalog/strixfold/runtime/kit",
+   "files": 15,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.lanes": {
+   "dir": "catalog/strixfold/runtime/lanes",
+   "files": 27,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.prompt_cache": {
+   "dir": "catalog/strixfold/runtime/prompt_cache",
+   "files": 6,
+   "spdx": "Apache-2.0"
+  },
+  "runtime.strixfold.sampling": {
+   "dir": "catalog/strixfold/runtime/sampling",
+   "files": 2,
+   "spdx": "Apache-2.0"
+  },
+  "serve.strixfold.http": {
+   "dir": "catalog/strixfold/serve/http",
+   "files": 62,
+   "spdx": "Apache-2.0"
+  },
+  "tool.strixfold.checkpoint_cli": {
+   "dir": "catalog/strixfold/tool/checkpoint_cli",
+   "files": 5,
+   "spdx": "Apache-2.0"
+  },
+  "tool.strixfold.zig_build": {
+   "dir": "catalog/strixfold/tool/zig_build",
+   "files": 7,
+   "spdx": "Apache-2.0"
+  }
+ },
+ "prebuilt": {
+  "kernel.strixfold.triton_kit": {
+   "env": "FLERP_PREBUILT_TRITON_KIT",
+   "where": "/data/pod/plans/af9276f296/tri-kit-gfx1151"
+  }
+ },
+ "recipe": "dsv41-flash.strixfold-tp2-zip2",
+ "steps": [
+  "native-hip"
+ ],
+ "system": "zig",
+ "toolchain": "therock-10.2",
+ "warnings": [],
+ "zig": "/home/pod/opt/zig-x86_64-linux-0.17.0/zig",
+ "zig_argv": [
+  "build",
+  "native-hip",
+  "-Dhipcc=${here}/hipcc-pinned",
+  "-Drocm=${FLERP_ROCM_ROOT}",
+  "-Dhip-triton-kit=${FLERP_PREBUILT_TRITON_KIT}"
+ ]
+}

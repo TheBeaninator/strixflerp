@@ -1,0 +1,66 @@
+id        = "format.tensorfold.exl3"
+kind      = "format"
+summary   = "EXL3 and EXLR8 on the host: format and layout, load and prepare, projection decode, EXLR8 codec, manifest, node split, experts, prompt path"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/core/exl3_format.zig",
+  "zig/src/core/exl3_layout.zig",
+  "zig/src/core/exl3_load.zig",
+  "zig/src/core/exl3_metal_load.zig",
+  "zig/src/core/exl3_prepare.zig",
+  "zig/src/core/exl3_projection.zig",
+  "zig/src/core/exl3_projection_decode.zig",
+  "zig/src/core/exl3_projection_gpu_test.zig",
+  "zig/src/core/exl3_rect_test.zig",
+  "zig/src/core/exlr8.zig",
+  "zig/src/core/exlr8_codec.zig",
+  "zig/src/core/exlr8_dense.zig",
+  "zig/src/core/exlr8_dense_gpu.zig",
+  "zig/src/core/exlr8_experts.zig",
+  "zig/src/core/exlr8_job.zig",
+  "zig/src/core/exlr8_manifest.zig",
+  "zig/src/core/exlr8_metal.zig",
+  "zig/src/core/exlr8_node.zig",
+  "zig/src/core/exlr8_oracle_test.zig",
+  "zig/src/core/exlr8_pack.zig",
+  "zig/src/core/exlr8_projection.zig",
+  "zig/src/core/exlr8_prompt.zig",
+  "zig/src/core/exlr8_release.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+upstream  = "EXL3 after ExLlamaV3 (MIT, Turboderp)"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.loader-tensorfold/exl3-safetensors/-"
+api       = "core/exl3_format.zig, exl3_layout.zig, exl3_load.zig"
+numeric   = "exact"
+regime    = "load time"
+
+[[provides]]
+interface = "format.loader/exlr8/-"
+api       = "core/exlr8*.zig"
+numeric   = "exact"
+regime    = "load time"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

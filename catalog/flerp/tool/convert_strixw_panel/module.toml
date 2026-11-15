@@ -1,0 +1,46 @@
+id        = "tool.flerp.convert_strixw_panel"
+kind      = "tool"
+summary   = "Copies a strixw v1..v4 file to a strixw v5 with chosen Q4/Q8 classes re-laid out as Q4Panel16 / Q8Panel16 (order-only, no checkpoint): streamed one tensor at a time, every component read hash-checked against OLD's index, copied components byte for byte, then the output re-read and every converted tensor inverted and compared byte for byte with OLD"
+design    = "DESIGN.md"
+notes     = "Built with the host C++ compiler by src/flerp/convert_strixw_panel/build.sh (no HIP). docs/STRIXW-LAYOUT-NEXT.md stage 2 (the converter only; the --layout path in convert_qwen4exp is not written). Criteria gate/strixw-panel.toml; results gate/results/strixw-panel/."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/convert_strixw_panel/build.sh", "flerp/convert_strixw_panel/convert_strixw_panel.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/convert_strixw_panel/convert_strixw_panel.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "tool.strixw-panel/-/-"
+api       = "convert_strixw_panel --old OLD (--out NEW | --plan [--scratch DIR] | --check-tensors NAME,..) [--classes a,b,..]"
+numeric   = "exact: copied components bit-identical; converted tensors a permutation of OLD's q/scale/min bytes, verified by inverse"
+regime    = "host, one tensor at a time (largest exp_gu: ~0.9 GB; peak ~2 GB writing, ~4 GB verifying), O_DIRECT reads where the filesystem allows"
+
+[[requires]]
+module    = "format.flerp.strixw_v5"
+
+[[requires]]
+module    = "format.flerp.q4panel"
+
+[[requires]]
+module    = "format.flerp.q8panel"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host tool built by its build.sh, not by a recipe; tests/test_convert_strixw_panel.py and gate/results/strixw-panel are its evidence; the full 74.6 GB output has not been written"

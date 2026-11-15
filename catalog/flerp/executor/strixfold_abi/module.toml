@@ -1,0 +1,49 @@
+id        = "executor.flerp.strixfold_abi"
+kind      = "executor"
+summary   = "StrixFold's dsv41 executor behind the executor ABI: the C functions exported from Zig over the lane backend vtable and the family's kept-state functions; tokens drawn on the device, held drafts, verify windows with keep / keep_prefix / drop, states kept at prompt chunk ends"
+notes     = "Rank 0 of the pair: flerp_open is the family's native.open, so rank 1 (tf-dsv41-lanes) must be started against it as for the server. flerp.build.zig adds the step flerp-abi to the origin's build graph without changing a vendored file. docs/EXECUTOR-ABI.md has the mapping and what does not map (rounds, logits rows, trees, early speculation, vision)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp.build.zig", "flerp/executor/strixfold_abi.zig"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "zig"
+sources   = ["src/flerp/executor/strixfold_abi.zig"]
+includes  = []
+
+[[provides]]
+interface = "executor.abi/flerp-v1/-"
+api       = "flerp_open .. flerp_stats_json (include/flerp/executor.h), exported from flerp/executor/strixfold_abi.zig"
+numeric   = "the backend's own: greedy rows are the device argmax, sampled rows the keyed sampler's draw at the row's position"
+regime    = "TP2 rank 0; a round's rows (16) a verify; states at chunk ends (2048) of a prompt pass"
+
+[[requires]]
+interface = "executor.model/deepseek-v4.1-flash/exl3"
+
+[[requires]]
+interface = "executor.lane-backend/-/-"
+
+[[requires]]
+interface = "device.facade/hip/-"
+
+[[requires]]
+interface = "build.graph/zig/-"
+
+[[requires]]
+module    = "runtime.strixfold.core"
+
+[[requires]]
+module    = "runtime.strixfold.fabric"
+
+[gate]
+parity    = "flerp:gate/strixfold_recipe.py"
+bench     = "none"
+status    = "harvested"

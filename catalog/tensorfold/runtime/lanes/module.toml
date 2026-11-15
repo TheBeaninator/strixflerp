@@ -1,0 +1,169 @@
+id        = "runtime.tensorfold.lanes"
+kind      = "runtime"
+summary   = "Lane core: the round loop over concurrent streams, the backend vtable, draft depth and acceptance, the engine API, stagger"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/core/draft_depth.zig",
+  "zig/src/core/engine_api.zig",
+  "zig/src/core/lane_host.zig",
+  "zig/src/core/lane_host_reuse_test.zig",
+  "zig/src/core/lane_host_test.zig",
+  "zig/src/core/lanes/accept.zig",
+  "zig/src/core/lanes/allocate.zig",
+  "zig/src/core/lanes/backend.zig",
+  "zig/src/core/lanes/commit_storage_test.zig",
+  "zig/src/core/lanes/config.zig",
+  "zig/src/core/lanes/context_copy.zig",
+  "zig/src/core/lanes/context_copy_price_test.zig",
+  "zig/src/core/lanes/copied_rate_test.zig",
+  "zig/src/core/lanes/cost_cache.zig",
+  "zig/src/core/lanes/cost_cache_windows_test.zig",
+  "zig/src/core/lanes/cost_identity.zig",
+  "zig/src/core/lanes/cost_identity_test.zig",
+  "zig/src/core/lanes/cost_rule.zig",
+  "zig/src/core/lanes/cost_rule_test.zig",
+  "zig/src/core/lanes/cuda_cost_rule_test.zig",
+  "zig/src/core/lanes/depth.zig",
+  "zig/src/core/lanes/depth_constants.zig",
+  "zig/src/core/lanes/depth_probe_test.zig",
+  "zig/src/core/lanes/draft_tree.zig",
+  "zig/src/core/lanes/drafted.zig",
+  "zig/src/core/lanes/drafted_adopt_test.zig",
+  "zig/src/core/lanes/drafted_chances_test.zig",
+  "zig/src/core/lanes/drafted_copy_test.zig",
+  "zig/src/core/lanes/drafted_grammar_test.zig",
+  "zig/src/core/lanes/drafted_held_test.zig",
+  "zig/src/core/lanes/drafted_role_test.zig",
+  "zig/src/core/lanes/drafted_step_test.zig",
+  "zig/src/core/lanes/drafted_test.zig",
+  "zig/src/core/lanes/drafter.zig",
+  "zig/src/core/lanes/drafter_depth_sweep.zig",
+  "zig/src/core/lanes/drafter_depth_sweep_test.zig",
+  "zig/src/core/lanes/embedding.zig",
+  "zig/src/core/lanes/engine.zig",
+  "zig/src/core/lanes/engine_sweep_test.zig",
+  "zig/src/core/lanes/engine_test.zig",
+  "zig/src/core/lanes/events.zig",
+  "zig/src/core/lanes/fair_turns_test.zig",
+  "zig/src/core/lanes/fake.zig",
+  "zig/src/core/lanes/fill.zig",
+  "zig/src/core/lanes/fill_test.zig",
+  "zig/src/core/lanes/fill_trim_test.zig",
+  "zig/src/core/lanes/gpu_full.zig",
+  "zig/src/core/lanes/gpu_full_test.zig",
+  "zig/src/core/lanes/gpu_rule.zig",
+  "zig/src/core/lanes/grammar.zig",
+  "zig/src/core/lanes/grammar_budget_test.zig",
+  "zig/src/core/lanes/grammar_error_test.zig",
+  "zig/src/core/lanes/grammar_fake.zig",
+  "zig/src/core/lanes/grammar_handoff_test.zig",
+  "zig/src/core/lanes/grammar_parallel.zig",
+  "zig/src/core/lanes/grammar_parallel_test.zig",
+  "zig/src/core/lanes/grammar_time.zig",
+  "zig/src/core/lanes/grammar_time_test.zig",
+  "zig/src/core/lanes/grammar_window.zig",
+  "zig/src/core/lanes/granted_reservation_test.zig",
+  "zig/src/core/lanes/handover.zig",
+  "zig/src/core/lanes/handover_test.zig",
+  "zig/src/core/lanes/hold_price.zig",
+  "zig/src/core/lanes/lanes.zig",
+  "zig/src/core/lanes/late_draft.zig",
+  "zig/src/core/lanes/late_draft_test.zig",
+  "zig/src/core/lanes/learned_dirs.zig",
+  "zig/src/core/lanes/learned_disk.zig",
+  "zig/src/core/lanes/logprob.zig",
+  "zig/src/core/lanes/lone_backoff_test.zig",
+  "zig/src/core/lanes/lone_costs.zig",
+  "zig/src/core/lanes/lone_costs_test.zig",
+  "zig/src/core/lanes/long_loop.zig",
+  "zig/src/core/lanes/long_loop_test.zig",
+  "zig/src/core/lanes/loop_stop_test.zig",
+  "zig/src/core/lanes/mtp_policy.zig",
+  "zig/src/core/lanes/open.zig",
+  "zig/src/core/lanes/open_first.zig",
+  "zig/src/core/lanes/open_first_test.zig",
+  "zig/src/core/lanes/open_trace_test.zig",
+  "zig/src/core/lanes/pieces.zig",
+  "zig/src/core/lanes/plan_before_test.zig",
+  "zig/src/core/lanes/plan_equivalence_test.zig",
+  "zig/src/core/lanes/plan_lanes.zig",
+  "zig/src/core/lanes/prefill_widths.zig",
+  "zig/src/core/lanes/pricing_test.zig",
+  "zig/src/core/lanes/proposal_external_test.zig",
+  "zig/src/core/lanes/proposal_head.zig",
+  "zig/src/core/lanes/proposal_score.zig",
+  "zig/src/core/lanes/proposer.zig",
+  "zig/src/core/lanes/readout.zig",
+  "zig/src/core/lanes/recall.zig",
+  "zig/src/core/lanes/recall_engine_test.zig",
+  "zig/src/core/lanes/recall_record.zig",
+  "zig/src/core/lanes/recall_record_test.zig",
+  "zig/src/core/lanes/recall_store.zig",
+  "zig/src/core/lanes/recall_store_test.zig",
+  "zig/src/core/lanes/recall_test.zig",
+  "zig/src/core/lanes/recorder.zig",
+  "zig/src/core/lanes/recorder_test.zig",
+  "zig/src/core/lanes/rollback_test.zig",
+  "zig/src/core/lanes/root_copy.zig",
+  "zig/src/core/lanes/root_copy_test.zig",
+  "zig/src/core/lanes/row_cost.zig",
+  "zig/src/core/lanes/sampling.zig",
+  "zig/src/core/lanes/sampling_identity_test.zig",
+  "zig/src/core/lanes/sampling_race_test.zig",
+  "zig/src/core/lanes/sampling_reference.zig",
+  "zig/src/core/lanes/sampling_row.zig",
+  "zig/src/core/lanes/sampling_selection.zig",
+  "zig/src/core/lanes/sampling_selection_test.zig",
+  "zig/src/core/lanes/shape.zig",
+  "zig/src/core/lanes/shape_prefixes.zig",
+  "zig/src/core/lanes/shared_draft_check.zig",
+  "zig/src/core/lanes/shared_drafts.zig",
+  "zig/src/core/lanes/shared_head_cost_check.zig",
+  "zig/src/core/lanes/shared_step_test.zig",
+  "zig/src/core/lanes/solo_chunk.zig",
+  "zig/src/core/lanes/step_cap.zig",
+  "zig/src/core/lanes/stream.zig",
+  "zig/src/core/lanes/table.zig",
+  "zig/src/core/lanes/trail.zig",
+  "zig/src/core/lanes/trim.zig",
+  "zig/src/core/lanes/window_cut.zig",
+  "zig/src/core/lanes/windows.zig",
+  "zig/src/core/lanes/windows_grammar_test.zig",
+  "zig/src/core/stagger.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.lane-backend-tensorfold/-/-"
+api       = "core/lanes/backend.zig"
+numeric   = "n/a"
+regime    = "N streams a round"
+
+[[provides]]
+interface = "sample.next-token/-/f64.tensorfold"
+api       = "core/lanes/sampling.zig"
+numeric   = "keyed exact sampler"
+regime    = "per token"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

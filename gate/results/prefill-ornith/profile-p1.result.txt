@@ -1,0 +1,24 @@
+k_profile job 20261114T032032Z-profile-x on bench box K (192.0.2.56), 10 s; files: /data/pod/kbench/runs/8ef0a645e7/20261114T032032Z-profile-x
+acquired bench:K owner=kbench-20261114T032032Z-profile-x expires=1794633633 bound=none
+code: src /data/pod/kbench/stage/8ef0a645e7-pfo (0.1 MB)
+build: exit 0 in 3.3 s
+profiled run: exit 0 in 2.13 s under rocprofv3; Tctl 56->75 C peak, 41 W mean (80 peak)
+GPU kernel time 1085.379 ms over 131 launches of 15 distinct kernels; wall 2.128 s (kernels = 51.0% of wall)
+small kernels (avg < 10 us): 6 kinds, 64 launches, 0.238 ms = 0.0% of kernel time
+top 15 by GPU time:   %time      total ms    calls    avg us   VGPR SGPR scratch LDS  name
+   19.19%      208.253        6  34708.80     32  128       0    0  FillBlocks(unsigned char*, unsigned long, int, unsigned long)
+   17.99%      195.224        8  24402.96    144  128       0 23552  void flerp::kgrouped::(anonymous namespace)::GroupedKernel<32, (flerp::kgrouped::WType)12, true>(unsigned char
+   16.97%      184.228        8  23028.55    200  128       0 28672  void flerp::kgrouped::(anonymous namespace)::GroupedKernel<64, (flerp::kgrouped::WType)12, true>(unsigned char
+   13.81%      149.847        8  18730.82    256  128       0 38912  void flerp::kgrouped::(anonymous namespace)::GroupedKernel<128, (flerp::kgrouped::WType)12, true>(unsigned cha
+   12.38%      134.336        8  16791.95    152  128       0 23552  void flerp::kgrouped::(anonymous namespace)::GroupedKernel<32, (flerp::kgrouped::WType)14, false>(unsigned cha
+   10.12%      109.846        8  13730.74    208  128       0 28672  void flerp::kgrouped::(anonymous namespace)::GroupedKernel<64, (flerp::kgrouped::WType)14, false>(unsigned cha
+    8.79%       95.448        8  11931.00    256  128       0 38912  void flerp::kgrouped::(anonymous namespace)::GroupedKernel<128, (flerp::kgrouped::WType)14, false>(unsigned ch
+    0.58%        6.289       12    524.09     16  128       0    0  flerp::kgrouped::(anonymous namespace)::ToF16Kernel(float const*, unsigned short*, unsigned long, unsigned int
+    0.15%        1.671        1   1670.98     24  128       0    0  FillNormal(float*, unsigned long, unsigned long)
+    0.01%        0.062       12      5.19      8  128       0    0  flerp::kgrouped::(anonymous namespace)::PlaceKernel(int const*, unsigned long, int, int const*, int*, int*)
+    0.00%        0.050       12      4.13      8  128       0    0  flerp::kgrouped::(anonymous namespace)::IdentityKernel(unsigned long, int, int*, int*, int*, HIP_vector_type<i
+    0.00%        0.045       12      3.73      8  128       0    0  flerp::kgrouped::(anonymous namespace)::CountKernel(int const*, unsigned long, int, int*)
+    0.00%        0.040       13      3.05     16  128       0    0  __amd_rocclr_fillBufferAligned
+    0.00%        0.033       12      2.77     16  128       0 8192  flerp::kgrouped::(anonymous namespace)::ScanKernel(int const*, int, int, int*, int*, HIP_vector_type<int, 2u>*
+    0.00%        0.008        3      2.79     16  128       0    0  __amd_rocclr_copyBuffer
+full tables: /data/pod/kbench/runs/8ef0a645e7/20261114T032032Z-profile-x/kernel_stats.csv, kernel_trace.csv

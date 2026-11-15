@@ -1,0 +1,37 @@
+==> rank1.log <==
+info: rank cache: 95.1 GiB of expert entries read whole in 82.0 s
+info: collectives: tcp_host over 1 data link(s) from port 29636, stripe >= 0 MiB, RTO floor 8000 us, progress deadline 15000 ms, GPU waits fail after 10 s (logged past 2 s), dma staging, gathers >= 8 MiB pipelined in 4 MiB chunks
+info: collectives: tcp_proxy with 8 slots of 4352 KiB (coherent slab 68 MiB), proxy thread on CPU 6; larger gathers through tcp_host
+info: dsv41: w-tri's HIP kernels in place of Triton: hip (TF_DS_AUX)
+{"rank": 1, "loaded_s": 102.2, "pool": 131072, "drafts": true, "arena_used": 3961133136, "arena_reserved": 4081057792, "replay_floor": false, "side": false, "engram_aio": false}
+info: lanes: step 0 rank 1 prompt pass: 16 tokens, slot 0, extent at 0; collectives (stream idle): staged 2, cable1 2, cable2 0, host 11
+{"rank": 1, "follow": "PeerDown"}
+
+==> rank0-ready.txt <==
+{"reply": "The capital of France is Paris.", "usage": {"prompt_tokens": 16, "completion_tokens": 8, "total_tokens": 24, "prompt_tokens_details": {"cached_tokens": 0}, "completion_tokens_details": {"reasoning_tokens": 0}}, "wall_s": 0.315, "completion_tok_per_s_wall": 25.37}
+ready: http://192.0.2.50:18080 (/home/pod/tfp/run/serve128k/pair-20261111T014805Z)
+==== rank 0
+info: rank cache: 95.1 GiB of expert entries read whole in 78.5 s
+info: collectives: tcp_host over 1 data link(s) from port 29636, stripe >= 0 MiB, RTO floor 8000 us, progress deadline 15000 ms, GPU waits fail after 10 s (logged past 2 s), dma staging, gathers >= 8 MiB pipelined in 4 MiB chunks
+info: collectives: tcp_proxy with 8 slots of 4352 KiB (coherent slab 68 MiB), proxy thread on CPU 6; larger gathers through tcp_host
+info: dsv41: w-tri's HIP kernels in place of Triton: hip (TF_DS_AUX)
+info: config.json declares a vision tower; not opened (text capability)
+[tensorfold] warning: non-loopback server has no API key; requests are open
+[tensorfold] open-file limit raised: soft 1024 -> 1048576
+[tensorfold] HIP gfx1151 device 0 (AMD Radeon 8060S Graphics, memory shared with the host): model 102.76 GiB; 1 stream at once, 0.00 GiB each at a 131072-token window, of 3.5 GiB left after a 12.4 GiB reserve; prompts in 2048-row chunks
+[tensorfold] serving dsv41 at http://192.0.2.50:18080/v1 (sampling: greedy; drafts: on; context: 131054; loaded in 102.0s)
+[tensorfold] 192.0.2.50 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.50 "GET /health HTTP/1.1" 200 -
+info: lanes: step 0 rank 0 prompt pass: 16 tokens, slot 0, extent at 0, 2048 rows; from 0: no kept state; 0 other stream(s) live; collectives (stream idle): staged 2, cable1 2, cable2 0, host 11
+{"prompt_logits": "request", "sha256": "b1cdb895d1bda1d5b7bc2bb343aed6731566a1931aec7bc3f7471a9dd13cded3", "rows": 16}
+info: prompt cache: 16 tokens, resumed at 0, kept 0; 0 states, 0 MiB and 0 MiB spare of 4096 MiB (hits 0, misses 1, evicted 0, refused 0, failed 0)
+{"verify": 16, "rows": 6, "ids": { 671, 6102, 294, 8760, 344, 11111 }, "drawn": { 6102, 294, 8760, 344, 11111, 16 }}
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "POST /cache/export HTTP/1.1" 400 -
+{"verify": 22, "rows": 6, "ids": { 16, 1, 10257, 294, 8760, 16 }, "drawn": { 1, 201, 1, 8760, 344, 1 }}
+[tensorfold] done chatcmpl-83865882462a31f845e63075dcb106ad prompt=16 cached=0 thinking=False effort=none tokens=8 sha=6243895c315c finish=stop rounds=2 accepted=6/10
+[tensorfold] 192.0.2.50 "POST /v1/chat/completions HTTP/1.1" 200 -
+[tensorfold] 192.0.2.50 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -
+[tensorfold] 192.0.2.31 "GET /health HTTP/1.1" 200 -

@@ -1,0 +1,39 @@
+id      = "kernel.strixite.wmma"
+kind    = "kernel"
+summary = "gfx11 matrix-core 16x16 tile helpers (wave32) and the end-to-end lane-layout check"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/wmma.hip", "kernels/wmma.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/wmma.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "gemm.wmma-tile/-/bf16"
+api       = "strix::kernels::wmma_tile_product and the device helpers wmma_bf16, wmma_f16, wmma_load_rows"
+numeric   = "bf16 (or f16) inputs, fp32 accumulate; not bit-exact IEEE: up to 2^-23 of sum|a*b| per 16x16x16 step"
+regime    = "v_wmma_f32_16x16x16_bf16 on RDNA3 / RDNA3.5"
+
+[[requires]]
+module = "kernel.strixite.device_info"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

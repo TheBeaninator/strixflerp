@@ -1,0 +1,68 @@
+id        = "format.flerp.convert_qwen4exp_p16"
+kind      = "format"
+summary   = "Converter library from the HF BF16 checkpoint: format.strixite.convert_qwen4exp with layout classes that may carry the p16 suffix (Q4Panel16 / Q8Panel16, strixw v5), plus a check mode that quantizes chosen tensors and compares them with a reference strixw"
+design    = "DESIGN.md"
+notes     = "Adapted copy of strixite's formats/convert_qwen4exp.{cpp,hpp} (20937dc); every change is marked `flerp`. Quantization is the origin's code; p16 classes are then re-laid out by format.flerp.q4panel / q8panel and written through format.flerp.strixw_v5. docs/STRIXW-LAYOUT-NEXT.md stage 2, the `--layout` path."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/convert_qwen4exp_p16/convert_qwen4exp_p16.cpp", "flerp/convert_qwen4exp_p16/convert_qwen4exp_p16.hpp"]
+authors   = ["shawnshekari", "pod"]
+modified  = false
+upstream  = "strixite https://github.com/shawnshekari/strixite 20937dc (branch v0.7.0-pod): formats/convert_qwen4exp.cpp, formats/convert_qwen4exp.hpp (catalog/strixite/format/convert_qwen4exp holds them verbatim)"
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/convert_qwen4exp_p16/convert_qwen4exp_p16.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "format.convert/strixw-p16/-"
+api       = "flerp::convert_qwen4exp_p16, flerp::normalized_layout, flerp::checkpoint_fingerprint, flerp::ConvertOptions (plan_scratch, check_ref, check_names)"
+numeric   = "per-class Q4/Q5/Q6/Q8 by the origin's quantizers; p16 classes bit-identical codes/scales/mins to the origin's row-major, re-laid out"
+regime    = "host, streaming, threads as given"
+
+[[requires]]
+module    = "format.strixite.convert_qwen4exp"
+
+[[requires]]
+module    = "format.flerp.strixw_v5"
+
+[[requires]]
+module    = "format.flerp.q4panel"
+
+[[requires]]
+module    = "format.flerp.q8panel"
+
+[[requires]]
+module    = "format.strixite.merge_plan"
+
+[[requires]]
+module    = "format.strixite.q4"
+
+[[requires]]
+module    = "format.strixite.q5"
+
+[[requires]]
+module    = "format.strixite.q6"
+
+[[requires]]
+module    = "format.strixite.q8"
+
+[[requires]]
+module    = "format.strixite.safetensors"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host code built by tool.flerp.convert_qwen4exp_p16's build.sh, not by a recipe; evidence tests/test_convert_qwen4exp_p16.py (synthetic checkpoint: equal to the origin without p16, equal to convert_strixw_panel of the origin with p16) and gate/results/strixw-p16-raw (real tensors of the ark checkpoint vs the fleet file); the full conversion from the raw checkpoint has not been run"

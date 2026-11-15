@@ -1,0 +1,8 @@
+{
+ "_card": "crucible-fatzero",
+ "_call": "stopllama",
+ "cmd": "systemctl status worker-llama --no-pager 2>&1 | head -5; systemctl show -p Restart,User worker-llama; sudo -n systemctl stop worker-llama; echo stop-rc=$?; sleep 5; pgrep -af llama-server || echo no-llama; cat /sys/class/drm/card*/device/mem_info_gtt_used | awk '{print \"gtt_used_MiB\", $1/1048576}'; free -g | head -2",
+ "timeout_s": 120,
+ "queue_wait_s": 7200,
+ "why": "crucible-fatzero: stop the boot-default worker-llama on K (29 GB GPU; K serves no model, RC-BOOT-EMPTY approved) so Crucible's 108 GB arena fits; runtime stop only"
+}

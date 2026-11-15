@@ -1,0 +1,48 @@
+id        = "tool.crucible.build"
+kind      = "tool"
+summary   = "The origin build: Makefile, the checked hipcc wrapper, devsplit (parallel split device compile with the same ISA), ISA diff, release stamp and state epoch stamp"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "Makefile",
+  "VERSION",
+  "tools/devsplit.py",
+  "tools/devsplit_facts.tsv",
+  "tools/devsplit_groups.tsv",
+  "tools/devsplit_ir.py",
+  "tools/generate_persistent_ops.py",
+  "tools/hipcc_checked.sh",
+  "tools/isa_diff.py",
+  "tools/release_engine.py",
+  "tools/state_epoch.py",
+  "tools/state_epoch_pins.tsv",
+  "tools/state_epoch_sources.txt",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "build.graph/make/-"
+api       = "make build/engine/crucible[.mono] (Makefile)"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "build scripts"

@@ -1,0 +1,73 @@
+id        = "kernel.strixfold.exl3"
+kind      = "kernel"
+summary   = "EXL3 trellis-coded linears and routed experts: exact MUL1 tile decode, v_dot2_f32_f16 for decode windows, f16 WMMA for prompt chunks"
+notes     = "Tile format after ExLlamaV3 (MIT, Copyright (c) 2025 Turboderp). exl3.l2_prefetch is a no-output hint kernel."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/exl3.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/exl3.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 48
+
+[[provides]]
+interface = "linear.decode/exl3/f16-f32.row-invariant"
+api       = "tf_ds_exl3_rot_many, tf_ds_exl3_glinear_k<K2>_w<W> (12 variants)"
+numeric   = "input rotated (Hadamard 128, sign vectors) into fp16; each 16x16 weight tile decoded exactly once a wave (MUL1), v_dot2_f32_f16 with fp32 accumulation in a fixed order (split-K partials and wave sums added in fixed order); contract exl3.linear of numerics.json (tolerance vs CUDA bits, not bit-equal)"
+regime    = "1..63 rows glinear; memory-bound"
+
+[[provides]]
+interface = "linear.prefill/exl3/f16-f32"
+api       = "tf_ds_exl3_rot_in, tf_ds_exl3_gemm_k<K2>_m<M> (8), tf_ds_exl3_unpack_k<K2> (6)"
+numeric   = "v_wmma_f32_16x16x16_f16, fp16 operands, fp32 accumulation; contract exl3.linear"
+regime    = "prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/bf16"
+api       = "tf_ds_exl3_experts_decode_prep, tf_ds_exl3_experts_grouped_cp_lo<L>_hi<H>_epi<E> (6), tf_ds_exl3_experts_gateup_epilogue, tf_ds_exl3_experts_down_combine"
+numeric   = "epoch / ready protocol of the decode experts, SwiGLU and combine epilogues in the CUDA order; contract exl3.experts_grouped"
+regime    = "decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "moe.experts-prefill/exl3/bf16.grouped"
+api       = "tf_ds_exl3_experts_group_count, _group_place, _work_list, _rot_in, _grouped_mma_* (3), _grouped_rows_* (3)"
+numeric   = "picks grouped by expert; contract exl3.experts_grouped"
+regime    = "prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[[requires]]
+interface = "format.device-view/exl3/-"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.exl3.json"

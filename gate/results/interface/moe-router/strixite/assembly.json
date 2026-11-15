@@ -1,0 +1,76 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_moe_router",
+   "modules": [
+    "runtime.strixite.check",
+    "kernel.strixite.hip_common",
+    "kernel.strixite.device_info",
+    "kernel.strixite.norm",
+    "kernel.strixite.moe_router",
+    "tool.flerp.gate_moe_router"
+   ]
+  }
+ },
+ "bindings": {
+  "moe.router/-/bf16": "kernel.strixite.moe_router"
+ },
+ "code_objects": [],
+ "contract_changes": [],
+ "foreign": {},
+ "include_only": [],
+ "modules": {
+  "kernel.strixite.device_info": {
+   "dir": "catalog/strixite/kernel/device_info",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.hip_common": {
+   "dir": "catalog/strixite/kernel/hip_common",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.moe_router": {
+   "dir": "catalog/strixite/kernel/moe_router",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/moe_router.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.norm": {
+   "dir": "catalog/strixite/kernel/norm",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/norm.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "runtime.strixite.check": {
+   "dir": "catalog/strixite/runtime/check",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "tool.flerp.gate_moe_router": {
+   "dir": "gate/interface/drivers/moe_router",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-moe-router.strixite",
+ "renames": {},
+ "toolchain": "therock-10.1"
+}

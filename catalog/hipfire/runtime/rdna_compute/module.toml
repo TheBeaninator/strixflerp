@@ -1,0 +1,184 @@
+id        = "runtime.hipfire.rdna_compute"
+kind      = "runtime"
+summary   = "The kernel launcher: source registry (kernels.rs maps every kernel name to its HIP source text), JIT compile with a content-keyed cache and packaged kernel packs, arch capability table, typed launch wrappers per family"
+notes     = "kernels.rs is the generator input the units.json files of the kernel modules were derived from. src/cdna (gfx942) is left out, so the crate does not build as is."
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/rdna-compute/Cargo.toml",
+  "crates/rdna-compute/map.md",
+  "crates/rdna-compute/src/arch_caps.rs",
+  "crates/rdna-compute/src/attention.rs",
+  "crates/rdna-compute/src/attention_wmma_verify.rs",
+  "crates/rdna-compute/src/bin/hipfire-kernel-hash.rs",
+  "crates/rdna-compute/src/bin/hipfire-kernel-manifest.rs",
+  "crates/rdna-compute/src/bin/hipfire-kernel-pack.rs",
+  "crates/rdna-compute/src/bin/hipfire-kernel-registry.rs",
+  "crates/rdna-compute/src/byte_arena.rs",
+  "crates/rdna-compute/src/code_object.rs",
+  "crates/rdna-compute/src/compile_jobs.rs",
+  "crates/rdna-compute/src/compiler.rs",
+  "crates/rdna-compute/src/device_counter.rs",
+  "crates/rdna-compute/src/device_wait.rs",
+  "crates/rdna-compute/src/dflash_draft_fusion.rs",
+  "crates/rdna-compute/src/dflash_gdn_pre.rs",
+  "crates/rdna-compute/src/dflash_gdn_replay.rs",
+  "crates/rdna-compute/src/dflash_hidden_scatter.rs",
+  "crates/rdna-compute/src/dflash_sampled_accept.rs",
+  "crates/rdna-compute/src/dflash_selector.rs",
+  "crates/rdna-compute/src/dflash_state_copy.rs",
+  "crates/rdna-compute/src/dispatch.rs",
+  "crates/rdna-compute/src/draft_lane_conv.rs",
+  "crates/rdna-compute/src/draft_lane_rows.rs",
+  "crates/rdna-compute/src/e8p_moe_decode.rs",
+  "crates/rdna-compute/src/embedding.rs",
+  "crates/rdna-compute/src/emu.rs",
+  "crates/rdna-compute/src/emu_validate.rs",
+  "crates/rdna-compute/src/expert_capabilities.rs",
+  "crates/rdna-compute/src/fa_prefill_pm.rs",
+  "crates/rdna-compute/src/fa_qprep_pm.rs",
+  "crates/rdna-compute/src/feature_flags.rs",
+  "crates/rdna-compute/src/ffn_activation.rs",
+  "crates/rdna-compute/src/flash_attn_ck.rs",
+  "crates/rdna-compute/src/flux_fused.rs",
+  "crates/rdna-compute/src/fn_gdn_dense.rs",
+  "crates/rdna-compute/src/fp8_e4m3.rs",
+  "crates/rdna-compute/src/gap_timing.rs",
+  "crates/rdna-compute/src/gated_delta_vector.rs",
+  "crates/rdna-compute/src/gated_delta_vector_pm.rs",
+  "crates/rdna-compute/src/gdn_chunk_prep_pm.rs",
+  "crates/rdna-compute/src/gdn_q8ef_reference.rs",
+  "crates/rdna-compute/src/gemm.rs",
+  "crates/rdna-compute/src/gemm_fp8_verify.rs",
+  "crates/rdna-compute/src/gemm_mq6_fp8.rs",
+  "crates/rdna-compute/src/gemm_mq6_i8.rs",
+  "crates/rdna-compute/src/gemm_vt.rs",
+  "crates/rdna-compute/src/gemma4_ext.rs",
+  "crates/rdna-compute/src/gemma4_ops.rs",
+  "crates/rdna-compute/src/gemv.rs",
+  "crates/rdna-compute/src/gemv_q8x.rs",
+  "crates/rdna-compute/src/ggml_convert.rs",
+  "crates/rdna-compute/src/ggml_mmvq.rs",
+  "crates/rdna-compute/src/ggml_ops.rs",
+  "crates/rdna-compute/src/gpu_test.rs",
+  "crates/rdna-compute/src/graph.rs",
+  "crates/rdna-compute/src/grouped_ops.rs",
+  "crates/rdna-compute/src/hc_row_fold.rs",
+  "crates/rdna-compute/src/head_lanes.rs",
+  "crates/rdna-compute/src/iu4_c8_pm.rs",
+  "crates/rdna-compute/src/kernel_abi.rs",
+  "crates/rdna-compute/src/kernel_pack.rs",
+  "crates/rdna-compute/src/kernel_registry.rs",
+  "crates/rdna-compute/src/kernels.rs",
+  "crates/rdna-compute/src/kv_slots.rs",
+  "crates/rdna-compute/src/lane_fa.rs",
+  "crates/rdna-compute/src/lane_gdn.rs",
+  "crates/rdna-compute/src/lane_proj.rs",
+  "crates/rdna-compute/src/lane_rows_pm.rs",
+  "crates/rdna-compute/src/latent_attention.rs",
+  "crates/rdna-compute/src/latent_attention_absorb.rs",
+  "crates/rdna-compute/src/latent_attention_decode.rs",
+  "crates/rdna-compute/src/latent_attention_flash.rs",
+  "crates/rdna-compute/src/latent_attention_tiled.rs",
+  "crates/rdna-compute/src/lib.rs",
+  "crates/rdna-compute/src/load_phases.rs",
+  "crates/rdna-compute/src/loaded_code_check.rs",
+  "crates/rdna-compute/src/moe.rs",
+  "crates/rdna-compute/src/moe_decode_lanes.rs",
+  "crates/rdna-compute/src/moe_few.rs",
+  "crates/rdna-compute/src/moe_grouped_k2_pm.rs",
+  "crates/rdna-compute/src/moe_rotate_i4_pm.rs",
+  "crates/rdna-compute/src/moe_slot_ops.rs",
+  "crates/rdna-compute/src/mq6_railgun.rs",
+  "crates/rdna-compute/src/mq_f16_producers.rs",
+  "crates/rdna-compute/src/mq_f16_residual_producers.rs",
+  "crates/rdna-compute/src/norm.rs",
+  "crates/rdna-compute/src/norm_fold.rs",
+  "crates/rdna-compute/src/npu_trunk.rs",
+  "crates/rdna-compute/src/npu_trunk_consumers.rs",
+  "crates/rdna-compute/src/packed_mq4.rs",
+  "crates/rdna-compute/src/page_pool.rs",
+  "crates/rdna-compute/src/plan_sink.rs",
+  "crates/rdna-compute/src/pm4_ledger.rs",
+  "crates/rdna-compute/src/pm_decode_twins.rs",
+  "crates/rdna-compute/src/pm_mtp_gemm.rs",
+  "crates/rdna-compute/src/pm_tune.rs",
+  "crates/rdna-compute/src/pm_xbatch.rs",
+  "crates/rdna-compute/src/pool.rs",
+  "crates/rdna-compute/src/prefill_invariant.rs",
+  "crates/rdna-compute/src/prefill_route_capabilities.rs",
+  "crates/rdna-compute/src/profile.rs",
+  "crates/rdna-compute/src/profile_rocprof.rs",
+  "crates/rdna-compute/src/profiler.rs",
+  "crates/rdna-compute/src/qsa_pooled_mirror.rs",
+  "crates/rdna-compute/src/qwen35_fa_batch.rs",
+  "crates/rdna-compute/src/railgun_check.rs",
+  "crates/rdna-compute/src/railgun_window.rs",
+  "crates/rdna-compute/src/rdna/gfx1201.rs",
+  "crates/rdna-compute/src/rdna/mod.rs",
+  "crates/rdna-compute/src/replay.rs",
+  "crates/rdna-compute/src/replay/railgun_lower.rs",
+  "crates/rdna-compute/src/replay/railgun_shadow.rs",
+  "crates/rdna-compute/src/residual_lanes.rs",
+  "crates/rdna-compute/src/rope.rs",
+  "crates/rdna-compute/src/route_plans/qwen3.8-flash-next-base.mq2-xts.gfx1201.tsv",
+  "crates/rdna-compute/src/route_plans/qwen3.8-flash-next-base.mq4-xts.gfx1201.tsv",
+  "crates/rdna-compute/src/route_plans/qwen3.8-flash-next.gfx1100.tsv",
+  "crates/rdna-compute/src/route_plans/qwen3.8-flash-next.gfx1201.tsv",
+  "crates/rdna-compute/src/router_fault.rs",
+  "crates/rdna-compute/src/rows_batched.rs",
+  "crates/rdna-compute/src/sampled_rows_compact.rs",
+  "crates/rdna-compute/src/sampling.rs",
+  "crates/rdna-compute/src/scratch.rs",
+  "crates/rdna-compute/src/select_regrid.rs",
+  "crates/rdna-compute/src/shadow_borrow.rs",
+  "crates/rdna-compute/src/shared_i8.rs",
+  "crates/rdna-compute/src/slab_admission.rs",
+  "crates/rdna-compute/src/slab_moe.rs",
+  "crates/rdna-compute/src/slot_pool.rs",
+  "crates/rdna-compute/src/spec_sampling_cpu_ar.rs",
+  "crates/rdna-compute/src/stream_mix.rs",
+  "crates/rdna-compute/src/tape_copy.rs",
+  "crates/rdna-compute/src/tensor_ops.rs",
+  "crates/rdna-compute/src/text_encoder.rs",
+  "crates/rdna-compute/src/tp_peer_push.rs",
+  "crates/rdna-compute/src/trunk_mask.rs",
+  "crates/rdna-compute/src/uma_memory.rs",
+  "crates/rdna-compute/src/vae.rs",
+  "crates/rdna-compute/src/verify_twins.rs",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "device.facade-hipfire/hip/-"
+api       = "rdna_compute::{Gpu, KernelCompiler, ArchCaps, kernels, kernel_registry}"
+numeric   = "n/a"
+regime    = "JIT compile on first use, then cached code objects"
+
+[[provides]]
+interface = "verify.kernel-pack/hsaco/-"
+api       = "rdna_compute::compiler (pack index, hash validation), code_object.rs"
+numeric   = "content-keyed objects; packaged objects re-verified by hash before load"
+regime    = "load time"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

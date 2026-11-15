@@ -1,0 +1,41 @@
+id      = "runtime.strixite.chat_template"
+kind    = "runtime"
+summary = "The model's chat template rendered in C++ (messages, tools, thinking switches)"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/chat_template.cpp", "serve/chat_template.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/chat_template.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "text.chat-template/-/-"
+api       = "strix::render_chat, strix::ChatTemplateOptions"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.unicode"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,711 @@
+{
+ "origin_registry": "crates/rdna-compute/src/kernels.rs (+ other rdna-compute/src/*.rs constants)",
+ "note": "a unit is the concatenation of its parts, compiled as one HIP source, as hipfire builds it; path parts are relative to catalog/hipfire",
+ "units": [
+  {
+   "name": "add_inplace",
+   "const": "ADD_INPLACE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/add_inplace.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "add_peer_residual",
+   "const": "ADD_PEER_RESIDUAL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/add_peer_residual_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "add",
+   "const": "ADD_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/add.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "arena",
+   "const": "ARENA_SRC",
+   "registry": "crates/rdna-compute/src/npu_trunk_consumers.rs",
+   "parts": [
+    {
+     "text": "#define NPU_TRUNK_ARENA 1\n#define gated_delta_conv_bf16_f32_batched_k4 gated_delta_conv_batched_arena\n#define gated_delta_conv_qknorm_bf16_f32_batched_k4 gated_delta_conv_qknorm_batched_arena\n"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/mq_fwht256.h"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/rope_yarn.h"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/tensor_ops.hip"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/npu_trunk_consumers.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "batched_categorical_sample",
+   "const": "BATCHED_CATEGORICAL_SAMPLE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/batched_categorical_sample.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "bf16_round_trip",
+   "const": "BF16_ROUND_TRIP_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/bf16_round_trip.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "bias_add",
+   "const": "BIAS_ADD_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/bias_add.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "block_i4_128_quant",
+   "const": "BLOCK_I4_128_QUANT_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "cast_f32_to_f16",
+   "const": "CAST_F32_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/cast_f32_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "conv1d_decode",
+   "const": "CONV1D_DECODE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/conv1d_decode.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "conv1d_gated_decode",
+   "const": "CONV1D_GATED_DECODE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/conv1d_gated_decode.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "copy_f32_buffer",
+   "const": "COPY_F32_BUFFER_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/copy_f32_buffer.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "copy_rows_strided_f32",
+   "const": "COPY_ROWS_STRIDED_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/copy_rows_strided_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "deepseek4_compressor_cache_f16",
+   "const": "DEEPSEEK4_COMPRESSOR_CACHE_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/deepseek4_compressor_cache_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "deinterleave_batched",
+   "const": "DEINTERLEAVE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/deinterleave_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "deinterleave_q_rmsnorm_batched",
+   "const": "DEINTERLEAVE_Q_RMSNORM_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/deinterleave_q_rmsnorm_f32_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "deinterleave",
+   "const": "DEINTERLEAVE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/deinterleave.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "dequant_bq1g128_to_f16",
+   "const": "DEQUANT_BQ1G128_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/dequant_bq1g128_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "dequant_hfq4g256_to_f16",
+   "const": "DEQUANT_HFQ4G256_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/dequant_hfq4g256_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "dequant_tq2g128_to_f16",
+   "const": "DEQUANT_TQ2G128_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/dequant_tq2g128_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_sigmoid_alpha_gate",
+   "const": "FUSED_SIGMOID_ALPHA_GATE_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_sigmoid_alpha_gate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_silu_mul_givens_rotate",
+   "const": "FUSED_SILU_MUL_GIVENS_ROTATE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_silu_mul_givens_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_silu_mul_mq_rotate_awq_i4_hin",
+   "const": "FUSED_SILU_MUL_MQ_ROTATE_AWQ_I4_HIN_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#if defined(__gfx1100__) && defined(IU4_A4_CANDIDATES) && IU4_A4_CANDIDATES == 2\n#define HIPFIRE_IU4_C2_ONEPASS 1\n#endif\n"
+    },
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_SILU_HIN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_SILU_MQ_ROTATE_KERNEL fused_silu_mul_mq_rotate_awq_i4_hin\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_silu_mul_mq_rotate_awq.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_silu_mul_mq_rotate_awq_i4",
+   "const": "FUSED_SILU_MUL_MQ_ROTATE_AWQ_I4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_SILU_MQ_ROTATE_KERNEL fused_silu_mul_mq_rotate_awq_i4\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_silu_mul_mq_rotate_awq.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_silu_mul_mq_rotate_awq_i8_hin_gfx11",
+   "const": "FUSED_SILU_MUL_MQ_ROTATE_AWQ_I8_HIN_GFX11_SRC",
+   "registry": "crates/rdna-compute/src/gemv.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I8_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_quant.hip"
+    },
+    {
+     "path": "kernel/gemm_mq/src/kernels/src/block_i8_128_emit.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_SILU_HIN 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_SILU_MQ_ROTATE_KERNEL fused_silu_mul_mq_rotate_awq_i8_hin_gfx11\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_silu_mul_mq_rotate_awq.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_silu_mul_mq_rotate_awq_indexed",
+   "const": "FUSED_SILU_MUL_MQ_ROTATE_AWQ_INDEXED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_silu_mul_mq_rotate_awq_indexed.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_silu_mul_mq_rotate_awq",
+   "const": "FUSED_SILU_MUL_MQ_ROTATE_AWQ_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_silu_mul_mq_rotate_awq.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_silu_mul_mq_rotate_i4",
+   "const": "FUSED_SILU_MUL_MQ_ROTATE_I4_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "text": "#define HIPFIRE_BLOCK_I4_128_QUANT_NO_STANDALONE 1\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/block_i4_128_quant.hip"
+    },
+    {
+     "text": "#define HIPFIRE_IU4_SIDECAR 1\n"
+    },
+    {
+     "text": "#define HIPFIRE_SILU_MQ_ROTATE_KERNEL fused_silu_mul_mq_rotate_i4\n"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_silu_mul_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "fused_silu_mul_mq_rotate",
+   "const": "FUSED_SILU_MUL_MQ_ROTATE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/fused_silu_mul_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gelu_new_mul_f32",
+   "const": "GELU_NEW_MUL_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/gelu_new_mul_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "gelu_tanh",
+   "const": "GELU_TANH_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/gelu_tanh.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "mul",
+   "const": "MUL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/mul.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "npu_trunk",
+   "const": "NPU_TRUNK_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/npu_trunk.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_bf16_round_trip",
+   "const": "QWEN4_BF16_ROUND_TRIP_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/qwen4_bf16_round_trip.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_decode_head_fuse",
+   "const": "QWEN4_DECODE_HEAD_FUSE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/qwen4_decode_head_fuse.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "qwen4_silu_mul",
+   "const": "QWEN4_SILU_MUL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/qwen4_silu_mul.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "repeat_interleave_qk_batched",
+   "const": "REPEAT_INTERLEAVE_QK_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/repeat_interleave_qk_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "repeat_interleave_qk",
+   "const": "REPEAT_INTERLEAVE_QK_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/repeat_interleave_qk.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "rows_twins",
+   "const": "ROWS_TWINS_SRC",
+   "registry": "crates/rdna-compute/src/rows_batched.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/rows_batched_twins.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "scaled_add_inplace",
+   "const": "SCALED_ADD_INPLACE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/scaled_add_inplace.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "scale_f32",
+   "const": "SCALE_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/scale_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "sigmoid_mul",
+   "const": "SIGMOID_MUL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/sigmoid_mul.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "sigmoid_scaled_residual_add_batched",
+   "const": "SIGMOID_SCALED_RESIDUAL_ADD_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/sigmoid_scaled_residual_add_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "sigmoid",
+   "const": "SIGMOID_SRC",
+   "registry": "crates/rdna-compute/src/kernel_registry.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/sigmoid.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "silu_mul",
+   "const": "SILU_MUL_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/silu_mul.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "silu",
+   "const": "SILU_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/silu.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "split_mq4v2_z_betaalpha",
+   "const": "SPLIT_MQ4V2_Z_BETAALPHA_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/split_mq4v2_z_betaalpha.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "sqrt_softplus_f32",
+   "const": "SQRT_SOFTPLUS_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/sqrt_softplus_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "src",
+   "const": "SRC",
+   "registry": "crates/rdna-compute/src/dispatch.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/convert_f32_to_bf16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "swa_visibility_stage_batched",
+   "const": "SWA_VISIBILITY_STAGE_BATCHED_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/swa_visibility_stage_batched.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "tensor_ops",
+   "const": "TENSOR_OPS_SRC",
+   "registry": "crates/rdna-compute/src/tensor_ops.rs",
+   "parts": [
+    {
+     "path": "kernel/common_headers/src/kernels/src/mq_fwht256.h"
+    },
+    {
+     "path": "kernel/common_headers/src/kernels/src/rope_yarn.h"
+    },
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/tensor_ops.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "transpose",
+   "const": "TRANSPOSE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/transpose.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "v4f_convert_f32_to_f16",
+   "const": "V4F_CONVERT_F32_TO_F16_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/deepseek4_convert_f32_to_f16.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "v4f_fused_silu_mul_clamp_mq_rotate",
+   "const": "V4F_FUSED_SILU_MUL_CLAMP_MQ_ROTATE_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/deepseek4_fused_silu_mul_clamp_mq_rotate.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "v4f_silu_mul_clamp",
+   "const": "V4F_SILU_MUL_CLAMP_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/deepseek4_silu_mul_clamp.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "zero_f32",
+   "const": "ZERO_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/zero_f32.hip"
+    }
+   ],
+   "flags": []
+  },
+  {
+   "name": "zero_inactive_rows_f32",
+   "const": "ZERO_INACTIVE_ROWS_F32_SRC",
+   "registry": "crates/rdna-compute/src/kernels.rs",
+   "parts": [
+    {
+     "path": "kernel/tensor_ops/src/kernels/src/zero_inactive_rows_f32.hip"
+    }
+   ],
+   "flags": []
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+# 2026-11-12T01:07:06Z load 4.67 before tcp2 rank 0, waited 0 s
+$ ionice -c3 nice -n 19 taskset -c 0-3 /data/projects/strixflerp/build/qwen36-35b-a3b.flerp-serve-stage/strixflerp-qwen36-35b-a3b.flerp-serve-stage --host 127.0.0.1 --port 39710 --model-id qwen36-35b-a3b --generation-config /data/projects/strixflerp/build/gate-scratch-serve-stage/generation_config.json executor.weights=/data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf executor.context=4096 executor.world=2 executor.placement=even executor.epoch=9 executor.single_reader=on executor.pause_ms=100 executor.peers=127.0.0.1:39760 text.weights=/data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf text.context=4096
+startup: text gufo Qwen tokenizer (248320 tokens) and compiled Qwen ChatML formatter; the file's template qwen-chatml-compiled-v1 sha256 e84f32a23fdda27689f868aa4a1a5621f41133e51a48d7f3efcbea2839574259; /data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf
+{"event":"loaded","mode":"tcp","rank":0,"load_s":52.8401,"placed":{"plan_sha256":"5c6d28ff8ae2cc4446ea95bd2b0a8a2b9f29dab37c4ae1a3422c98a09d88e2f3","blocks":[0,20],"allocated_bytes":10512327936,"plan_device_bytes":10512327936,"tensor_bytes":10512323840,"fill_s":50.6628,"pause_s":36.6277,"single_reader":true,"direct_io":true,"hip_free_before":129919143936,"hip_free_after":119200780288,"hip_total":133143986176},"t_unix":1.79445e+09}
+{"event":"waiting","rank":0,"world":2,"cuts":[0,20,40],"peers":"127.0.0.1:39760","t_unix":1.79445e+09}
+# 2026-11-12T01:08:00Z load 3.45 before tcp2 rank 1, waited 0 s
+{"event":"connected","rank":0,"world":2,"t_unix":1.79445e+09}
+startup: executor executor.flerp.qwen35moe_abi: Qwen3.6-35B-A3B-Q4_K_M.gguf, 40 blocks, world 2 (TCP 127.0.0.1:39760), cuts 0,20,40, context 4096, decode graph on, one seq, greedy tokens or full rows (loaded in 104.8 s)
+startup: executor ABI 2, deliveries 5, flags 0, 4096 positions, 1 rows a verify, 1 seqs
+startup: tokens are sampled on the host by greedy (runtime.flerp.sampler_greedy: argmax of each row, temperature 0 only); drafts 0 a verify (no draft head), margin 1.5; prompt cut none
+startup: serving on http://127.0.0.1:39710 (one conversation at a time)
+shutdown: closing the executor
+{"event":"closed","rank":0,"failed":false,"t_unix":1.79445e+09}
+shutdown: the executor is closed

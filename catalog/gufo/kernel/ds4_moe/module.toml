@@ -1,0 +1,63 @@
+id        = "kernel.gufo.ds4_moe"
+kind      = "kernel"
+summary   = "DeepSeek V4 Flash routed MoE: router, IQ2 gate/up experts, Q2_K down projection on WMMA with row groups of 128/64, shared expert, routed sum"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_iq2_gate.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_moe.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_moe_launch.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_q2_down.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_router.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_rocm_shared_expert.hip.hpp",
+  "src/models/deepseek_v4_flash/kernels/rocm/iq2_tables.hip.hpp",
+]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/detail",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.router/-/f32.ds4"
+api       = "router kernel + ds4_gpu_router_* launchers"
+numeric   = "only the final score is rounded: intermediate fp32 transcendental rounding varies across ROCm libraries and can change routing"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-iq2+q2_k/f32"
+api       = "ds4_gpu_routed_moe_* launchers (47 kernels)"
+numeric   = "IQ2_XXS gate/up decoded through grid tables keeping the established scalar product order; Q2_K down; fp32 accumulate; -ffast-math"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-iq2+q2_k/f32"
+api       = "ds4_gpu_routed_moe_* launchers (batched, WMMA q2 down)"
+numeric   = "rows grouped by expert in 128-row groups then a 64-row tail"
+regime    = "prefill batches (64..1024 tokens), compute-bound"
+
+[[requires]]
+module    = "kernel.gufo.ds4_backend"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.gufo.ds4_backend"
+reason    = "header fragment of one translation unit; compiles only inside kernel.gufo.ds4_backend"

@@ -1,0 +1,146 @@
+{
+ "binaries": {
+  "driver": {
+   "entry": "driver.cpp",
+   "main": "tool.flerp.gate_dense_bf16",
+   "modules": [
+    "runtime.strixite.check",
+    "kernel.strixite.hip_common",
+    "kernel.strixite.device_info",
+    "kernel.strixite.norm",
+    "kernel.strixite.linear",
+    "kernel.strixfold.dsv41_abi",
+    "kernel.strixfold.dense_bf16",
+    "kernel.flerp.adapter_rt",
+    "kernel.flerp.dense_bf16_strixfold",
+    "tool.flerp.gate_dense_bf16"
+   ]
+  }
+ },
+ "bindings": {
+  "linear.dense/bf16/bf16": "kernel.flerp.dense_bf16_strixfold"
+ },
+ "code_objects": [
+  {
+   "adapter": "kernel.flerp.dense_bf16_strixfold",
+   "command": "/data/models/tools/therock-10.2/bin/hipcc --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 --offload-device-only --no-gpu-bundle-output -O3 -std=c++20 -fno-gpu-rdc -mno-wavefrontsize64 -ffp-contract=off -fno-fast-math -fdenormal-fp-math=ieee -D__HIP_PLATFORM_AMD__ -I catalog/strixfold/kernel/dense_bf16/src/zig/kernels/hip/dsv41 -I catalog/strixfold/kernel/dsv41_abi/src/zig/kernels/hip/dsv41 @SRC@ -o @OUT@",
+   "module": "kernel.strixfold.dense_bf16",
+   "symbol": "flerp_co_strixfold_dense",
+   "toolchain": "therock-10.2",
+   "unit": "src/zig/kernels/hip/dsv41/dense.hip"
+  }
+ ],
+ "contract_changes": [
+  {
+   "module": "kernel.flerp.dense_bf16_strixfold",
+   "provided": "linear.dense/bf16/bf16.f32-out-row-invariant",
+   "required": "linear.dense/bf16/bf16"
+  }
+ ],
+ "foreign": {
+  "kernel.strixfold.dense_bf16": {
+   "origin": "strixfold",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  },
+  "kernel.strixfold.dsv41_abi": {
+   "origin": "strixfold",
+   "product": "code-object",
+   "toolchain": "therock-10.2"
+  }
+ },
+ "include_only": [],
+ "modules": {
+  "kernel.flerp.adapter_rt": {
+   "dir": "catalog/flerp/kernel/adapter_rt",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "MIT"
+  },
+  "kernel.flerp.dense_bf16_strixfold": {
+   "dir": "catalog/flerp/kernel/dense_bf16_strixfold",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/flerp_adapters/dense_bf16_strixfold.cpp"
+   ],
+   "spdx": "MIT"
+  },
+  "kernel.strixfold.dense_bf16": {
+   "dir": "catalog/strixfold/kernel/dense_bf16",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/zig/kernels/hip/dsv41/dense.hip"
+   ],
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixfold.dsv41_abi": {
+   "dir": "catalog/strixfold/kernel/dsv41_abi",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "Apache-2.0"
+  },
+  "kernel.strixite.device_info": {
+   "dir": "catalog/strixite/kernel/device_info",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.hip_common": {
+   "dir": "catalog/strixite/kernel/hip_common",
+   "files": 2,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.linear": {
+   "dir": "catalog/strixite/kernel/linear",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/linear.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "kernel.strixite.norm": {
+   "dir": "catalog/strixite/kernel/norm",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/kernels/norm.hip"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
+  "runtime.strixite.check": {
+   "dir": "catalog/strixite/runtime/check",
+   "files": 1,
+   "linked": true,
+   "sources": [],
+   "spdx": "AGPL-3.0-only"
+  },
+  "tool.flerp.gate_dense_bf16": {
+   "dir": "gate/interface/drivers/dense_bf16",
+   "files": 1,
+   "linked": true,
+   "sources": [
+    "src/driver.cpp"
+   ],
+   "spdx": "MIT"
+  }
+ },
+ "recipe": "gate-dense-bf16.strixfold",
+ "renames": {
+  "kernel.strixite.linear": {
+   "adapter": "kernel.flerp.dense_bf16_strixfold",
+   "suffix": "_flerp_origin",
+   "symbols": [
+    "linear_bf16w"
+   ]
+  }
+ },
+ "toolchain": "therock-10.1"
+}

@@ -1,0 +1,45 @@
+id        = "executor.flerp.qwen35moe_abi"
+kind      = "executor"
+summary   = "executor.flerp.qwen35moe behind the executor ABI, at world 1 or as N stages joined by runtime.flerp.stage_relay (rank 0 in this process; ranks 1..N-1 in this process as views of one load, or one tool.flerp.qwen35moe_stage process each over TCP): one seq, greedy tokens or full logits rows, one row a forward; MTP drafts held by the last stage (flerp_open drafts=N over TCP, the last stage process draft_head=on: FLERP_CAP_DRAFT_HELD, keep_prefix of its greedy chain; ORNITH-O3 step two, compiled, not yet run on a GPU through the ABI); no snapshots"
+notes     = "Stage P3 of docs/PHASE5-FOURNODE-DESIGN.md (section 3.9). stages.cpp is stage P2's stage mechanics (Stage, ServeOne, View and the relay plan of tool.flerp.qwen35moe_generate's stage_driver.cpp) as a library: rank 0's Pipeline and the stage loop of the other ranks, which waits for its caller's next call with no deadline and ends with status 0 on CLOSE or SIGTERM (Relay::Interrupt from the handler). abi.cpp maps include/flerp/executor.h onto it; its header says which forward is a prompt chunk and which a decode step. flerp_open keys: weights, context, world, rank (0), peers (loopback | HOST[,HOST...]:PORT), placement (even | cuts), epoch, deadline_ms, setup_deadline_ms, graph, single_reader, pause_ms, data_file (the bytes from a same-size copy, e.g. loom-swarm's sparse rank file), swarm_helper, swarm_manifest, swarm_from, swarm_conns (the bytes streamed by loom-swarm straight into the device, nothing on disk); every load goes through format.flerp.gguf_placed, by the single O_DIRECT reader unless single_reader=off."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/qwen35moe_abi/abi.cpp", "flerp/qwen35moe_abi/stages.cpp", "flerp/qwen35moe_abi/stages.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/qwen35moe_abi/abi.cpp", "src/flerp/qwen35moe_abi/stages.cpp"]
+includes  = ["src", "../../../../include"]
+
+[[provides]]
+interface = "executor.abi/flerp-v1/-"
+api       = "flerp_open .. flerp_stats_json (include/flerp/executor.h); flerp::qwen35moe_abi::StageMain, InterruptStage, Pipeline (flerp/qwen35moe_abi/stages.hpp)"
+numeric   = "the executor's own: greedy tokens are the last stage's device argmax (the generator's), full rows are its logits row of the call's last position, bit for bit as at world 1 (stage P2)"
+regime    = "one seq; prompt chunks of the arena's prompt batch, then one id a forward (a decode step); world 1 to N, one GPU (loopback) or one process a stage (TCP)"
+
+[[requires]]
+interface = "executor.model/qwen35moe/gguf"
+
+[[requires]]
+interface = "format.loader/gguf/-"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-.placed"
+
+[[requires]]
+interface = "transport.stage-relay/-/f32"
+
+[gate]
+parity    = "flerp:gate/moe_serve_stage.py"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by CMake (recipes/qwen36-35b-a3b.flerp-serve-stage.toml); its gate is gate/moe_serve_stage.py"

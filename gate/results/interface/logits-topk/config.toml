@@ -1,0 +1,221 @@
+# Interface gate: top-20 logits candidates. Swap 2 of docs/INTERFACES.md.
+# Pass criteria fixed on 2026-11-10 before the first run. Do not edit them to turn a failure into a pass.
+interface = "logits.topk/-/-"
+api       = "strix::kernels::logits_topk(logits, rows, ld, n_valid, out, nan, workspace, bytes, stream, mask, mask_words)"
+driver    = "gate/interface/drivers/logits_topk"
+toolchain = "therock-10.1"
+
+[criteria]
+# An exact selection has one correct answer: every provider must give the CPU reference's bytes (LogitCand[20] per
+# row, then the NaN words) on every parity case, except the cases marked below:
+#   require = "structure"  the NaN flags must be exact; the candidates of a NaN row are reported (the sampler
+#                          refuses a flagged row, and the adapter documents that gufo lists a NaN as -inf);
+#   require = "report"     +inf logits: gufo maps them to -inf by design; recorded, never a pass criterion.
+parity                          = "bit-identical"
+adapter_must_launch_foreign     = true
+# The allow-mask case and the short-row case are meant to fall back to strixite's kernel: one launch each.
+adapter_origin_launches_allowed = 2
+
+[[provider]]
+name     = "strixite"
+module   = "kernel.strixite.logits_topk"
+launches = "2 per call"
+[provider.bind]
+"logits.topk/-/-" = "kernel.strixite.logits_topk"
+
+[[provider]]
+name     = "gufo"
+module   = "kernel.flerp.logits_topk_gufo"
+wraps    = "kernel.gufo.qwen_sampling"
+adapter  = true
+launches = "5 per row + 1"
+[provider.bind]
+"logits.topk/-/-"                  = "kernel.flerp.logits_topk_gufo"
+"format.device-view/gguf-kquant/-" = "format.gufo.gguf_kquant"
+
+[[case]]
+name = "gauss-1row"
+kind = "parity"
+dump = "raw"
+rows = 1
+n_valid = 248077
+ld = 248320
+pattern = "gauss"
+seed = 101
+
+[[case]]
+name = "gauss-2rows"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 248077
+ld = 248320
+pattern = "gauss"
+seed = 102
+
+[[case]]
+name = "gauss-9rows"
+kind = "parity"
+dump = "raw"
+rows = 9
+n_valid = 248077
+ld = 248320
+pattern = "gauss"
+seed = 103
+
+[[case]]
+name = "ties-3rows"
+kind = "parity"
+dump = "raw"
+rows = 3
+n_valid = 248077
+ld = 248320
+pattern = "ties"
+seed = 104
+
+[[case]]
+name = "signed-zero-2rows"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 248077
+ld = 248320
+pattern = "signed-zero"
+seed = 105
+
+[[case]]
+name = "padding-must-not-win"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 200000
+ld = 248320
+pattern = "gauss"
+seed = 106
+
+[[case]]
+name = "neg-inf-masked-2rows"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 248077
+ld = 248320
+pattern = "neg-inf-masked"
+seed = 107
+
+[[case]]
+name = "unpadded-row"
+kind = "parity"
+dump = "raw"
+rows = 1
+n_valid = 248320
+ld = 248320
+pattern = "gauss"
+seed = 108
+
+[[case]]
+name = "small-vocab-4097"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 4097
+ld = 4100
+pattern = "ties"
+seed = 109
+
+[[case]]
+name = "few-finite"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 248077
+ld = 248320
+pattern = "few-finite"
+seed = 110
+
+[[case]]
+name = "allow-mask"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 248077
+ld = 248320
+pattern = "gauss"
+seed = 111
+mask = 1
+
+[[case]]
+name = "short-row-1000"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 1000
+ld = 1000
+pattern = "ties"
+seed = 112
+
+[[case]]
+name = "nan-row"
+kind = "parity"
+dump = "raw"
+rows = 3
+n_valid = 248077
+ld = 248320
+pattern = "nan"
+seed = 113
+require = "structure"
+
+[[case]]
+name = "nan-row-few-finite"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 248077
+ld = 248320
+pattern = "nan-few-finite"
+seed = 114
+require = "structure"
+
+[[case]]
+name = "pos-inf"
+kind = "parity"
+dump = "raw"
+rows = 2
+n_valid = 248077
+ld = 248320
+pattern = "pos-inf"
+seed = 115
+require = "report"
+
+[[case]]
+name = "bench-decode-1row"
+kind = "bench"
+shape = "1 row x 248,077 logits (a decode step)"
+rows = 1
+n_valid = 248077
+ld = 248320
+pattern = "gauss"
+iters = 400
+repeats = 9
+
+[[case]]
+name = "bench-verify-4rows"
+kind = "bench"
+shape = "4 rows x 248,077 (an MTP verify window)"
+rows = 4
+n_valid = 248077
+ld = 248320
+pattern = "gauss"
+iters = 200
+repeats = 9
+
+[[case]]
+name = "bench-16rows"
+kind = "bench"
+shape = "16 rows x 248,077 (the widest window; prefill needs one row)"
+rows = 16
+n_valid = 248077
+ld = 248320
+pattern = "gauss"
+iters = 60
+repeats = 9

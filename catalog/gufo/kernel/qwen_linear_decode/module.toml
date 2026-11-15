@@ -1,0 +1,78 @@
+id        = "kernel.gufo.qwen_linear_decode"
+kind      = "kernel"
+summary   = "Decode and verification projections on GGUF weights: F32/BF16 GEMV, K-quant GEMV decoded in-kernel, fused QKV and fused gate/up SwiGLU, exact wave64 small-batch kernels for draft verification"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/families/qwen/kernels/fused.hip",
+  "src/families/qwen/kernels/gemv.hip",
+  "src/families/qwen/kernels/gemv_quant.hip",
+  "src/families/qwen/kernels/qkv.hip",
+  "src/families/qwen/kernels/small_batch_quant16_wave64.hip",
+  "src/families/qwen/kernels/small_batch_wave64.hip",
+  "src/families/qwen/kernels/swiglu.hip",
+  "src/families/qwen/kernels/verify_gemm_27b.hip",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = true
+reason    = "gemv_quant.hip: LaunchQ8KBlockGEMV takes a wide-load Q4_K two-row kernel (16-byte code and x loads, x shared by the pair, eight waves a block), same lanes, decode and summation order, bit-equal (strixflerp DECODE-KERN3, gate/decode-kern3.toml); qkv.hip: LaunchFusedQKVProjections takes quant_ops.hpp TryLaunchWideQuantProjections first, same bits (strixflerp ATTN-PROJ, gate/attn-proj.toml)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/families/qwen/kernels/gemv.hip",
+  "src/src/families/qwen/kernels/gemv_quant.hip",
+  "src/src/families/qwen/kernels/fused.hip",
+  "src/src/families/qwen/kernels/qkv.hip",
+  "src/src/families/qwen/kernels/swiglu.hip",
+  "src/src/families/qwen/kernels/small_batch_wave64.hip",
+  "src/src/families/qwen/kernels/small_batch_quant16_wave64.hip",
+  "src/src/families/qwen/kernels/verify_gemm_27b.hip",
+]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = ["-x", "hip", "-std=gnu++20", "-O2", "-UNDEBUG", "-DENGINE_ENABLE_HIP=1", "-c"]
+source_options = { "src/src/families/qwen/kernels/small_batch_wave64.hip" = ["-mwavefrontsize64"], "src/src/families/qwen/kernels/small_batch_quant16_wave64.hip" = ["-mwavefrontsize64", "-gline-tables-only", "-Xarch_device", "-mllvm=-amdgpu-sched-strategy=iterative-ilp"] }
+variants  = 8
+
+[[provides]]
+interface = "linear.decode/gguf-kquant/f32.gufo"
+api       = "gufo::hip::LaunchGEMV, LaunchQ8KBlockGEMV, LaunchFusedQKVProjections, LaunchFusedSwiGLUGEMV (ops/gemm.hpp, ops/attention.hpp, ops/swiglu.hpp)"
+numeric   = "fp32 activations, weights decoded in-kernel from packed GGUF blocks, fp32 accumulate; Q8_K path quantizes the activation to int8 and uses an integer MAC with one fp scale at block end"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "linear.dense/bf16/f32.gufo"
+api       = "gufo::hip::LaunchGEMV (is_bf16), LaunchExactBf16GEMMFp32SmallBatch"
+numeric   = "fp32 x, bf16 W, fp32 accumulate, fp32 out"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "linear.verify/gguf-kquant/f32.exact-rows"
+api       = "gufo::hip::LaunchVerifyGemm27, LaunchKQuantSixteenWave64, LaunchPackedSwiGLUSixteenWave64"
+numeric   = "every lane walks its sub-blocks in the same order and lanes reduce in the same butterfly for every block shape: rows of a verification batch are bit-equal to the one-row decode kernel"
+regime    = "9..16 verification rows, wave64"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-"
+
+[gate]
+parity    = "origin-test:tests/kernels"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.qwen_linear_decode.json"

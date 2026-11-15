@@ -1,0 +1,68 @@
+id        = "executor.gufo.qwen_vision"
+kind      = "executor"
+summary   = "Qwen vision input: the image encoder (ViT tower on HIP), its device input, the prompt layout with image spans and the RoPE layout the text executor reads, the image cache"
+notes     = "Harvested for phase 5: src/models/qwen/hip/executor.hpp includes vision/device_input.hpp and the origin links gufo_qwen_vision into gufo_qwen27b, so the text executor does not build without it."
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/families/qwen/vision/CMakeLists.txt",
+  "src/families/qwen/vision/device_input.hip",
+  "src/families/qwen/vision/device_input.hpp",
+  "src/families/qwen/vision/encoder.hip",
+  "src/families/qwen/vision/encoder.hpp",
+  "src/families/qwen/vision/image_cache.cpp",
+  "src/families/qwen/vision/image_cache.hpp",
+  "src/families/qwen/vision/library.json",
+  "src/families/qwen/vision/prompt.cpp",
+  "src/families/qwen/vision/prompt.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.vision/qwen3.5/gguf"
+api       = "gufo::models::qwen::vision (encoder.hpp, device_input.hpp, prompt.hpp, image_cache.hpp)"
+numeric   = "fp32 on the mmproj GGUF"
+regime    = "solo"
+
+[[requires]]
+interface = "format.loader/gguf/-"
+
+[[requires]]
+interface = "device.memory/hip/-"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "runtime.gufo.image"
+
+[[requires]]
+module    = "runtime.gufo.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

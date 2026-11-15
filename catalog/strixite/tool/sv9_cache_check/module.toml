@@ -1,0 +1,47 @@
+id      = "tool.strixite.sv9_cache_check"
+kind    = "tool"
+summary = "Test: the prompt cache keys on image content"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/sv9_cache_check.cpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/sv9_cache_check.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.sv9-cache-check/-/-"
+api       = "main (sv9_cache_check)"
+numeric   = "n/a"
+regime    = "host only test; sv9_cache_check <tokenizer.json> <preprocessor_config.json> <config.json> <scratch_dir>"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.prompt_cache"
+
+[[requires]]
+module = "runtime.strixite.stb"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[[requires]]
+module = "runtime.strixite.vision_request"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

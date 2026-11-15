@@ -1,0 +1,63 @@
+id        = "kernel.hipfire.sampling"
+kind      = "kernel"
+summary   = "Device sampling: argmax (single, batched, token chain), top-k logits, top-p sampling (parallel), softmax with temperature, logit penalties and softcap, greedy accept (16 sources, 17 gfx1151 compile units)"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "kernels/src/argmax.hip",
+  "kernels/src/argmax_batched.hip",
+  "kernels/src/argmax_token_chain.hip",
+  "kernels/src/greedy_accept.hip",
+  "kernels/src/logit_penalty_table.hip",
+  "kernels/src/logit_softcap.hip",
+  "kernels/src/max_prob.hip",
+  "kernels/src/sample_rows_pf.hip",
+  "kernels/src/sample_top_p.hip",
+  "kernels/src/sample_top_p_parallel.hip",
+  "kernels/src/select_regrid.hip",
+  "kernels/src/softmax.hip",
+  "kernels/src/softmax_prob_gather_batched.hip",
+  "kernels/src/softmax_temp_batched.hip",
+  "kernels/src/topk_logits.hip",
+  "kernels/src/topk_logsumexp_batched.hip",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/kernels/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+units     = "units.json"
+variants  = 17
+
+[[provides]]
+interface = "logits.topk/-/f32.hipfire"
+api       = "topk_logits, sample_top_p*, softmax_temp_batched, logit_penalty_table"
+numeric   = "fp32"
+regime    = "1 row x vocab"
+
+[[provides]]
+interface = "logits.argmax/-/f32.hipfire"
+api       = "argmax, argmax_batched, argmax_token_chain"
+numeric   = "argmax"
+regime    = "1..N rows x vocab"
+
+[[requires]]
+module    = "kernel.hipfire.common_headers"
+
+[gate]
+parity    = "origin-test:crates/rdna-compute/tests"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.hipfire.sampling.json"

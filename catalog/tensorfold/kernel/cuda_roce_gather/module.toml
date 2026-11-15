@@ -1,0 +1,34 @@
+id        = "kernel.tensorfold.cuda_roce_gather"
+kind      = "kernel"
+summary   = "Cross-rank gather over RoCE with GPU-side completion (roce_gather.cu) and the rank sum used by TP decode"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = ["zig/kernels/cuda/rank_sum.cu", "zig/kernels/cuda/roce_gather.cu"]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "collective.allgather-roce/-/f32.tensorfold-cuda"
+api       = "roce_gather.cu, rank_sum.cu"
+numeric   = "bytes; sum in rank order"
+regime    = "TP decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source: harvested to read its recipe; not built for gfx1151"

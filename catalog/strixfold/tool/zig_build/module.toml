@@ -1,0 +1,45 @@
+id        = "tool.strixfold.zig_build"
+kind      = "tool"
+summary   = "The origin build graph: root build.zig, the HIP half (code objects by hipcc, the kit by tf-hip-kit scan, the native-hip step), the CUDA and dist halves build.zig imports, the pinned Zig version, the build wrapper"
+notes     = "zig/build/*.zig were missing from the laptop reference copy (it excluded directories named build) and come from the pod tree by way of ~/Code/strixflerp-upstream-supplement. cuda.zig and dist.zig are needed because build.zig imports them; their targets name files that are not harvested and are never made by the native-hip step."
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  ".zig-version",
+  "build.zig",
+  "build.zig.zon",
+  "tools/dsv41-hip/zig_build.sh",
+  "zig/build/cuda.zig",
+  "zig/build/dist.zig",
+  "zig/build/hip_dsv41.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "build.graph/zig/-"
+api       = "zig build native-hip -Dhipcc= -Drocm= -Dhip-triton-kit="
+numeric   = "n/a"
+regime    = "build time"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

@@ -1,0 +1,153 @@
+test-dsv41-hip-host
++- run test 144 pass, 8 skip, 1 fail (153 total)
+[default] (warn): collectives: rank 0 wire header mismatch: this rank's seq 2 site 0/2 bytes 64 part 0/1, the peer's (rank 1) seq 2 site 0/3 bytes 64 part 0/1
+[default] (warn): collectives: rank 1 wire header mismatch: this rank's seq 2 site 0/3 bytes 64 part 0/1, the peer's (rank 0) seq 2 site 0/2 bytes 64 part 0/1
+[default] (warn): collectives: rank 0 wire header mismatch: this rank's seq 1 site 0/1 bytes 128 part 0/1, the peer's (rank 1) seq 1 site 0/1 bytes 256 part 0/1
+[default] (warn): collectives: rank 1 wire header mismatch: this rank's seq 1 site 0/1 bytes 256 part 0/1, the peer's (rank 0) seq 1 site 0/1 bytes 128 part 0/1
+[default] (warn): collectives: rank 0 wire header mismatch: this rank's seq 1 site 0/1 bytes 32 part 0/1, the peer's (rank 1) seq 1 site 0/1 bytes 32 part 0/1; magic, version or epoch differs
+[default] (warn): collectives: rank 1 wire header mismatch: this rank's seq 1 site 0/1 bytes 32 part 0/1, the peer's (rank 0) seq 1 site 0/1 bytes 32 part 0/1; magic, version or epoch differs
+[default] (warn): collectives handshake: this rank has b=2, the peer has b=3
+[default] (warn): collectives handshake: the peer has c=4, this rank has nothing
+[default] (warn): collectives handshake: this rank has gpu_wait_s=10, the peer has gpu_wait_s=60
+[default] (warn): collectives: rank 0 proxy cable 1 exchange of gather 14 (phase ? layer 7, 1000 bytes) after 500 ms: Timeout no progress within the deadline
+[default] (warn): collectives: rank 0 proxy expected gather 1 in slot 1 and found gather 5
+[default] (warn): collectives: rank 0: a device wait gave up (past TF_COLL_GPU_WAIT_S, or a done past its gather) while the proxy was waiting for its GPU to stage gather 1: last staged 0 (phase ? layer 0, 0 bytes); slot 1 ready 0 done 0 consumed 0
+[default] (warn): collectives: rank 0 proxy cable 1 exchange of gather 1 (prompt_engram layer 3, 4096 bytes) after 500 ms: Timeout no progress within the deadline
+[default] (warn): rank cache: reading bytes 82097..1139673 whole failed (ReadFailed); their entries are read one by one
+error: 'model.test.the handshake names what orders a prompt chunk's gathers: split, zip, chunk rows, phase timer, frames' failed:
+       ====== expected this output: =========
+       prefill_split=256 prefill_zip=true chunk_caps=1024/1024 phase_timer=false frames=2␃
+       
+       ======== instead found this: =========
+       prefill_split=256 prefill_zip=true chunk_caps=1024/1024 phase_timer=false frames=4␃
+       
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       prefill_split=256 prefill_zip=true chunk_caps=1024/1024 phase_timer=false frames=2
+                                                                                        ^ ('\x32')
+       found:
+       prefill_split=256 prefill_zip=true chunk_caps=1024/1024 phase_timer=false frames=4
+                                                                                        ^ ('\x34')
+       /home/pod/opt/zig-x86_64-linux-0.17.0/lib/std/testing.zig:696:9: 0x13d5c15 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /data/projects/strixflerp/build/zip2-hosttest/base/zig/src/families/dsv41/model.zig:1347:5: 0x15df8f2 in test.the handshake names what orders a prompt chunk's gathers: split, zip, chunk rows, phase timer, frames (hip_test.zig)
+           try std.testing.expectEqualStrings("prefill_split=256 prefill_zip=true chunk_caps=1024/1024 phase_timer=false frames=2", try Model.gatherOrder(&b, 256, true, false));
+           ^
+failed command: ./.zig-cache/o/30d32cdf1785f7a8349599eb8506b035/test --cache-dir=./.zig-cache --seed=0x105493b8 --listen=-
+
+lint: 14 device source files, 0 unreviewed bit_cast uses
+test-dsv41-hip-host
++- run exe tf-hip-kit
+   +- run exe tf-hip-kit (dsv41-kit) w
+kit dsv41: 11 objects, 103 kernels, manifest sha256 6f18d7061dc4e8f350e245bb049a29793d19e553807aa3ae2e7accd7740a83be
+failed command: ./.zig-cache/o/fa8e4440bcab4e31368021eaa9c287c1/tf-hip-kit scan --kit dsv41 --arch gfx1151 --required declared --registry ./zig/kernels/hip/dsv41/registry.json --hipcc-version-file ./.zig-cache/o/c2556deb1428fb6dc1f9ebc6f6e25561/stdout --flag --offload-device-only --flag --no-gpu-bundle-output --flag -O3 --flag -std=c++20 --flag -fno-gpu-rdc --flag -mno-wavefrontsize64 --flag -ffp-contract=off --flag -fno-fast-math --flag -fdenormal-fp-math=ieee --flag -D__HIP_PLATFORM_AMD__ --input registry.json=./zig/kernels/hip/dsv41/registry.json --input abi.h=./zig/kernels/hip/dsv41/abi.h --input glue.hip=./zig/kernels/hip/dsv41/glue.hip glue.hip=./.zig-cache/o/e17fd82ade718c2f2558d161495bf0fa/glue.hsaco --input aux.hip=./zig/kernels/hip/dsv41/aux.hip aux.hip=./.zig-cache/o/67cf53f68eaa7ff1a3872ac8f7377f3a/aux.hsaco --input aux_attn.hip=./zig/kernels/hip/dsv41/aux_attn.hip aux_attn.hip=./.zig-cache/o/3ce4aa77a454344146f59408b3c47f90/aux_attn.hsaco --input aux_index.hip=./zig/kernels/hip/dsv41/aux_index.hip aux_index.hip=./.zig-cache/o/3f719ce5319d3c17fbd2afab71c10c1f/aux_index.hsaco --input aux_hc.hip=./zig/kernels/hip/dsv41/aux_hc.hip aux_hc.hip=./.zig-cache/o/71cc4063fced2ea99fa62bfbdb6ac7ff/aux_hc.hsaco --input exl3.hip=./zig/kernels/hip/dsv41/exl3.hip exl3.hip=./.zig-cache/o/2b8e5a1741ec34f94e4bb6b4366034e8/exl3.hsaco --input exl3_pf.hip=./zig/kernels/hip/dsv41/exl3_pf.hip exl3_pf.hip=./.zig-cache/o/ed9064d8928edff38ac884be35907748/exl3_pf.hsaco --input coll.hip=./zig/kernels/hip/dsv41/coll.hip coll.hip=./.zig-cache/o/b3dfc76850822d1fd042ccd52eb39863/coll.hsaco --input aux_gate.hip=./zig/kernels/hip/dsv41/aux_gate.hip aux_gate.hip=./.zig-cache/o/fe4af89144ab403fa4bb273c630486eb/aux_gate.hsaco --input aux_rope.hip=./zig/kernels/hip/dsv41/aux_rope.hip aux_rope.hip=./.zig-cache/o/5b4ba03be218cf9bd92af9d6f5b47ea8/aux_rope.hsaco --input dense.hip=./zig/kernels/hip/dsv41/dense.hip dense.hip=./.zig-cache/o/c6caedfbcb01ba8fd7569845db5c601f/dense.hsaco --out ./.zig-cache/o/3beed5878e8a30181763928a98c587f5/dsv41-kit
+
+kit dsv41 (gfx1151, ABI 1): 11 objects, 103 kernels, manifest sha256 6f18d7061dc4e8f350e245bb049a29793d19e553807aa3ae2e7accd7740a83be: ok
+isa-lint: 103 functions, 0 fp16 results of a mixed fma without allow_fma_mix
+Build Summary: 70/72 steps succeeded (1 failed); 206/215 tests passed (8 skipped, 1 failed)
+test-dsv41-hip-host transitive failure
++- run test 26 pass (26 total) 8ms MaxRSS:7M
+|  +- compile test debug native success 584ms MaxRSS:172M
+|     +- translate-c success 17ms MaxRSS:38M
++- run test 1 pass (1 total) 7ms MaxRSS:5M
+|  +- compile test debug native success 259ms MaxRSS:152M
+|     +- options success
++- run test 3 pass (3 total) 8ms MaxRSS:6M
+|  +- compile test debug native success 254ms MaxRSS:153M
+|     +- WriteFile smoke.hsaco success
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (smoke.hsaco) success 1s
+|     |  |  +- run /data/models/tools/therock-10.2/bin/hipcc success 82ms
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (abi_echo.hsaco) success 492ms
+|     |  |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     |  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-readelf success 11ms
+|     |  |  +- run /data/models/tools/therock-10.2/bin/hipcc (smoke.hsaco) (+1 more reused dependencies)
+|     |  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-readelf success 6ms
+|     |     +- run /data/models/tools/therock-10.2/bin/hipcc (abi_echo.hsaco) (+1 more reused dependencies)
+|     +- translate-c cached 24ms MaxRSS:36M
++- run test 3 pass (3 total) 683us MaxRSS:2M
+|  +- compile test safe native success 20s MaxRSS:604M
+|     +- translate-c success 14ms MaxRSS:38M
++- run exe tf-hip-kit success 4ms
+|  +- compile exe tf-hip-kit safe native success 21s MaxRSS:607M
+|  |  +- translate-c (reused)
+|  +- run exe tf-hip-kit (dsv41-kit) success 4ms
+|     +- compile exe tf-hip-kit safe native (+1 more reused dependencies)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc success 43ms
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (glue.hsaco) success 933ms
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (aux.hsaco) success 697ms
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (aux_attn.hsaco) success 1s
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (aux_index.hsaco) success 660ms
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (aux_hc.hsaco) success 1s
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (exl3.hsaco) success 45s
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (exl3_pf.hsaco) success 21s
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (coll.hsaco) success 449ms
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (aux_gate.hsaco) success 505ms
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (aux_rope.hsaco) success 583ms
+|     |  +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (dense.hsaco) success 1s
+|        +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
++- run exe tf-hip-kit success 1ms
+|  +- compile exe tf-hip-kit safe native (+1 more reused dependencies)
++- run exe tf-hip-kit success 26ms
+|  +- compile exe tf-hip-kit safe native (+1 more reused dependencies)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 16ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (glue.hsaco) success 1s
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc success 41ms
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 21ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (aux.hsaco) success 629ms
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 14ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (aux_attn.hsaco) success 589ms
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 13ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (aux_index.hsaco) success 680ms
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 40ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (aux_hc.hsaco) success 2s
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 1s
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (exl3.hsaco) success 30s
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 386ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (exl3_pf.hsaco) success 17s
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 17ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (coll.hsaco) success 1s
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 20ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (aux_gate.hsaco) success 695ms
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 7ms
+|  |  +- run /data/models/tools/therock-10.2/bin/hipcc (aux_rope.hsaco) success 552ms
+|  |     +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
+|  +- run /data/models/tools/therock-10.2/lib/llvm/bin/llvm-objdump success 14ms
+|     +- run /data/models/tools/therock-10.2/bin/hipcc (dense.hsaco) success 672ms
+|        +- run /data/models/tools/therock-10.2/bin/hipcc (reused)
++- run test 144 pass, 8 skip, 1 fail (153 total)
+|  +- compile test debug native success 761ms MaxRSS:246M
+|     +- translate-c cached 7ms MaxRSS:37M
++- run test 1 pass (1 total) 6ms MaxRSS:6M
+|  +- compile test debug native success 299ms MaxRSS:161M
+|     +- translate-c (reused)
++- run test 20 pass (20 total) 649ms MaxRSS:113M
+|  +- compile test debug native success 340ms MaxRSS:169M
++- run test 8 pass (8 total) 5ms MaxRSS:6M
+|  +- compile test debug native success 500ms MaxRSS:165M
+|     +- translate-c cached 17ms MaxRSS:31M
++- compile exe tf-dsv41-lanes fast native success 1m MaxRSS:1G
+|  +- translate-c success 16ms MaxRSS:33M
++- run sh success 137ms
+   +- compile exe tf-dsv41-lanes fast native (+1 more reused dependencies)
+
+RC=1

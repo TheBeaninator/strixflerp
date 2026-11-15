@@ -1,0 +1,60 @@
+id      = "format.strixite.strixw_loader"
+kind    = "format"
+summary = "strixw weights onto the device: one allocation, concurrent pread into two pinned staging buffers with event-gated async copies"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/strixw_loader.cpp", "runtime/strixw_loader.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/strixw_loader.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.device-loader/strixw/-"
+api       = "strix::StrixwDevice, strix::WeightPlacement"
+numeric   = "bytes as stored"
+regime    = "tensors keep file offsets and alignment; HostExperts placement is for test and bench tools only"
+
+[[requires]]
+interface = "format.device-view/strixw-q4/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q5/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q6/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module = "format.strixite.strixw"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[[requires]]
+module = "runtime.strixite.qweight"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,150 @@
+id        = "kernel.gufo.qfn_kernels"
+kind      = "kernel"
+summary   = "Qwen3.8-Flash-Next model-private kernels in one translation unit (83 kernels): embedding, grouped RMSNorm, hyper-connection mix / combine, PLE, Gated DeltaNet, QSA pooling / select, attention, router top-k, MoE epilogue, MTP head, argmax, W8A8 int8 WMMA GEMM"
+notes     = "One 9,352-line translation unit: the kernels cannot be compiled or swapped separately without editing it. kernels.hpp is the launch API."
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp",
+  "src/models/qwen38_flash_next/kernels/rocm/kernels.hpp",
+  "src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip",
+  "src/models/qwen38_flash_next/mtp_sampling.hpp",
+  "src/models/qwen38_flash_next/rope_scaling.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp",
+  "src/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip",
+]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = [
+  "-x",
+  "hip",
+  "-std=gnu++20",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-Wno-unused-command-line-argument",
+  "-UNDEBUG",
+  "-c",
+  "-DQFN_ROCM_BUILD=1",
+  "-DENGINE_ENABLE_HIP=1",
+]
+source_options = { "src/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip" = ["-mwavefrontsize64"] }
+variants  = 83
+
+[[provides]]
+interface = "hc.mix/gguf-q8_0/f32"
+api       = "gufo::models::qwen38_flash_next::rocm::HcMixEpilogue*, HcCombine*, HcMixQ8Fused, HcApplyDeferred (kernels.hpp)"
+numeric   = "fp32 residual streams (4 x 2560, rank 320); fused decode form is byte for byte the separate launches; F16 and tiled Q8 mirrors byte-identical to qfn_mmq_quantize_q8_1; compiled -ffast-math"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound; prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.qfn"
+api       = "GdnPrep, GdnPrepKq, GdnPrepAb, Gdn, GdnEpilogue, RestoreGdnState, RollingSnapshot, SsmConv*"
+numeric   = "fp32 state; rollback keeps the state after the first token and exact fp32 keys / decays / betas / errors for later tokens (no inverse, no quantization)"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "ple.inject/gguf-q8_0/f32"
+api       = "PleGate, PleConv, PleInject, HistoryShift"
+numeric   = "fp32"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32.qfn"
+api       = "PoolBlocks, SelectScore, CompactSelection"
+numeric   = "fp32 block-pooled keys and scores"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.qfn"
+api       = "PrepareAttention, Rope, StoreKv, Attention, AttentionMerge, WmmaCausalAttention"
+numeric   = "fp32 math over stored K/V rows; split attention merged from partials"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound; prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "moe.router/-/f32.qfn"
+api       = "RouterTopK, ExpertCounts, RoutedPadBounds, RoutedScatter"
+numeric   = "top-k on fp32 router logits"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "moe.combine/-/f32.qfn"
+api       = "MoeEpilogue, MoeEpilogueVec4, HcCombineMoeF16"
+numeric   = "weighted sum of expert rows plus the gated shared expert; F16 expert rows in the fused form"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "linear.prefill/gguf-q8_0/i8-f32.w8a8"
+api       = "QuantizeQ8Tiled*, W8A8BlockedWmmaGEMM, W8A8Tail"
+numeric   = "activations quantized per 32-wide block to int8 (Q8_1 tiles), int8 WMMA integer accumulate, one fp scale per block pair"
+regime    = "prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "linear.decode/f32+bf16+f16/f32.narrow"
+api       = "Narrow, SmallGemm, DenseF16GEMM, ExpandQ8_0"
+numeric   = "fp32 accumulate; for the narrow projections the quantized tier does not cover (routers, alpha/beta, indexer, inject)"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "norm.rmsnorm/-/f32.grouped"
+api       = "RmsNorm, RmsNormCached"
+numeric   = "grouped RMSNorm sharing one gamma row, fp32"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "act.swiglu/-/f32.qfn"
+api       = "Swiglu, SwigluHalf, SwigluQ8, SiluScale, SigmoidMul"
+numeric   = "fp32; F16 and Q8 output forms"
+regime    = "decode and MTP/DFlash verification, 1..16 rows, memory-bound"
+
+[[provides]]
+interface = "logits.argmax/-/f32.penalty"
+api       = "ArgmaxPartial, ArgmaxFinish, SplitArgmax*, PenaltyArgmax*, GatherArgmaxCandidates, VerificationCandidateTile"
+numeric   = "argmax and candidate tiles, lowest id on ties"
+regime    = "1..16 rows x vocab"
+
+[[provides]]
+interface = "draft.mtp/gguf-q8_0/f32"
+api       = "MtpHidden, MtpHiddenVec4, MtpAddEmbeddingVec4, MtpCandidateTile, MaskDraftLogits, GatherDraftLogits, RemapDraftIds"
+numeric   = "draft-only numerics"
+regime    = "draft steps"
+
+[[provides]]
+interface = "collective.device-stage/-/f32"
+api       = "StagePartial, WaitValue, AddRowsBroadcast"
+numeric   = "TP2 partial staging on the device; reduction adds the peer partial in rank order"
+regime    = "TP2"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.qfn_mmq"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.qfn_kernels.json"

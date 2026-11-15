@@ -1,0 +1,136 @@
+# Host facts, run settings and pass criteria for the qwen35moe recipe gate (gate/moe_recipe.py), on control-node.
+# [criteria] was fixed before the first run; do not edit it to turn a failure into a pass.
+
+[host]
+origin              = "gufo"
+reference_checkout  = "/data/ark-inbox/src/github.com__neuhaus__gufo"      # git tree; exported at ORIGIN.toml's commit
+scratch             = "build/gate-scratch-moe"      # under build/: pod-sync deletes anything else it does not know
+# llama.cpp 86a24a1 built for the CPU by the dense recipe's gate; reused, with one more target (llama-eval-callback).
+llama_build         = "build/gate-scratch-gufo/llama-build"
+build_jobs          = 2                             # control-node's memory is shared with the pod's jobs
+oom_score_adj       = 1000
+openssl_headers     = "/opt/node/include/node/openssl"                     # see gate/qwen35-decider-2b.gufo.toml
+openssl_crypto      = "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+gpu_busy_pattern    = "^(strix_|strixflerp-|flerp-gufo-|flerp-qwen35moe-|steer_check|omf_seg|gufo|ds4|sglang|llama-server|tfp)"
+gpu_free_gtt_bytes  = 1073741824
+lease_resource      = "control-gpu"
+lease_owner         = "agent"
+lease_ttl_s         = 900
+gpu_wait_s          = 1800
+
+[model]
+# Qwen3.6-35B-A3B Q4_K_M, 20.2 GiB: qwen35moe, 41 blocks (40 + 1 MTP), hidden 2048, 256 experts, 8 used, widths 512.
+gguf                = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"
+architecture        = "qwen35moe"
+# The dense recipe's model and its recorded GPU run: the new executor must give the same tokens on the same ids.
+dense_gguf          = "/data/models/decider-2b/decider-2b-v12-Q4_K_M.gguf"
+dense_results       = "gate/results/qwen35-decider-2b.gufo"
+
+[run]
+max_tokens          = 128
+repeats             = 2                 # the MoE model is generated this many times, in separate processes
+context             = 4096
+long_prompt_sentences = 40              # about 1,800 prompt tokens with this tokenizer
+run_timeout_s       = 1500
+trace_top           = 40                # logits kept a position on this side; llama.cpp gives its top 20
+# At most five: the origin's arena holds five hidden-state taps (hip/arena.cpp kMaxTargetLayerTaps). The first run
+# asked for seven and its traced run stopped on that (2026-11-11T16:30Z); the list is a run setting, not a criterion.
+trace_layers        = [0, 1, 19, 38, 39]
+trace_prompts       = ["rivers", "code"]     # llama.cpp's eval callback runs these (every graph node is copied out)
+# The CPU reference of this executor (written here for the MoE blocks, gufo's for the rest), first prompt only.
+cpu_tokens          = 2
+cpu_prompts         = 1
+cpu_threads         = 8
+cpu_timeout_s       = 1800
+# Three ways on one short prompt (a record, added after the first full run failed criterion 3b, to say where the
+# difference from llama.cpp comes from): the CPU reference's logits (FP32 activations), this executor with the
+# prompt fed through the decode step (FP32 activations), and the plain prompt pass (the origin's prompt chunks
+# quantize activations in the attention and DeltaNet projections, as llama.cpp's CPU kernels do in their own way).
+three_way_prompt    = "rivers"
+three_way_tokens    = 3
+
+[criteria]
+# 1. Dense regression: on the dense model, every prompt's generated ids equal the dense recipe's recorded ones.
+# 2. The MoE runs repeat themselves, and the traced run (which copies logits out) gives the plain run's ids.
+# 3. Against llama.cpp on the same prompt ids, for every prompt:
+#    a. the first generated token is llama.cpp's, unless llama.cpp's own margin between its two best tokens there
+#       is below tie_margin;
+#    b. at the first generated position, over the tokens of llama.cpp's top 20 that are in this side's kept logits,
+#       the largest absolute difference of log-probabilities is at most logprob_tolerance;
+#    c. where the generated ids first leave llama.cpp's, llama.cpp's margin between its two best tokens at that
+#       position is below tie_margin and this side's token is one of those two.
+# Cross-engine token identity over the whole generation is not required (SPEC.md section 1, fact 3; the dense
+# recipe left llama.cpp at positions 1, 5 and 81 on three of four prompts). The same differences on the dense
+# model, through the origin's unmodified path, are measured beside these as the baseline and are not a criterion.
+logprob_tolerance   = 0.5               # nats
+tie_margin          = 1.0               # nats
+
+# Raw text, no chat template: the dense recipe's prompts, so its recorded ids can be compared.
+[[prompt]]
+name = "bridge"
+text = "The following is a careful step by step explanation of how a suspension bridge carries its load.\n\n1."
+
+[[prompt]]
+name = "code"
+text = "def merge_sorted(a, b):\n    \"\"\"Merge two sorted lists into one sorted list.\"\"\"\n"
+
+[[prompt]]
+name = "rivers"
+text = "Question: Name three rivers in Europe and the sea each one flows into.\nAnswer:"
+
+[[prompt]]
+name = "records"
+long = true          # the filler of [run] long_prompt_sentences, then the text
+text = "\n\nThe first five record numbers whose sentence mentions a harbour are:"
+
+[llama]
+source              = "/data/ark/src/github.com__ggml-org__llama.cpp"
+port                = 5398
+threads             = 8
+n_probs             = 20
+build_timeout_s     = 3600
+startup_timeout_s   = 900
+request_timeout_s   = 3600
+
+# --- the fidelity stages (`--stages reference,fidelity`), added 2026-11-11 after the gpu stage failed criterion 3b ---
+# The gpu stage's result stands as it was set. These stages ask a different question: not "is this engine like
+# llama.cpp" but "how far is each engine from a full-precision evaluation of the weights as shipped": the K-quant
+# weights dequantized, every activation in FP32. Reference: the executor's CPU reference (gufo's CPU forward, FP32
+# activations, with the MoE block written here), given standing by gate/moe_block_check.py (numpy and llama.cpp's
+# gguf-py on real block inputs) and, on the dense model, by llama.cpp run on an F32 conversion of the same file.
+# Every engine sees the same context: the prompt ids and, for later positions, the continuation llama.cpp recorded
+# (teacher forcing). Measured against the reference at each position: KL(reference || engine) in nats over the
+# tokens both sides kept, the largest absolute log-probability difference over tokens the reference gives at least
+# prob_floor, whether the best token is the reference's, and the reference's margin between its two best.
+[fidelity]
+positions           = [0, 4, 12, 24]    # generated positions of a short prompt (0 = the first)
+long_positions      = [0, 1, 2, 3]      # of the long prompt: the CPU reference costs seconds a token
+top                 = 1000              # logits kept a position on every side (llama-server: n_probs)
+prob_floor          = 1e-3
+block_check_prompt  = "rivers"          # the CPU reference dumps these blocks of this prompt for the numpy check
+block_check_layers  = [0, 19, 39]
+dense_cpu_prompts   = ["bridge", "code", "rivers"]   # the dense CPU reference; the long prompt's is llama.cpp on F32
+# CRITERIA, written and committed before any of these runs. Held: this executor on the MoE model, both ways it
+# computes a prompt (the prompt pass, and the prompt through the decode step); llama.cpp, the FP32-activation
+# prompt pass and the dense model are records.
+# Where the numbers come from. KL between two softmaxes whose logits differ by d is, to second order, half the
+# variance of d under the reference distribution. The dense recipe's baseline (the origin's unmodified path against
+# llama.cpp, gate/results/.../summary.md) puts |d| on tokens with real mass at 0.04 to 0.08 nats on average and
+# 0.2 to 0.25 at most, and that is two engines' errors together; d = 0.2 on every token of mass would give
+# 0.5 * 0.2^2 = 0.02 nats. So kl_bound = 0.02 is an executor whose every likely token is off by the worst the
+# dense baseline showed, and an executor at the baseline's average (0.06) sits near 0.002: that is kl_floor, below
+# which a ratio to llama.cpp says nothing. One position has few tokens above the floor, so the ratio of two
+# engines' errors there is noisy (each is a maximum, or a variance, of a handful of draws): a factor of 3 a
+# position, and 1.5 on the mean over all positions of a model, where the noise averages out. llama.cpp is the
+# yardstick only because it also quantizes activations to 8 bits (Q8_K) on this file: an engine that needs more
+# than 3 times its error at a position, or 1.5 times overall, is losing precision llama.cpp keeps.
+kl_bound            = 0.02              # 1. KL(reference || executor) <= this, every prompt and position
+kl_factor           = 3.0               # 2. KL <= max(kl_factor * llama.cpp's KL at the position, kl_floor)
+kl_floor            = 0.002
+maxdiff_factor      = 3.0               # 3. floor-restricted max difference <= max(factor * llama.cpp's, maxdiff_floor)
+maxdiff_floor       = 0.1
+mean_kl_factor      = 1.5               # 4. mean KL over all positions <= max(factor * llama.cpp's mean, mean_kl_floor)
+mean_kl_floor       = 0.001
+top1_margin         = 0.5               # 5. the best token is the reference's wherever its margin is at least this
+coverage            = 0.999             # 6. the tokens compared hold this much of the reference's mass, and no token
+                                        #    above prob_floor is missing from a side

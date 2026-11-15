@@ -1,0 +1,47 @@
+id      = "runtime.strixite.vision_request"
+kind    = "runtime"
+summary = "Images of a chat request: data-URL parsing, decode memo, prompt planning and image-pad expansion"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/vision_request.cpp", "serve/vision_request.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/vision_request.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "vision.request/-/-"
+api       = "strix::vision::{prepare_images, plan_vision_prompt, load_vision_config, ServedVision}"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+interface = "format.container/strixw/-"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.engine"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.vision_preprocess"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

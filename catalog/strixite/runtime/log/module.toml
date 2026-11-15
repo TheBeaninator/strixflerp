@@ -1,0 +1,35 @@
+id      = "runtime.strixite.log"
+kind    = "runtime"
+summary = "Levelled one-line logging with journald priority prefixes"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["common/log.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.log/-/-"
+api       = "strix::slog, strix::set_log_level"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

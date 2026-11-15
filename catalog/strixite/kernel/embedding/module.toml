@@ -1,0 +1,60 @@
+id      = "kernel.strixite.embedding"
+kind    = "kernel"
+summary = "Token embedding lookup from a BF16 or Q8 table, with a device-side bad-id error slot"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["kernels/embedding.hip", "kernels/embedding.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/embedding.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "embed.lookup/bf16/bf16"
+api       = "strix::kernels::embedding_lookup (uint16_t table), strix::kernels::check_embedding_error"
+numeric   = "table rows copied (bf16) or widened exactly (f32); an out-of-range id zeroes its row and is reported"
+regime    = "one launch per forward; copies > 1 broadcasts into the hyper-connection streams"
+
+[[provides]]
+interface = "embed.lookup/bf16/f32"
+api       = "strix::kernels::embedding_lookup (uint16_t table), strix::kernels::check_embedding_error"
+numeric   = "table rows copied (bf16) or widened exactly (f32); an out-of-range id zeroes its row and is reported"
+regime    = "one launch per forward; copies > 1 broadcasts into the hyper-connection streams"
+
+[[provides]]
+interface = "embed.lookup/strixw-q8/bf16"
+api       = "strix::kernels::embedding_lookup (Q8DeviceView table)"
+numeric   = "Q8 row dequantized (code * scale + min) and stored in the activation dtype"
+regime    = "one launch per forward"
+
+[[provides]]
+interface = "embed.lookup/strixw-q8/f32"
+api       = "strix::kernels::embedding_lookup (Q8DeviceView table)"
+numeric   = "Q8 row dequantized (code * scale + min) and stored in the activation dtype"
+regime    = "one launch per forward"
+
+[[requires]]
+interface = "format.device-view/strixw-q8/-"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+module = "kernel.strixite.norm"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

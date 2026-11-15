@@ -1,0 +1,41 @@
+id      = "runtime.strixite.token_mask"
+kind    = "runtime"
+summary = "Per-row allowed-token bit masks from a grammar state"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/token_mask.cpp", "serve/token_mask.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/token_mask.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "grammar.token-mask/-/-"
+api       = "strix::TokenMasker"
+numeric   = "n/a"
+regime    = "host; masks are what logits_topk consumes"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.grammar"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

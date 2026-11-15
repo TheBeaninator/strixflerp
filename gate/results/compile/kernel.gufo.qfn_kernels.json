@@ -1,0 +1,33 @@
+{
+ "module": "kernel.gufo.qfn_kernels",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-10T22:55:31Z",
+ "toolchain": "therock-10.1",
+ "toolchain_root": "/data/tools/therock-10.1.0a20260823",
+ "compiler": "AMD clang version 23.0.0git (https://github.com/ROCm/llvm-project.git 0bace1908348b840e6aa1b4b6e12151dae208158) | Target: x86_64-unknown-linux-gnu",
+ "units": 2,
+ "passed": 2,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 21.2,
+ "results": [
+  {
+   "unit": "src/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O3 -ffast-math -fno-finite-math-only -Wno-unused-command-line-argument -UNDEBUG -c -DQFN_ROCM_BUILD=1 -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_kernels/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_kernels/src/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp -o build/compile-gate/kernel.gufo.qfn_kernels/0-kernels.hip.cpp.o",
+   "rc": 0,
+   "seconds": 21.19,
+   "object_bytes": 2722944,
+   "object_sha256": "dd06be37050d55d2996866d64b5829599e12df83dbdbe5927b5206568938cbf3"
+  },
+  {
+   "unit": "src/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip",
+   "cmd": "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O3 -ffast-math -fno-finite-math-only -Wno-unused-command-line-argument -UNDEBUG -c -DQFN_ROCM_BUILD=1 -DENGINE_ENABLE_HIP=1 -mwavefrontsize64 -I catalog/gufo/kernel/qfn_kernels/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_kernels/src/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip -o build/compile-gate/kernel.gufo.qfn_kernels/1-w8a8_wave64.hip.o",
+   "rc": 0,
+   "seconds": 1.82,
+   "object_bytes": 36024,
+   "object_sha256": "005befa19b9218b9a2f89022406e000a6055eff1442d8971a0d75a4fc9e9501a"
+  }
+ ]
+}

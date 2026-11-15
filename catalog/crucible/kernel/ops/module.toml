@@ -1,0 +1,81 @@
+id        = "kernel.crucible.ops"
+kind      = "kernel"
+summary   = "Non-EXL3 operators of the Qwen3.8-Flash-Next forward: embed, norms, RoPE (incl. generated YaRN tables), router, dense fp16 rows, PLE gather and mix, MTP fuse, argmax; numerics mode switch"
+notes     = "ops.h:65 folds HC weights as ExLlamaV3 does; carries the MIT notice too."
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "engine/layers/dense_rows.h",
+  "engine/layers/nonfinite_probe.h",
+  "engine/layers/numerics.h",
+  "engine/layers/ops.h",
+  "engine/layers/persistent_ops.h",
+  "engine/layers/prefill_ple.h",
+  "engine/layers/rope_tables.h",
+]
+authors   = ["jaedync"]
+modified  = false
+upstream  = "EXL3 format after ExLlamaV3 d3739fd393337b1ff4d6c2a342b12f0c87a9592f (MIT, Turboderp; catalog/crucible/NOTICE)"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/engine", "src/engine/layers"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "moe.router/-/f32.crucible"
+api       = "MoeRouteKernel (layers/ops.h)"
+numeric   = "fp32 logits, top-k stable"
+regime    = "decode and MTP verify, 1..8 rows (R), memory-bound"
+
+[[provides]]
+interface = "pos.rope/-/f32.crucible"
+api       = "RopePlainFillKernel, rope_tables.h (YaRN x2/x4)"
+numeric   = "tables generated from tools/yarn reference json"
+regime    = "all"
+
+[[provides]]
+interface = "ple.inject/-/f32.crucible"
+api       = "PleGatherKernel, PleMixKernel, PleMixSpanKernel (ops.h), prefill_ple.h"
+numeric   = "fp32"
+regime    = "all"
+
+[[provides]]
+interface = "logits.argmax/-/f32.crucible"
+api       = "ArgmaxKernel"
+numeric   = "exact"
+regime    = "decode"
+
+[[requires]]
+module    = "format.crucible.flashnext_weights"
+
+[[requires]]
+module    = "format.crucible.ngram16"
+
+[[requires]]
+module    = "kernel.crucible.device_common"
+
+[[requires]]
+module    = "kernel.crucible.exl3_gemv"
+
+[[requires]]
+module    = "kernel.crucible.gdn"
+
+[[requires]]
+module    = "runtime.crucible.conversation_cache"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:executor.crucible.flashnext"
+reason    = "header fragment of the one translation unit engine/engine.hip; compiles only inside executor.crucible.flashnext"

@@ -1,0 +1,80 @@
+id      = "runtime.strixite.engine"
+kind    = "runtime"
+summary = "The generation engine: LmBackend ABI, request loop, MTP draft and verify, slots and batched sequences (SeqBackend), thinking budget, structured output hooks"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["serve/engine.cpp", "serve/engine.hpp", "serve/seq_backend.cpp", "serve/seq_backend.hpp"]
+authors  = ["shawnshekari", "pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/engine.cpp", "src/serve/seq_backend.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.engine/-/-"
+api       = "strix::Engine, strix::LmBackend, strix::SeqBackend, strix::GpuArbiter, strix::GenerationRequest"
+numeric   = "greedy and sampled token choice delegated to the sampler; an MTP draft only proposes, the verify forward decides every token"
+regime    = "host; one GPU, conversations batched per forward"
+
+[[requires]]
+module = "runtime.strixite.capture"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.grammar"
+
+[[requires]]
+module = "runtime.strixite.logprobs"
+
+[[requires]]
+module = "runtime.strixite.output_parser"
+
+[[requires]]
+module = "runtime.strixite.paged_state"
+
+[[requires]]
+module = "runtime.strixite.prompt_cache"
+
+[[requires]]
+module = "runtime.strixite.resume_loss"
+
+[[requires]]
+module = "runtime.strixite.sampler"
+
+[[requires]]
+module = "runtime.strixite.serve_log"
+
+[[requires]]
+module = "runtime.strixite.steer"
+
+[[requires]]
+module = "runtime.strixite.structured_output"
+
+[[requires]]
+module = "runtime.strixite.think_nudge"
+
+[[requires]]
+module = "runtime.strixite.token_mask"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[[requires]]
+module = "runtime.strixite.tool_grammar"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

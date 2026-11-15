@@ -1,0 +1,32 @@
+id      = "runtime.strixite.steer"
+kind    = "runtime"
+summary = "Activation steering sets: per-conversation vectors added to the residual streams after chosen layers"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["runtime/steer.hpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "steer.set/-/-"
+api       = "strix::SteerSet, strix::SteerLayer"
+numeric   = "n/a"
+regime    = "header only; the request's cache key carries the steer salt as its first token"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

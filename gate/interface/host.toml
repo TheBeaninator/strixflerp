@@ -1,0 +1,10 @@
+# Host facts for the interface gates, on control-node: its own GPU only, free before anything runs, under the
+# control-gpu lease while a driver runs (the same guard and lease as the recipe gate, gate/strixite_recipe.py).
+[host]
+gpu_busy_pattern    = "^(strix_|strixflerp-|steer_check|omf_seg|gufo|ds4|sglang|llama-server|tfp)"
+gpu_free_gtt_bytes  = 1073741824
+lease_resource      = "control-gpu"
+lease_owner         = "agent-phase4"   # not the phase 3 lane's name: two holders under one name cannot exclude each other
+lease_ttl_s         = 1800
+build_jobs          = 8
+driver_timeout_s    = 1800

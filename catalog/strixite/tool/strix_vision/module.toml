@@ -1,0 +1,65 @@
+id      = "tool.strixite.strix_vision"
+kind    = "tool"
+summary = "One image through preprocess, the vision tower and the merger; HF-golden per-stage gate and encode bench"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/strix_vision.cpp", "tools/vision_batch_test.sh", "tools/vision_check.py"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/strix_vision.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.strix-vision/-/-"
+api       = "main (strix_vision)"
+numeric   = "n/a"
+regime    = "needs the GPU and vision.strixw"
+
+[[requires]]
+module = "executor.strixite.vision_tower"
+
+[[requires]]
+interface = "format.container/strixw/-"
+
+[[requires]]
+module = "kernel.strixite.hip_common"
+
+[[requires]]
+interface = "norm.rmsnorm-zc/-/bf16"
+
+[[requires]]
+interface = "norm.rmsnorm-gated/-/bf16"
+
+[[requires]]
+interface = "vision.tower-ops/bf16/bf16"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[[requires]]
+module = "runtime.strixite.json"
+
+[[requires]]
+module = "runtime.strixite.vision_preprocess"
+
+[[requires]]
+module = "runtime.strixite.vision_request"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

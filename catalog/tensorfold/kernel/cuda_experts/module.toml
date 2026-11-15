@@ -1,0 +1,52 @@
+id        = "kernel.tensorfold.cuda_experts"
+kind      = "kernel"
+summary   = "CUDA MoE expert kernels: affine/NVFP4/FP8 experts, packed and prefill experts, expert rows, CK lanes, generic MoE glue and the lane GEMV"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/cuda/ck_experts.cu",
+  "zig/kernels/cuda/ck_lane.cu",
+  "zig/kernels/cuda/experts.cu",
+  "zig/kernels/cuda/experts.cuh",
+  "zig/kernels/cuda/experts3.cu",
+  "zig/kernels/cuda/experts3.cuh",
+  "zig/kernels/cuda/experts3_prefill.cu",
+  "zig/kernels/cuda/experts_pack.cu",
+  "zig/kernels/cuda/experts_prefill.cu",
+  "zig/kernels/cuda/experts_rows.cu",
+  "zig/kernels/cuda/fp8_experts.cu",
+  "zig/kernels/cuda/lane_gemv.cu",
+  "zig/kernels/cuda/moe.cu",
+  "zig/kernels/cuda/moe_glue.cu",
+  "zig/kernels/cuda/nvfp4_experts.cu",
+  "zig/kernels/cuda/nvfp4_experts32.cu",
+  "zig/kernels/cuda/nvfp4_experts_tile.cu",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-prefill/affine/f32.tensorfold-cuda"
+api       = "experts_prefill.cu, experts3_prefill.cu"
+numeric   = "fp32"
+regime    = "prompt chunks, compute-bound"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source: harvested to read its recipe; not built for gfx1151"

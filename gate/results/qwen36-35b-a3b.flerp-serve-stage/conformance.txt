@@ -1,0 +1,46 @@
+# 2026-11-12T00:55:27Z load 9.97 before conformance world1, waited 0 s
+$ ionice -c3 nice -n 19 taskset -c 0-3 /data/projects/strixflerp/build/qwen36-35b-a3b.flerp-serve-stage/flerp-executor-conformance --out /data/projects/strixflerp/gate/results/qwen36-35b-a3b.flerp-serve-stage/conformance-world1.json weights=/data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf context=4096 world=1 placement=even epoch=9 single_reader=on pause_ms=100 --case bridge --ids /data/projects/strixflerp/build/gate-scratch-serve-stage/prompts/bridge.ids --paths plain,loop --new 128 --max-tokens 128 --end-ids 248046,248044 --no-snapshot --case code --ids /data/projects/strixflerp/build/gate-scratch-serve-stage/prompts/code.ids --paths plain,loop --new 128 --max-tokens 128 --end-ids 248046,248044 --no-snapshot --case rivers --ids /data/projects/strixflerp/build/gate-scratch-serve-stage/prompts/rivers.ids --paths plain,loop --new 128 --max-tokens 128 --end-ids 248046,248044 --no-snapshot --case records --ids /data/projects/strixflerp/build/gate-scratch-serve-stage/prompts/records.ids --paths plain,loop --new 128 --max-tokens 128 --end-ids 248046,248044 --no-snapshot
+{"event":"loaded","mode":"world1","rank":0,"load_s":104.582,"placed":{"plan_sha256":"9385002c01da29bd15b162a5df0012c7b509160347ede649d63139fda5e658f9","blocks":[0,40],"allocated_bytes":21155772928,"plan_device_bytes":21155772928,"tensor_bytes":21155768832,"fill_s":101.11,"pause_s":73.3595,"single_reader":true,"direct_io":true,"hip_free_before":129919143936,"hip_free_after":108557733888,"hip_total":133143986176},"t_unix":1.79445e+09}
+conformance: abi_version                        ok
+conformance: case bridge (21 prompt ids)
+conformance: reset_position                     ok
+conformance: plain_position                     ok
+conformance: loop_position                      ok
+conformance: case code (20 prompt ids)
+conformance: reset_position                     ok
+conformance: plain_position                     ok
+conformance: loop_position                      ok
+conformance: case rivers (18 prompt ids)
+conformance: reset_position                     ok
+conformance: plain_position                     ok
+conformance: loop_position                      ok
+conformance: case records (1808 prompt ids)
+conformance: reset_position                     ok
+conformance: plain_position                     ok
+conformance: loop_position                      ok
+conformance: passed (0 failed); closing the executor
+{"event":"closed","rank":0,"failed":false,"t_unix":1.79445e+09}
+conformance: the executor is closed
+# 2026-11-12T00:57:45Z load 4.0 before conformance loopback2, waited 0 s
+$ ionice -c3 nice -n 19 taskset -c 0-3 /data/projects/strixflerp/build/qwen36-35b-a3b.flerp-serve-stage/flerp-executor-conformance --out /data/projects/strixflerp/gate/results/qwen36-35b-a3b.flerp-serve-stage/conformance-loopback2.json weights=/data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf context=4096 world=2 placement=even epoch=9 single_reader=on pause_ms=100 peers=loopback --case bridge --ids /data/projects/strixflerp/build/gate-scratch-serve-stage/prompts/bridge.ids --paths plain,loop --new 128 --max-tokens 128 --end-ids 248046,248044 --no-snapshot --case code --ids /data/projects/strixflerp/build/gate-scratch-serve-stage/prompts/code.ids --paths plain,loop --new 128 --max-tokens 128 --end-ids 248046,248044 --no-snapshot --case rivers --ids /data/projects/strixflerp/build/gate-scratch-serve-stage/prompts/rivers.ids --paths plain,loop --new 128 --max-tokens 128 --end-ids 248046,248044 --no-snapshot --case records --ids /data/projects/strixflerp/build/gate-scratch-serve-stage/prompts/records.ids --paths plain,loop --new 128 --max-tokens 128 --end-ids 248046,248044 --no-snapshot
+{"event":"loaded","mode":"loopback","rank":0,"load_s":102.108,"placed":{"plan_sha256":"9385002c01da29bd15b162a5df0012c7b509160347ede649d63139fda5e658f9","blocks":[0,40],"allocated_bytes":21155772928,"plan_device_bytes":21155772928,"tensor_bytes":21155768832,"fill_s":101.197,"pause_s":73.3561,"single_reader":true,"direct_io":true,"hip_free_before":129919143936,"hip_free_after":108557733888,"hip_total":133143986176},"t_unix":1.79445e+09}
+conformance: abi_version                        ok
+conformance: case bridge (21 prompt ids)
+conformance: reset_position                     ok
+conformance: plain_position                     ok
+conformance: loop_position                      ok
+conformance: case code (20 prompt ids)
+conformance: reset_position                     ok
+conformance: plain_position                     ok
+conformance: loop_position                      ok
+conformance: case rivers (18 prompt ids)
+conformance: reset_position                     ok
+conformance: plain_position                     ok
+conformance: loop_position                      ok
+conformance: case records (1808 prompt ids)
+conformance: reset_position                     ok
+conformance: plain_position                     ok
+conformance: loop_position                      ok
+conformance: passed (0 failed); closing the executor
+{"event":"closed","rank":0,"failed":false,"t_unix":1.79445e+09}
+conformance: the executor is closed

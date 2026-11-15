@@ -1,0 +1,14 @@
+# Recipe gate config for the swapped variant qwen38-flash-next.topk-gufo: the unmodified recipe's host facts, run
+# settings and unit tests, unchanged. Criteria fixed on 2026-11-10 before the first run.
+inherit = "gate/qwen38-flash-next.strixite.toml"
+
+[host]
+scratch = "build/gate-scratch-topk-gufo"
+lease_owner = "agent-phase4"      # its own name: the phase 3 lane leases the same GPU as agent
+
+[variant]
+# The swap is an exact selection (module gate: gate/results/interface/logits-topk/), so the recipe's criterion is
+# full token identity. gufo's path costs more launches per row (5 against 2); tokens per second are recorded next
+# to the reference's and do not decide the gate.
+module_gate        = "gate/results/interface/logits-topk/result.json"
+speed_is_criterion = false

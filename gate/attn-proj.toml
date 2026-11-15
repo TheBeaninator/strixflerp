@@ -1,0 +1,95 @@
+# ATTN-PROJ: a faster decode kernel for Ornith-1.5 397B's K=4096 input projections (attention q/k/v, GDN qkv/gate/
+# alpha/beta), memory access only, bit-equal. Committed BEFORE any GPU run of this experiment; not edited to turn a
+# failure into a pass (an amendment, if any, is added below in its own commit with its date and reason).
+# Method of DECODE-KERN3 (gate/decode-kern3.toml + [kernel_cold]) and ORNITH-KERN3 (gate/ornith-kern3.toml).
+# Tools: gate/attn_proj.hip (bench: the NEW catalogue launchers against gate/attn_proj_ref.hip, the old ones as at
+# ae04251, namespace attn_proj_ref), gate/attn_proj.py (runner, judge, projection), gate/attn_proj_build.sh (CPU
+# builds), gate/attn_proj_run.sh (GPU job through tools/gpu-queue.sh, control-node's GPU only, lease control-gpu as
+# agent; no worker, no hold, no multi-node window).
+
+[facts]
+# Read from the code at ae04251 before any run.
+decode_route = """single-token decode does NOT reach these matrices through LaunchQ8KBlockGEMV (the kernel DECODE-KERN3
+widened and ORNITH-KERN3 checked at these dims). executor.flerp.qwen35moe decode_step.cpp calls
+  attention blocks: LaunchFusedQKVProjections(attn_q, attn_k, attn_v)  (kernel.gufo.qwen_linear_decode qkv.hip)
+  GDN blocks:       LaunchFusedSSMInputProjections(attn_qkv, attn_gate, ssm_alpha, ssm_beta)  (kernel.gufo.qwen_gdn ssm.hip)
+both one launch over all rows of their matrices (x read once a launch already: the q+gate, q+k+v and qkv+gate+alpha+
+beta fusions exist), one row a wave, four waves a block, each row by QuantWarpBlockDot's sub16 route (4-byte loads,
+x read again by every row). The verify path (batched_decode.cpp LaunchProjection, 2..8 rows) runs Q4_K/Q6_K as one
+LaunchQ8KBlockGEMV a row; it is not live for Ornith or the 35B (the MTP block is not loaded) and is not changed here."""
+ornith = """Q4_K_M census (gate/results/ornith15-397b.census): blocks 0-59, 45 GDN + 15 attention, hidden 4096 = K.
+  GDN: attn_qkv [4096 -> 12288] Q4_K in 23 blocks, Q6_K in 22; attn_gate [4096 -> 8192] Q4_K; ssm_alpha, ssm_beta [4096 -> 64] Q4_K
+  attention: attn_q [4096 -> 16384] Q4_K (q and gate interleaved); attn_k [4096 -> 512] Q4_K; attn_v [4096 -> 512] Q4_K in 8, Q6_K in 7
+  stage 0 (blocks 0-14, the P5 18.5 ms stage): GDN with Q6_K qkv 8 (0-2, 4-6, 9, 12), GDN with Q4_K qkv 4 (8, 10, 13, 14),
+  attention with Q6_K v 1 (3), attention with Q4_K v 2 (7, 11)
+  bytes a token: ~3.0 GB of input projections (Q4_K ~2.1 GB) against 1.13 GB out-projections and 0.5 GB router"""
+q35 = "Qwen3.6-35B-A3B: the same two launchers at hidden 2048 (qkv Q4_K/Q6_K [2048 -> 8192], gate [2048 -> 4096], alpha/beta [2048 -> 32], q [2048 -> 8192], k/v [2048 -> 512])"
+
+[change]
+rule  = """memory access only: every output row keeps QuantWarpBlockDot's sub16 arithmetic - lane L owns sub-blocks L, L+32, ...
+in that order, decodes them as DecodeQuantSub16 does, sum += scale * dot - offset * xsum, then the same xor reduction,
+lane 0 writes. What may change: how bytes arrive (16-byte code and x loads, x shared by the rows of a wave, several
+rows a wave, waves a block) and which wave does which rows. Q4_K only; Q6_K, Q5_K and the other types keep the old
+one-row-a-wave arithmetic inside the same launch; BF16, F32, Q8_0 segments keep the old kernel."""
+where = "LaunchFusedQKVProjections and LaunchFusedSSMInputProjections (both executors' decode step: 397B and 35B), nothing else"
+
+[tune]
+# A tuning sweep, not the gate (as DECODE-KERN3's sweep.jsonl). Variants of the new kernel, same source with
+# rows-a-wave R and waves-a-block W patched: v1 R2 W8 (the DECODE-KERN3 shape), v2 R2 W4, v3 R4 W4, v4 R4 W8.
+# Each variant runs the four Ornith fused cases cold, 1 token. Pick = the variant with the lowest sum of new median us
+# over those four cases among variants with 0 differing outputs; the catalogue takes its R and W before the gate run.
+variants = "v1 2 8; v2 2 4; v3 4 4; v4 4 8"
+
+[kernel]
+# The judged run: the final catalogue source, one process a case.
+shapes = """Ornith dims, synthetic codes in the real block layout (the Ornith GGUF is not on NVMe; as ornith-kern3.toml [weights]):
+  fused (the launches decode makes):
+    attn-v4   q 16384 Q4_K + k 512 Q4_K + v 512 Q4_K
+    attn-v6   q 16384 Q4_K + k 512 Q4_K + v 512 Q6_K
+    gdn-q4    qkv 12288 Q4_K + gate 8192 Q4_K + alpha 64 + beta 64 Q4_K
+    gdn-q6    qkv 12288 Q6_K + gate 8192 Q4_K + alpha 64 + beta 64 Q4_K
+  per shape (the same launchers with the other segments empty):
+    attn-q 16384, attn-kv 512 (k + v), attn-gate 8192, attn-qkv 12288 Q4_K, ssm-alpha 64 (alpha + beta), all Q4_K;
+    attn-qkv-q6 12288 Q6_K (control: the new launcher hands an all-Q6_K launch to the old kernel)
+  35B real weights from /data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf (NVMe; never /data/ark, /mnt/ark*, /mnt/nv*):
+    GDN blk.0 (qkv Q6_K) and blk.5 (qkv Q4_K), attention blk.3 (v Q6_K) and blk.11 (v Q4_K)
+  edges, synthetic: GDN qkv 1002 Q4_K (even, not a multiple of 4) + gate 1001 Q4_K (odd) + alpha/beta 3, K 4096;
+    attention q 2048 + k/v 256 Q4_K at K 256 and K 5120"""
+x       = "uniform(-1, 1) and normal * 0.05, fixed seeds"
+tokens  = [1, 2, 3, 4, 8, 16]   # 1 = decode; 2..8 = MTP/verify batch rows (kMaxDecodeBatch 8), 16 = the wave64 verify bound
+correct = """every case, x and token count (T rows of x, each arm launched once a row): output bytes of the new launcher equal
+the old launcher's (memcmp), 0 differing; and equal to the verify path's (LaunchQ8KBlockGEMV a matrix a row), 0 differing"""
+timing  = "cache-cold (--cold-mib 512: launches cycle over copies of all of the launch's weights), 1 token, 7 alternating rounds, 20 warm + 200 timed; median round, spread min..max; GB/s = weight bytes + x once / time"
+load    = "loadavg 1-min <= 6 at the start and end of each case's process, else that case's timing is invalid and rerun"
+continue_rule = """new cold GB/s >= old on every Ornith fused and per-shape case at 1 token (the Q6_K control is reported, not
+judged), and 0 differing bytes everywhere; else the change does not go in"""
+bandwidth = "GB/s also reported as a fraction of ~250 GB/s practical read bandwidth"
+
+[share]
+block = "old fused us of each block type / (18.5 ms / 15 = 1233 us a block): the input projections' share of a block's decode time, reported"
+
+[model]
+# The 35B, as decode-kern3.toml [model]: 4 gate prompts x configs 1:even:on x3, 1:even:off, 2:even:on, 2:even:off,
+# --staged loopback, executor.flerp.qwen35moe, model from /data/models (never the ark).
+binaries = "before = recipe qwen36-35b-a3b.flerp-moe assembled from the catalogue at the criteria commit (build/attnproj/before); after = the same plus the new kernel (build/attnproj/after)"
+order    = "before, after, before, after, after, before: six processes"
+equal    = "after (every process, every config and prompt): ids equal P1's and the sha256 of each of the 128 logits rows equals P1's (qwen36-35b-a3b.flerp-moe-placed/equal.json); before judged the same way as a control; any differing id or sha = FAIL, the change does not go in"
+speed    = "decode tok/s world 1 graph on, median over load-valid runs a binary (before was 68.87 at 83d5366); the change goes in if identity holds and after >= before"
+
+[projection]
+# No Ornith stage loads on one GPU from NVMe (58-62 GB a stage, the source is /mnt/nv1), so the gain is computed, not
+# measured, from the fused cold medians at 1 token: saving(type) = old us - new us of attn-v4, attn-v6, gdn-q4, gdn-q6.
+stage  = "stage 0 ms = 18.5 - 15 x 0.088 (ORNITH-KERN3 router + outproj, measured) - (8 gdn-q6 + 4 gdn-q4 + 1 attn-v6 + 2 attn-v4 savings)"
+e2e    = "token ms = 83.0 - 60 x 0.088 - (22 gdn-q6 + 23 gdn-q4 + 7 attn-v6 + 8 attn-v4 savings); tok/s = 1000 / token ms; also this kernel alone (without the 0.088)"
+report = "labelled projected, never measured; a 4-node confirm run is owner's call"
+
+[backend_kbench]
+# Note 2026-11-13, added in its own commit; adds no criterion and loosens none (every threshold above is judged as written).
+# The kernel stage (and, for DECODE-KERN3, only its synthetic-code cases) can run on bench box K through pod-kbench k_run
+# (gate/kbench_backend.py, `--backend kbench`, the default; `--backend queue` is the control-node path above, unchanged).
+# Judged the same way: byte equality, cold GB/s, new >= ref, loadavg <= 6 at the start and end of each case's process (K's
+# own loadavg, read on K). Method differences, recorded in each result's -method.json and summary: host K (balanced 85 W,
+# quiet cooling, weak die contact, so absolute GB/s differ; ratios are the judged quantity), ROCm 7.2.4 runtime libs under a
+# binary built with therock 10.1 clang, each case's process started at Tctl <= 50 C, one k_run job (one bench:K lease) a
+# stage. The in-process ref/new alternation is the bench's own; pod-kbench's ABBA process order (k_ab) is not used.
+# Results of this backend: gate/results/<gate>/kbench/ (the control-node results are not overwritten).

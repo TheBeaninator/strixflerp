@@ -1,0 +1,98 @@
+id        = "format.hipfire.quantize"
+kind      = "format"
+summary   = "The hipfire quantizer / converter: HFQ, MQ (FWHT rotation, symmetric, Lloyd MQ4V2), HFP4 / MFP4, E8 lattice and GPTQ, Q4, GGUF input, per-model pipelines (Qwen4 slabs and PLE hot packs, DeepSeek)"
+notes     = "The crate is taken whole, so it also carries image-model pipelines (pipeline_flux.rs, raon.rs, vision_sidecar.rs) that are outside this pass."
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/hipfire-quantize/Cargo.toml",
+  "crates/hipfire-quantize/map.md",
+  "crates/hipfire-quantize/src/bin/collect_e8_hessian.rs",
+  "crates/hipfire-quantize/src/bin/dflash_convert.rs",
+  "crates/hipfire-quantize/src/bin/draft_to_mq4.rs",
+  "crates/hipfire-quantize/src/bin/mq4_merge_mtp.rs",
+  "crates/hipfire-quantize/src/bin/mtp_extract.rs",
+  "crates/hipfire-quantize/src/bin/qwen4_i4_slabs.rs",
+  "crates/hipfire-quantize/src/bin/qwen4_slab_admit_check.rs",
+  "crates/hipfire-quantize/src/calibration.rs",
+  "crates/hipfire-quantize/src/cli.rs",
+  "crates/hipfire-quantize/src/dequant.rs",
+  "crates/hipfire-quantize/src/diagnostics.rs",
+  "crates/hipfire-quantize/src/e8.rs",
+  "crates/hipfire-quantize/src/e8_gptq.rs",
+  "crates/hipfire-quantize/src/float16.rs",
+  "crates/hipfire-quantize/src/gguf_input.rs",
+  "crates/hipfire-quantize/src/gptq.rs",
+  "crates/hipfire-quantize/src/hessian_io.rs",
+  "crates/hipfire-quantize/src/hfhs_diag.rs",
+  "crates/hipfire-quantize/src/hfq.rs",
+  "crates/hipfire-quantize/src/hfqm.rs",
+  "crates/hipfire-quantize/src/i4_records.rs",
+  "crates/hipfire-quantize/src/i4_slabs.rs",
+  "crates/hipfire-quantize/src/lib.rs",
+  "crates/hipfire-quantize/src/main.rs",
+  "crates/hipfire-quantize/src/maple.rs",
+  "crates/hipfire-quantize/src/model_filter.rs",
+  "crates/hipfire-quantize/src/mq_symmetric.rs",
+  "crates/hipfire-quantize/src/npz.rs",
+  "crates/hipfire-quantize/src/pipeline.rs",
+  "crates/hipfire-quantize/src/pipeline_deepseek.rs",
+  "crates/hipfire-quantize/src/pipeline_flux.rs",
+  "crates/hipfire-quantize/src/pipeline_gguf.rs",
+  "crates/hipfire-quantize/src/pipeline_maple.rs",
+  "crates/hipfire-quantize/src/ple_hot_pack.rs",
+  "crates/hipfire-quantize/src/ple_hot_rank.rs",
+  "crates/hipfire-quantize/src/quant_e8.rs",
+  "crates/hipfire-quantize/src/quant_fwht.rs",
+  "crates/hipfire-quantize/src/quant_hfp4.rs",
+  "crates/hipfire-quantize/src/quant_mq.rs",
+  "crates/hipfire-quantize/src/quant_mq4v2_lloyd.rs",
+  "crates/hipfire-quantize/src/quant_q4.rs",
+  "crates/hipfire-quantize/src/qwen4.rs",
+  "crates/hipfire-quantize/src/qwen4/dev_tiny.rs",
+  "crates/hipfire-quantize/src/qwen4/dev_tiny/tests.rs",
+  "crates/hipfire-quantize/src/qwen4/stock_fp8.rs",
+  "crates/hipfire-quantize/src/qwen4/stock_fp8/tests.rs",
+  "crates/hipfire-quantize/src/raon.rs",
+  "crates/hipfire-quantize/src/raon/tests.rs",
+  "crates/hipfire-quantize/src/reap_overlay.rs",
+  "crates/hipfire-quantize/src/safetensors_file.rs",
+  "crates/hipfire-quantize/src/trunk_overlay.rs",
+  "crates/hipfire-quantize/src/vision_sidecar.rs",
+  "docs/quant-formats/cpu-simd-coverage.md",
+  "docs/quant-formats/fp8-e4m3.md",
+  "docs/quant-formats/hfp4.md",
+  "docs/quant-formats/ladder.md",
+  "docs/quant-formats/mq-v2-family.md",
+  "docs/quant-formats/mq4-v2.md",
+  "docs/quant-formats/qt-register.txt",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.converter/hipfire-hfq+mq+mfp4/-"
+api       = "hipfire-quantize (cli.rs, pipeline.rs, quant_mq.rs, quant_hfp4.rs, quant_e8.rs, hfq.rs)"
+numeric   = "calibrated quantization; the .hfq container and qt numbers (docs/quant-formats/qt-register.txt)"
+regime    = "offline"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

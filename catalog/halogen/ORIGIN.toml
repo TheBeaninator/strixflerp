@@ -1,0 +1,22 @@
+# halogen (halogen-flash-server): a closed container image serving Qwen3.8-Flash-Next on Strix Halo.
+# Listed so the catalogue names every engine the pod uses. No code is harvested: there is none to take.
+name      = "halogen"
+repo      = "https://github.com/peonist-ai/halogen-flash-server"       # documentation, compose files and tools only
+commit    = "8242b15"                                    # docs repo at release 0.20.0 (image ghcr.io/peonist-ai/halogen-flash-server:0.20.0)
+harvest   = "none"
+harvest_reason = "Closed image under an end user licence agreement (LICENSE.md, Peonist, LLC, version 0.1): the engine binary and its kernels are not published as source. Only the docs repository is on the pod."
+pod_tree  = "/data/ark-inbox/src/github.com__peonist-ai__halogen-flash-server"
+
+[licence]
+spdx      = "LicenseRef-proprietary"
+note      = "halogen End User License Agreement, LICENSE.md in the docs repository"
+
+[toolchain]
+host      = "container image; not built on the pod"
+device    = "ROCm 10.1 inside the image, per the 0.20.0 release note"
+
+[kernels]
+loading   = "unknown (closed binary)"
+
+[status]
+verified  = "docs repository listed on control-node 2026-11-10; the image was not pulled or run in this pass"

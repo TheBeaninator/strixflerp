@@ -1,0 +1,42 @@
+id      = "format.strixite.q4_from_q8"
+kind    = "format"
+summary = "Q8 to Q4 requantization for the MTP draft's cheaper LM-head copy"
+design  = "DESIGN.md"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/q4_from_q8.cpp", "formats/q4_from_q8.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/q4_from_q8.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.requant/strixw-q4/-"
+api       = "strix::quantize_q4_from_q8"
+numeric   = "dequantize the Q8 rows exactly, then quantize as quantize_q4; byte-identical regardless of thread split"
+regime    = "host, once at load"
+
+[[requires]]
+module = "format.strixite.q4"
+
+[[requires]]
+module = "format.strixite.q8"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

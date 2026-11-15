@@ -1,0 +1,82 @@
+# Prefill work on qwen38-flash-next.strixite (strixite v0.7.0-pod): the same modules plus the prefill bench, and the
+# prefill changes as switchable modules (each off unless its switch is set; criteria in gate/qwen38-flash-next.strixite-pf*.toml).
+name      = "qwen38-flash-next.strixite-pf"
+model     = "qwen3.8-flash-next"
+reference = { engine = "strixite", build = "/data/projects/strixite-v070" }
+toolchain = "therock-10.1"
+
+# interface -> module. Every interface a module of the assembly requires is bound here.
+[modules]
+"format.convert/strixw/-"            = "format.strixite.convert_qwen4exp"
+"format.container/ngram-table/-"     = "format.strixite.ngram_table"
+"format.device-view/strixw-q4/-"     = "format.strixite.q4_device"
+"format.requant/strixw-q4/-"         = "format.strixite.q4_from_q8"
+"format.device-view/strixw-q5/-"     = "format.strixite.q5_device"
+"format.device-view/strixw-q6/-"     = "format.strixite.q6_device"
+"format.device-view/strixw-q8/-"     = "format.strixite.q8_device"
+"format.reader/safetensors/-"        = "format.strixite.safetensors"
+"format.container/strixw/-"          = "format.strixite.strixw"
+"format.device-loader/strixw/-"      = "format.strixite.strixw_loader"
+"attn.softmax-gqa/-/bf16"            = "kernel.strixite.attention"
+"embed.lookup/bf16/bf16"             = "kernel.strixite.embedding"
+"embed.lookup/strixw-q8/bf16"        = "kernel.strixite.embedding"
+"mixer.gdn/-/bf16"                   = "kernel.strixite.gdn"
+"hc.mix/strixw-q4/bf16"              = "kernel.strixite.hc"
+"hc.mix/strixw-q8/bf16"              = "kernel.strixite.hc"
+"hc.mix-prefill/strixw-q4/bf16"      = "kernel.strixite.hc_wmma"
+"hc.mix-prefill/strixw-q8/bf16"      = "kernel.strixite.hc_wmma"
+"linear.dense/bf16/bf16"             = "kernel.strixite.linear"
+"linear.decode/strixw-q4/bf16"       = "kernel.strixite.linear_q4"
+"moe.experts-decode/strixw-q4/bf16"  = "kernel.strixite.linear_q4"
+"moe.experts-decode/strixw-q5/bf16"  = "kernel.strixite.linear_q4"
+"linear.decode/strixw-q5/bf16"       = "kernel.strixite.linear_q56"
+"linear.decode/strixw-q6/bf16"       = "kernel.strixite.linear_q56"
+"linear.decode/strixw-q8/bf16"       = "kernel.strixite.linear_q8"
+"linear.prefill/bf16/bf16"           = "kernel.strixite.linear_wmma"
+"linear.prefill/strixw-q4/bf16"      = "kernel.strixite.linear_wmma"
+"linear.prefill/strixw-q5/bf16"      = "kernel.strixite.linear_wmma"
+"linear.prefill/strixw-q6/bf16"      = "kernel.strixite.linear_wmma"
+"linear.prefill/strixw-q8/bf16"      = "kernel.strixite.linear_wmma"
+"logits.bias/-/-"                    = "kernel.strixite.logits_bias"
+"logits.topk/-/-"                    = "kernel.strixite.logits_topk"
+"moe.experts-prefill/strixw-q4/bf16" = "kernel.flerp.moe_grouped_pf"   # option 2 (STRIXFLERP_PF_COMBINE); was kernel.strixite.moe_grouped
+"moe.experts-prefill/strixw-q5/bf16" = "kernel.flerp.moe_grouped_pf"
+"moe.router/-/bf16"                  = "kernel.strixite.moe_router"
+"draft.mtp-pick/-/-"                 = "kernel.strixite.mtp_pick"
+"norm.rmsnorm-gated/-/bf16"          = "kernel.strixite.norm"
+"norm.rmsnorm-zc/-/bf16"             = "kernel.strixite.norm"
+"ple.inject/-/bf16"                  = "kernel.strixite.ple"
+"attn.qsa-indexer/-/bf16"            = "kernel.strixite.qsa"
+"residual.add/-/bf16"                = "kernel.strixite.residual"
+"pos.rope/-/bf16"                    = "kernel.strixite.rope"
+"steer.add-rows/-/bf16"              = "kernel.strixite.steer"
+"act.swiglu/-/bf16"                  = "kernel.strixite.swiglu"
+"vision.tower-ops/bf16/bf16"         = "kernel.strixite.vision"
+
+# Modules the origin builds but no binary links (its Qwen3.5 baseline forward and the safetensors bulk loader):
+# compiled so the build proves them.
+[include]
+modules = ["executor.strixite.qwen3_5", "format.strixite.safetensors_loader"]
+
+[binaries]
+"strixflerp-qwen38-flash-next.strixite-pf" = { main = "serve.strixite.strix_server", entry = "tools/strix_server.cpp" }
+convert_qwen4exp      = { main = "tool.strixite.convert_qwen4exp", entry = "tools/convert_qwen4exp.cpp" }
+convert_ngram_table   = { main = "tool.strixite.convert_ngram_table", entry = "tools/convert_ngram_table.cpp" }
+transcode_ngram_table = { main = "tool.strixite.transcode_ngram_table", entry = "tools/transcode_ngram_table.cpp" }
+inspect_strixw        = { main = "tool.strixite.inspect_strixw", entry = "tools/inspect_strixw.cpp" }
+check_stream_calls    = { main = "tool.strixite.check_stream_calls", entry = "tools/check_stream_calls.cpp" }
+check_logprobs        = { main = "tool.strixite.check_logprobs", entry = "tools/check_logprobs.cpp" }
+sv9_cache_check       = { main = "tool.strixite.sv9_cache_check", entry = "tools/sv9_cache_check.cpp" }
+cache_xfer_check      = { main = "tool.strixite.cache_xfer_check", entry = "tools/cache_xfer_check.cpp" }
+strix_vision          = { main = "tool.strixite.strix_vision", entry = "tools/strix_vision.cpp" }
+omf_seg               = { main = "tool.strixite.omf_seg", entry = "tools/omf_seg.cpp" }
+strix_acts            = { main = "tool.strixite.strix_acts", entry = "tools/strix_acts.cpp" }
+steer_check           = { main = "tool.strixite.steer_check", entry = "tools/steer_check.cpp" }
+"strixflerp-prefill-bench" = { main = "tool.flerp.strixite_prefill_bench", entry = "flerp/strixite_prefill_bench/prefill_bench.cpp" }
+
+[deploy]
+topology = "solo"
+
+[gate]
+runner = "gate/strixite_recipe.py"
+config = "gate/qwen38-flash-next.strixite.toml"

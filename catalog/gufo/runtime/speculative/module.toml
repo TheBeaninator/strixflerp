@@ -1,0 +1,54 @@
+id        = "runtime.gufo.speculative"
+kind      = "runtime"
+summary   = "Speculation framework: draft backend interface, prompt-lookup drafts, the lossless speculative verifier, and the Qwen verifier"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/core/speculative/draft_backend.hpp",
+  "src/core/speculative/prompt_lookup.hpp",
+  "src/core/speculative/speculative_verifier.cpp",
+  "src/core/speculative/speculative_verifier.hpp",
+  "src/models/qwen/hip/qwen_speculative_verifier.cpp",
+  "src/models/qwen/hip/qwen_speculative_verifier.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "speculation.window-verify-lossless/-/-"
+api       = "gufo::core::speculative::SpeculativeVerifier, DraftBackend, PromptLookup"
+numeric   = "lossless: accepted tokens follow the target distribution (exact rejection / residual sampling)"
+regime    = "draft width 1..16"
+
+[[requires]]
+interface = "speculation.accept/-/f32.gufo"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "runtime.gufo.ext_api"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

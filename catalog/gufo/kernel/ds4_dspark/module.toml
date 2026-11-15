@@ -1,0 +1,43 @@
+id        = "kernel.gufo.ds4_dspark"
+kind      = "kernel"
+summary   = "DSpark sampling kernels: eight corrected logits per request without a full-vocabulary probability buffer"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = ["src/models/deepseek_v4_flash/kernels/rocm/detail/ds4_dspark_sampling.hip.hpp"]
+authors   = ["antirez (DS4)", "gufo contributors"]
+modified  = false
+upstream  = "DS4 84cc882352757baf628a1776badf7cc54d584e28 (MIT, see src/.../LICENSE.ds4 and UPSTREAM.md); converted to native ROCm/HIP by gufo"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src",
+  "src/src/models/deepseek_v4_flash/kernels/rocm",
+  "src/src/models/deepseek_v4_flash/kernels/rocm/detail",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "draft.dspark-sampling/-/f32"
+api       = "ds4_dspark_sampling kernels"
+numeric   = "bounded proposal q with exact rejection / residual correction on the host (dspark_sampler.hpp)"
+regime    = "draft cycles"
+
+[[requires]]
+module    = "kernel.gufo.ds4_backend"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.gufo.ds4_backend"
+reason    = "header fragment of one translation unit; compiles only inside kernel.gufo.ds4_backend"

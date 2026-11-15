@@ -1,0 +1,73 @@
+id        = "runtime.strixfold.kit"
+kind      = "runtime"
+summary   = "Kernel kit loading and verification: raw gfx1151 code objects described by a manifest generated from each object AMDGPU metadata note and re-verified at load; kernel registry and the build step that makes the kit"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = [
+  "tools/dsv41-hip/KERNELS.md",
+  "tools/dsv41-hip/kernel_registry.py",
+  "tools/dsv41-hip/kernels.json",
+  "tools/dsv41-hip/numerics/PROVENANCE.md",
+  "tools/dsv41-hip/numerics/controls.json",
+  "tools/dsv41-hip/numerics/layer_points-1.6.0.json",
+  "tools/dsv41-hip/numerics/layer_points.json",
+  "tools/dsv41-hip/numerics/numerics-1.6.0.json",
+  "tools/dsv41-hip/numerics/numerics.json",
+  "tools/dsv41-hip/numerics/op_points.json",
+  "zig/kernels/hip/dsv41/registry.json",
+  "zig/src/gpu/hsaco.zig",
+  "zig/src/gpu/kit_tool.zig",
+  "zig/src/gpu/manifest.zig",
+  "zig/src/gpu/msgpack.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.kit-manifest/hsaco/-"
+api       = "tf-hip-kit scan/merge/verify/coverage, gpu.Kit, gpu.Kernel(id, Params).bind"
+numeric   = "load-time check: exact arch, wave size, per-kernel argument table against the hsaco metadata, sha256 of every object"
+regime    = "load time"
+
+[[provides]]
+interface = "verify.numerics-contract/-/-"
+api       = "tools/dsv41-hip/numerics/numerics.json (w-ref contract 1.7.0)"
+numeric   = "per-operator tolerance bands against fp64 references; the contract the non-bit-exact kernels are judged under"
+regime    = "n/a"
+
+[[prebuilt]]
+kit       = "dsv41 HIP kit as built on control-node by zig build (test kit, HIP objects only)"
+objects   = 11
+kernels   = 103
+where     = "control-node:/data/pod/plans/strixfold/fork/zig-out/native-hip/test/dsv41-kit"
+manifest  = "prebuilt/dsv41-kit.manifest.json"
+toolchain = "HIP version: 7.17.26392-0000000"
+
+[[prebuilt]]
+kit       = "dsv41 serving kit (HIP + Triton) on workers F and A"
+objects   = 169
+kernels   = 302
+manifest_sha256 = "94bf37dbcba2400d6bca5ec6f38626b092fba9eddb71168ca83c4bd68fbf745a"
+where     = "workers F and A: ~/tfp/src/TensorFold/zig-out/native-hip (not read in this pass; figures from /data/pod/plans/strixfold/PATHS.md r6)"
+
+[gate]
+parity    = "none"
+bench     = "none"
+compile   = "n/a"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp2/summary.json"
+reason    = "zig: builds as part of the recipe dsv41-flash.strixfold-tp2 on control-node (zig 0.17.0, TheRock 10.2); Zig compiles what the built programs reach, not every declaration; not run on a GPU from that build"

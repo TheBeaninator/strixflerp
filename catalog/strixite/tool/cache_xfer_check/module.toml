@@ -1,0 +1,41 @@
+id      = "tool.strixite.cache_xfer_check"
+kind    = "tool"
+summary = "Test: the prompt cache's export and import transfer API on synthetic states"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/cache_xfer_check.cpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/cache_xfer_check.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.cache-xfer-check/-/-"
+api       = "main (cache_xfer_check)"
+numeric   = "n/a"
+regime    = "host only test; cache_xfer_check <scratch_dir>"
+
+[[requires]]
+interface = "format.container/strixw/-"
+
+[[requires]]
+module = "runtime.strixite.host_buffer"
+
+[[requires]]
+module = "runtime.strixite.prompt_cache"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

@@ -1,0 +1,60 @@
+id        = "kernel.strixfold.sparse_attn"
+kind      = "kernel"
+summary   = "DeepSeek-V4.1 sparse attention with a sink (32 heads, head dim 512 a rank): 128-key window ring plus indexer picks, split partials or one pass"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/aux_attn.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/aux_attn.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 1
+
+[[provides]]
+interface = "attn.sparse-sink/kv-bf16/bf16"
+api       = "tf_ds_aux_sparse_attn_h32_d512"
+numeric   = "scores fp32, online softmax over 16-key chunks, p rounded to bf16 before the PV product, acc fp32; split mode writes (m, l, acc) partials in _sparse_attn_part layout, one-pass writes bf16(acc / (l + exp(sink - m))); contract sparse_attn_sink_bf16p"
+regime    = "decode / verify windows, 1..128 rows, memory-bound; also prompt path one-pass"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-fp4-e2m1/bf16"
+api       = "tf_ds_aux_sparse_attn_h32_d512"
+numeric   = "as kv-bf16, keys decoded exactly from packed FP4 (E2M1 codes, E4M3 scale per 16 elements)"
+regime    = "decode / verify windows, 1..128 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[[requires]]
+interface = "kvcache.store/fp4-e2m1/bf16"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.sparse_attn.json"

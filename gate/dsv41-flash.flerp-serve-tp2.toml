@@ -1,0 +1,26 @@
+# The front end gate over the StrixFold executor: serve.flerp.http as rank 0 of dsv41-flash.flerp-serve-tp2 on workers
+# F and A. The pair's facts, the launcher, the serving conf and the requests are the StrixFold recipe gate's
+# (gate/dsv41-flash.strixfold-tp2.toml). What each stage requires is stated in gate/flerp_serve_pair.py. Written
+# before any run of the pair stage; do not edit it to turn a failure into a pass.
+inherit = "gate/dsv41-flash.strixfold-tp2.toml"
+
+[host]
+scratch = "build/gate-scratch-flerp-serve-pair"
+
+[pair]
+why          = "strixflerp phase 3 gate: the common front end over the StrixFold executor"
+busy_pattern = "tensorfold-native|tf-dsv41-|strix_server|strixite|first_light.sh|flerp-executor|strixflerp-"
+hold_ttl_s   = 3600                    # two reference loads and two front end loads
+
+[run]
+repeats = 1
+
+[serve]
+binary     = "strixflerp-dsv41-flash.flerp-serve-tp2"      # the link flerp assemble's build.sh leaves in build/<recipe>/
+port       = 18081                                         # on F, next to the origin server's 18080
+model_id   = "deepseek-v4.1-flash-1017"
+# A DeepSeek-V4.1-Flash checkpoint directory on control-node (tokenizer.json, tokenizer_config.json): the build stage
+# loads it through the text module, with no executor behind it.
+text_probe = "/mnt/nv4/models/LibertAIDAI__DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw/raw"
+# Recorded, not required: one sampled request on both servers.
+sampled    = { temperature = 0.7, top_k = 20, top_p = 0.95, seed = 4242 }

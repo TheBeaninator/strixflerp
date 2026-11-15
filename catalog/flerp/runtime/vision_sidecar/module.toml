@@ -1,0 +1,46 @@
+id        = "runtime.flerp.vision_sidecar"
+kind      = "runtime"
+summary   = "The DeepSeek-V4.1 CPU vision worker of Strixfold pull request #6 (ViT and aligner in torch, BF16 image rows over a pipe) with the interpreter and torch pin as a checked, recorded setting in place of one hard-coded string; and its admission check"
+notes     = "Derived from runtime.strixfold_pr6.vision_sidecar and tool.strixfold_pr6.prepare_vision (Strixfold pull request #6, 766df75): vision_cpu.py and verify_vision.py are copies of the origin's files with the changes marked `flerp (runtime.flerp.vision_sidecar)`; no origin file is edited. vision_cpu.py: the test `torch.__version__ != '2.9.0+cpu'` becomes FLERP_VISION_ENV ('python=3.12,torch=2.11.0+cpu,numpy=2.3.5'), every named key compared with the running process, unset = the origin's pin; nothing in read_weights, rms, rotary, encode, span, decode_grid or main's protocol is changed. verify_vision.py: the three literal versions become a named record of vision-env.json (--env, --env-file, --allow-candidate) and it prints the FLERP_VISION_ENV to start the worker with. vision-env.json is written here: the environments, their status and the gate result behind each. Not adapted: vision_cpu.zig (it embeds the origin's vision_cpu.py with @embedFile; a Zig build that embeds this copy is a recipe's work), vision_hip.py (the optional HIP attention), prepare_vision.py (standard library only, used as it is). vision_cpu.py follows DeepSeek V4.1 Flash 1017 inference/vision.py (revision 1bae0e10, git blob 77af0bde; MIT, Copyright (c) 2023 DeepSeek; the text is src/flerp/vision_sidecar/tools/dsv41-hip/assets/DEEPSEEK_VISION_LICENSE). [build] lang is \"zig\" only because SPEC.md has no value for a script (docs/SPEC-PROPOSALS.md section 12); nothing is compiled. Gate: gate/vision_dsv41_cpu.py with gate/vision-dsv41-cpu312.toml (CPU only)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = [
+  "flerp/vision_sidecar/tools/dsv41-hip/assets/DEEPSEEK_VISION_LICENSE",
+  "flerp/vision_sidecar/tools/dsv41-hip/verify_vision.py",
+  "flerp/vision_sidecar/vision-env.json",
+  "flerp/vision_sidecar/zig/src/families/dsv41/vision_cpu.py",
+]
+authors   = ["aercanozcan", "DeepSeek (the reference inference/vision.py that vision_cpu.py follows)", "pod"]
+modified  = false
+upstream  = "strixfold_pr6 https://github.com/Shoestring-dev/Strixfold 766df75 (pull request #6, branch feat/hip-cpu-image-input, Apache-2.0): zig/src/families/dsv41/vision_cpu.py, tools/dsv41-hip/verify_vision.py, adapted here; tools/dsv41-hip/assets/DEEPSEEK_VISION_LICENSE verbatim (catalog/strixfold_pr6 holds all three verbatim). Behind vision_cpu.py: DeepSeek V4.1 Flash 1017 inference/vision.py at 1bae0e1088993b9b82de08f59de5be5a34e42170 (MIT)"
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+
+[[provides]]
+interface = "vision.worker-pipe/vcpu-v1/bf16.env-setting"
+api       = "`<python> -I -c <vision_cpu.py> <weights> <sha256>` with FLERP_VISION_ENV, TF_DS_VISION_THREADS, TF_DS_VISION_TIMEOUT; verify_vision.py --env NAME [--allow-candidate]"
+numeric   = "the origin's worker unchanged: ViT and aligner in bf16 tensors with fp32 inside rms and rotary, torch MATH attention over query pieces of 128 rows; rows as bf16 bytes. What it gives on a given (python, torch, numpy, CPU, threads) is what gate/vision_dsv41_cpu.py measured for that record of vision-env.json"
+regime    = "one image a process; at most 9,216 patches and 1,024 rows; the child side of the pipe only (the origin's vision_cpu.zig is the parent side)"
+
+[[requires]]
+module    = "runtime.strixfold_pr6.vision_sidecar"
+
+[[requires]]
+module    = "tool.strixfold_pr6.prepare_vision"
+
+[gate]
+parity    = "flerp:gate/vision_dsv41_cpu.py"
+bench     = "none"
+status    = "parity"
+compile   = "n/a"
+reason    = "a script, nothing to compile, so there is no builds step. Parity: its gate passed on control-node's CPU on 2026-11-11 (Python 3.12.3, torch 2.11.0+cpu): rows bit-identical to DeepSeek's vision.py in BF16 on 11 images, FP32 arithmetic identical, the pipe protocol and refusals, determinism. Criterion 3a was restated by the owner after the first verdict failed on it (the config's [restated]). SPEC.md section 5 asks for gfx1151 hardware: this module runs on that machine's CPU and its gate ran there; no GPU is involved. The parent side (vision_cpu.zig) and an image through an engine are not part of this status"
+evidence  = "gate/results/vision-dsv41-cpu312/summary.md"

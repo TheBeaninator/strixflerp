@@ -1,0 +1,56 @@
+id        = "tool.crucible.cli"
+kind      = "tool"
+summary   = "The ./crucible launcher and its Python CLI: setup, doctor, packs, service, update, kernel parameters"
+
+[provenance]
+origin    = "crucible"
+repo      = "https://github.com/jaedync/crucible-strix-halo"
+commit    = "d6af02cd739d554c43a62ef8d0e98b6f59f2dfd7"
+branch    = "main"
+paths     = [
+  "crucible",
+  "tools/crucible_cli/__init__.py",
+  "tools/crucible_cli/cli.py",
+  "tools/crucible_cli/doctor.py",
+  "tools/crucible_cli/files.py",
+  "tools/crucible_cli/host.py",
+  "tools/crucible_cli/http.py",
+  "tools/crucible_cli/kernelparams.py",
+  "tools/crucible_cli/keyfile.py",
+  "tools/crucible_cli/launch.py",
+  "tools/crucible_cli/measured.py",
+  "tools/crucible_cli/packs.py",
+  "tools/crucible_cli/release.py",
+  "tools/crucible_cli/rocm.py",
+  "tools/crucible_cli/runner.py",
+  "tools/crucible_cli/runtime-pin.json",
+  "tools/crucible_cli/runtime.py",
+  "tools/crucible_cli/service.py",
+  "tools/crucible_cli/settings.py",
+  "tools/crucible_cli/steps.py",
+  "tools/crucible_cli/update.py",
+]
+authors   = ["jaedync"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.launcher/crucible/-"
+api       = "./crucible (tools/crucible_cli/cli.py)"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

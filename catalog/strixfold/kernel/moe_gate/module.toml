@@ -1,0 +1,51 @@
+id        = "kernel.strixfold.moe_gate"
+kind      = "kernel"
+summary   = "MoE router gate logits (and indexer head weights) of a prompt chunk: x bf16 times fp16 weights on bf16 WMMA with an exact hi/lo split"
+
+[provenance]
+origin    = "strixfold"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "f64b5ff"
+branch    = "main"
+paths     = ["zig/kernels/hip/dsv41/aux_gate.hip"]
+authors   = ["StrixFold contributors", "TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/aux_gate.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "--offload-device-only",
+  "--no-gpu-bundle-output",
+  "-O3",
+  "-std=c++20",
+  "-fno-gpu-rdc",
+  "-mno-wavefrontsize64",
+  "-ffp-contract=off",
+  "-fno-fast-math",
+  "-fdenormal-fp-math=ieee",
+  "-D__HIP_PLATFORM_AMD__",
+]
+variants  = 2
+
+[[provides]]
+interface = "moe.gate-logits/f16/bf16-f32"
+api       = "tf_ds_aux_gate_logits_d5120, tf_ds_aux_gate_logits_n32_d5120"
+numeric   = "each fp16 weight split exactly into two bf16, products exact, WMMA fp32 accumulation (not IEEE RNE), within gamma(5120) of the exact sum (torch fp32 GEMM contract); row-invariant"
+regime    = "prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[gate]
+parity    = "origin-test:tools/dsv41-hip/tri/run_tests.sh"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strixfold.moe_gate.json"

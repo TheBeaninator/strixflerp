@@ -1,0 +1,42 @@
+id        = "runtime.flerp.text_gufo"
+kind      = "runtime"
+summary   = "The Qwen 3.5 / 3.6 family's tokenizer and chat template behind include/flerp/text.h: a C shim over gufo's QwenTokenizer (from the GGUF), the loader's template check (QwenChatTemplate::ValidateGgufTemplate) and gufo's compiled Qwen ChatML formatter with the options gufo's server resolves"
+notes     = "No tokenizer or template code of its own. The rendering is the one gufo's server applies to every Qwen file (QwenChatTemplate::Render, compiled), not the file's own Jinja template, whose SHA-256 and profile are only reported. Tool messages and tool calls are refused; thinking switches are read as gufo's ParseReasoningOptions reads them. Keys: weights, context."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/text/text_gufo.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/text/text_gufo.cpp"]
+includes  = ["../../../../include"]
+
+[[provides]]
+interface = "text.model/flerp-v1/-"
+api       = "flerp_text_open .. flerp_text_render_chat (include/flerp/text.h)"
+numeric   = "n/a"
+regime    = "one thread; the GGUF's tokenizer"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+interface = "format.loader/gguf/-"
+
+[[requires]]
+module    = "runtime.strixite.json"
+
+[gate]
+parity    = "flerp:gate/moe_serve_stage.py"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only inside a recipe, by CMake (recipes/qwen36-35b-a3b.flerp-serve-stage.toml); its gate is gate/moe_serve_stage.py"

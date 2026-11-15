@@ -1,0 +1,49 @@
+id        = "kernel.tensorfold.cuda_common"
+kind      = "kernel"
+summary   = "Shared CUDA headers: cp.async, MMA fragments for quantised matmul, KV pages, MLA and KDA helpers, fp pairs, fold"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/cuda/common/act.cuh",
+  "zig/kernels/cuda/common/cp_async.cuh",
+  "zig/kernels/cuda/common/fold.cuh",
+  "zig/kernels/cuda/common/fp_pairs.cuh",
+  "zig/kernels/cuda/common/glue_math.cuh",
+  "zig/kernels/cuda/common/kda.cuh",
+  "zig/kernels/cuda/common/kv_pages.cuh",
+  "zig/kernels/cuda/common/mla.cuh",
+  "zig/kernels/cuda/common/qmm_frag.cuh",
+  "zig/kernels/cuda/common/reduce.cuh",
+  "zig/kernels/cuda/common/router_mma.cuh",
+  "zig/kernels/cuda/common/router_tiles.cuh",
+  "zig/kernels/cuda/common/unpack8_value.cuh",
+  "zig/kernels/cuda/common/vec.cuh",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kernel-abi.tensorfold-cuda/-/-"
+api       = "common/*.cuh"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source: harvested to read its recipe; not built for gfx1151"

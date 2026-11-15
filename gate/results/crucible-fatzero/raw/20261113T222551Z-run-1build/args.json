@@ -1,0 +1,15 @@
+{
+ "_card": "crucible-fatzero",
+ "_call": "j1build",
+ "src": "/data/pod/kbench/stage/crucible-fatzero",
+ "cmd": "bash build.sh; for t in stock101 fatzero101 stock724; do test -x $t/build/engine/crucible.mono || exit 9; done; free -g; bash tokens.sh fatzero101:0",
+ "fetch": [
+  "fatzero101/build/kbout/*",
+  "stock101/build/kb-build.log",
+  "fatzero101/build/kb-build.log",
+  "stock724/build/kb-build.log"
+ ],
+ "timeout_s": 7200,
+ "queue_wait_s": 14400,
+ "why": "Crucible ROCm 10.1 fat-zero spill fix (owner 2026-11-13): build stock/patched with TheRock 10.1 + stock 7.2.4, first token run"
+}

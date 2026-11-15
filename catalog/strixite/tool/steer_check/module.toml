@@ -1,0 +1,44 @@
+id      = "tool.strixite.steer_check"
+kind    = "tool"
+summary = "Test: a run's steering never touches another run of its batch, bit for bit"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["tools/steer_check.cpp"]
+authors  = ["pod"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/steer_check.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.steer-check/-/-"
+api       = "main (steer_check)"
+numeric   = "n/a"
+regime    = "GPU test; loads the model"
+
+[[requires]]
+module = "executor.strixite.qwen4exp"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[[requires]]
+module = "runtime.strixite.device_buffer"
+
+[[requires]]
+module = "runtime.strixite.tokenizer"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

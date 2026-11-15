@@ -1,0 +1,118 @@
+id        = "runtime.gufo.cache"
+kind      = "runtime"
+summary   = "Continuation and prefix caches: slot store, prefix index, checkpoints, disk catalog and ledger, retention, streaming; the serving-side continuation cache, identity and disk store; component text cache"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/cache/CMakeLists.txt",
+  "src/cache/adapter.hpp",
+  "src/cache/checkpoint.cpp",
+  "src/cache/checkpoint.hpp",
+  "src/cache/completion.cpp",
+  "src/cache/completion.hpp",
+  "src/cache/component_resources.hpp",
+  "src/cache/disk.cpp",
+  "src/cache/disk.hpp",
+  "src/cache/disk_catalog.cpp",
+  "src/cache/disk_catalog.hpp",
+  "src/cache/events.hpp",
+  "src/cache/identity.cpp",
+  "src/cache/identity.hpp",
+  "src/cache/ledger.cpp",
+  "src/cache/ledger.hpp",
+  "src/cache/prefix_index.cpp",
+  "src/cache/prefix_index.hpp",
+  "src/cache/retention.cpp",
+  "src/cache/retention.hpp",
+  "src/cache/slot.cpp",
+  "src/cache/slot.hpp",
+  "src/cache/stream.hpp",
+  "src/cache/streaming.cpp",
+  "src/cache/streaming.hpp",
+  "src/cache/types.hpp",
+  "src/cli/serve/component_cache_metrics.hpp",
+  "src/cli/serve/component_text_cache.cpp",
+  "src/cli/serve/component_text_cache.hpp",
+  "src/cli/serve/continuation_cache.cpp",
+  "src/cli/serve/continuation_cache.hpp",
+  "src/cli/serve/continuation_disk_store.cpp",
+  "src/cli/serve/continuation_disk_store.hpp",
+  "src/cli/serve/continuation_identity.cpp",
+  "src/cli/serve/continuation_identity.hpp",
+  "src/core/hip/committed_backing.cpp",
+  "src/core/hip/committed_backing.hpp",
+  "src/core/hip/component_cache_resources.cpp",
+  "src/core/hip/component_cache_resources.hpp",
+  "src/core/hip/staging.cpp",
+  "src/core/hip/staging.hpp",
+  "src/core/hip/transfer_pool.cpp",
+  "src/core/hip/transfer_pool.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "cache.prompt-gufo/-/-"
+api       = "gufo::cache (slot.hpp, prefix_index.hpp, checkpoint.hpp, disk.hpp), ContinuationCache"
+numeric   = "exact reuse of a saved slot state for a matching token prefix"
+regime    = "RAM and disk tiers"
+
+[[requires]]
+interface = "cache.snapshot-copy/-/-"
+
+[[requires]]
+module    = "executor.gufo.deepseek_v4_flash"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+module    = "executor.gufo.qwen38_flash_next"
+
+[[requires]]
+module    = "format.gufo.gguf_kquant"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "runtime.gufo.dflash"
+
+[[requires]]
+module    = "runtime.gufo.ext_api"
+
+[[requires]]
+module    = "runtime.gufo.hip_host"
+
+[[requires]]
+module    = "runtime.gufo.platform"
+
+[[requires]]
+module    = "runtime.gufo.speculative"
+
+[[requires]]
+module    = "serve.gufo.http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

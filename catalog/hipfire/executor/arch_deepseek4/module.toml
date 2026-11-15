@@ -1,0 +1,103 @@
+id        = "executor.hipfire.arch_deepseek4"
+kind      = "executor"
+summary   = "DeepSeek V4 Flash (arch 9): hyper-connections, compressed-KV indexer, tail-only RoPE, Q/O-LoRA, raw SWA; bundle, weights, state, forward; the DSpark and MTP speculators and speculative decode"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/hipfire-arch-deepseek4/Cargo.toml",
+  "crates/hipfire-arch-deepseek4/map.md",
+  "crates/hipfire-arch-deepseek4/src/arch.rs",
+  "crates/hipfire-arch-deepseek4/src/arch_model.rs",
+  "crates/hipfire-arch-deepseek4/src/backend/gfx1201.rs",
+  "crates/hipfire-arch-deepseek4/src/backend/gfx942.rs",
+  "crates/hipfire-arch-deepseek4/src/backend/mod.rs",
+  "crates/hipfire-arch-deepseek4/src/carrier.rs",
+  "crates/hipfire-arch-deepseek4/src/config_cache.rs",
+  "crates/hipfire-arch-deepseek4/src/deepseek4.rs",
+  "crates/hipfire-arch-deepseek4/src/dsml.rs",
+  "crates/hipfire-arch-deepseek4/src/dspark_speculator.rs",
+  "crates/hipfire-arch-deepseek4/src/ep.rs",
+  "crates/hipfire-arch-deepseek4/src/forward.rs",
+  "crates/hipfire-arch-deepseek4/src/heterogeneous.rs",
+  "crates/hipfire-arch-deepseek4/src/lib.rs",
+  "crates/hipfire-arch-deepseek4/src/mtp.rs",
+  "crates/hipfire-arch-deepseek4/src/mtp_speculator.rs",
+  "crates/hipfire-arch-deepseek4/src/program.rs",
+  "crates/hipfire-arch-deepseek4/src/routed_seal.rs",
+  "crates/hipfire-arch-deepseek4/src/rows_program.rs",
+  "crates/hipfire-arch-deepseek4/src/sampling.rs",
+  "crates/hipfire-arch-deepseek4/src/spec_decode.rs",
+  "crates/hipfire-arch-deepseek4/src/spec_emit.rs",
+  "crates/hipfire-arch-deepseek4/src/spec_impl.rs",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model/deepseek-v4-flash/hipfire-mfp4"
+api       = "hipfire_arch_deepseek4::{Deepseek4Bundle, forward, program}"
+numeric   = "fp32 activations; expert-parallel rank state in LoadedModel.ep"
+regime    = "solo, expert-parallel"
+
+[[provides]]
+interface = "speculation.draft/dspark/f32.hipfire-ds4"
+api       = "hipfire_arch_deepseek4::{dspark_speculator, spec_decode, spec_impl}"
+numeric   = "draft-only numerics"
+regime    = "draft blocks"
+
+[[provides]]
+interface = "speculation.draft/mtp/f32.hipfire-ds4"
+api       = "hipfire_arch_deepseek4::{mtp, mtp_speculator}"
+numeric   = "no measured AR floor: speculation.mtp = auto keeps plain AR (map.md)"
+regime    = "draft steps"
+
+[[requires]]
+interface = "attn.sparse-sink/kv-f16/f32.hipfire"
+
+[[requires]]
+interface = "attn.indexer-score/kv-f32/f32.hipfire"
+
+[[requires]]
+interface = "attn.indexer-topk/-/f32.hipfire"
+
+[[requires]]
+interface = "moe.experts-decode/hipfire-hfq+mq+mfp4/f32"
+
+[[requires]]
+interface = "hc.mix/hipfire/f32"
+
+[[requires]]
+interface = "linear.decode/hipfire-mfp4/f32"
+
+[[requires]]
+interface = "pos.rope/-/f32.hipfire"
+
+[[requires]]
+interface = "format.loader/hipfire-hfq/-"
+
+[[requires]]
+interface = "device.facade-hipfire/hip/-"
+
+[[requires]]
+interface = "dispatch.kernel-table/hipfire/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

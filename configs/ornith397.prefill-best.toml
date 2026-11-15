@@ -1,0 +1,21 @@
+# Champion configuration, area prefill (prompt tok/s). Fidelity floor: mean KL vs the FP32 reference <= 0.0176 (the
+# per-token path's own distance; owner 2026-11-14, gate/prefill-ornith.toml amendment). Arm F of
+# gate/prefill-ornith-dense.toml: grouped experts and the prompt chunk's dense projections on kernel.flerp.moe_kgrouped,
+# F16 (35B: 1,327 tok/s at 2,048 tokens, KL vs FP32 0.0065; card de279ffbf6), plus kernel.flerp.attn_wmma_gqa for the
+# attention blocks (arm G of gate/prefill-attn.toml: 1,974 tok/s at 2,048 and 1,937 at 16,384 tokens, KL vs FP32 0.0040;
+# card 671acb4cef). Bulk chunks (FLERP_MAX_PROMPT_BATCH)
+# stay OFF until the chunk-size drift (G4: KL 0.05 at the first decode position between 4,096- and 16,384-row chunks)
+# is explained.
+name        = "ornith397.prefill-best"
+description = "Ornith-1.5 397B prompt passes: grouped experts + dense projections on kernel.flerp.moe_kgrouped, F16, and the GQA WMMA prompt attention (FLERP_MOE_GROUPED=1, FLERP_DENSE_GROUPED=1, FLERP_ATTN_GQA=1), the origin's 4,096-row chunk bound"
+model       = "ornith-1.5-397b"
+areas       = ["prefill", "ttft"]
+includes    = []
+kernels     = ["moe_kgrouped 412bb79", "attn_wmma_gqa 136a3bf"]
+
+[stage]
+
+[env]
+FLERP_MOE_GROUPED   = "1"
+FLERP_DENSE_GROUPED = "1"
+FLERP_ATTN_GQA      = "1"

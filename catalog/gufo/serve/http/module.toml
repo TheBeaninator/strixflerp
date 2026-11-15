@@ -1,0 +1,110 @@
+id        = "serve.gufo.http"
+kind      = "serve"
+summary   = "gufo serve: HTTP server, OpenAI chat API, text generation scheduler and model runner, inference backend, logprobs, stop sequences, response formats"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/cli/serve/generation_metrics.hpp",
+  "src/cli/serve/http_server.cpp",
+  "src/cli/serve/http_server.hpp",
+  "src/cli/serve/inference_backend.cpp",
+  "src/cli/serve/inference_backend.hpp",
+  "src/cli/serve/logging.hpp",
+  "src/cli/serve/logprobs.hpp",
+  "src/cli/serve/openai_chat.cpp",
+  "src/cli/serve/openai_chat.hpp",
+  "src/cli/serve/quote_tracker.hpp",
+  "src/cli/serve/response_format.hpp",
+  "src/cli/serve/responses_logprobs.hpp",
+  "src/cli/serve/sampling_request.hpp",
+  "src/cli/serve/serve.cpp",
+  "src/cli/serve/serve.hpp",
+  "src/cli/serve/stop_sequences.hpp",
+  "src/cli/serve/text_generation_backend.hpp",
+  "src/cli/serve/text_generation_scheduler.cpp",
+  "src/cli/serve/text_generation_scheduler.hpp",
+  "src/cli/serve/text_model_runner.cpp",
+  "src/cli/serve/text_model_runner.hpp",
+  "src/cli/serve/text_publication_wait.hpp",
+  "src/cli/serve/trace.hpp",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.http-gufo/openai/-"
+api       = "gufo serve (serve.cpp, http_server.cpp, openai_chat.cpp)"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+interface = "executor.provider-api/gufo-ext/-"
+
+[[requires]]
+interface = "cache.prompt-gufo/-/-"
+
+[[requires]]
+interface = "sample.next-token/-/f32.gufo"
+
+[[requires]]
+module    = "executor.gufo.deepseek_v4_flash"
+
+[[requires]]
+module    = "executor.gufo.qwen"
+
+[[requires]]
+module    = "executor.gufo.qwen38_flash_next"
+
+[[requires]]
+module    = "executor.gufo.qwen_vision"
+
+[[requires]]
+module    = "format.gufo.gguf_kquant"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "runtime.gufo.dflash"
+
+[[requires]]
+module    = "runtime.gufo.dspark"
+
+[[requires]]
+module    = "runtime.gufo.hip_host"
+
+[[requires]]
+module    = "runtime.gufo.image"
+
+[[requires]]
+module    = "runtime.gufo.platform"
+
+[[requires]]
+module    = "runtime.gufo.speculative"
+
+[[requires]]
+module    = "runtime.gufo.tp_verbs"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c++ host code: built only inside a recipe (phase 3 and later)"

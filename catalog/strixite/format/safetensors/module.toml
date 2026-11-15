@@ -1,0 +1,35 @@
+id      = "format.strixite.safetensors"
+kind    = "format"
+summary = "Hand-rolled read-only mmap reader for HF safetensors files"
+
+[provenance]
+origin   = "strixite"
+repo     = "https://github.com/shawnshekari/strixite"
+commit   = "d19945e"
+branch   = "tool-grammar-v070"
+paths    = ["formats/safetensors.cpp", "formats/safetensors.hpp"]
+authors  = ["shawnshekari"]
+modified = false
+
+[licence]
+spdx = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/safetensors.cpp"]
+includes  = ["src"]
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.reader/safetensors/-"
+api       = "strix::SafetensorsFile"
+numeric   = "bytes as stored"
+regime    = "host; header and metadata inspection, converter input"
+
+[[requires]]
+module = "runtime.strixite.check"
+
+[gate]
+parity = "none"
+bench  = "none"
+status = "harvested"

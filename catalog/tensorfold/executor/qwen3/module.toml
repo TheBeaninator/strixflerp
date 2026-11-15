@@ -1,0 +1,60 @@
+id        = "executor.tensorfold.qwen3"
+kind      = "executor"
+summary   = "Qwen3 dense (embedding / reranker readouts on HIP, CUDA)"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/src/families/qwen3/checks.zig",
+  "zig/src/families/qwen3/config.zig",
+  "zig/src/families/qwen3/cuda/engine.zig",
+  "zig/src/families/qwen3/cuda/forward_test.zig",
+  "zig/src/families/qwen3/cuda/gemm.zig",
+  "zig/src/families/qwen3/cuda/lm.zig",
+  "zig/src/families/qwen3/cuda/native.zig",
+  "zig/src/families/qwen3/cuda/store.zig",
+  "zig/src/families/qwen3/cuda/weights.zig",
+  "zig/src/families/qwen3/cuda_check.zig",
+  "zig/src/families/qwen3/decide_test.zig",
+  "zig/src/families/qwen3/engine.zig",
+  "zig/src/families/qwen3/forward.zig",
+  "zig/src/families/qwen3/forward_test.zig",
+  "zig/src/families/qwen3/head.zig",
+  "zig/src/families/qwen3/lane.zig",
+  "zig/src/families/qwen3/model.zig",
+  "zig/src/families/qwen3/names.zig",
+  "zig/src/families/qwen3/native.zig",
+  "zig/src/families/qwen3/projection_test.zig",
+  "zig/src/families/qwen3/prompt.zig",
+  "zig/src/families/qwen3/qwen3.zig",
+  "zig/src/families/qwen3/qwen3_cuda.zig",
+  "zig/src/families/qwen3/score.zig",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model/qwen3/bf16.tensorfold"
+api       = "families/qwen3"
+numeric   = "per family receipts (docs/receipts upstream)"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "zig: harvested as data; not assembled (no tensorfold recipe yet)"

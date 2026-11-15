@@ -1,0 +1,40 @@
+id        = "format.flerp.q4panel"
+kind      = "format"
+summary   = "Q4Panel16: strixw Q4 re-laid out in panels of 16 rows (16-byte code chunks chunk-major inside a panel, then the panel's interleaved BF16 scale/min pairs), the reference relayout row-major -> panel and its inverse, and the panel geometry the strixw v5 writer plans with"
+design    = "DESIGN.md"
+notes     = "docs/STRIXW-LAYOUT-NEXT.md section 2 candidate A, stage 1. Order-only: the bytes of a strix::Q4Weight moved, nothing re-quantized. The relayout is code-width agnostic (format.flerp.q8panel calls it at 8 bits)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/q4panel/q4panel.cpp", "flerp/q4panel/q4panel.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/q4panel/q4panel.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "format.host/strixw-q4p16/-"
+api       = "flerp::Panel16Geom, panel16_geom, panel16_pack, panel16_unpack, panel16_code_offset, panel16_sm_offset, Q4Panel16, q4_panel16_bytes, to_panel16, from_panel16 (flerp/q4panel/q4panel.hpp)"
+numeric   = "exact: the same codes, scales and mins as the row-major Q4Weight, so dequantized values are bit-identical"
+regime    = "N % 16 == 0, K % 32 == 0, G in 32/64/128 dividing K; panel = 8K + 64K/G bytes"
+
+[[requires]]
+module    = "format.strixite.q4"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host code built by tool.flerp.convert_strixw_panel's build.sh, not by a recipe; evidence: tests/test_convert_strixw_panel.py (every fleet class shape, Q4 and Q8, exact round trip) and gate/results/strixw-panel (real tensors of the fleet file), criteria gate/strixw-panel.toml"

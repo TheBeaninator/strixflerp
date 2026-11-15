@@ -1,0 +1,75 @@
+id        = "kernel.gufo.qwen_linear_prefill"
+kind      = "kernel"
+summary   = "Prefill projections: blocked WMMA GEMM directly on K-quant blocks, the Q8_1 activation-quantized route, the FP16 route, hipBLAS / hipBLASLt BF16 GEMM with cached plans, batched SwiGLU"
+
+[provenance]
+origin    = "gufo"
+repo      = "https://github.com/neuhaus/gufo"
+commit    = "f070a17"
+branch    = "rdma"
+paths     = [
+  "src/families/qwen/kernels/hipblas_gemm.hip",
+  "src/families/qwen/kernels/hipblaslt_gemm.hip",
+  "src/families/qwen/kernels/prefill_fp16.hip",
+  "src/families/qwen/kernels/prefill_gemm.hip",
+  "src/families/qwen/kernels/prefill_quant_gemm.hip",
+  "src/families/qwen/kernels/prefill_quant_wave64.hip",
+  "src/families/qwen/kernels/prefill_swiglu.hip",
+]
+authors   = ["gufo contributors", "neuhaus"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/families/qwen/kernels/prefill_gemm.hip",
+  "src/src/families/qwen/kernels/prefill_quant_gemm.hip",
+  "src/src/families/qwen/kernels/prefill_quant_wave64.hip",
+  "src/src/families/qwen/kernels/prefill_fp16.hip",
+  "src/src/families/qwen/kernels/hipblas_gemm.hip",
+  "src/src/families/qwen/kernels/hipblaslt_gemm.hip",
+  "src/src/families/qwen/kernels/prefill_swiglu.hip",
+]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+options   = ["-x", "hip", "-std=gnu++20", "-O2", "-UNDEBUG", "-DENGINE_ENABLE_HIP=1", "-c"]
+source_options = { "src/src/families/qwen/kernels/prefill_quant_gemm.hip" = ["-fno-slp-vectorize"], "src/src/families/qwen/kernels/prefill_quant_wave64.hip" = ["-mwavefrontsize64", "-fno-slp-vectorize"] }
+variants  = 7
+
+[[provides]]
+interface = "linear.prefill/gguf-kquant/bf16-f32"
+api       = "gufo::hip::LaunchBatchedQuantGEMM, LaunchBatchedQuantGEMMBf16, LaunchBatchedQuantGEMMFp32, LaunchBatchedQuantGEMMPreQuantized"
+numeric   = "no dequantize-to-BF16: each output row reads the quant blocks directly; activations bf16 (or pre-quantized Q8_1 tiles, int8 MAC), fp32 accumulate"
+regime    = "prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "linear.prefill/gguf-kquant/f16-f32"
+api       = "ops/prefill_fp16.hpp launchers"
+numeric   = "packed weights scaled in fp32, rounded to fp16 in-kernel, fp16 activations, fp32 accumulation in K16 order"
+regime    = "prefill batches (64..1024 tokens), compute-bound"
+
+[[provides]]
+interface = "linear.prefill/bf16/bf16-f32.hipblaslt"
+api       = "gufo::hip::HipblasltGemmPlans::RunBf16, LaunchHipblasGEMM, LaunchHipblasGEMMBF16"
+numeric   = "library GEMM; summation order is the library plan"
+regime    = "prefill batches (64..1024 tokens), compute-bound"
+
+[[requires]]
+module    = "kernel.gufo.qwen_ops"
+
+[[requires]]
+module    = "kernel.gufo.core_headers"
+
+[[requires]]
+interface = "format.device-view/gguf-kquant/-"
+
+[gate]
+parity    = "origin-test:tests/kernels"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.gufo.qwen_linear_prefill.json"

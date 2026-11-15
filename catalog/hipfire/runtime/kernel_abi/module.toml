@@ -1,0 +1,47 @@
+id        = "runtime.hipfire.kernel_abi"
+kind      = "runtime"
+summary   = "KernelAbiV1: one typed contract per kernel family (kernarg fields, operand formats and extents, admitted domain, numeric contract id, per-export arch / block / LDS / grid), validated before enqueue"
+
+[provenance]
+origin    = "hipfire"
+repo      = "https://github.com/warpfront/hipfire"
+commit    = "efa8fbb"
+branch    = "master"
+paths     = [
+  "crates/hipfire-kernel-abi/Cargo.toml",
+  "crates/hipfire-kernel-abi/src/check.rs",
+  "crates/hipfire-kernel-abi/src/expr.rs",
+  "crates/hipfire-kernel-abi/src/families/ggml_convert.rs",
+  "crates/hipfire-kernel-abi/src/families/ggml_mmvq.rs",
+  "crates/hipfire-kernel-abi/src/families/ggml_mmvq_fused.rs",
+  "crates/hipfire-kernel-abi/src/families/mod.rs",
+  "crates/hipfire-kernel-abi/src/families/mq6_i8.rs",
+  "crates/hipfire-kernel-abi/src/families/qwen4_moe_sym.rs",
+  "crates/hipfire-kernel-abi/src/lib.rs",
+  "crates/hipfire-kernel-abi/src/validate.rs",
+]
+authors   = ["Kaden Schutt", "hipfire contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 OR MIT"
+
+[build]
+lang      = "rust"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.kernel-abi/hipfire-v1/-"
+api       = "hipfire_kernel_abi::{KernelAbiV1, validate_invocation, encode_into, check_export}"
+numeric   = "rejects a wrong arch / export / dtype / format / alignment / extent / domain / grid / block / LDS before the launch"
+regime    = "per launch"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "rust crate: built only inside a recipe (phase 3 and later); cargo needs the whole workspace and vendored dependencies"

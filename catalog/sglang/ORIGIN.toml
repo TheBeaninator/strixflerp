@@ -1,0 +1,24 @@
+# SGLang 0.5.20 with RCCL: the pod's Python / PyTorch-ROCm engine (GLM-5.3-Flash TP4 on workers A B C D).
+# Listed so the catalogue names every engine the pod uses. No code is harvested.
+name      = "sglang"
+repo      = "https://github.com/sgl-project/sglang"
+commit    = "v0.5.20"                                    # release tarball sglang-v0.5.20.tar.gz; the pod tree has no .git, so the commit hash is not recorded
+harvest   = "none"
+harvest_reason = "A Python engine on PyTorch: its kernels are torch ops, Triton kernels compiled at serving time and aiter / flashinfer libraries. There is no standalone HIP kernel source, code-object kit or C ABI executor to take verbatim, which are the seams SPEC section 1.1 names. What is reusable is the collective library (RCCL), recorded under [toolchain] as a dependency, not as a module."
+pod_tree  = "/data/projects/sglang-0.5.20"
+pod_tools = "/data/models/tools/sglang-rocm"             # install and patch scripts, sgk-venv.tgz (the patched venv), wheels, Triton cache backup, tp-serve.sh
+
+[licence]
+spdx      = "Apache-2.0"
+
+[toolchain]
+host      = "python 3.12 venv (sgk-venv, packed by /data/models/tools/sglang-rocm/pack-venv.sh; fingerprint in sgk-venv.fingerprint)"
+device    = "PyTorch for ROCm (/data/models/tools/torch-rocm), Triton JIT at serving time (cache backup triton-cache-glm-5.3-flash-tp4.tgz), aiter built from source (aiter-src)"
+collective = "RCCL for gfx1151 (/data/models/tools/rccl-gfx1151: patch rccl-gfx1151.patch over /data/models/tools/rccl-src, plus libsymk_stub.so), TP4 over the 100 GbE RoCE rail"
+pod_patches = "apply-base-patches.sh, apply-glm53-patches.sh and the 0100-local-aiter patch under /data/models/tools/sglang-rocm"
+
+[kernels]
+loading   = "torch modules and Triton kernels compiled at run time; no ahead-of-time kernel kit"
+
+[status]
+verified  = "paths listed on control-node 2026-11-10; nothing was built or run in this pass"

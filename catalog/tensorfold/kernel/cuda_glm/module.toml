@@ -1,0 +1,63 @@
+id        = "kernel.tensorfold.cuda_glm"
+kind      = "kernel"
+summary   = "GLM-5.3-Flash CUDA kernels: KDA (Kimi delta attention) mixer, DSA indexer pools and scores, glue (attention, latent, router MMA, MoE, hyper-connections, norms, rows), DFlash drafter, quant, vision"
+
+[provenance]
+origin    = "tensorfold"
+repo      = "https://github.com/ashhart/TensorFold"
+commit    = "000b534a284524bbe9a4cc1f3e8996baf80af754"
+branch    = "main"
+paths     = [
+  "zig/kernels/cuda/glm_dflash.cu",
+  "zig/kernels/cuda/glm_glue.cu",
+  "zig/kernels/cuda/glm_glue_attn.cuh",
+  "zig/kernels/cuda/glm_glue_bmm.cuh",
+  "zig/kernels/cuda/glm_glue_hc.cuh",
+  "zig/kernels/cuda/glm_glue_index.cuh",
+  "zig/kernels/cuda/glm_glue_latent.cuh",
+  "zig/kernels/cuda/glm_glue_moe.cuh",
+  "zig/kernels/cuda/glm_glue_norm.cuh",
+  "zig/kernels/cuda/glm_glue_router.cuh",
+  "zig/kernels/cuda/glm_glue_rows.cuh",
+  "zig/kernels/cuda/glm_index.cu",
+  "zig/kernels/cuda/glm_index_pools.cuh",
+  "zig/kernels/cuda/glm_index_scores.cuh",
+  "zig/kernels/cuda/glm_kda.cu",
+  "zig/kernels/cuda/glm_mm.cu",
+  "zig/kernels/cuda/glm_ops.cu",
+  "zig/kernels/cuda/glm_quant.cu",
+  "zig/kernels/cuda/glm_router_mma.cuh",
+  "zig/kernels/cuda/glm_swiglu.cuh",
+  "zig/kernels/cuda/glm_triton.cuh",
+  "zig/kernels/cuda/glm_vision.cu",
+]
+authors   = ["TensorFold contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "mixer.kda/-/f32.tensorfold-cuda"
+api       = "glm_kda.cu"
+numeric   = "fp32 state"
+regime    = "decode and prefill"
+
+[[provides]]
+interface = "attn.indexer-score/-/f32.tensorfold-glm"
+api       = "glm_index.cu, glm_index_pools.cuh, glm_index_scores.cuh"
+numeric   = "fp32"
+regime    = "decode and prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source: harvested to read its recipe; not built for gfx1151"
