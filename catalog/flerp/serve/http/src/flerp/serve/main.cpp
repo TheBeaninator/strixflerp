@@ -6,6 +6,7 @@
 //   strixflerp-<recipe> [--host H] [--port N] [--model-id ID] [--drafts N] [--draft-margin M] [--prompt-cut TOKEN]
 //                       [--delivery auto|tokens] [--generation-config FILE] [--think-nudge on|off] [--think-end-guard on|off]
 //                       [--literal-tags on|off] [--think-close-on-call on|off] [--thinking on|off]
+//                       [--queue N] [--retry-after S]
 //                       executor.KEY=VALUE ... text.KEY=VALUE ...
 //
 //   executor.K=V, text.K=V  the keys of flerp_open and flerp_text_open, as the bound modules name them
@@ -22,10 +23,16 @@
 //   --think-nudge .. --thinking   strixite's reply policy (its server_config.cpp switches of the same names), all on
 //                           as served. A chat reply is split by the model's reply module (include/flerp/reply.h,
 //                           opened with the text module's keys) into reasoning_content, content and tool_calls.
+//   --queue N               most requests waiting for the executor's thread (default 4); one more is refused with
+//                           HTTP 503 and Retry-After: S (--retry-after, default 15 s, FreeFitty's own retry wait)
 //
 // Routes: POST /v1/chat/completions, POST /v1/completions (JSON or SSE), GET /v1/models, GET /health, POST /tokenize.
 // One conversation at a time: requests queue and run one after another on the thread that opened the executor
-// (the ABI is driven by one thread); HTTP threads only parse, wait and write.
+// (the ABI is driven by one thread); HTTP threads only parse, wait and write. The queue is bounded (--queue), a
+// client that leaves cancels its request (a queued one is dropped before it starts, a running one stops between
+// decode steps: httplib's is_connection_closed polled by the waiting HTTP thread, the SSE write for a stream), and
+// /health, /v1/models and the refusals never wait on the generation lane: the HTTP pool holds --queue + 1 threads
+// for the lane, which is the most it can pin, and 8 more that nothing holds (FLERP-FRONT-ROUTER, card c2567775e3).
 #include "flerp/decode_loop.h"
 #include "flerp/executor.h"
 #include "flerp/sampler.h"
@@ -46,7 +53,10 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <execinfo.h>  // the crash note below; glibc, async-signal-safe printing via backtrace_symbols_fd
 #include <deque>
+#include <fcntl.h>  // open("/proc/self/maps") from the crash note
+#include <functional>
 #include <limits>
 #include <fstream>
 #include <memory>
@@ -55,6 +65,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <unistd.h>  // backtrace_symbols_fd: the write(2) path, not stdio, from a signal handler
 #include <vector>
 
 using namespace flerp_serve;
@@ -78,6 +89,7 @@ struct Job {
     std::string id;
     int64_t created = 0;
     std::atomic<bool> cancelled{false};
+    std::function<bool()> connection_closed;  // httplib::Request::is_connection_closed: called by the HTTP thread that waits on the job
     std::mutex mu;
     std::condition_variable cv;
     std::deque<Event> events;
@@ -101,6 +113,8 @@ struct Config {
     std::string host = "127.0.0.1", model_id = "strixflerp", prompt_cut, delivery = "auto", generation_config;
     int port = 5400;
     int drafts = -1;
+    int queue_max = 4;       // requests waiting for the executor's thread; one more is refused with 503
+    int retry_after_s = 15;  // the Retry-After of that refusal
     double margin = 1.5;
     std::vector<std::pair<std::string, std::string>> executor, text;
     // the reply policy of strixite's engine (server_config.cpp: think-nudge, think-end-guard, literal-tags,
@@ -132,17 +146,113 @@ struct State {
     std::condition_variable cv;
     std::deque<std::shared_ptr<Job>> queue;
     std::atomic<bool> stopping{false}, busy{false}, failed{false};
-    std::atomic<int64_t> next_id{0}, served{0};
+    std::atomic<int64_t> next_id{0}, served{0}, cancelled{0}, dropped{0}, refused{0};
+    std::string think_end_guard_says;  // "on", "off", or why it cannot run on this executor (/health think_end_guard)
+    bool is_end(flerp_token t) const { return std::find(end_ids.begin(), end_ids.end(), t) != end_ids.end(); }
 };
 
-State *g_state = nullptr;
-httplib::Server *g_server = nullptr;
+// SIGINT / SIGTERM set a flag and nothing else (the only async-signal-safe act here): the main loop, which wakes every
+// 200 ms, sees it, marks the server stopping and stops the HTTP server from its own thread.
+volatile std::sig_atomic_t g_signalled = 0;
 
-void on_signal(int) {
-    if (g_state) g_state->stopping = true;
-    if (g_server) g_server->stop();
-    if (g_state) g_state->cv.notify_all();
+void on_signal(int) { g_signalled = 1; }
+
+// --- the crash note -----------------------------------------------------------------------------------------------
+// A front end whose close ran to the end and then died on the way out (exit status 139, docs/EXECUTOR-ABI.md) cannot
+// be traced on these workers: no gdb, core_pattern is apport, `ulimit -c 0`. The only instrument available is this
+// process, so this handler is the instrument: SIGSEGV / SIGABRT / SIGBUS print a note into our own log and then die
+// exactly as they would have (default disposition restored and the signal re-raised, so the exit status stays 139 and
+// the kernel's own dmesg line still appears next to ours).
+//
+// What it prints, in async-signal-safe calls only (write(2) and backtrace_symbols_fd, not stdio: a thread may be
+// inside a printf when another one faults): the signal, the faulting address, which phase of the run we are in, the
+// frames of the faulting thread, and the /proc/self/maps lines those frames fall in. The maps lines are what make the
+// note resolvable offline: the shipped binary is not stripped, and the addresses of a frame in libamdhip64 or libomp
+// turn into a file offset (addr2line -f -C -i -e <obj> <off>) here on the control node, where the tools are.
+namespace {
+
+// Where the run is, for the banner: 3 with a fault after "the executor is closed" is an exit-handler death, and a
+// fault before it is inside the close -- the two candidates the card has to tell apart.
+enum Phase : int { kStarting = 0, kServing = 1, kClosing = 2, kClosed = 3 };
+volatile std::sig_atomic_t g_phase = kStarting;
+const char *phase_name(int p) {
+    switch (p) {
+        case kServing: return "serving";
+        case kClosing: return "closing the executor";
+        case kClosed: return "closed, returning from main";
+        default: return "startup";
+    }
 }
+
+// The maps lines a frame lives in, one read at a time into a static buffer (not the crash thread's stack: the HIP
+// runtime's own threads have small ones). Bounded; a note that runs out of buffer simply names fewer modules.
+void dump_frames_in_maps(void *const *frames, int n) {
+    static char buf[64 * 1024];
+    const int fd = open("/proc/self/maps", O_RDONLY);
+    if (fd < 0) return;
+    size_t len = 0;
+    for (;;) {
+        const ssize_t got = read(fd, buf + len, sizeof buf - len - 1);
+        if (got <= 0) break;
+        len += static_cast<size_t>(got);
+        buf[len] = 0;
+        char *p = buf;  // each line is parsed where it stands: the head of the buffer is only line 1
+        for (char *nl = std::strchr(p, '\n'); nl != nullptr; nl = std::strchr(p, '\n')) {
+            *nl = 0;
+            unsigned long lo = 0, hi = 0;
+            if (std::sscanf(p, "%lx-%lx", &lo, &hi) == 2) {
+                for (int f = 0; f < n; ++f) {
+                    const unsigned long a = reinterpret_cast<unsigned long>(frames[f]);
+                    if (a < lo || a >= hi) continue;
+                    write(1, p, strlen(p));
+                    write(1, "\n", 1);
+                    break;
+                }
+            }
+            p = nl + 1;
+        }
+        len -= static_cast<size_t>(p - buf);
+        if (len) std::memmove(buf, p, len);
+        if (len == sizeof buf - 1) break;  // one line longer than the buffer: stop, the frames are still complete
+    }
+    close(fd);
+}
+
+volatile std::sig_atomic_t g_in_crash_note = 0;
+
+void crash_note(int sig, siginfo_t *info, void *) {
+    if (g_in_crash_note) {  // a second thread faulted while this one was writing: die quietly, the note exists
+        std::signal(sig, SIG_DFL);
+        std::raise(sig);
+        _exit(128 + sig);
+    }
+    g_in_crash_note = 1;
+    const char *name = sig == SIGSEGV ? "SIGSEGV" : sig == SIGABRT ? "SIGABRT" : sig == SIGBUS ? "SIGBUS" : "signal";
+    char hdr[256];
+    const int n = std::snprintf(hdr, sizeof hdr, "\ncrash: %s (code %d) at %p while %s (pid %d); the frames:\n", name,
+                                info ? info->si_code : 0, info ? info->si_addr : nullptr,
+                                phase_name(g_phase), static_cast<int>(getpid()));
+    if (n > 0) write(1, hdr, static_cast<size_t>(n > 255 ? 255 : n));
+    void *frames[64];
+    const int nf = backtrace(frames, 64);
+    backtrace_symbols_fd(frames, nf, 1);
+    dump_frames_in_maps(frames, nf);
+    std::fflush(nullptr);  // lines this thread had buffered; every other thread's are lost, which is the honest note
+    std::signal(sig, SIG_DFL);
+    std::raise(sig);
+    _exit(128 + sig);
+}
+
+void install_crash_note() {
+    struct sigaction sa;
+    std::memset(&sa, 0, sizeof sa);
+    sa.sa_sigaction = crash_note;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+    for (const int s : {SIGSEGV, SIGABRT, SIGBUS}) sigaction(s, &sa, nullptr);
+}
+
+}  // namespace
 
 // --- text helpers -------------------------------------------------------------------------------------------------
 // The length of the longest prefix of s[from, n) that does not end inside a UTF-8 sequence.
@@ -236,6 +346,7 @@ struct Gen {
     bool budget_hit = false;
     enum class Feeding { None, Budget, Nudge, CallClose } feeding = Feeding::None;
     int64_t nudges = 0, end_blocked = 0, closed_for_call = 0;
+    int64_t end_unguarded = 0;  // tokens delivery: end ids the executor drew inside a think block or a call, which the guard could not ban
     std::string reply_error;
     Gen(State &s, Job &j) : st(s), job(j), rq(j.req) {}
     ~Gen() {
@@ -306,7 +417,16 @@ struct Gen {
             if ((rs.in_reasoning || rs.in_call) && g.ban_end(rows, row)) ++g.end_blocked;
         }
         if (g.delivery == FLERP_OUT_TOKENS) {
+            // The think-end guard does not run here, and cannot: it bans the end ids out of a logits row (ban_end),
+            // and with the tokens delivery the executor drew this token on the device and handed back no row. The
+            // startup line and /health (think_end_guard) say so, and each end id drawn where the guard would have
+            // banned it is counted (think_end_unguarded in the reply's flerp.reply). Moving the guard onto such an
+            // executor is ABI version 3's seq policy (docs/EXECUTOR-ABI.md, FLERP_CAP_SEQ_POLICY), not this file.
             t = rows->tokens[row];
+            if (g.reply && g.st.cfg.think_end_guard && g.st.is_end(t)) {
+                const flerp_reply_state rs = g.reply_state();
+                if (rs.in_reasoning || rs.in_call) ++g.end_unguarded;
+            }
         } else if (flerp_sampler_pick(g.sampler, g.delivery, rows, row, g.st.facts.caps.candidates, g.st.facts.caps.logits_row, &t) != FLERP_OK) {
             if (g.pick_error.empty()) g.pick_error = flerp_sampler_last_error();
             return g.st.end_ids.empty() ? 0 : g.st.end_ids[0];  // ends the loop; the request fails with pick_error
@@ -542,9 +662,9 @@ struct Gen {
         Gen &g = *(Gen *)ctx;
         g.sequence.insert(g.sequence.end(), ids, ids + n);
     }
-    static int cancelled(void *ctx) {
+    static int cancelled(void *ctx) {  // between decode steps: the client left, the server stops (or was signalled mid-request), or a hook failed
         const Gen &g = *(Gen *)ctx;
-        return g.job.cancelled.load() || g.st.stopping.load() || !g.pick_error.empty() || !g.reply_error.empty();
+        return g.job.cancelled.load() || g.st.stopping.load() || g_signalled || !g.pick_error.empty() || !g.reply_error.empty();
     }
 };
 
@@ -713,7 +833,7 @@ void generate(State &st, Job &job) {
     L.rows = &g.rows, L.max_tokens = max_tokens, L.drafts = st.drafts, L.margin = st.cfg.margin;
     L.end_ids = st.end_ids.data(), L.n_end = st.end_ids.size();
     flerp_loop_hooks H{};
-    H.ctx = &g, H.pick = Gen::pick, H.emit = Gen::emit, H.step = Gen::step, H.entered = Gen::entered, H.cancelled = Gen::cancelled;
+    H.size = sizeof(H), H.ctx = &g, H.pick = Gen::pick, H.emit = Gen::emit, H.step = Gen::step, H.entered = Gen::entered, H.cancelled = Gen::cancelled;
     if (g.reply) H.fed = Gen::fed, H.fed_stops_drafts = Gen::fed_stops_drafts, H.before = Gen::before, H.draft_ok = Gen::draft_ok, H.masks = Gen::masks;
     flerp_loop_result res{};
     res.size = sizeof(res);
@@ -786,12 +906,14 @@ void generate(State &st, Job &job) {
         r.set("thinking_budget_hit", Value::boolean(g.budget_hit));
         if (g.nudges > 0) r.set("think_nudges", Value::integer(g.nudges));
         if (g.end_blocked > 0) r.set("think_end_blocked", Value::integer(g.end_blocked));
+        if (g.end_unguarded > 0) r.set("think_end_unguarded", Value::integer(g.end_unguarded));
         if (g.closed_for_call > 0) r.set("think_closed_for_call", Value::integer(g.closed_for_call));
         if (rs.dropped_partial_call) r.set("dropped_partial_tool_call", Value::boolean(true));
         if (rs.malformed_calls > 0) r.set("malformed_tool_calls", Value::integer(rs.malformed_calls));
         flerp.set("reply", std::move(r));
     }
     if (finish == "cancelled") {
+        ++st.cancelled;
         job.push({Event::Kind::Error, error_body({499, "the request was cancelled", "", "cancelled"}), 499});
         return;
     }
@@ -888,12 +1010,37 @@ void reply_error(httplib::Response &res, const ApiError &e) {
     res.set_content(error_body(e), "application/json");
 }
 
-void submit(State &st, const std::shared_ptr<Job> &job) {
+// Queues the job for the executor's thread; false when the queue is full (the caller answers 503 + Retry-After).
+bool submit(State &st, const std::shared_ptr<Job> &job) {
     {
         std::lock_guard<std::mutex> lock(st.mu);
+        if ((int64_t)st.queue.size() >= st.cfg.queue_max) {
+            ++st.refused;
+            return false;
+        }
         st.queue.push_back(job);
     }
     st.cv.notify_all();
+    return true;
+}
+
+void queue_full(State &st, httplib::Response &res) {
+    res.set_header("Retry-After", std::to_string(st.cfg.retry_after_s));
+    reply_error(res, {503, "the request queue is full: " + std::to_string(st.cfg.queue_max) + " waiting for one conversation at a time; retry after " +
+                               std::to_string(st.cfg.retry_after_s) + " s", "", "queue_full"});
+}
+
+// The job's next event. False when the server is stopping, or when the client has left: the job is then cancelled,
+// so a queued one is dropped before it starts and a running one stops between decode steps (Gen::cancelled).
+bool await(State &st, Job &job, Event &e) {
+    while (!job.pop(e, 0.5)) {
+        if (st.stopping) return false;
+        if (job.connection_closed && job.connection_closed()) {
+            job.cancelled = true;
+            return false;
+        }
+    }
+    return true;
 }
 
 void completions(State &st, const httplib::Request &req, httplib::Response &res, bool chat) {
@@ -917,10 +1064,10 @@ void completions(State &st, const httplib::Request &req, httplib::Response &res,
     }
     job->id = (chat ? "chatcmpl-flerp-" : "cmpl-flerp-") + std::to_string(++st.next_id);
     job->created = (int64_t)std::time(nullptr);
-    submit(st, job);
+    job->connection_closed = req.is_connection_closed;
+    if (!submit(st, job)) return queue_full(st, res);
     Event first;
-    while (!job->pop(first, 1.0))
-        if (st.stopping) return reply_error(res, {503, "the server is stopping", "", ""});
+    if (!await(st, *job, first)) return reply_error(res, {503, "the server is stopping", "", ""});  // or the client left: unread
     if (first.kind == Event::Kind::Error) {  // refused before anything ran: a plain HTTP error, streamed or not
         res.status = first.status;
         return res.set_content(first.body, "application/json");
@@ -928,8 +1075,7 @@ void completions(State &st, const httplib::Request &req, httplib::Response &res,
     if (!job->req.stream) {
         Event e = first;
         while (e.kind != Event::Kind::Done && e.kind != Event::Kind::Error)
-            while (!job->pop(e, 1.0))
-                if (st.stopping) return reply_error(res, {503, "the server is stopping", "", ""});
+            if (!await(st, *job, e)) return reply_error(res, {503, "the server is stopping", "", ""});
         res.status = e.status;
         return res.set_content(e.body, "application/json");
     }
@@ -1006,6 +1152,11 @@ void routes(State &st, httplib::Server &svr) {
         v.set("conversations_at_once", Value::integer(1));
         v.set("busy", Value::boolean(st.busy.load()));
         v.set("requests_served", Value::integer(st.served.load()));
+        v.set("requests_cancelled", Value::integer(st.cancelled.load()));  // the client left while it ran
+        v.set("requests_dropped", Value::integer(st.dropped.load()));      // the client left while it waited
+        v.set("requests_refused", Value::integer(st.refused.load()));      // 503: the queue was full
+        v.set("queue_max", Value::integer(st.cfg.queue_max));
+        v.set("think_end_guard", Value::string(st.think_end_guard_says));
         // the fields FreeFitty's router reads (docs/FLERP-SWAP-PLAN.md section A3): one conversation at a time is one
         // slot whatever caps.seqs says, since requests run one after another on the executor's thread
         size_t queued = 0;
@@ -1032,10 +1183,10 @@ void routes(State &st, httplib::Server &svr) {
         } catch (const std::exception &e) {
             return reply_error(res, {400, std::string("/tokenize takes {\"content\": \"text\"}: ") + e.what(), "content", ""});
         }
-        submit(st, job);
+        job->connection_closed = req.is_connection_closed;
+        if (!submit(st, job)) return queue_full(st, res);
         Event e;
-        while (!job->pop(e, 1.0))
-            if (st.stopping) return reply_error(res, {503, "the server is stopping", "", ""});
+        if (!await(st, *job, e)) return reply_error(res, {503, "the server is stopping", "", ""});
         res.status = e.status;
         res.set_content(e.body, "application/json");
     });
@@ -1057,7 +1208,7 @@ void routes(State &st, httplib::Server &svr) {
 int usage() {
     std::fprintf(stderr, "usage: strixflerp-<recipe> [--host H] [--port N] [--model-id ID] [--drafts N] [--draft-margin M] [--prompt-cut TOKEN] "
                          "[--delivery auto|tokens] [--generation-config FILE] [--think-nudge|--think-end-guard|--literal-tags|--think-close-on-call|--thinking on|off] "
-                         "executor.KEY=VALUE ... text.KEY=VALUE ...\n");
+                         "[--queue N] [--retry-after S] executor.KEY=VALUE ... text.KEY=VALUE ...\n");
     return 2;
 }
 
@@ -1080,6 +1231,8 @@ extern "C" int flerp_host_main(int argc, char **argv) {
         else if (a == "--prompt-cut" && more) cfg.prompt_cut = argv[++i];
         else if (a == "--delivery" && more) cfg.delivery = argv[++i];
         else if (a == "--generation-config" && more) cfg.generation_config = argv[++i];
+        else if (a == "--queue" && more) cfg.queue_max = std::atoi(argv[++i]);
+        else if (a == "--retry-after" && more) cfg.retry_after_s = std::atoi(argv[++i]);
         else if ((a == "--think-nudge" || a == "--think-end-guard" || a == "--literal-tags" || a == "--think-close-on-call" || a == "--thinking") && more) {
             const std::string v = argv[++i];
             if (v != "on" && v != "off") return usage();
@@ -1094,6 +1247,7 @@ extern "C" int flerp_host_main(int argc, char **argv) {
         else return usage();
     }
     if (cfg.delivery != "auto" && cfg.delivery != "tokens") return usage();
+    if (cfg.queue_max < 0 || cfg.retry_after_s < 1) return usage();
     std::setvbuf(stdout, nullptr, _IOLBF, 0);
 
     // the model's text
@@ -1205,25 +1359,38 @@ extern "C" int flerp_host_main(int argc, char **argv) {
     std::printf("startup: tokens are %s; drafts %d a verify (%s), margin %g; prompt cut %s\n",
                 st.facts.host_sampling ? (std::string("sampled on the host by ") + flerp_sampler_describe()).c_str() : "drawn by the executor", st.drafts,
                 step ? "stepped" : held ? "held" : "no draft head", cfg.margin, cfg.prompt_cut.empty() ? "none" : cfg.prompt_cut.c_str());
+    // the think-end guard bans end ids out of a logits row: an executor that draws its tokens hands back none (Gen::pick)
+    st.think_end_guard_says = !st.reply || !cfg.think_end_guard ? "off"
+                              : st.facts.host_sampling          ? "on"
+                                                                : "unavailable: the executor draws its tokens (tokens delivery) and the host sees no logits row to ban the end ids out of; "
+                                                                  "end ids drawn inside a think block or a call are counted as think_end_unguarded";
+    std::printf("startup: think-end guard %s\n", st.think_end_guard_says.c_str());
 
     httplib::Server svr;
     svr.set_payload_max_length(64u << 20);
     svr.set_read_timeout(30, 0);
+    // The generation lane pins at most queue_max + 1 HTTP threads (one running, queue_max waiting; a refusal returns
+    // at once), so with 8 more in the pool /health, /v1/models and the 503s are answered whatever the lane holds.
+    const size_t lane = (size_t)cfg.queue_max + 1, http_threads = lane + 8;
+    svr.new_task_queue = [http_threads] { return new httplib::ThreadPool(http_threads); };
     routes(st, svr);
     if (!svr.bind_to_port(cfg.host, cfg.port)) {
         std::fprintf(stderr, "startup: cannot bind %s:%d\n", cfg.host.c_str(), cfg.port);
         return shut(1);
     }
-    g_state = &st, g_server = &svr;
+    install_crash_note();  // before any work: a startup fault deserves a note too
     std::signal(SIGINT, on_signal);
     std::signal(SIGTERM, on_signal);
     std::signal(SIGPIPE, SIG_IGN);
     std::thread http([&] { svr.listen_after_bind(); });
-    std::printf("startup: serving on http://%s:%d (one conversation at a time)\n", cfg.host.c_str(), cfg.port);
+    g_phase = kServing;
+    std::printf("startup: serving on http://%s:%d (one conversation at a time, %d waiting at most, %zu http threads)\n", cfg.host.c_str(), cfg.port,
+                cfg.queue_max, http_threads);
 
     // this thread opened the executor and is the only one that calls it
     for (;;) {
         std::shared_ptr<Job> job;
+        if (g_signalled) st.stopping = true;
         {
             std::unique_lock<std::mutex> lock(st.mu);
             st.cv.wait_for(lock, std::chrono::milliseconds(200), [&] { return st.stopping.load() || !st.queue.empty(); });
@@ -1232,18 +1399,23 @@ extern "C" int flerp_host_main(int argc, char **argv) {
             job = st.queue.front();
             st.queue.pop_front();
         }
+        if (job->cancelled) {  // its client left while it waited: dropped before anything runs
+            ++st.dropped;
+            job->push({Event::Kind::Error, error_body({499, "the request was cancelled", "", "cancelled"}), 499});
+            continue;
+        }
         st.busy = true;
-        if (job->cancelled) job->push({Event::Kind::Error, error_body({499, "the request was cancelled", "", "cancelled"}), 499});
-        else run_job(st, *job);
+        run_job(st, *job);
         st.busy = false;
         ++st.served;
     }
     svr.stop();
     http.join();
-    g_server = nullptr, g_state = nullptr;
+    g_phase = kClosing;
     std::printf("shutdown: closing the executor\n");
     const int rc = shut(0);
     std::printf("shutdown: the executor is closed\n");
+    g_phase = kClosed;  // a fault past this line is an exit handler, not our code
     return rc;
 }
 

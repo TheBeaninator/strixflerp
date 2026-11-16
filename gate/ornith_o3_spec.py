@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """ORNITH-O3 step two (criteria: gate/ornith-o3-spec.toml, committed before any GPU run): speculative decoding with the
 file's own MTP head in the pipeline-parallel qwen35moe executor (survey option B), proved on the 35B as four TCP rank
-processes on control-node's one GPU. Run ON control-node, in a clean export of the tree (tools/pod-sync.sh with
-POD_SYNC_DEST, never the shared /data/projects/strixflerp):
+processes on control-node's one GPU. Run ON control-node, in a clean checkout of the card branch (tools/card-branch.sh <card-id> on the laptop,
+tools/pod-push.sh --card <card-id>, then git clone /data/projects/strixflerp.git -b card/<card-id> /data/projects/<card-id>;
+never the shared /data/projects/strixflerp; docs/POD-GIT.md):
 
     python3 gate/ornith_o3_spec.py build     # CPU only: flerp assemble + build.sh under nice/ionice
     python3 gate/ornith_o3_spec.py smoke     # GPU (through tools/gpu-queue.sh): one launch, 3 prompts, 32 tokens

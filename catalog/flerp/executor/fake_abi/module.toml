@@ -2,7 +2,7 @@ id        = "executor.flerp.fake_abi"
 kind      = "executor"
 summary   = "A stand-in executor behind the executor ABI for testing its callers without a GPU: the next token is a hash of the last token and the position, and the deliveries, draft form, sampled draws, logit bias, ABI version (1 to 3) and version 3 capabilities (state with prefix ids, marks, shared and parked snapshots, steering, image spans, constraints, stop policy, slot calls) it offers are chosen at flerp_open"
 why       = "The front end and decode loop must handle every shape the ABI allows (rows or tokens, stepped or held drafts, ABI versions 1 to 3) but a real executor offers only one and needs a GPU or the worker pair; a deterministic hash model lets the no-GPU gate run 551 checks over nine executor shapes on a laptop"
-notes     = "No weights and no device. Drafts are output-invariant by construction, so a caller's loop can be checked against itself in every shape the ABI allows."
+notes     = "No weights and no device. Drafts are output-invariant by construction, so a caller's loop can be checked against itself in every shape the ABI allows. hold_cap=N (card 15a4d3cdbb) makes the held form hold fewer than asked, as qwen35moe_abi draft_value=on does."
 
 [provenance]
 origin    = "flerp"

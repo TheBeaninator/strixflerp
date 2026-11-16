@@ -43,6 +43,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "gate"))
 import strixite_recipe as p1                     # noqa: E402  (lease, GPU check, server, capture reader)
+import summary as SM                             # noqa: E402  (summary.json / summary.md, config_sha256)
 from flerplib.catalog import Catalog             # noqa: E402
 
 STAGES = ("check", "build", "gpu")
@@ -300,18 +301,12 @@ def stage_gpu(ctx):
 
 
 def write_summary(ctx, results):
-    ok = all(results.get(s, {}).get("pass") for s in STAGES)
-    with open(os.path.join(ctx["res"], "summary.json"), "w") as f:
-        json.dump({"recipe": ctx["recipe"].name, "host": socket.gethostname(), "date": now(), "pass": ok,
-                   "stages": results}, f, indent=1)
-        f.write("\n")
+    ok = SM.all_pass(STAGES, results)
+    SM.write_json(ctx["res"], {"recipe": ctx["recipe"].name, "host": socket.gethostname(), "date": now(), "pass": ok,
+                               "stages": results}, ctx=ctx)
     lines = [f"# Executor ABI conformance: {ctx['recipe'].name}", "",
              f"Host {socket.gethostname()}, {now()}. Stages run: {', '.join(results)}.", ""]
-    for s in STAGES:
-        if s in results:
-            r = results[s]
-            lines.append(f"- **{s}**: {'PASS' if r.get('pass') else 'FAIL'}"
-                         + (f" - {r['blocked']}" if r.get("blocked") else "") + (f" - {r['error']}" if r.get("error") else ""))
+    lines += SM.stage_bullets(STAGES, results)
     g = results.get("gpu", {})
     cases = [c for e in g.get("executor", []) for c in e["cases"]]
     if cases:
@@ -357,8 +352,7 @@ def write_summary(ctx, results):
                      else "no pod job was waiting when a hold began."),
                   "", "The conformance driver calls the executor only through `include/flerp/executor.h`. Native tokens and step "
                   "records are read from the server's capture files (`--capture-dir`)."]
-    with open(os.path.join(ctx["res"], "summary.md"), "w") as f:
-        f.write("\n".join(lines) + "\n")
+    SM.write_md(ctx["res"], lines)
     return ok
 
 

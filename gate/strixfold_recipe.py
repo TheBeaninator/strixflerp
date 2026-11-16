@@ -46,6 +46,7 @@ from flerplib import origin as origin_mod        # noqa: E402
 from flerplib.catalog import Catalog             # noqa: E402
 sys.path.insert(0, os.path.join(ROOT, "gate"))
 import pair_nodes                                # noqa: E402  (which workers are the pair: the live serving conf)
+import summary as SM                             # noqa: E402  (summary.json / summary.md, config_sha256)
 
 STAGES = ("check", "origin", "build", "pair")
 SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"]
@@ -179,6 +180,24 @@ def stage_build(ctx):
     return out
 
 
+def lease_lines_for(nodes, lease_text):
+    """The pod-lease status lines that name either rank of the pair. Matched against the LIVE pair (gate/pair_nodes.py:
+    each rank's letter, mgmt and rail address), never a hardcoded F/A pattern: since the pair moved to D (NODE1=D,
+    2026-11-11), a worker:D lease was invisible to "is the pair free" -- the old pattern was
+    worker:[FA]|192.0.2.5[04] (found by card b390d523b9, 2026-11-16)."""
+    names = set()
+    for r in nodes.values():
+        if isinstance(r, dict):
+            for key in ("letter", "mgmt", "rail"):
+                if r.get(key):
+                    names.add(str(r[key]))
+    hits = []
+    for line in (lease_text or "").splitlines():
+        if any(re.search(r"(?<![\w.-])" + re.escape(n) + r"(?![\w-])", line) for n in names):
+            hits.append(line)
+    return hits
+
+
 # --- the pair -------------------------------------------------------------------------------------------------
 class Pair:
     def __init__(self, ctx, plan=False):
@@ -269,9 +288,8 @@ class Pair:
                 why.append(f"{ip}: {w['gtt_used_bytes']} bytes of GPU memory in use")
             if st["holds"][ip]:
                 why.append(f"{ip}: held ({st['holds'][ip]})")
-        for line in st["leases"].splitlines():
-            if re.search(r"worker[:\-_ ]?[FA]\b|10\.42\.0\.5[04]", line):
-                why.append(f"lease: {line.strip()[:160]}")
+        for line in lease_lines_for(self.nodes, st["leases"]):
+            why.append(f"lease: {line.strip()[:160]}")
         if st["launcher_starting"]:
             why.append("the pod's pair launcher is starting the pair (strixfold-pair-up is active on A)")
         if st["serving"]:
@@ -304,6 +322,15 @@ class Pair:
             text = f.read()
         over = dict(self.p["conf"], DEPLOY_DIR=deploy, DRAFTS=str(drafts), MASTER_IP=self.nodes["rank0"]["rail"],
                     SERVE_HOST=self.nodes["rank0"]["mgmt"])
+        # ... and the live rank 1: strixfold-pair.sh reads NODE1/NODE1_IP/NODE1_RAIL out of the conf it is handed (cv,
+        # :21), and without them it falls back to A. The gate's base conf is a recording of the pod's serving conf of
+        # 2026-11-10, which predates the move to D (NODE1=D) - so a reference run started by the launcher from one of
+        # these confs would try to bring up the OLD pair, refusing on a node nobody holds, while the gate's own hold
+        # sits on the live one (card b390d523b9, 2026-11-16).
+        if self.nodes["rank1"].get("letter"):
+            over["NODE1"] = self.nodes["rank1"]["letter"]
+        over["NODE1_IP"] = self.nodes["rank1"]["mgmt"]
+        over["NODE1_RAIL"] = self.nodes["rank1"]["rail"]
         if run_root:
             over["RUN_ROOT"] = run_root
         text += "\n# --- strixflerp phase 3 gate: appended, a later assignment wins ---\n"
@@ -738,10 +765,8 @@ def prompt_ids(pair, body):
 
 # --- summary --------------------------------------------------------------------------------------------------
 def write_summary(ctx, results):
-    ok = all(results.get(s, {}).get("pass") for s in STAGES)
-    with open(os.path.join(ctx["res"], "summary.json"), "w") as f:
-        json.dump({"recipe": ctx["recipe"].name, "host": socket.gethostname(), "date": now(), "pass": ok, "stages": results}, f, indent=1)
-        f.write("\n")
+    ok = SM.all_pass(STAGES, results)
+    SM.write_json(ctx["res"], {"recipe": ctx["recipe"].name, "host": socket.gethostname(), "date": now(), "pass": ok, "stages": results}, ctx=ctx)
     lines = [f"# Recipe gate: {ctx['recipe'].name}", "", f"Host {socket.gethostname()}, {now()}. Stages run: {', '.join(results)}.", ""]
     notes = {"check": lambda r: r.get("last_line", ""),
              "origin": lambda r: f"{r.get('identical')}/{r.get('files')} files byte-identical to git archive {r.get('commit')} of "
@@ -770,8 +795,7 @@ def write_summary(ctx, results):
         lines += ["", "Executor ABI conformance (StrixFold adapter as rank 0):"]
         for c in pr["abi"]["cases"]:
             lines.append(f"- {c['prompt']}: plain = server {'yes' if c.get('plain_equals_native') else 'NO'}, checks {c.get('checks')}")
-    with open(os.path.join(ctx["res"], "summary.md"), "w") as f:
-        f.write("\n".join(lines) + "\n")
+    SM.write_md(ctx["res"], lines)
     return ok
 
 

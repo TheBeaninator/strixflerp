@@ -2,7 +2,8 @@
 """ORNITH-SUBCHUNK (pod card 6abf28258c; criteria gate/ornith-subchunk.toml, committed before any GPU run): the 1,024-row
 sub-chunk floor, the adaptive count and the in-flight window, on the 35B at world 4 over TCP on control-node's one GPU.
 
-Run ON control-node in a clean export (POD_SYNC_DEST=/data/projects/strixflerp-subchunk tools/pod-sync.sh):
+Run ON control-node in a clean checkout of the card branch (tools/card-branch.sh <card-id> on the laptop, tools/pod-push.sh --card <card-id>,
+then on the pod: git clone /data/projects/strixflerp.git -b card/<card-id> /data/projects/<card-id>; docs/POD-GIT.md):
 
     python3 gate/ornith_subchunk.py build    # CPU: flerp assemble qwen36-35b-a3b.flerp-serve-stage + build.sh (nice/ionice)
     python3 gate/ornith_subchunk.py gen      # GPU: the generator, four tcp ranks, every spec in one load

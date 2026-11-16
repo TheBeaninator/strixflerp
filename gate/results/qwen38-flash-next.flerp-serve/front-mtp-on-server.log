@@ -1,8 +1,9 @@
 startup: text strixite tokenizer and chat template (Qwen3.8-Flash-Next), 248077 tokens, /data/models/strix-infer/tok/tokenizer.json
 startup: reply strixite reply parser (Qwen3.8-Flash-Next: <think>, <tool_call> XML calls), /data/models/strix-infer/tok/tokenizer.json; think-nudge on, think-end-guard on, literal-tags on, think-close-on-call on, thinking on
-startup: executor qwen4exp, 48 layers, layout exp_gu=q4g128,exp_down=q4g32,sh_gu=q8g64,sh_down=q8g32,gdn_in=q4g128,gdn_out=q8g64,attn_qkv=q8g64,attn_o=q8g64,hc_down=q8g64,hc_up=q8g64,ple_kv=q8g64,lm_head=q8g64,mtp_fc=q8g64,embed=bf16, BF16, capacity 16384, chunk 8192, precision gdn=half-u attention=exact, kv q8, mtp (draft vocabulary 65536), n-gram row cache 8388608 rows (loaded in 59.3 s)
+startup: executor qwen4exp, 48 layers, layout exp_gu=q4g128,exp_down=q4g32,sh_gu=q8g64,sh_down=q8g32,gdn_in=q4g128,gdn_out=q8g64,attn_qkv=q8g64,attn_o=q8g64,hc_down=q8g64,hc_up=q8g64,ple_kv=q8g64,lm_head=q8g64,mtp_fc=q8g64,embed=bf16, BF16, capacity 16384, chunk 8192, precision gdn=half-u attention=exact, kv q8, mtp (draft vocabulary 65536), n-gram row cache 8388608 rows (loaded in 48.2 s)
 startup: executor ABI 2, deliveries 7, flags 2793, 16384 positions, 16 rows a verify, 1 seqs
 startup: tokens are sampled on the host by strixite Sampler (host; temperature, top_k, top_p, seed); drafts 7 a verify (stepped), margin 1.5; prompt cut <|im_start|>
-startup: serving on http://127.0.0.1:5395 (one conversation at a time)
+startup: think-end guard on
+startup: serving on http://127.0.0.1:5395 (one conversation at a time, 4 waiting at most, 13 http threads)
 shutdown: closing the executor
 shutdown: the executor is closed

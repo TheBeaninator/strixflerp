@@ -1,0 +1,13 @@
+{
+ "config": "ornith397.prefill-best",
+ "area": "prefill",
+ "case": "",
+ "value": 2725,
+ "run_id": "zgate (control-node 2026-11-14T18:29Z, card 5083008fe9)",
+ "fidelity": {
+  "kl_vs_fp32": 0.00399
+ },
+ "scale": "35B proxy",
+ "note": "arm Z = G + live-tile items (moe_kgrouped 3dbd959) + tiled prompt router (moe_kquant 379fc3a) + 16-byte MoE combine and one ToF16 per shared input (moe_combine 6e95ab2): 2725 tok/s at 2,048 tokens and 2560 at 16,384 (one load, median of 3 interleaved; G in the same process 2012 / 1962, Z/G 1.355 / 1.305); logits sha256 of every recorded step and the ids equal G's on the 8 fidelity prompts and a 16K prompt (108 steps, 0 mismatches), so G's KL vs FP32 0.00399 holds unchanged; GPU time a 4,096-row chunk 2,049 -> 1,410 ms (zprof); gate/prefill-lrc.toml Z1-Z4 all pass; supersedes the withdrawn single-lever proposals of 9506f4f116, c6473d6063, 2dc55e67f0",
+ "date": "2026-11-14"
+}

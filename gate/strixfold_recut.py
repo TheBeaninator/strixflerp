@@ -139,7 +139,7 @@ def main():
         [(r"DEPLOY_DIR='\$HOME/tfp/deploy/[0-9a-f]+'", f"DEPLOY_DIR='$HOME/tfp/deploy/{deploy}'", 0)])
     subprocess.check_call([sys.executable, os.path.join(ROOT, "flerp"), "check", "--origin", "strixfold"], cwd=ROOT)
     print(f"\nre-cut to {short} (deployment {deploy}, kit {info['kit_manifest_sha256'][:16]}...). Next:\n"
-          "  tools/pod-sync.sh\n"
+          "  tools/card-branch.sh <card-id>; commit there; tools/pod-push.sh --card <card-id>   # the pod tree is git: no rsync (docs/POD-GIT.md)\n"
           "  tools/pod-run.sh './flerp gate recipe dsv41-flash.strixfold-tp2 --stages check,origin,build'\n"
           "  tools/pod-run.sh './flerp assemble dsv41-flash.strixfold-tp2-abi && build/dsv41-flash.strixfold-tp2-abi/build.sh'\n"
           "  tools/pod-run.sh './flerp gate recipe dsv41-flash.strixfold-tp2 --stages pair --plan'\n"

@@ -519,8 +519,8 @@ working on the strength of a build alone.
 - Build and GPU gates: control-node (`/data/projects/strixflerp`), which has gfx1151, TheRock toolchains under
   `/data/tools` and `/data/models/tools`, the system ROCm 7.2.4 under `/opt`, cmake, ninja, zig 0.17
   (`/home/pod/opt`), python 3.12. `toolchains.toml` names each (kind `therock` or `rocm` for a ROCm install,
-  `triton` for the ahead-of-time Triton kit's wheel, `zig` for the Zig compiler of a Zig-hosted recipe). Sync with
-  `tools/pod-sync.sh`; run with `tools/pod-run.sh`. The pod has no internet: no pip, no cargo fetch, no git clone.
+  `triton` for the ahead-of-time Triton kit's wheel, `zig` for the Zig compiler of a Zig-hosted recipe). Code reaches it as a
+  card branch (`tools/card-branch.sh`, `tools/pod-push.sh`, `docs/POD-GIT.md`); run with `tools/pod-run.sh`. The pod has no internet: no pip, no cargo fetch, no git clone.
 - Workers serve the pod's roles. Never stop, restart or load an engine on a worker for phase 1 or 2. Phase 3's
   pair gate is the one exception and it is narrow: the pair F and A, only while it holds both with `pod-quad hold`,
   only through the pod's own launcher, and it stops only what it started (`gate/strixfold_recipe.py`).

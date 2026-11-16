@@ -33,14 +33,23 @@ def cmd_list(cat, a):
 
 def cmd_check(cat, a):
     rep = check.run(cat, a.origin)
-    for w in rep.warnings if a.warnings else []:
+    for w in rep.warnings if a.warnings or a.all_warnings else []:
         print("warning:", w)
+    if a.all_warnings:
+        for ws in rep.cycles.values():
+            for w in ws:
+                print("cycle:", w)
+    for line in rep.cycle_lines():          # one line per vendored origin, always: the count, not the list
+        print("cycles:", line)
     for e in rep.errors:
         print("error:", e)
     scope = f"origin {a.origin}" if a.origin else "catalogue"
     n = len([m for m in cat.modules if not a.origin or m.dir_origin == a.origin])
+    cyc = sum(len(ws) for ws in rep.cycles.values())
     print(f"flerp check ({scope}): {n} modules, {len(cat.recipes)} recipe(s), "
-          f"{len(rep.errors)} error(s), {len(rep.warnings)} warning(s)")
+          f"{len(rep.errors)} error(s), {len(rep.warnings)} warning(s)"
+          + (f", {cyc} dependency cycle warning(s) inside vendored origins ({', '.join(f'{o} {len(ws)}' for o, ws in sorted(rep.cycles.items()))})"
+             if cyc else ""))
     return 1 if rep.errors else 0
 
 
@@ -251,7 +260,9 @@ def main(argv=None):
 
     p = sub.add_parser("check", help="validate every manifest, origin file and recipe")
     p.add_argument("--origin", help="only this origin's modules and the recipes that use them")
-    p.add_argument("-w", "--warnings", action="store_true", help="print the warnings, not only their count")
+    p.add_argument("-w", "--warnings", action="store_true",
+                   help="print the warnings, not only their count (dependency cycles inside a vendored origin stay one line per origin)")
+    p.add_argument("--all-warnings", action="store_true", help="print every warning, the vendored origins' dependency cycles too")
     p.set_defaults(fn=cmd_check)
 
     p = sub.add_parser("show", help="one module in full")

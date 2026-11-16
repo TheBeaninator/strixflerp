@@ -70,6 +70,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "gate"))
 import strixite_recipe as p1                     # noqa: E402  (lease, GPU check, server, capture reader)
+import summary as SM                             # noqa: E402  (summary.json / summary.md, config_sha256)
 from flerplib.catalog import Catalog             # noqa: E402
 
 STAGES = ("check", "build", "nogpu", "gpu")
@@ -690,16 +691,10 @@ def stage_gpu(ctx):
 # --- summary ----------------------------------------------------------------------------------------------------------
 def write_summary(ctx, results):
     stages = ctx["cfg"]["serve"]["stages"]
-    ok = all(results.get(s, {}).get("pass") for s in stages)
-    with open(os.path.join(ctx["res"], "summary.json"), "w") as f:
-        json.dump({"recipe": ctx["recipe"].name, "host": socket.gethostname(), "date": now(), "pass": ok, "stages": results}, f, indent=1)
-        f.write("\n")
+    ok = SM.all_pass(stages, results)
+    SM.write_json(ctx["res"], {"recipe": ctx["recipe"].name, "host": socket.gethostname(), "date": now(), "pass": ok, "stages": results}, ctx=ctx)
     lines = [f"# Front end gate: {ctx['recipe'].name}", "", f"Host {socket.gethostname()}, {now()}. Stages run: {', '.join(results)}.", ""]
-    for s in stages:
-        if s in results:
-            r = results[s]
-            lines.append(f"- **{s}**: {'PASS' if r.get('pass') else 'FAIL'}" + (f" - {r['blocked']}" if r.get("blocked") else "")
-                         + (f" - {r['error']}" if r.get("error") else ""))
+    lines += SM.stage_bullets(stages, results)
     b = results.get("build", {})
     if b.get("binaries"):
         lines += ["", "Built: " + "; ".join(f"`{n}` ({v['bytes']} bytes, sha256 {v['sha256'][:16]})" for n, v in b["binaries"].items() if v)
@@ -751,8 +746,7 @@ def write_summary(ctx, results):
                   "the `flerp` object of its HTTP responses (`\"flerp_trace\": true`). Native tokens and step records are read from "
                   "the server's capture files (`--capture-dir`). Decode tok/s is each server's own `timings.predicted_per_second` "
                   "for the one request: recorded, not a criterion."]
-    with open(os.path.join(ctx["res"], "summary.md"), "w") as f:
-        f.write("\n".join(lines) + "\n")
+    SM.write_md(ctx["res"], lines)
     return ok
 
 

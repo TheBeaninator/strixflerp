@@ -50,6 +50,8 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.join(ROOT, "gate"))
+import summary as SM  # noqa: E402  (summary.json / summary.md, config_sha256)
 from flerplib.catalog import Catalog  # noqa: E402
 
 STAGES = ("check", "origin", "build", "unit", "gpu")
@@ -672,9 +674,7 @@ def write_summary(ctx, results, recorded=None):
                        "stages_run": list(results), "pass": overall if set(results) == set(STAGES) else None,
                        "stages": results}
     if recorded is None:
-        with open(os.path.join(res, "summary.json"), "w") as f:
-            json.dump(doc, f, indent=1)
-            f.write("\n")
+        SM.write_json(res, doc, ctx=ctx)
     lines = [f"# Recipe gate: {ctx['recipe'].name}", "",
              f"Host {doc['host']}, {doc['when_utc']}. Stages run: {', '.join(results)}.", ""]
     stamped = any(r.get("when_utc") for r in results.values())      # a partial run: the stages without a time are older
@@ -743,9 +743,7 @@ def write_summary(ctx, results, recorded=None):
                 fd = "-" if r["first_divergence"] is None else r["first_divergence"]
                 lines.append(f"| {'on' if r['mtp'] else 'off'} | {r['prompt']} | {r['repeat']} | "
                              f"{r['generated_tokens'][0]} / {r['generated_tokens'][1]} | {fd} | {r['tokens_agreeing']} |")
-    with open(os.path.join(res, "summary.md"), "w") as f:
-        f.write("\n".join(lines) + "\n")
-    print("\n".join(lines))
+    print(SM.write_md(res, lines), end="")
     return overall
 
 

@@ -27,6 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "gate"))
 import gguf_census as C  # noqa: E402
+import summary as SM  # noqa: E402  (summary.json / summary.md, config_sha256)
 
 STAGES = ("plan", "equal", "range35", "ornith")
 GIB = float(1 << 30)
@@ -503,10 +504,9 @@ def bench_lines(rec):
 
 def write_summary(ctx, results):
     cfg, res = ctx["cfg"], ctx["res"]
-    ok = all(results.get(s, {}).get("pass") for s in STAGES)
-    missing = [s for s in STAGES if s not in results]
-    verdict = "PASSED" if ok else ("NOT COMPLETE: " + ", ".join(missing) + " not run" if missing and all(results[s].get("pass") for s in results) else "FAILED")
-    save(ctx, "summary.json", {"gate": "moe-placed", "host": socket.gethostname(), "written_utc": G.utc(), "stages": results, "pass": ok, "disk_reads": ctx["disk_all"]})
+    ok = SM.all_pass(STAGES, results)
+    verdict = SM.verdict(STAGES, results)
+    SM.write_json(res, {"gate": "moe-placed", "host": socket.gethostname(), "written_utc": G.utc(), "stages": results, "pass": ok, "disk_reads": ctx["disk_all"]}, ctx=ctx)
     L = [f"# Gate of the placed loader and the block range: {cfg['recipe']}", "", f"Host {socket.gethostname()}, written {G.utc()}. **{verdict}** under `[criteria]` of "
          f"`{ctx['config']}` (committed before the first GPU run). Stage P1 of `docs/PHASE5-FOURNODE-DESIGN.md`.", "",
          "**Gate (1) was not judged as the brief set it.** Its criterion is bit equality (sha256 of the copied logits) with today's binary. Today's binary has only the "
@@ -560,8 +560,7 @@ def write_summary(ctx, results):
               f"{sum(r['seconds'] or 0 for r in reads):.0f} s of reading with its pauses, between {reads[0]['when']} and {reads[-1]['when']}:", "",
               "| run | GB | seconds | ended (UTC) |", "|---|---|---|---|"]
         L += [f"| {r['run']} | {r['bytes'] / 1e9:.2f} | {r['seconds']} | {r['when']} |" for r in reads]
-    with open(os.path.join(res, "summary.md"), "w") as f:
-        f.write("\n".join(L) + "\n")
+    SM.write_md(res, L)
     return ok
 
 

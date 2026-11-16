@@ -218,6 +218,25 @@ class ResolveTests(Base):
         self.assertTrue(any("dependency cycle" in w for w in asm.warnings))
         self.assertFalse(any("dependency cycle" in e for e in asm.errors))
 
+    def test_cycle_inside_a_vendored_origin_is_its_own_class(self):
+        # card 6249b8db6f: 110 of flerp check's 140 warnings were gufo/crucible cycles; they are counted per origin, not listed.
+        self.assertEqual(check.cycle_origin("dependency cycle: kernel.gufo.a -> kernel.gufo.b -> kernel.gufo.a"), "gufo")
+        self.assertEqual(check.cycle_origin("dependency cycle: runtime.crucible.x -> runtime.crucible.x"), "crucible")
+        self.assertIsNone(check.cycle_origin("dependency cycle: kernel.flerp.a -> kernel.flerp.b -> kernel.flerp.a"))     # this tree's
+        self.assertIsNone(check.cycle_origin("dependency cycle: kernel.flerp.a -> kernel.gufo.b -> kernel.flerp.a"))      # across origins
+        self.assertIsNone(check.cycle_origin("dependency cycle: kernel.nosuch.a -> kernel.nosuch.a"))
+        self.assertIsNone(check.cycle_origin("[modules] x is bound but nothing in the assembly requires it"))
+        rep = check.Report()
+        rep.warn("recipes/p.toml", "dependency cycle: kernel.gufo.a -> kernel.gufo.b -> kernel.gufo.a")
+        rep.warn("recipes/q.toml", "dependency cycle: kernel.gufo.a -> kernel.gufo.b -> kernel.gufo.a")
+        rep.warn("recipes/q.toml", "dependency cycle: kernel.gufo.c -> kernel.gufo.c")
+        rep.warn("recipes/q.toml", "dependency cycle: kernel.flerp.a -> kernel.flerp.a")
+        rep.warn("recipes/q.toml", "[modules] i is bound but nothing in the assembly requires it")
+        self.assertEqual(len(rep.warnings), 2)
+        self.assertEqual({o: len(ws) for o, ws in rep.cycles.items()}, {"gufo": 3})
+        self.assertEqual(rep.cycle_lines(), ["3 dependency cycle warning(s) inside origin gufo: 2 distinct cycle(s) in 2 recipe(s), "
+                                             "the origin's own headers (reported, not refused; --all-warnings lists them)"])
+
     def test_two_providers_in_one_assembly(self):
         self.t.module("flerp", "kernel", "a2", {"k/a2.hpp": "\n"}, provides=["linear.decode/q4/bf16"])
         self.t.module("flerp", "tool", "t", {"t/main.cpp": "int main() { return 0; }\n"}, sources=["t/main.cpp"],
@@ -396,6 +415,26 @@ class CliTests(Base):
         with redirect_stdout(out), redirect_stderr(err):
             rc = cli.main(["--root", self.t.root] + list(argv))
         return rc, out.getvalue(), err.getvalue()
+
+    def test_check_counts_vendored_cycles_per_origin(self):
+        rc, out, _ = self.run_cli("check")
+        self.assertEqual(rc, 0, out)
+        self.assertNotIn("cycles:", out)
+        # a cycle inside a vendored origin that the recipe assembles: one counted line, the list only with --all-warnings
+        self.t.origin("gufo")
+        self.t.module("gufo", "kernel", "c", {"g/c.hpp": "int c();\n"}, provides=["g.c/-/-"], requires=["@kernel.gufo.d"])
+        self.t.module("gufo", "kernel", "d", {"g/d.hpp": "int d();\n"}, provides=["g.d/-/-"], requires=["@kernel.gufo.c"])
+        self.t.module("flerp", "tool", "t", {"t/main.cpp": '#include "k/b.hpp"\nint main() { return b(); }\n'},
+                      sources=["t/main.cpp"], provides=["tool.t/-/-"], requires=["@kernel.flerp.b", "@kernel.gufo.c"])
+        rc, out, _ = self.run_cli("check")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("cycles: 1 dependency cycle warning(s) inside origin gufo: 1 distinct cycle(s) in 1 recipe(s)", out)
+        self.assertIn("0 error(s), 0 warning(s), 1 dependency cycle warning(s) inside vendored origins (gufo 1)", out)
+        self.assertNotIn("warning:", out)
+        rc, out, _ = self.run_cli("check", "-w")
+        self.assertNotIn("kernel.gufo.c -> kernel.gufo.d", out)
+        rc, out, _ = self.run_cli("check", "--all-warnings")
+        self.assertIn("cycle: recipes/r.toml: dependency cycle: kernel.gufo.c -> kernel.gufo.d -> kernel.gufo.c", out)
 
     def test_commands(self):
         rc, out, _ = self.run_cli("check")

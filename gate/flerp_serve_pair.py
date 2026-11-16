@@ -47,6 +47,7 @@ not read the pair's state either: it opens no connection to a worker and calls n
 """
 import argparse
 import datetime
+import glob
 import json
 import os
 import re
@@ -63,6 +64,7 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "gate"))
 import strixfold_recipe as sf                    # noqa: E402  (the pair: hold, staging, launcher runs, teardown)
 import strixite_recipe as p1                     # noqa: E402  (config inheritance)
+import summary as SM                             # noqa: E402  (summary.json / summary.md, config_sha256)
 from flerplib.catalog import Catalog             # noqa: E402
 
 STAGES = ("check", "build", "pair")
@@ -282,6 +284,84 @@ class Front:
                      "main_returned": "host: main returned" in text, "exit_status": int(m.group(1)) if m else None,
                      "last_step": last[-1] if last else None}
         return (not self.exit["killed"] and self.exit["executor_closed"] and self.exit["exit_status"] == 0), text[-600:]
+
+
+def write_exit_backtrace(ctx, tag, exit_info):
+    """exit-backtrace.txt: the frame that faulted, named.
+
+    The workers have no gdb, core_pattern is apport and `ulimit -c 0`, so the front end prints its own note (serve/http
+    main.cpp, install_crash_note): the signal, the address, which phase of the run, the faulting thread's frames, and
+    the /proc/self/maps lines they fall in. This reads that note out of the evidence the stage collected and resolves
+    it here, where the tools and the unstripped binaries are: a maps line gives the module's file offset of the frame
+    (seg_off + addr - seg_start), and addr2line turns that into a function and a source line. A module we have no local
+    copy of is named as such, not guessed at."""
+    res, tree = ctx["res"], os.path.join(ROOT, "build", ctx["recipe"].name)
+    local = [os.path.join(tree, ctx["cfg"]["serve"]["binary"])]
+    for pat in ("*/libamdhip64.so*", "*/libomp.so*", "*/libgcc_s.so*"):
+        local += sorted(glob.glob(os.path.join("/data/models/tools", "therock*", "lib", os.path.basename(pat))))
+    by_name = {}
+    for f in local:
+        if os.path.isfile(f):
+            by_name.setdefault(os.path.basename(f.split(".so")[0]), f)
+    lines = [f"# exit backtrace of the front end (dsv41 flerp-serve pair stage), run {tag}", "",
+             f"recorded {sf.now()}; the front end's exit as the stage saw it: {json.dumps(exit_info)}", "",
+             "The kernel's own line is not available on these workers (dmesg and journalctl -k are refused to pod),",
+             "so this is the process's own note. Frames are resolved with addr2line against the local copies of the",
+             "modules named in the maps lines; a module without a local copy is left as the note wrote it.", ""]
+    src_files = [os.path.join(res, f"front-{tag}-rank0-evidence.txt")]
+    note = None
+    for f in src_files:
+        try:
+            text = open(f, errors="replace").read()
+        except OSError:
+            continue
+        i = text.find("\ncrash: ")
+        if i < 0:
+            continue
+        note = text[i + 1:]
+        j = note.find("EVIDENCE-END")
+        if j > 0:
+            note = note[:j].rstrip()
+        break
+    if note is None:
+        lines.append("NO CRASH NOTE in the collected evidence: the process did not fault under the note's signals, or")
+        lines.append("the build that ran predates the note (check `host: main returned` in the same file). The stage's")
+        lines.append("exit fields above are then the whole record.")
+    else:
+        lines += ["--- the note, as printed by the process (its stdout, serve.log) ---", "", note, "",
+                  "--- resolved frames ---", ""]
+        maps = {}
+        for m in re.finditer(r"^([0-9a-f]+)-([0-9a-f]+) \S+ ([0-9a-f]+) \S+ \S+\s+(\S+)\s*$", note, re.M):
+            lo, hi, off, path = (int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16), m.group(4))
+            maps.setdefault(os.path.basename(path), (lo, off, path))
+        for m in re.finditer(r"^(.+?)\(([^()]+)\)\[0x([0-9a-f]+)\]$", note, re.M):
+            path, printed, addr = m.group(1), m.group(2), int(m.group(3), 16)
+            key, stem = os.path.basename(path), os.path.basename(path).split(".so")[0]
+            if not printed.startswith("+0x"):   # backtrace_symbols_fd knew the symbol: it is already a name
+                lines.append(f"{key}({printed}) [{m.group(3)}]")
+                continue
+            foff = int(printed[3:], 16)
+            base = next((k for k in maps if k.split(".so")[0] == stem), None)
+            if base is None:
+                lines.append(f"{key}(+0x{foff:x}): no maps line for it in the note")
+                continue
+            lo, seg_off, abspath = maps[base]
+            file_off = seg_off + (addr - lo)      # the file offset of the frame: seg_off places the segment in the file
+            local_copy = by_name.get(stem) or (abspath if os.path.isfile(abspath) else None)
+            if local_copy is None:
+                lines.append(f"{key}(+0x{foff:x}) = {abspath} file offset {file_off:#x}: no local copy to resolve")
+                continue
+            try:
+                r = subprocess.run(["addr2line", "-f", "-C", "-i", "-e", local_copy, hex(file_off)],
+                                   capture_output=True, text=True, timeout=60)
+                got = r.stdout.strip().replace("\n", " <- ") or f"unresolved (rc {r.returncode})"
+            except OSError as e:
+                got = f"addr2line could not run: {e}"
+            lines.append(f"{key}(+0x{foff:x}) file offset {file_off:#x} in {local_copy}: {got}")
+    path = os.path.join(res, "exit-backtrace.txt")
+    with open(path, "w") as f:
+        f.write("\n".join(lines) + "\n")
+    return path
 
 
 def end_ids_of(ctx):
@@ -534,6 +614,10 @@ def stage_pair(ctx, plan=False):
             run["front_clean_exit"] = clean or plan
             run["front_exit"] = getattr(front, "exit", None)
             if not plan:
+                run["exit_backtrace"] = os.path.relpath(write_exit_backtrace(ctx, tag, run["front_exit"]), ROOT)
+                if not clean:
+                    pair.say("the front end did not exit clean; the faulting frame: " + run["exit_backtrace"])
+            if not plan:
                 ok, ws = pair.idle()
                 if not ok:
                     raise RuntimeError(f"GPU memory did not return to idle after the front end: {ws}")
@@ -569,18 +653,12 @@ def stage_pair(ctx, plan=False):
 
 
 def write_summary(ctx, results):
-    ok = all(results.get(s, {}).get("pass") for s in STAGES)
-    with open(os.path.join(ctx["res"], "summary.json"), "w") as f:
-        json.dump({"recipe": ctx["recipe"].name, "host": socket.gethostname(), "date": sf.now(), "pass": ok, "stages": results}, f, indent=1)
-        f.write("\n")
+    ok = SM.all_pass(STAGES, results)
+    SM.write_json(ctx["res"], {"recipe": ctx["recipe"].name, "host": socket.gethostname(), "date": sf.now(), "pass": ok, "stages": results}, ctx=ctx)
     lines = [f"# Front end gate (StrixFold executor): {ctx['recipe'].name}", "",
              f"Host {socket.gethostname()}, {sf.now()}. Stages run: {', '.join(results) or 'none'}; not run: "
              f"{', '.join(s for s in STAGES if s not in results) or 'none'}.", ""]
-    for s in STAGES:
-        if s in results:
-            r = results[s]
-            lines.append(f"- **{s}**: {'PASS' if r.get('pass') else 'FAIL'}" + (f" - {r['blocked']}" if r.get("blocked") else "")
-                         + (f" - {r['error']}" if r.get("error") else ""))
+    lines += SM.stage_bullets(STAGES, results)
     b = results.get("build", {})
     if b.get("binary"):
         lines += ["", f"Built `{ctx['cfg']['serve']['binary']}`: {b['binary']['bytes']} bytes, sha256 {b['binary']['sha256'][:16]}; "
@@ -606,8 +684,7 @@ def write_summary(ctx, results):
                      f"last line: `{x['last_step']}`)" if (x := run.get("front_exit")) else "") + ".",
                   f"Recorded: the sampled request's tokens equal the origin's: {run.get('sampled_equal_native')}"
                   + (f" (the origin's server: {run['native_sampled']['error']})" if isinstance(run.get("native_sampled"), dict) and run["native_sampled"].get("error") else "") + "."]
-    with open(os.path.join(ctx["res"], "summary.md"), "w") as f:
-        f.write("\n".join(lines) + "\n")
+    SM.write_md(ctx["res"], lines)
     return ok
 
 

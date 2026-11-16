@@ -7,11 +7,11 @@
 # stay OFF until the chunk-size drift (G4: KL 0.05 at the first decode position between 4,096- and 16,384-row chunks)
 # is explained.
 name        = "ornith397.prefill-best"
-description = "Ornith-1.5 397B prompt passes: grouped experts + dense projections on kernel.flerp.moe_kgrouped, F16, and the GQA WMMA prompt attention (FLERP_MOE_GROUPED=1, FLERP_DENSE_GROUPED=1, FLERP_ATTN_GQA=1), the origin's 4,096-row chunk bound"
+description = "Ornith-1.5 397B prompt passes: grouped experts + dense projections on kernel.flerp.moe_kgrouped, F16, and the GQA WMMA prompt attention, plus live-tile items, the tiled prompt router and the 16-byte MoE combine (FLERP_MOE_GROUPED=1, FLERP_DENSE_GROUPED=1, FLERP_ATTN_GQA=1, FLERP_KG_LIVE=1, FLERP_ROUTER_TILED=1, FLERP_MOE_COMBINE_FAST=1; card 5083008fe9), the origin's 4,096-row chunk bound"
 model       = "ornith-1.5-397b"
 areas       = ["prefill", "ttft"]
 includes    = []
-kernels     = ["moe_kgrouped 412bb79", "attn_wmma_gqa 136a3bf"]
+kernels     = ["moe_kgrouped 3dbd959", "attn_wmma_gqa 136a3bf", "moe_kquant 379fc3a", "qwen35moe moe_combine 6e95ab2"]
 
 [stage]
 
@@ -19,3 +19,6 @@ kernels     = ["moe_kgrouped 412bb79", "attn_wmma_gqa 136a3bf"]
 FLERP_MOE_GROUPED   = "1"
 FLERP_DENSE_GROUPED = "1"
 FLERP_ATTN_GQA      = "1"
+FLERP_KG_LIVE       = "1"
+FLERP_ROUTER_TILED  = "1"
+FLERP_MOE_COMBINE_FAST = "1"

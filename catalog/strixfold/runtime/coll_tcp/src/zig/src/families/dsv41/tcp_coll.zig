@@ -9,7 +9,7 @@
 //! transport's settings and refuses the open on a difference, naming the fields; then the data links connect with the
 //! session epoch both ranks drew. Settings (environment, read by both ranks, compared in the handshake):
 //!   TF_TP_DATA_PORT   first data port (default: the control link's port + 16; link i uses port + i)
-//!   TF_TP_STRIPE      rank 0's address on the second cable, e.g. 10.30.1.1 (default: one data link)
+//!   TF_TP_STRIPE      rank 0's address on the second cable, e.g. 203.0.113.1 (default: one data link)
 //!   TF_COLL_STRIPE_MIB  payloads of at least this many MiB are split over both links (default 4)
 //!   TF_COLL_RTO_MIN_US  TCP_RTO_MIN_US per data socket (default 8000; 0 keeps the kernel's 200 ms floor)
 //!   TF_COLL_PROGRESS_MS a call fails with Timeout when nothing moves for this long (default 2000)

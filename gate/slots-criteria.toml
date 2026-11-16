@@ -1,0 +1,16 @@
+# Card 331a35995a (PF-SLOTS): pass criteria for a two-slot scheduling or arbiter change in strixite, fixed on
+# 2026-11-15 before any hardware run. They cannot be loosened after a run. tools/slots-replay.py compare reads [pass].
+#
+# Baseline = the fleet binary (strix_server.v070tg = strixite fd2c51d) at --total-slots 2 on the same GPU, the same two
+# streams (tools/slots-replay.py's fixed prompt set, greedy, seed 1234), ABAB with the candidate, 3 reps each.
+
+[pass]
+# aggregate decode tok/s of both streams over the main phase's wall, median of the reps
+aggregate_ratio_min   = 1.03   # the candidate's median at or above baseline x 1.03 (run-to-run spread is under 2%)
+aggregate_ratio_floor = 0.99   # and no rep below baseline x 0.99
+# a new thread's time to first token while the other slot is mid-prefill (the probe: a 10k-token prefill, A 2.5 s in)
+ttft_slack_s          = 0.050  # candidate median at or below the baseline median + 50 ms
+# token identity: the server's --capture-dir ids, matched by prompt ids, equal on every matched prompt
+identity = "generated ids identical to the baseline's on every matched prompt, at --total-slots 2 and at --total-slots 1"
+# the one-slot path stays as it was: bit-identical ids and a median decode tok/s inside the baseline's run-to-run range
+one_slot = "1-slot run: ids identical, median decode tok/s within [min, max] of the baseline's 1-slot reps"

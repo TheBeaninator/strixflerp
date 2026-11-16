@@ -54,6 +54,7 @@ typedef struct flerp_loop_verify { /* one verify, for a trace */
 } flerp_loop_verify;
 
 typedef struct flerp_loop_hooks {
+    uint32_t size;            /* sizeof(flerp_loop_hooks) as the caller compiled it: hooks past `size` are absent (null) */
     void *ctx;
     /* Required. The token of row `row` of `rows`, which hold the loop's delivery. Called once a row, in sequence
      * order, only for rows whose token the reply may take. */
@@ -115,6 +116,9 @@ typedef struct flerp_loop_result {
     int64_t forwards, verifies, redone, drafted, accepted;
 } flerp_loop_result;
 
+/* Every struct here starts with `size` = sizeof the struct as the caller compiled it, as include/flerp/executor.h's do,
+ * so fields can be appended: the loop reads `hooks` only as far as hooks->size (a hook past it is null) and refuses
+ * (FLERP_E_ARGUMENT, result->error set) a `size` short of `pick` or a null `pick`. */
 flerp_status flerp_decode_loop(const flerp_loop *loop, const flerp_loop_hooks *hooks, flerp_loop_result *result);
 
 #ifdef __cplusplus

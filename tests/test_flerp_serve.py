@@ -140,6 +140,73 @@ class LoopOverTheStandIn(unittest.TestCase):
                     self.assertGreater(c["loop_drop_dropped_verifies"], 0)
                 self.assertEqual(sum(s[2] for s in c["loop_steps"]), len(c["loop"]))
 
+    def test_a_hold_shorter_than_asked_survives_a_redo(self):
+        """Held form, an executor with a depth rule of its own (hold_cap=3 under --mtp-draft 7, as qwen35moe_abi
+        draft_value=on): the loop takes each round's k from the verify's rows, and a dropped round drafted and verified
+        again compares equal. Before the fix the redo asked the full depth, got a shorter k2 and failed with
+        "the draft chain changed after a drop"."""
+        rc, j = self.run_case("held", "candidates", ("reply=200", "hold_cap=3"))
+        c = j["cases"][0]
+        self.assertEqual((rc, j["failures"]), (0, 0), j)
+        self.assertGreater(c["loop_drop_dropped_verifies"], 0)
+        self.assertEqual(c["loop_drop"], c["loop"])
+        self.assertEqual(c["loop"], c["plain"][:len(c["loop"])])
+        self.assertEqual(max(s[0] for s in c["loop_steps"] if s[0] != 255), 3)    # never more than the executor held
+
+    def test_hooks_carry_their_size(self):
+        """flerp_loop_hooks starts with size like every other struct; the loop refuses a size short of pick or a null
+        pick (FLERP_E_ARGUMENT, result.error set) and reads hooks only as far as size."""
+        with open(os.path.join(ROOT, "include", "flerp", "decode_loop.h")) as f:
+            self.assertRegex(f.read(), r"typedef struct flerp_loop_hooks \{\s*uint32_t size;")
+        for path in ("executor/conformance/src/flerp/executor/conformance.c", "serve/http/src/flerp/serve/main.cpp"):
+            with open(os.path.join(FLERP, path)) as f:
+                self.assertIn("H.size = sizeof(H)", f.read(), path)
+        prog = os.path.join(self.dir, "hooks.c")
+        with open(prog, "w") as f:
+            f.write(r'''
+#include "flerp/decode_loop.h"
+#include <stdio.h>
+#include <string.h>
+static flerp_token pick(void *ctx, const flerp_rows *rows, int64_t row) { (void)ctx; return rows->tokens[row]; }
+static int cancelled(void *ctx) { (void)ctx; return 1; }   /* past a short size: must not be called */
+int main(void) {
+    flerp_kv kv[] = {{"vocab", "100"}, {"reply", "3"}};
+    flerp_open_args oa = {sizeof(oa), "t", kv, 2};
+    flerp_executor *ex;
+    flerp_caps caps; flerp_token tok[16]; uint8_t nan[16]; flerp_rows rows; flerp_seq_args sa; flerp_want w; int32_t seq;
+    flerp_loop L; flerp_loop_hooks H; flerp_loop_result R;
+    const flerp_token prompt[2] = {1, 2}, end = 99;
+    if (flerp_open(&oa, &ex) != FLERP_OK) return 1;
+    memset(&caps, 0, sizeof(caps)); caps.size = sizeof(caps);
+    if (flerp_get_caps(ex, &caps) != FLERP_OK) return 2;
+    memset(&sa, 0, sizeof(sa)); sa.size = sizeof(sa); sa.max_new = 8;
+    if (flerp_seq_new(ex, &sa, &seq) != FLERP_OK) return 3;
+    memset(&rows, 0, sizeof(rows)); rows.size = sizeof(rows); rows.tokens = tok; rows.tokens_cap = 16; rows.nan = nan; rows.nan_cap = 16;
+    memset(&w, 0, sizeof(w)); w.size = sizeof(w); w.delivery = FLERP_OUT_TOKENS; w.rows = 1; w.n_valid = 100;
+    if (flerp_forward(ex, seq, prompt, 2, &w, &rows, NULL, 0) != FLERP_OK) return 4;
+    memset(&L, 0, sizeof(L)); L.size = sizeof(L); L.ex = ex; L.seq = seq; L.caps = &caps; L.delivery = FLERP_OUT_TOKENS; L.n_valid = 100;
+    L.rows = &rows; L.max_tokens = 8; L.end_ids = &end; L.n_end = 1;
+    memset(&H, 0, sizeof(H)); H.pick = pick; H.cancelled = cancelled;
+    memset(&R, 0, sizeof(R)); R.size = sizeof(R);
+    H.size = (uint32_t)offsetof(flerp_loop_hooks, pick);                    /* short of pick */
+    if (flerp_decode_loop(&L, &H, &R) != FLERP_E_ARGUMENT || R.error == NULL) return 5;
+    H.size = sizeof(H); H.pick = NULL;
+    if (flerp_decode_loop(&L, &H, &R) != FLERP_E_ARGUMENT || R.error == NULL) return 6;
+    H.pick = pick; H.size = (uint32_t)FLERP_HAS(flerp_loop_hooks, pick);      /* cancelled lies past size: absent */
+    if (flerp_decode_loop(&L, &H, &R) != FLERP_OK || R.finish == NULL || strcmp(R.finish, "stop") != 0 || R.completion < 1) return 7;
+    H.size = sizeof(H);                                                      /* the whole struct: cancelled runs first */
+    if (flerp_seq_reset(ex, seq) != FLERP_OK || flerp_forward(ex, seq, prompt, 2, &w, &rows, NULL, 0) != FLERP_OK) return 8;
+    if (flerp_decode_loop(&L, &H, &R) != FLERP_OK || strcmp(R.finish, "cancelled") != 0) return 9;
+    flerp_close(ex);
+    return 0;
+}
+''')
+        exe = os.path.join(self.dir, "hooks")
+        subprocess.run(["cc", "-std=c11", "-D_POSIX_C_SOURCE=200809L", "-Wall", "-Werror", "-I", os.path.join(ROOT, "include"), prog,
+                        os.path.join(FLERP, "runtime/decode_loop/src/flerp/decode_loop.c"),
+                        os.path.join(FLERP, "executor/fake_abi/src/flerp/executor/fake_abi.c"), "-lm", "-o", exe], check=True)
+        self.assertEqual(subprocess.run([exe]).returncode, 0)
+
     def test_end_of_turn_stops_the_loop(self):
         rc, j = self.run_case("held", "tokens", ("reply=20", "end=4999"))
         c = j["cases"][0]
@@ -242,6 +309,144 @@ class Version3(unittest.TestCase):
                 text = f.read()
             self.assertRegex(text, r"abi = 2;", path)
             self.assertNotIn("FLERP_EXECUTOR_ABI;", text, path)
+
+
+def _reply_harness():
+    """The scripted stand-in front end's build and tokenizer (tests/test_flerp_reply.py), or None where they are not here."""
+    from tests import test_flerp_reply as r
+    if not (shutil.which("g++") and shutil.which("gcc") and os.path.isfile(r.TOKENIZER)):
+        return None
+    return r
+
+
+@unittest.skipUnless(_reply_harness(), "needs g++ and the model's tokenizer.json (FLERP_TEST_TOKENIZER)")
+class FrontEndUnderARouter(unittest.TestCase):
+    """serve.flerp.http under a router that times out and retries (FLERP-FRONT-ROUTER, card c2567775e3): the scripted
+    stand-in with delay_ms=100 holds the generation lane for 0.1 s a token, so the queue, the refusal, /health under
+    load and a client that leaves can be seen without a model."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.r = _reply_harness()
+        cls.dir = tempfile.mkdtemp(prefix="flerp-front-")
+        cls.exe = cls.r.build(cls.dir)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.dir, ignore_errors=True)
+
+    def start(self, *args, delay_ms=100):
+        import time
+        import urllib.request
+        port = self.r.free_port()
+        log = open(os.path.join(self.dir, f"server-{port}.log"), "w")
+        proc = subprocess.Popen([self.exe, "--port", str(port), "--model-id", "fake", f"text.tokenizer={self.r.TOKENIZER}", "executor.vocab=248077",
+                                 "executor.lo=1000", "executor.hi=30000", "executor.reply=4000", f"executor.end={self.r.END}",
+                                 f"executor.delay_ms={delay_ms}", *args], stdout=log, stderr=subprocess.STDOUT)
+        self.addCleanup(lambda: (proc.kill() if proc.poll() is None else None, log.close()))
+        for _ in range(300):
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=5).read()
+                return proc, port
+            except OSError:
+                time.sleep(0.1)
+        raise RuntimeError("the server did not start: " + open(log.name).read())
+
+    @staticmethod
+    def health(port):
+        import urllib.request
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=3) as r:
+            return json.loads(r.read())
+
+    @staticmethod
+    def post(port, max_tokens):
+        import urllib.error
+        import urllib.request
+        body = json.dumps({"prompt": "hello", "max_tokens": max_tokens, "temperature": 0}).encode()
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/v1/completions", body, {"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return r.status, dict(r.headers), json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, dict(e.headers), json.loads(e.read())
+
+    @staticmethod
+    def leave(port, max_tokens, after_s):
+        """A client that sends a request and goes away: a raw socket closed after `after_s` without reading."""
+        import socket
+        import time
+        body = json.dumps({"prompt": "hello", "max_tokens": max_tokens, "temperature": 0}).encode()
+        s = socket.create_connection(("127.0.0.1", port))
+        s.sendall(b"POST /v1/completions HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n" % len(body) + body)
+        time.sleep(after_s)
+        s.close()
+
+    @staticmethod
+    def until(pred, seconds):
+        import time
+        t0 = time.time()
+        while not pred():
+            if time.time() - t0 > seconds:
+                return False
+            time.sleep(0.05)
+        return True
+
+    def test_a_client_that_leaves_cancels_its_request(self):
+        """A non-streaming request whose client has gone stops between decode steps (is_connection_closed polled by the
+        waiting HTTP thread), not at max_tokens: 400 tokens at 0.1 s each would run 40 s; it is over within 3 s."""
+        proc, port = self.start()
+        self.leave(port, 400, 0.5)
+        self.assertTrue(self.until(lambda: not self.health(port)["busy"], 3))
+        h = self.health(port)
+        self.assertEqual((h["requests_cancelled"], h["requests_served"], h["queued"]), (1, 1, 0))
+
+    def test_the_queue_is_bounded_and_health_never_waits(self):
+        """--queue 1: A runs, B waits, C is refused with 503 + Retry-After (the router's own wait) at once; /health
+        answers under load with queued 1; B's client leaves while it waits and B is dropped before it starts."""
+        import threading
+        import time
+        proc, port = self.start("--queue", "1", "--retry-after", "7")
+        out = {}
+        a = threading.Thread(target=lambda: out.__setitem__("A", self.post(port, 30)))
+        a.start()
+        self.assertTrue(self.until(lambda: self.health(port)["busy"], 3))
+        b = threading.Thread(target=lambda: self.leave(port, 30, 1.5))
+        b.start()
+        self.assertTrue(self.until(lambda: self.health(port)["queued"] == 1, 3))
+        t0 = time.time()
+        h = self.health(port)
+        self.assertLess(time.time() - t0, 1.0)
+        self.assertEqual((h["busy"], h["queued"], h["queue_max"]), (True, 1, 1))
+        t0 = time.time()
+        status, headers, body = self.post(port, 30)
+        self.assertLess(time.time() - t0, 1.0)
+        self.assertEqual((status, headers.get("Retry-After"), body["error"]["code"]), (503, "7", "queue_full"))
+        b.join()
+        a.join(30)
+        self.assertEqual(out["A"][0], 200)
+        self.assertTrue(self.until(lambda: self.health(port)["requests_dropped"] == 1, 3))
+        h = self.health(port)
+        self.assertEqual((h["requests_served"], h["requests_refused"], h["requests_cancelled"], h["busy"]), (1, 1, 0, False))
+
+    def test_health_says_whether_the_think_end_guard_runs(self):
+        """The guard bans end ids out of a logits row; with --delivery tokens the executor draws and the host sees no
+        row, so /health says so instead of the guard being skipped in silence."""
+        _, port = self.start(delay_ms=0)
+        self.assertEqual(self.health(port)["think_end_guard"], "on")
+        _, port = self.start("--delivery", "tokens", delay_ms=0)
+        self.assertTrue(self.health(port)["think_end_guard"].startswith("unavailable: the executor draws its tokens"))
+        _, port = self.start("--think-end-guard", "off", delay_ms=0)
+        self.assertEqual(self.health(port)["think_end_guard"], "off")
+
+    def test_sigterm_stops_the_server_from_the_main_loop(self):
+        """The handler only sets a flag; the 200 ms main loop stops the server and the process exits 0, also mid-request."""
+        import signal
+        import threading
+        proc, port = self.start()
+        threading.Thread(target=lambda: self.post(port, 100), daemon=True).start()
+        self.assertTrue(self.until(lambda: self.health(port)["busy"], 3))
+        proc.send_signal(signal.SIGTERM)
+        self.assertEqual(proc.wait(timeout=10), 0)
 
 
 class GateComparisons(unittest.TestCase):

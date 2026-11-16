@@ -1,0 +1,30 @@
+# PREFILL-LRC (card 5083008fe9, parent PREFILL-ORNITH 8ef0a645e7; depends on 9506f4f116, c6473d6063, 2dc55e67f0): one
+# prefill arm Z = G + live-tile items (L) + tiled prompt router (R) + 16-byte MoE combine with one ToF16 per shared input
+# (C). PM decision 2026-11-14: the three single-lever champion proposals are withdrawn and superseded by this arm.
+# Committed before any hardware run. Shape: docs/EXPERIMENTS.md.
+
+[hypothesis]
+prediction = "the levers touch disjoint kernels and each kept G's bits, so their measured savings add: G's 2,049 ms a 4,096-row 35B chunk minus experts 119, router 259, combine 209, ToF16 29 = ~1,430 ms; Z/G ~1.45x at 2,048 tokens and ~1.40x at 16,384 (attention at depth untouched)"
+confirmed_at = "Z/G >= 1.35x at both 2,048 and 16,384 tokens"
+refuted_below = "Z/G < 1.25x at either"
+
+[criteria]
+Z1 = "identity (gate/lever_gate.py run --arm Z, one load): every recorded step's logits sha256 and the generated ids of every Z rep equal G's first rep, the 8 fidelity prompts of gate/prefill_ornith_35b.py and a 16,384-id prompt; any mismatch fails"
+Z2 = "speed, same process, median of 3 interleaved reps: Z tok/s >= 1.25 x G at 2,048 tokens and >= 1.25 x G at 16,384"
+Z3 = "per-kernel profile (gate/prefill_kprof.py run, KPROF_ARMS=Z,Z,Z,Z,Z, 2 warm-ups + 3 measured) valid under gate/prefill-kprof.toml criteria.profile (rc 0, one chunk a rep, spread <= 0.10 on every class >= 5 %, profiled first_token_s <= 1.15 x unprofiled); per class ms, share and TFLOPS reported against p2"
+Z4 = "ISA (tools/isa-scan.py on this branch's recipe build, rocm-7.2.4 and therock-10.1): 0 scratch in GroupedKernel<.., true>, GateLogitsTiledKernel and MoeCombineVec4Kernel"
+champion = "only if Z1-Z4 all pass: flerp champion propose ornith397.prefill-best (FLERP_KG_LIVE=1, FLERP_ROUTER_TILED=1, FLERP_MOE_COMBINE_FAST=1) for the prefill area; fidelity is G's KL 0.00399 because the logits are bit-identical; never promoted by hand"
+start_rule = "each GPU job runs under gate/loadwait.sh: starts at 1-min loadavg <= 6 (at most 90 min), the sample that passed recorded in the job log; a disturbed Z3 run is re-run, never judged on its median"
+
+[resources]
+nodes   = "control-node GPU via tools/gpu-queue.sh (laptop main's /dev/kfd busy test), never forcing a holder; no idle holds"
+hold    = "none: queued GPU jobs, ~5 min expected, TTL 7 min each"
+weights = "21.7 GB Qwen3.6-35B-A3B-Q4_K_M.gguf already on control-node NVMe /data/models/qwen36-35b-a3b (pod-weights), staged before the hold"
+loads   = "2 because the gate (G vs Z in one process) and the profiler-wrapped profile must be separate processes; every rep inside its process"
+reps    = "3 interleaved because the bar is 25 % and the undisturbed per-rep spread is under 5 %"
+shares  = "the pod's own GPU jobs and other gpu-queue lanes wait their turn; darkstudio-comfyui is never forced; no worker or K touched"
+cleanup = "gpu-queue jobs exit and release the GPU; no placements; control-node doctor green afterwards"
+
+[monitor]
+milestones = "jobs start within 60 min of queueing (after the load rule); done 15 min after start; watched every <= 15 min"
+stop_rule  = "stop at the first fault"

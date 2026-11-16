@@ -39,15 +39,46 @@ RECIPE_KEYS = {"name": str, "model": str, "reference": dict, "toolchain": str, "
 RECIPE_OPTIONAL = {"include": dict, "deploy": dict, "gate": dict, "build": dict, "overlay": dict}
 
 
+CYCLE = "dependency cycle: "
+
+
+def cycle_origin(msg):
+    """The one origin a dependency-cycle warning stays inside, or None (not a cycle, or a cycle across origins).
+    A cycle inside a vendored origin is a fact of that origin's sources (headers including each other) and is reported
+    by the resolver, not refused; it is its own class here so the warnings about this tree stand out."""
+    if not msg.startswith(CYCLE):
+        return None
+    origins = {mid.split(".")[1] for mid in msg[len(CYCLE):].split(" -> ") if mid.count(".") >= 2}
+    if len(origins) != 1:
+        return None
+    origin = origins.pop()
+    return origin if origin in ORIGINS and origin != "flerp" else None
+
+
 class Report:
     def __init__(self):
         self.errors, self.warnings = [], []
+        self.cycles = {}          # vendored origin -> ["where: dependency cycle: a -> b -> a", ...], one entry per recipe it is seen in
 
     def error(self, where, msg):
         self.errors.append(f"{where}: {msg}")
 
     def warn(self, where, msg):
-        self.warnings.append(f"{where}: {msg}")
+        origin = cycle_origin(msg)
+        if origin is not None:
+            self.cycles.setdefault(origin, []).append(f"{where}: {msg}")
+        else:
+            self.warnings.append(f"{where}: {msg}")
+
+    def cycle_lines(self):
+        """One line per vendored origin: how many cycle warnings, how many distinct cycles, in how many recipes."""
+        out = []
+        for origin, ws in sorted(self.cycles.items()):
+            distinct = {w.split(CYCLE, 1)[1] for w in ws}
+            recipes = {w.split(": ", 1)[0] for w in ws}
+            out.append(f"{len(ws)} dependency cycle warning(s) inside origin {origin}: {len(distinct)} distinct cycle(s) in "
+                       f"{len(recipes)} recipe(s), the origin's own headers (reported, not refused; --all-warnings lists them)")
+        return out
 
 
 def _typed(rep, where, table_name, table, required, optional):

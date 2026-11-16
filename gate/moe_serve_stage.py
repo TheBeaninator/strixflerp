@@ -31,6 +31,7 @@ import urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "gate"))
+import summary as SM  # noqa: E402  (summary.json / summary.md, config_sha256)
 
 STAGES = ("check", "build", "conformance", "serve1", "reference", "serve2", "tcp", "shutdown")
 SERVE_STAGE = {"serve1": "world1", "serve2": "loopback2", "tcp": "tcp2"}
@@ -659,9 +660,7 @@ def stage_shutdown(ctx):
 
 # --- summary ----------------------------------------------------------------------------------------------------------
 def write_summary(ctx, results):
-    with open(os.path.join(ctx["res"], "summary.json"), "w") as f:
-        json.dump({"stages": results, "disk_reads": ctx["disk_all"]}, f, indent=1)
-        f.write("\n")
+    SM.write_json(ctx["res"], {"stages": results, "disk_reads": ctx["disk_all"]}, ctx=ctx)
     utc = ctx["S"].utc
     L = [f"# Gate of the executor ABI over the stages: {ctx['recipe'].name}", "",
          f"Host {os.uname().nodename}, written {utc()}. Criteria: `[criteria]` of `{ctx['config']}` (committed before the first GPU run). "
@@ -696,8 +695,7 @@ def write_summary(ctx, results):
     if holds:
         L += ["", "## GPU holds", "", "| for | from | to | seconds |", "|---|---|---|---|"]
         L += [f"| {h['for']} | {h['from']} | {h['to']} | {h['seconds']} |" for h in holds]
-    with open(os.path.join(ctx["res"], "summary.md"), "w") as f:
-        f.write("\n".join(L) + "\n")
+    SM.write_md(ctx["res"], L)
 
 
 def main():

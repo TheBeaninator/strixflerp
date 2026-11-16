@@ -17,6 +17,9 @@ import re
 import struct
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import summary as SM  # noqa: E402  (census.json / summary.md, config_sha256)
+
 GIB = float(1 << 30)
 # ggml type id -> (name, values a block, bytes a block): ggml.c type traits at llama.cpp 86a24a1.
 GGML_TYPES = {
@@ -417,8 +420,7 @@ def write_summary(path, name, h, c, plans, est, budget):
         L.append(f"Largest stage {gib(worst)} GiB of weights; not loaded: {len(p['unloaded'])} tensors, {gib(sum(u['bytes'] or 0 for u in p['unloaded']))} GiB.")
     if c["layout_problems"]:
         L += ["", "## Problems in the tensor table", ""] + [f"- {x}" for x in c["layout_problems"]]
-    with open(path, "w") as fh:
-        fh.write("\n".join(L) + "\n")
+    SM.write_md(os.path.dirname(path), L, name=os.path.basename(path))
 
 
 def compact(nums):
@@ -481,9 +483,7 @@ def main():
            "tensors": h["tensors"]}
     if a.out:
         os.makedirs(a.out, exist_ok=True)
-        with open(os.path.join(a.out, "census.json"), "w") as f:
-            json.dump(doc, f, indent=1)
-            f.write("\n")
+        SM.write_json(a.out, doc, name="census.json")       # no gate TOML: config_sha256 is null
         write_summary(os.path.join(a.out, "summary.md"), a.name or os.path.basename(a.gguf), h, c, plans, est, a.budget_gib)
         print(f"wrote {a.out}/census.json and summary.md; header bytes read {h['header_bytes_read']}")
     else:

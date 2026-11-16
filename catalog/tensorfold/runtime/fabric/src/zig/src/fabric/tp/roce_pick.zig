@@ -532,7 +532,7 @@ test "hca over a real bootstrap: both ranks print their peer-linked ports; an ex
     try std.testing.expectError(error.NoSharedSubnet, lines[1]);
 }
 
-/// Three Sparks cabled in a triangle, no switch: each port's two functions on the link's two /24s (10.41.ab, 10.10.ab).
+/// Three Sparks cabled in a triangle, no switch: each port's two functions on the link's two /24s (10.41.ab, 10.42.ab).
 const triangle = [3][4]rv.Port{ .{
     port("rocep1s0f0", true, .{ 10, 41, 13, 1 }),
     port("rocep1s0f1", true, .{ 10, 41, 12, 1 }),

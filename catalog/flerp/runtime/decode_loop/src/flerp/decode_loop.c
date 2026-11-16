@@ -136,7 +136,20 @@ static flerp_status feed_before(const flerp_loop *L, const flerp_loop_hooks *H, 
     return FLERP_OK;
 }
 
-flerp_status flerp_decode_loop(const flerp_loop *L, const flerp_loop_hooks *H, flerp_loop_result *R) {
+flerp_status flerp_decode_loop(const flerp_loop *L, const flerp_loop_hooks *hooks, flerp_loop_result *R) {
+    /* the hooks as far as the caller's size: a caller compiled against a shorter struct has the later hooks null */
+    flerp_loop_hooks hooks_known;
+    const flerp_loop_hooks *H = &hooks_known;
+    memset(&hooks_known, 0, sizeof(hooks_known));
+    if (hooks == NULL || hooks->size < FLERP_HAS(flerp_loop_hooks, pick)) {
+        R->finish = NULL, R->error = "flerp_loop_hooks is null or its size is short of pick";
+        return FLERP_E_ARGUMENT;
+    }
+    memcpy(&hooks_known, hooks, hooks->size < sizeof(hooks_known) ? hooks->size : sizeof(hooks_known));
+    if (H->pick == NULL) {
+        R->finish = NULL, R->error = "flerp_loop_hooks.pick is required";
+        return FLERP_E_ARGUMENT;
+    }
     const int step_form = (L->caps->flags & FLERP_CAP_DRAFT_STEP) != 0 && L->drafts > 0;
     const int held_form = !step_form && (L->caps->flags & FLERP_CAP_DRAFT_HELD) != 0 && L->drafts > 0;
     int64_t depth = L->drafts;
@@ -226,9 +239,17 @@ flerp_status flerp_decode_loop(const flerp_loop *L, const flerp_loop_hooks *H, f
                     memcpy(again, ids, sizeof(ids));
                     TRY(flerp_drop(L->ex, L->seq));
                     ++R->redone, redone = 1;
-                    const int k2 = draft(L, H, step_form, steps, ids);
+                    int k2 = draft(L, H, step_form, steps, ids);
                     if (k2 < 0) return (flerp_status)k2;
-                    if (k2 == k) TRY(verify(L, H, step_form, ids, k));
+                    if (step_form) {
+                        if (k2 == k) TRY(verify(L, H, step_form, ids, k));
+                    } else {
+                        /* held form: ask the depth of the first round again (k2 == steps) and take the round's k from
+                           the returned rows as the first verify did, so an executor that held fewer than asked
+                           (qwen35moe_abi draft_value=on) compares equal rather than failing as a changed chain */
+                        TRY(verify(L, H, step_form, ids, k2));
+                        if (L->rows->rows >= 1 && L->rows->rows < k2 + 1) k2 = (int)L->rows->rows - 1;
+                    }
                     if (k2 != k || L->rows->rows != k + 1 || memcmp(again, ids, (size_t)(k + 1) * sizeof(flerp_token))) {
                         R->error = "the draft chain changed after a drop";
                         return FLERP_E_FAILED;

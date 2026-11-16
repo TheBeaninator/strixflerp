@@ -28,6 +28,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import strixite_recipe as sr  # noqa: E402
+import summary as SM  # noqa: E402  (results.json / summary.md, config_sha256)
 
 ROOT = sr.ROOT
 
@@ -258,8 +259,7 @@ def write_summary(cfg, ctx, res):
         for r in s.get("runs", []):
             r.pop("generated", None)
             r.pop("steps", None)
-    with open(os.path.join(ctx["results"], "results.json"), "w") as f:
-        json.dump(slim, f, indent=1)
+    SM.write_json(ctx["results"], slim, name="results.json", ctx=ctx)
     L = [f"# Prefill gate: {ctx['name']}", "", f"Host control-node, {sr.utc()}. Config `{ctx['config_rel']}`.", ""]
     for v in res.get("verdicts", []):
         tag = "REPORT" if v.get("report_only") else ("PASS" if v["pass"] else "FAIL")
@@ -286,8 +286,7 @@ def write_summary(cfg, ctx, res):
               "; ".join(f"{s['prompt']} {s['decode_tps_reference']} -> {s['decode_tps_assembled']}" for s in c["speed"])]
     L += ["", "GPU holds: " + "; ".join(f"{h['for']} {h['seconds']} s" for h in res.get("holds", [])),
           f"Storage read by the bench processes: {res.get('io_read_gb', '?')} GB"]
-    with open(os.path.join(ctx["results"], "summary.md"), "w") as f:
-        f.write("\n".join(L) + "\n")
+    SM.write_md(ctx["results"], L)
 
 
 def main():

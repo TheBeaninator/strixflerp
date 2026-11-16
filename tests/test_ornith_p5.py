@@ -26,8 +26,9 @@ class Cleanup(unittest.TestCase):
             self.assertEqual(p.stdout.strip(), "0")
             os.makedirs(bundle)
             exe = os.path.join(bundle, "sleeper")
-            os.symlink("/bin/sleep", exe)
-            child = subprocess.Popen([exe, "30"])
+            # the child is python, not a renamed sleep: uutils coreutils refuses a utility whose argv[0] is another name
+            os.symlink(sys.executable, exe)
+            child = subprocess.Popen([exe, "-c", "import time; time.sleep(30)"])
             try:
                 p = subprocess.run(["bash", "-c", f"pgrep -fc '{pat}'; true"], capture_output=True, text=True)
                 self.assertEqual(p.stdout.strip(), "1")

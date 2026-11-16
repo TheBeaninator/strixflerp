@@ -42,6 +42,8 @@ import time
 import urllib.parse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "gate"))
+import summary as SM  # noqa: E402  (results.json / summary.md, config_sha256)
 VOLATILE = ("id", "created", "timings", "system_fingerprint")
 SKIP_ROUTES = ("/health", "/metrics", "/dashboard", "/stats")   # state of the moment, not a reply
 
@@ -354,9 +356,7 @@ def run(a):
     out["counts"] = {"replayed": len(res), "equal": sum(r["equal"] for r in res), "skipped": len(out["skipped"]),
                      "tokens_compared": sum(r["tokens"]["equal"] is not None for r in res)}
     out["verdict"] = "PASS" if res and all(r["equal"] for r in res) and ta.fresh and tb.fresh else "FAIL"
-    with open(os.path.join(a.out, "results.json"), "w") as f:
-        json.dump(out, f, indent=1)
-        f.write("\n")
+    SM.write_json(a.out, out, name="results.json")       # no gate TOML: config_sha256 is null
     write_summary(out, os.path.join(a.out, "summary.md"))
     return out
 
@@ -385,8 +385,7 @@ def write_summary(out, path):
         for s in out["skipped"]:
             why[s["why"]] = why.get(s["why"], 0) + 1
         L += ["Skipped: " + "; ".join(f"{n} {w}" for w, n in sorted(why.items())), ""]
-    with open(path, "w") as f:
-        f.write("\n".join(L))
+    SM.write_md(os.path.dirname(path), L, name=os.path.basename(path), newline=False)
 
 
 def main(argv=None):

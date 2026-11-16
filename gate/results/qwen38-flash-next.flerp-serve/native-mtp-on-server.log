@@ -53,12 +53,12 @@ startup: config steer-dir = /data/models/strix-infer/steer (flag)
 startup: config cache-xfer = off (default)
 startup: tokenizer /data/models/strix-infer/tok/tokenizer.json (248077 tokens)
 startup: YaRN factor 2: 524288 positions (262144 trained), cos/sin factor 1.0693
-startup: 69.5 GiB of weights loaded in 85.3 s
+startup: 69.5 GiB of weights loaded in 61.2 s
 startup: steering vectors from /data/models/strix-infer/steer: librarian16, librarian20, librarian24, pirate20, villain24
 startup: kv-generations auto: 1024 K/V generations per slot (~0.3 TiB of address space per slot, no RAM); the session is rebuilt on the loaded model (the soft K/V reset) once a slot is within 16 generations of the last
 startup: precision gdn=half-u attention=exact (faster, less exact math than all-exact)
 startup: GPU memory 73.9 GiB in 71 buffer kinds; GiB per kind (>= 64 MiB): strixw data region of 69.46, experts combine partials 0.86, recurrent state snapshot layer 0.42, QSA top-k workspace 0.31, projection 0.25, experts gate|up 0.21, PLE key|value 0.20, attention workspace 0.19, PLE history 0.16, MTP normed streams 0.16, residual streams 0.16, MTP streams 0.16, MTP chain previous streams 0.16, gdn q|k|v 0.16, QSA block scores 0.13, experts swiglu 0.11, recurrent state layer 0.11, gdn normed 0.09, mixer core 0.09, PLE n-gram rows (host) 0.08
-startup: memory: MemAvailable 41.7 GiB after loading (GPU buffers 73.9 GiB, n-gram row cache 3.0 GiB) less 0.3 GiB held for one slot's K/V at full capacity (paged: mapped as conversations fill it); needs the floor 4.0 GiB (no prompt cache) (low-memory fail: short of it, startup fails; adapt would start with the RAM caches turned down)
+startup: memory: MemAvailable 23.3 GiB after loading (GPU buffers 73.9 GiB, n-gram row cache 3.0 GiB) less 0.3 GiB held for one slot's K/V at full capacity (paged: mapped as conversations fill it); needs the floor 4.0 GiB (no prompt cache) (low-memory fail: short of it, startup fails; adapt would start with the RAM caches turned down)
 startup: think-block / tool-call guard off, literal tags on, think close before a call off
 startup: thinking nudge off
 startup: thinking on for requests that don't say
@@ -73,9 +73,9 @@ prompt      21 tokens, raw completion (no chat template)
 max_tokens  256
 sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed)
 resume      none: no saved state is a prefix of this prompt - all 21 tokens prefilled
-prefill             - t/s   21 new tokens in 0.24 s
-generate         44.4 t/s   256 tokens (think 0) in 5.75 s
-done             5.98 s total, 0.24 s first token, length, queue 0.00 s
+prefill             - t/s   21 new tokens in 3.92 s
+generate         38.4 t/s   256 tokens (think 0) in 6.64 s
+done            10.56 s total, 3.92 s first token, length, queue 0.00 s
 ----------------------------------------
  
 ----------------------------------------
@@ -86,9 +86,9 @@ prompt      85 tokens, 1 message, 0 tools, thinking on
 max_tokens  256
 sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed)
 resume      none: no saved state is a prefix of this prompt - all 85 tokens prefilled
-prefill             - t/s   85 new tokens in 0.38 s
-generate         51.1 t/s   165 tokens (think 130) in 3.21 s
-done             3.59 s total, 0.38 s first token, stop, queue 0.00 s
+prefill             - t/s   85 new tokens in 0.47 s
+generate         57.0 t/s   165 tokens (think 130) in 2.88 s
+done             3.35 s total, 0.47 s first token, stop, queue 0.00 s
 ----------------------------------------
  
 ----------------------------------------
@@ -100,7 +100,7 @@ max_tokens  256
 sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed)
 resume      none: no saved state is a prefix of this prompt - all 21 tokens prefilled
 prefill             - t/s   21 new tokens in 0.16 s
-generate         49.3 t/s   168 tokens (think 0) in 3.38 s
+generate         49.3 t/s   168 tokens (think 0) in 3.39 s
 done             3.55 s total, 0.16 s first token, stop, queue 0.00 s
 ----------------------------------------
  
@@ -112,12 +112,9 @@ prompt      4,971 tokens, 2 messages, 0 tools, thinking off
 max_tokens  256
 sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, seed)
 resume      none: no saved state is a prefix of this prompt - all 4,971 tokens prefilled
-prefill           983 t/s   4,971 new tokens in 5.06 s
-generate         59.4 t/s   256 tokens (think 0) in 4.29 s
-ple         84,368 row lookups, 35,550 distinct, 13.0% from the RAM row cache
-            30,925 read from the table file on demand, 728 prefetched
-            WARNING: forwards waited for rows 52 times, 2.051 s in total
-done             9.35 s total, 5.06 s first token, length, queue 0.00 s
+prefill         1,341 t/s   4,971 new tokens in 3.71 s
+generate         67.9 t/s   256 tokens (think 0) in 3.76 s
+done             7.46 s total, 3.71 s first token, length, queue 0.00 s
 ----------------------------------------
  
 ----------------------------------------
@@ -130,8 +127,8 @@ sampling    temperature 0, top_p 0.95, top_k 20, seed 1234 (asked: temperature, 
 logit_bias  1 tokens: 1 down (to -100)
 resume      none: no saved state is a prefix of this prompt - all 21 tokens prefilled
 prefill             - t/s   21 new tokens in 0.13 s
-generate         52.0 t/s   64 tokens (think 0) in 1.21 s
-done             1.34 s total, 0.13 s first token, length, queue 0.00 s
+generate         53.3 t/s   64 tokens (think 0) in 1.18 s
+done             1.31 s total, 0.13 s first token, length, queue 0.00 s
 ----------------------------------------
  
 ----------------------------------------
@@ -143,8 +140,8 @@ max_tokens  128
 sampling    temperature 0.7, top_p 0.95, top_k 20, seed 4242 (asked: temperature, top_p, top_k, seed)
 resume      none: no saved state is a prefix of this prompt - all 45 tokens prefilled
 prefill             - t/s   45 new tokens in 0.21 s
-generate         57.7 t/s   128 tokens (think 0) in 2.20 s
-done             2.41 s total, 0.21 s first token, length, queue 0.00 s
+generate         63.3 t/s   128 tokens (think 0) in 2.01 s
+done             2.22 s total, 0.21 s first token, length, queue 0.00 s
 ----------------------------------------
  
 ----------------------------------------
@@ -156,8 +153,8 @@ max_tokens  128
 sampling    temperature 0.8, top_p 0.9, top_k 20, seed 99 (asked: temperature, top_p, top_k, seed)
 resume      none: no saved state is a prefix of this prompt - all 21 tokens prefilled
 prefill             - t/s   21 new tokens in 0.12 s
-generate         33.3 t/s   128 tokens (think 0) in 3.81 s
-done             3.93 s total, 0.12 s first token, length, queue 0.00 s
+generate         38.9 t/s   128 tokens (think 0) in 3.27 s
+done             3.39 s total, 0.12 s first token, length, queue 0.00 s
 ----------------------------------------
  
 stopped

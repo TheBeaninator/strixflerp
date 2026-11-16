@@ -10,6 +10,9 @@
  *   deliveries=LIST of full,candidates,tokens (default all three)
  *   draft=none|step|held   the draft head's form (default none); every 5th draft is wrong, and a step draft's
  *                   margin is 0.5 where the position is a multiple of 7 and 3 elsewhere
+ *   hold_cap=N      draft=held: hold at most N drafts however many are asked, and a verify of the held drafts returns
+ *                   1 + what was held (an executor with a depth rule of its own, as qwen35moe_abi draft_value=on;
+ *                   default 0: hold what is asked and refuse a verify naming another count)
  *   sampled=on|off  FLERP_CAP_SAMPLED_TOKENS (default off); top_k_max=N, needs_top_k=on|off: flerp_caps version 2
  *   masks=on|off    FLERP_CAP_MASKS, a logit bias only (default on)
  *   positions=N     (default 4096); seqs=N (default 1)
@@ -90,7 +93,7 @@ struct flerp_executor {
     int64_t vocab, row, lo, hi, reply, positions, keep_step;
     flerp_token end, image_token;
     uint32_t deliveries;
-    int draft, sampled, masks, top_k_max, needs_top_k, abi, n_seqs, features;
+    int draft, hold_cap, sampled, masks, top_k_max, needs_top_k, abi, n_seqs, features;
     seq_t seqs[MAX_SEQS];
     snap_t snaps[MAX_SNAPS];
     vector_t vectors[MAX_VECTORS];
@@ -234,7 +237,7 @@ static void free_ex(flerp_executor *ex) {
 }
 
 flerp_status flerp_open(const flerp_open_args *args, flerp_executor **out) {
-    static const char *const keys[] = {"vocab", "row", "lo", "hi", "reply", "end", "deliveries", "draft", "sampled", "top_k_max",
+    static const char *const keys[] = {"vocab", "row", "lo", "hi", "reply", "end", "deliveries", "draft", "hold_cap", "sampled", "top_k_max",
                                        "needs_top_k", "masks", "positions", "seqs", "abi", "features", "keep_step", "image_token"};
     g_open_error[0] = 0;
     if (args == NULL || out == NULL) return FLERP_E_ARGUMENT;
@@ -275,6 +278,7 @@ flerp_status flerp_open(const flerp_open_args *args, flerp_executor **out) {
     if (strstr(d, "tokens")) ex->deliveries |= FLERP_OUT_TOKENS;
     d = value_of(args, "draft", "none");
     ex->draft = !strcmp(d, "step") ? 1 : !strcmp(d, "held") ? 2 : 0;
+    ex->hold_cap = atoi(value_of(args, "hold_cap", "0"));
     ex->sampled = !strcmp(value_of(args, "sampled", "off"), "on");
     ex->masks = !strcmp(value_of(args, "masks", "on"), "on");
     ex->top_k_max = atoi(value_of(args, "top_k_max", "0"));
@@ -560,6 +564,7 @@ flerp_status flerp_draft_hold(flerp_executor *ex, int32_t seq, flerp_token pendi
     if (ex->draft != 2) return fail(ex, FLERP_E_UNSUPPORTED, "fake: no held drafts (draft=held)");
     if (q->pending) return fail(ex, FLERP_E_STATE, "fake: a verify is pending");
     if (depth < 0 || depth > 8) return fail(ex, FLERP_E_ARGUMENT, "fake: depth outside 0..caps.max_draft");
+    if (ex->hold_cap > 0 && depth > ex->hold_cap) depth = ex->hold_cap; /* its own depth rule: fewer than asked */
     flerp_token prev = pending;
     for (int i = 0; i < depth; ++i) prev = q->held[i] = draft_of(ex, q, prev, q->pos + 1 + i);
     q->n_held = depth;
@@ -576,9 +581,12 @@ flerp_status flerp_verify(flerp_executor *ex, flerp_verify_run *runs, size_t n_r
     if (r->ids == NULL || r->n_ids == 0) return fail(ex, FLERP_E_ARGUMENT, "flerp_verify: a run without ids");
     int64_t rows = (int64_t)r->n_ids;
     if (r->held > 0) {
-        if (ex->draft != 2 || r->n_ids != 1 || r->held != q->n_held) return fail(ex, FLERP_E_ARGUMENT, "fake: run.held is not the drafts held for the seq");
-        if (r->held_out == NULL || r->held_cap < (size_t)r->held) return fail(ex, FLERP_E_ARGUMENT, "flerp_verify_run.held_out is too small");
-        rows = 1 + r->held;
+        /* run.held names what the caller asked to hold; with hold_cap the seq holds at most that many and the verify
+           returns 1 + what it holds (the caller takes the round's size from the rows) */
+        const int held_ok = ex->hold_cap > 0 ? r->held >= q->n_held : r->held == q->n_held;
+        if (ex->draft != 2 || r->n_ids != 1 || !held_ok) return fail(ex, FLERP_E_ARGUMENT, "fake: run.held is not the drafts held for the seq");
+        if (r->held_out == NULL || r->held_cap < (size_t)q->n_held) return fail(ex, FLERP_E_ARGUMENT, "flerp_verify_run.held_out is too small");
+        rows = 1 + q->n_held;
     }
     if (rows > MAX_ROWS) return fail(ex, FLERP_E_FULL, "flerp_verify: more rows than caps.max_verify_rows");
     if (q->pos + rows > ex->positions) return fail(ex, FLERP_E_FULL, "fake: the seq is out of positions");
@@ -586,7 +594,7 @@ flerp_status flerp_verify(flerp_executor *ex, flerp_verify_run *runs, size_t n_r
     if (st != FLERP_OK) return st;
     q->v_ids[0] = r->ids[0];
     for (int64_t i = 1; i < rows; ++i) q->v_ids[i] = r->held > 0 ? q->held[i - 1] : r->ids[i];
-    if (r->held > 0) memcpy(r->held_out, q->held, (size_t)r->held * sizeof(flerp_token));
+    if (r->held > 0) memcpy(r->held_out, q->held, (size_t)q->n_held * sizeof(flerp_token));
     q->pending = 1, q->v_rows = rows;
     ++ex->stats.verifies, ex->stats.verify_rows += rows;
     for (int64_t i = 0; i < rows; ++i) {

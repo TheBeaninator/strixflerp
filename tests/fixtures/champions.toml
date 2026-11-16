@@ -1,0 +1,32 @@
+# Fixture ledger for tests/test_champion.py. The test never opens the live configs/champions.toml: its floors and
+# champions move with the pod's measurements (the prefill floor went to 0.0176 and its champion to 1974 tok/s on
+# 2026-11-14, which broke the test that copied it). The numbers here are chosen so each promotion rule is tested on its own.
+
+[area.prefill]
+description    = "Prompt pass speed (fixture)"
+unit           = "tok/s"
+direction      = "higher"
+fidelity       = "kl"
+fidelity_bound = 0.02
+floor_text     = "mean KL vs the FP32 reference <= 0.02 (fixture)"
+
+[area.ttft]
+description = "Time to first token (fixture)"
+unit        = "s"
+direction   = "lower"
+fidelity    = "identity"
+floor_text  = "identical first token (fixture)"
+
+[[champion]]
+area     = "prefill"
+case     = ""
+config   = "ornith397.prefill-best"
+value    = 1200
+unit     = "tok/s"
+scale    = "35B proxy"
+run_id   = "fixture-1"
+evidence = "tests/fixtures (not a measurement)"
+fidelity = "KL vs FP32 0.01 <= 0.02"
+date     = "2026-01-01"
+status   = "current"
+note     = "fixture incumbent"

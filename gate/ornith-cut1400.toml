@@ -1,0 +1,35 @@
+# ORNITH-CUT1400 (pod card 72e1417340, parent PREFILL-ORNITH 8ef0a645e7). Committed BEFORE any GPU run of this card;
+# never loosened after it.
+#
+# Question: in ORNITH-WINDOW3 (window/ornith-next da79bafa, gate/results/ornith-window3/run.json) the old prompt path
+# (pold, on:full:1:0:0) and arm Z (pz16, G + live tiles + tiled router + fast combine, FLERP_MAX_PROMPT_BATCH=16384)
+# disagreed at the prefill end of cut1400 = records[:1400] with confidence: old 17 ("2", the true records[1400])
+# by 1.33 nats over 16, Z 16 ("1") by 2.24 nats over 17. The text there is "...\nRecord 3" and the next id is the
+# second digit of the record number, so the position is an exact long-range count recall. 1,400 rows run as one part
+# through grouped experts F16 + dense F16 + GQA WMMA attention. Is a Z kernel wrong at that row count, or is the
+# 397B itself on a knife edge there?
+#
+# Tool: python3 gate/ornith_cut1400.py run|judge on control-node (tools/gpu-queue.sh behind gate/loadwait.sh), the 35B
+# proxy (Qwen3.6-35B-A3B Q4_K_M, /data/models/qwen36-35b-a3b, pod-weights staged), ONE load, the generator built from
+# card/5083008fe9 @ 56c0ead8 (the only binary with arm Z; its sha256 is recorded in run.json). Prompts: the records
+# prefixes that end right before a record number's second digit, between 1,000 and 1,808 ids (cut1400 among them),
+# every arm teacher-forced on the true continuation (records[c:c+4]), logits (top 1,000, logsumexp) recorded at
+# positions 0-3. Arms D (prompt through the decode step, FP32 activations: the yardstick), X (exact weight codes,
+# hi/lo F16 activations, exact dense Linear), Z and G.
+
+[hypothesis]
+prediction = "on the 35B at cut1400 Z's top-1 equals D's and KL(D || Z) <= 0.01 nats, as for the rest of the family (G's mean KL vs FP32 is 0.0040, top-1 98.8 % over the fidelity prompts); verdict NOT A DEFECT: the Ornith miss is the 397B's own small margin at a count-recall digit, flipped by which quantized-activation prompt path ran, not a Z kernel error at 1,400 rows"
+refuted_if = "C2 names a defect (Z misses D's top-1 where X hits it with D's margin >= 0.3 nats, or KL(D || Z) > 5 x KL(D || X) and > 0.02) at cut1400 or at two or more cuts of the family"
+
+[criteria]
+C1 = "validity: rc 0, every arm (D, X, Z, G) records every prompt at positions 0-3, no per-token fallback, and Z's logits sha256 equals G's at every recorded step (Z is bit-identical to G, PREFILL-LRC Z1)"
+C2 = "decision at cut1400 position 0: DEFECT if Z's top-1 != D's top-1 while X's top-1 == D's top-1 and D's margin (top-1 minus top-2 logit) >= 0.3 nats, or if KL(D || Z) > 5 x KL(D || X) and KL(D || Z) > 0.02; NOT A DEFECT if Z's top-1 == D's top-1, or D's margin < 0.3 (the position is a tie for FP32 too), or X misses D's top-1 as well (a prefill-activation precision property shared by the exact arm, not a Z kernel error)"
+C3 = "family (every cut): top-1 agreement with D of Z and of X, KL(D || arm) mean and max; DEFECT PATTERN if Z misses D's top-1 at two or more cuts where X hits it with D's margin >= 0.3; otherwise the family is recorded, not judged"
+record = "per cut and arm: D, X, Z, G top-8 (id, logit) at position 0, the top-1 / top-2 gap, KL(D || arm) at positions 0-3, prefill first_token_s; the Ornith window3 numbers beside them"
+verdict = "report /data/pod/reports/2026-11/ornith-cut1400.md names DEFECT (then a fix card with its own gate, after the per-kernel Z vs X diff on that chunk) or NOT A DEFECT, from C2 and C3 as written here"
+
+[resources]
+nodes   = "control-node GPU via tools/gpu-queue.sh behind gate/loadwait.sh (1-min loadavg <= 6); never forcing a holder; no worker, no K"
+weights = "the staged 35B on control-node NVMe (pod-weights qwen36-35b-a3b); never from cold storage"
+loads   = "1: all arms and prompts in one process"
+time    = "about 6 min: arm D runs 1,400-1,800 tokens through the decode step a prompt (~20 ms a token), the prompt arms are seconds"

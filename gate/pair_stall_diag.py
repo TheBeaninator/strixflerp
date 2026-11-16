@@ -39,6 +39,7 @@ import argparse
 import datetime
 import json
 import os
+import tomllib
 import re
 import shlex
 import signal
@@ -64,7 +65,18 @@ UNIT, SUNIT = "strixflerp-stall-up", "strixflerp-stall-sampler"
 CARD = "c18e4b0bd2"
 NEED_KEYS = ("WRAP0", "WRAP1", "ENGRAM_AIO", "ENGRAM_DIR", "LEARN_DIR", "PROMPT_CACHE_GIB", "RUN_ROOT", "DRAFTS", "BENCH",
              "MASTER_IP", "PEAK_GIB", "TEMPERATURE", "DEPLOY_DIR", "COLL_PROGRESS_MS")
-MGMT_NET, RAIL_NET = "192.0.2.", "198.51.100."
+
+
+def load_nets(path=None):
+    """The pod's two network prefixes from configs/pod-nets.toml ([nets] mgmt, rail); FLERP_MGMT_NET and FLERP_RAIL_NET
+    override it. No prefix lives in this script: the config is scrubbed with the fixtures, so the two stay consistent."""
+    path = path or os.path.join(ROOT, "configs", "pod-nets.toml")
+    with open(path, "rb") as f:
+        nets = tomllib.load(f)["nets"]
+    return os.environ.get("FLERP_MGMT_NET") or nets["mgmt"], os.environ.get("FLERP_RAIL_NET") or nets["rail"]
+
+
+MGMT_NET, RAIL_NET = load_nets()
 PAIR = None         # the pair (pair_nodes), bound in main() with F and A from the live serving conf
 BOOT_S = 200         # a boot: about 140 s of load, the probe, the checks
 LEARN_S = 90         # the standard prefix read whole once (68,902 tokens: 71 s on 2026-11-11)
@@ -257,18 +269,19 @@ def frames_of(events, kind="fill_chunk"):
     return out
 
 
-def roles(hdr):
-    """The node's interfaces and NFS mounts by network: management (192.0.2.x) and rail (198.51.100.x)."""
+def roles(hdr, nets=None):
+    """The node's interfaces and NFS mounts by network: management and rail (prefixes from load_nets)."""
+    mgmt, rail = nets or (MGMT_NET, RAIL_NET)
     r = {"mgmt_if": None, "rail_if": None, "mgmt_mounts": [], "rail_mounts": []}
     for ifc, ip in (hdr.get("ifaces") or {}).items():
-        if ip and ip.startswith(MGMT_NET):
+        if ip and ip.startswith(mgmt):
             r["mgmt_if"] = ifc
-        elif ip and ip.startswith(RAIL_NET):
+        elif ip and ip.startswith(rail):
             r["rail_if"] = ifc
     for mnt, dev in (hdr.get("mounts") or {}).items():
-        if dev.startswith(MGMT_NET):
+        if dev.startswith(mgmt):
             r["mgmt_mounts"].append(mnt)
-        elif dev.startswith(RAIL_NET):
+        elif dev.startswith(rail):
             r["rail_mounts"].append(mnt)
     return r
 

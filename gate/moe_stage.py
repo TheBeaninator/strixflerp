@@ -28,6 +28,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "gate"))
 import moe_placed as P  # noqa: E402
+import summary as SM  # noqa: E402  (summary.json / summary.md, config_sha256)
 
 STAGES = ("loopback", "tcp", "faults")
 GIB = float(1 << 30)
@@ -406,9 +407,7 @@ def stage_faults(ctx):
 
 # --- summary ---------------------------------------------------------------------------------------------------
 def write_summary(ctx, results):
-    with open(os.path.join(ctx["res"], "summary.json"), "w") as f:
-        json.dump({"stages": results, "disk_reads": ctx["disk_all"]}, f, indent=1)
-        f.write("\n")
+    SM.write_json(ctx["res"], {"stages": results, "disk_reads": ctx["disk_all"]}, ctx=ctx)
     L = [f"# Gate of the stages and the relay: {ctx['recipe'].name}", "",
          f"Host {os.uname().nodename}, written {P.S.utc()}. Criteria: `[criteria]` of `{ctx['config']}` (committed before the first GPU run). "
          "Stage P2 of `docs/PHASE5-FOURNODE-DESIGN.md`.", "",
@@ -437,9 +436,8 @@ def write_summary(ctx, results):
         tot += d["bytes"] or 0
         L.append(f"| {d['run']} | {(d['bytes'] or 0) / 1e9:.2f} | {d['seconds']} | {d['when']} |")
     L.append(f"| total | {tot / 1e9:.2f} | | |")
-    with open(os.path.join(ctx["res"], "summary.md"), "w") as f:
-        f.write("\n".join(L) + "\n")
-    return all((results.get(s) or {}).get("pass") for s in STAGES)
+    SM.write_md(ctx["res"], L)
+    return SM.all_pass(STAGES, results)
 
 
 def main():

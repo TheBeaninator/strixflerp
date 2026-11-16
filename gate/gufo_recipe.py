@@ -44,6 +44,7 @@ sys.path.insert(0, os.path.join(ROOT, "gate"))
 from flerplib import origin as origin_mod  # noqa: E402
 from flerplib.catalog import Catalog  # noqa: E402
 from strixite_recipe import Hold, die_with_parent, load_config, long_text, sh, sha256, tail, utc  # noqa: E402
+import summary as SM  # noqa: E402  (summary.json / summary.md, config_sha256)
 
 STAGES = ("check", "origin", "build", "reference", "cpu", "llama", "gpu")
 NO_GPU = {"HIP_VISIBLE_DEVICES": "-1", "ROCR_VISIBLE_DEVICES": "-1"}      # for the runs that must not touch it
@@ -487,16 +488,11 @@ def stage_gpu(ctx):
 # --- summary --------------------------------------------------------------------------------------------------
 def write_summary(ctx, results):
     cfg, name = ctx["cfg"], ctx["recipe"].name
-    ok = all(results.get(s, {}).get("pass") for s in STAGES)
-    doc = {"recipe": name, "host": socket.gethostname(), "written_utc": utc(), "stages": results, "pass": ok,
-           "stages_run": [s for s in STAGES if s in results]}
-    with open(os.path.join(ctx["res"], "summary.json"), "w") as f:
-        json.dump(doc, f, indent=1)
-        f.write("\n")
+    ok = SM.all_pass(STAGES, results)
+    SM.write_json(ctx["res"], {"recipe": name, "host": socket.gethostname(), "written_utc": utc(), "stages": results, "pass": ok,
+                               "stages_run": [s for s in STAGES if s in results]}, ctx=ctx)
     L = [f"# Recipe gate: {name}", ""]
-    missing = [s for s in STAGES if s not in results]
-    verdict = "PASSED" if ok else ("NOT COMPLETE: " + ", ".join(missing) + " not run" if missing and all(results[s].get("pass") for s in results)
-                                   else "FAILED")
+    verdict = SM.verdict(STAGES, results)
     L += [f"Host {socket.gethostname()}, written {utc()}. **{verdict}**.", "",
           f"Model: `{cfg['model']['gguf']}` (general.architecture {cfg['model']['architecture']}). Reference: gufo at "
           f"{results.get('origin', {}).get('commit', '?')}, built from a git export of `{cfg['host']['reference_checkout']}`.", "",
@@ -581,14 +577,13 @@ def write_summary(ctx, results):
         L += ["", "llama.cpp's tokenizer on the prompt texts against gufo's: "
               + ", ".join(f"{k}: {'equal' if v['tokenizer_ids_equal_gufo'] else 'differs at ' + str(v['tokenizer_first_difference'])}" for k, v in ll["runs"].items())
               + ". Its CPU decode speed: " + ", ".join(f"{k} {v['decode_tok_s'] and round(v['decode_tok_s'], 1)} tok/s" for k, v in ll["runs"].items()) + "."]
-    L += ["", "## Commands", "", "```", "tools/pod-sync.sh",
+    L += ["", "## Commands", "", "```", "tools/card-branch.sh <card-id>   # commit there, then: tools/pod-push.sh --card <card-id> (docs/POD-GIT.md)",
           f"tools/pod-run.sh './flerp gate recipe {name} --stages check,origin,build,reference,cpu,llama'",
           f"tools/pod-run.sh 'echo \"gufo-gpu | ./flerp gate recipe {name} --stages gpu\" > build/jobs-gufo.txt; "
           "nohup setsid tools/gpu-queue.sh build/jobs-gufo.txt > /dev/null 2>&1 &'",
           f"tools/pod-pull.sh gate/results/{name}", "```", "",
           "Every command a stage ran is the `$` line above its output in the stage's evidence file."]
-    with open(os.path.join(ctx["res"], "summary.md"), "w") as f:
-        f.write("\n".join(L) + "\n")
+    SM.write_md(ctx["res"], L)
     return ok
 
 

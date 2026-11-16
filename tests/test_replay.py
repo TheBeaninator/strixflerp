@@ -398,8 +398,14 @@ class FrontEndAsBothServers(unittest.TestCase):
             u1 = [sysm, {"role": "user", "content": STORY}]
             r1 = call(p, "POST", "/v1/chat/completions", chat(u1))
             self.assertEqual(r1[0], 200, r1[2][:300])
-            reply = json.loads(r1[2])["choices"][0]["message"]["content"]
-            u2 = u1 + [{"role": "assistant", "content": reply}, {"role": "user", "content": "And then what happened to the keeper?"}]
+            # The second turn's assistant line is fixed text, NOT the reply just received. The first request is
+            # recorded without a seed (that is the point of it), so its reply is one draw under a random seed, and a
+            # corpus that embeds it is different traffic on every run -- with it, this test's FAIL set moved between
+            # 4 and 5 exchanges run to run on unchanged code (review d0b17fd3d2: 7 failures in 26 runs of the Verify
+            # command). Traffic a test puts exact numbers on has to be the same traffic every run; that is what a
+            # recorded corpus is for. The unseeded first request still proves seed injection (see the diff below).
+            u2 = u1 + [{"role": "assistant", "content": "Once there was a keeper who counted the waves until morning."},
+                       {"role": "user", "content": "And then what happened to the keeper?"}]
             self.assertEqual(call(p, "POST", "/v1/chat/completions", chat(u2))[0], 200)
             self.assertEqual(call(p, "POST", "/v1/chat/completions", chat(u1, temperature=0.8, top_k=20))[0], 200)   # sampled, seed injected
             self.assertEqual(call(p, "POST", "/v1/chat/completions", chat(u1, temperature=0.8, top_k=20, seed=3))[0], 200)
@@ -430,11 +436,16 @@ class FrontEndAsBothServers(unittest.TestCase):
         self.assertEqual((rc, res["verdict"]), (0, "PASS"), json.dumps([r for r in res["results"] if not r["equal"]], indent=1)[:3000])
         self.assertEqual(res["counts"]["replayed"], 7)
         self.assertEqual(res["counts"]["tokens_compared"], 5)        # the five chats that ran; the refusal has none
+        # `tokens_compared` counts exchanges where BOTH sides produced an id list, so a reader that
+        # returned nothing would show 0, not a PASS. And the lists it compared must hold real ids:
+        # comparing [] to [] is equal but proves nothing (review d0b17fd3d2, finding 1's worry).
+        for r in [x for x in res["results"] if isinstance(x["tokens"].get("compared"), str)]:
+            self.assertTrue(r["tokens"]["a"] and r["tokens"]["b"], r)
         self.assertTrue(res["a"]["fresh"] and res["b"]["fresh"])
         rc, res = run(("executor.reply=30",), "other-model")
         self.assertEqual((rc, res["verdict"]), (1, "FAIL"))
         diff = [r for r in res["results"] if not r["equal"]]
-        self.assertEqual(len(diff), 4, diff)                       # the four chats that reach token 30; the refusal is equal
+        self.assertEqual(len(diff), 5, diff)                       # all five chats: B stops at its own token 30, the refusal is equal
         for r in diff:
             self.assertEqual((r["tokens"]["compared"], r["tokens"]["equal"]), ("token_ids", False), r)
             self.assertIn(r["tokens"]["first_difference"], (30, 31), r)   # where the shorter model's end falls

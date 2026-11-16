@@ -17,7 +17,9 @@ at hand: control-node).
 ## The exchange schema
 
 One JSON object per exchange, the same from the recorder, from FLERP-CORPUS's pcap extractor
-(`/data/pod/flerp-replay/tools/extract.py`) and in a corpus file: `id`, `target` (`strixite`, `pair`), `server`,
+(`/data/pod/flerp-replay/tools/extract.py`) and in a corpus file. That directory is a scratch area and its copies are
+not maintained: the tools in this repo (`tools/replay/`, `gate/replay.py`) are the authoritative ones, including
+`tools/replay/extract.py`, which the repo copy follows: `id`, `target` (`strixite`, `pair`), `server`,
 `client`, `method`, `path`, `t_start`, `t_req_end`, `t_end` (epoch seconds), `req_headers`, `request` (the parsed JSON
 body, `null` for none) or `request_raw` (a body that is not JSON), `status`, `resp_headers`, `response_raw` (the body
 as text), `in_flight_at_start` (POSTs to `/v1/` in flight on that server when this one started), `req_complete`,
@@ -55,6 +57,11 @@ replayable.
 - **Seed injection.** strixite gives an unseeded request a random seed (`catalog/strixite/serve/http/src/serve/http_server.cpp:466`).
   A request body under `/v1/` recorded without `seed` gets `seed` = the first 31 bits of sha256(exchange id), the
   same on both servers and on every run. A recorded seed is kept.
+- **A corpus you put exact numbers on must be the same traffic every run.** An unseeded recorded request replays
+  under a fixed injected seed, but the reply *at recording time* was drawn under a random one, so a later turn whose
+  prompt embeds that reply makes the corpus differ run to run (this cost `tests/test_replay.py` its stability: the same
+  unchanged code produced 4 or 5 differing exchanges, 7 failures in 26 runs). Either seed the recording request, or
+  build multi-turn corpora from fixed text.
 - **Not replayed** (listed as skipped with the reason): `/health`, `/metrics`, `/stats`, `/dashboard` (the state of
   the moment); exchanges marked not replayable; incomplete exchanges; a request body that is not JSON; a
   `/cache/import` whose bytes no earlier `/cache/export` of the corpus answered. When one did, each server is sent
@@ -65,7 +72,7 @@ replayable.
 | | how |
 |---|---|
 | status | equal |
-| token ids | where both servers say them: `--X-kind flerp` (`serve.flerp.http`) adds `"flerp_trace": true` to the body and reads the reply's `flerp.token_ids` (every id drawn; a stream: each chunk's) and `flerp.sequence_ids` (the ids fed, without the last drawn one), then removes the `flerp` object before the body comparison; `--X-capture-dir` (strixite's `--capture-dir`) reads the request's capture file, whose `generated` are the fed ids. Two front ends compare `token_ids`, a front end and strixite `sequence_ids` (the last drawn id then shows in the body). StrixFold says none: "n/a", and the body decides |
+| token ids | where both servers say them: `--X-kind flerp` (`serve.flerp.http`) adds `"flerp_trace": true` to the body and reads the reply's `flerp.token_ids` (every id drawn; a stream: each chunk's) and `flerp.sequence_ids` (the ids fed, without the last drawn one), then removes the `flerp` object before the body comparison; `--X-capture-dir` (strixite's `--capture-dir`) reads the request's capture file, whose `generated` are the fed ids. A capture is one id array plus the header's `prompt_n` as the split (`serve/capture.cpp`): the first `prompt_n` ids are the prompt, the rest are `generated` -- that is all it covers, so the ids compared are this request's prompt and draw, not a running conversation | Two front ends compare `token_ids`, a front end and strixite `sequence_ids` (the last drawn id then shows in the body). StrixFold says none: "n/a", and the body decides |
 | body | after dropping the volatile fields: JSON parsed and compared as values (key order included), SSE event by event, any other body byte for byte; `/cache/export` by size and sha256 |
 | headers | the ones named by `--header` (default `content-type`) |
 

@@ -178,7 +178,8 @@ typedef struct flerp_seq_args {
     int64_t max_new;                /* reply tokens the seq may take after its prompt (0: no limit asked).
                                        StrixFold sizes the seq's extent of the pool from it */
     int32_t drafts;                 /* 0: the seq never uses the executor's draft head */
-    /* version 3, read only when `size` covers them */
+    /* version 3, read only when `size` covers them. Setting one whose flag the executor does not report is
+       FLERP_E_UNSUPPORTED at flerp_seq_new (a non-null / non-zero field is a request, not padding) */
     const struct flerp_constraint *constraint; /* null: none. FLERP_CAP_CONSTRAINT; FLERP_OUT_TOKENS draws only */
     const flerp_token *eos;         /* FLERP_CAP_SEQ_POLICY: ids that end the reply: a forward or verify that feeds */
     size_t n_eos;                   /*   one after the prompt is refused (FLERP_E_STATE) until the seq is reset */
@@ -375,7 +376,9 @@ typedef struct flerp_image_span {
 } flerp_image_span;
 /* The span a picture takes in the executor's own tower: fills tokens and grid of `out` (at, rows, payload unread). */
 flerp_status flerp_image_prepare(flerp_executor *ex, const void *payload, size_t n, flerp_image_span *out);
-/* flerp_forward whose ids carry image spans; spans lie inside the forward, ascending, not overlapping. */
+/* flerp_forward whose ids carry image spans; spans lie inside the forward, ascending, not overlapping. With
+ * n_spans == 0 this is a plain forward and answers FLERP_OK on any executor: FLERP_E_UNSUPPORTED is for a span
+ * (or flerp_image_prepare) where FLERP_CAP_IMAGE_ROWS / _IMAGE_PREPARE is absent. */
 flerp_status flerp_forward_spans(flerp_executor *ex, int32_t seq, const flerp_token *ids, size_t n,
                                  const flerp_image_span *spans, size_t n_spans, const flerp_want *want, flerp_rows *out,
                                  const flerp_token *lookahead, size_t n_lookahead);

@@ -214,6 +214,8 @@ static size_t speculative(int32_t seq, flerp_token first, flerp_token *t, size_t
             if (held) run.held = k, run.held_out = drafts, run.held_cap = 64;
             rows_init(&r);
             CHECK(flerp_verify(ex, &run, 1, &w));
+            /* held form: an executor with a depth rule of its own may hold fewer than asked; the round's k is what came back */
+            if (held && r.rows >= 1 && r.rows < k + 1) k = (int)r.rows - 1;
             if (r.rows != k + 1) die("a verify returned a row count other than 1 + its drafts");
             if (attempt == 0 && rounds % 4 == 3 && !cur->no_drop) { /* undo the whole verify, then run the round again */
                 if (flerp_forward(ex, seq, ids, 1, &w, &r, NULL, 0) != FLERP_E_STATE) die("a forward was accepted while a verify was pending");
@@ -360,7 +362,7 @@ static void engine_loop(int32_t seq, const flerp_token *prompt, size_t n, int dr
     L.max_tokens = cur->max_tokens, L.drafts = cur->mtp_draft, L.margin = cur->mtp_margin;
     L.end_ids = cur->end_ids, L.n_end = (size_t)cur->n_end;
     memset(&H, 0, sizeof(H));
-    H.ctx = o, H.pick = hook_pick, H.fed = hook_fed, H.redo = hook_redo, H.step = hook_step, H.entered = hook_entered;
+    H.size = sizeof(H), H.ctx = o, H.pick = hook_pick, H.fed = hook_fed, H.redo = hook_redo, H.step = hook_step, H.entered = hook_entered;
     H.verified = hook_verified;
     memset(&R, 0, sizeof(R));
     R.size = sizeof(R);

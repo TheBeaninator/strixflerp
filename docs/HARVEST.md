@@ -31,7 +31,7 @@ zig/build/{cuda,hip_dsv41}.zig, tools/dsv41-hip/rdma_check.py among the harveste
 python3 docs/harvest/harvest_strixfold.py     # each script rebuilds catalog/<origin> from the reference checkout
 python3 docs/harvest/harvest_gufo.py
 python3 docs/harvest/harvest_hipfire.py
-tools/pod-sync.sh && tools/pod-run.sh 'python3 gate/compile/run.py' && tools/pod-pull.sh gate/results
+tools/pod-push.sh --card <card-id> && tools/pod-run.sh 'python3 gate/compile/run.py' && tools/pod-pull.sh gate/results
 python3 docs/harvest/harvest_<origin>.py      # again: gate.status = "builds" is written from gate/results/compile
 python3 docs/harvest/make_harvest_md.py && python3 flerp check
 ```
@@ -115,7 +115,7 @@ The serving build on F and A moves with the pod's own StrixFold work. One comman
 
 ```
 python3 gate/strixfold_recut.py <commit> <deploy-dir-name>      # e.g. f64b5ff f64b5ff2e28b; run on the laptop, re-runnable
-tools/pod-sync.sh
+tools/pod-push.sh --card <card-id>     # from the card's worktree (tools/card-branch.sh)
 tools/pod-run.sh './flerp gate recipe dsv41-flash.strixfold-tp2 --stages check,origin,build'
 tools/pod-run.sh './flerp assemble dsv41-flash.strixfold-tp2-abi && build/dsv41-flash.strixfold-tp2-abi/build.sh'
 ```

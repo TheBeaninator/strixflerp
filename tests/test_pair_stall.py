@@ -319,5 +319,34 @@ class Leads(unittest.TestCase):
             self.assertIn("no <arm>-rank1.samples.jsonl", D.render(D.analyze(d)))
 
 
+class NetsFromConfig(unittest.TestCase):
+    """The network prefixes come from configs/pod-nets.toml, not from literals in the script."""
+
+    def test_roles_follow_the_config(self):
+        with tempfile.TemporaryDirectory() as d:
+            cfg = os.path.join(d, "pod-nets.toml")
+            with open(cfg, "w") as f:
+                f.write('[nets]\nmgmt = "203.0.113."\nrail = "198.51.100."\n')
+            nets = D.load_nets(cfg)
+            self.assertEqual(nets, ("203.0.113.", "198.51.100."))
+            hdr = {"ifaces": {"eno1": "203.0.113.54", "enp194s0np0": "198.51.100.54"},
+                   "mounts": {"/data/models": "203.0.113.31:/data/models", "/data/models-rail": "198.51.100.31:/data/models"}}
+            r = D.roles(hdr, nets=nets)
+            self.assertEqual((r["mgmt_if"], r["rail_if"]), ("eno1", "enp194s0np0"))
+            self.assertEqual((r["mgmt_mounts"], r["rail_mounts"]), (["/data/models"], ["/data/models-rail"]))
+            self.assertEqual(D.roles(hdr)["mgmt_if"], None)
+
+    def test_env_overrides_the_config(self):
+        os.environ["FLERP_MGMT_NET"], os.environ["FLERP_RAIL_NET"] = "192.0.2.", "203.0.113."
+        try:
+            self.assertEqual(D.load_nets(), ("192.0.2.", "203.0.113."))
+        finally:
+            del os.environ["FLERP_MGMT_NET"], os.environ["FLERP_RAIL_NET"]
+
+    def test_script_holds_no_prefix_literal(self):
+        src = open(os.path.join(os.path.dirname(D.__file__), "pair_stall_diag.py")).read()
+        self.assertEqual(src.count(D.MGMT_NET + '"') + src.count(D.RAIL_NET + '"'), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

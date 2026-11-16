@@ -11,7 +11,9 @@
  * each row's mask to the delivered row itself, as an executor that offers masks does: a refused id leaves a full
  * row (-inf), leaves the candidates (the rest move up), and a drawn token falls to the lowest allowed id. An empty script file leaves the stand-in's rows.
  * Open key masks_rows=off reports FLERP_CAP_MASKS without row masks (a refusal path); masks=off (the stand-in's own
- * key) takes FLERP_CAP_MASKS away. Drafts are the stand-in's: use draft=none with a script. */
+ * key) takes FLERP_CAP_MASKS away. Drafts are the stand-in's: use draft=none with a script.
+ * Open key delay_ms=N makes every forward and verify take N ms, so a test can hold the front end's generation lane
+ * (its queue, /health under load, a client that leaves) without a model. */
 #define flerp_open fake_inner_open
 #define flerp_forward fake_inner_forward
 #define flerp_verify fake_inner_verify
@@ -23,6 +25,7 @@
 #undef flerp_seq_new
 
 #include <stdint.h>
+#include <time.h>
 
 flerp_status flerp_open(const flerp_open_args *args, flerp_executor **out);
 flerp_status flerp_forward(flerp_executor *ex, int32_t seq, const flerp_token *ids, size_t n, const flerp_want *want, flerp_rows *out,
@@ -33,6 +36,14 @@ flerp_status flerp_seq_new(flerp_executor *ex, const flerp_seq_args *args, int32
 #define SCRIPT_MAX 8192
 static char g_script_path[1024];
 static int g_rows_masks = 1;
+static long g_delay_ms = 0;
+
+static void delay(void) {
+    if (g_delay_ms <= 0) return;
+    struct timespec ts;
+    ts.tv_sec = g_delay_ms / 1000, ts.tv_nsec = (g_delay_ms % 1000) * 1000000L;
+    nanosleep(&ts, NULL);
+}
 static flerp_token g_script[SCRIPT_MAX];
 static size_t g_n_script, g_cursor[MAX_SEQS];
 static int g_armed[MAX_SEQS];
@@ -40,10 +51,11 @@ static int g_armed[MAX_SEQS];
 flerp_status flerp_open(const flerp_open_args *args, flerp_executor **out) {
     flerp_kv kv[64];
     size_t n = 0;
-    g_script_path[0] = 0, g_rows_masks = 1;
+    g_script_path[0] = 0, g_rows_masks = 1, g_delay_ms = 0;
     for (size_t i = 0; args && i < args->n_config && n < 64; ++i) {
         if (!strcmp(args->config[i].key, "script")) snprintf(g_script_path, sizeof(g_script_path), "%s", args->config[i].value);
         else if (!strcmp(args->config[i].key, "masks_rows")) g_rows_masks = strcmp(args->config[i].value, "off") != 0;
+        else if (!strcmp(args->config[i].key, "delay_ms")) g_delay_ms = atol(args->config[i].value);
         else kv[n++] = args->config[i];
     }
     flerp_open_args a = *args;
@@ -125,6 +137,7 @@ flerp_status flerp_forward(flerp_executor *ex, int32_t seq, const flerp_token *i
     const flerp_masks *m = want ? want->masks : NULL;
     flerp_status st = masks_ok(ex, m);
     if (st != FLERP_OK) return st;
+    delay();
     flerp_want w;
     flerp_masks keep;
     if (want) w = *want, w.masks = bias_of(m, &keep);
@@ -145,6 +158,7 @@ flerp_status flerp_verify(flerp_executor *ex, flerp_verify_run *runs, size_t n_r
     const flerp_masks *m = runs[0].masks;
     flerp_status st = masks_ok(ex, m);
     if (st != FLERP_OK) return st;
+    delay();
     flerp_masks keep;
     flerp_verify_run run = runs[0];
     run.masks = bias_of(m, &keep);
