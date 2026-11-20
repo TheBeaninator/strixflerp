@@ -4,6 +4,12 @@ One inference engine for AMD Strix Halo (gfx1151, ROCm/HIP), built as a catalogu
 is a recipe: a list of modules assembled at build time into one binary. `SPEC.md` is the contract; this file says
 what is in the tree.
 
+## Request an experiment
+
+Have a question about strixflerp that needs Strix Halo hardware you do not have? Write a research card and open a pull
+request: [`docs/research/README.md`](docs/research/README.md) says what we run, what we will not run, how a card is
+judged and how to cite the result. [`research/INDEX.md`](research/INDEX.md) lists every card with its verdict.
+
 ## State
 
 The counts, versions, pins and champion numbers in this block are generated from the tree by
@@ -70,10 +76,11 @@ on it is not measured, and its prefill numbers carry no FP32 reference at 397B (
 | `catalog/flerp/` | code written here: kernel adapters, the executor ABI adapters, their conformance driver and a stand-in executor, the shared decode loop, the text and sampler modules, the front end |
 | `include/flerp/` | the C interfaces written here: `executor.h` (the executor ABI), `text.h` (a model's tokenizer and chat template), `sampler.h` (a host sampler), `decode_loop.h` (the decode loop over the ABI) |
 | `recipes/` | recipes |
+| `research/` | research cards: outside requests for strixflerp experiments, one folder each with the card, its gate, results and verdict; `research/INDEX.md` lists them |
 | `gate/` | gate runners and their configuration; `gate/results/` holds the evidence of runs on gfx1151 |
 | `gate/interface/` | interface gates: one config per interface (providers, cases, pass criteria), the driver programs and the CPU references |
-| `docs/` | `INTERFACES.md` (where engines overlap, swap verdicts), `EXECUTOR-ABI.md`, `HARVEST.md`, `SOURCES.md`, `SPEC-PROPOSALS.md`, `PHASE5-GLM52-GAPMAP.md` and `PHASE5-ORNITH-GAPMAP.md` (what the catalogue lacks for two models no origin serves here), `FIDELITY.md` (a full-precision reference as a recipe's measure, and what it found) |
-| `tools/` | `card-branch.sh` and `pod-push.sh` (card branches to the pod's Buzz git host, `docs/POD-GIT.md`), `pod-run.sh`, `pod-pull.sh`, `gpu-queue.sh`, `harvest-strixite.py`, `make-variant-recipes.py`, `readme-facts.py` (the facts block above), `gate-provenance.py`, `provenance-map.py` and `public-check.py` (`docs/PROVENANCE.md`) |
+| `docs/` | `INTERFACES.md` (where engines overlap, swap verdicts), `EXECUTOR-ABI.md`, `HARVEST.md`, `SOURCES.md`, `SPEC-PROPOSALS.md`, `PHASE5-GLM52-GAPMAP.md` and `PHASE5-ORNITH-GAPMAP.md` (what the catalogue lacks for two models no origin serves here), `FIDELITY.md` (a full-precision reference as a recipe's measure, and what it found), `research/README.md` (how to request an experiment) |
+| `tools/` | `card-branch.sh` and `pod-push.sh` (card branches to the pod's Buzz git host, `docs/POD-GIT.md`), `pod-run.sh`, `pod-pull.sh`, `gpu-queue.sh`, `harvest-strixite.py`, `make-variant-recipes.py`, `readme-facts.py` (the facts block above), `gate-provenance.py`, `provenance-map.py` and `public-check.py` (`docs/PROVENANCE.md`), `flerp-research` (research cards, `docs/research/README.md`) |
 | `tests/` | unit tests: `flerplib`, the recipes, the decode loop over the stand-in executor (needs a C compiler), the gates' comparisons |
 
 ## The catalogue

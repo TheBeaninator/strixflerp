@@ -1,0 +1,628 @@
+#!/usr/bin/env python3
+"""flerp-research: research cards, the outside requests for strixflerp experiments we run on our Strix Halo boxes. stdlib only.
+
+A card is research/<area>/<id>-<slug>/card.md; the pull request that adds it (and, optionally, the new module under
+catalog/<origin>/<kind>/<name>/) is the request. id = first 10 hex of sha256(card.md) as submitted; branch card/<id>.
+
+verbs:
+  template [AREA]                      print a blank card
+  new AREA SLUG [--root R]             make the draft folder research/<area>/<slug>/ with a blank card.md
+  submit DIR [--by WHO]                lint, name the folder <id>-<slug>, write the first LOG line
+  lint PATH... [--clean] [--deny F]    a card.md or a card folder: shape, refusals, LOG, hashes, results, scrub, module;
+                                       --clean also runs flerp check and the module's host tests in a clean checkout of HEAD
+  log DIR STEP --by WHO [--reason R] [--commit SHA]
+                                       append a LOG line (accepted | wont-do | amended | run | verdict | merged); hashes recorded
+  ingest RUN_DIR DIR --files A,B [--metric K=V]... [--map FROM=TO]... [--deny F]
+                                       copy run files into DIR/results through the scrub; summary.json + MANIFEST.sha256
+  judge DIR                            evaluate gate.toml against results/summary.json (exit 0 all pass, 1 not)
+  merge-plan DIR... | --series TAG     which paths merge, per card: CONFIRMED = folder + module; REFUTED/INCONCLUSIVE = folder only
+  render DIR                           a draft run plan for our own tracker (not published)
+  index [--root R] [--check]           write research/INDEX.md from the folders
+  scrub-check PATH... [--deny F]       report internal hosts, addresses and paths in files to be published
+--deny F (lint, ingest, scrub-check) defaults to $FLERP_RESEARCH_DENY, else .flerp-research-deny at the repo root (untracked):
+one private literal a line, matched case-insensitively; a line "re:PATTERN" is a regular expression, matched as written.
+See docs/research/README.md.
+"""
+import sys, os, re, json, hashlib, datetime, argparse, shutil, subprocess, tempfile
+try:
+    import tomllib
+except ImportError:  # python < 3.11
+    tomllib = None
+
+KEYS = ["TITLE", "AREA", "ASKED BY", "APPLIES TO", "SERIES", "QUESTION", "WHY", "MECHANISM", "PREDICTION", "METHOD", "MODULE",
+        "MEASURE", "EXACTNESS", "REPS", "GIVES", "NOTE"]
+REQUIRED = ["TITLE", "AREA", "ASKED BY", "QUESTION", "WHY", "MECHANISM", "PREDICTION", "METHOD", "MEASURE", "EXACTNESS", "REPS", "GIVES"]
+AREAS = ["module", "recipe", "kernel", "model", "transport", "fidelity"]
+METHOD_KEYS = ["code", "subject", "baseline", "settings", "model", "boxes"]
+MODULE_KEYS = ["path", "replaces", "interface", "builds", "tests"]
+STEPS = ["submitted", "accepted", "wont-do", "amended", "run", "verdict", "merged"]
+NEXT = {None: {"submitted"}, "submitted": {"accepted", "wont-do"}, "accepted": {"run", "wont-do"}, "run": {"run", "verdict"},
+        "verdict": {"merged"}, "merged": set(), "wont-do": set()}
+# licences a module may carry into the catalogue (SPDX ids; the module keeps its own, the catalogue redistributes it as is)
+COMPATIBLE = {"MIT", "MIT-0", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "BSL-1.0", "Unlicense", "0BSD",
+              "MPL-2.0", "LGPL-2.1-only", "LGPL-2.1-or-later", "LGPL-3.0-only", "LGPL-3.0-or-later", "GPL-2.0-only",
+              "GPL-2.0-or-later", "GPL-3.0-only", "GPL-3.0-or-later", "AGPL-3.0-only", "AGPL-3.0-or-later", "NCSA"}
+AMENDABLE = {"accepted", "run"}
+VERDICTS = ["CONFIRMED", "REFUTED", "INCONCLUSIVE"]
+OPS = {">=": lambda a, b: a >= b, "<=": lambda a, b: a <= b, ">": lambda a, b: a > b, "<": lambda a, b: a < b, "==": lambda a, b: a == b}
+MAX_REPS = 10
+
+# card-shape rules: narrative, guesses, a prediction with its numbers
+PRIME = re.compile(r"\b(i think|suspect\w*|probably|likely|maybe|my guess|i believe|seems like|hopefully|i feel)\b", re.I)
+NARRATIVE = re.compile(r"\b(and then|once .{0,40} then|after that|if that works)\b", re.I)
+UNBOUNDED = re.compile(r"\b(all (the )?(models|kernels|modules|settings|quants|configs|combinations)|every (model|kernel|module|setting|quant|config|combination)"
+                       r"|as many as|until (it|we|you|the)|open[- ]ended|explore|best possible|whatever (works|you)|as long as (it|you)"
+                       r"|indefinitely|continuous(ly)?|ongoing|daily|nightly|weekly|every (day|night|week)|keep (it )?running|grid search|autotune everything)\b", re.I)
+NETWORK = re.compile(r"(\b(pip3? install|conda install|npm install|cargo install|apt(-get)? install|curl|wget|git clone|git fetch|huggingface-cli|hf_hub\w*"
+                     r"|hf download|from_pretrained|download\w*|internet|online|telemetry|webhook|upload\w*|callback url|phone home"
+                     r"|ssh|shell access|remote access|vpn|port forward\w*)\b|https?://)", re.I)
+SECRET = re.compile(r"\b(password|passwd|secret|private key|api[_ ]?key|access[_ ]token|bearer)\b|BEGIN [A-Z ]*PRIVATE KEY", re.I)
+# a resource plan is ours: its section keys are refused; private tool names come from the deny list (see DENY below)
+INTERNAL_PLAN = re.compile(r"^\s*(RESOURCES|MONITOR|hold)\s*:", re.M)
+MECH = re.compile(r"(bytes?|\bGB\b|\bMB\b|GB/s|FLOPs?|TFLOPS|occupancy|trace|bandwidth|latency|launch\w*|waves?|VGPRs?|LDS|cache|\bms\b|\bus\b|loads?|stores?|rows?|tiles?)", re.I)
+UNIT = re.compile(r"(tok/s|tokens?/s|\bms\b|\bus\b|\bs\b|seconds?|GB/s|GiB|\bMB\b|%|\bKL\b|nats|accuracy|bytes?|words?|bits?\b|TTFT"
+                  r"|perplexity|\bppl\b|tflops|latency|sha256|equal|identical)", re.I)
+SHA = re.compile(r"^[0-9a-f]{12,40}$")
+PLACEHOLDER = re.compile(r"<[^<>\n]{2,}>")
+MODNET = re.compile(r"\b(FetchContent\w*|ExternalProject\w*|git clone|wget|curl_easy\w*|libcurl|getaddrinfo|urllib|http\.client|socket\.socket|requests\.(get|post)|pip install)\b")
+
+# scrub: what must never appear in a published card folder. Only generic patterns live here: the tool itself is published.
+# Private host, user and actor names come from a deny list kept out of git: --deny F, else $FLERP_RESEARCH_DENY, else
+# .flerp-research-deny at the repo root (gitignored). One literal a line, matched case-insensitively, or "re:PATTERN", a regular
+# expression matched as written (for a word that is private only in one case); ingest replaces them.
+DENY = [
+    ("private address", re.compile(r"\b(10\.\d{1,3}|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b")),
+    ("loopback service", re.compile(r"\b127\.0\.0\.1:\d+")),
+    ("home path", re.compile(r"/home/[\w.-]+")),
+    ("pod path", re.compile(r"(?<![\w.])/(data|mnt|srv|cache)/[\w.@/-]+")),
+    ("email", re.compile(r"\b[\w.+-]+@[\w-]+\.[a-z]{2,}\b", re.I)),
+]
+FOLDER = re.compile(r"(?:^|/)research/(?P<area>[a-z]+)/(?P<id>[0-9a-f]{10})-(?P<slug>[a-z0-9][a-z0-9-]{2,40})/?$")
+DRAFT = re.compile(r"(?:^|/)research/(?P<area>[a-z]+)/(?P<slug>[a-z0-9][a-z0-9-]{2,40})/?$")
+MODPATH = re.compile(r"^catalog/[a-z0-9_]+/[a-z]+/[a-z0-9_]+/?$")
+
+def slurp(path, mode="r"):
+    with open(path, mode, **({} if "b" in mode else {"encoding": "utf-8"})) as f: return f.read()
+
+def h10(path): return hashlib.sha256(slurp(path, "rb")).hexdigest()[:10]
+
+def words(s): return len(re.findall(r"\S+", s))
+
+def parse(text):
+    d = {k: "" for k in KEYS}; cur = None
+    for raw in text.splitlines():
+        if raw.startswith("#"): continue
+        m = re.match(r"^([A-Z][A-Z ]*?):\s?(.*)$", raw)
+        if m and m.group(1) in KEYS:
+            cur = m.group(1); v = m.group(2).strip()
+            d[cur] = (d[cur] + "\n" + v).strip() if d[cur] else v
+        elif cur and raw.strip():
+            d[cur] = (d[cur] + "\n" + raw.strip()).strip()
+    return d
+
+def sub_parse(text, keys):
+    r = {}; cur = None
+    for l in text.splitlines():
+        m = re.match(r"^\s*(%s):\s*(.*)$" % "|".join(keys), l, re.I)
+        if m: cur = m.group(1).lower(); r[cur] = m.group(2).strip()
+        elif cur and l.strip(): r[cur] += " " + l.strip()
+    return r
+
+def lint_card(d):
+    """Return a list of (rule, message, fix). Empty = OK."""
+    F = []
+    def fail(rule, msg, fix): F.append((rule, msg, fix))
+    for k in REQUIRED:
+        if not d[k].strip(): fail("Q0", "%s is missing" % k, "fill %s: (flerp-research template shows every line)" % k)
+    for k in KEYS:
+        m = PLACEHOLDER.search(d[k])
+        if m: fail("Q0", "%s still holds the placeholder %s" % (k, m.group(0)), "replace it, or delete the line if it is optional")
+    t = d["TITLE"]
+    if t and (not 12 <= len(t) <= 100 or "\n" in t or t.rstrip().endswith((".", ":", ";"))):
+        fail("Q1", "TITLE must be the question in one line, 12-100 chars, no trailing punctuation", "say what is asked, in one line")
+    if d["SERIES"].strip() and not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,30}", d["SERIES"].strip()): fail("Q2", "SERIES must be a short tag (a-z 0-9 -, up to 31 chars)", "SERIES: engine-x-kernels")
+    if d["APPLIES TO"] and ("\n" in d["APPLIES TO"] or words(d["APPLIES TO"]) > 40): fail("Q3", "APPLIES TO must be one line: the project and the decision the answer feeds", "APPLIES TO: <project>: which attention kernel it ships")
+    area = d["AREA"].strip().lower()
+    if area and area not in AREAS: fail("Q2", "AREA must be one of %s" % " ".join(AREAS), "pick the one closest to what runs")
+    q = d["QUESTION"]
+    if q and ("\n" in q or words(q) > 50 or not q.rstrip().endswith("?")): fail("Q3", "QUESTION must be one sentence ending with '?'", "ask one thing")
+    if d["WHY"] and ("\n" in d["WHY"] or words(d["WHY"]) > 40): fail("Q3", "WHY must be one sentence under 40 words", "say what the answer changes for you")
+    me = d["MECHANISM"]
+    if me and (not re.search(r"\d", me) or not MECH.search(me)): fail("Q4", "MECHANISM must give the reason with numbers: bytes, FLOPs, occupancy, a trace", "MECHANISM: the pass moves 335 MB at 48 GB/s against a 196 GB/s read ...")
+    p = d["PREDICTION"]
+    if p and (not re.search(r"\d", p) or not re.search(r"\bconfirm\w*", p, re.I) or not re.search(r"\brefut\w*", p, re.I)):
+        fail("Q5", "PREDICTION needs the expected number, a confirm number and a refute number", "PREDICTION: about 115 ms; confirmed at 150 ms or less, refuted above 250 ms")
+    M = sub_parse(d["METHOD"], METHOD_KEYS)
+    code = M.get("code", "").strip()
+    if d["METHOD"].strip():
+        miss = [k for k in METHOD_KEYS if not M.get(k, "").strip()]
+        if miss: fail("Q6", "METHOD is missing %s" % ", ".join(k + ":" for k in miss), "indented lines under METHOD: code, subject, baseline, settings, model, boxes (none where it does not apply)")
+        if code and code.lower() != "this pr":
+            at = code.rsplit("@", 1)
+            if len(at) != 2 or at[0].strip().rsplit("/", 1)[-1].removesuffix(".git") != "strixflerp" or not SHA.match(at[1].strip()):
+                fail("Q6", "METHOD code: must be 'this PR' or strixflerp@<commit, 12-40 hex>; a branch moves", "code: this PR")
+        st = M.get("settings", "").strip()
+        if st and st.lower() != "none" and not all(re.fullmatch(r"[A-Z][A-Z0-9_]*=\S+", x) for x in st.split()):
+            fail("Q6", "METHOD settings: must be KEY=VALUE words (or none)", "settings: FLERP_MOE_COMBINE_FAST=1")
+        if re.search(r"https?://|hf:|huggingface", M.get("model", ""), re.I): fail("Q14", "METHOD model: names a download; we run only models we hold", "name the model; we say whether we hold it")
+        bx = M.get("boxes", "").strip()
+        if bx and bx not in {"1", "2", "4"}: fail("Q6", "METHOD boxes: must be 1, 2 or 4", "boxes: 1")
+        if area == "transport" and bx and bx not in {"2", "4"}: fail("Q7", "a transport card needs boxes: 2 or 4", "boxes: 2")
+        if area == "model" and M.get("model", "").strip().lower() in ("", "none"): fail("Q7", "a model card names the model", "model: <id>")
+        if area in ("module", "kernel") and not code: fail("Q7", "a %s card needs code:" % area, "code: this PR")
+    adds_module = code.lower() == "this pr" and M.get("subject", "").strip().startswith("catalog/")
+    if adds_module and not d["MODULE"].strip(): fail("Q7", "the PR adds a module (code: this PR, subject under catalog/): MODULE is required", "MODULE: path, replaces, interface, builds, tests")
+    if d["MODULE"].strip():
+        X = sub_parse(d["MODULE"], MODULE_KEYS)
+        miss = [k for k in MODULE_KEYS if not X.get(k, "").strip()]
+        if miss: fail("Q7", "MODULE is missing %s" % ", ".join(k + ":" for k in miss), "indented lines under MODULE: path, replaces, interface, builds, tests")
+        if X.get("path") and not MODPATH.match(X["path"].strip()): fail("Q7", "MODULE path: must be catalog/<origin>/<kind>/<name>", "path: catalog/flerp/kernel/my_kernel")
+    if d["MEASURE"] and not UNIT.search(d["MEASURE"]): fail("Q8", "MEASURE names no metric or unit", "MEASURE: prefill tok/s at 2,048 tokens, read from the gate's summary")
+    ex = d["EXACTNESS"].strip()
+    if ex and not (re.match(r"bit-exact\b", ex, re.I) or (re.match(r"tolerance:", ex, re.I) and re.search(r"\d", ex)) or re.fullmatch(r"n/a\b.*", ex, re.I)):
+        fail("Q9", "EXACTNESS must be 'bit-exact vs baseline ...', 'tolerance: <metric> <bound>' or 'n/a'", "EXACTNESS: bit-exact vs baseline: logits sha256 and ids")
+    if area == "fidelity" and ex.lower().startswith("n/a"): fail("Q9", "a fidelity card cannot have EXACTNESS n/a", "EXACTNESS: tolerance: mean KL <= 0.02 nats")
+    rp = d["REPS"]
+    if rp:
+        m = re.match(r"\s*(\d+)", rp)
+        if not m: fail("Q10", "REPS must start with the count", "REPS: 3, because ...")
+        elif not 1 <= int(m.group(1)) <= MAX_REPS: fail("Q10", "REPS %s is outside 1-%d" % (m.group(1), MAX_REPS), "ask for the smallest count that answers the question; a bigger study is several cards")
+        if not re.search(r"\b(because|since|enough|smallest|resolves?|answers?)\b", rp, re.I): fail("Q10", "REPS must say why that count is enough", "REPS: 3, because the bar is 5 % and the spread is under 5 %")
+    for k in ("TITLE", "QUESTION", "METHOD", "MODULE", "MEASURE", "MECHANISM", "REPS"):
+        m = PRIME.search(d[k])
+        if m: fail("Q12", "%s holds a guess ('%s'); a mechanism is read, not guessed" % (k, m.group(0)), "give the bytes, FLOPs, occupancy or trace behind it")
+    for k in ("METHOD", "MODULE", "MEASURE", "GIVES", "EXACTNESS"):
+        for l in d[k].splitlines():
+            if len(l) > 220 or NARRATIVE.search(l): fail("Q12", "%s is a narrative ('and then', or a line over 220 chars)" % k, "one fact per line; a sequence is several cards"); break
+    if words(d["NOTE"]) > 300: fail("Q12", "NOTE is over 300 words", "link a write-up instead")
+    for k in ("TITLE", "QUESTION", "METHOD", "MEASURE", "REPS"):
+        m = UNBOUNDED.search(d[k])
+        if m: fail("Q13", "%s is unbounded ('%s')" % (k, m.group(0)), "name the exact arms and the count; one card answers one question")
+    for k in ("METHOD", "MODULE", "MEASURE", "GIVES", "EXACTNESS"):
+        m = NETWORK.search(d[k])
+        if m: fail("Q14", "%s needs the network or remote access ('%s'); the boxes have none" % (k, m.group(0)), "put what the run needs in the PR")
+    for k in KEYS:
+        m = SECRET.search(d[k])
+        if m: fail("Q14", "%s mentions a secret ('%s'); never send one" % (k, m.group(0)), "remove it")
+        m = INTERNAL_PLAN.search(d[k])
+        if m: fail("Q15", "%s carries a resource plan ('%s'); holds, staging and nodes are ours and never in the card" % (k, m.group(0).strip()), "drop it")
+    return F
+
+def repo_root(folder):
+    p = os.path.abspath(folder)
+    i = p.rfind(os.sep + "research" + os.sep)
+    return p[:i] if i >= 0 else os.getcwd()
+
+def lint_module(root, d):
+    """Static checks of a module the card brings: files, provenance, licence, toolchain, host tests, no network."""
+    F = []; X = sub_parse(d["MODULE"], MODULE_KEYS); mp = X.get("path", "").strip().rstrip("/")
+    if not mp: return F
+    md = os.path.join(root, mp); mt = os.path.join(md, "module.toml")
+    if not os.path.isfile(mt): return [("M1", "MODULE path %s has no module.toml" % mp, "add module.toml (SPEC.md section 5)")]
+    try: t = tomllib.loads(slurp(mt))
+    except Exception as e: return [("M1", "module.toml does not parse: %s" % e, "fix the TOML")]
+    pv = t.get("provenance", {}); lc = t.get("licence", {})
+    if not all(isinstance(pv.get(k), str) and pv.get(k) for k in ("origin", "repo", "commit")): F.append(("M2", "module.toml [provenance] needs origin, repo and commit", "SPEC.md section 5"))
+    elif pv["origin"] != "flerp":
+        # ported from another project: that project's provenance and licence travel with it
+        if not re.fullmatch(r"[0-9a-f]{7,40}", pv["commit"]): F.append(("M2", "a ported module's [provenance] commit must be the origin's commit (7-40 hex)", 'commit = "20937dc"'))
+        if not pv.get("authors"): F.append(("M2", "a ported module's [provenance] names its authors", 'authors = ["..."]'))
+        if not os.path.isfile(os.path.join(root, "catalog", pv["origin"], "ORIGIN.toml")): F.append(("M2", "origin '%s' has no catalog/%s/ORIGIN.toml" % (pv["origin"], pv["origin"]), "add ORIGIN.toml (repo, commit, licence, toolchain) in the PR"))
+    spdx = lc.get("spdx") if isinstance(lc.get("spdx"), str) else ""
+    if not spdx: F.append(("M2", "module.toml [licence] spdx is missing", 'spdx = "MIT"'))
+    elif not all(x in COMPATIBLE for x in re.split(r"\s+(?:OR|AND|WITH)\s+", spdx.strip("() "))): F.append(("M2", "licence '%s' is not one we can carry (open-source SPDX ids only)" % spdx, "the module keeps its origin's licence; a closed or unknown licence is declined"))
+    tc = t.get("build", {}).get("toolchain")
+    if tc is not None:
+        tcs = tomllib.loads(slurp(os.path.join(root, "toolchains.toml"))) if os.path.isfile(os.path.join(root, "toolchains.toml")) else {}
+        if tc not in tcs: F.append(("M3", "module toolchain '%s' is not in toolchains.toml" % tc, "name a toolchain from toolchains.toml"))
+    tests = [x for x in re.split(r"[,\s]+", X.get("tests", "")) if x]
+    for x in tests:
+        if not os.path.isfile(os.path.join(root, x)): F.append(("M4", "MODULE tests: %s does not exist" % x, "add the host test"))
+    for r, _, fs in os.walk(md):
+        for f in fs:
+            p = os.path.join(r, f)
+            if f == "module.toml": continue
+            try: text = slurp(p)
+            except (UnicodeDecodeError, OSError): continue
+            m = MODNET.search(text)
+            if m: F.append(("M5", "%s reaches for the network ('%s')" % (os.path.relpath(p, root), m.group(0)), "vendor what it fetches; the build and the boxes have no network"))
+    return F
+
+def clean_check(root, d, timeout=900):
+    """flerp check and the module's host tests in a clean checkout of HEAD (what the PR's head commit holds)."""
+    X = sub_parse(d["MODULE"], MODULE_KEYS); mp = X.get("path", "").strip().rstrip("/")
+    tests = [x for x in re.split(r"[,\s]+", X.get("tests", "")) if x]
+    F = []; tmp = tempfile.mkdtemp(prefix="flerp-research-")
+    try:
+        a = subprocess.run("git -C %s archive HEAD | tar -x -C %s" % (shlex_q(root), shlex_q(tmp)), shell=True, capture_output=True, text=True)
+        if a.returncode: return [("M6", "clean checkout failed: %s" % a.stderr.strip()[:200], "commit the PR first")]
+        if not os.path.isdir(os.path.join(tmp, mp)): return [("M6", "%s is not committed at HEAD" % mp, "commit the module")]
+        c = subprocess.run([sys.executable, "flerp", "check"], cwd=tmp, capture_output=True, text=True, timeout=timeout)
+        errs = [l for l in (c.stdout + c.stderr).splitlines() if l.startswith("error:") and mp in l]
+        for e in errs: F.append(("M6", "flerp check: %s" % e[6:].strip(), "fix the module manifest"))
+        net = ["unshare", "-rn"] if subprocess.run(["unshare", "-rn", "true"], capture_output=True).returncode == 0 else []
+        for x in tests:
+            cmd = [sys.executable, "-m", "unittest", x[:-3].replace("/", ".")] if x.endswith(".py") else [os.path.join(tmp, x)]
+            r = subprocess.run(net + cmd, cwd=tmp, capture_output=True, text=True, timeout=timeout)
+            if r.returncode: F.append(("M7", "host test %s failed in a clean checkout: %s" % (x, (r.stdout + r.stderr).strip().splitlines()[-1:]), "make it pass from a fresh clone"))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return F
+
+def shlex_q(s): return "'" + s.replace("'", "'\\''") + "'"
+
+def read_log(folder):
+    p = os.path.join(folder, "LOG"); out = []
+    if not os.path.isfile(p): return out
+    for l in slurp(p).splitlines():
+        if not l.strip() or l.startswith("#"): continue
+        head, _, reason = l.partition(" -- ")
+        parts = head.split()
+        out.append({"ts": parts[0] if parts else "", "step": parts[1] if len(parts) > 1 else "",
+                    "kv": dict(x.split("=", 1) for x in parts[2:] if "=" in x), "reason": reason.strip(), "line": l})
+    return out
+
+def log_view(L):
+    """The state machine over LOG lines, and the hashes card.md and gate.toml must still have."""
+    errs = []; prev = None; seen = set(); want = {"card": None, "gate": None}
+    for s in L:
+        st = s["step"]
+        if not re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d)?Z", s["ts"]): errs.append(("L1", "LOG line has no UTC time: %s" % s["line"], "use flerp-research log"))
+        if not s["kv"].get("by"): errs.append(("L1", "LOG line has no by=<who>: %s" % s["line"], "every step says who"))
+        if st == "amended":
+            if prev not in AMENDABLE: errs.append(("L2", "amended after %s; the owner amends an accepted card" % prev, "amend after accepted"))
+            if not s["reason"]: errs.append(("L2", "amended needs the reason and what changed after ' -- '", "flerp-research log DIR amended --by <owner> --reason '...'"))
+        else:
+            if st not in NEXT.get(prev, set()): errs.append(("L2", "LOG goes %s -> %s, not allowed" % (prev, st), "allowed from %s: %s" % (prev, " ".join(sorted(NEXT.get(prev, set()))) or "nothing (final)")))
+            if st == "wont-do" and not s["reason"]: errs.append(("L2", "wont-do needs the reason", "flerp-research log DIR wont-do --by <owner> --reason '...'"))
+            if st == "merged" and not re.fullmatch(r"[0-9a-f]{12,40}", s["kv"].get("commit", "")): errs.append(("L2", "merged needs commit=<the merge commit, 12-40 hex>", "flerp-research log DIR merged --by <owner> --commit <sha>"))
+            prev = st; seen.add(st)
+        for k in want:
+            if k in s["kv"]: want[k] = s["kv"][k]
+    return errs, prev, seen, want
+
+def lint_folder(folder, deny=(), clean=False):
+    F = []; folder = os.path.normpath(folder); cp = os.path.join(folder, "card.md")
+    if not os.path.isfile(cp): return [("F1", "no card.md in %s" % folder, "flerp-research new AREA SLUG")]
+    d = parse(slurp(cp)); F += lint_card(d); root = repo_root(folder)
+    if d["MODULE"].strip():
+        F += lint_module(root, d)
+        if clean and not any(r.startswith("M") for r, _, _ in F): F += clean_check(root, d)
+    L = read_log(folder); ab = os.path.abspath(folder)
+    m = FOLDER.search(ab); dm = DRAFT.search(ab)
+    if not L:
+        if not dm: F.append(("F1", "a draft folder is research/<area>/<slug>/", "flerp-research new AREA SLUG"))
+        elif dm.group("area") != d["AREA"].strip().lower(): F.append(("F1", "folder area %s differs from AREA %s" % (dm.group("area"), d["AREA"]), "move the folder or fix AREA"))
+    else:
+        if not m: F.append(("F1", "a submitted folder is research/<area>/<id>-<slug>/ (id = 10 hex)", "flerp-research submit names it"))
+        elif m.group("area") != d["AREA"].strip().lower(): F.append(("F1", "folder area %s differs from AREA %s" % (m.group("area"), d["AREA"]), "move the folder or fix AREA"))
+        errs, prev, seen, want = log_view(L); F += errs
+        if m and L[0]["step"] == "submitted" and L[0]["kv"].get("card") != m.group("id"):
+            F.append(("F2", "folder id %s is not the submitted card's hash %s" % (m.group("id"), L[0]["kv"].get("card")), "the id is the first 10 hex of sha256(card.md) as submitted"))
+        if want["card"] and want["card"] != h10(cp): F.append(("F2", "card.md differs from its last recorded hash", "restore it, or the owner records an amendment"))
+        gp = os.path.join(folder, "gate.toml")
+        if "accepted" in seen:
+            if not os.path.isfile(gp): F.append(("F3", "accepted without gate.toml", "the owner writes gate.toml before any run"))
+            else:
+                F += lint_gate(gp)
+                if want["gate"] != h10(gp): F.append(("F3", "gate.toml differs from its last recorded hash; only the owner amends it, with a reason", "restore it or record an amendment"))
+        if seen & {"run", "verdict"} and os.path.isdir(os.path.join(folder, "results")) or "verdict" in seen:
+            F += lint_results(folder)
+        if "verdict" in seen:
+            vp = os.path.join(folder, "verdict.md")
+            if not os.path.isfile(vp): F.append(("F4", "verdict.md is missing", "write it from flerp-research judge"))
+            else:
+                vt = slurp(vp); vm = re.search(r"^VERDICT:\s*(\S+)", vt, re.M); gm = re.search(r"^GATE:\s*(PASS|FAIL)\b", vt, re.M)
+                ok, _ = judge(folder)
+                if not vm or vm.group(1) not in VERDICTS: F.append(("F4", "verdict.md needs 'VERDICT: %s'" % " | ".join(VERDICTS), "add it"))
+                if not gm or (gm.group(1) == "PASS") != ok: F.append(("F4", "verdict.md 'GATE: PASS|FAIL' must match flerp-research judge (%s)" % ("PASS" if ok else "FAIL"), "copy judge's line"))
+                if vm and vm.group(1) == "CONFIRMED" and not ok: F.append(("F4", "CONFIRMED with a failing gate", "the verdict is REFUTED or INCONCLUSIVE"))
+                lv = [s for s in L if s["step"] == "verdict"]
+                if vm and lv and lv[-1]["kv"].get("verdict") != vm.group(1): F.append(("F4", "the LOG's verdict= differs from verdict.md", "log the verdict with flerp-research log DIR verdict"))
+    for f, name, hit in scrub_check([folder], deny): F.append(("F5", "%s in %s: %s" % (name, os.path.relpath(f, folder), hit), "scrub it (flerp-research ingest scrubs run files)"))
+    return F
+
+def lint_gate(gp):
+    try: t = tomllib.loads(slurp(gp))
+    except Exception as e: return [("F3", "gate.toml does not parse: %s" % e, "fix the TOML")]
+    F = []
+    if set(t) & {"resources", "monitor"}: F.append(("Q15", "gate.toml carries [resources] or [monitor]; the resource plan stays in our records", "remove the table"))
+    checks = t.get("check", [])
+    if not checks: F.append(("F3", "gate.toml has no [[check]]", "add [[check]] with metric, op, value"))
+    for i, c in enumerate(checks, 1):
+        if not isinstance(c.get("metric"), str) or c.get("op") not in OPS or not isinstance(c.get("value"), (int, float)) or isinstance(c.get("value"), bool):
+            F.append(("F3", "gate check %d needs metric (string), op (%s) and a numeric value" % (i, " ".join(OPS)), 'metric = "x"  op = ">="  value = 1.05'))
+    return F
+
+def lint_results(folder):
+    F = []; rd = os.path.join(folder, "results"); man = os.path.join(rd, "MANIFEST.sha256")
+    if not os.path.isfile(os.path.join(rd, "summary.json")): F.append(("F4", "results/summary.json is missing", "flerp-research ingest"))
+    if not os.path.isfile(man): F.append(("F4", "results/MANIFEST.sha256 is missing", "flerp-research ingest")); return F
+    for l in slurp(man).splitlines():
+        h, _, name = l.strip().partition("  ")
+        p = os.path.join(rd, name)
+        if not os.path.isfile(p) or hashlib.sha256(slurp(p, "rb")).hexdigest() != h: F.append(("F4", "results/%s does not match MANIFEST.sha256" % name, "results are not edited after ingest"))
+    return F
+
+def judge(folder):
+    gp = os.path.join(folder, "gate.toml")
+    t = tomllib.loads(slurp(gp)) if os.path.isfile(gp) else {}
+    sp = os.path.join(folder, "results", "summary.json")
+    metrics = json.loads(slurp(sp)).get("metrics", {}) if os.path.isfile(sp) else {}
+    rows = []; ok = bool(t.get("check"))
+    for c in t.get("check", []):
+        v = metrics.get(c["metric"]); p = v is not None and OPS[c["op"]](v, c["value"]); ok = ok and p
+        rows.append("| %s | %s %s | %s | %s |" % (c["metric"], c["op"], c["value"], "missing" if v is None else v, "pass" if p else "FAIL"))
+    return ok, rows
+
+def merge_plan(folder, root=None):
+    """(merge, drop, why): the repo-relative paths that merge with the PR, and the ones dropped from it."""
+    folder = os.path.normpath(folder); root = root or repo_root(folder)
+    rel = os.path.relpath(os.path.abspath(folder), root)
+    d = parse(slurp(os.path.join(folder, "card.md")))
+    mp = sub_parse(d["MODULE"], MODULE_KEYS).get("path", "").strip().rstrip("/")
+    _, prev, _, _ = log_view(read_log(folder))
+    if prev == "wont-do": return [], [rel] + ([mp] if mp else []), "won't do: the pull request is closed; nothing merges"
+    if prev not in ("verdict", "merged"): return [], [], "no verdict yet: the pull request stays open while it is tested"
+    vm = re.search(r"^VERDICT:\s*(\S+)", slurp(os.path.join(folder, "verdict.md")), re.M)
+    v = vm.group(1) if vm else ""
+    if v == "CONFIRMED": return [rel] + ([mp] if mp else []), [], "CONFIRMED: the card folder and the module merge; the module's evidence is the folder's gate and results"
+    return [rel], ([mp] if mp else []), "%s: only the card folder merges, with its results; the module is dropped from the merge" % (v or "no VERDICT line")
+
+def series_dirs(root, tag):
+    """The card folders of one batch (one pull request may add several cards, each judged and merged on its own)."""
+    out = []
+    for r, _, fs in os.walk(root):
+        if "card.md" in fs and FOLDER.search(os.path.abspath(r)) and parse(slurp(os.path.join(r, "card.md")))["SERIES"].strip() == tag: out.append(r)
+    return sorted(out)
+
+def deny_rx(lit):
+    """A deny-list line as a regex: 're:PATTERN' as written, else the literal, case-insensitive."""
+    return re.compile(lit[3:]) if lit.startswith("re:") else re.compile(re.escape(lit), re.I)
+
+def scrub_findings(text, deny=()):
+    found = [(name, m.group(0)) for name, rx in DENY for m in rx.finditer(text)]
+    return found + [("deny list", m.group(0)) for lit in deny if lit for m in [deny_rx(lit).search(text)] if m]
+
+DENY_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".flerp-research-deny")
+
+def load_deny(path=None):
+    """The private literals: path, else $FLERP_RESEARCH_DENY, else the untracked .flerp-research-deny at the repo root."""
+    path = path or os.environ.get("FLERP_RESEARCH_DENY") or (DENY_FILE if os.path.isfile(DENY_FILE) else "")
+    return [l.strip() for l in slurp(path).splitlines() if l.strip() and not l.startswith("#")] if path else []
+
+def scrub_check(paths, deny=()):
+    out = []
+    for p in paths:
+        files = [p] if os.path.isfile(p) else [os.path.join(r, f) for r, _, fs in os.walk(p) for f in sorted(fs)]
+        for f in files:
+            try: text = slurp(f)
+            except (UnicodeDecodeError, OSError): out.append((f, "binary", "binary files are not published")); continue
+            out += [(f, n, h) for n, h in scrub_findings(text, deny)]
+    return out
+
+def scrub_text(text, ipmap, maps, deny=()):
+    for a, b in maps: text = text.replace(a, b)
+    def ip(m):
+        if m.group(0) not in ipmap: ipmap[m.group(0)] = "box-%d" % (len(ipmap) + 1)
+        return ipmap[m.group(0)]
+    text = DENY[0][1].sub(ip, text)
+    for (_, rx), rep in zip(DENY[1:], ["localhost", "~", "<path>", "<email>"]): text = rx.sub(rep, text)
+    for lit in deny:
+        if lit: text = deny_rx(lit).sub("<private>", text)
+    return text
+
+def cmd_ingest(run_dir, folder, files, metrics, maps, deny):
+    rd = os.path.join(folder, "results"); os.makedirs(rd, exist_ok=True); ipmap = {}
+    for spec in files:
+        src, _, dst = spec.partition(":")
+        out = scrub_text(slurp(os.path.join(run_dir, src)), ipmap, maps, deny)
+        left = scrub_findings(out, deny)
+        if left: sys.exit("ingest: %s still holds %s after the scrub; add --map or leave the file out" % (src, left[0]))
+        with open(os.path.join(rd, dst or os.path.basename(src)), "w", encoding="utf-8") as f: f.write(out)
+    sp = os.path.join(rd, "summary.json")
+    summ = json.loads(slurp(sp)) if os.path.isfile(sp) else {"metrics": {}}
+    for kv in metrics:
+        k, _, v = kv.partition("=")
+        try: summ["metrics"][k] = json.loads(v)
+        except ValueError: summ["metrics"][k] = v
+    with open(sp, "w", encoding="utf-8") as f: json.dump(summ, f, indent=1, sort_keys=True); f.write("\n")
+    names = sorted(x for x in os.listdir(rd) if x != "MANIFEST.sha256" and os.path.isfile(os.path.join(rd, x)))
+    with open(os.path.join(rd, "MANIFEST.sha256"), "w", encoding="utf-8") as f:
+        for n in names: f.write("%s  %s\n" % (hashlib.sha256(slurp(os.path.join(rd, n), "rb")).hexdigest(), n))
+    print("ingest: %d files into %s, %d metrics" % (len(names), rd, len(summ["metrics"])))
+
+def now(): return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+
+def append_log(folder, line):
+    with open(os.path.join(folder, "LOG"), "a", encoding="utf-8") as f: f.write(line + "\n")
+    print(line)
+
+def tok(s): return re.sub(r"\s+", "-", s.strip()) or "unknown"
+
+def cmd_submit(folder, by):
+    folder = os.path.normpath(folder)
+    if read_log(folder): sys.exit("submit: %s is already submitted" % folder)
+    dm = DRAFT.search(os.path.abspath(folder))
+    if not dm: sys.exit("submit: a draft folder is research/<area>/<slug>/")
+    F = [f for f in lint_folder(folder) if f[0] != "F1"]
+    if F: sys.exit("submit: the card does not lint; fix it first:\n" + "\n".join("FAIL %s: %s" % (r, m) for r, m, _ in F))
+    d = parse(slurp(os.path.join(folder, "card.md")))
+    cid = h10(os.path.join(folder, "card.md")); nd = os.path.join(os.path.dirname(folder), "%s-%s" % (cid, dm.group("slug")))
+    if os.path.exists(nd): sys.exit("submit: %s exists (the same card was submitted before)" % nd)
+    os.rename(folder, nd)
+    append_log(nd, "%s submitted by=%s card=%s" % (now(), tok(by or d["ASKED BY"]), cid))
+    print(nd)
+
+def cmd_log(folder, step, by, reason, commit=""):
+    if step == "submitted": sys.exit("log: use flerp-research submit")
+    if not by: sys.exit("log: --by is required")
+    _, prev, _, _ = log_view(read_log(folder))
+    if step == "amended":
+        if prev not in AMENDABLE: sys.exit("log: the owner amends an accepted card (now %s)" % prev)
+        if not reason: sys.exit("log: amended needs --reason (why, and what changed)")
+    elif step not in NEXT.get(prev, set()): sys.exit("log: %s -> %s is not allowed (allowed: %s)" % (prev, step, " ".join(sorted(NEXT.get(prev, set()))) or "none"))
+    if step == "wont-do" and not reason: sys.exit("log: wont-do needs --reason")
+    extra = ["by=" + tok(by)]; gp = os.path.join(folder, "gate.toml")
+    if step in ("accepted", "amended"):
+        if not os.path.isfile(gp): sys.exit("log: write gate.toml first (the pass rule, before any run)")
+        F = lint_gate(gp)
+        if F: sys.exit("log: gate.toml does not lint: %s" % F[0][1])
+        extra.append("gate=" + h10(gp))
+    if step == "amended":
+        F = lint_card(parse(slurp(os.path.join(folder, "card.md"))))
+        if F: sys.exit("log: the amended card does not lint: %s" % F[0][1])
+        extra.append("card=" + h10(os.path.join(folder, "card.md")))
+    if step == "merged":
+        if not re.fullmatch(r"[0-9a-f]{12,40}", commit): sys.exit("log: merged needs --commit <the merge commit, 12-40 hex>")
+        extra.append("commit=" + commit)
+    if step == "verdict":
+        vp = os.path.join(folder, "verdict.md")
+        vm = re.search(r"^VERDICT:\s*(\S+)", slurp(vp), re.M) if os.path.isfile(vp) else None
+        if not vm or vm.group(1) not in VERDICTS: sys.exit("log: write verdict.md with 'VERDICT: %s' first" % " | ".join(VERDICTS))
+        extra.append("verdict=" + vm.group(1))
+    append_log(folder, " ".join([now(), step] + extra) + (" -- " + reason if reason else ""))
+
+def build_index(root):
+    rows = []
+    for r, ds, fs in os.walk(root):
+        m = FOLDER.search(os.path.abspath(r))
+        if "card.md" in fs and m:
+            d = parse(slurp(os.path.join(r, "card.md"))); L = read_log(r); _, st, _, _ = log_view(L)
+            am = sum(1 for s in L if s["step"] == "amended")
+            vp = os.path.join(r, "verdict.md"); vm = re.search(r"^VERDICT:\s*(\S+)", slurp(vp), re.M) if os.path.isfile(vp) else None
+            mp = sub_parse(d["MODULE"], MODULE_KEYS).get("path", "").strip()
+            mc = next((s["kv"].get("commit", "") for s in L if s["step"] == "merged"), "")
+            rows.append((L[0]["ts"] if L else "", m.group("id"), d["SERIES"].strip() or "-", d["AREA"].strip(), d["TITLE"].strip(), (st or "draft") + (" (amended %d)" % am if am else ""),
+                         vm.group(1) if vm else "", mp or "-", mc[:12] or "-", os.path.relpath(r, root)))
+    rows.sort(reverse=True)
+    out = ["# Research cards", "", "Generated by tools/flerp-research index; do not edit. Newest first. How to ask: docs/research/README.md.",
+           "Cite a result as research/<folder>/verdict.md at its merge commit.", "",
+           "| id | submitted | series | area | question | step | verdict | module | merge commit | folder |", "|---|---|---|---|---|---|---|---|---|---|"]
+    out += ["| %s | %s | %s | %s | %s | %s | %s | %s | %s | [%s](%s/%s) |" % (i, ts[:10], se, a, t.replace("|", "/"), s, v, mp, mc, f, f, "verdict.md" if v else "card.md")
+            for ts, i, se, a, t, s, v, mp, mc, f in rows]
+    return "\n".join(out) + "\n"
+
+def render(d, folder):
+    m = FOLDER.search(os.path.abspath(folder)); cid = m.group("id") if m else "<id>"
+    M = sub_parse(d["METHOD"], METHOD_KEYS); rel = os.path.relpath(folder)
+    return "\n".join([
+        "TITLE: " + ("RESEARCH %s: %s" % (cid, d["TITLE"].strip()))[:90].rstrip(" .:;"), "KIND: experiment",
+        "WHY: strixflerp research card %s (%s) from %s: %s" % (cid, d["AREA"].strip(), d["ASKED BY"].strip(), d["WHY"].strip()),
+        "DONE: %s/results ingested and verdict.md written on card/%s; flerp-research lint prints OK" % (rel, cid),
+        "DONE: flerp-research merge-plan %s applied: the merge holds exactly the paths it lists" % rel,
+        "VERIFY: tools/flerp-research lint %s" % rel,
+        "HYPOTHESIS: " + d["PREDICTION"].strip(),
+        "CRITERIA: %s/gate.toml" % rel,
+        "RESOURCES:",
+        "  nodes: TODO (%s boxes; the tool that takes them)" % M.get("boxes", "?"),
+        "  hold: TODO (expected duration and TTL)",
+        "  weights: TODO (%s: the staged local copy, bytes, before the hold)" % M.get("model", "?"),
+        "  loads: TODO", "  reps: " + d["REPS"].strip(), "  shares: TODO", "  cleanup: TODO",
+        "MONITOR: TODO milestones with deadlines; watcher; stop and release at the first fault",
+        "NEXT: read %s/card.md and the code it names before any build" % rel,
+        "SIZE: est-m", "PRIORITY: p2", "PARENT: TODO", "LABELS: flerp-research",
+        "NOTE: commits name %s on card/%s. code %s; subject %s; baseline %s; settings %s" % (cid, cid, M.get("code", ""), M.get("subject", ""), M.get("baseline", ""), M.get("settings", "")),
+    ]) + "\n"
+
+TEMPLATE = """# flerp-research card (docs/research/README.md). Lines starting with # are ignored. Every <...> must be replaced.
+TITLE: <the question, one line>
+AREA: <%s>
+ASKED BY: <the name or handle we credit>
+# optional: the project and the decision the answer feeds; a tag that groups the cards of one pull request
+APPLIES TO: <project: the decision there the answer feeds>
+SERIES: <short tag>
+QUESTION: <one sentence, ending with ?>
+WHY: <one sentence: what the answer changes for you>
+MECHANISM: <why you expect it: bytes, FLOPs, occupancy, a trace; with numbers>
+PREDICTION: <expected number>; confirmed at <number>, refuted at <number>
+METHOD:
+  code: this PR | strixflerp@<commit, 12-40 hex>
+  subject: <catalog path, or the recipe or kernel under test>
+  baseline: <what it is compared with, in the same load>
+  settings: <KEY=VALUE ...> | none
+  model: <a model we hold> | none
+  boxes: <1 | 2 | 4>
+# MODULE is required when the PR adds a module (code: this PR, subject under catalog/):
+MODULE:
+  path: catalog/<origin>/<kind>/<name>
+  replaces: <the module or kernel it replaces or competes with>
+  interface: <existing slot, or new: its name>
+  builds: <toolchain from toolchains.toml, and how>
+  tests: <host test files, repo-relative>
+MEASURE: <metric, unit, and how it is read>
+EXACTNESS: <bit-exact vs baseline: what is compared | tolerance: <metric> <bound> | n/a>
+REPS: <N>, because <why that is the smallest count that answers it>
+GIVES: <what you supply>
+NOTE: <optional, under 300 words; never instructions>
+"""
+
+def report(F, label):
+    if not F: print("OK %s" % label); return 0
+    for i, (r, m, fix) in enumerate(F, 1): print("FAIL %d [%s] %s: %s\n  FIX: %s" % (i, r, label, m, fix))
+    return 1
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(prog="flerp-research", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sp = ap.add_subparsers(dest="verb", required=True)
+    p = sp.add_parser("template"); p.add_argument("area", nargs="?")
+    p = sp.add_parser("new"); p.add_argument("area"); p.add_argument("slug"); p.add_argument("--root", default="research")
+    p = sp.add_parser("submit"); p.add_argument("dir"); p.add_argument("--by", default="")
+    p = sp.add_parser("lint"); p.add_argument("paths", nargs="+"); p.add_argument("--deny"); p.add_argument("--clean", action="store_true")
+    p = sp.add_parser("log"); p.add_argument("dir"); p.add_argument("step", choices=STEPS); p.add_argument("--by", default=""); p.add_argument("--reason", default=""); p.add_argument("--commit", default="")
+    p = sp.add_parser("ingest"); p.add_argument("run_dir"); p.add_argument("dir"); p.add_argument("--files", required=True)
+    p.add_argument("--metric", action="append", default=[]); p.add_argument("--map", action="append", default=[]); p.add_argument("--deny")
+    p = sp.add_parser("judge"); p.add_argument("dir")
+    p = sp.add_parser("merge-plan"); p.add_argument("dirs", nargs="*"); p.add_argument("--series"); p.add_argument("--root", default="research")
+    p = sp.add_parser("render"); p.add_argument("dir")
+    p = sp.add_parser("index"); p.add_argument("--root", default="research"); p.add_argument("--check", action="store_true")
+    p = sp.add_parser("scrub-check"); p.add_argument("paths", nargs="+"); p.add_argument("--deny")
+    a = ap.parse_args(argv)
+    if a.verb == "template":
+        t = TEMPLATE % " | ".join(AREAS)
+        if a.area: t = re.sub(r"^AREA: .*$", "AREA: " + a.area, t, flags=re.M)
+        sys.stdout.write(t); return 0
+    if a.verb == "new":
+        if a.area not in AREAS: sys.exit("new: AREA is one of " + " ".join(AREAS))
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]{2,40}", a.slug) or re.match(r"[0-9a-f]{10}-", a.slug): sys.exit("new: slug is 3-41 chars of a-z 0-9 -, not starting with an id")
+        d = os.path.join(a.root, a.area, a.slug); os.makedirs(d)
+        with open(os.path.join(d, "card.md"), "w", encoding="utf-8") as f: f.write(re.sub(r"^AREA: .*$", "AREA: " + a.area, TEMPLATE % "", flags=re.M))
+        print(d); return 0
+    if a.verb == "submit": cmd_submit(a.dir, a.by); return 0
+    if a.verb == "lint":
+        rc = 0; deny = load_deny(a.deny)
+        for p in a.paths:
+            if os.path.isdir(p): rc |= report(lint_folder(p, deny, a.clean), p); continue
+            t = slurp(p)
+            rc |= report(lint_card(parse(t)) + [("F5", "%s: %s" % (n, h), "drop it") for n, h in scrub_findings(t, deny)], p)
+        return rc
+    if a.verb == "log": cmd_log(a.dir, a.step, a.by, a.reason, a.commit); return 0
+    if a.verb == "ingest":
+        cmd_ingest(a.run_dir, a.dir, [x for x in a.files.split(",") if x], a.metric, [tuple(m.split("=", 1)) for m in a.map], load_deny(a.deny)); return 0
+    if a.verb == "judge":
+        ok, rows = judge(a.dir)
+        print("| metric | rule | measured | result |\n|---|---|---|---|\n" + "\n".join(rows)); print("GATE: %s" % ("PASS" if ok else "FAIL")); return 0 if ok else 1
+    if a.verb == "merge-plan":
+        dirs = list(a.dirs) + (series_dirs(a.root, a.series) if a.series else [])
+        if not dirs: sys.exit("merge-plan: name card folders or --series TAG")
+        for dd in dirs:
+            merge, drop, why = merge_plan(dd)
+            print("%s: %s" % (os.path.normpath(dd), why))
+            for x in merge: print("  merge: " + x)
+            for x in drop: print("  drop: " + x)
+        return 0
+    if a.verb == "render": sys.stdout.write(render(parse(slurp(os.path.join(a.dir, "card.md"))), a.dir)); return 0
+    if a.verb == "index":
+        text = build_index(a.root); p = os.path.join(a.root, "INDEX.md")
+        if a.check:
+            if (slurp(p) if os.path.isfile(p) else "") != text: print("index: %s is stale; run tools/flerp-research index" % p); return 1
+            print("index: %s is current" % p); return 0
+        with open(p, "w", encoding="utf-8") as f: f.write(text)
+        print("index: wrote %s" % p); return 0
+    if a.verb == "scrub-check":
+        hits = scrub_check(a.paths, load_deny(a.deny))
+        for f, n, h in hits: print("%s: %s: %s" % (f, n, h))
+        print("scrub-check: %d findings" % len(hits)); return 1 if hits else 0
+
+if __name__ == "__main__":
+    sys.exit(main())

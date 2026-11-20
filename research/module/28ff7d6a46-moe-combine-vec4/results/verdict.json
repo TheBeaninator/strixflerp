@@ -1,0 +1,142 @@
+{
+ "card": "28ff7d6a46",
+ "criteria": "gate/moe-combine.toml",
+ "cause": {
+  "rule": [
+   "kernel_shape"
+  ],
+  "by_dims": [
+   {
+    "dims": [
+     4096,
+     8,
+     2048
+    ],
+    "gbps": {
+     "orig.isolated": 48.2,
+     "vec4o.isolated": 188.7,
+     "probe.isolated": 196.0,
+     "orig.after_writer": 48.3,
+     "vec4o.after_writer": 189.0,
+     "probe.after_writer": 195.4
+    },
+    "differ": 0,
+    "words": 8388608,
+    "rule": "kernel_shape"
+   },
+   {
+    "dims": [
+     4096,
+     10,
+     4096
+    ],
+    "gbps": {
+     "orig.isolated": 51.4,
+     "vec4o.isolated": 202.9,
+     "probe.isolated": 207.9,
+     "orig.after_writer": 51.4,
+     "vec4o.after_writer": 202.5,
+     "probe.after_writer": 207.5
+    },
+    "differ": 0,
+    "words": 16777216,
+    "rule": "kernel_shape"
+   }
+  ],
+  "source": "k-cause1.jsonl (bench job 20261114T102419Z-run-cause1)"
+ },
+ "C0": {
+  "pass": true,
+  "differ_by_dims": {
+   "4096x8x2048": [
+    0,
+    8388608
+   ],
+   "4096x10x4096": [
+    0,
+    16777216
+   ]
+  }
+ },
+ "C2": {
+  "pass": true,
+  "checked_steps": 108,
+  "mismatches": 0,
+  "source": "cgate/verdict-gate.json"
+ },
+ "C3": {
+  "pass": true,
+  "ratio_2048": 1.1004,
+  "ratio_16384": 1.1295,
+  "min": 1.05,
+  "tok_s": {
+   "G@2048": 1979.3,
+   "G@16384": 1889.1,
+   "C@2048": 2178.0,
+   "C@16384": 2133.7
+  },
+  "source": "cgate/verdict-gate.json"
+ },
+ "C4": {
+  "pass": true,
+  "isa": {
+   "rocm-7.2.4": {
+    "kernels": 1,
+    "scratch_bytes": [
+     0
+    ],
+    "vgpr": [
+     74
+    ]
+   },
+   "therock-10.1": {
+    "kernels": 1,
+    "scratch_bytes": [
+     0
+    ],
+    "vgpr": [
+     75
+    ]
+   }
+  }
+ },
+ "hypothesis": {
+  "combine_ms": 70.42,
+  "tof16_ms": 38.95,
+  "combine_plus_tof16_ms": 109.37,
+  "arm_G_ms": {
+   "combine": 279.0,
+   "tof16": 69.0
+  },
+  "confirmed_at_ms": 150,
+  "refuted_above_ms": 250,
+  "result": "confirmed",
+  "per_pass": {
+   "combine": {
+    "launches_a_pass": 40,
+    "passes_ms": [
+     171.86,
+     142.57,
+     70.42,
+     69.93,
+     70.48
+    ],
+    "measured_median_ms": 70.42
+   },
+   "tof16": {
+    "launches_a_pass": 120,
+    "passes_ms": [
+     94.37,
+     81.96,
+     38.95,
+     38.77,
+     38.99
+    ],
+    "measured_median_ms": 38.95
+   }
+  },
+  "source": "cprof/trace/kt_kernel_trace.csv, passes 3-5 measured (1-2 warm-up)"
+ },
+ "champion": "proposal withdrawn 2026-11-14; the lever enters the prefill champion through a later experiment",
+ "pass": true
+}

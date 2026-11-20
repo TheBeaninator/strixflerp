@@ -1,0 +1,39 @@
+# Pass rule for this card, from PREDICTION and EXACTNESS; committed before any run. Only the owner amends it, with a
+# reason recorded in LOG. flerp-research judge reads results/summary.json.
+# This card's rule restates gate/moe-combine.toml as committed before any hardware run (internal commit; public in
+# strixflerp@ad7270763b75).
+[[check]]
+metric = "combine_plus_tof16_ms"
+what = "hypothesis: combine + ToF16 a 4,096-row chunk, median of profile passes 3-5 (kernel trace)"
+op = "<="
+value = 150
+
+[[check]]
+metric = "c0_words_differ"
+what = "C0: output words of the new combine differing from MoeEpilogueKernel's, kernel bench, both dims"
+op = "=="
+value = 0
+
+[[check]]
+metric = "c2_mismatches"
+what = "C2: recorded steps whose logits sha256 or generated ids differ from arm G (8 fidelity prompts and a 16,384-id prompt)"
+op = "=="
+value = 0
+
+[[check]]
+metric = "c3_ratio_2048"
+what = "C3: prefill tok/s, candidate / arm G at 2,048 tokens, median of 3 interleaved reps"
+op = ">="
+value = 1.05
+
+[[check]]
+metric = "c3_ratio_16384"
+what = "C3: the same at 16,384 tokens"
+op = ">="
+value = 1.05
+
+[[check]]
+metric = "c4_scratch_bytes"
+what = "C4: scratch bytes of the new kernel, rocm-7.2.4 and therock-10.1 (max)"
+op = "=="
+value = 0
