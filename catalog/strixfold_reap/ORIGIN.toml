@@ -1,0 +1,27 @@
+# The passive Edge-REAP collector over the pod's StrixFold TP4 serving build (a pod-local branch of the fork).
+# A sub-origin of strixfold_tp4 (catalog/strixfold_tp4, 003f679c, on its own card branch until merged): only the files
+# the change set touches between 003f679c and the head are harvested, by docs/harvest/harvest_strixfold_reap.py.
+# REAP_STATS unset leaves the engine's launches and replies as 003f679c's; docs/EDGE-REAP.md is the how-to.
+name      = "strixfold_reap"
+parent    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "feb5614b"
+branch    = "TP4-REAP-STATS over 03d67fc1 (= 003f679c28b1 + two server commits), a branch local to the pod fork"
+base      = "003f679c"            # strixfold_tp4's commit; the harvest diffs against it, so the base branch's two server commits ride along
+state     = "host tests and native-hip build pass on the origin (TheRock 10.2, kit gfx1151-v6f2c38-tp4); not yet run on hardware"
+
+[licence]
+spdx      = "Apache-2.0"
+files     = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
+third_party = "as catalog/strixfold (THIRD_PARTY_NOTICES.md)"
+
+[toolchain]
+host      = "zig 0.17.0, as catalog/strixfold"
+device    = "therock-10.2"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_strixfold_reap.py"
+# not built by a recipe (the recipe builds the engine, not the launcher or its docs); the conf keys REAP_STATS,
+# REAP_EVERY, REAP_PREFILL_ROWS, REAP_BUCKETS, REAP_DIR, REAP_SNAPSHOT_MIN live in tools/dsv41-hip/serve.conf / tp4.conf
+unharvested = ["docs/experiments/tp4-reap-stats.md (copied as runtime/edge_reap/DESIGN.md)", "tools/dsv41-hip/serve.conf", "tools/dsv41-hip/serve_lib.sh", "tools/dsv41-hip/tp4.conf"]

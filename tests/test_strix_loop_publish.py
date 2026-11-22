@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,6 +28,37 @@ class PublishablePaths(unittest.TestCase):
         self.assertEqual(S.pub("/srv/bench/runs/x/20261117T000124Z-run-pmodel"), "20261117T000124Z-run-pmodel")
         self.assertEqual(S.pub("gate/results/x"), "gate/results/x")
         self.assertIsNone(S.pub(None))
+
+
+class ScrubRun(unittest.TestCase):
+    """A fresh run's output, written with real paths and the card id, is publishable after scrub_run."""
+    def test_fresh_run_output_is_clean(self):
+        card = "0123456789"
+        with tempfile.TemporaryDirectory() as d:
+            res = os.path.join(d, "gate", "results", "strix-loop", "r1")
+            os.makedirs(os.path.join(res, "model"))
+            job = "/data/pod/bench/runs/20261117T000124Z-run-pmodel"
+            files = {
+                "plan.json": '{"card": "%s"}' % card,
+                "kbench-model.args.json": '{"_card": "%s", "src": "%s/build/r1/kstage"}' % (card, d),
+                "kbench-model.txt": "files: %s\nran on ltsp-k\n" % job,
+                "state.json": '{"job": "%s", "tool": "/data/models/tools/therock-10.1/bin/clang", "x": "%s/tools/isa-scan.py"}' % (job, d),
+                "loop.log": "$ /data/pod/x ran for card %s\n" % card,
+            }
+            for n, t in files.items():
+                with open(os.path.join(res, n), "w") as f:
+                    f.write(t)
+            changed = S.scrub_run(res, d, card)
+            self.assertEqual(len(changed), len(files))
+            for n in files:
+                with open(os.path.join(res, n)) as f:
+                    t = f.read()
+                self.assertIsNone(BAD.search(t), n)
+                self.assertIsNone(CARD_ID.search(t), n)
+                self.assertNotIn(d, t)
+            with open(os.path.join(res, "kbench-model.args.json")) as f:
+                self.assertIn("<checkout>/build/r1/kstage", f.read())
+            self.assertEqual(S.scrub_run(res, d, card), [])    # idempotent
 
 
 class NoInternalTraces(unittest.TestCase):

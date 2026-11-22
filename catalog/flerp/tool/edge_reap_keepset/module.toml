@@ -1,0 +1,34 @@
+id        = "tool.flerp.edge_reap_keepset"
+kind      = "tool"
+summary   = "owner's Edge-REAP expert-pruning script (strix_moe_surgery.py, unchanged: the exact DeepSeek-V4.1 and Qwen3 routers, the collector's report format, compute_edge_reap_keepset, the safetensors slicer and exporters) with a reader that validates, merges and solves the serving engine's per-(domain, modality) reports into keep-sets"
+why       = "Pruning experts by Edge-REAP saliency needs calibration statistics from the traffic the pruned model will serve; the serving engine collects them passively (runtime.strixfold_reap.edge_reap, REAP_STATS=1) in the script's own report format, so the keep-set side here turns those reports into the per-layer expert lists the script's slicer takes"
+notes     = "strix_moe_surgery.py is owner's (2026-11-21), checked in as he wrote it; its --self-test passes here. edge_reap_report.py adds fetch (GET /stats/reap with the admin key), merge (counts and gate mass summed, peaks maxed, saliency from the raw sampled sums when every report carries them, so reap_saliency = reap_weighted_norm_sum / token_count holds) and keepset (the script's solver on the merged report). docs/EDGE-REAP.md is the how-to; tests/test_edge_reap_keepset.py the proofs, including the engine's golden export."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/edge_reap_keepset/strix_moe_surgery.py", "flerp/edge_reap_keepset/edge_reap_report.py"]
+authors   = ["owner", "pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+
+[[provides]]
+interface = "tool.edge-reap-keepset/-/f64"
+api       = "edge_reap_report.py fetch|merge|keepset; strix_moe_surgery.py slice|export-q4p16|export-gguf|--self-test"
+numeric   = "float64 throughout, as the script; keep-sets deterministic (ties to the lower expert id)"
+regime    = "host only; numpy"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; tests/test_edge_reap_keepset.py round-trips reports into keep-sets"

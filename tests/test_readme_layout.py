@@ -38,5 +38,14 @@ class ReadmeLayout(unittest.TestCase):
             self.assertIn(p, paths)
 
 
+class ReadmeFacts(unittest.TestCase):
+    def test_facts_block_is_current(self):
+        import subprocess
+        import sys
+        p = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "readme-facts.py"), "--check"], cwd=ROOT,
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,685 @@
+# S2 counterexample: rank 0 collect of call 0 chunk 0 (lane 0 gather 2) reads slot 0 quarter 0 holding gather 2 of call (0, 2) from rank 0 (expected rank 0)
+# configuration: {"world": 4, "nslot": 4, "lanes": 2, "mode": "D1", "calls": 2, "kinds": "c", "mut": ["depth"], "name": "w4-depth", "what": "one stage more ahead than Layout.depth (two stages of one lane before its collect)", "expected": "S2"}
+# 204 steps; each line: step | the code it models
+
+  1. script call 0 = c
+     | coll.zig contract: both ranks issue the same calls (COLLECTIVES-DESIGN 2.2)
+  2. rank 0 stage call 0 chunk 0: gather 1 of lane 0 into slot 1, ready = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+  3. rank 0 stage call 0 chunk 1: gather 1 of lane 1 into slot 3, ready = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+  4. rank 0 stage call 0 chunk 2: gather 2 of lane 0 into slot 0, ready = 2
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+  5. rank 0 collect call 0 chunk 0 reads lane 0 seq = 2
+     | coll.hip:93 (collect reads its lane header's seq; rdma_proxy.zig:402-410 launchCollects)
+  6. rank 0 proxy starts lane 0 gather 1 (slot 1)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+  7. rank 0 proxy starts lane 1 gather 1 (slot 3)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+  8. rank 0 NIC places data of gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+  9. rank 0 NIC places trailer of lane 0 gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 10. rank 0 NIC places data of gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 11. rank 0 NIC places trailer of lane 1 gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 12. rank 0 NIC: ack from rank 1, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 13. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 14. rank 0 NIC: ack from rank 1, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 15. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 16. rank 0 NIC places data of gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 17. rank 0 NIC places trailer of lane 0 gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 18. rank 0 NIC places data of gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 19. rank 0 NIC places trailer of lane 1 gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 20. rank 0 NIC: ack from rank 2, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 21. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 22. rank 0 NIC: ack from rank 2, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 23. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 24. rank 0 NIC places data of gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 25. rank 0 NIC places trailer of lane 0 gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 26. rank 0 NIC places data of gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 27. rank 0 NIC places trailer of lane 1 gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 28. rank 0 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 29. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 30. rank 0 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 31. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 32. rank 1 stage call 0 chunk 0: gather 1 of lane 0 into slot 1, ready = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+ 33. rank 1 stage call 0 chunk 1: gather 1 of lane 1 into slot 3, ready = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+ 34. rank 1 stage call 0 chunk 2: gather 2 of lane 0 into slot 0, ready = 2
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+ 35. rank 1 collect call 0 chunk 0 reads lane 0 seq = 2
+     | coll.hip:93 (collect reads its lane header's seq; rdma_proxy.zig:402-410 launchCollects)
+ 36. rank 1 proxy starts lane 0 gather 1 (slot 1)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+ 37. rank 1 proxy starts lane 1 gather 1 (slot 3)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+ 38. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 39. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 40. rank 1 NIC places data of gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 41. rank 1 NIC places trailer of lane 0 gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 42. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 43. rank 1 NIC places data of gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 44. rank 1 NIC places trailer of lane 1 gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 45. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 46. rank 1 NIC: ack from rank 0, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 47. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 48. rank 1 NIC: ack from rank 0, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 49. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 50. rank 1 NIC places data of gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 51. rank 1 NIC places trailer of lane 0 gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 52. rank 1 NIC places data of gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 53. rank 1 NIC places trailer of lane 1 gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 54. rank 1 NIC: ack from rank 2, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 55. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 56. rank 1 NIC: ack from rank 2, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 57. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 58. rank 1 NIC places data of gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 59. rank 1 NIC places trailer of lane 0 gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 60. rank 1 NIC places data of gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 61. rank 1 NIC places trailer of lane 1 gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 62. rank 1 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 63. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 64. rank 1 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 65. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 66. rank 2 stage call 0 chunk 0: gather 1 of lane 0 into slot 1, ready = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+ 67. rank 2 stage call 0 chunk 1: gather 1 of lane 1 into slot 3, ready = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+ 68. rank 2 stage call 0 chunk 2: gather 2 of lane 0 into slot 0, ready = 2
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+ 69. rank 2 collect call 0 chunk 0 reads lane 0 seq = 2
+     | coll.hip:93 (collect reads its lane header's seq; rdma_proxy.zig:402-410 launchCollects)
+ 70. rank 2 proxy starts lane 0 gather 1 (slot 1)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+ 71. rank 2 proxy starts lane 1 gather 1 (slot 3)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+ 72. rank 2 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 73. rank 2 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 74. rank 2 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 75. rank 2 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 76. rank 2 NIC places data of gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 77. rank 2 NIC places trailer of lane 0 gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 78. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 79. rank 2 NIC places data of gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 80. rank 2 NIC places trailer of lane 1 gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 81. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 82. rank 2 NIC: ack from rank 0, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 83. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 84. rank 2 NIC: ack from rank 0, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 85. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 86. rank 2 NIC places data of gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 87. rank 2 NIC places trailer of lane 0 gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 88. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 89. rank 2 NIC places data of gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 90. rank 2 NIC places trailer of lane 1 gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 91. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 92. rank 2 NIC: ack from rank 1, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 93. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 94. rank 2 NIC: ack from rank 1, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+ 95. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+ 96. rank 2 NIC places data of gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 97. rank 2 NIC places trailer of lane 0 gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 98. rank 2 NIC places data of gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 99. rank 2 NIC places trailer of lane 1 gather 1 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+100. rank 2 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+101. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+102. rank 2 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+103. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+104. rank 3 stage call 0 chunk 0: gather 1 of lane 0 into slot 1, ready = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+105. rank 3 stage call 0 chunk 1: gather 1 of lane 1 into slot 3, ready = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+106. rank 3 stage call 0 chunk 2: gather 2 of lane 0 into slot 0, ready = 2
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+107. rank 3 collect call 0 chunk 0 reads lane 0 seq = 2
+     | coll.hip:93 (collect reads its lane header's seq; rdma_proxy.zig:402-410 launchCollects)
+108. rank 3 proxy starts lane 0 gather 1 (slot 1)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+109. rank 3 proxy starts lane 1 gather 1 (slot 3)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+110. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+111. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+112. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+113. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+114. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+115. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+116. rank 3 NIC places data of gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+117. rank 3 NIC places trailer of lane 0 gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+118. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+119. rank 0 proxy: lane 0 gather 1 complete, done = 1
+     | rdma_core.zig:533-543
+120. rank 0 proxy starts lane 0 gather 2 (slot 0)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+121. rank 0 NIC places data of gather 2 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+122. rank 0 NIC places trailer of lane 0 gather 2 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+123. rank 0 NIC: ack from rank 1, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+124. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+125. rank 0 NIC places data of gather 2 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+126. rank 0 NIC places trailer of lane 0 gather 2 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+127. rank 0 NIC: ack from rank 2, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+128. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+129. rank 0 NIC places data of gather 2 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+130. rank 0 NIC places trailer of lane 0 gather 2 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+131. rank 0 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+132. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+133. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+134. rank 2 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+135. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+136. rank 3 NIC places data of gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+137. rank 3 NIC places trailer of lane 1 gather 1 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+138. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+139. rank 0 proxy: lane 1 gather 1 complete, done = 1
+     | rdma_core.zig:533-543
+140. rank 3 NIC: ack from rank 0, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+141. rank 3 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+142. rank 3 NIC: ack from rank 0, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+143. rank 3 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+144. rank 3 NIC places data of gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+145. rank 3 NIC places trailer of lane 0 gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+146. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+147. rank 1 proxy: lane 0 gather 1 complete, done = 1
+     | rdma_core.zig:533-543
+148. rank 1 proxy starts lane 0 gather 2 (slot 0)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+149. rank 1 NIC places data of gather 2 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+150. rank 1 NIC places trailer of lane 0 gather 2 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+151. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+152. rank 1 NIC: ack from rank 0, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+153. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+154. rank 1 NIC places data of gather 2 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+155. rank 1 NIC places trailer of lane 0 gather 2 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+156. rank 1 NIC: ack from rank 2, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+157. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+158. rank 1 NIC places data of gather 2 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+159. rank 1 NIC places trailer of lane 0 gather 2 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+160. rank 1 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+161. rank 1 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+162. rank 2 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+163. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+164. rank 3 NIC places data of gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+165. rank 3 NIC places trailer of lane 1 gather 1 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+166. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+167. rank 1 proxy: lane 1 gather 1 complete, done = 1
+     | rdma_core.zig:533-543
+168. rank 3 NIC: ack from rank 1, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+169. rank 3 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+170. rank 3 NIC: ack from rank 1, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+171. rank 3 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+172. rank 3 NIC places data of gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+173. rank 3 NIC places trailer of lane 0 gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+174. rank 2 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+175. rank 2 proxy: lane 0 gather 1 complete, done = 1
+     | rdma_core.zig:533-543
+176. rank 2 proxy starts lane 0 gather 2 (slot 0)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+177. rank 2 NIC places data of gather 2 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+178. rank 2 NIC places trailer of lane 0 gather 2 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+179. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+180. rank 2 NIC: ack from rank 0, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+181. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+182. rank 2 NIC places data of gather 2 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+183. rank 2 NIC places trailer of lane 0 gather 2 in rank 1
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+184. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+185. rank 2 NIC: ack from rank 1, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+186. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+187. rank 2 NIC places data of gather 2 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+188. rank 2 NIC places trailer of lane 0 gather 2 in rank 3
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+189. rank 2 NIC: ack from rank 3, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+190. rank 2 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+191. rank 3 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+192. rank 3 NIC places data of gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+193. rank 3 NIC places trailer of lane 1 gather 1 in rank 2
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+194. rank 2 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+195. rank 2 proxy: lane 1 gather 1 complete, done = 1
+     | rdma_core.zig:533-543
+196. rank 3 NIC: ack from rank 2, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+197. rank 3 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+198. rank 3 proxy: lane 0 gather 1 complete, done = 1
+     | rdma_core.zig:533-543
+199. rank 3 proxy starts lane 0 gather 2 (slot 0)
+     | rdma_core.zig:465-472 + start :592-643 (own trailer :613-614, posts :627-635 -> rdma_nic.zig:443-457, early trailers :636-640)
+200. rank 3 NIC places data of gather 2 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+201. rank 3 NIC places trailer of lane 0 gather 2 in rank 0
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+202. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+203. rank 0 proxy: lane 0 gather 2 complete, done = 2
+     | rdma_core.zig:533-543
+204. rank 0 collect call 0 chunk 0 0: done = 2, copies slot 0, consumed = 2
+     | coll.hip:86-117 (done wait :97-102, copy :108, consumed :114); launched by tcp_proxy.zig:442 / rdma_proxy.zig:162 / rdma_proxy.zig:402-410
+
+# state before the violating step:
+{
+ "script": "c",
+ "rank0": {
+  "st": "L",
+  "call": 0,
+  "op": 3,
+  "seq": [
+   2,
+   1
+  ],
+  "ready": [
+   [
+    2,
+    1
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "done": [
+   [
+    2,
+    1
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "consumed": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    0
+   ]
+  ],
+  "abort": [
+   0,
+   0
+  ],
+  "failed": "OK",
+  "turns": [
+   [
+    0,
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    0,
+    2,
+    0,
+    0,
+    0
+   ]
+  ],
+  "posted": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "rcq": []
+ },
+ "rank1": {
+  "st": "L",
+  "call": 0,
+  "op": 3,
+  "seq": [
+   2,
+   1
+  ],
+  "ready": [
+   [
+    2,
+    1
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "done": [
+   [
+    0,
+    1
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "consumed": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    0
+   ]
+  ],
+  "abort": [
+   0,
+   0
+  ],
+  "failed": "OK",
+  "turns": [
+   [
+    1,
+    2,
+    15,
+    7,
+    0
+   ],
+   [
+    0,
+    2,
+    0,
+    0,
+    0
+   ]
+  ],
+  "posted": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "rcq": []
+ },
+ "rank2": {
+  "st": "L",
+  "call": 0,
+  "op": 3,
+  "seq": [
+   2,
+   1
+  ],
+  "ready": [
+   [
+    2,
+    1
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "done": [
+   [
+    0,
+    1
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "consumed": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    0
+   ]
+  ],
+  "abort": [
+   0,
+   0
+  ],
+  "failed": "OK",
+  "turns": [
+   [
+    1,
+    2,
+    15,
+    7,
+    0
+   ],
+   [
+    0,
+    2,
+    0,
+    0,
+    0
+   ]
+  ],
+  "posted": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "rcq": []
+ },
+ "rank3": {
+  "st": "L",
+  "call": 0,
+  "op": 3,
+  "seq": [
+   2,
+   1
+  ],
+  "ready": [
+   [
+    2,
+    1
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "done": [
+   [
+    0,
+    1
+   ],
+   [
+    0,
+    0
+   ]
+  ],
+  "consumed": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    0
+   ]
+  ],
+  "abort": [
+   0,
+   0
+  ],
+  "failed": "OK",
+  "turns": [
+   [
+    1,
+    2,
+    8,
+    15,
+    0
+   ],
+   [
+    1,
+    1,
+    11,
+    15,
+    0
+   ]
+  ],
+  "posted": [
+   0,
+   2,
+   2,
+   0
+  ],
+  "rcq": []
+ }
+}

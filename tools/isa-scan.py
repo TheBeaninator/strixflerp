@@ -152,9 +152,14 @@ def cmd_compile(a):
     for unit, argv, cwd, gen in jobs:
         out_s = os.path.abspath(os.path.join(a.out, unit.replace("/", "~") + ".s"))
         work.append((unit, rewrite(argv, root, out_s, a.extra), cwd, out_s, gen, a.max_load))
+    failed = 0
     with cf.ThreadPoolExecutor(a.jobs) as ex:
         for unit, ok, sec in ex.map(run_job, work):
             print(f"{'ok  ' if ok else 'FAIL'} {sec:7.1f}s {unit}", flush=True)
+            failed += 0 if ok else 1
+    if failed or not work:
+        print(f"isa-scan: {failed} of {len(work)} unit(s) failed" if work else "isa-scan: no units matched", file=sys.stderr)
+        sys.exit(1)
 
 
 # ---------------------------------------------------------------- assembly parsing

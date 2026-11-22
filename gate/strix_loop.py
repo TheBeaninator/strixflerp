@@ -745,6 +745,51 @@ def pub(p):
     return os.path.basename(p.rstrip(os.sep))
 
 
+SCRUB_TEXT = (".json", ".txt", ".log", ".md", ".tsv", ".jsonl", ".mem", ".toml")
+
+
+def scrub_text(text, root, card, job_dirs=()):
+    """A run's text as it is published: the checkout, the bench job and staging directories, the toolchain install, other
+    pod paths and the card id replaced by placeholders (numbers and verdicts untouched)."""
+    for d in sorted({os.path.dirname(j.rstrip(os.sep)) for j in job_dirs if isinstance(j, str) and os.path.isabs(j)}, key=len, reverse=True):
+        text = text.replace(d + os.sep, "<bench-runs>/")
+    text = text.replace(root, "<checkout>")
+    text = re.sub(r"/\S*/therock-[0-9.]+", "<therock-10.1>", text)
+    text = re.sub(r"/data/projects/[0-9a-f]{10}\S*", "<checkout>", text)       # a per-card pod checkout
+    text = re.sub(r"/data/" + r"pod\S*", "<pod-path>", text)
+    text = text.replace("ltsp" + "-k", "bench-box-K")
+    if card:
+        text = text.replace(card, "<card>")
+    return text
+
+
+def scrub_run(res_dir, root, card):
+    """Rewrite every text file under a run's results directory in place with scrub_text. Run last: state.json holds the
+    real paths the stages resume from. Returns the files changed."""
+    jobs = set()
+    for p in glob.glob(os.path.join(res_dir, "*.txt")):
+        with open(p, errors="replace") as fh:
+            jobs.update(re.findall(r"files: (\S+)", fh.read()))
+    changed = []
+    for dp, _, fns in os.walk(res_dir):
+        for fn in fns:
+            if not fn.endswith(SCRUB_TEXT):
+                continue
+            p = os.path.join(dp, fn)
+            try:
+                with open(p, encoding="utf-8") as fh:
+                    old = fh.read()
+            except UnicodeDecodeError:
+                continue
+            new = scrub_text(old, root, card, jobs)
+            if new != old:
+                with open(p, "r+", encoding="utf-8") as fh:      # same inode: loop.log is this process's stdout
+                    fh.write(new)
+                    fh.truncate()
+                changed.append(p)
+    return changed
+
+
 def report(a, ctx, plan, res):
     verdicts = []
     model = res.get("model")
@@ -914,7 +959,8 @@ def main():
         jdump(state, res)
     if "report" in stages:
         v = report(a, ctx, plan, res)
-        print(json.dumps({"verdict": v["verdict"], "criteria": v["criteria"], "speed": v["speed"], "pin": v["canary_pin"]["line"]}, indent=1))
+        print(json.dumps({"verdict": v["verdict"], "criteria": v["criteria"], "speed": v["speed"], "pin": v["canary_pin"]["line"]}, indent=1), flush=True)
+        scrub_run(ctx["res"], ROOT, a.card)      # last: the stages above resume from real paths; the published run has none
 
 
 if __name__ == "__main__":

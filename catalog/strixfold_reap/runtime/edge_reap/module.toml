@@ -1,0 +1,83 @@
+id        = "runtime.strixfold_reap.edge_reap"
+kind      = "runtime"
+summary   = "Passive Edge-REAP routing statistics in the DeepSeek-V4.1 TP4/TP2 serving engine, behind REAP_STATS: every committed token's routing (count, gate mass after the top-6 renorm and the 1.5 scaling, first-64-position count) from the router's own outputs, and a fixed sample's full expert-output norms (the TP2 partner's per-slot K-partial added on the pair's rank 0 before the sum of squares, the two TP4 pairs' halves joined on rank 0), accumulated on device in f64 per (domain, modality) bucket and exported in owner's strix_moe_surgery.py report format"
+why       = "owner's expert-pruning script needs Edge-REAP calibration statistics from the traffic the pruned model will serve; under tensor parallelism no rank holds an expert's whole output (the intermediate is K-split across the TP2 ranks and the sum of partial norms is not the norm), so the engine itself must join the partials, and doing that for a sample keeps the expected cost near 0.3 % of a TP4 decode round and 0.5 % of a TP2 one (DESIGN.md, computed)"
+design    = "DESIGN.md"
+notes     = "Overlay of the TP4 tree (strixfold_tp4 at 003f679c; overlay.json has every file's sha256 there and here and the commits). 39 files, 9 added (reap.zig, reap_dev.zig, reap.hip, reap_hook.zig, reap_routes.zig and its test, the two golden exports). Conf keys (launcher, not harvested): REAP_STATS 0, REAP_EVERY 8, REAP_PREFILL_ROWS 4, REAP_BUCKETS 16, REAP_DIR empty, REAP_SNAPSHOT_MIN 10. Request field reap_domain or header x-reap-domain; GET /stats/reap behind the /cache routes' key. Device bytes a rank: TP4 200 MB rank 0 / 176 MB others, TP2 367 / 344 MB. Kernels (TheRock 10.2, kit flags): tf_ds_reap_pack 8 VGPR, ssq 12, route 25, norm 31; 0 spills, 0 scratch, occupancy 16, LDS 0. The keep-set side is tool.flerp.edge_reap_keepset; tests/test_edge_reap_keepset.py reads the golden exports."
+
+[provenance]
+origin    = "strixfold_reap"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "feb5614b"
+branch    = "TP4-REAP-STATS over 03d67fc1, a branch local to the pod fork"
+paths     = [
+  "zig/build/hip_dsv41.zig",
+  "zig/kernels/hip/dsv41/reap.hip",
+  "zig/kernels/hip/dsv41/registry.json",
+  "zig/src/core/engine_api.zig",
+  "zig/src/core/lane_host.zig",
+  "zig/src/core/lanes/lanes.zig",
+  "zig/src/core/lanes/reap_hook.zig",
+  "zig/src/core/lanes/stream.zig",
+  "zig/src/families/dsv41/coll.zig",
+  "zig/src/families/dsv41/comm.zig",
+  "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/exl3_experts2d.zig",
+  "zig/src/families/dsv41/exl3_experts.zig",
+  "zig/src/families/dsv41/fixtures/reap_export_small_all.json",
+  "zig/src/families/dsv41/fixtures/reap_export_small.json",
+  "zig/src/families/dsv41/hip_load.zig",
+  "zig/src/families/dsv41/lanes.zig",
+  "zig/src/families/dsv41/model.zig",
+  "zig/src/families/dsv41/pil.zig",
+  "zig/src/families/dsv41/prompt2d.zig",
+  "zig/src/families/dsv41/prompt.zig",
+  "zig/src/families/dsv41/rdma_proxy.zig",
+  "zig/src/families/dsv41/reap_dev.zig",
+  "zig/src/families/dsv41/reap.zig",
+  "zig/src/families/dsv41/round.zig",
+  "zig/src/families/dsv41/tcp_coll.zig",
+  "zig/src/families/dsv41/tcp_proxy.zig",
+  "zig/src/server/anthropic.zig",
+  "zig/src/server/auth.zig",
+  "zig/src/server/chat.zig",
+  "zig/src/server/http_body_test.zig",
+  "zig/src/server/http_body.zig",
+  "zig/src/server/openai.zig",
+  "zig/src/server/reap_routes_test.zig",
+  "zig/src/server/reap_routes.zig",
+  "zig/src/server/root.zig",
+  "zig/src/server/routes.zig",
+  "zig/src/server/server.zig",
+  "zig/src/server/serve.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on strixfold_tp4 (003f679c): files of its modules replaced whole, the rest added; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_reap"
+
+[[provides]]
+interface = "stats.edge-reap/deepseek-v4.1-flash/f64"
+api       = "GET /stats/reap?domain=&modality= (server/reap_routes.zig); REAP_DIR snapshots; reap.zig writeReport"
+numeric   = "f64 sums and i64 counts on device; norms of the summed K-partials in f64; replies unchanged (read-only side path)"
+regime    = "TP4 (world 4) and TP2 (world 2); 40 MoE layers, 384 experts, top-6; DSpark layers 40..42 never counted"
+
+[[requires]]
+interface = "executor.model/deepseek-v4.1-flash/exl3"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "built only by a TP4 recipe that lays strixfold_tp4 and this overlay over strixfold (strixfold_tp4 is on its own card branch); origin host tests: test-dsv41-hip-host 297/309 passed 12 skipped 0 failed, zig build test 398/398, native-hip 35/35 with kit gfx1151-v6f2c38-tp4 (logs kept on the pod); hardware check pending"

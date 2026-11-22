@@ -7,6 +7,7 @@ import tomllib
 KINDS = ("format", "kernel", "executor", "runtime", "serve", "tool")
 ORIGINS = ("strixite", "strixfold", "strixfold_pr6", "gufo", "hipfire", "crucible", "tensorfold", "sglang", "halogen", "ds4", "radiance", "flerp")
 LANGS = ("hip-c++", "c++", "c", "zig", "hsaco", "triton-aot", "rust", "python", "cuda")
+ORIGINS += ("strixfold_reap",)  # the passive Edge-REAP collector, a sub-origin over strixfold_tp4 (docs/EDGE-REAP.md)
 # `verified` is the first step of a prebuilt kit (hashes checked on the build host); it stands where `builds` does.
 STATUSES = ("harvested", "builds", "verified", "parity", "benched")
 PREBUILT_LANGS = ("hsaco", "triton-aot")

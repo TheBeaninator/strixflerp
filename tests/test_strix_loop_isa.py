@@ -18,6 +18,26 @@ def healthy(rows=3):
     return {"base": {"rc": 0, "units": 2, "rows": rows}, "variant": {"rc": 0, "units": 2, "rows": rows}}
 
 
+class IsaScanExit(unittest.TestCase):
+    """tools/isa-scan.py compile exits nonzero when any unit fails or nothing matched."""
+    def run_compile(self, cmd):
+        with tempfile.TemporaryDirectory() as d:
+            return subprocess.run([sys.executable, os.path.join(ROOT, "tools", "isa-scan.py"), "compile", "--toolchain",
+                                   "therock-10.1", "--out", d, "cmd:u:" + cmd], capture_output=True, text=True)
+
+    def test_failed_unit_exits_nonzero(self):
+        p = self.run_compile("false")
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("FAIL", p.stdout)
+        self.assertIn("1 of 1 unit(s) failed", p.stderr)
+
+    def test_no_units_exits_nonzero(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "isa-scan.py"), "compile", "--toolchain",
+                                "therock-10.1", "--out", d, "ccdb:/nonexistent-ccdb-only-for-test"], capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0)
+
+
 class IsaCriterion(unittest.TestCase):
     def test_empty_scan_is_not_pass(self):
         isa = {"sides": {"base": {"rc": 1, "units": 0, "rows": 0}, "variant": {"rc": 1, "units": 0, "rows": 0}},

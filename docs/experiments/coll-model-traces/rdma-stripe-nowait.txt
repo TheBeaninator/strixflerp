@@ -1,0 +1,137 @@
+# S2 counterexample: rank 0 collect of call 0 (gather 1) copies RX[1] half 1 holding gather 0 of call -1 written by rank -1
+# configuration: {"world": 2, "transport": "rdma", "stripe": 1, "wire": 1, "nslot": 2, "mode": "D1", "calls": 4, "kinds": "P", "mut": ["nowait"], "name": "rdma-stripe-nowait", "what": "hypothetical striped rdma whose first thread does not wait for QP 2's half", "expected": "S2"}
+# 15 steps; each line: step | the code it models
+
+  1. script call 0 = P
+     | coll.zig contract: both ranks issue the same calls (COLLECTIVES-DESIGN 2.2)
+  2. rank 0 stage call 0: gather 1 into TX[1], ready[1] = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+  3. rank 0 collect call 0 reads seq = 1
+     | coll.hip:93 (tf_ds_coll_collect: q = seq)
+  4. rank 0 proxy sees ready[1] = 1 (call 0): trailer, posts the write with immediate (half 0; half 1 to the second thread)
+     | tcp_proxy.zig:111-136 / rdma_core.zig:40-71 (ready :42, trailer :63-65, postWrite :68 -> rdma_nic.zig:206-211)
+  5. rank 0 NIC places gather 1 in rank 1's RX[1]
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+  6. rank 0 NIC: ack, send completion
+     | signaled send completion (rdma_nic.zig:208 / :446)
+  7. rank 0 proxy polls its send CQ
+     | rdma_core.zig:97-109 (world 2) / :490-501 (world 4, CoreN)
+  8. rank 1 stage call 0: gather 1 into TX[1], ready[1] = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+  9. rank 1 collect call 0 reads seq = 1
+     | coll.hip:93 (tf_ds_coll_collect: q = seq)
+ 10. rank 1 proxy sees ready[1] = 1 (call 0): trailer, posts the write with immediate (half 0; half 1 to the second thread)
+     | tcp_proxy.zig:111-136 / rdma_core.zig:40-71 (ready :42, trailer :63-65, postWrite :68 -> rdma_nic.zig:206-211)
+ 11. rank 1 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 12. rank 1 NIC places gather 1 in rank 0's RX[1]
+     | RC write (with immediate) placed in order at the peer: rdma_nic.zig:206-211 (world 2), :443-457 (world 4: data unsignaled, then the signaled trailer)
+ 13. rank 0 proxy polls its receive CQ
+     | rdma_core.zig:110-132 (world 2) / :503-531 (world 4: poison :511-515, turn branches :520-531, check :646-663)
+ 14. rank 0 proxy: both completions, trailer checked, done[1] = 1
+     | rdma_core.zig:74-85 (trailer check, done[s] = q)
+ 15. rank 0 collect call 0: done[1] = 1, copies RX[1], consumed[1] = 1
+     | coll.hip:86-117 (done wait :97-102, copy :108, consumed :114); launched by tcp_proxy.zig:442 / rdma_proxy.zig:162 / rdma_proxy.zig:402-410
+
+# state before the violating step:
+{
+ "script": "P",
+ "rank0": {
+  "st": "L",
+  "call": 0,
+  "op": "collect",
+  "seq": 1,
+  "ready": [
+   0,
+   1
+  ],
+  "done": [
+   0,
+   1
+  ],
+  "consumed": [
+   0,
+   0
+  ],
+  "abort": 0,
+  "failed": "OK",
+  "proxy": [
+   2,
+   0,
+   0,
+   0,
+   0
+  ],
+  "rx_gen": [
+   [
+    0,
+    0
+   ],
+   [
+    1,
+    0
+   ]
+  ],
+  "second": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   1
+  ],
+  "posted": []
+ },
+ "rank1": {
+  "st": "L",
+  "call": 0,
+  "op": "collect",
+  "seq": 1,
+  "ready": [
+   0,
+   1
+  ],
+  "done": [
+   0,
+   0
+  ],
+  "consumed": [
+   0,
+   0
+  ],
+  "abort": 0,
+  "failed": "OK",
+  "proxy": [
+   1,
+   1,
+   0,
+   1,
+   1
+  ],
+  "rx_gen": [
+   [
+    0,
+    0
+   ],
+   [
+    1,
+    0
+   ]
+  ],
+  "second": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   1
+  ],
+  "posted": []
+ }
+}

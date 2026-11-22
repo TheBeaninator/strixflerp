@@ -1,0 +1,20 @@
+import Proofs
+#print axioms NumericsProof.exact_no_false_fail
+#print axioms NumericsProof.exact_no_false_pass
+#print axioms NumericsProof.exact_accept_iff_inf_sup
+#print axioms NumericsProof.classify_may
+#print axioms NumericsProof.classify_must
+#print axioms NumericsProof.argmax_exact
+#print axioms NumericsProof.old_rule_sound_equal_bands
+#print axioms NumericsProof.old_rule_false_fail_ce1
+#print axioms NumericsProof.old_rule_false_fail_ce2
+#print axioms NumericsProof.old_rule_unsound
+#print axioms NumericsProof.old_rule_false_pass_fp1
+#print axioms NumericsProof.e4m3_ue8m0_bf16_literal_false
+#print axioms NumericsProof.e4m3_ue8m0_bf16_iff
+#print axioms NumericsProof.e4m3_ue8m0_bf16_edges
+#print axioms NumericsProof.ue8m0Scale_bound
+#print axioms NumericsProof.ue8m0Scale_tight
+#print axioms NumericsProof.ue8m0Scale_e4m3_exponent
+#print axioms NumericsProof.e2m1_ue8m0_fp32_literal_false
+#print axioms NumericsProof.e2m1_ue8m0_fp32_iff

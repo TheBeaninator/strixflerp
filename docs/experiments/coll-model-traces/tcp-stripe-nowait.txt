@@ -1,0 +1,141 @@
+# S2 counterexample: rank 0 collect of call 0 (gather 1) copies RX[1] half 1 holding gather 0 of call -1 written by rank -1
+# configuration: {"world": 2, "transport": "tcp", "stripe": 1, "wire": 1, "nslot": 2, "mode": "D1", "calls": 4, "kinds": "P", "mut": ["nowait"], "name": "tcp-stripe-nowait", "what": "the first proxy thread publishes done without waiting for the second cable's half (tcp_proxy.zig:142-151)", "expected": "S2"}
+# 12 steps; each line: step | the code it models
+
+  1. script call 0 = P
+     | coll.zig contract: both ranks issue the same calls (COLLECTIVES-DESIGN 2.2)
+  2. rank 0 stage call 0: gather 1 into TX[1], ready[1] = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+  3. rank 0 collect call 0 reads seq = 1
+     | coll.hip:93 (tf_ds_coll_collect: q = seq)
+  4. rank 0 proxy sees ready[1] = 1 (call 0), hands half 1 to the second thread
+     | tcp_proxy.zig:113, 134-136 (split), :237-242 Second.hand
+  5. rank 0 proxy sends gather 1 (call 0) on cable 1
+     | tcp_proxy.zig:138 -> tcp_wire.zig:203 (sendmsg half of the exchange)
+  6. rank 1 stage call 0: gather 1 into TX[1], ready[1] = 1
+     | coll.hip:47-84 (q = seq + 1 :54, consumed wait :59-64, copy :70-72, bytes/site/seq/ready :78-81); launched by tcp_proxy.zig:426 / rdma_proxy.zig:144 / rdma_proxy.zig:393-400
+  7. rank 1 collect call 0 reads seq = 1
+     | coll.hip:93 (tf_ds_coll_collect: q = seq)
+  8. rank 1 proxy sees ready[1] = 1 (call 0), hands half 1 to the second thread
+     | tcp_proxy.zig:113, 134-136 (split), :237-242 Second.hand
+  9. rank 1 proxy sends gather 1 (call 0) on cable 1
+     | tcp_proxy.zig:138 -> tcp_wire.zig:203 (sendmsg half of the exchange)
+ 10. rank 0 proxy receives the peer's gather into RX[1]
+     | tcp_proxy.zig:138 -> tcp_wire.zig:203 (recvmsg into RX[s]; header check :328)
+ 11. rank 0 proxy: done[1] = 1
+     | tcp_proxy.zig:153
+ 12. rank 0 collect call 0: done[1] = 1, copies RX[1], consumed[1] = 1
+     | coll.hip:86-117 (done wait :97-102, copy :108, consumed :114); launched by tcp_proxy.zig:442 / rdma_proxy.zig:162 / rdma_proxy.zig:402-410
+
+# state before the violating step:
+{
+ "script": "P",
+ "rank0": {
+  "st": "L",
+  "call": 0,
+  "op": "collect",
+  "seq": 1,
+  "ready": [
+   0,
+   1
+  ],
+  "done": [
+   0,
+   1
+  ],
+  "consumed": [
+   0,
+   0
+  ],
+  "abort": 0,
+  "failed": "OK",
+  "proxy": [
+   2,
+   0,
+   0,
+   0,
+   0,
+   2
+  ],
+  "rx_gen": [
+   [
+    0,
+    0
+   ],
+   [
+    1,
+    0
+   ]
+  ],
+  "second": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   1
+  ],
+  "wire1_out": [
+   [
+    "P",
+    1,
+    0,
+    1,
+    1
+   ]
+  ]
+ },
+ "rank1": {
+  "st": "L",
+  "call": 0,
+  "op": "collect",
+  "seq": 1,
+  "ready": [
+   0,
+   1
+  ],
+  "done": [
+   0,
+   0
+  ],
+  "consumed": [
+   0,
+   0
+  ],
+  "abort": 0,
+  "failed": "OK",
+  "proxy": [
+   1,
+   1,
+   1,
+   0,
+   1,
+   1
+  ],
+  "rx_gen": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    0
+   ]
+  ],
+  "second": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   1
+  ],
+  "wire1_out": []
+ }
+}
