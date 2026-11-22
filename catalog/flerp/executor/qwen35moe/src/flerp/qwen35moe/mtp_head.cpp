@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -46,6 +47,7 @@ struct Wanted {
 MtpHead::~MtpHead() {
   if (stream_ != nullptr) (void)hipStreamSynchronize(stream_);
   if (coarse_) std::cerr << CoarseStatsJson() << std::endl;
+  if (coarse_trace_ != nullptr) std::fclose(coarse_trace_);
   coarse_.reset();
   if (h_cres_ != nullptr) (void)hipHostFree(h_cres_);
   for (void* p : buffers_) (void)hipFree(p);
@@ -419,6 +421,51 @@ std::uint32_t MtpHead::HeadCoarse() {
     if (m1) ++cstats_.miss_top1;
     if (m2) ++cstats_.miss_top2;
     if (m2 && r.fallback == 0) ++cstats_.unsafe;
+    // V10-BLOCKBOUND: per-row and per-block certificates (gate/draft-coarse-blockbound.toml). The head multiplies the
+    // F32 x directly (QuantWarpBlockDot), so |exact_t - coarse_t| <= row_err[t] * ||x||; slack covers FP32 summation.
+    {
+      constexpr std::size_t kB = flerp::draft_coarse::kBlockTokens;
+      const std::vector<float>& re = coarse_->row_err();
+      if (block_err_.empty()) {
+        block_err_.assign((V + kB - 1) / kB, 0.0F);
+        for (std::size_t t = 0; t < V; ++t) block_err_[t / kB] = std::max(block_err_[t / kB], re[t]);
+      }
+      const double xn = static_cast<double>(r.xnorm);
+      const double slack = 1e-5 * (std::fabs(static_cast<double>(r.best)) + 1.0);
+      double ub_row = -INFINITY, ub_block = -INFINITY;
+      for (std::size_t b = 0; b < block_err_.size(); ++b) {
+        if (in[b * kB] != 0) continue;
+        double cmax = -INFINITY;
+        for (std::size_t t = b * kB; t < std::min(V, (b + 1) * kB); ++t) {
+          if (!std::isfinite(coarse_row[t])) continue;
+          const double c = coarse_row[t], bound = static_cast<double>(re[t]) * xn;
+          cmax = std::max(cmax, c);
+          ub_row = std::max(ub_row, c + bound);
+          if (std::isfinite(exact[t])) {
+            const double d = std::fabs(c - static_cast<double>(exact[t]));
+            if (d > bound + slack) ++cstats_.bound_violations;
+            if (bound > 0.0) cstats_.max_ratio = std::max(cstats_.max_ratio, d / bound);
+          }
+        }
+        ub_block = std::max(ub_block, cmax + static_cast<double>(block_err_[b]) * xn);
+      }
+      const double best = r.best, second = r.second;
+      const bool c1b = ub_block + slack < best, c2b = ub_block + slack < second;
+      const bool c1r = ub_row + slack < best, c2r = ub_row + slack < second;
+      cstats_.cert1_block += c1b; cstats_.cert2_block += c2b; cstats_.cert1_row += c1r; cstats_.cert2_row += c2r;
+      if (((c1b || c1r) && m1) || ((c2b || c2r) && m2)) ++cstats_.false_cert;
+      if (coarse_trace_ == nullptr) {
+        if (const char* tp = std::getenv("FLERP_MTP_COARSE_TRACE"); tp != nullptr && *tp != 0) coarse_trace_ = std::fopen(tp, "w");
+      }
+      if (coarse_trace_ != nullptr) {
+        std::fprintf(coarse_trace_,
+                     "{\"step\":%llu,\"best\":%.9g,\"second\":%.9g,\"xnorm\":%.9g,\"ub_block\":%.9g,\"ub_row\":%.9g,"
+                     "\"outside\":%.9g,\"tau\":%.9g,\"fallback\":%u,\"miss1\":%d,\"miss2\":%d,\"c1b\":%d,\"c2b\":%d,\"c1r\":%d,\"c2r\":%d}\n",
+                     static_cast<unsigned long long>(cstats_.checked), best, second, xn, ub_block, ub_row,
+                     static_cast<double>(r.outside), static_cast<double>(r.tau), r.fallback, m1 ? 1 : 0, m2 ? 1 : 0,
+                     c1b ? 1 : 0, c2b ? 1 : 0, c1r ? 1 : 0, c2r ? 1 : 0);
+      }
+    }
     const double scale = static_cast<double>(coarse_->err_rms()) * static_cast<double>(r.xnorm);
     if (scale > 0.0) {
       for (std::size_t t = 0; t < V; ++t) {
@@ -441,7 +488,9 @@ std::string MtpHead::CoarseStatsJson() const {
   o << ",\"steps\":" << cstats_.steps << ",\"fallbacks\":" << cstats_.fallbacks << ",\"checked\":" << cstats_.checked
     << ",\"wrong_ids\":" << cstats_.wrong_ids << ",\"miss_top1\":" << cstats_.miss_top1 << ",\"miss_top2\":" << cstats_.miss_top2
     << ",\"unsafe\":" << cstats_.unsafe << ",\"rescore_mismatch\":" << cstats_.rescore_mismatch << ",\"max_z\":" << cstats_.max_z
-    << "}";
+    << ",\"cert1_block\":" << cstats_.cert1_block << ",\"cert2_block\":" << cstats_.cert2_block << ",\"cert1_row\":" << cstats_.cert1_row
+    << ",\"cert2_row\":" << cstats_.cert2_row << ",\"false_cert\":" << cstats_.false_cert << ",\"bound_violations\":" << cstats_.bound_violations
+    << ",\"max_ratio\":" << cstats_.max_ratio << "}";
   return o.str();
 }
 

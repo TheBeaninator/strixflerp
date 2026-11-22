@@ -1,0 +1,36 @@
+id        = "tool.flerp.launch_tax"
+kind      = "tool"
+summary   = "Microbench of what a fused decode kernel can save on gfx1151: a dependent launch on one stream against a grid barrier inside a persistent kernel, at the decode HC shapes (40 blocks x 256 threads, 10,240 values)"
+why       = "Fusing residual + RMSNorm + HC mix (owner's 2026-11-16 package) keeps two grid-wide dependencies, so 3 launches become 1 launch + 2 grid barriers; the saving is 2 x (launch - barrier) per boundary and decides whether the fused kernel is worth building"
+notes     = "Card SFX-PKG (pod board, 2026-11-16). Criteria: gate/criteria/sfx-pkg.toml [fused]. Standalone: hipcc -O3 --offload-arch=gfx1151 launch_tax.hip -o launch_tax (built on K by pod-kbench)."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/launch_tax/launch_tax.hip"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/flerp/launch_tax/launch_tax.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.launch-tax/-/-"
+api       = "main (launch_tax [--n N] [--blocks B] [--reps R]): one JSON line per rep, launch_us / barrier_us / work_us"
+numeric   = "hip event times divided by the step count"
+regime    = "needs the GPU; every block resident (blocks <= CUs)"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a measuring tool, built by hipcc on K; not part of any recipe"

@@ -1,0 +1,132 @@
+{
+ "name": "chain-k-test",
+ "module": "runtime.flerp.chain",
+ "test": "catalog/flerp/runtime/chain/test/chain_test.hip",
+ "source_commit": "50dd7b42",
+ "note": "Both runs used the test and header as committed at 50dd7b42; since then only the first comment line of each changed (an internal work-item reference was removed), no code. The second run was an independent re-run that staged the committed source and built it itself.",
+ "hardware": "AMD Ryzen AI MAX+ 395 (gfx1151) bench node, one GPU",
+ "criteria": {
+  "bit_identical": "chained and plain final buffers equal at grids 10, 40, 160, 1280 (n = 2000 dependent kernels)",
+  "grid40_saved_us_min": 0.3,
+  "watchdog": "a skipped predecessor sets the error word within the bounded wait; no hang"
+ },
+ "runs": [
+  {
+   "run": "independent re-run",
+   "utc": "2026-11-17T11:08:43Z",
+   "build": "hipcc -std=c++20 -O2 -Isrc chain_test.hip -o chain_test",
+   "exit": 0,
+   "stdout": [
+    {
+     "grid": 10,
+     "n": 2000,
+     "plain_us": 1.986,
+     "chained_us": 1.634,
+     "saved_us": 0.351,
+     "bit_identical": true
+    },
+    {
+     "grid": 40,
+     "n": 2000,
+     "plain_us": 2.014,
+     "chained_us": 1.637,
+     "saved_us": 0.377,
+     "bit_identical": true
+    },
+    {
+     "grid": 160,
+     "n": 2000,
+     "plain_us": 3.634,
+     "chained_us": 3.43,
+     "saved_us": 0.204,
+     "bit_identical": true
+    },
+    {
+     "grid": 1280,
+     "n": 2000,
+     "plain_us": 5.14,
+     "chained_us": 11.023,
+     "saved_us": -5.883,
+     "bit_identical": true
+    },
+    {
+     "watchdog": {
+      "error_word_set": true,
+      "elapsed_ms": 50.2,
+      "timeout_ms": 50,
+      "hung": false
+     }
+    },
+    {
+     "summary": {
+      "bit_identical_all_grids": true
+     }
+    }
+   ]
+  },
+  {
+   "run": "author run",
+   "utc": "2026-11-17T07:27:34Z",
+   "build": "prebuilt binary from the same commit",
+   "exit": 0,
+   "stdout": [
+    {
+     "grid": 10,
+     "n": 2000,
+     "plain_us": 1.977,
+     "chained_us": 2.1,
+     "saved_us": -0.122,
+     "bit_identical": true
+    },
+    {
+     "grid": 40,
+     "n": 2000,
+     "plain_us": 2.01,
+     "chained_us": 1.628,
+     "saved_us": 0.381,
+     "bit_identical": true
+    },
+    {
+     "grid": 160,
+     "n": 2000,
+     "plain_us": 3.613,
+     "chained_us": 3.417,
+     "saved_us": 0.196,
+     "bit_identical": true
+    },
+    {
+     "grid": 1280,
+     "n": 2000,
+     "plain_us": 5.137,
+     "chained_us": 11.032,
+     "saved_us": -5.894,
+     "bit_identical": true
+    },
+    {
+     "watchdog": {
+      "error_word_set": true,
+      "elapsed_ms": 50,
+      "timeout_ms": 50,
+      "hung": false
+     }
+    },
+    {
+     "summary": {
+      "bit_identical_all_grids": true
+     }
+    }
+   ]
+  }
+ ],
+ "verdict": {
+  "bit_identical_all_grids": true,
+  "grid40_saved_us": [
+   0.377,
+   0.381
+  ],
+  "watchdog_error_word_set": true,
+  "hung": false,
+  "pass": true,
+  "caveat": "grid 1280 loses about 5.9 us a launch chained (waiting blocks hold wave slots): keep wide back-to-back kernels unchained"
+ }
+}

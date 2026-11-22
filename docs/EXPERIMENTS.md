@@ -4,7 +4,22 @@ An experiment is anything that runs hardware to measure something. Its gate toml
 hardware run and is never edited to turn a failure into a pass; an amendment is its own commit with date and reason. Since 2026-11-14
 (owner: "formalize what an experiment is and have 'resource efficiency' be a section in the requirements") every gate also carries a
 `[resources]` table with the same fields as the card's `RESOURCES:` block. The card that runs the gate is KIND `experiment`
-(`card-intake template --kind experiment`, rules R15-R25 in ~/Code/card-intake) and its CRITERIA line names this file.
+(`card-intake template --kind experiment`, rules R15-R29 in ~/Code/card-intake) and its CRITERIA line names this file.
+
+Since 2026-11-20 every gate also carries a `[limits]` table, the card's `LIMITS:` lines (card-intake R26-R29). Owner, after an eval
+turned out to have run with caps he never saw (reply max_tokens = 2x p99, a thinking budget, agent turn and token caps, 30-min wall
+limits, decision margins the agent picked): "what other assumptions like that are you hiding from me?" Rules:
+
+- One entry per limit that bounds what is measured or how: token caps (per reply, per attempt), thinking or reasoning budgets, turn
+  caps, timeouts and wall clocks, context sizes, draws and reps, sampling (temperature, top_p, top_k and where each comes from),
+  decision thresholds and confidence levels, trimming and retry rules. Each gives `value`, `source` (`measured`, `default` = a
+  documented model or tool default, `hardware`, `model-limit` = the model's own maximum such as its context window, or `chosen`),
+  `why`, and `changes_outcome` (can it change the measured outcome).
+- A limit that can change the outcome is a real one (`hardware`, `model-limit`) or it is justified (`justified`) and shown to the
+  requester before the run (`shown`).
+- No derived caps on the quantity being measured (no token cap of 2x p99 on a model-quality attempt) unless justified. A hang is
+  caught by a no-progress guard and counted as a harness fault, never as a model failure.
+- The report states the limits in force and how often each one was hit.
 
 Why: the waste of 2026-11-14 all came from experiments with no resource plan: a K bench re-pulled a 100 GB checkpoint over NFS for
 each of 16 processes (half its 4 h), PLACE staging ran two fetches against one USB disk and hung worker B, agents staged weights with
@@ -21,6 +36,51 @@ refuted_below = "accepted tokens per step < 1.5"
 
 [criteria]
 # The pass rule, fixed before the run. Numbers and operators only; cannot be loosened after the run.
+
+[limits]
+# One table per limit that bounds what is measured or how. card-intake lints the card's LIMITS: copy (R26-R29); the report gives
+# each one's hit count. changes_outcome = true needs justified and shown unless source is hardware or model-limit.
+[limits.context]
+value = "16,640 tokens"
+source = "chosen"
+why = "the longest prompt is 16,384 tokens plus 256 generated"
+changes_outcome = false
+
+[limits.generated_tokens]
+value = "256 a prompt, EOS ignored"
+source = "chosen"
+why = "every rep averages acceptance over the same steps"
+changes_outcome = true
+justified = "256 steps hold over 600 draft decisions a prompt; a longer run moves the mean by less than the confirm-refute gap"
+shown = "owner, on the card before the window opens"
+
+[limits.sampling]
+value = "greedy, temperature 0"
+source = "chosen"
+why = "draft tokens are accepted against the target's argmax"
+changes_outcome = true
+justified = "the engine serves the pod's agents greedy; a sampled run is its own experiment"
+shown = "owner, on the card before the window opens"
+
+[limits.pass_line]
+value = "2.0 accepted tokens a step, refuted below 1.5"
+source = "chosen"
+why = "from the mechanism's prediction of 2.5"
+changes_outcome = true
+justified = "set from the mechanism in this file before any run and never moved"
+shown = "owner, in this file before the window"
+
+[limits.timeout_per_rep]
+value = "15 min"
+source = "chosen"
+why = "one rep takes about 6 min at 9 tok/s"
+changes_outcome = false
+
+[limits.no_progress_guard]
+value = "no new token for 120 s"
+source = "chosen"
+why = "a stalled rail shows as no tokens: a hang is a harness fault and the rep is rerun, never scored"
+changes_outcome = false
 
 [resources]
 # One line each. Every key is required. card-intake lints the card's copy of these lines.
@@ -42,6 +102,9 @@ milestones = "staging done by T-10 min; launch by T+5 min; first rep by T+25 min
 stop_rule  = "stop and release at the first fault"
 ```
 
-Checking a card against this: put the same lines in the card (`RESOURCES:` indented under the key, `HYPOTHESIS:`, `CRITERIA: gate/<name>.toml`,
-`MONITOR:`) and run `card-intake lint`. A gate on control-node's GPU alone through tools/gpu-queue.sh holds no worker: say so in `nodes`,
+Checking a card against this: put the same lines in the card (`LIMITS:` and `RESOURCES:` indented under their keys, `HYPOTHESIS:`,
+`CRITERIA: gate/<name>.toml`, `MONITOR:`) and run `card-intake lint`. A `[limits]` entry becomes the card line
+`<name> = <value>; source: <source>; why: <why>; changes-outcome: yes|no[; justified: ...; shown: ...]`.
+
+A gate on control-node's GPU alone through tools/gpu-queue.sh holds no worker: say so in `nodes`,
 write `hold = "none: queued GPU job, ~N min"` style text with a TTL, and keep the rest.

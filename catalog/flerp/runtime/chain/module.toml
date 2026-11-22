@@ -1,0 +1,36 @@
+id        = "runtime.flerp.chain"
+kind      = "runtime"
+summary   = "Chained kernel launches on one HIP stream: kernels launched with hipExtAnyOrderLaunch (no AQL barrier bit) keep their order on the device through a completion counter each block waits on in its prologue and adds to when done; a bounded wait sets an error word and releases the chain instead of hanging"
+why       = "Flash-Next decode spends ~1.7 ms of a 28.8 ms step in the gaps between its 927 dependent launches (1.84 us each on gfx1151); chaining removes ~1.2 ms of that with the same kernels and arithmetic. This module is the primitive; giving the decode kernels chained forms is separate work."
+notes     = "Test: test/chain_test.hip on a gfx1151 bench node; results in gate/results/chain-k-test/result.json."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/chain/chain.hpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+uses      = ["hip-runtime"]
+
+[[provides]]
+interface = "runtime.chain/-/-"
+api       = "flerp::chain::Chain (host launcher, counter, error word), flerp::chain::wait / done (device bracket), flerp::chain::Arg"
+numeric   = "none: moves no data; the schedule only"
+regime    = "one counter a stream; every chained kernel's blocks wait for all blocks issued before it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "header-only"
+evidence  = "gate/results/chain-k-test/result.json"
+reason    = "header only; test/chain_test.hip run on hardware: chained == plain bit-identical at grids 10/40/160/1280, bounded wait sets the error word"

@@ -216,3 +216,32 @@ fidelity = "no FP32 reference on the 397B (floor not checkable); vs the old per-
 date     = "2026-11-14"
 status   = "measured"
 note     = "Ornith 397B measured, world 4 F D A C, 4,096-row chunks x 16 sub-chunks: 527 tok/s at 16K, 503 at 32K, 362-377 at 1.8-2K (old path about 125); 200-1,000-token prompts stay at about 125 at 16 sub-chunks (under the 64-row grouped floor). Misses the ~2,500 tok/s projection (PROJECTION MISSED, about 5x): 256-row sub-chunks put each stage on the weight-bandwidth roof plus a 16 % pipeline fill/drain per 4K call; the 35B proxy entry (1,974, one GPU, whole 4K chunks) stays the floor-checked champion"
+
+[[champion]]
+area          = "prefill"
+case          = "qwen38-flash-next"
+config        = "qwen38-fnext.served"
+value         = 1618.4
+unit          = "tok/s"
+scale         = "Flash-Next (K, 8192-token prompt)"
+run_id        = "20261116-sfx-p16"
+evidence      = "gate/results/strix-loop/20261116-sfx-p16/champion-base"
+fidelity      = "logits sha256 and greedy ids identical to the served Flash-Next path itself (strixite modules, v4 weights) (its KL vs FP32 unchanged)"
+date          = "2026-11-17"
+status        = "history"
+note          = "base side of strix-loop 20261116-sfx-p16 on K (job 20261117T000124Z-run-pmodel): median second-request prefill tok/s at 8192 (A1/A2 1617.5-1619.2); 128..32768: 716 / 1206 / 1372 / 1466 / 1531 / 1618 / 1605 / 1589; decode 33.1-33.9 tok/s T=1 MTP off"
+superseded_by = "qwen38-fnext.prefill-best 20261116-sfx-p16 2026-11-17"
+
+[[champion]]
+area     = "prefill"
+case     = "qwen38-flash-next"
+config   = "qwen38-fnext.prefill-best"
+value    = 1700.4
+unit     = "tok/s"
+scale    = "Flash-Next (K, 8192-token prompt)"
+run_id   = "20261116-sfx-p16"
+evidence = "gate/results/strix-loop/20261116-sfx-p16"
+fidelity = "logits sha256 and greedy ids identical to qwen38-fnext.served (logits sha256 of the last 16 rows and 32 greedy ids, 8 prompts 128..32768) (its KL vs FP32 unchanged)"
+date     = "2026-11-17"
+status   = "current"
+note     = "strix-loop 20261116-sfx-p16 on K, A B A B: prefill ratio vs served 1.101 / 1.112 / 1.073 / 1.046 / 1.069 / 1.051 / 1.051 / 1.051 at 128..32768 (median 1.051 over >= 2048, every pair outside both sides' ranges); 1700.4 tok/s at 8192 vs 1618.4; decode ratio 1.003-1.005 (not promoted for decode)"

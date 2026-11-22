@@ -61,6 +61,10 @@ def floor_check(area, fid):
         ok = fid.get("identical") is True
         return ok, "identical ids" if ok else f"identity not shown ({fid})"
     kl = fid.get("kl_vs_fp32")
+    if kl is None and fid.get("identical") is True and fid.get("reference"):
+        # Logits byte-identical to the model's served path (the path the floor is defined by) leave its KL unchanged,
+        # so an order-only change (a weight relayout, a bit-equal kernel) passes a KL floor without an FP32 run.
+        return True, f"logits sha256 and greedy ids identical to {fid['reference']} (its KL vs FP32 unchanged)"
     if kl is None:
         return False, "no kl_vs_fp32 recorded"
     ok = kl <= area["fidelity_bound"]

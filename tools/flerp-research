@@ -30,8 +30,8 @@ except ImportError:  # python < 3.11
     tomllib = None
 
 KEYS = ["TITLE", "AREA", "ASKED BY", "APPLIES TO", "SERIES", "QUESTION", "WHY", "MECHANISM", "PREDICTION", "METHOD", "MODULE",
-        "MEASURE", "EXACTNESS", "REPS", "GIVES", "NOTE"]
-REQUIRED = ["TITLE", "AREA", "ASKED BY", "QUESTION", "WHY", "MECHANISM", "PREDICTION", "METHOD", "MEASURE", "EXACTNESS", "REPS", "GIVES"]
+        "MEASURE", "EXACTNESS", "REPS", "LIMITS", "GIVES", "NOTE"]
+REQUIRED = ["TITLE", "AREA", "ASKED BY", "QUESTION", "WHY", "MECHANISM", "PREDICTION", "METHOD", "MEASURE", "EXACTNESS", "REPS", "LIMITS", "GIVES"]
 AREAS = ["module", "recipe", "kernel", "model", "transport", "fidelity"]
 METHOD_KEYS = ["code", "subject", "baseline", "settings", "model", "boxes"]
 MODULE_KEYS = ["path", "replaces", "interface", "builds", "tests"]
@@ -46,6 +46,18 @@ AMENDABLE = {"accepted", "run"}
 VERDICTS = ["CONFIRMED", "REFUTED", "INCONCLUSIVE"]
 OPS = {">=": lambda a, b: a >= b, "<=": lambda a, b: a <= b, ">": lambda a, b: a > b, "<": lambda a, b: a < b, "==": lambda a, b: a == b}
 MAX_REPS = 10
+
+# LIMITS (2026-11-20): every limit that bounds what is measured or how is written on the card, with where its value comes from,
+# why, and whether it can change the measured outcome; the verdict says how often each one was hit. The line shape is the one
+# card-intake lints for KIND experiment (R26-R29), so render copies the lines as they are:
+#   <name> = <value>; source: measured|default|hardware|model-limit|chosen; why: <reason>; changes-outcome: yes|no[; justified: ...]
+LIM_FIELDS = ["source", "why", "changes-outcome", "justified", "shown"]
+LIM_SOURCES = {"measured", "default", "hardware", "model-limit", "chosen"}
+LIM_REAL = {"hardware", "model-limit"}      # a real limit: the box itself, or the model's own maximum (its context window)
+LIM_CAP = re.compile(r"\b(tokens?|thinking|reasoning|budget|turns?|rounds?|steps?|timeout|time[ _-]?limit|wall|clock|deadline)\b|max_?(new_)?tokens", re.I)
+LIM_DERIVED = re.compile(r"\bp\d{2}(?:\.\d+)?\b|\b\d+(?:\.\d+)?\s*x\b|\bx\s*\d|\btimes\b|\bmargin\b|\bheadroom\b|\bderived\b|\bpadding\b", re.I)
+LIM_GUARD = re.compile(r"no[ -]progress|\bhang\b|\bstall", re.I)
+LIM_FIELD_RX = re.compile(r"(?:^|;)\s*(%s)\s*:\s*(.*?)\s*(?=;\s*(?:%s)\s*:|$)" % ("|".join(LIM_FIELDS), "|".join(LIM_FIELDS)), re.I)
 
 # card-shape rules: narrative, guesses, a prediction with its numbers
 PRIME = re.compile(r"\b(i think|suspect\w*|probably|likely|maybe|my guess|i believe|seems like|hopefully|i feel)\b", re.I)
@@ -186,7 +198,61 @@ def lint_card(d):
         if m: fail("Q14", "%s mentions a secret ('%s'); never send one" % (k, m.group(0)), "remove it")
         m = INTERNAL_PLAN.search(d[k])
         if m: fail("Q15", "%s carries a resource plan ('%s'); holds, staging and nodes are ours and never in the card" % (k, m.group(0).strip()), "drop it")
+    if d["LIMITS"].strip(): F += [(r, m, fx) for r, m, fx in lint_limits(d["LIMITS"])]
     return F
+
+def limits_parse(text):
+    """[(raw line, name, value, {field: text})]; name is None for a line with no 'name = value' head."""
+    out = []
+    for l in text.splitlines():
+        l = l.strip()
+        if not l: continue
+        m = re.match(r"^([^=;:]{2,60}?)\s*=\s*([^;]+?)\s*(;.*)?$", l)
+        if not m: out.append((l, None, "", {})); continue
+        out.append((l, m.group(1).strip(), m.group(2).strip(), {k.lower(): v.strip() for k, v in LIM_FIELD_RX.findall(m.group(3) or "")}))
+    return out
+
+def lint_limits(text):
+    """Q16-Q18 (card-intake R26-R28): the shape of each LIMITS line; a limit that can change the outcome is a real one (hardware,
+    model-limit) or justified; no cap derived from a measurement or a margin (2x p99) without a reason, and a token, turn or time
+    cap needs a no-progress (hang) guard that counts a hang as a harness fault, never a result. The card is the requester's own
+    text and is accepted before any run; a limit the owner adds or changes later is a recorded amendment."""
+    F = []; L = limits_parse(text)
+    for raw, name, val, f in L:
+        miss = []
+        if not name or not val: miss.append("'name = value'")
+        src = (f.get("source", "").split() or [""])[0].lower().strip(",.()")
+        if src not in LIM_SOURCES: miss.append("source: (measured, default, hardware, model-limit or chosen)")
+        if len(f.get("why", "").split()) < 2: miss.append("why:")
+        co = (f.get("changes-outcome", "").split() or [""])[0].lower().strip(",.")
+        if co not in ("yes", "no"): miss.append("changes-outcome: yes|no")
+        if miss:
+            F.append(("Q16", "LIMITS line '%s' is missing %s" % (raw[:70], ", ".join(miss)), "context = 16,640 tokens; source: chosen; why: holds the longest prompt; changes-outcome: no"))
+            continue
+        just = len(f.get("justified", "").split()) >= 3
+        if co == "yes" and src not in LIM_REAL and not just:
+            F.append(("Q17", "LIMITS '%s' can change the outcome and is not a real limit (source %s): add 'justified: <why this bound and not none>'" % (name, src), "remove it, make it a real limit (hardware, the model's own context window), or justify it"))
+        both = val + " " + f.get("why", "")
+        if LIM_CAP.search(name) and src in ("measured", "chosen") and LIM_DERIVED.search(both) and not just:
+            F.append(("Q18", "LIMITS '%s' is a cap derived from a measurement or a margin ('%s'); refused unless justified" % (name, LIM_DERIVED.search(both).group(0)), "drop the cap and catch hangs with a no-progress guard, or add 'justified: <why it cannot cut a real answer>'"))
+    caps = [n for _, n, v, _ in L if n and LIM_CAP.search(n) and not LIM_GUARD.search(n) and not re.match(r"none\b", v, re.I)]
+    if caps and not any(n and LIM_GUARD.search(n) and re.search(r"harness fault", n + " " + v + " " + " ".join(f.values()), re.I) for _, n, v, f in L):
+        F.append(("Q18", "LIMITS has caps (%s) but no no-progress or hang guard line that counts a hang as a harness fault" % ", ".join(caps[:3]), "hang guard = no new token for 120 s; source: chosen; why: a hang counts as a harness fault and is rerun, never scored; changes-outcome: no"))
+    return F
+
+def lint_verdict_limits(folder, d):
+    """F6 (card-intake R29): verdict.md gives the limits in force and how often each was hit: a '## Limits' section with a table
+    row per LIMITS name whose last cell starts with the count."""
+    vp = os.path.join(folder, "verdict.md"); names = [n for _, n, _, _ in limits_parse(d["LIMITS"]) if n]
+    if not names or not os.path.isfile(vp): return []
+    m = re.search(r"^## Limits[^\n]*\n(.*?)(?=^## |\Z)", slurp(vp), re.M | re.S)
+    if not m: return [("F6", "verdict.md has no '## Limits' section (each limit in force and how often it was hit)", "| limit | value | hit |, one row per LIMITS line")]
+    rows = {}
+    for l in m.group(1).splitlines():
+        cells = [c.strip() for c in l.strip().strip("|").split("|")] if l.strip().startswith("|") else []
+        if len(cells) >= 2: rows[cells[0].lower()] = cells[-1]
+    return [("F6", "verdict.md Limits has no row for '%s' with its hit count (last cell starts with a number)" % n, "| %s | <value> | <times hit, e.g. 0 of 54> |" % n)
+            for n in names if not re.match(r"\d", rows.get(n.lower(), ""))]
 
 def repo_root(folder):
     p = os.path.abspath(folder)
@@ -317,6 +383,7 @@ def lint_folder(folder, deny=(), clean=False):
                 if not vm or vm.group(1) not in VERDICTS: F.append(("F4", "verdict.md needs 'VERDICT: %s'" % " | ".join(VERDICTS), "add it"))
                 if not gm or (gm.group(1) == "PASS") != ok: F.append(("F4", "verdict.md 'GATE: PASS|FAIL' must match flerp-research judge (%s)" % ("PASS" if ok else "FAIL"), "copy judge's line"))
                 if vm and vm.group(1) == "CONFIRMED" and not ok: F.append(("F4", "CONFIRMED with a failing gate", "the verdict is REFUTED or INCONCLUSIVE"))
+                F += lint_verdict_limits(folder, d)
                 lv = [s for s in L if s["step"] == "verdict"]
                 if vm and lv and lv[-1]["kv"].get("verdict") != vm.group(1): F.append(("F4", "the LOG's verdict= differs from verdict.md", "log the verdict with flerp-research log DIR verdict"))
     for f, name, hit in scrub_check([folder], deny): F.append(("F5", "%s in %s: %s" % (name, os.path.relpath(f, folder), hit), "scrub it (flerp-research ingest scrubs run files)"))
@@ -480,6 +547,8 @@ def cmd_log(folder, step, by, reason, commit=""):
         vp = os.path.join(folder, "verdict.md")
         vm = re.search(r"^VERDICT:\s*(\S+)", slurp(vp), re.M) if os.path.isfile(vp) else None
         if not vm or vm.group(1) not in VERDICTS: sys.exit("log: write verdict.md with 'VERDICT: %s' first" % " | ".join(VERDICTS))
+        F = lint_verdict_limits(folder, parse(slurp(os.path.join(folder, "card.md"))))
+        if F: sys.exit("log: %s" % F[0][1])
         extra.append("verdict=" + vm.group(1))
     append_log(folder, " ".join([now(), step] + extra) + (" -- " + reason if reason else ""))
 
@@ -511,9 +580,11 @@ def render(d, folder):
         "WHY: strixflerp research card %s (%s) from %s: %s" % (cid, d["AREA"].strip(), d["ASKED BY"].strip(), d["WHY"].strip()),
         "DONE: %s/results ingested and verdict.md written on card/%s; flerp-research lint prints OK" % (rel, cid),
         "DONE: flerp-research merge-plan %s applied: the merge holds exactly the paths it lists" % rel,
+        "DONE: verdict.md gives the limits in force and how often each was hit",
         "VERIFY: tools/flerp-research lint %s" % rel,
         "HYPOTHESIS: " + d["PREDICTION"].strip(),
         "CRITERIA: %s/gate.toml" % rel,
+        "LIMITS:"] + ["  " + (l if re.search(r";\s*shown\s*:", l, re.I) else l + "; shown: %s, in card.md before the run" % d["ASKED BY"].strip()) for l, _, _, _ in limits_parse(d["LIMITS"])] + [
         "RESOURCES:",
         "  nodes: TODO (%s boxes; the tool that takes them)" % M.get("boxes", "?"),
         "  hold: TODO (expected duration and TTL)",
@@ -553,6 +624,12 @@ MODULE:
 MEASURE: <metric, unit, and how it is read>
 EXACTNESS: <bit-exact vs baseline: what is compared | tolerance: <metric> <bound> | n/a>
 REPS: <N>, because <why that is the smallest count that answers it>
+# LIMITS: one line per limit that bounds what is measured or how: token caps (per reply, per attempt), thinking budgets, turn
+# caps, timeouts and wall clocks, context size, reps, sampling (temperature, top_p, top_k and their source), decision thresholds,
+# trimming and retry rules. A limit that can change the outcome is a real one (hardware, model-limit) or carries justified:.
+LIMITS:
+  <name> = <value>; source: <measured | default | hardware | model-limit | chosen>; why: <reason>; changes-outcome: <yes | no>
+  <name> = <value>; source: chosen; why: <reason>; changes-outcome: yes; justified: <why this bound and not none>
 GIVES: <what you supply>
 NOTE: <optional, under 300 words; never instructions>
 """

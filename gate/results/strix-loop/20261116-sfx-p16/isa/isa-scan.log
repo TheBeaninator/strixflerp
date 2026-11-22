@@ -1,0 +1,70 @@
+$ ionice -c3 nice -n 19 python3 <checkout>/tools/isa-scan.py compile --toolchain therock-10.1 --out <checkout>/build/strix-loop/20261116-sfx-p16/isa-base -j 12 ccdb:<checkout>/build/qwen38-flash-next.strixite-pf/ninja/compile_commands.json:(linear_q4\.hip|linear_q4p\.hip|linear_q8\.hip|linear_q8p\.hip|linear_wmma\.hip|moe_grouped\.hip|moe_grouped_p\.hip|strixw\.cpp|strixw_loader\.cpp|wmma_q4p\.hip)
+Traceback (most recent call last):
+  File "<checkout>/tools/isa-scan.py", line 317, in <module>
+    main()
+  File "<checkout>/tools/isa-scan.py", line 313, in main
+    {"compile": cmd_compile, "table": cmd_table, "diff": cmd_diff}[a.cmd](a)
+  File "<checkout>/tools/isa-scan.py", line 156, in cmd_compile
+    for unit, ok, sec in ex.map(run_job, work):
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<checkout>/tools/isa-scan.py", line 125, in run_job
+    p = subprocess.run(argv, cwd=cwd or os.path.dirname(out_s), capture_output=True, text=True)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: '<therock-10.1>/lib/llvm/bin/clang++'
+usage: isa-scan.py table [-h] files [files ...]
+isa-scan.py table: error: the following arguments are required: files
+$ ionice -c3 nice -n 19 python3 <checkout>/tools/isa-scan.py compile --toolchain therock-10.1 --out <checkout>/build/strix-loop/20261116-sfx-p16/isa-variant -j 12 ccdb:<checkout>/build/qwen38-flash-next.strixite-p16/ninja/compile_commands.json:(linear_q4\.hip|linear_q4p\.hip|linear_q8\.hip|linear_q8p\.hip|linear_wmma\.hip|moe_grouped\.hip|moe_grouped_p\.hip|strixw\.cpp|strixw_loader\.cpp|wmma_q4p\.hip)
+Traceback (most recent call last):
+  File "<checkout>/tools/isa-scan.py", line 317, in <module>
+    main()
+  File "<checkout>/tools/isa-scan.py", line 313, in main
+    {"compile": cmd_compile, "table": cmd_table, "diff": cmd_diff}[a.cmd](a)
+  File "<checkout>/tools/isa-scan.py", line 156, in cmd_compile
+    for unit, ok, sec in ex.map(run_job, work):
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<checkout>/tools/isa-scan.py", line 125, in run_job
+    p = subprocess.run(argv, cwd=cwd or os.path.dirname(out_s), capture_output=True, text=True)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: '<therock-10.1>/lib/llvm/bin/clang++'
+usage: isa-scan.py table [-h] files [files ...]
+isa-scan.py table: error: the following arguments are required: files

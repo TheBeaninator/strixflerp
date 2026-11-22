@@ -36,6 +36,15 @@ class T(unittest.TestCase):
     def propose(self, config, area, case=""):
         return C.propose(config, area, self.res, case=case, ledger=self.led, doc=self.doc)
 
+    def test_kl_floor_accepts_identity_to_a_named_reference(self):
+        # An order-only change (SFX-PKG: strixw panel layout) has logits byte-identical to the served path,
+        # so its KL is that path's; identity without a named reference is not enough for a KL area.
+        ok, why = C.floor_check({"fidelity": "kl", "fidelity_bound": 0.02}, {"identical": True, "reference": "served pf"})
+        self.assertTrue(ok, why)
+        self.assertIn("identical to served pf", why)
+        self.assertFalse(C.floor_check({"fidelity": "kl", "fidelity_bound": 0.02}, {"identical": True})[0])
+        self.assertFalse(C.floor_check({"fidelity": "kl", "fidelity_bound": 0.02}, {"identical": False, "reference": "x"})[0])
+
     def test_promotion_rules_higher_is_better(self):
         # The fixture incumbent is 1200 tok/s under a KL floor of 0.02. Each refusal is checked by its reason, so a
         # broken incumbent rule cannot hide behind the floor and a broken floor cannot hide behind the incumbent.

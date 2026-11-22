@@ -1,0 +1,16 @@
+# Champion configuration, area prefill, case qwen38-flash-next (SFX-PKG, the 2026-11-16 package): the strixw
+# panel layout Q4P16 / Q8P16 (docs/STRIXW-LAYOUT-NEXT.md) read by the panel kernels. Order-only: logits sha256 and greedy
+# ids identical to qwen38-fnext.served on 8 prompts 128..32768 (strix-loop run 20261116-sfx-p16 on K); prefill 1.046-1.112x,
+# decode 1.003-1.005x (not a decode promotion: under the criteria's 1.01).
+name        = "qwen38-fnext.prefill-best"
+description = "Flash-Next with strixw v5 panel weights (convert_strixw_panel of the fleet v4) on recipe qwen38-flash-next.strixite-p16: linear_q4p/q8p decode, wmma_q4p dense prefill, moe_grouped_p expert prefill, strixw_loader_p"
+model       = "qwen3.8-flash-next"
+areas       = ["prefill"]
+includes    = ["qwen38-fnext.served"]
+recipe      = "qwen38-flash-next.strixite-p16"
+weights     = "v5 panel file from tool.flerp.convert_strixw_panel --old <fleet v4>; the K gate read /data/models/strix-infer/tmp/sfx-p16/weights.strixw (staged for the gate, released at card end)"
+kernels     = ["linear_q4p/q8p decode2 map", "wmma_q4p", "moe_grouped_p", "strixw_loader_p"]
+
+[stage]
+
+[env]

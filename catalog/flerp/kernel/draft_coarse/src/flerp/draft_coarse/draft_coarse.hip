@@ -80,7 +80,8 @@ __device__ inline void Place(int bits, int j, unsigned code, std::uint32_t* word
 
 __global__ void __launch_bounds__(128) BuildKernel(const std::uint8_t* __restrict__ head, int q6, int vocab, int hidden,
                                                    int bits, std::uint32_t* __restrict__ codes, __half* __restrict__ scale,
-                                                   __half* __restrict__ minv, unsigned* __restrict__ err_bits) {
+                                                   __half* __restrict__ minv, unsigned* __restrict__ err_bits,
+                                                   float* __restrict__ row_err) {
   const int lane = threadIdx.x & 31;
   const int row = blockIdx.x * 4 + (threadIdx.x >> 5);
   if (row >= vocab) return;
@@ -116,7 +117,10 @@ __global__ void __launch_bounds__(128) BuildKernel(const std::uint8_t* __restric
     minv[static_cast<std::size_t>(row) * ng + g] = mh;
   }
   err = WaveSum(err);
-  if (lane == 0) atomicMax(err_bits, __float_as_uint(sqrtf(err / static_cast<float>(hidden))));
+  if (lane == 0) {
+    atomicMax(err_bits, __float_as_uint(sqrtf(err / static_cast<float>(hidden))));
+    row_err[row] = sqrtf(err);   // ||w_r - w~_r||_2: the per-row coarse error the per-block bound reads (V10-BLOCKBOUND)
+  }
 }
 
 // Coarse logits: one block of 8 waves per 128 tokens, 16 rows a wave, two rows at a time. x sits in LDS transposed
@@ -376,26 +380,33 @@ std::unique_ptr<Coarse> Coarse::Build(const void* head, GgmlType type, int vocab
   const std::size_t code_bytes = static_cast<std::size_t>(vocab) * ng * 2 * bits * 4;
   const std::size_t par_bytes = static_cast<std::size_t>(vocab) * ng * 2;
   unsigned* err_bits = nullptr;
+  float* row_err = nullptr;
+  if (hipMalloc(&row_err, static_cast<std::size_t>(vocab) * sizeof(float)) != hipSuccess) return fail("device allocation");
   if (hipMalloc(&c->codes_, code_bytes) != hipSuccess || hipMalloc(&c->scale_, par_bytes) != hipSuccess ||
       hipMalloc(&c->minv_, par_bytes) != hipSuccess || hipMalloc(&c->maxima_, c->blocks_ * sizeof(float)) != hipSuccess ||
       hipMalloc(&c->chosen_, kMaxKeep * sizeof(int)) != hipSuccess || hipMalloc(&c->outside_, sizeof(float)) != hipSuccess ||
       hipMalloc(&c->cand_, kMaxKeep * kBlockTokens * sizeof(float)) != hipSuccess ||
       hipMalloc(&err_bits, sizeof(unsigned)) != hipSuccess) {
     if (err_bits != nullptr) (void)hipFree(err_bits);
+    (void)hipFree(row_err);
     return fail("device allocation");
   }
   c->bytes_ = code_bytes + 2 * par_bytes;
   (void)hipMemsetAsync(err_bits, 0, sizeof(unsigned), stream);
   BuildKernel<<<(vocab + 3) / 4, 128, 0, stream>>>(static_cast<const std::uint8_t*>(head), type == GgmlType::kQ6_K ? 1 : 0,
-                                                   vocab, hidden, bits, c->codes_, c->scale_, c->minv_, err_bits);
+                                                   vocab, hidden, bits, c->codes_, c->scale_, c->minv_, err_bits, row_err);
   unsigned eb = 0;
+  c->row_err_.resize(static_cast<std::size_t>(vocab));
   const hipError_t st = hipGetLastError();
   if (st != hipSuccess || hipMemcpyAsync(&eb, err_bits, sizeof(unsigned), hipMemcpyDeviceToHost, stream) != hipSuccess ||
+      hipMemcpyAsync(c->row_err_.data(), row_err, c->row_err_.size() * sizeof(float), hipMemcpyDeviceToHost, stream) != hipSuccess ||
       hipStreamSynchronize(stream) != hipSuccess) {
     (void)hipFree(err_bits);
+    (void)hipFree(row_err);
     return fail(std::string("build: ") + hipGetErrorString(st));
   }
   (void)hipFree(err_bits);
+  (void)hipFree(row_err);
   std::memcpy(&c->err_rms_, &eb, sizeof(float));
   return c;
 }

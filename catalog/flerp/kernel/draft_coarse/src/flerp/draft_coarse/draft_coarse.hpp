@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "src/core/gguf_reader.hpp"
 
@@ -75,6 +76,9 @@ class Coarse {
   [[nodiscard]] int blocks() const noexcept { return blocks_; }
   /// The last Score's kept blocks (device, keep ints) and candidate logits (device, keep * 128 floats).
   [[nodiscard]] const int* chosen() const noexcept { return chosen_; }
+  /// ||w_r - w~_r||_2 of every row (host, vocab floats), the exact per-row coarse error. The head multiplies the F32
+  /// activation directly (QuantWarpBlockDot), so |exact_r - coarse_r| <= row_err()[r] * ||x||_2 up to FP32 rounding.
+  [[nodiscard]] const std::vector<float>& row_err() const noexcept { return row_err_; }
 
  private:
   Coarse() = default;
@@ -91,6 +95,7 @@ class Coarse {
   int* chosen_{nullptr};
   float* outside_{nullptr};
   float* cand_{nullptr};
+  std::vector<float> row_err_;
 };
 
 }  // namespace flerp::draft_coarse

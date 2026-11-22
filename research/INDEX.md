@@ -5,4 +5,4 @@ Cite a result as research/<folder>/verdict.md at its merge commit.
 
 | id | submitted | series | area | question | step | verdict | module | merge commit | folder |
 |---|---|---|---|---|---|---|---|---|---|
-| 28ff7d6a46 | 2026-11-14 | moe-prefill | module | Does the qwen35moe MoE combine run near read bandwidth with 16-byte loads | verdict | CONFIRMED | catalog/flerp/executor/qwen35moe | - | [module/28ff7d6a46-moe-combine-vec4](module/28ff7d6a46-moe-combine-vec4/verdict.md) |
+| 61208c12ad | 2026-11-14 | moe-prefill | module | Does the qwen35moe MoE combine run near read bandwidth with 16-byte loads | verdict | CONFIRMED | catalog/flerp/executor/qwen35moe | - | [module/61208c12ad-moe-combine-vec4](module/61208c12ad-moe-combine-vec4/verdict.md) |

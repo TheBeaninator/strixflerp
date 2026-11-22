@@ -1,0 +1,49 @@
+id        = "tool.flerp.qsa_overlap"
+kind      = "tool"
+summary   = "Cross-layer QSA selection overlap on the engine's own selections: real text prefilled and decoded through strixite's Qwen4ExpSession, the qsa_sel / qsa_nsel probe points of every full-attention layer recorded per query row, and the recall |S_a ∩ S_b| / k per layer pair written with its random baseline and the recency/sink shares"
+why       = "An IndexCache (cross-layer index reuse, owner's 2026-11-16 package) recovers layer b's top-k from layer a's only as far as the two sets overlap; that overlap is the decision number and has to come from recorded indexer outputs, not from the 0.75 the sketch assumes"
+notes     = "Card SFX-PKG (pod board, 2026-11-16). Criteria: gate/criteria/sfx-pkg.toml [indexcache]. Built inside recipes/qwen38-flash-next.strixite-pf.toml. A row counts only where both layers kept a full k = qsa_budget / 4 blocks."
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["flerp/qsa_overlap/qsa_overlap.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/flerp/qsa_overlap/qsa_overlap.cpp"]
+includes  = ["src"]
+
+[[provides]]
+interface = "tool.qsa-overlap/qwen4exp/-"
+api       = "main (strixflerp-qsa-overlap --weights W --ngram T --tokenizer J --text FILE --out DIR [--lens L,..] [--decode N] [--stride S])"
+numeric   = "the session's own selections; recall as a set intersection"
+regime    = "needs the GPU; one process, one weights load"
+
+[[requires]]
+module    = "executor.strixite.qwen4exp"
+
+[[requires]]
+module    = "kernel.strixite.hip_common"
+
+[[requires]]
+module    = "runtime.strixite.check"
+
+[[requires]]
+module    = "runtime.strixite.tokenizer"
+
+[[requires]]
+module    = "kernel.strixite.qsa"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a measuring tool; its numbers are judged by gate/criteria/sfx-pkg.toml"

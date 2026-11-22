@@ -118,6 +118,64 @@ class Card(unittest.TestCase):
         self.assertIn("Q7", rules(c))
 
 
+def limit(text, name, line):
+    """Replace the LIMITS line that starts with name (None: drop it)."""
+    return re.sub(r"^  %s = .*\n" % re.escape(name), "" if line is None else "  %s\n" % line, text, count=1, flags=re.M)
+
+
+class Limits(unittest.TestCase):
+    """LIMITS (owner 2026-11-20): every limit on the card with source, why and changes-outcome; outcome-changing limits real or
+    justified; no derived caps; a hang guard; the verdict gives each limit's hit count (card-intake R26-R29)."""
+    def test_limits_are_required(self):
+        self.assertIn("Q0", rules(re.sub(r"^LIMITS:\n(  .*\n)+", "", GOOD, flags=re.M)))
+
+    def test_line_needs_source_why_and_changes_outcome(self):
+        F = fr.lint_limits("context = 16,640 tokens")
+        self.assertEqual([r for r, _, _ in F], ["Q16"])
+        for part in ("source:", "why:", "changes-outcome"):
+            self.assertIn(part, F[0][1])
+        self.assertIn("Q16", rules(limit(GOOD, "context", "context = 16,640 tokens; source: guessed; why: holds the prompt; changes-outcome: no")))
+        self.assertIn("Q16", rules(limit(GOOD, "context", "context = 16,640 tokens; source: chosen; why: holds the prompt; changes-outcome: maybe")))
+
+    def test_outcome_changing_chosen_limit_needs_justification(self):
+        line = "speed bar = 1.05x baseline; source: chosen; why: smaller gains sit inside the spread; changes-outcome: yes"
+        self.assertIn("Q17", rules(limit(GOOD, "speed bar", line)))
+        self.assertNotIn("Q17", rules(limit(GOOD, "speed bar", line + "; justified: the mechanism predicts 1.11x, twice the bar")))
+        # a real limit needs no justification: the model's own context window
+        real = "context = 262,144 tokens; source: model-limit; why: the model's own window; changes-outcome: yes"
+        self.assertEqual(rules(limit(GOOD, "context", real)), set())
+
+    def test_derived_caps_and_hang_guard(self):
+        derived = "max_tokens per reply = 2x p99 of a pilot, 3,680; source: measured; why: replies end well before it; changes-outcome: no"
+        self.assertIn("Q18", rules(limit(GOOD, "context", derived)))
+        self.assertNotIn("Q18", rules(limit(GOOD, "context", derived + "; justified: the pilot used the same prompts and the cap was never reached")))
+        self.assertIn("Q18", rules(limit(GOOD, "hang guard", None)))  # generated tokens is a cap: something must catch a hang
+        unguarded = "hang guard = process timeout 3,000 s; source: chosen; why: a hang ends the process; changes-outcome: no"
+        self.assertIn("Q18", rules(limit(GOOD, "hang guard", unguarded)))  # it must say a hang is a harness fault
+
+    def test_template_carries_limits(self):
+        self.assertIn("LIMITS:", fr.TEMPLATE)
+        self.assertIn("Q0", rules(fr.TEMPLATE % "module"))
+
+    def test_render_copies_the_limits(self):
+        out = fr.render(fr.parse(GOOD), EXAMPLE)
+        lim = re.search(r"^LIMITS:\n((?:  .*\n)+)", out, re.M).group(1).splitlines()
+        self.assertEqual(len(lim), len(fr.limits_parse(fr.parse(GOOD)["LIMITS"])))
+        self.assertTrue(all("; shown: " in l for l in lim))
+        self.assertIn("limits in force and how often each was hit", out)
+
+    def test_experiments_template_limits_table(self):
+        text = fr.slurp(os.path.join(ROOT, "docs", "EXPERIMENTS.md"))
+        t = fr.tomllib.loads(re.search(r"```toml\n(.*?)```", text, re.S).group(1))
+        self.assertTrue(t.get("limits"))
+        for name, v in t["limits"].items():
+            self.assertTrue({"value", "source", "why", "changes_outcome"} <= set(v), name)
+            self.assertIn(v["source"], fr.LIM_SOURCES, name)
+            if v["changes_outcome"] and v["source"] not in fr.LIM_REAL:
+                self.assertTrue(v.get("justified") and v.get("shown"), name)
+        self.assertTrue(any("harness fault" in v["why"] for v in t["limits"].values()))
+
+
 class ModulePR(Fixture):
     def test_ported_module_card_lints(self):
         self.assertEqual(fr.lint_folder(self.draft), [])
@@ -201,6 +259,26 @@ class Verdicts(Fixture):
         d = self.place_example("CONFIRMED")
         put(os.path.join(d, "verdict.md"), fr.slurp(os.path.join(d, "verdict.md")).replace("GATE: PASS", "GATE: FAIL"))
         self.assertIn("F4", self.fails(d))
+
+    def test_verdict_gives_each_limit_and_its_hits(self):
+        d = self.place_example("CONFIRMED")
+        vp = os.path.join(d, "verdict.md"); good = fr.slurp(vp)
+        put(vp, re.sub(r"^## Limits\n.*?(?=^## )", "", good, flags=re.M | re.S))
+        self.assertIn("F6", self.fails(d))
+        put(vp, re.sub(r"^\| hang guard \|.*\n", "", good, flags=re.M))
+        self.assertIn("F6", self.fails(d))  # a limit with no row
+        put(vp, re.sub(r"^(\| hang guard \|[^|]*\|) [^|]*\|", r"\1 never |", good, flags=re.M))
+        self.assertIn("F6", self.fails(d))  # the hit count must be a number
+        put(vp, good)
+        self.assertEqual({r for r in self.fails(d) if not r.startswith("M")}, set())
+
+    def test_verdict_step_refuses_a_verdict_without_limits(self):
+        d = self.place_example("CONFIRMED")
+        put(os.path.join(d, "LOG"), "\n".join(l for l in fr.slurp(os.path.join(d, "LOG")).splitlines() if " verdict " not in l) + "\n")
+        vp = os.path.join(d, "verdict.md")
+        put(vp, re.sub(r"^## Limits\n.*?(?=^## )", "", fr.slurp(vp), flags=re.M | re.S))
+        rc, out = run("log", d, "verdict", "--by", "owner")
+        self.assertIn("Limits", str(rc))
 
     def test_results_and_scrub(self):
         d = self.place_example("CONFIRMED")

@@ -1,0 +1,39 @@
+# SFX-PKG: pass criteria for the 2026-11-16 strixflerp package, written before any hardware run. Never loosened after.
+# Judged against: (1) the strix-loop model stage of recipe:qwen38-flash-next.strixite-p16 (variant, reading a strixw v5
+# panel file on K's NVMe) against base qwen38-flash-next.strixite-pf (the served strixite module set, v4 file), order
+# A B A B, 8 prompts 128..32768 x 2 rounds a process, 32 greedy tokens after each; (2) launch_tax on K; (3)
+# strixflerp-qsa-overlap on K.
+written = "2026-11-16"
+
+[panel.mechanism]
+kernels  = "linear_q4p/q8p (decode GEMV, expert gather/SwiGLU/combine), wmma_q4p (dense prefill), moe_grouped_p (expert prefill): every case byte-equal to the origin kernels on real fleet tensors (gate/results/strixw-panel-kernels, strixw-panel-decode2: 489/489 cases)"
+speed    = "per kernel (decode2 final run): decode dense median 84-99 % of origin time, expert decode 96-99 %; prefill dense 67-99 % (gdn_out/attn_o 67-90 %, the rest 92-99 %), expert prefill 93.6-98.4 %"
+prefill_weight = "Oct profile of an 8,192-token chunk: experts 33 %, dense WMMA 26 %, HC 16 %, GDN core 13 %, attention 11 % (docs/STRIXW-LAYOUT-NEXT.md, CRUCIBLE-VS-STRIXITE.md [P1]); panel touches the first two"
+
+[panel.predict]
+identity      = "logits sha256 (last 16 rows) and greedy ids identical on all 8 prompts: same dequantized values, same K order, byte-equal kernels"
+prefill_ratio = "variant / base tok/s 1.02-1.05 at 2048-32768 (expert ~5 % of 33 % + dense ~5 % of 26 % = ~3 % of GPU time), ~1.00 at 128-512 where launches dominate; the package's 9-13 % is refuted below 1.05"
+decode_ratio  = "1.00-1.03 (decode is weight-bandwidth bound; the kernels read the same bytes and the per-kernel medians are 96-99 %)"
+
+[panel.pass]
+every_process_exit_0          = true
+logits_identical_all_prompts  = true
+greedy_identical_all_prompts  = true
+prefill_ratio_min_2048_up     = 1.00   # median of second-request rows, every prompt >= 2048
+decode_ratio_min              = 0.99   # every prompt
+promote_if = "all pass lines hold AND the median prefill ratio over prompts >= 2048 is >= 1.01 (twice the 0.5 % null band); then the p16 layout is the Flash-Next prefill champion candidate and a strixflerp champion entry is written; decode is promoted only with a median decode ratio >= 1.01"
+
+[fused.mechanism]
+launches = "executor.strixite.qwen4exp decode, per layer: hc_inject + hc_mix_down + hc_mix_up before the MoE (qwen4exp.cpp:3149,3152), moe_shared_add_inject + hc_mix_down + hc_mix_up before the next layer (:3218, :2969); 48 layers -> 96 boundaries x 3 = 288 launches a token; a fused kernel keeps two grid-wide dependencies (RMS/dot over all H*d inputs; the up-mix over all of h), so 3 launches become 1 launch + 2 grid barriers: 192 launches a token removed, 192 barriers added"
+predict  = "launch_us 4-8, barrier_us 2-5 on K: saving 192 x (launch - barrier) = 0.2-1.1 ms of a ~30 ms decode step (MTP off) = 0.7-3.5 %"
+
+[fused.pass]
+build_if = "192 x (median launch_us - median barrier_us) >= 0.6 ms (>= 2 % of the base decode step measured in the panel run); below that the fused kernel is not built and the number is the verdict"
+
+[indexcache.mechanism]
+qsa      = "Flash-Next: 12 full-attention layers (every 4th), each with its own indexer; QSA selects k = 512 blocks of 4 tokens past 2,051 keys (qwen4exp.hpp:69,81; qsa.hpp:33); an IndexCache reuses layer a's set for layer b"
+ceiling  = "decode at T = 1: qsa_topk 6.9-29.4 us at 1k-32k blocks (qsa.hpp measured), qsa_scores reads blocks x 256 B; x 12 layers = ~0.3 ms at 32K, ~0.8 ms at 128K of a ~30 ms step: the indexer is 1-3 % of decode, so even a perfect cache cannot give 1.5x on this model"
+predict  = "adjacent attention layers (4 layers apart, separate indexer weights): recall 0.3-0.6 against a random baseline k / blocks (0.25 at 8K, 0.06 at 32K)"
+
+[indexcache.pass]
+build_if = "median recall of adjacent pairs >= 0.75 at 32K (the sketch's threshold) AND the indexer's share of the decode step >= 5 %; otherwise stop with the numbers"

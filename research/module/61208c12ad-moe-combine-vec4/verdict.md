@@ -1,4 +1,4 @@
-# 28ff7d6a46 verdict: MoE combine with 16-byte loads
+# 61208c12ad verdict: MoE combine with 16-byte loads
 
 VERDICT: CONFIRMED
 GATE: PASS
@@ -32,6 +32,23 @@ rose 10 % at 2,048 tokens and 13 % at 16,384.
 
 Identity: 108 recorded steps, 0 logits sha256 or generated-id mismatches; 0 of 8,388,608 and 0 of 16,777,216 output
 words differ in the kernel bench. ISA: 0 scratch bytes with both toolchains (74 and 75 VGPRs).
+
+## Limits
+
+The limits in force (card.md LIMITS) and how often each one was hit.
+
+| limit | value | hit |
+|---|---|---|
+| model reps | 3 interleaved reps a prompt length, median | 3 of 3 reps ran at each length and arm; the median left out arm G's slow first 2,048-token rep (1.249 s against 1.035 and 1.030) |
+| kernel bench reps | 7 a dim, caches flushed | 7 of 7 ran at both dims |
+| speed bar | 1.05x at 2,048 and 16,384 tokens | 0 of 2 lengths under it (1.100x and 1.129x) |
+| prediction lines | confirm at 150 ms or less, refute above 250 ms | 0 crossings of the refute line; 109.37 ms is inside the confirm line |
+| identity bar | 0 differing words, sha256 or ids | 0 differences in 108 recorded steps and 25,165,824 output words |
+| generated tokens | 2 a prompt | 54 of 54 traced prompts stopped at the cap, as designed |
+| context | 16,640 tokens | 0 prompts truncated (longest 16,384 ids) |
+| sampling | greedy | 54 of 54 traced prompts greedy (argmax is the token) |
+| trace warm-up | passes 1-2 dropped | 2 of 5 profile passes dropped |
+| hang guard | 3,000 s process timeout | 0 (the model gate ran 87.7 s) |
 
 ## Premises found wrong
 

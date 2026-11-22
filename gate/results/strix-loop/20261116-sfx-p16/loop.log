@@ -1,0 +1,30 @@
+strix-loop run 20261116-sfx-p16: recipe:qwen38-flash-next.strixite-p16 stages ['plan', 'build'] -> gate/results/strix-loop/20261116-sfx-p16
+Traceback (most recent call last):
+  File "<checkout>/gate/strix_loop.py", line 864, in <module>
+    main()
+  File "<checkout>/gate/strix_loop.py", line 841, in main
+    res["build"] = stage_build(a, ctx, plan)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<checkout>/gate/strix_loop.py", line 334, in stage_build
+    res[side] = build_recipe(name, ctx, log)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<checkout>/gate/strix_loop.py", line 321, in build_recipe
+    sh(["cmake", "-G", "Ninja", "-S", tree, "-B", ninja, "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"], log, check=True, timeout=900)
+  File "<checkout>/gate/strix_loop.py", line 91, in sh
+    raise RuntimeError(f"{cmd if isinstance(cmd, str) else ' '.join(cmd)} exited {rc}" + (f"; see {log}" if log else ""))
+RuntimeError: cmake -G Ninja -S <checkout>/build/qwen38-flash-next.strixite-pf -B <checkout>/build/qwen38-flash-next.strixite-pf/ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON exited 1; see <checkout>/gate/results/strix-loop/20261116-sfx-p16/build.log
+strix-loop run 20261116-sfx-p16: recipe:qwen38-flash-next.strixite-p16 stages ['build'] -> gate/results/strix-loop/20261116-sfx-p16
+Traceback (most recent call last):
+  File "<checkout>/gate/strix_loop.py", line 864, in <module>
+    main()
+  File "<checkout>/gate/strix_loop.py", line 841, in main
+    res["build"] = stage_build(a, ctx, plan)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<checkout>/gate/strix_loop.py", line 334, in stage_build
+    res[side] = build_recipe(name, ctx, log)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<checkout>/gate/strix_loop.py", line 321, in build_recipe
+    sh(["cmake", "-G", "Ninja", "-S", tree, "-B", ninja, "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"], log, check=True, timeout=900)
+  File "<checkout>/gate/strix_loop.py", line 91, in sh
+    raise RuntimeError(f"{cmd if isinstance(cmd, str) else ' '.join(cmd)} exited {rc}" + (f"; see {log}" if log else ""))
+RuntimeError: cmake -G Ninja -S <checkout>/build/qwen38-flash-next.strixite-pf -B <checkout>/build/qwen38-flash-next.strixite-pf/ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON exited 1; see <checkout>/gate/results/strix-loop/20261116-sfx-p16/build.log

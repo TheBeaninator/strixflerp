@@ -1,0 +1,623 @@
+{
+ "build": {
+  "base": {
+   "bench": "<checkout>/build/qwen38-flash-next.strixite-pf/ninja/strixflerp-prefill-bench",
+   "bench_sha256": "b7a4e57adae4aa2c04402c909e16555fb8d0ebfe4dfb5c0665c4f13392d0453a",
+   "build_s": 21.8,
+   "server": "<checkout>/build/qwen38-flash-next.strixite-pf/ninja/strixflerp-qwen38-flash-next.strixite-pf",
+   "tree": "build/qwen38-flash-next.strixite-pf"
+  },
+  "variant": {
+   "bench": "<checkout>/build/qwen38-flash-next.strixite-p16/ninja/strixflerp-prefill-bench",
+   "bench_sha256": "1dd9b5abcf9ddface69da215bf2eeb82a653c65ca9367ec01fc904a1ddc51af0",
+   "build_s": 172.8,
+   "server": "<checkout>/build/qwen38-flash-next.strixite-p16/ninja/strixflerp-qwen38-flash-next.strixite-p16",
+   "tree": "build/qwen38-flash-next.strixite-p16"
+  }
+ },
+ "canary_pin": {
+  "before": [
+   "register the serving: a SERVE_strixite_loop_20261116-sfx-p16 block in engines.conf (pod-engine register) whose binary is <checkout>/build/qwen38-flash-next.strixite-p16/ninja/strixflerp-qwen38-flash-next.strixite-p16 copied to /data/models/strix-infer/runtime/bin/ (NFS, replace in place, never mv over a path workers exec)",
+   "one worker, the canary letter a human picks; the keeper converges it at its next pass",
+   "pod-engine pin <letter> - removes the pin"
+  ],
+  "human": true,
+  "line": "pod-engine pin <letter> strixite_loop_20261116-sfx-p16",
+  "only_if": "every criterion above passed and the gain is wanted"
+ },
+ "card": "<card>",
+ "criteria": [
+  {
+   "criterion": "full model on K: logits sha256 (last 16 rows) and greedy ids equal to base on every prompt [128, 512, 1024, 2048, 4096, 8192, 16384, 32768]",
+   "pass": true
+  },
+  {
+   "criterion": "every bench process on K exited 0",
+   "detail": [],
+   "pass": true
+  },
+  {
+   "criterion": "isa: no kernel of the changed units uses scratch in the variant build",
+   "detail": "the isa scan did not run: base: isa-scan compile exited 1; base: no assembly (.s) produced; base: base.tsv has no kernel rows; variant: isa-scan compile exited 1; variant: no assembly (.s) produced; variant: variant.tsv has no kernel rows",
+   "pass": false,
+   "ran": false,
+   "report_only": false
+  }
+ ],
+ "detail": {},
+ "host": "control-node (builds, isa) + bench box K via pod-kbench",
+ "identical_binaries": false,
+ "isa": {
+  "diff_lines": [],
+  "problems": "the isa scan did not run: base: isa-scan compile exited 1; base: no assembly (.s) produced; base: base.tsv has no kernel rows; variant: isa-scan compile exited 1; variant: no assembly (.s) produced; variant: variant.tsv has no kernel rows",
+  "scratch": [],
+  "units": "linear_q4\\.hip|linear_q4p\\.hip|linear_q8\\.hip|linear_q8p\\.hip|linear_wmma\\.hip|moe_grouped\\.hip|moe_grouped_p\\.hip|strixw\\.cpp|strixw_loader\\.cpp|wmma_q4p\\.hip"
+ },
+ "kind": "recipe",
+ "micro": {},
+ "micro_no_driver": [],
+ "model_job": "<bench-runs>/20261117T000124Z-run-pmodel",
+ "model_procs": {
+  "A1": {
+   "bench_busy_s_lower_bound": 124.6,
+   "dev_used_after_gib": 78.29,
+   "io_read_gb": 78.9,
+   "load_end": 13.98,
+   "load_s": 321.9,
+   "load_s_upper_bound": 323.5,
+   "load_start": 0.24,
+   "mem_avail_min_gb": 11.1,
+   "mem_avail_start_gb": 93.7,
+   "peak_ram_gb": 82.6,
+   "placement": "device",
+   "rc": 0,
+   "side": "base",
+   "tctl_end_c": 23.85,
+   "tctl_start_c": 20.85,
+   "wall_s": 448.1,
+   "weights_gib": 69.5
+  },
+  "A2": {
+   "bench_busy_s_lower_bound": 120.8,
+   "dev_used_after_gib": 78.29,
+   "io_read_gb": 78.71,
+   "load_end": 17.17,
+   "load_s": 286.7,
+   "load_s_upper_bound": 288.2,
+   "load_start": 4.26,
+   "mem_avail_min_gb": 11.0,
+   "mem_avail_start_gb": 93.3,
+   "peak_ram_gb": 82.3,
+   "placement": "device",
+   "rc": 0,
+   "side": "base",
+   "tctl_end_c": 24.85,
+   "tctl_start_c": 25.85,
+   "wall_s": 409.0,
+   "weights_gib": 69.5
+  },
+  "B1": {
+   "bench_busy_s_lower_bound": 107.7,
+   "dev_used_after_gib": 78.33,
+   "io_read_gb": 78.88,
+   "load_end": 11.49,
+   "load_s": 277.4,
+   "load_s_upper_bound": 279.0,
+   "load_start": 5.2,
+   "mem_avail_min_gb": 10.9,
+   "mem_avail_start_gb": 93.4,
+   "peak_ram_gb": 82.5,
+   "placement": "device",
+   "rc": 0,
+   "side": "variant",
+   "tctl_end_c": 24.85,
+   "tctl_start_c": 25.85,
+   "wall_s": 386.7,
+   "weights_gib": 69.5
+  },
+  "B2": {
+   "bench_busy_s_lower_bound": 145.1,
+   "dev_used_after_gib": 78.33,
+   "io_read_gb": 78.72,
+   "load_end": 18.99,
+   "load_s": 303.1,
+   "load_s_upper_bound": 304.6,
+   "load_start": 3.92,
+   "mem_avail_min_gb": 10.9,
+   "mem_avail_start_gb": 93.3,
+   "peak_ram_gb": 82.4,
+   "placement": "device",
+   "rc": 0,
+   "side": "variant",
+   "tctl_end_c": 23.85,
+   "tctl_start_c": 25.85,
+   "wall_s": 449.7,
+   "weights_gib": 69.5
+  }
+ },
+ "model_table": [
+  {
+   "base_sha": [
+    "26cd42fadff52ef3578a70f083c4040acb5a24cab352532e87e15df2ddee78b7"
+   ],
+   "decode_outside_noise": true,
+   "decode_ratio": 1.0032,
+   "decode_tps_base": {
+    "max": 33.952,
+    "median": 33.916,
+    "min": 33.881,
+    "n": 2,
+    "spread_pct": 0.21
+   },
+   "decode_tps_variant": {
+    "max": 34.033,
+    "median": 34.026,
+    "min": 34.019,
+    "n": 2,
+    "spread_pct": 0.04
+   },
+   "dev_used_gib_base": 76.58,
+   "dev_used_gib_variant": 76.62,
+   "greedy_first_diff": null,
+   "greedy_identical": true,
+   "len": 128,
+   "logits_identical": true,
+   "prefill_outside_noise": true,
+   "prefill_ratio": 1.1007,
+   "prefill_tps_base": {
+    "max": 716.515,
+    "median": 715.621,
+    "min": 714.728,
+    "n": 2,
+    "spread_pct": 0.25
+   },
+   "prefill_tps_variant": {
+    "max": 788.415,
+    "median": 787.65,
+    "min": 786.885,
+    "n": 2,
+    "spread_pct": 0.19
+   },
+   "variant_sha": [
+    "26cd42fadff52ef3578a70f083c4040acb5a24cab352532e87e15df2ddee78b7"
+   ]
+  },
+  {
+   "base_sha": [
+    "7c781b9fda7b576cadc3cfede7e3a9265061ea19ad2a5c51697f306d782b5cc5"
+   ],
+   "decode_outside_noise": true,
+   "decode_ratio": 1.0049,
+   "decode_tps_base": {
+    "max": 33.791,
+    "median": 33.755,
+    "min": 33.719,
+    "n": 2,
+    "spread_pct": 0.21
+   },
+   "decode_tps_variant": {
+    "max": 33.927,
+    "median": 33.919,
+    "min": 33.911,
+    "n": 2,
+    "spread_pct": 0.05
+   },
+   "dev_used_gib_base": 76.72,
+   "dev_used_gib_variant": 76.76,
+   "greedy_first_diff": null,
+   "greedy_identical": true,
+   "len": 512,
+   "logits_identical": true,
+   "prefill_outside_noise": true,
+   "prefill_ratio": 1.112,
+   "prefill_tps_base": {
+    "max": 1213.669,
+    "median": 1206.34,
+    "min": 1199.011,
+    "n": 2,
+    "spread_pct": 1.22
+   },
+   "prefill_tps_variant": {
+    "max": 1347.247,
+    "median": 1341.499,
+    "min": 1335.751,
+    "n": 2,
+    "spread_pct": 0.86
+   },
+   "variant_sha": [
+    "7c781b9fda7b576cadc3cfede7e3a9265061ea19ad2a5c51697f306d782b5cc5"
+   ]
+  },
+  {
+   "base_sha": [
+    "0a0ea0befcf544e93516e52206dc10fe4a8fee6b9f886fa27e1add98a0bd756f"
+   ],
+   "decode_outside_noise": true,
+   "decode_ratio": 1.0036,
+   "decode_tps_base": {
+    "max": 33.675,
+    "median": 33.648,
+    "min": 33.621,
+    "n": 2,
+    "spread_pct": 0.16
+   },
+   "decode_tps_variant": {
+    "max": 33.782,
+    "median": 33.77,
+    "min": 33.758,
+    "n": 2,
+    "spread_pct": 0.07
+   },
+   "dev_used_gib_base": 76.86,
+   "dev_used_gib_variant": 76.9,
+   "greedy_first_diff": null,
+   "greedy_identical": true,
+   "len": 1024,
+   "logits_identical": true,
+   "prefill_outside_noise": true,
+   "prefill_ratio": 1.0729,
+   "prefill_tps_base": {
+    "max": 1373.102,
+    "median": 1371.913,
+    "min": 1370.723,
+    "n": 2,
+    "spread_pct": 0.17
+   },
+   "prefill_tps_variant": {
+    "max": 1475.405,
+    "median": 1471.904,
+    "min": 1468.404,
+    "n": 2,
+    "spread_pct": 0.48
+   },
+   "variant_sha": [
+    "0a0ea0befcf544e93516e52206dc10fe4a8fee6b9f886fa27e1add98a0bd756f"
+   ]
+  },
+  {
+   "base_sha": [
+    "a5c6101b2e95c81d762071ea030b1af5ef1e63fc8adc1742bf6256847c5eef00"
+   ],
+   "decode_outside_noise": true,
+   "decode_ratio": 1.0042,
+   "decode_tps_base": {
+    "max": 33.198,
+    "median": 33.154,
+    "min": 33.11,
+    "n": 2,
+    "spread_pct": 0.27
+   },
+   "decode_tps_variant": {
+    "max": 33.303,
+    "median": 33.294,
+    "min": 33.284,
+    "n": 2,
+    "spread_pct": 0.06
+   },
+   "dev_used_gib_base": 77.0,
+   "dev_used_gib_variant": 77.04,
+   "greedy_first_diff": null,
+   "greedy_identical": true,
+   "len": 2048,
+   "logits_identical": true,
+   "prefill_outside_noise": true,
+   "prefill_ratio": 1.0461,
+   "prefill_tps_base": {
+    "max": 1466.648,
+    "median": 1465.543,
+    "min": 1464.439,
+    "n": 2,
+    "spread_pct": 0.15
+   },
+   "prefill_tps_variant": {
+    "max": 1533.177,
+    "median": 1533.041,
+    "min": 1532.905,
+    "n": 2,
+    "spread_pct": 0.02
+   },
+   "variant_sha": [
+    "a5c6101b2e95c81d762071ea030b1af5ef1e63fc8adc1742bf6256847c5eef00"
+   ]
+  },
+  {
+   "base_sha": [
+    "19287f2f65c6863336f9df6862d771c4f76a8795100741496bd30f073eeb55f8"
+   ],
+   "decode_outside_noise": true,
+   "decode_ratio": 1.0034,
+   "decode_tps_base": {
+    "max": 33.164,
+    "median": 33.128,
+    "min": 33.092,
+    "n": 2,
+    "spread_pct": 0.22
+   },
+   "decode_tps_variant": {
+    "max": 33.248,
+    "median": 33.241,
+    "min": 33.234,
+    "n": 2,
+    "spread_pct": 0.04
+   },
+   "dev_used_gib_base": 77.19,
+   "dev_used_gib_variant": 77.23,
+   "greedy_first_diff": null,
+   "greedy_identical": true,
+   "len": 4096,
+   "logits_identical": true,
+   "prefill_outside_noise": true,
+   "prefill_ratio": 1.069,
+   "prefill_tps_base": {
+    "max": 1531.438,
+    "median": 1530.722,
+    "min": 1530.005,
+    "n": 2,
+    "spread_pct": 0.09
+   },
+   "prefill_tps_variant": {
+    "max": 1638.353,
+    "median": 1636.406,
+    "min": 1634.459,
+    "n": 2,
+    "spread_pct": 0.24
+   },
+   "variant_sha": [
+    "19287f2f65c6863336f9df6862d771c4f76a8795100741496bd30f073eeb55f8"
+   ]
+  },
+  {
+   "base_sha": [
+    "a1a3a4d4a839a4cc77890a2ad19fd2f25b9d3bce34bf644c758e5e87f7bd3255"
+   ],
+   "decode_outside_noise": true,
+   "decode_ratio": 1.0038,
+   "decode_tps_base": {
+    "max": 33.155,
+    "median": 33.116,
+    "min": 33.077,
+    "n": 2,
+    "spread_pct": 0.24
+   },
+   "decode_tps_variant": {
+    "max": 33.245,
+    "median": 33.24,
+    "min": 33.235,
+    "n": 2,
+    "spread_pct": 0.03
+   },
+   "dev_used_gib_base": 77.43,
+   "dev_used_gib_variant": 77.47,
+   "greedy_first_diff": null,
+   "greedy_identical": true,
+   "len": 8192,
+   "logits_identical": true,
+   "prefill_outside_noise": true,
+   "prefill_ratio": 1.0507,
+   "prefill_tps_base": {
+    "max": 1619.198,
+    "median": 1618.363,
+    "min": 1617.528,
+    "n": 2,
+    "spread_pct": 0.1
+   },
+   "prefill_tps_variant": {
+    "max": 1701.395,
+    "median": 1700.411,
+    "min": 1699.427,
+    "n": 2,
+    "spread_pct": 0.12
+   },
+   "variant_sha": [
+    "a1a3a4d4a839a4cc77890a2ad19fd2f25b9d3bce34bf644c758e5e87f7bd3255"
+   ]
+  },
+  {
+   "base_sha": [
+    "c9aee513cd12bac16596977b3ce453f62e2400b0f7eee35ac572a859d47d4663"
+   ],
+   "decode_outside_noise": true,
+   "decode_ratio": 1.0038,
+   "decode_tps_base": {
+    "max": 33.128,
+    "median": 33.104,
+    "min": 33.08,
+    "n": 2,
+    "spread_pct": 0.14
+   },
+   "decode_tps_variant": {
+    "max": 33.233,
+    "median": 33.229,
+    "min": 33.224,
+    "n": 2,
+    "spread_pct": 0.03
+   },
+   "dev_used_gib_base": 77.75,
+   "dev_used_gib_variant": 77.79,
+   "greedy_first_diff": null,
+   "greedy_identical": true,
+   "len": 16384,
+   "logits_identical": true,
+   "prefill_outside_noise": true,
+   "prefill_ratio": 1.0505,
+   "prefill_tps_base": {
+    "max": 1605.547,
+    "median": 1605.009,
+    "min": 1604.47,
+    "n": 2,
+    "spread_pct": 0.07
+   },
+   "prefill_tps_variant": {
+    "max": 1686.955,
+    "median": 1686.109,
+    "min": 1685.262,
+    "n": 2,
+    "spread_pct": 0.1
+   },
+   "variant_sha": [
+    "c9aee513cd12bac16596977b3ce453f62e2400b0f7eee35ac572a859d47d4663"
+   ]
+  },
+  {
+   "base_sha": [
+    "f3c026e3f1c9115171ce96eb8cde6134a87bd1a4a27711b4524f3a23beb9cdb5"
+   ],
+   "decode_outside_noise": true,
+   "decode_ratio": 1.0038,
+   "decode_tps_base": {
+    "max": 33.103,
+    "median": 33.064,
+    "min": 33.026,
+    "n": 2,
+    "spread_pct": 0.24
+   },
+   "decode_tps_variant": {
+    "max": 33.195,
+    "median": 33.19,
+    "min": 33.185,
+    "n": 2,
+    "spread_pct": 0.03
+   },
+   "dev_used_gib_base": 78.29,
+   "dev_used_gib_variant": 78.33,
+   "greedy_first_diff": null,
+   "greedy_identical": true,
+   "len": 32768,
+   "logits_identical": true,
+   "prefill_outside_noise": true,
+   "prefill_ratio": 1.0511,
+   "prefill_tps_base": {
+    "max": 1589.351,
+    "median": 1588.725,
+    "min": 1588.099,
+    "n": 2,
+    "spread_pct": 0.08
+   },
+   "prefill_tps_variant": {
+    "max": 1670.483,
+    "median": 1669.983,
+    "min": 1669.483,
+    "n": 2,
+    "spread_pct": 0.06
+   },
+   "variant_sha": [
+    "f3c026e3f1c9115171ce96eb8cde6134a87bd1a4a27711b4524f3a23beb9cdb5"
+   ]
+  }
+ ],
+ "notes": [
+  "corrected 2026-11-21: the isa scan never ran (the toolchain path was missing, both tables are empty), so the isa criterion is FAIL and the overall verdict FAIL; the identity and speed rows above are unchanged"
+ ],
+ "order": [
+  "A",
+  "B",
+  "A",
+  "B"
+ ],
+ "overlays": {
+  "executor.flerp.qwen4exp_p16": "executor.strixite.qwen4exp",
+  "format.flerp.strixw_v5p": "format.strixite.strixw"
+ },
+ "prediction": {
+  "identity": "logits sha256 and greedy ids equal to base on every prompt",
+  "speed": "identity on all 8 prompts; prefill ratio 1.02-1.05 at 2048-32768, ~1.00 at 128-512; decode 1.00-1.03 (gate/criteria/sfx-pkg.toml [panel.predict])"
+ },
+ "run": "20261116-sfx-p16",
+ "speed": {
+  "decode": {
+   "outside_noise_prompts": [
+    128,
+    512,
+    1024,
+    2048,
+    4096,
+    8192,
+    16384,
+    32768
+   ],
+   "ratio_max": 1.0049,
+   "ratio_median": 1.0038,
+   "ratio_min": 1.0032
+  },
+  "prefill": {
+   "outside_noise_prompts": [
+    128,
+    512,
+    1024,
+    2048,
+    4096,
+    8192,
+    16384,
+    32768
+   ],
+   "ratio_max": 1.112,
+   "ratio_median": 1.06,
+   "ratio_min": 1.0461
+  }
+ },
+ "swaps": [
+  {
+   "base": "format.strixite.strixw_loader",
+   "interface": "format.device-loader/strixw/-",
+   "overlay": null,
+   "variant": "format.flerp.strixw_loader_p"
+  },
+  {
+   "base": "kernel.strixite.linear_q4",
+   "interface": "linear.decode/strixw-q4/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.linear_q4p"
+  },
+  {
+   "base": "kernel.strixite.linear_q8",
+   "interface": "linear.decode/strixw-q8/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.linear_q8p"
+  },
+  {
+   "base": "kernel.strixite.linear_wmma",
+   "interface": "linear.prefill/strixw-q4/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.wmma_q4p"
+  },
+  {
+   "base": "kernel.strixite.linear_wmma",
+   "interface": "linear.prefill/strixw-q8/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.wmma_q4p"
+  },
+  {
+   "base": "kernel.strixite.linear_q4",
+   "interface": "moe.experts-decode/strixw-q4/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.linear_q4p"
+  },
+  {
+   "base": "kernel.flerp.moe_grouped_pf",
+   "interface": "moe.experts-prefill/strixw-q4/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.moe_grouped_p"
+  },
+  {
+   "base": "kernel.flerp.moe_grouped_pf",
+   "interface": "moe.experts-prefill/strixw-q5/bf16",
+   "overlay": null,
+   "variant": "kernel.strixite.moe_grouped"
+  },
+  {
+   "base": "format.strixite.strixw",
+   "interface": "format.container/strixw/-",
+   "overlay": "format.flerp.strixw_v5p",
+   "variant": "format.strixite.strixw"
+  }
+ ],
+ "target": "recipe:qwen38-flash-next.strixite-p16",
+ "verdict": "FAIL",
+ "weights": {
+  "ngram": "/data/models/strix-infer/converted/qwen38-fnext-ngram-int8/ngram.table",
+  "variant_args": "",
+  "variant_weights": "/data/models/strix-infer/tmp/sfx-p16/weights.strixw",
+  "weights": "/data/models/strix-infer/converted/qwen38-fnext-tpn/weights.strixw"
+ },
+ "when_utc": "2026-11-17T00:33:12Z"
+}

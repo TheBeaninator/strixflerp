@@ -1,0 +1,88 @@
+{
+ "assembly_errors": [],
+ "base_recipe": "qwen38-flash-next.strixite-pf",
+ "card": "<card>",
+ "detail": {},
+ "kind": "recipe",
+ "notes": [],
+ "overlays": {
+  "executor.flerp.qwen4exp_p16": "executor.strixite.qwen4exp",
+  "format.flerp.strixw_v5p": "format.strixite.strixw"
+ },
+ "prediction": {
+  "identity": "logits sha256 and greedy ids equal to base on every prompt",
+  "speed": "identity on all 8 prompts; prefill ratio 1.02-1.05 at 2048-32768, ~1.00 at 128-512; decode 1.00-1.03 (gate/criteria/sfx-pkg.toml [panel.predict])"
+ },
+ "run": "20261116-sfx-p16",
+ "swaps": [
+  {
+   "base": "format.strixite.strixw_loader",
+   "interface": "format.device-loader/strixw/-",
+   "overlay": null,
+   "variant": "format.flerp.strixw_loader_p"
+  },
+  {
+   "base": "kernel.strixite.linear_q4",
+   "interface": "linear.decode/strixw-q4/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.linear_q4p"
+  },
+  {
+   "base": "kernel.strixite.linear_q8",
+   "interface": "linear.decode/strixw-q8/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.linear_q8p"
+  },
+  {
+   "base": "kernel.strixite.linear_wmma",
+   "interface": "linear.prefill/strixw-q4/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.wmma_q4p"
+  },
+  {
+   "base": "kernel.strixite.linear_wmma",
+   "interface": "linear.prefill/strixw-q8/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.wmma_q4p"
+  },
+  {
+   "base": "kernel.strixite.linear_q4",
+   "interface": "moe.experts-decode/strixw-q4/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.linear_q4p"
+  },
+  {
+   "base": "kernel.flerp.moe_grouped_pf",
+   "interface": "moe.experts-prefill/strixw-q4/bf16",
+   "overlay": null,
+   "variant": "kernel.flerp.moe_grouped_p"
+  },
+  {
+   "base": "kernel.flerp.moe_grouped_pf",
+   "interface": "moe.experts-prefill/strixw-q5/bf16",
+   "overlay": null,
+   "variant": "kernel.strixite.moe_grouped"
+  },
+  {
+   "base": "format.strixite.strixw",
+   "interface": "format.container/strixw/-",
+   "overlay": "format.flerp.strixw_v5p",
+   "variant": "format.strixite.strixw"
+  }
+ ],
+ "target": "recipe:qwen38-flash-next.strixite-p16",
+ "units": [
+  "linear_q4.hip",
+  "linear_q4p.hip",
+  "linear_q8.hip",
+  "linear_q8p.hip",
+  "linear_wmma.hip",
+  "moe_grouped.hip",
+  "moe_grouped_p.hip",
+  "strixw.cpp",
+  "strixw_loader.cpp",
+  "wmma_q4p.hip"
+ ],
+ "variant_recipe": "qwen38-flash-next.strixite-p16",
+ "when_utc": "2026-11-16T23:40:36Z"
+}

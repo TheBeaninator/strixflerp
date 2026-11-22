@@ -37,6 +37,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <vector>
@@ -109,6 +110,13 @@ class MtpHead {
     std::uint64_t unsafe{0};            // checked steps with no fallback and a top-1 or top-2 miss
     std::uint64_t rescore_mismatch{0};  // kept logits whose bits differ from the exact head's
     double max_z{0.0};                  // max over checked steps and tokens outside the kept blocks of |coarse - exact| / (err_rms ||x||)
+    // V10-BLOCKBOUND (gate/draft-coarse-blockbound.toml): exact per-row / per-block bounds on the same steps.
+    // A step is certified when every token outside the kept blocks has coarse + bound below the kept best (top-1) or
+    // the kept second (top-2); bound = row_err * ||x|| (row) or the block's max row_err * ||x|| (block), plus slack.
+    std::uint64_t cert1_block{0}, cert2_block{0}, cert1_row{0}, cert2_row{0};
+    std::uint64_t false_cert{0};        // a certified step (any of the four) whose certified exact top-1/top-2 is not kept (must be 0)
+    std::uint64_t bound_violations{0};  // tokens with |coarse - exact| > row_err * ||x|| + slack (must be 0: proves the bound)
+    double max_ratio{0.0};              // max |coarse - exact| / (row_err * ||x||) over unkept tokens (<= 1 by Cauchy-Schwarz)
     double build_s{0.0};
   };
   [[nodiscard]] bool coarse_on() const noexcept { return coarse_ != nullptr; }
@@ -117,6 +125,8 @@ class MtpHead {
 
  private:
   MtpHead() = default;
+  std::vector<float> block_err_;   // max row_err of each 128-token block (V10-BLOCKBOUND)
+  std::FILE* coarse_trace_{nullptr};   // FLERP_MTP_COARSE_TRACE: one JSON line a checked step
   std::uint32_t Run(std::uint32_t token, const float* h_normed, std::uint32_t pos, bool logits);
   std::uint32_t HeadExact();
   std::uint32_t HeadCoarse();

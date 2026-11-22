@@ -1,0 +1,246 @@
+$ <checkout>/flerp assemble qwen38-flash-next.strixite-pf
+assembled qwen38-flash-next.strixite-pf: 108 modules (86 with sources), 15 binaries -> build/qwen38-flash-next.strixite-pf
+build: cmake -G Ninja -S build/qwen38-flash-next.strixite-pf -B build/qwen38-flash-next.strixite-pf/ninja && ninja -C build/qwen38-flash-next.strixite-pf/ninja
+$ cmake -G Ninja -S <checkout>/build/qwen38-flash-next.strixite-pf -B <checkout>/build/qwen38-flash-next.strixite-pf/ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-- ROCm at /data/models/tools/therock-10.1
+-- Performing Test FLERP_HOST_STDLIB_OK
+-- Performing Test FLERP_HOST_STDLIB_OK - Success
+-- Configuring done (2.0s)
+-- Generating done (0.6s)
+-- Build files have been written to: <checkout>/build/qwen38-flash-next.strixite-pf/ninja
+$ nice -n 19 ninja -C <checkout>/build/qwen38-flash-next.strixite-pf/ninja -j 12
+ninja: Entering directory `<checkout>/build/qwen38-flash-next.strixite-pf/ninja'
+[1/13] Linking CXX static library libflerp_include_only.a
+[2/13] Linking CXX executable convert_ngram_table
+[3/13] Linking CXX executable cache_xfer_check
+[4/13] Building CXX object CMakeFiles/m_tool_flerp_qsa_overlap.dir<checkout>/catalog/flerp/tool/qsa_overlap/src/flerp/qsa_overlap/qsa_overlap.cpp.o
+[5/13] Linking CXX executable sv9_cache_check
+[6/13] Linking CXX executable convert_qwen4exp
+[7/13] Linking CXX executable strix_vision
+[8/13] Linking CXX executable strixflerp-prefill-bench
+[9/13] Linking CXX executable steer_check
+[10/13] Linking CXX executable strix_acts
+[11/13] Linking CXX executable omf_seg
+[12/13] Linking CXX executable strixflerp-qsa-overlap
+[13/13] Linking CXX executable strixflerp-qwen38-flash-next.strixite-pf
+$ <checkout>/flerp assemble qwen38-flash-next.strixite-p16
+assembled qwen38-flash-next.strixite-p16: 118 modules (94 with sources), 15 binaries -> build/qwen38-flash-next.strixite-p16
+build: cmake -G Ninja -S build/qwen38-flash-next.strixite-p16 -B build/qwen38-flash-next.strixite-p16/ninja && ninja -C build/qwen38-flash-next.strixite-p16/ninja
+$ cmake -G Ninja -S <checkout>/build/qwen38-flash-next.strixite-p16 -B <checkout>/build/qwen38-flash-next.strixite-p16/ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-- The C compiler identification is Clang 23.0.0
+-- The CXX compiler identification is Clang 23.0.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /data/models/tools/therock-10.1/lib/llvm/bin/clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /data/models/tools/therock-10.1/lib/llvm/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- ROCm at /data/models/tools/therock-10.1
+-- Performing Test FLERP_HOST_STDLIB_OK
+-- Performing Test FLERP_HOST_STDLIB_OK - Success
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Configuring done (3.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: <checkout>/build/qwen38-flash-next.strixite-p16/ninja
+$ nice -n 19 ninja -C <checkout>/build/qwen38-flash-next.strixite-p16/ninja -j 12
+ninja: Entering directory `<checkout>/build/qwen38-flash-next.strixite-p16/ninja'
+[1/150] Building CXX object CMakeFiles/m_format_flerp_q4panel.dir<checkout>/catalog/flerp/format/q4panel/src/flerp/q4panel/q4panel.cpp.o
+[2/150] Building CXX object CMakeFiles/m_format_strixite_q5.dir<checkout>/catalog/strixite/format/q5/src/formats/q5.cpp.o
+[3/150] Building CXX object CMakeFiles/m_format_strixite_q4.dir<checkout>/catalog/strixite/format/q4/src/formats/q4.cpp.o
+[4/150] Building CXX object CMakeFiles/m_format_strixite_q6.dir<checkout>/catalog/strixite/format/q6/src/formats/q6.cpp.o
+[5/150] Building CXX object CMakeFiles/m_format_strixite_q8.dir<checkout>/catalog/strixite/format/q8/src/formats/q8.cpp.o
+[6/150] Building CXX object CMakeFiles/m_format_strixite_strixw.dir<checkout>/catalog/flerp/format/strixw_v5p/src/flerp/strixw_v5p/formats/strixw.cpp.o
+[7/150] Building CXX object CMakeFiles/m_format_flerp_strixw_loader_p.dir<checkout>/catalog/flerp/format/strixw_loader_p/src/flerp/strixw_loader_p/runtime/strixw_loader.cpp.o
+[8/150] Building CXX object CMakeFiles/m_kernel_strixite_wmma.dir<checkout>/catalog/strixite/kernel/wmma/src/kernels/wmma.hip.o
+[9/150] Building CXX object CMakeFiles/m_kernel_strixite_norm.dir<checkout>/catalog/strixite/kernel/norm/src/kernels/norm.hip.o
+[10/150] Building CXX object CMakeFiles/m_kernel_strixite_residual.dir<checkout>/catalog/strixite/kernel/residual/src/kernels/residual.hip.o
+[11/150] Building CXX object CMakeFiles/m_kernel_strixite_linear_q8.dir<checkout>/catalog/strixite/kernel/linear_q8/src/kernels/linear_q8.hip.o
+[12/150] Building CXX object CMakeFiles/m_executor_strixite_vision_tower.dir<checkout>/catalog/strixite/executor/vision_tower/src/runtime/vision_tower.cpp.o
+[13/150] Building CXX object CMakeFiles/m_format_strixite_q4_from_q8.dir<checkout>/catalog/strixite/format/q4_from_q8/src/formats/q4_from_q8.cpp.o
+[14/150] Building CXX object CMakeFiles/m_kernel_strixite_vision.dir<checkout>/catalog/strixite/kernel/vision/src/kernels/vision.hip.o
+[15/150] Building CXX object CMakeFiles/m_kernel_strixite_linear_q4.dir<checkout>/catalog/strixite/kernel/linear_q4/src/kernels/linear_q4.hip.o
+[16/150] Building CXX object CMakeFiles/m_kernel_strixite_rope.dir<checkout>/catalog/strixite/kernel/rope/src/kernels/rope.hip.o
+[17/150] Building CXX object CMakeFiles/m_kernel_strixite_kv8.dir<checkout>/catalog/strixite/kernel/kv8/src/kernels/kv8.hip.o
+[18/150] Building CXX object CMakeFiles/m_kernel_strixite_embedding.dir<checkout>/catalog/strixite/kernel/embedding/src/kernels/embedding.hip.o
+[19/150] Building CXX object CMakeFiles/m_kernel_flerp_wmma_q4p.dir<checkout>/catalog/flerp/kernel/wmma_q4p/src/flerp/wmma_q4p/kernels/wmma_q4p.hip.o
+[20/150] Building CXX object CMakeFiles/m_kernel_strixite_linear_q56.dir<checkout>/catalog/strixite/kernel/linear_q56/src/kernels/linear_q56.hip.o
+[21/150] Building CXX object CMakeFiles/m_kernel_strixite_linear.dir<checkout>/catalog/strixite/kernel/linear/src/kernels/linear.hip.o
+[22/150] Building CXX object CMakeFiles/m_kernel_strixite_logits_bias.dir<checkout>/catalog/strixite/kernel/logits_bias/src/kernels/logits_bias.hip.o
+[23/150] Building CXX object CMakeFiles/m_kernel_strixite_attention.dir<checkout>/catalog/strixite/kernel/attention/src/kernels/attention.hip.o
+[24/150] Building CXX object CMakeFiles/m_kernel_strixite_logits_topk.dir<checkout>/catalog/strixite/kernel/logits_topk/src/kernels/logits_topk.hip.o
+[25/150] Building CXX object CMakeFiles/m_kernel_strixite_ple.dir<checkout>/catalog/strixite/kernel/ple/src/kernels/ple.hip.o
+[26/150] Building CXX object CMakeFiles/m_kernel_strixite_moe_router.dir<checkout>/catalog/strixite/kernel/moe_router/src/kernels/moe_router.hip.o
+[27/150] Building CXX object CMakeFiles/m_kernel_strixite_mtp_pick.dir<checkout>/catalog/strixite/kernel/mtp_pick/src/kernels/mtp_pick.hip.o
+[28/150] Building CXX object CMakeFiles/m_format_strixite_safetensors.dir<checkout>/catalog/strixite/format/safetensors/src/formats/safetensors.cpp.o
+[29/150] Building CXX object CMakeFiles/m_kernel_strixite_gdn.dir<checkout>/catalog/strixite/kernel/gdn/src/kernels/gdn.hip.o
+[30/150] Building CXX object CMakeFiles/m_kernel_strixite_hc_wmma.dir<checkout>/catalog/strixite/kernel/hc_wmma/src/kernels/hc_wmma.hip.o
+[31/150] Building CXX object CMakeFiles/m_runtime_strixite_ple_hash.dir<checkout>/catalog/strixite/runtime/ple_hash/src/runtime/ple_hash.cpp.o
+[32/150] Building CXX object CMakeFiles/m_format_strixite_ngram_table.dir<checkout>/catalog/strixite/format/ngram_table/src/formats/ngram_table.cpp.o
+[33/150] Building CXX object CMakeFiles/m_format_flerp_q8panel.dir<checkout>/catalog/flerp/format/q8panel/src/flerp/q8panel/q8panel.cpp.o
+[34/150] Building CXX object CMakeFiles/m_runtime_strixite_ngram_rows.dir<checkout>/catalog/strixite/runtime/ngram_rows/src/runtime/ngram_rows.cpp.o
+[35/150] Building CXX object CMakeFiles/m_runtime_strixite_ngram_table.dir<checkout>/catalog/strixite/runtime/ngram_table/src/runtime/ngram_table.cpp.o
+[36/150] Building CXX object CMakeFiles/m_kernel_strixite_hc.dir<checkout>/catalog/strixite/kernel/hc/src/kernels/hc.hip.o
+[37/150] Building CXX object CMakeFiles/m_runtime_strixite_capture.dir<checkout>/catalog/strixite/runtime/capture/src/serve/capture.cpp.o
+[38/150] Building CXX object CMakeFiles/m_runtime_strixite_json.dir<checkout>/catalog/strixite/runtime/json/src/serve/json.cpp.o
+[39/150] Building CXX object CMakeFiles/m_kernel_strixite_linear_wmma.dir<checkout>/catalog/strixite/kernel/linear_wmma/src/kernels/linear_wmma.hip.o
+[40/150] Building CXX object CMakeFiles/m_runtime_strixite_unicode.dir<checkout>/catalog/strixite/runtime/unicode/src/serve/unicode.cpp.o
+[41/150] Building CXX object CMakeFiles/m_kernel_strixite_swiglu.dir<checkout>/catalog/strixite/kernel/swiglu/src/kernels/swiglu.hip.o
+[42/150] Building CXX object CMakeFiles/m_kernel_strixite_steer.dir<checkout>/catalog/strixite/kernel/steer/src/kernels/steer.hip.o
+[43/150] Building CXX object CMakeFiles/m_runtime_strixite_sampler.dir<checkout>/catalog/strixite/runtime/sampler/src/serve/sampler.cpp.o
+[44/150] Building CXX object CMakeFiles/m_runtime_strixite_host_buffer.dir<checkout>/catalog/strixite/runtime/host_buffer/src/serve/host_buffer.cpp.o
+[45/150] Building CXX object CMakeFiles/m_runtime_strixite_grammar.dir<checkout>/catalog/strixite/runtime/grammar/src/serve/grammar.cpp.o
+[46/150] Building CXX object CMakeFiles/m_runtime_strixite_tokenizer.dir<checkout>/catalog/strixite/runtime/tokenizer/src/serve/tokenizer.cpp.o
+[47/150] Building CXX object CMakeFiles/m_kernel_strixite_qsa.dir<checkout>/catalog/strixite/kernel/qsa/src/kernels/qsa.hip.o
+[48/150] Building CXX object CMakeFiles/m_runtime_strixite_logprobs.dir<checkout>/catalog/strixite/runtime/logprobs/src/serve/logprobs.cpp.o
+[49/150] Building CXX object CMakeFiles/m_runtime_strixite_resume_loss.dir<checkout>/catalog/strixite/runtime/resume_loss/src/serve/resume_loss.cpp.o
+[50/150] Building CXX object CMakeFiles/m_runtime_strixite_output_parser.dir<checkout>/catalog/strixite/runtime/output_parser/src/serve/output_parser.cpp.o
+[51/150] Building CXX object CMakeFiles/m_runtime_strixite_token_mask.dir<checkout>/catalog/strixite/runtime/token_mask/src/serve/token_mask.cpp.o
+[52/150] Building CXX object CMakeFiles/m_runtime_strixite_think_nudge.dir<checkout>/catalog/strixite/runtime/think_nudge/src/serve/think_nudge.cpp.o
+[53/150] Building CXX object CMakeFiles/m_runtime_strixite_structured_output.dir<checkout>/catalog/strixite/runtime/structured_output/src/serve/structured_output.cpp.o
+[54/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/alpha_dec.c.o
+[55/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/buffer_dec.c.o
+[56/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/frame_dec.c.o
+[57/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/idec_dec.c.o
+[58/150] Building CXX object CMakeFiles/m_runtime_strixite_tool_grammar.dir<checkout>/catalog/strixite/runtime/tool_grammar/src/serve/tool_grammar.cpp.o
+[59/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/io_dec.c.o
+[60/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/quant_dec.c.o
+[61/150] Building CXX object CMakeFiles/m_runtime_strixite_memory_plan.dir<checkout>/catalog/strixite/runtime/memory_plan/src/serve/memory_plan.cpp.o
+[62/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/tree_dec.c.o
+[63/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/vp8_dec.c.o
+[64/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/webp_dec.c.o
+[65/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dec/vp8l_dec.c.o
+[66/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/alpha_processing_sse41.c.o
+[67/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/cpu.c.o
+[68/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/alpha_processing.c.o
+[69/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/alpha_processing_sse2.c.o
+[70/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/dec_clip_tables.c.o
+[71/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/dec_sse41.c.o
+[72/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/filters.c.o
+[73/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/dec.c.o
+[74/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/dec_sse2.c.o
+[75/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/lossless_sse2.c.o
+[76/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/filters_sse2.c.o
+[77/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/lossless.c.o
+[78/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/lossless_sse41.c.o
+[79/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/rescaler.c.o
+[80/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/rescaler_sse2.c.o
+[81/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/upsampling_sse41.c.o
+[82/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/upsampling_sse2.c.o
+[83/150] Building CXX object CMakeFiles/m_runtime_strixite_prompt_cache.dir<checkout>/catalog/strixite/runtime/prompt_cache/src/serve/prompt_cache.cpp.o
+[84/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/upsampling.c.o
+[85/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/yuv_sse41.c.o
+[86/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/color_cache_utils.c.o
+[87/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/bit_reader_utils.c.o
+[88/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/filters_utils.c.o
+[89/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/yuv_sse2.c.o
+[90/150] Building CXX object CMakeFiles/m_runtime_strixite_engine.dir<checkout>/catalog/strixite/runtime/engine/src/serve/seq_backend.cpp.o
+[91/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/dsp/yuv.c.o
+[92/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/random_utils.c.o
+[93/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/huffman_utils.c.o
+[94/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/rescaler_utils.c.o
+[95/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/thread_utils.c.o
+[96/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/utils.c.o
+[97/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/quant_levels_dec_utils.c.o
+[98/150] Building C object CMakeFiles/m_runtime_strixite_libwebp.dir<checkout>/catalog/strixite/runtime/libwebp/src/third_party/libwebp/src/utils/palette.c.o
+[99/150] Building CXX object CMakeFiles/m_executor_strixite_qwen4exp_backend.dir<checkout>/catalog/strixite/executor/qwen4exp_backend/src/serve/qwen4exp_backend.cpp.o
+[100/150] Building CXX object CMakeFiles/m_runtime_strixite_chat_template.dir<checkout>/catalog/strixite/runtime/chat_template/src/serve/chat_template.cpp.o
+[101/150] Building CXX object CMakeFiles/m_runtime_strixite_vision_preprocess.dir<checkout>/catalog/strixite/runtime/vision_preprocess/src/serve/vision_preprocess.cpp.o
+[102/150] Building CXX object CMakeFiles/m_runtime_strixite_engine.dir<checkout>/catalog/strixite/runtime/engine/src/serve/engine.cpp.o
+<checkout>/catalog/strixite/runtime/engine/src/serve/engine.cpp:180:67: warning: missing field 'slot_why' initializer [-Wmissing-field-initializers]
+  180 |         queue_.push_back({std::move(req), std::move(sink), now_s()});
+      |                                                                   ^
+1 warning generated.
+[103/150] Building CXX object CMakeFiles/m_runtime_strixite_grammar_cache.dir<checkout>/catalog/strixite/runtime/grammar_cache/src/serve/grammar_cache.cpp.o
+[104/150] Building CXX object CMakeFiles/m_executor_strixite_qwen4exp.dir<checkout>/catalog/flerp/executor/qwen4exp_p16/src/flerp/qwen4exp_p16/runtime/qwen4exp.cpp.o
+[105/150] Building CXX object CMakeFiles/m_runtime_strixite_vision_request.dir<checkout>/catalog/strixite/runtime/vision_request/src/serve/vision_request.cpp.o
+[106/150] Building CXX object CMakeFiles/m_runtime_strixite_stb.dir<checkout>/catalog/strixite/runtime/stb/src/third_party/stb_impl/stb_impl.cpp.o
+[107/150] Building CXX object CMakeFiles/m_runtime_strixite_json_schema.dir<checkout>/catalog/strixite/runtime/json_schema/src/serve/json_schema.cpp.o
+[108/150] Building CXX object CMakeFiles/m_format_strixite_merge_plan.dir<checkout>/catalog/strixite/format/merge_plan/src/formats/merge_plan.cpp.o
+[109/150] Building CXX object CMakeFiles/m_serve_strixite_http.dir<checkout>/catalog/strixite/serve/http/src/serve/server_config.cpp.o
+[110/150] Building CXX object CMakeFiles/m_tool_strixite_convert_qwen4exp.dir<checkout>/catalog/strixite/tool/convert_qwen4exp/src/tools/convert_qwen4exp.cpp.o
+[111/150] Building CXX object CMakeFiles/m_serve_strixite_openai.dir<checkout>/catalog/strixite/serve/openai/src/serve/openai.cpp.o
+[112/150] Building CXX object CMakeFiles/m_serve_strixite_steer_library.dir<checkout>/catalog/strixite/serve/steer_library/src/serve/steer_library.cpp.o
+[113/150] Building CXX object CMakeFiles/m_tool_strixite_inspect_strixw.dir<checkout>/catalog/strixite/tool/inspect_strixw/src/tools/inspect_strixw.cpp.o
+[114/150] Building CXX object CMakeFiles/m_tool_strixite_convert_ngram_table.dir<checkout>/catalog/strixite/tool/convert_ngram_table/src/tools/convert_ngram_table.cpp.o
+[115/150] Building CXX object CMakeFiles/m_serve_strixite_strix_server.dir<checkout>/catalog/strixite/serve/strix_server/src/tools/strix_server.cpp.o
+[116/150] Building CXX object CMakeFiles/m_tool_strixite_transcode_ngram_table.dir<checkout>/catalog/strixite/tool/transcode_ngram_table/src/tools/transcode_ngram_table.cpp.o
+[117/150] Building CXX object CMakeFiles/m_tool_strixite_sv9_cache_check.dir<checkout>/catalog/strixite/tool/sv9_cache_check/src/tools/sv9_cache_check.cpp.o
+[118/150] Building CXX object CMakeFiles/m_tool_strixite_cache_xfer_check.dir<checkout>/catalog/strixite/tool/cache_xfer_check/src/tools/cache_xfer_check.cpp.o
+[119/150] Building CXX object CMakeFiles/m_tool_strixite_check_stream_calls.dir<checkout>/catalog/strixite/tool/check_stream_calls/src/tools/check_stream_calls.cpp.o
+[120/150] Building CXX object CMakeFiles/m_tool_strixite_check_logprobs.dir<checkout>/catalog/strixite/tool/check_logprobs/src/tools/check_logprobs.cpp.o
+[121/150] Building CXX object CMakeFiles/m_tool_strixite_omf_seg.dir<checkout>/catalog/strixite/tool/omf_seg/src/tools/omf_seg.cpp.o
+[122/150] Building CXX object CMakeFiles/m_tool_strixite_steer_check.dir<checkout>/catalog/strixite/tool/steer_check/src/tools/steer_check.cpp.o
+[123/150] Building CXX object CMakeFiles/m_tool_strixite_strix_acts.dir<checkout>/catalog/strixite/tool/strix_acts/src/tools/strix_acts.cpp.o
+[124/150] Building CXX object CMakeFiles/m_tool_flerp_strixite_prefill_bench.dir<checkout>/catalog/flerp/tool/strixite_prefill_bench/src/flerp/strixite_prefill_bench/prefill_bench.cpp.o
+[125/150] Building CXX object CMakeFiles/m_tool_strixite_strix_vision.dir<checkout>/catalog/strixite/tool/strix_vision/src/tools/strix_vision.cpp.o
+[126/150] Building CXX object CMakeFiles/m_format_strixite_convert_qwen4exp.dir<checkout>/catalog/strixite/format/convert_qwen4exp/src/formats/convert_qwen4exp.cpp.o
+[127/150] Building CXX object CMakeFiles/m_tool_flerp_strixw_panel_kernel_bench.dir<checkout>/catalog/flerp/tool/strixw_panel_kernel_bench/src/flerp/strixw_panel_kernel_bench/panel_kernel_bench.cpp.o
+<checkout>/catalog/flerp/tool/strixw_panel_kernel_bench/src/flerp/strixw_panel_kernel_bench/panel_kernel_bench.cpp:482:26: warning: missing field 't' initializer [-Wmissing-field-initializers]
+  482 |     Bench B{o, reps, warm};
+      |                          ^
+1 warning generated.
+[128/150] Linking CXX executable transcode_ngram_table
+[129/150] Linking CXX executable inspect_strixw
+[130/150] Building CXX object CMakeFiles/m_format_strixite_safetensors_loader.dir<checkout>/catalog/strixite/format/safetensors_loader/src/runtime/weight_loader.cpp.o
+[131/150] Building CXX object CMakeFiles/m_executor_strixite_qwen3_5.dir<checkout>/catalog/strixite/executor/qwen3_5/src/runtime/qwen3_5.cpp.o
+[132/150] Linking CXX static library libflerp_include_only.a
+[133/150] Linking CXX executable convert_ngram_table
+[134/150] Linking CXX executable cache_xfer_check
+[135/150] Building CXX object CMakeFiles/m_serve_strixite_http.dir<checkout>/catalog/strixite/serve/http/src/serve/http_server.cpp.o
+<checkout>/catalog/strixite/serve/http/src/serve/http_server.cpp:424:36: warning: comparison of integers of different signs: 'const int64_t' (aka 'const long') and 'size_type' (aka 'unsigned long') [-Wsign-compare]
+  424 |                     if (pre_tokens != gen.prompt.size())
+      |                         ~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~~~
+1 warning generated.
+[136/150] Linking CXX executable check_stream_calls
+[137/150] Linking CXX executable sv9_cache_check
+[138/150] Linking CXX executable convert_qwen4exp
+[139/150] Linking CXX executable check_logprobs
+[140/150] Building CXX object CMakeFiles/m_kernel_flerp_linear_q8p.dir<checkout>/catalog/flerp/kernel/linear_q8p/src/flerp/linear_q8p/kernels/linear_q8p.hip.o
+[141/150] Building CXX object CMakeFiles/m_kernel_flerp_moe_grouped_p.dir<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip.o
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:168:29: warning: unused variable 'kCodeLd' [-Wunused-variable]
+  168 |     constexpr int kWin = 8, kCodeLd = 3;  // uint4 per code row (2 used)
+      |                             ^~~~~~~
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:555:19: warning: unused variable 'groups' [-Wunused-variable]
+  555 |     const int64_t groups = K / G;
+      |                   ^~~~~~
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:43:15: warning: unused variable 'kRouteThreads' [-Wunused-const-variable]
+   43 | constexpr int kRouteThreads = 1024;  // one per bucket: E experts + the invalid-id bucket
+      |               ^~~~~~~~~~~~~
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:94:24: warning: unused function 'load_x32' [-Wunused-function]
+   94 | __device__ inline void load_x32(const float *x, int64_t off, float (&v)[kChunk]) {
+      |                        ^~~~~~~~
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:102:24: warning: unused function 'load_x32' [-Wunused-function]
+  102 | __device__ inline void load_x32(const uint16_t *x, int64_t off, float (&v)[kChunk]) {
+      |                        ^~~~~~~~
+5 warnings generated when compiling for gfx1151.
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:168:29: warning: unused variable 'kCodeLd' [-Wunused-variable]
+  168 |     constexpr int kWin = 8, kCodeLd = 3;  // uint4 per code row (2 used)
+      |                             ^~~~~~~
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:555:19: warning: unused variable 'groups' [-Wunused-variable]
+  555 |     const int64_t groups = K / G;
+      |                   ^~~~~~
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:43:15: warning: unused variable 'kRouteThreads' [-Wunused-const-variable]
+   43 | constexpr int kRouteThreads = 1024;  // one per bucket: E experts + the invalid-id bucket
+      |               ^~~~~~~~~~~~~
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:94:24: warning: unused function 'load_x32' [-Wunused-function]
+   94 | __device__ inline void load_x32(const float *x, int64_t off, float (&v)[kChunk]) {
+      |                        ^~~~~~~~
+<checkout>/catalog/flerp/kernel/moe_grouped_p/src/flerp/moe_grouped_p/kernels/moe_grouped_p.hip:102:24: warning: unused function 'load_x32' [-Wunused-function]
+  102 | __device__ inline void load_x32(const uint16_t *x, int64_t off, float (&v)[kChunk]) {
+      |                        ^~~~~~~~
+5 warnings generated when compiling for host.
+[142/150] Building CXX object CMakeFiles/m_kernel_strixite_moe_grouped.dir<checkout>/catalog/strixite/kernel/moe_grouped/src/kernels/moe_grouped.hip.o
+[143/150] Building CXX object CMakeFiles/m_kernel_flerp_linear_q4p.dir<checkout>/catalog/flerp/kernel/linear_q4p/src/flerp/linear_q4p/kernels/linear_q4p.hip.o
+[144/150] Linking CXX executable strixflerp-panel-kernel-bench
+[145/150] Linking CXX executable strix_vision
+[146/150] Linking CXX executable strixflerp-prefill-bench
+[147/150] Linking CXX executable steer_check
+[148/150] Linking CXX executable strix_acts
+[149/150] Linking CXX executable omf_seg
+[150/150] Linking CXX executable strixflerp-qwen38-flash-next.strixite-p16
