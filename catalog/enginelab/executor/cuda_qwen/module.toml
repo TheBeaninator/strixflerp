@@ -1,0 +1,164 @@
+id        = "executor.enginelab.cuda_qwen"
+kind      = "executor"
+summary   = "Qwen on CUDA (src/cuda/models/qwen, include/strix/cuda/qwen_*, src/qwen35/cuda): 40 origin files under include/strix, src/cuda"
+why       = "the RTX Qwen route (85-96 tok/s serial, 600+ with MTP + wide on JSON); where it would go: beside the catalogue's executor.model/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.model/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. CUDA (RTX PRO 6000 route). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/cuda/qwen_cohort.hpp",
+  "include/strix/cuda/qwen_cohort_plan.hpp",
+  "include/strix/cuda/qwen_dense.hpp",
+  "include/strix/cuda/qwen_gdn.hpp",
+  "include/strix/cuda/qwen_gdn_prepass.hpp",
+  "include/strix/cuda/qwen_hc.hpp",
+  "include/strix/cuda/qwen_hc_exact_shape.hpp",
+  "include/strix/cuda/qwen_hc_fp16_range.hpp",
+  "include/strix/cuda/qwen_moe.hpp",
+  "include/strix/cuda/qwen_mtp_defer.hpp",
+  "include/strix/cuda/qwen_mtp_diagnostic.hpp",
+  "include/strix/cuda/qwen_mtp_draft.hpp",
+  "include/strix/cuda/qwen_mtp_v2_shape.hpp",
+  "include/strix/cuda/qwen_options.hpp",
+  "include/strix/cuda/qwen_plemtp.hpp",
+  "include/strix/cuda/qwen_prefill.hpp",
+  "include/strix/cuda/qwen_prefix_identity.hpp",
+  "include/strix/cuda/qwen_prefix_plan.hpp",
+  "include/strix/cuda/qwen_prefix_pool.hpp",
+  "include/strix/cuda/qwen_prefix_store.hpp",
+  "include/strix/cuda/qwen_qsa.hpp",
+  "include/strix/cuda/qwen_quant.cuh",
+  "include/strix/cuda/qwen_route_bf16.hpp",
+  "include/strix/cuda/qwen_transcode.hpp",
+  "include/strix/cuda/qwen_turbo.hpp",
+  "src/cuda/models/qwen/qsa_fused_order.hpp",
+  "src/cuda/models/qwen/qwen_dense.cu",
+  "src/cuda/models/qwen/qwen_gdn.cu",
+  "src/cuda/models/qwen/qwen_handoff.cpp",
+  "src/cuda/models/qwen/qwen_handoff.hpp",
+  "src/cuda/models/qwen/qwen_hc.cu",
+  "src/cuda/models/qwen/qwen_http.hpp",
+  "src/cuda/models/qwen/qwen_moe.cu",
+  "src/cuda/models/qwen/qwen_mtp_draft.cu",
+  "src/cuda/models/qwen/qwen_plemtp.cu",
+  "src/cuda/models/qwen/qwen_prefill_driver.cu",
+  "src/cuda/models/qwen/qwen_prefix_identity.cpp",
+  "src/cuda/models/qwen/qwen_qsa.cu",
+  "src/cuda/models/qwen/qwen_tier_adapter.hpp",
+  "src/cuda/models/qwen/qwen_transcode.cu",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.model-enginelab-qwen-cuda/-/-"
+api       = "src/cuda/models/qwen/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.qwen_engine"
+
+[[requires]]
+module    = "executor.enginelab.qwen_prefill"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_attn"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_dense"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_head"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_moe"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_recur"
+
+[[requires]]
+module    = "kernel.enginelab.gdn_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.moe_launch"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.cuda_exec"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_drafters"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_window"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[[requires]]
+module    = "runtime.enginelab.recurrent_state"
+
+[[requires]]
+module    = "runtime.enginelab.residency"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.spec_core"
+
+[[requires]]
+module    = "runtime.enginelab.spec_wide_window"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source for the optional RTX PRO route: no CUDA toolkit on the island and no NVIDIA device on the pod, so it is not compiled"

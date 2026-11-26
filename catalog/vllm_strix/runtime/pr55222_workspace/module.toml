@@ -1,0 +1,39 @@
+id        = "runtime.vllm_strix.pr55222_workspace"
+kind      = "runtime"
+summary   = "ports of upstream vLLM PR #55222 (workspace units) as whole files for glm5next/common/attention.py and the MLA indexer backend: indexer and GLM attention workspaces sized in units the ROCm kernels accept"
+why       = "without the port the rig could not size the indexer workspace on its pin; carried until a pin bump made it upstream"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/55222-glm5next-attention.py", "container/patches/55222-indexer.py"]
+authors   = [
+  "vLLM project contributors (upstream code; this repo ports or patches it)",
+  "davidcanar (vllm-strix-halo)",
+]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.workspace-units/-/-"
+api       = "replacement vllm/models/glm5next/common/attention.py and v1/attention/backends/mla/indexer.py"
+numeric   = "n/a"
+regime    = "GLM-5.3"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

@@ -1,0 +1,54 @@
+id        = "kernel.maya_tp.kvcache"
+kind      = "kernel"
+summary   = "KV cache formats and streaming: Q4_0 KV with a Walsh-Hadamard rotation (kv_q4), INT8 KV (kv_q8) and the host-resident KV stream with its page moves (kv_stream)"
+why       = "long contexts on a 128 GB APU live or die by KV bytes; three KV shapes ready to sit behind strixflerp's kvcache.store interface"
+notes     = "Interface tag: kvcache.store/q4_0-wht+i8/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/kv_q4.hpp",
+  "include/strata/kernels/kv_q8.hpp",
+  "include/strata/kernels/kv_stream.hpp",
+  "src/kernels/cuda/kv_q4.cu",
+  "src/kernels/cuda/kv_q8.cu",
+  "src/kernels/cuda/kv_stream.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/kv_q4.cu", "src/src/kernels/cuda/kv_q8.cu", "src/src/kernels/cuda/kv_stream.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kvcache.store/q4_0-wht+i8/f32.maya-tp"
+api       = "strata::kernels::kv_q4_*, kv_q8_*, kv_stream_*"
+numeric   = "Q4_0 with WHT, INT8 per-row scales"
+regime    = "decode and prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.qsa"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.kvcache.json"

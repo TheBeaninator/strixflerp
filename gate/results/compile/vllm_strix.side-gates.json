@@ -1,0 +1,194 @@
+{
+ "gate": "side-gates",
+ "origin": "vllm_strix",
+ "host": "control-node",
+ "date": "2026-11-25T22:55:54Z",
+ "python": {
+  "files": 144,
+  "ok": 144,
+  "failed": []
+ },
+ "patches": {
+  "files": 20,
+  "parsed": 19,
+  "results": [
+   {
+    "module": "runtime.vllm_strix.router_det_topk",
+    "file": "container/patches/vsh-moe-router-deterministic-topk.patch",
+    "rc": 0,
+    "numstat": [
+     "17\t9\tvllm/model_executor/layers/fused_moe/router/grouped_topk_router.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.pr59412_indexer_blocks",
+    "file": "container/patches/59412-indexer.diff",
+    "rc": 0,
+    "numstat": [
+     "40\t2\tvllm/v1/attention/backends/mla/indexer.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.dflash_drafter_kv_group",
+    "file": "container/patches/vsh-dflash-drafter-kv-group.patch",
+    "rc": 0,
+    "numstat": [
+     "75\t1\tvllm/v1/core/kv_cache_utils.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.eagle3_aux_states",
+    "file": "container/patches/vsh-glm-eagle3-aux-states.patch",
+    "rc": 0,
+    "numstat": [
+     "35\t6\tvllm/models/glm5next/common/model.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.wna16_empty_cache",
+    "file": "container/patches/vsh-wna16-layerwise-empty-cache.patch",
+    "rc": 0,
+    "numstat": [
+     "10\t0\tvllm/model_executor/layers/quantization/compressed_tensors/compressed_tensors_moe/compressed_tensors_moe_wna16.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.aiter_gfx1151_gate",
+    "file": "container/patches/vsh-aiter-gfx1151-gate.patch",
+    "rc": 0,
+    "numstat": [
+     "8\t1\tvllm/_aiter_ops.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.fp8_fnuz_mqa",
+    "file": "container/patches/vsh-fp8-fnuz-mqa.patch",
+    "rc": 0,
+    "numstat": [
+     "17\t0\tvllm/v1/attention/ops/rocm_aiter_mla_sparse.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.mhc_no_tilelang",
+    "file": "container/patches/vsh-mhc-no-tilelang-gfx1151.patch",
+    "rc": 0,
+    "numstat": [
+     "4\t1\tvllm/model_executor/layers/mhc.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.ds4_gfx1151_gates",
+    "file": "container/patches/vsh-ds4-c4a-decode-layout-gfx1151.patch",
+    "rc": 128,
+    "numstat": [
+     "error: No valid patches in input (allow with \"--allow-empty\")"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.ds4_gfx1151_gates",
+    "file": "container/patches/vsh-ds4-generic-gemm-gfx1151.patch",
+    "rc": 0,
+    "numstat": [
+     "14\t0\tvllm/models/deepseek_v4/amd/rocm.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.ds4_gfx1151_gates",
+    "file": "container/patches/vsh-ds4-no-aiter-fp8-gfx1151.patch",
+    "rc": 0,
+    "numstat": [
+     "15\t0\tvllm/model_executor/kernels/linear/scaled_mm/aiter.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.ds4_gfx1151_gates",
+    "file": "container/patches/vsh-ds4-no-attn-preshuffle-gfx1151.patch",
+    "rc": 0,
+    "numstat": [
+     "10\t0\tvllm/models/deepseek_v4/amd/rocm.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.ds4_gfx1151_gates",
+    "file": "container/patches/vsh-ds4-no-gateup-preshuffle-gfx1151.patch",
+    "rc": 0,
+    "numstat": [
+     "9\t0\tvllm/models/deepseek_v4/amd/model.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.ds4_idx_hadamard",
+    "file": "container/patches/vsh-ds4-idx-hadamard-K-031.patch",
+    "rc": 0,
+    "numstat": [
+     "69\t1\tvllm/models/deepseek_v4/common/ops/fused_compress_quant_cache.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.ds4_idx_hadamard",
+    "file": "container/patches/vsh-ds4-idx-hadamard-K.patch",
+    "rc": 0,
+    "numstat": [
+     "101\t40\topt/venv/lib/python3.12/site-packages/vllm/models/deepseek_v4/common/ops/fused_compress_quant_cache.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.ds4_idx_hadamard",
+    "file": "container/patches/vsh-ds4-idx-hadamard-Q-031.patch",
+    "rc": 0,
+    "numstat": [
+     "87\t0\tvllm/models/deepseek_v4/common/ops/fused_indexer_q.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.odl_ar2_hook",
+    "file": "container/patches/vsh-odl-ar2-allreduce.patch",
+    "rc": 0,
+    "numstat": [
+     "24\t0\tvllm/distributed/device_communicators/cuda_communicator.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.odl_mq_hook",
+    "file": "container/patches/vsh-odl-mq-dataplane.patch",
+    "rc": 0,
+    "numstat": [
+     "73\t2\tvllm/distributed/device_communicators/shm_broadcast.py"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.odinlink_local_patch",
+    "file": "odinlink/odinlink-local.patch",
+    "rc": 0,
+    "numstat": [
+     "21\t0\tdriver/odl_tb5_core.h",
+     "23\t0\tdriver/odl_tb5_params.c",
+     "30\t0\tdriver/odl_tb5_proto.c",
+     "206\t46\tdriver/odl_tb5_ring_dma.c",
+     "6\t7\trccl/src/odl_tb5_plugin.c"
+    ]
+   },
+   {
+    "module": "runtime.vllm_strix.odinlink_local_patch",
+    "file": "container/odinlink/odinlink-local.patch",
+    "rc": 0,
+    "numstat": [
+     "21\t0\tdriver/odl_tb5_core.h",
+     "23\t0\tdriver/odl_tb5_params.c",
+     "30\t0\tdriver/odl_tb5_proto.c",
+     "206\t46\tdriver/odl_tb5_ring_dma.c",
+     "6\t7\trccl/src/odl_tb5_plugin.c"
+    ]
+   }
+  ]
+ },
+ "c_helpers": {
+  "runtime.vllm_strix.odl_state": "pass",
+  "tool.vllm_strix.odl_pingpong": "pass"
+ },
+ "odinlink_local_patch_on_0315225": {
+  "target": "OdinLink-Five 0315225 (/data/ark-inbox/src/github.com__Geramy__OdinLink-Five)",
+  "rc": 1,
+  "tail": "Checking patch driver/odl_tb5_core.h...\nHunk #3 succeeded at 606 (offset 5 lines).\nChecking patch driver/odl_tb5_params.c...\nChecking patch driver/odl_tb5_proto.c...\nHunk #1 succeeded at 169 (offset 11 lines).\nHunk #2 succeeded at 742 (offset 137 lines).\nChecking patch driver/odl_tb5_ring_dma.c...\nHunk #2 succeeded at 413 (offset -1 lines).\nHunk #3 succeeded at 457 (offset -1 lines).\nHunk #4 succeeded at 474 (offset -1 lines).\nHunk #5 succeeded at 503 (offset -1 lines).\nHunk #6 succeeded at 555 (offset -1 lines).\nHunk #7 succeeded at 1401 (offset -1 lines).\nHunk #8 succeeded at 1435 (offset -1 lines).\nHunk #9 succeeded at 2204 (offset -1 lines).\nChecking patch rccl/src/odl_tb5_plugin.c...\nerror: while searching for:\n\todl_scan_devices();\n\t/* One-line confirmation so logs prove the fast path is active\n\t * (silent Socket fallback is the #1 footgun \u2014 issue #23). */\n\tif (odl_logger)\n\t\todl_logger(3 /* INFO */,\n\t\t\t   \"ODL_TB5 net plugin loaded (%d device(s); use NET/ODL_TB5, not Socket)\",\n\t\t\t   num_devices);\n\telse\n\t\tfprintf(stderr, \"NCCL INFO ODL_TB5 net plugin loaded (%d device(s))\\n\",\n\t\t\tnum_devices);\n\tif (num_devices == 0)\n\t\tWARN(\"no /dev/odl_tb5_* \u2014 reporting 0 devices. \"\n\t\t     \"Load odl_tb5 on both machines and wait for \"\n\nerror: patch failed: rccl/src/odl_tb5_plugin.c:257\nerror: rccl/src/odl_tb5_plugin.c: patch does not apply\n"
+ }
+}

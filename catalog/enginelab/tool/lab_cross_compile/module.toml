@@ -1,0 +1,42 @@
+id        = "tool.enginelab.lab_cross_compile"
+kind      = "tool"
+summary   = "the cross-compile probe: a HIP probe and its prebuilt gfx1151 code object and object (lab/cross_compile/out) (lab/cross_compile)"
+why       = "checks offline compilation for gfx1151; where it would go: kept as a reference program or lab (tool.enginelab-lab-cross-compile/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-lab-cross-compile/-/-. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "lab/cross_compile/README.md",
+  "lab/cross_compile/out/probe.gfx1151.hsaco",
+  "lab/cross_compile/out/probe.gfx1151.o",
+  "lab/cross_compile/probe.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/lab/cross_compile/probe.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.enginelab-lab-cross-compile/-/-"
+api       = "lab/cross_compile"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/tool.enginelab.lab_cross_compile.json"

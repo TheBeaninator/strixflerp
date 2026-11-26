@@ -1,0 +1,76 @@
+id        = "runtime.maya_tp.glm_mtp"
+kind      = "runtime"
+summary   = "GLM MTP speculative decoding: the one-GPU MTP decode where the NextN block drafts (glm_mtp), several conversations drafting at once (glm_mtp_rows), the NextN carrier's sequence state (glm_mtp_state, glm_mtp_state_model) and the speculative verify window on the trunk (glm_window)"
+why       = "MTP under TP2 is maya-tp's biggest measured win (+29.6% code, two drafts): rank 0 coordinates drafts and acceptance while trunk partials are summed; the shape a strixflerp speculation.draft-mtp module takes"
+notes     = "Interface tag: speculation.draft-mtp/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/glm_mtp_state.hpp",
+  "include/strata/core/mtp_rows.hpp",
+  "src/core/glm_mtp.cu",
+  "src/core/glm_mtp_rows.cu",
+  "src/core/glm_mtp_state.cpp",
+  "src/core/glm_mtp_state_model.cu",
+  "src/core/glm_window.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "speculation.draft-mtp/-/-"
+api       = "Glm5Model MTP members (mtp_rows.hpp, glm_mtp_state.hpp)"
+numeric   = "per-kernel numerics"
+regime    = "drafts 1-7"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.sampler"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_dsa_decode"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_model"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_tools"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

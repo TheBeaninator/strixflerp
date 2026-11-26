@@ -1,0 +1,47 @@
+id        = "executor.strixfold_tp4.dsv41_vision"
+kind      = "executor"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for executor.strixfold.dsv41_vision: 3 file(s) of executor.strixfold.dsv41_vision (picture.zig, pil.zig, vision.zig), laid over the f64b5ff files"
+why       = "executor.strixfold.dsv41_vision is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over executor.strixfold.dsv41_vision without touching it or the TP2 recipes"
+notes     = "Overlay of executor.strixfold.dsv41_vision (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 9757a35411. Latest commits: 7aae65c0 dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side; 6d2765a2 dsv41 picture: a PNG's inflated data is bounded by the size its header gives; longer data is not inflated past it; 03d67fc1 server: Pillow for the picture child by TF_PIL_PATH (deploy pylib/), so JPEG and other non-PNG pictures decode on boxes without Pillow (pod card 9757a35411); c16dc5bf server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/families/dsv41/picture.zig",
+  "zig/src/families/dsv41/pil.zig",
+  "zig/src/families/dsv41/vision.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on executor.strixfold.dsv41_vision (origin strixfold, f64b5ff): 3 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "vision.tower/deepseek-v4.1/bf16.tp4"
+api       = "vision.zig, vit.zig (Vit), picture.zig, pil.zig, fmha.zig"
+numeric   = "not measured here: the phase 3 gate sends text only"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); one image a request, prompt path"
+
+[[requires]]
+module    = "executor.strixfold.dsv41_vision"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

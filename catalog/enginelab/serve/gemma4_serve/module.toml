@@ -1,0 +1,66 @@
+id        = "serve.enginelab.gemma4_serve"
+kind      = "serve"
+summary   = "Gemma 4 serving (with the Unicode licence notice) (src/gemma4/serve): 12 origin files under src/gemma4"
+why       = "strix-serve for Gemma 4; where it would go: beside the catalogue's serve.engine/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: serve.engine/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/serve/README.md",
+  "src/gemma4/serve/adapter.cpp",
+  "src/gemma4/serve/adapter.hpp",
+  "src/gemma4/serve/chat.cpp",
+  "src/gemma4/serve/chat.hpp",
+  "src/gemma4/serve/notices/OPENMDW-LICENSE.txt",
+  "src/gemma4/serve/notices/UNICODE-LICENSE.txt",
+  "src/gemma4/serve/parse.cpp",
+  "src/gemma4/serve/parse.hpp",
+  "src/gemma4/serve/tokenizer.cpp",
+  "src/gemma4/serve/tokenizer.hpp",
+  "src/gemma4/serve/unicode_lower.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND Unicode-3.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/gemma4/serve/adapter.cpp",
+  "src/src/gemma4/serve/chat.cpp",
+  "src/src/gemma4/serve/parse.cpp",
+  "src/src/gemma4/serve/tokenizer.cpp",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.engine-enginelab-gemma4/-/-"
+api       = "src/gemma4/serve/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "serve.enginelab.serve_chat"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[[requires]]
+module    = "serve.enginelab.serve_tokenizer"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

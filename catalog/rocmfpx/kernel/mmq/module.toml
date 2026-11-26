@@ -1,0 +1,76 @@
+id        = "kernel.rocmfpx.mmq"
+kind      = "kernel"
+summary   = "ROCmFPX MMQ: ggml's tiled integer matrix multiply (MUL_MAT and MUL_MAT_ID for prompt batches) with ROCmFPX tile loaders for all seven types (ROCmFP2, 3, 4, 4-fast, 6, 7, 8) against q8_1 activations, one template instance a type, the dispatcher, and the ROCmFP7 DualView fast paths: a direct MMA dot on the Q7 codes, a gfx1151 panel16 weight cache, and the exact signed-Q8 compute view that sends Q7 prefill through the ordinary Q8_0 MMQ"
+why       = "Ciru's HIP prefill path for the format family the catalogue's ladder lacks (2.5 to 8.25 bits a weight, UE4M3 or FP16 scales); the gguf-kquant MMQ providers kernel.gufo.ds4_mmq / qfn_mmq and kernel.hipfire.gemm_ggml are the same ggml lineage on K-quants"
+notes     = "Interface tags by file: mmq.cuh linear.prefill/gguf-rocmfpx/f32; mmq.cu moe.experts-prefill/gguf-rocmfpx/f32; quantize.cuh none; q7-view-mode.cuh none; q7-panel16.cuh none; q7-panel16-cache.cuh none; q7-q8-view.cuh none; q7-q8-view-cache.cuh none; the template instances none (catalog/rocmfpx/KERNELS.md has the table). Unchanged llama.cpp file kept here: quantize.cuh. No timing was taken on the pod."
+
+[provenance]
+origin    = "rocmfpx"
+repo      = "https://github.com/ciru-ai/ROCmFPX"
+commit    = "efd1ef5a17db576168d849831e1ef3346582881e"
+branch    = "main"
+paths     = [
+  "ggml/src/ggml-cuda/mmq.cu",
+  "ggml/src/ggml-cuda/mmq.cuh",
+  "ggml/src/ggml-cuda/q7-panel16-cache.cuh",
+  "ggml/src/ggml-cuda/q7-panel16.cuh",
+  "ggml/src/ggml-cuda/q7-q8-view-cache.cuh",
+  "ggml/src/ggml-cuda/q7-q8-view.cuh",
+  "ggml/src/ggml-cuda/q7-view-mode.cuh",
+  "ggml/src/ggml-cuda/quantize.cuh",
+  "ggml/src/ggml-cuda/template-instances/generate_cu_files.py",
+  "ggml/src/ggml-cuda/template-instances/mmq-instance-q2_0_rocmfpx.cu",
+  "ggml/src/ggml-cuda/template-instances/mmq-instance-q3_0_rocmfpx.cu",
+  "ggml/src/ggml-cuda/template-instances/mmq-instance-q4_0_rocmfp4.cu",
+  "ggml/src/ggml-cuda/template-instances/mmq-instance-q4_0_rocmfp4_fast.cu",
+  "ggml/src/ggml-cuda/template-instances/mmq-instance-q6_0_rocmfpx.cu",
+  "ggml/src/ggml-cuda/template-instances/mmq-instance-q7_0_rocmfpx.cu",
+  "ggml/src/ggml-cuda/template-instances/mmq-instance-q8_0_rocmfpx.cu",
+]
+authors   = ["Ciru (ciru-ai)", "the ggml authors"]
+modified  = false
+upstream  = "ggml-org/llama.cpp 15586e2d7165570fb3aa7c26e0d442e289ef69de: the llama.cpp files of this family carry the ROCmFPX code as extra type cases; the q7-*.cuh, the ROCmFP template instances and rocmfp4_hip.cu are ROCmFPX files"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/ggml/src/ggml-cuda/template-instances/mmq-instance-q2_0_rocmfpx.cu",
+  "src/ggml/src/ggml-cuda/template-instances/mmq-instance-q3_0_rocmfpx.cu",
+  "src/ggml/src/ggml-cuda/template-instances/mmq-instance-q4_0_rocmfp4.cu",
+  "src/ggml/src/ggml-cuda/template-instances/mmq-instance-q4_0_rocmfp4_fast.cu",
+  "src/ggml/src/ggml-cuda/template-instances/mmq-instance-q6_0_rocmfpx.cu",
+  "src/ggml/src/ggml-cuda/template-instances/mmq-instance-q7_0_rocmfpx.cu",
+  "src/ggml/src/ggml-cuda/template-instances/mmq-instance-q8_0_rocmfpx.cu",
+  "src/ggml/src/ggml-cuda/mmq.cu",
+]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.prefill/gguf-rocmfpx/f32.rocmfpx-mmq"
+api       = "ggml/src/ggml-cuda/mmq.cuh: ggml's MMQ kernel templates with the ROCmFPX load_tiles_* loaders, the mmq_type_traits of the seven types, and the Q7 MMA-direct and panel16 dots"
+numeric   = "q8_1 activations (ggml quantize_q8_1); integer dot products of the decoded codes with int8 activations, scaled by the decoded UE4M3 (FP16 for ROCmFP7) weight scale and the q8_1 scale, accumulated in f32; f32 output"
+regime    = "prompt batches (ggml_cuda_should_use_mmq; the origin build sets GGML_CUDA_FORCE_MMQ), dense and MoE expert matrices; the Q7 panel16 and Q8-view paths are gfx1151-only and opt-in by environment"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-rocmfpx/f32.rocmfpx-mmq"
+api       = "ggml/src/ggml-cuda/mmq.cu: ggml_cuda_mul_mat_q with the ROCmFPX type cases, the MUL_MAT_ID expert path through mmid.cuh, and the Q7 handoff to the panel16 cache or the Q8 view"
+numeric   = "q8_1 activations (ggml quantize_q8_1); integer dot products of the decoded codes with int8 activations, scaled by the decoded UE4M3 (FP16 for ROCmFP7) weight scale and the q8_1 scale, accumulated in f32; f32 output"
+regime    = "prompt batches (ggml_cuda_should_use_mmq; the origin build sets GGML_CUDA_FORCE_MMQ), dense and MoE expert matrices; the Q7 panel16 and Q8-view paths are gfx1151-only and opt-in by environment"
+
+[[requires]]
+module    = "kernel.rocmfpx.common"
+
+[[requires]]
+interface = "format.device-view/gguf-rocmfpx/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.rocmfpx.mmq.json"

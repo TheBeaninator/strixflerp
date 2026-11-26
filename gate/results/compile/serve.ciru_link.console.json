@@ -1,0 +1,36 @@
+{
+ "module": "serve.ciru_link.console",
+ "gate": "compile-go",
+ "arch": "x86_64 (host code)",
+ "host": "control-node",
+ "date": "2026-11-25T22:18:21Z",
+ "toolchain": "go version go1.27.1 linux/amd64",
+ "tree": "catalog/ciru_link Go modules runtime.ciru_link.nhi_endpoint, runtime.ciru_link.usb4net, tool.ciru_link.linktest, tool.ciru_link.prereq, serve.ciru_link.console, tool.ciru_link.cli assembled into one tree",
+ "env": "GOTOOLCHAIN=local GOPROXY=off GOFLAGS=-mod=mod CGO_ENABLED=0 GOOS=linux GOARCH=amd64",
+ "steps": [
+  {
+   "step": "vet",
+   "cmd": "vet ./...",
+   "rc": 0,
+   "seconds": 8.66,
+   "tail": ""
+  },
+  {
+   "step": "test-compile",
+   "cmd": "test -count=1 -run ^$ ./...",
+   "rc": 0,
+   "seconds": 1.27,
+   "tail": "?   \tgithub.com/ciru-ai/CiruStrixLink/cmd/ciru-strixlink\t[no test files]\nok  \tgithub.com/ciru-ai/CiruStrixLink/internal/bench\t0.002s [no tests to run]\nok  \tgithub.com/ciru-ai/CiruStrixLink/internal/install\t0.001s [no tests to run]\nok  \tgithub.com/ciru-ai/CiruStrixLink/internal/link\t0.001s [no tests to run]\nok  \tgithub.com/ciru-ai/CiruStrixLink/internal/prereq\t0.001s [no tests to run]\nok  \tgithub.com/ciru-ai/CiruStrixLink/internal/quality\t0.002s [no tests to run]\nok  \tgithub.com/ciru-ai/CiruStrixLink/internal/transport\t0.001s [no tests to run]\nok  \tgithub.com/ciru-ai/CiruStrixLink/internal/ui\t0.002s [no tests to run]\n"
+  },
+  {
+   "step": "build",
+   "cmd": "build -trimpath -ldflags -s -w -X main.version=0.3.3 -o /tmp/ciru-link-go-m3fuozxe/ciru-strixlink-linux-amd64 ./cmd/ciru-strixlink",
+   "rc": 0,
+   "seconds": 8.08,
+   "tail": ""
+  }
+ ],
+ "binary_sha256": "e2a55bdf81e790767f2b521bb432b8d65389128e383d7cfcad3d9429358226ef",
+ "binary_bytes": 8433824,
+ "status": "pass"
+}

@@ -1,0 +1,199 @@
+"""TP2 launcher wiring tests: fake all SSH/process/GPU commands, no hosts required."""
+import json
+import os
+from pathlib import Path
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class Tp2LauncherTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.bin = self.root / 'bin'
+        self.bin.mkdir()
+        for directory in ('tools/llama-swap', 'tools/tp2', '.venv/bin'):
+            (self.root / directory).mkdir(parents=True)
+        for script in ('tools/llama-swap/tp2.sh', 'tools/tp2/rank0.sh', 'tools/tp2/rank1.sh',
+                       'tools/tp2/model_env.sh'):
+            shutil.copy(ROOT / script, self.root / script)
+        self.config = self.root / 'maya-maya-s-v2-iq2_xxs-hip.json'
+        self.config.write_text(json.dumps(dict(
+            args=['--glm-pack', '/model/pack', '--max-context', '32768'],
+            tokenizer='/model/pack/tokenizer',
+            log=str(self.root / 'maya-maya-s-v2-iq2_xxs-hip.log'),
+            installer=dict(quant='Maya-S-v2-IQ2_XXS'))))
+        self.env = {k: v for k, v in os.environ.items() if not k.startswith(('MAYA_', 'STRATA_'))}
+        self.env.update(PATH=str(self.bin) + os.pathsep + os.environ['PATH'],
+                        TP_TEST_LOG=str(self.root / 'events.jsonl'), TP_TEST_RESULT=str(self.root / 'result.json'))
+        self.executable('ssh', '''import os,sys,json
+with open(os.environ['TP_TEST_LOG'],'a') as f: f.write(json.dumps(['ssh',sys.argv[1:]])+'\\n')
+cmd=sys.argv[-1]
+if 'pgrep' in cmd: sys.exit(1)
+if 'nohup' in cmd and os.environ.get('TP_TEST_SSH_FAIL'): sys.exit(77)
+''')
+        self.executable('pkill', '''import os,sys,json
+with open(os.environ['TP_TEST_LOG'],'a') as f: f.write(json.dumps(['pkill',sys.argv[1:]])+'\\n')
+''')
+        self.executable('pgrep', 'import sys; sys.exit(1)')
+        self.executable('ss', 'print("State Recv-Q Send-Q Local Address:Port Peer Address:Port")')
+        self.executable('tee', 'import sys; sys.stdout.write(sys.stdin.read())')
+        self.executable('ibv_devices', 'print("usb4_rdma5 000001")')
+
+    def executable(self, name, body, path=None):
+        p = path or self.bin / name
+        p.write_text(f'#!{sys.executable}\n' + body + '\n')
+        p.chmod(0o755)
+        return p
+
+    def run_script(self, script, *args, **extra_env):
+        return subprocess.run(['bash', str(self.root / script), *args], env={**self.env, **extra_env},
+                              capture_output=True, text=True, timeout=15)
+
+    def stub_rank0(self):
+        self.executable('rank0', '''import os,sys,json
+keys=('MAYA_TP_MTP','MAYA_GLM_MTP_FIXED','MAYA_GLM_MTP_DRAFT','CONTEXT','SEQS','MAYA_MODEL','MAYA_PACK','MAYA_CONFIG','MAYA_MODELS_DIR')
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump({'env':{k:os.environ.get(k) for k in keys},'args':sys.argv[1:]},f)
+''', self.root / 'tools/tp2/rank0.sh')
+
+    def test_wrapper_forwards_to_owned_launcher_without_cleanup(self):
+        self.executable('python', 'import os,sys,json;open(os.environ["TP_TEST_RESULT"],"w").write(json.dumps(sys.argv[1:]))', self.root/'.venv/bin/python')
+        r=self.run_script('tools/llama-swap/tp2.sh','run','18080','--parallel','4','--mtp','--drafts','3')
+        self.assertEqual(r.returncode,0,r.stderr)
+        args=json.loads((self.root/'result.json').read_text())
+        self.assertEqual(args[1:],['run','18080','--parallel','4','--mtp','--drafts','3'])
+        self.assertTrue(args[0].endswith('/tools/tp2/launch.py'))
+        self.assertFalse((self.root/'events.jsonl').exists())
+
+    def test_rank0_context_override_reaches_engine_config(self):
+        self.executable('server', '''import os,sys,json
+p=sys.argv[sys.argv.index('--config')+1]
+with open(p) as f: cfg=json.load(f)
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump(cfg,f)
+os.unlink(p)
+''', self.root / '.venv/bin/python')
+        r = self.run_script('tools/tp2/rank0.sh', '18080', CONTEXT='8192')
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        args = json.loads((self.root / 'result.json').read_text())['args']
+        self.assertEqual(args[-2:], ['--max-context','8192'])
+
+    def test_rank1_defaults_to_same_configured_context(self):
+        engine = self.executable('engine', '''import os,sys,json
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump(sys.argv[1:],f)
+''')
+        r = self.run_script('tools/tp2/rank1.sh', ENGINE=str(engine))
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        args = json.loads((self.root / 'result.json').read_text())
+        self.assertEqual(args[-2:], ['--max-context','32768'])
+
+    def test_rank1_applies_config_engine_env_without_shell_evaluation(self):
+        config = json.loads(self.config.read_text())
+        tuning = '/calibration/a table.txt:/calibration/b.txt'
+        literal = 'line one\n$(touch should-not-exist) `false`'
+        config['env'] = dict(MAYA_GLM_PREFILL_SUB='1024', MAYA_HIPBLASLT_TUNING=tuning,
+                             STRATA_LITERAL=literal)
+        self.config.write_text(json.dumps(config))
+        engine = self.executable('engine', '''import os,json
+keys=('MAYA_GLM_PREFILL_SUB','MAYA_HIPBLASLT_TUNING','STRATA_LITERAL')
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump({k:os.environ.get(k) for k in keys},f)
+''')
+        r = self.run_script('tools/tp2/rank1.sh', ENGINE=str(engine), MAYA_GLM_PREFILL_SUB='256')
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        env = json.loads((self.root / 'result.json').read_text())
+        self.assertEqual(env, dict(MAYA_GLM_PREFILL_SUB='1024', MAYA_HIPBLASLT_TUNING=tuning,
+                                   STRATA_LITERAL=literal))
+
+    def test_rank1_preserves_configured_kv_format_and_streaming(self):
+        cfg = json.loads(self.config.read_text())
+        cfg['args'] += ['--kv', 'fp16', '--kv', 'int8', '--kv-streaming', 'on', '--kv-resident', '8192']
+        self.config.write_text(json.dumps(cfg))
+        engine = self.executable('engine', '''import os,sys,json
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump(sys.argv[1:],f)
+''')
+        result = self.run_script('tools/tp2/rank1.sh', ENGINE=str(engine))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        args = json.loads((self.root / 'result.json').read_text())
+        formats = [args[i + 1] for i, value in enumerate(args[:-1]) if value == '--kv']
+        self.assertEqual(formats, ['fp16', 'int8'])
+        self.assertEqual(args[args.index('--kv-streaming') + 1], 'on')
+        self.assertEqual(args[args.index('--kv-resident') + 1], '8192')
+
+    def test_rank1_model_flag_overrides_pack(self):
+        engine = self.executable('engine', '''import os,sys,json
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump(sys.argv[1:],f)
+''')
+        models = self.root / 'models'
+        (models / 'Maya-M' / 'pack').mkdir(parents=True)
+        r = self.run_script('tools/tp2/rank1.sh', ENGINE=str(engine),
+                            MAYA_MODELS_DIR=str(models), MAYA_MODEL='Maya-M')
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        args = json.loads((self.root / 'result.json').read_text())
+        i = args.index('--glm-pack')
+        self.assertEqual(args[i + 1], str(models / 'Maya-M' / 'pack'))
+
+    def test_rank1_cli_pack_beats_env_model(self):
+        engine = self.executable('engine', '''import os,sys,json
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump(sys.argv[1:],f)
+''')
+        pack = self.root / 'explicit-pack'
+        pack.mkdir()
+        r = self.run_script('tools/tp2/rank1.sh', '--pack', str(pack),
+                            ENGINE=str(engine), MAYA_MODEL='Maya-M')
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        args = json.loads((self.root / 'result.json').read_text())
+        i = args.index('--glm-pack')
+        self.assertEqual(args[i + 1], str(pack))
+
+    def test_rank0_model_flag_rewrites_config_pack_and_tokenizer(self):
+        self.executable('server', '''import os,sys,json
+p=sys.argv[sys.argv.index('--config')+1]
+with open(p) as f: cfg=json.load(f)
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump(cfg,f)
+os.unlink(p)
+''', self.root / '.venv/bin/python')
+        models = self.root / 'models'
+        pack = models / 'Maya-M' / 'pack'
+        pack.mkdir(parents=True)
+        r = self.run_script('tools/tp2/rank0.sh', '18080', '--model', 'Maya-M',
+                            MAYA_MODELS_DIR=str(models))
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        cfg = json.loads((self.root / 'result.json').read_text())
+        self.assertIn('--glm-pack', cfg['args'])
+        self.assertEqual(cfg['args'][cfg['args'].index('--glm-pack') + 1], str(pack))
+        self.assertEqual(cfg['tokenizer'], str(pack / 'tokenizer'))
+        # log / installer must follow the selected pack, not the Maya-S base config
+        self.assertEqual(cfg['log'], str(self.root / 'maya-maya-m-hip.log'))
+        self.assertEqual(cfg['installer']['quant'], 'Maya-M')
+
+    def test_rank1_aliases_match_server_for_config_and_shell_conflicts(self):
+        from serve.server import child_env
+        cases = ({'STRATA_GLM_PREFILL_SUB': '1024'},
+                 {'MAYA_GLM_PREFILL_SUB': '1024'},
+                 {'MAYA_GLM_PREFILL_SUB': '1024', 'STRATA_GLM_PREFILL_SUB': '256'})
+        engine = self.executable('engine', '''import os,json
+keys=('MAYA_GLM_PREFILL_SUB','STRATA_GLM_PREFILL_SUB')
+with open(os.environ['TP_TEST_RESULT'],'w') as f: json.dump({k:os.environ.get(k) for k in keys},f)
+''')
+        for settings in cases:
+            with self.subTest(settings=settings):
+                cfg = json.loads(self.config.read_text())
+                cfg['env'] = settings
+                self.config.write_text(json.dumps(cfg))
+                r = self.run_script('tools/tp2/rank1.sh', ENGINE=str(engine),
+                                    MAYA_GLM_PREFILL_SUB='128', STRATA_GLM_PREFILL_SUB='64')
+                self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+                actual = json.loads((self.root / 'result.json').read_text())
+                expected = child_env(cfg)
+                self.assertEqual(actual, {k: expected[k] for k in actual})
+                self.assertEqual(set(actual.values()), {'1024'})
+
+
+if __name__ == '__main__':
+    unittest.main()

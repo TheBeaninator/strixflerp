@@ -1,0 +1,62 @@
+id        = "runtime.enginelab.qsa_plan"
+kind      = "runtime"
+summary   = "QSA plans and diagnostics: selection plan, input prefetch, cache-only mode and the selection / GQA-reuse diagnostics"
+why       = "what the QSA kernels read and when; where it would go: beside the catalogue's attn.qsa-ids/-/i32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: attn.qsa-ids/-/i32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_compact_qsa_diagnostic.hpp",
+  "include/strix/hip_qsa_gqa_reuse_diagnostic.hpp",
+  "include/strix/hip_qsa_selection_diagnostic.hpp",
+  "include/strix/qsa_cache_only.hpp",
+  "include/strix/qsa_input_prefetch.hpp",
+  "include/strix/qsa_selection_plan.hpp",
+  "src/hip_qsa_selection_diagnostic.hip",
+  "src/qsa_input_prefetch.cpp",
+  "src/qsa_selection_plan.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_qsa_selection_diagnostic.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.qsa-ids/-/i32.enginelab"
+api       = "src/qsa_selection_plan.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.moe_q4k_a8"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.qpf2k_schedule"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.qsa_plan.json"

@@ -1,0 +1,67 @@
+id        = "kernel.strix_trellis.exl3_tp_moe"
+kind      = "kernel"
+summary   = "Routed experts of one rank for K2 or K3 mul1 weights, six routes a row, 1 to 8 rows: the first plan runs gate and up with SiLU as one grouped launch and down with the ordered top-6 combine as a second (tp_moe gate_up_kernel, down_kernel); the split3 plan stages A, B and C over a workspace holding the hidden rows and the down partials, optionally as a pretransformed S4 pipeline with separate prepare, core and finish nodes, one- and two-row cores and a grouped finish of all six down routes; routes come from the host at plan creation or from device tensors a persistent expert bank reads each submit. An A8R variant with integer group accumulation is a different arithmetic identity and is compiled out by default"
+why       = "kernel.strixfold.exl3 serves the decode experts with an epoch / ready protocol over bf16 rows; this is the origin's K2 / K3 answer for the same top-6 block in two launches (one grouped gate / up, one down with the ordered combine), kept so the two launch plans can be compared when the pair is up; the origin itself has not run it in a full model"
+notes     = "Interface tag: none. The card's tag set has no word for it: this module matches moe.experts-decode/exl3, the class of kernel.strixfold.exl3 (grouped_cp) and kernel.crucible.moe_decode, not a linear interface. Routing, scatter and inter-rank reduction are the caller's. The STRIX_TRELLIS_TP_MOE_* options of CMakeLists.txt:19-65 pick the pipeline at build time."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "src/k2_local_decode.hpp",
+  "src/tp_moe.hip",
+  "src/tp_moe.hpp",
+  "src/tp_moe_a8r.hpp",
+  "src/tp_moe_a8r_math.hpp",
+  "src/tp_moe_a8r_reference.hpp",
+  "src/tp_moe_activation.hpp",
+  "src/tp_moe_finish.hpp",
+  "src/tp_moe_fold.hpp",
+  "src/tp_moe_gate_finish.hpp",
+  "src/tp_moe_grouped_finish.hpp",
+  "src/tp_moe_hash.hpp",
+  "src/tp_moe_persistent.hpp",
+  "src/tp_moe_pipeline.hpp",
+  "src/tp_moe_policy.hpp",
+  "src/tp_moe_reader.hpp",
+  "src/tp_moe_routes.hpp",
+  "src/tp_moe_s4_reference.hpp",
+  "src/tp_moe_schedule.hpp",
+  "src/tp_moe_split.hip",
+  "src/tp_moe_split_layout.hpp",
+  "src/tp_moe_weight_tile.hpp",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/tp_moe.hip", "src/src/tp_moe_split.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/f16-f32.strix-trellis"
+api       = "strix_tp_moe_plan_create, _create_device, _create_split, _create_device_split, _create_a8r, strix_tp_moe_plan_submit, _gate_up, _down, _down_core, _down_finish (include/strix_trellis.h)"
+numeric   = "output = alpha * sum over slots of score * down(SiLU(gate(X)) * up(X)) + beta * output, slots combined in slot order, zero scores skipped; S4 / DOT2ACC arithmetic, bitwise equal to the 0.3 operator on GPU fixtures per the origin; the scores are not normalised and the clamp of DeepSeek's SwiGLU is a build option (STRIX_TRELLIS_TP_MOE_DECLARED_SWIGLU, off)"
+regime    = "decode, 1..8 rows, top-6 of a bank of 6..256 experts; gate / up (5120, 1152), down (1152, 5120); the origin lists it as measured on GPU, not used in a full model"
+
+[[requires]]
+module    = "kernel.strix_trellis.trellis_common"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_tp_dense"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libstrix_trellis.a: built by the origin CMake (STRIX_TRELLIS_ENABLE_HIP=ON, -O3 -ffp-contract=off, HIP standard 17, gfx1151), not compiled by this harvest; in the library only with STRIX_TRELLIS_ENABLE_EXPERIMENTAL_TP=ON"

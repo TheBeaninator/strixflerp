@@ -1,0 +1,54 @@
+id        = "kernel.maya_tp.cpu_exl3"
+kind      = "kernel"
+summary   = "EXL3 routed experts on the CPU (exl3_cpu), the scalar EXL3 reference (exl3_ref) and the CPU EXL3 bench (exl3_cpu_bench)"
+why       = "an EXL3 CPU lane so trellis-quant experts can spill to the cores; the reference doubles as a parity oracle"
+notes     = "Interface tag: moe.experts-decode-cpu/exl3/f32.maya-tp. Not compiled by the gate (host C++, x86 options). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/cpu/exl3_cpu.hpp",
+  "include/strata/kernels/cpu/exl3_ref.hpp",
+  "src/kernels/cpu/exl3_cpu.cpp",
+  "src/kernels/cpu/exl3_cpu_avx512.inc",
+  "src/kernels/cpu/exl3_cpu_bench.cpp",
+  "src/kernels/cpu/exl3_ref.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode-cpu/exl3/f32.maya-tp"
+api       = "strata::kernels::cpu exl3 (exl3_cpu.hpp, exl3_ref.hpp)"
+numeric   = "FP32"
+regime    = "decode on the CPU"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Not compiled by the gate (host C++, x86 options)."

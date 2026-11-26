@@ -1,0 +1,64 @@
+id        = "kernel.strata.gguf_gemv"
+kind      = "kernel"
+summary   = "decode GEMVs on native GGUF blocks, adapted from llama.cpp's CUDA MMVQ at 3cf03257: Q2_0, Q4_0, Q5_0, Q8_0, Q3_K-Q6_K, IQ4_NL and IQ4_XS against q8_1 activations (native_mmvq), the i-quant formats IQ1_M-IQ3_S, IQ4_NL with Q2_0 and the UD-Q4_K_XL K-quants (iq_kernels: vec_dot, dequantizers, embedding rows), and the activation quantizers to Q8_0 / Q8_K the way ggml converts src1 (quantize_act)"
+why       = "Strata runs the IQ2_XS / IQ3_XXS and Unsloth UD-Q4_K_XL model files through these, so they are the GGUF k-quant and i-quant decode path of a Qwen3.8-Flash-Next engine measured on Strix Halo, beside gufo's and hipfire's"
+notes     = "Interface tags by file: native_mmvq.cu linear.decode/gguf-kquant+iq4+q2_0/q8_1-f32; iq_kernels.cu linear.decode/gguf-iq+kquant/q8_1-f32; quantize_act.cu quant.activation/-/q8_0+q8_k. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/iq_kernels.hpp",
+  "include/strata/kernels/native_mmvq.hpp",
+  "include/strata/kernels/quantize_act.hpp",
+  "src/kernels/cuda/iq_kernels.cu",
+  "src/kernels/cuda/native_mmvq.cu",
+  "src/kernels/cuda/quantize_act.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/native_mmvq.cu",
+  "src/src/kernels/cuda/iq_kernels.cu",
+  "src/src/kernels/cuda/quantize_act.cu",
+]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/src/kernels/cuda/quantize_act.cu" = ["-ffp-contract=off"] }
+
+[[provides]]
+interface = "linear.decode/gguf-kquant+iq4+q2_0/q8_1-f32.strata-mmvq"
+api       = "strata::kernels::native_quantize_q8_1, native_swiglu_quantize_q8_1, native_<type>_mmvq, native_<type>_f32 (src/kernels/cuda/native_mmvq.cu)"
+numeric   = "q8_1 activations, llama.cpp's integer dots and FP32 accumulation; the CUDA build compiles it with --use_fast_math, the HIP build without"
+regime    = "decode; one to a few columns"
+
+[[provides]]
+interface = "linear.decode/gguf-iq+kquant/q8_1-f32.strata-iq"
+api       = "strata::kernels::iq_mmvq, quantize_q8_1_rows, iq_dequant_f16 / f32, iq_embed_rows (src/kernels/cuda/iq_kernels.cu)"
+numeric   = "q8_1 activations; block layouts and grids from third_party/ggml/ggml-common.h"
+regime    = "decode"
+
+[[provides]]
+interface = "quant.activation/-/q8_0+q8_k.strata"
+api       = "strata::kernels::quantize_q8_0(_scaled), quantize_q8_K, dequant_q8_0, dequant_q8_K (src/kernels/cuda/quantize_act.cu)"
+numeric   = "Q8_K's multiply and magic-bias rounding kept as separate FP32 operations on HIP (-ffp-contract=off, CMakeLists.txt)"
+regime    = "any row length that is a multiple of the block"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.gguf_gemv.json"

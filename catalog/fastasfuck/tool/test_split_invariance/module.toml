@@ -1,0 +1,43 @@
+id        = "tool.fastasfuck.test_split_invariance"
+kind      = "tool"
+summary   = "fastasfuck's proof tool that replaying a prefix of verify rows gives a bit-exact GDN recurrent state"
+why       = "MTP rollback in a recurrent model relies on this invariance; the test is the evidence for it"
+notes     = "Files vs strixite: tools/test_split_invariance.cpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/test_split_invariance.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/test_split_invariance.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.test-split-invariance/-/-"
+api       = "tools/test_split_invariance.cpp"
+numeric   = "n/a"
+regime    = "host program"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.gdn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable test_split_invariance) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,78 @@
+id        = "kernel.strix_trellis.exl3_variants"
+kind      = "kernel"
+summary   = "Kernels the origin keeps beside its library and does not link into it: combined and static-combined decode GEMVs with their decoder (gemv_combined, gemv_static_combined, combined_decoder.hpp), fused-groups and fused-output GEMVs, a K2 rows kernel, a low-bit K3 / K4 reader pipeline, the K2 single-row kernel with an LDS split reduction (gemv_k2_local, its own optional library strix_trellis_k2_local), the blocked-K WMMA core with its submission control and a WMMA core with a replaced lane decoder"
+why       = "the origin keeps the decode and WMMA kernels its shipped ones replaced, with a bench each; they record which schedules were tried beside the shipped ones on gfx1151 (the blocked-K search is written up as a negative result), which tells the pod what not to re-run first"
+notes     = "Interface tag: none. CMakeLists.txt names none of these sources in libstrix_trellis.a; gemv_k2_local.hip builds only with STRIX_TRELLIS_BUILD_EXPERIMENTAL_K2_LOCAL=ON. The origin's design notes record the blocked-K search and its submission control as negative results (docs/WMMA_DECODER.md)."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "src/combined_decoder.hpp",
+  "src/gemv_combined.hip",
+  "src/gemv_combined.hpp",
+  "src/gemv_fused_groups.hip",
+  "src/gemv_fused_groups.hpp",
+  "src/gemv_fused_output.hip",
+  "src/gemv_fused_output.hpp",
+  "src/gemv_k2_local.hip",
+  "src/gemv_k2_local.hpp",
+  "src/gemv_k2_rows.hip",
+  "src/gemv_k2_rows.hpp",
+  "src/gemv_lowbit.hip",
+  "src/gemv_lowbit.hpp",
+  "src/gemv_static_combined.hip",
+  "src/gemv_static_combined.hpp",
+  "src/k2_local_policy.hpp",
+  "src/wmma_blocked_submit.hip",
+  "src/wmma_blocked_submit.hpp",
+  "src/wmma_decoder.hip",
+  "src/wmma_decoder.hpp",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/gemv_combined.hip",
+  "src/src/gemv_static_combined.hip",
+  "src/src/gemv_fused_groups.hip",
+  "src/src/gemv_fused_output.hip",
+  "src/src/gemv_k2_rows.hip",
+  "src/src/gemv_lowbit.hip",
+  "src/src/gemv_k2_local.hip",
+  "src/src/wmma_blocked_submit.hip",
+  "src/src/wmma_decoder.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-research.exl3-variants/exl3/-"
+api       = "the entry declared in each unit's header; driven by the origin's bench/*.hip programs, which are not harvested"
+numeric   = "each keeps the fp16 operands of the shipped path; orders differ per experiment (docs/K2_LOCAL.md, WMMA_DECODER.md, BLOCKED_K.md, LOWBIT_PIPELINE.md in the origin)"
+regime    = "operator experiments; none is selected by strix_gemv or strix_gemm"
+
+[[requires]]
+module    = "kernel.strix_trellis.trellis_common"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_gemv"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_tp_moe"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "not a unit of libstrix_trellis.a: CMakeLists.txt names none of these sources except gemv_k2_local.hip (the optional library strix_trellis_k2_local); the origin's bench programs drive them"

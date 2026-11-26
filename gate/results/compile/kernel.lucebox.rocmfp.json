@@ -1,0 +1,33 @@
+{
+ "module": "kernel.lucebox.rocmfp",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-24T22:51:29Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 2,
+ "passed": 2,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 49.2,
+ "results": [
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/rocmfp2_mix.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda/rocmfp2_mix.cu -o build/compile-gate/kernel.lucebox.rocmfp/0-rocmfp2_mix.cu.o",
+   "rc": 0,
+   "seconds": 49.24,
+   "object_bytes": 2098216,
+   "object_sha256": "2792e1396ca844a48eac295a69cc5a533a35542935704795cd6da1f2ae95c954"
+  },
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/rocmfp3_mix.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda/rocmfp3_mix.cu -o build/compile-gate/kernel.lucebox.rocmfp/1-rocmfp3_mix.cu.o",
+   "rc": 0,
+   "seconds": 30.9,
+   "object_bytes": 1699208,
+   "object_sha256": "9d54d33fe816c6e7f2a99b70b61976eda39bc44a2da795ced2d7b839f84b1ac7"
+  }
+ ]
+}

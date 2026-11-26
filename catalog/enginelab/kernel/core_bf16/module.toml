@@ -1,0 +1,72 @@
+id        = "kernel.enginelab.core_bf16"
+kind      = "kernel"
+summary   = "BF16 kernels of the shared core: dense row plans and narrow plans, the BF16 LM head, the BF16 projection batch, the BF16 reference, the FMA BF16 rows and the tall BF16 plan and reference"
+why       = "routers, hyper-connection projections and heads stay BF16 in every model; these are the shared BF16 GEMV / tall forms with host references for the EXACT gate; where it would go: beside the catalogue's linear.dense/bf16/bf16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.dense/bf16/bf16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/core/bf16_dense_row_plan.hpp",
+  "src/core/bf16_lm_head.hpp",
+  "src/core/bf16_projection_batch.hpp",
+  "src/core/bf16_reference.hpp",
+  "src/core/bf16_rows_plan.hpp",
+  "src/core/fma_bf16_rows.hpp",
+  "src/core/tall_bf16_plan.hpp",
+  "src/core/tall_bf16_reference.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.dense/bf16/bf16-f32.enginelab"
+api       = "strix::core bf16_*.hpp"
+numeric   = "BF16 weights, FP32 accumulation in a declared order"
+regime    = "decode rows and tall prefill"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_hc"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

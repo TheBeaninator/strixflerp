@@ -1,0 +1,65 @@
+{
+ "module": "kernel.maya_tp.s_gemv",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-25T22:59:23Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 6,
+ "passed": 6,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 1.9,
+ "results": [
+  {
+   "unit": "src/src/kernels/cuda/dequant_s2.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/s_gemv/src/include -I catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda/dequant_s2.cu -o build/compile-gate/kernel.maya_tp.s_gemv/0-dequant_s2.cu.o",
+   "rc": 0,
+   "seconds": 1.26,
+   "object_bytes": 18456,
+   "object_sha256": "2bd404c52e49dd2dec1a862c69d95b1d0e1c36979a513474cf5fd562695f3e51"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s2_gemv.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/s_gemv/src/include -I catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda/s2_gemv.cu -o build/compile-gate/kernel.maya_tp.s_gemv/1-s2_gemv.cu.o",
+   "rc": 0,
+   "seconds": 1.26,
+   "object_bytes": 17792,
+   "object_sha256": "2e482af2f0cb98bc687bbe4dcc629692ae93eef99283d092fb5633250780a97f"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s2_gemv_fast.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/s_gemv/src/include -I catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda/s2_gemv_fast.cu -o build/compile-gate/kernel.maya_tp.s_gemv/2-s2_gemv_fast.cu.o",
+   "rc": 0,
+   "seconds": 1.26,
+   "object_bytes": 25896,
+   "object_sha256": "eada7dbcb560b14909674510823ebab2a9701f27ee3040472c7bfccdebff0747"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s2_gemv_q8.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/s_gemv/src/include -I catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda/s2_gemv_q8.cu -o build/compile-gate/kernel.maya_tp.s_gemv/3-s2_gemv_q8.cu.o",
+   "rc": 0,
+   "seconds": 1.17,
+   "object_bytes": 17280,
+   "object_sha256": "e813cf0613657ab6fdfccf112dad1ebe576adcc57c6b8e860b38200a1a52c153"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s2_gemv_quads.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/s_gemv/src/include -I catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda/s2_gemv_quads.cu -o build/compile-gate/kernel.maya_tp.s_gemv/4-s2_gemv_quads.cu.o",
+   "rc": 0,
+   "seconds": 1.25,
+   "object_bytes": 16976,
+   "object_sha256": "d983fb7eb647a76d3d080f954414f37f497f133baf7e6ce6925c4e4123cd7290"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s_gemv.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/s_gemv/src/include -I catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/s_gemv/src/src/kernels/cuda/s_gemv.cu -o build/compile-gate/kernel.maya_tp.s_gemv/5-s_gemv.cu.o",
+   "rc": 0,
+   "seconds": 1.93,
+   "object_bytes": 123008,
+   "object_sha256": "e6a4c340109f99c5a9c735045a5bd33267320a1affbb04329b738a97bd78b11c"
+  }
+ ]
+}

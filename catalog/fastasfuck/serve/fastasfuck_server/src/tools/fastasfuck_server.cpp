@@ -1,0 +1,749 @@
+// strix-server: Qwen3.8-Flash-Next behind the OpenAI Chat Completions API. Loads the converted weights (the shipping
+// layout U - gdn_in - g128 unless --weights), the n-gram table and the tokenizer, then serves on --host:--port (default
+// 0.0.0.0:5300) until SIGINT / SIGTERM.
+//
+// Settings (serve/server_config.hpp): `--config PATH` reads a key = value file
+// (deploy/strix-server.conf is the served one), `--name value` flags override it, `--print-config` prints the
+// effective settings and exits, `--help` lists every option with its default and range.
+// Default paths are under $STRIX_MODELS_DIR (else ~/models/strix-infer).
+
+#include "common/check.hpp"
+#include "runtime/device_buffer.hpp"
+#include "runtime/qwen4exp.hpp"
+#include "serve/engine.hpp"
+#include "serve/http_server.hpp"
+#include "serve/json.hpp"
+#include "serve/log.hpp"
+#include "serve/memory_plan.hpp"
+#include "serve/prompt_cache.hpp"
+#include "serve/qwen4exp_backend.hpp"
+#include "serve/server_config.hpp"
+#include "serve/tokenizer.hpp"
+#include "serve/vocab_filter.hpp"
+#include "serve/mtp_calib.hpp"
+#include "serve/vision_request.hpp"
+#include "kernels/vision.hpp"  // kernels::kMaxVisionSeq (the attention cap = the resize clamp)
+
+#include <chrono>
+#include <atomic>
+#include <csignal>
+#include <filesystem>
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
+#include <memory>
+#include <sstream>
+
+using namespace strix;
+
+namespace {
+
+std::string models_dir() {
+    const char *env = std::getenv("STRIX_MODELS_DIR");
+    if (env && *env) return env;
+    const char *home = std::getenv("HOME");
+    STRIX_CHECK(home && *home, "fastasfuck_server: neither STRIX_MODELS_DIR nor HOME is set");
+    return std::string(home) + "/models/strix-infer";
+}
+
+// generation_config.json's sampling defaults (temperature, top_k, top_p); every one must be there.
+SamplingParams sampling_defaults(const std::string &path) {
+    std::ifstream f(path, std::ios::binary);
+    STRIX_CHECK(f.good(), "fastasfuck_server: can't open generation config '", path, "'");
+    std::ostringstream ss;
+    ss << f.rdbuf();
+    const json::Value g = json::Value::parse(ss.str());
+    SamplingParams p;
+    const auto need = [&](const char *k) -> const json::Value & {
+        const json::Value *v = g.find(k);
+        STRIX_CHECK(v != nullptr, "fastasfuck_server: '", path, "' has no '", k, "'");
+        return *v;
+    };
+    p.temperature = need("temperature").as_double(path + ".temperature");
+    p.top_k = need("top_k").as_int(path + ".top_k");
+    p.top_p = need("top_p").as_double(path + ".top_p");
+    return p;
+}
+
+HttpServer *g_server = nullptr;
+void on_signal(int) {
+    if (g_server) g_server->stop();
+}
+
+// Exit status after a GpuFatalError (the GPU context is lost): non-zero, so systemd's Restart=on-failure (or any
+// supervisor) starts a fresh process - the only recovery (upstream issue #6).
+constexpr int kExitGpuFatal = 3;
+// Exit status when the startup memory check refuses (low-memory = fail): deploy/strix-server.service names it in
+// RestartPreventExitStatus - a restart would load the weights again only to refuse again.
+constexpr int kExitLowMemory = 4;
+
+
+void run_system_preflight_checks() {
+    uint64_t vram_total = 0;
+    uint64_t gtt_total = 0;
+    try {
+        for (int c = 0; c < 4; ++c) {
+            std::string p = "/sys/class/drm/card" + std::to_string(c) + "/device/";
+            std::ifstream fv(p + "mem_info_vram_total");
+            if (fv.is_open()) { fv >> vram_total; }
+            std::ifstream fg(p + "mem_info_gtt_total");
+            if (fg.is_open()) { fg >> gtt_total; }
+            if (vram_total > 0 || gtt_total > 0) break;
+        }
+    } catch (...) {}
+
+    const double vram_gib = (double)vram_total / (1ull << 30);
+    const double gtt_gib = (double)gtt_total / (1ull << 30);
+    if (vram_total > 0 || gtt_total > 0) {
+        slog(LogLevel::Info, "preflight: detected GPU memory headroom: VRAM %.1f GiB, GTT %.1f GiB (total visible %.1f GiB)",
+             vram_gib, gtt_gib, vram_gib + gtt_gib);
+        if ((vram_gib + gtt_gib) < 68.0) {
+            slog(LogLevel::Warning, "preflight: WARNING: Total GPU addressable space (%.1f GiB) is under 68 GiB! Weights (~65.9 GiB) + KV cache will exceed available headroom. Recommended: configure BIOS UMA Frame Buffer to 96GB OR boot kernel with amdgpu.gttsize=122880.", vram_gib + gtt_gib);
+        }
+    }
+
+    try {
+        std::ifstream fthp("/sys/kernel/mm/transparent_hugepage/enabled");
+        if (fthp.is_open()) {
+            std::string line;
+            std::getline(fthp, line);
+            if (line.find("[always]") != std::string::npos) {
+                slog(LogLevel::Warning, "preflight: NOTICE: Transparent Huge Pages is [always]. Under heavy multi-agent concurrency, background khugepaged compaction causes memory bus stalls and ROCm SVM page faults. Recommended: 'echo madvise | sudo tee /sys/kernel/mm/transparent_hugepage/enabled'");
+            }
+        }
+    } catch (...) {}
+
+    try {
+        std::ifstream fmem("/proc/meminfo");
+        if (fmem.is_open()) {
+            std::string key;
+            uint64_t val;
+            std::string unit;
+            while (fmem >> key >> val >> unit) {
+                if (key == "SwapTotal:" && val > 0) {
+                    slog(LogLevel::Warning, "preflight: NOTICE: Swap is active (%llu MiB). On AMD Strix Halo unified memory architecture, direct page reclaim to swap starves GPU memory controllers. Recommended: 'sudo swapoff -a'", (unsigned long long)(val / 1024));
+                    break;
+                }
+            }
+        }
+    } catch (...) {}
+}
+
+int run(int argc, char **argv) {
+    ServerSettings settings(fastasfuck_server_options(models_dir()));
+    settings.load(std::vector<std::string>(argv + 1, argv + argc));
+    if (settings.help()) {
+        std::fputs(settings.usage("fastasfuck_server").c_str(), stdout);
+        return 0;
+    }
+    if (settings.print_config()) {
+        std::fputs(settings.render().c_str(), stdout);
+        return 0;
+    }
+    set_log_level(parse_log_level(settings.text("log-level")));  // first: every line below is filtered by it
+    run_system_preflight_checks();
+    slog(LogLevel::Info, "startup: config file %s",
+         settings.config_path().empty() ? "none (defaults and flags only)" : settings.config_path().c_str());
+    for (const ConfigOption &o : settings.options()) {
+        const ConfigSetting &s = settings.setting(o.name);
+        slog(LogLevel::Info, "startup: config %s = %s (%s)", o.name.c_str(), s.value.c_str(), s.source.c_str());
+    }
+    const std::string weights = settings.text("weights"), ngram = settings.text("ngram");
+    const std::string tokenizer = settings.text("tokenizer"), gen_config = settings.text("generation-config");
+    ServerConfig cfg;
+    cfg.host = settings.text("host");
+    cfg.port = (int)settings.integer("port");
+    cfg.request_read_timeout_s = (int)settings.integer("request-read-timeout-s");
+    cfg.model_id = settings.text("model-id");
+    cfg.model_aliases = settings.text("model-aliases");
+    cfg.api_key = settings.text("api-key");
+    const int64_t slot_capacity = settings.integer("slot-capacity");
+    const int64_t total_capacity = settings.integer("total-capacity");
+    const int64_t total_slots = settings.integer("total-slots");
+    const bool kv_precommit = settings.on("kv-precommit");
+    if (total_capacity > 0) {
+        STRIX_CHECK(slot_capacity <= total_capacity,
+                    "startup: slot-capacity (", slot_capacity, ") cannot exceed total-capacity (", total_capacity, ")");
+        if (kv_precommit) {
+            STRIX_CHECK(total_slots * slot_capacity <= total_capacity,
+                        "startup: kv-precommit: total-slots (", total_slots, ") * slot-capacity (", slot_capacity,
+                        " = ", total_slots * slot_capacity, " tokens) exceeds total-capacity (", total_capacity,
+                        "); to use dynamic oversubscription across slots, set kv-precommit = off");
+        }
+    }
+    const int64_t chunk = settings.integer("chunk");
+    const int64_t chunk_shared = settings.integer("chunk-shared");
+    const float yarn_factor = (float)settings.number("rope-yarn-factor");
+    const std::string cache_dir = settings.text("prompt-cache-dir");
+    const bool prompt_cache_enabled = settings.on("prompt-cache");
+    const int64_t cache_gib = prompt_cache_enabled ? settings.integer("prompt-cache-gib") : 0;
+    PromptCache::Options cache_opts;
+    cache_opts.ram_margin = (uint64_t)settings.integer("prompt-cache-ram-margin-gib") << 30;
+    cache_opts.idle_seconds = settings.number("prompt-cache-idle-s");
+    cache_opts.write_gib_per_hour = settings.number("prompt-cache-write-gib-per-hour");
+    cache_opts.checkpoints_per_chain = (int)settings.integer("prompt-cache-checkpoints");
+    cache_opts.max_points = (int)settings.integer("prompt-cache-points");
+    cache_opts.delta_max_tokens = settings.integer("prompt-cache-delta-max-tokens");
+    cache_opts.disk_free_margin = (uint64_t)settings.integer("prompt-cache-disk-free-gib") << 30;
+    PrecisionOptions precision;
+    precision.gdn = parse_gdn_precision(settings.text("gdn-precision"));  // an unknown value fails startup
+    precision.attention = parse_attention_precision(settings.text("attention-precision"));
+    const KvFormat kv_format = parse_kv_format(settings.text("kv-cache"));  // an unknown value fails startup
+    const bool use_mtp = settings.on("mtp");
+    const bool draft_head_q4 = settings.on("draft-head-q4");
+    const int64_t mtp_draft = settings.integer("mtp-draft"), mtp_vocab = settings.integer("mtp-vocab");
+    const float mtp_margin = (float)settings.number("mtp-margin");
+    const std::string mtp_gate_rule = settings.text("mtp-gate-rule");
+    const std::string sampled_gate = settings.text("sampled-gate");
+    const float mtp_lut_step_penalty = (float)settings.number("mtp-lut-step-penalty");
+    const float mtp_ema_decay = (float)settings.number("mtp-ema-decay");
+    const int64_t ngram_cache_rows = settings.integer("ngram-cache-rows");
+    const std::string capture_dir = settings.text("capture-dir");  // empty: no capture
+    const bool think_nudge = settings.on("think-nudge");
+    const bool think_end_guard = settings.on("think-end-guard");
+    const bool literal_tags = settings.on("literal-tags");
+    const bool think_close_on_call = settings.on("think-close-on-call");
+    ThinkWatch::Policy nudge_policy;
+    nudge_policy.rate = settings.number("think-nudge-rate");
+    nudge_policy.min_tokens = settings.integer("think-nudge-min-tokens");
+    const std::string nudge_wording = settings.text("think-nudge-wording");
+    think_nudge1_text(nudge_wording);  // an unknown wording fails startup, naming the choices
+    cfg.thinking_default = settings.on("thinking");
+    cfg.thinking_cap = settings.integer("thinking-cap");
+    cfg.thinking_cap_grace = settings.integer("thinking-cap-grace");
+    if (cfg.thinking_cap > 0)
+        slog(LogLevel::Info, "startup: thinking capped at %lld tokens (then up to %lld more to a sentence end)",
+             (long long)cfg.thinking_cap, (long long)cfg.thinking_cap_grace);
+    cfg.defaults = sampling_defaults(gen_config);
+    const Tokenizer tok(tokenizer);
+    slog(LogLevel::Info, "startup: tokenizer %s (%d tokens)", tokenizer.c_str(), tok.size());
+
+    // Early validation: check MTP vocabulary filter and prerequisites before loading weights (~50 s)
+    const std::string vocab_filter_spec = settings.text("mtp-vocab-filter");
+    const uint32_t filter_mask = vocab_filter::parse_filter(vocab_filter_spec);
+    const bool is_filtered = !vocab_filter::is_all(filter_mask);
+    if (is_filtered) {
+        STRIX_CHECK(mtp_vocab == 0, "fastasfuck_server: --mtp-vocab-filter cannot be combined with nonzero --mtp-vocab (got ",
+                    mtp_vocab, "); use --mtp-vocab 0 with filtering");
+    }
+
+    const WeightPlacement placement = parse_weight_placement(settings.text("placement"), "placement");
+    // Vision: the tower file is a sibling of the served weights; the preprocessor values come
+    // from the checkpoint's own files next to the tokenizer (the producer is JSON-free, this is where
+    // the JSON lives). vision = off (the served default): no tower loaded, image parts stay a 400.
+    const bool vision = settings.on("vision");
+    const std::string vision_weights = [&] {
+        if (!vision) return std::string();
+        const size_t slash = weights.rfind('/');
+        STRIX_CHECK(slash != std::string::npos && slash > 0, "fastasfuck_server: --weights '", weights,
+                    "' is not a plain path - can't find sibling vision.faf or vision.strixw");
+        const std::string dir = weights.substr(0, slash);
+        if (std::filesystem::exists(dir + "/vision.faf")) return dir + "/vision.faf";
+        return dir + "/vision.strixw";
+    }();
+    // Before the ~30 s weight load: a missing tower file is a setup mistake, named with both ways out.
+    if (vision) {
+        const size_t ts = tokenizer.rfind('/');
+        const std::string pp = ts == std::string::npos ? std::string("preprocessor_config.json")
+                                                       : tokenizer.substr(0, ts) + "/preprocessor_config.json";
+        for (const std::string &need : {vision_weights, pp})
+            STRIX_CHECK(std::filesystem::is_regular_file(need), "fastasfuck_server: vision = on but ", need,
+                        " is missing - download it from the weights repo (re-running the download fetches only the new "
+                        "files), or set vision = off");
+    }
+    Qwen4ExpModel model(weights, ngram, kernels::Act::BF16, /*allow_truncated=*/false, ngram_cache_rows, yarn_factor,
+                        placement, vision_weights);
+    if (placement != WeightPlacement::Device)
+        slog(LogLevel::Info, "startup: placement %s (test machines only)", weight_placement_name(placement));
+    if (yarn_factor > 1.0f)
+        slog(LogLevel::Info, "startup: YaRN factor %g: %lld positions (%lld trained), cos/sin factor %.4f",
+             (double)yarn_factor, (long long)model.dims().max_positions(), (long long)model.dims().trained_positions,
+             (double)model.rope_scale());
+    slog(LogLevel::Info, "startup: %.1f GiB of weights loaded in %.1f s",
+                 (double)model.weights().data_bytes() / (1ull << 30), model.weights().load_seconds());
+    // MTP drafts score a compact / Q4 copy of the draft vocabulary's LM head rows (Qwen4ExpModel::make_draft_head; upstream
+    // PR #2): saves memory bandwidth per draft call, the verify still decides every token.
+    if (use_mtp && model.has_mtp()) {
+        const auto t0 = std::chrono::steady_clock::now();
+        if (is_filtered) {
+            const int64_t max_v = std::min((int64_t)tok.size(), model.dims().vocab);
+            const std::vector<int32_t> compact_ids = vocab_filter::filter_vocabulary(tok, filter_mask, max_v);
+            model.make_draft_head(compact_ids, /*quantize_q4=*/draft_head_q4, /*G=*/64, /*threads=*/16);
+            const double dur_s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+            slog(LogLevel::Info,
+                 "startup: MTP draft head: compact Q%d filter '%s' retained %lld / %lld tokens (%.1f%%), %.1f MB, made in %.2f s",
+                 model.draft_head_q4().bits, vocab_filter_spec.c_str(), (long long)compact_ids.size(), (long long)model.dims().vocab,
+                 100.0 * (double)compact_ids.size() / (double)model.dims().vocab,
+                 (double)model.draft_head_q4_bytes() / 1e6, dur_s);
+        } else if (draft_head_q4) {
+            const int64_t rows = mtp_vocab > 0 ? mtp_vocab : model.dims().vocab;
+            model.make_draft_head(rows, /*quantize_q4=*/true, /*G=*/64, /*threads=*/16);
+            slog(LogLevel::Info, "startup: MTP draft head: Q4 G64 copy of the first %lld LM head rows, %.1f MB, made in %.2f s",
+                 (long long)rows, (double)model.draft_head_q4_bytes() / 1e6,
+                 std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count());
+        } else {
+            slog(LogLevel::Info, "startup: MTP draft head: Q4 copy disabled (--draft-head-q4 off); using loaded Q%d LM head directly",
+                 model.lm_head().bits);
+        }
+    }
+    std::unique_ptr<vision::ServedVision> served_vision;
+    if (vision) {
+        STRIX_CHECK(model.has_vision(), "fastasfuck_server: vision = on but the model loaded without a tower");
+        const size_t slash = tokenizer.rfind('/');
+        STRIX_CHECK(slash != std::string::npos && slash > 0, "fastasfuck_server: --tokenizer '", tokenizer,
+                    "' is not a plain path - can't find the checkpoint's config files");
+        served_vision = std::make_unique<vision::ServedVision>(vision::load_vision_config(
+            tokenizer.substr(0, slash) + "/preprocessor_config.json", tokenizer.substr(0, slash) + "/config.json",
+            kernels::kMaxVisionSeq));
+        // The runtime scatters the tower's merged rows at kVisionImageTokenId positions of the id stream; the
+        // request path expands the checkpoint's own image_token_id. Two sources of truth - they must agree,
+        // or every image forward fails later with a row-count message. Fail at startup naming both.
+        STRIX_CHECK(served_vision->image_token_id == kVisionImageTokenId,
+                    "fastasfuck_server: config.json image_token_id = ", (int)served_vision->image_token_id,
+                    ", but the runtime scatters merged image rows at id ", (int)kVisionImageTokenId,
+                    " (runtime/qwen4exp.hpp kVisionImageTokenId) - this checkpoint's image token is not served");
+        served_vision->vision_weights = vision_weights;
+        cfg.vision = served_vision.get();
+        cfg.vision_preprocess_limit = settings.integer("vision-preprocess-limit");
+        slog(LogLevel::Info, "startup: vision on - tower %s (image_token_id %d, resize clamp %lld patches, "
+                     "mean %.2f/%.2f/%.2f std %.2f/%.2f/%.2f), at most %lld image preprocesses at once",
+             vision_weights.c_str(), (int)served_vision->image_token_id, (long long)served_vision->cfg.max_patches,
+             served_vision->cfg.mean[0], served_vision->cfg.mean[1], served_vision->cfg.mean[2],
+             served_vision->cfg.std[0], served_vision->cfg.std[1], served_vision->cfg.std[2],
+             (long long)cfg.vision_preprocess_limit);
+    }
+    const int64_t kv_generations = 1;
+    Qwen4ExpBackend backend(model, slot_capacity, chunk, use_mtp, mtp_vocab, precision, kv_format, total_slots,
+                            kv_generations);
+    if (total_capacity > 0) backend.set_total_capacity(total_capacity);
+    if (kv_precommit) {
+        backend.precommit();
+        slog(LogLevel::Info, "startup: KV cache: statically pre-committed full capacity (%s tokens per slot, %lld slots, total %s tokens)",
+             fmt_n(slot_capacity).c_str(), (long long)total_slots, fmt_n(slot_capacity * total_slots).c_str());
+    }
+    if (total_slots > 1)
+        slog(LogLevel::Info, "startup: %lld slots: %lld conversations at once, each at slot-capacity %s (total-capacity: %s, kv-precommit: %s)",
+             (long long)total_slots, (long long)total_slots, fmt_n(slot_capacity).c_str(),
+             total_capacity > 0 ? fmt_n(total_capacity).c_str() : "unconstrained",
+             kv_precommit ? "on" : "off");
+    slog(LogLevel::Info, "startup: KV cache: pure static flat pre-allocation (zero VMM overcommit, infinite uptime)");
+    slog(LogLevel::Info, "startup: precision %s%s", precision.describe().c_str(),
+         precision.exact() ? "" : " (faster, less exact math than all-exact)");
+    {
+        // Where the GPU memory went (all of it is system RAM here - the prompt cache's RAM tier gets what's left).
+        const auto tally = GpuMemoryTally::snapshot();
+        int64_t total = 0;
+        for (const auto &c : tally) total += c.second;
+        std::string top;
+        for (size_t i = 0; i < tally.size(); ++i) {
+            if (tally[i].second < (64ll << 20)) break;  // largest first: the rest is small
+            char item[160];
+            std::snprintf(item, sizeof item, "%s%s %.2f", i ? ", " : "", tally[i].first.c_str(),
+                          (double)tally[i].second / (1ull << 30));
+            top += item;
+        }
+        slog(LogLevel::Info, "startup: GPU memory %.1f GiB in %zu buffer kinds; GiB per kind (>= 64 MiB): %s",
+             (double)total / (1ull << 30), tally.size(), top.c_str());
+    }
+    std::string degraded;  // what the memory plan turned down (Engine::Options::degraded)
+    {
+        // The startup memory check (serve/memory_plan.hpp, upstream issue #6): every GPU buffer is allocated now.
+        int64_t gpu_total = 0;
+        for (const auto &c : GpuMemoryTally::snapshot()) gpu_total += c.second;
+        const NgramTableRows *table =
+            model.has_ngram_rows() ? dynamic_cast<const NgramTableRows *>(&model.ngram_rows()) : nullptr;
+        MemoryPlanInput mi;
+        mi.adapt = parse_low_memory(settings.text("low-memory"));
+        mi.mem_available = proc_mem_available();
+        mi.gpu_bytes = (uint64_t)gpu_total;
+        mi.prompt_cache = cache_gib > 0;
+        mi.ram_margin = cache_opts.ram_margin;
+        mi.capacity = slot_capacity;
+        mi.state_bytes = [&backend](int64_t n) { return backend.state_bytes_at(n); };
+        mi.row_cache_rows = table ? table->cache_rows() : 0;
+        mi.row_cache_row_bytes = table ? table->cache_bytes_per_row() : 0;
+        mi.row_cache_min_rows = std::min<int64_t>(mi.row_cache_rows, NgramTableRows::kDefaultCacheRows);
+        mi.slots = total_slots;
+        mi.slot_bytes = backend.state_bytes_at(slot_capacity);
+        mi.kv_unmapped = backend.is_precommitted() ? 0 : backend.kv_full_bytes();
+        const MemoryPlan plan = plan_memory(mi);
+        for (const std::string &l : plan.info) slog(LogLevel::Info, "%s", l.c_str());
+        if (plan.refuse) {
+            slog(LogLevel::Error, "fatal: %s", plan.refusal.c_str());
+            std::fflush(nullptr);
+            return kExitLowMemory;
+        }
+        for (const std::string &l : plan.warnings) slog(LogLevel::Warning, "startup: %s", l.c_str());
+        if (plan.spares_off) cache_opts.max_spares = 0, cache_opts.prefault = false;
+        if (plan.ram_tier_off) cache_opts.ram_tier = false, cache_opts.ram_margin = kLowMemoryFloor;
+        if (table && plan.row_cache_rows != table->cache_rows()) {
+            table->resize_cache(plan.row_cache_rows);
+            slog(LogLevel::Info, "startup: memory: MemAvailable %.1f GiB after the row cache shrink",
+                 (double)proc_mem_available() / (1ull << 30));
+        }
+        cache_opts.status_note = plan.status;
+        degraded = plan.status;
+    }
+    std::unique_ptr<PromptCache> cache;
+    if (cache_gib > 0) {
+        cache = std::make_unique<PromptCache>(cache_dir, (uint64_t)cache_gib << 30, backend.state_fingerprint(), cache_opts);
+        const PromptCacheStats s = cache->stats();
+        slog(LogLevel::Info, "startup: prompt cache %s: %lld entries, %.1f of %lld GiB (%lld invalid dropped)",
+             cache_dir.c_str(), (long long)s.entries, (double)s.bytes / (1ull << 30), (long long)cache_gib, (long long)s.invalid);
+        slog(LogLevel::Info, "startup: prompt cache RAM tier: margin %.0f GiB, idle write after %.0f s, budget %.0f GiB/h, "
+             "disk free margin %.0f GiB", (double)cache_opts.ram_margin / (1ull << 30), cache_opts.idle_seconds,
+             cache_opts.write_gib_per_hour, (double)cache_opts.disk_free_margin / (1ull << 30));
+        // Disk space (logged only; whether low space should adapt too is open): the cap is reachable when the
+        // filesystem's free space minus the free margin covers what the cache doesn't hold yet. Short of it, the cache
+        // stays smaller (disk_room_locked's rule) - and with no room at all, nothing is written.
+        const double gib = (double)(1ull << 30);
+        const uint64_t free = cache->disk_free_now(), margin = cache_opts.disk_free_margin;
+        const uint64_t cap = (uint64_t)cache_gib << 30, used = (uint64_t)s.bytes;
+        const uint64_t usable = used + (free > margin ? free - margin : 0);  // what the cache can grow to
+        if (usable >= cap)
+            slog(LogLevel::Info, "startup: disk: %.0f GiB free on the prompt cache's filesystem; the %lld GiB cap fits "
+                 "(%.1f GiB used, %.0f GiB kept free)", free / gib, (long long)cache_gib, used / gib, margin / gib);
+        else
+            slog(LogLevel::Warning, "startup: WARNING: disk: %.0f GiB free on the prompt cache's filesystem (%s): the "
+                 "cache can grow to %.1f GiB, not its %lld GiB cap (%.1f GiB used, %.0f GiB kept free by "
+                 "prompt-cache-disk-free-gib)%s - fewer conversations survive a switch or a restart. Free disk space, or "
+                 "lower prompt-cache-gib / prompt-cache-disk-free-gib", free / gib, cache_dir.c_str(), usable / gib,
+                 (long long)cache_gib, used / gib, margin / gib,
+                 free <= margin ? "; below the free margin: no entry is written" : "");
+    }
+    // K/V first: a slot's K/V growth asks the prompt cache for the RAM - spares go,
+    // then RAM-tier entries leave (least recently used first) - and is refused only when that can't keep the margin.
+    // Without a prompt cache the session's own floor check stands.
+    if (cache)
+        // The growth runs inside a session call (this thread holds the GPU), so parked records the room rule
+        // retires go back right here, straight on the backend - else their pages would stay held until the
+        // engine's next drain while this growth waits on that very RAM.
+        backend.set_kv_budget([c = cache.get(), &backend](uint64_t bytes) {
+            const auto release = [&backend](const std::vector<int64_t> &ids) {
+                for (const int64_t id : ids) backend.release_parked(id);
+            };
+            STRIX_CHECK(c->make_room_for(bytes, release), "K/V growth of ", bytes >> 20, " MiB refused: the prompt cache can't ",
+                        "keep its RAM margin after it (MemAvailable ", c->mem_available_now() >> 20, " MiB) - every ",
+                        "slot together holds more K/V than this machine has room for");
+        });
+    MtpHardwareProfile hw_prof;
+    hw_prof.draft_step_ms = (float)settings.number("mtp-draft-ms");
+    hw_prof.verify_base_ms = (float)settings.number("mtp-verify-base-ms");
+    hw_prof.verify_step_ms = (float)settings.number("mtp-verify-step-ms");
+    const std::string v_lat_cfg = settings.text("mtp-verify-latencies");
+    if (v_lat_cfg != "auto" && !v_lat_cfg.empty()) {
+        std::vector<float> grid = {0.0f};
+        std::stringstream ss(v_lat_cfg);
+        std::string token;
+        while (std::getline(ss, token, ',')) {
+            try {
+                grid.push_back(std::stof(token));
+            } catch (...) {}
+        }
+        if (grid.size() >= 2) hw_prof.verify_latencies = grid;
+    }
+    float eff_alpha = (float)settings.number("mtp-alpha");
+    float eff_beta = (float)settings.number("mtp-beta");
+    float eff_bias = (float)settings.number("mtp-bias");
+
+    if (use_mtp && settings.on("mtp-calib")) {
+        uint64_t strix_h = 0, fsize = 0;
+        int64_t fmtime = 0;
+        const int draft_head_bits = (model.draft_head().bits > 0) ? model.draft_head().bits : model.lm_head().bits;
+        const std::string fp = compute_weights_fingerprint(
+            weights, cfg.model_id, draft_head_bits,
+            settings.text("mtp-vocab-filter"), settings.text("gdn-precision"),
+            &strix_h, &fsize, &fmtime
+        );
+        std::string cache_path = settings.text("mtp-calib-cache-file");
+        if (cache_path.empty() || cache_path == "off") {
+            std::string dir = weights;
+            size_t slash = dir.rfind('/');
+            if (slash != std::string::npos) dir = dir.substr(0, slash);
+            cache_path = dir + "/mtp_calib_cache.json";
+        }
+        std::optional<MtpCalibratedProfile> cached_prof;
+        if (settings.on("mtp-calib-cache")) {
+            cached_prof = load_cached_profile(cache_path, fp);
+        }
+        if (cached_prof) {
+            slog(LogLevel::Info, "startup: [MTP_CALIB] loaded cached profile %s (draft=%.2f ms, solo_v[1]=%.2f ms, solo_v[4]=%.2f ms, batch_v[4]=%.2f ms, batch_v[16]=%.2f ms, alpha=%.2f, beta=%.3f, bias=%.2f)",
+                 fp.substr(0, 12).c_str(), cached_prof->hw.draft_step_ms,
+                 cached_prof->hw.solo_verify_latencies[1], cached_prof->hw.solo_verify_latencies[4],
+                 cached_prof->hw.verify_latencies[4], cached_prof->hw.verify_latencies[16],
+                 cached_prof->acceptance.alpha, cached_prof->acceptance.beta, cached_prof->acceptance.bias);
+            hw_prof = cached_prof->hw;
+            eff_alpha = cached_prof->acceptance.alpha;
+            eff_beta = cached_prof->acceptance.beta;
+            eff_bias = cached_prof->acceptance.bias;
+        } else {
+            slog(LogLevel::Info, "startup: [MTP_CALIB] profile %s not in cache; running live hardware calibration...",
+                 fp.substr(0, 12).c_str());
+            try {
+                // 1. Warmup ping to ensure all kernels and allocators are initialized
+                backend.forward_rows({100}, 1, false, 0);
+
+                // 2. Calibrate draft_step_ms: measure forward_mtp_top2
+                std::vector<float> draft_times;
+                for (int t = 0; t < 2; ++t) backend.forward_mtp_top2(100, 0); // warmup
+                for (int t = 0; t < 5; ++t) {
+                    const auto t0 = std::chrono::steady_clock::now();
+                    backend.forward_mtp_top2(100, 0);
+                    const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+                    draft_times.push_back((float)ms);
+                }
+                const float meas_draft_ms = compute_median(draft_times);
+                if (meas_draft_ms > 0.1f && meas_draft_ms < 50.0f) {
+                    hw_prof.draft_step_ms = meas_draft_ms;
+                }
+
+                // 2b. Calibrate batched draft_batch_step_ms for m = total_slots
+                if (total_slots >= 2) {
+                    std::vector<LmBackend::MtpDraftRun> batch_runs;
+                    for (int s = 0; s < total_slots; ++s) {
+                        batch_runs.push_back({s, 100 + s, 0});
+                    }
+                    std::vector<float> b_times;
+                    for (int t = 0; t < 2; ++t) backend.forward_mtp_top2_batch(batch_runs); // warmup
+                    for (int t = 0; t < 5; ++t) {
+                        const auto t0 = std::chrono::steady_clock::now();
+                        backend.forward_mtp_top2_batch(batch_runs);
+                        const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+                        b_times.push_back((float)ms);
+                    }
+                    const float meas_b_draft_ms = compute_median(b_times);
+                    if (meas_b_draft_ms > 0.1f && meas_b_draft_ms < 50.0f) {
+                        hw_prof.draft_batch_step_ms = meas_b_draft_ms;
+                    }
+                } else {
+                    hw_prof.draft_batch_step_ms = hw_prof.draft_step_ms;
+                }
+
+                // 3. Calibrate verify latencies for T across nodes {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24}
+                // Pre-warm context to pos >= 64 across active slots with diverse tokens from code, math, Russian, systems
+                const std::string calib_text =
+                    "Write a robust, production-ready asynchronous task execution DAG in Python 3.12 using asyncio. "
+                    "Tasks are nodes with dependencies; each task has an async execute() method and a timeout. "
+                    "State and prove the Riemann-Lebesgue Lemma for functions in L1(R) using step functions. "
+                    "Explain the exact mechanical walk of a 4-level x86_64 page table lookup from VA to PA. "
+                    "Проанализируйте следующий фрагмент технического текста: The zero-copy Unified Memory "
+                    "Architecture exposes concurrent lock contention across HSA queue ringbuffers. "
+                    "Evaluate whether any tool call is warranted: execute_database_drop. "
+                    "Deficit Round Robin fairness between prefill and decode passes on AMD Strix Halo.";
+                const std::vector<int32_t> calib_all = tok.encode(calib_text);
+                STRIX_CHECK(calib_all.size() >= 128, "Calibration corpus too short: ", calib_all.size());
+
+                if (total_slots >= 4) {
+                    for (int s = 0; s < 4; ++s) {
+                        std::vector<int32_t> ptok(calib_all.begin() + s * 16, calib_all.begin() + (s + 1) * 16 + 48);
+                        backend.forward_rows(s, ptok, 1, false, 0);
+                    }
+                } else {
+                    std::vector<int32_t> ptok(calib_all.begin(), calib_all.begin() + 64);
+                    backend.forward_rows(0, ptok, 1, false, 0);
+                }
+
+                // 3a. Calibrate solo verify latencies for k in [1..8] (single slot 0, 1 sequence with k tokens)
+                const std::vector<int> kSoloNodes = {1, 2, 3, 4, 5, 6, 7, 8};
+                std::vector<float> solo_grid(9, 0.0f);
+                for (int k : kSoloNodes) {
+                    std::vector<int32_t> test_ids(calib_all.begin(), calib_all.begin() + k);
+                    std::vector<LmBackend::VerifyRun> runs = {{0, test_ids, nullptr}};
+                    backend.verify_batch(runs, false, 0);
+                    backend.drop_verify(0);
+
+                    std::vector<float> k_times;
+                    for (int t = 0; t < 5; ++t) {
+                        const auto t0 = std::chrono::steady_clock::now();
+                        backend.verify_batch(runs, false, 0);
+                        const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+                        backend.drop_verify(0);
+                        k_times.push_back((float)ms);
+                    }
+                    solo_grid[k] = compute_median(k_times);
+                }
+                for (size_t k = 2; k < solo_grid.size(); ++k) {
+                    if (solo_grid[k] <= solo_grid[k - 1]) solo_grid[k] = solo_grid[k - 1] + 0.5f;
+                }
+                hw_prof.solo_verify_latencies = solo_grid;
+                hw_prof.verify_base_ms = solo_grid[1];
+
+                // 3b. Calibrate batched verify latencies for M in [1..24] across active slots
+                const std::vector<int> kNodes = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24};
+                std::map<int, float> node_latencies;
+                for (int k : kNodes) {
+                    std::vector<LmBackend::VerifyRun> runs;
+                    if (total_slots >= 4 && k >= 4) {
+                        const int base_r = k / 4;
+                        const int rem = k % 4;
+                        size_t offset = 0;
+                        for (int s = 0; s < 4; ++s) {
+                            int count = base_r + (s < rem ? 1 : 0);
+                            if (count > 0) {
+                                std::vector<int32_t> slot_ids(calib_all.begin() + offset, calib_all.begin() + offset + count);
+                                runs.push_back({s, slot_ids, nullptr});
+                                offset += count;
+                            }
+                        }
+                    } else if (total_slots >= 4) {
+                        for (int s = 0; s < k; ++s) {
+                            runs.push_back({s, {calib_all[s * 10]}, nullptr});
+                        }
+                    } else {
+                        std::vector<int32_t> test_ids(calib_all.begin(), calib_all.begin() + k);
+                        runs.push_back({0, test_ids, nullptr});
+                    }
+
+                    // 1 untimed warmup
+                    backend.verify_batch(runs, false, 0);
+                    for (const auto &r : runs) backend.drop_verify(r.seq);
+
+                    std::vector<float> k_times;
+                    for (int t = 0; t < 5; ++t) {
+                        const auto t0 = std::chrono::steady_clock::now();
+                        backend.verify_batch(runs, false, 0);
+                        const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+                        for (const auto &r : runs) backend.drop_verify(r.seq);
+                        k_times.push_back((float)ms);
+                    }
+                    node_latencies[k] = compute_median(k_times);
+                }
+                backend.reset();
+
+                // Piecewise linear interpolation to populate verify_grid[0..24]
+                std::vector<float> verify_grid(25, 0.0f);
+                verify_grid[0] = 0.0f;
+                for (size_t i = 0; i < kNodes.size(); ++i) {
+                    int n_curr = kNodes[i];
+                    float lat_curr = node_latencies[n_curr];
+                    if (i == 0) {
+                        verify_grid[n_curr] = lat_curr;
+                    } else {
+                        int n_prev = kNodes[i - 1];
+                        float lat_prev = node_latencies[n_prev];
+                        if (lat_curr <= lat_prev) lat_curr = lat_prev + 0.5f; // physical monotonicity constraint
+                        for (int j = n_prev + 1; j <= n_curr; ++j) {
+                            float frac = (float)(j - n_prev) / (float)(n_curr - n_prev);
+                            verify_grid[j] = lat_prev + frac * (lat_curr - lat_prev);
+                        }
+                    }
+                }
+
+                if (verify_grid.size() >= 25 && verify_grid[1] > 1.0f) {
+                    hw_prof.verify_latencies = verify_grid;
+                    hw_prof.verify_step_ms = std::max(0.1f, (verify_grid[24] - verify_grid[4]) / 20.0f);
+                }
+
+                slog(LogLevel::Info, "startup: [MTP_CALIB] live calibration done: draft(1)=%.2f ms, draft(%d)=%.2f ms, solo_v[1]=%.2f ms, solo_v[4]=%.2f ms, batch_v[4]=%.2f ms, batch_v[16]=%.2f ms, batch_v[24]=%.2f ms",
+                     hw_prof.draft_step_ms, (int)total_slots, hw_prof.draft_batch_step_ms,
+                     hw_prof.solo_verify_latencies[1], hw_prof.solo_verify_latencies[4],
+                     hw_prof.verify_latencies[4], hw_prof.verify_latencies[16], hw_prof.verify_latencies[24]);
+            } catch (const std::exception &ex) {
+                slog(LogLevel::Warning, "startup: [MTP_CALIB] live calibration failed (%s); using baseline", ex.what());
+                backend.reset();
+            }
+
+            if (settings.on("mtp-calib-cache")) {
+                MtpCalibratedProfile p_save;
+                p_save.fingerprint = fp;
+                p_save.model_id = cfg.model_id;
+                p_save.weights_path = weights;
+                p_save.weights_strix_hash = strix_h;
+                p_save.weights_size = fsize;
+                p_save.weights_mtime = fmtime;
+                p_save.draft_head_bits = draft_head_bits;
+                p_save.draft_head_q4 = (draft_head_bits == 4);
+                p_save.mtp_vocab_filter = settings.text("mtp-vocab-filter");
+                p_save.gdn_precision = settings.text("gdn-precision");
+                p_save.hw = hw_prof;
+                p_save.acceptance.alpha = eff_alpha;
+                p_save.acceptance.beta = eff_beta;
+                p_save.acceptance.bias = eff_bias;
+                p_save.acceptance.sample_count = (int)settings.integer("mtp-calib-triplets");
+                save_cached_profile(cache_path, p_save);
+                slog(LogLevel::Info, "startup: [MTP_CALIB] saved calibrated profile to %s", cache_path.c_str());
+            }
+        }
+    }
+
+    Engine::Options eng_opts;
+    eng_opts.cache = cache.get();
+    eng_opts.mtp_hw_profile = hw_prof;
+    eng_opts.mtp_alpha = eff_alpha;
+    eng_opts.mtp_beta = eff_beta;
+    eng_opts.mtp_bias = eff_bias;
+    eng_opts.mtp_margin = mtp_margin;
+    eng_opts.mtp_draft = mtp_draft;
+    eng_opts.mtp_escalating_margin = settings.on("mtp-escalating-margin");
+    eng_opts.mtp_margin_slope = (float)settings.number("mtp-margin-slope");
+    eng_opts.set_mtp_gate_rule(mtp_gate_rule);
+    eng_opts.set_sampled_gate(sampled_gate);
+    eng_opts.mtp_lut_step_penalty = mtp_lut_step_penalty;
+    eng_opts.mtp_ema_decay = mtp_ema_decay;
+    slog(LogLevel::Info, "startup: MTP gate rule greedy=%s, sampled=%s (step_penalty=%.3f, ema_decay=%.2f)",
+         eng_opts.mtp_gate_rule_str().c_str(), eng_opts.sampled_gate_str().c_str(),
+         eng_opts.mtp_lut_step_penalty, eng_opts.mtp_ema_decay);
+    eng_opts.think_nudge = think_nudge;
+    eng_opts.think_nudge_policy = nudge_policy;
+    eng_opts.think_nudge_wording = nudge_wording;
+    eng_opts.think_end_guard = think_end_guard;
+    eng_opts.literal_tags = literal_tags;
+    eng_opts.think_close_on_call = think_close_on_call;
+    eng_opts.shared_chunk = chunk_shared;
+    eng_opts.degraded = degraded;
+    slog(LogLevel::Info, "startup: think-block / tool-call guard %s, literal tags %s, think close before a call %s",
+         think_end_guard ? "on" : "off", literal_tags ? "on" : "off", think_close_on_call ? "on" : "off");
+    if (think_nudge)
+        slog(LogLevel::Info, "startup: thinking nudge on: %.0f%% self-copy over %lld tokens past %lld, wording %s",
+             100.0 * nudge_policy.rate, (long long)nudge_policy.window, (long long)nudge_policy.min_tokens,
+             nudge_wording.c_str());
+    else
+        slog(LogLevel::Info, "startup: thinking nudge off");
+    slog(LogLevel::Info, "startup: thinking %s for requests that don't say", cfg.thinking_default ? "on" : "off");
+    if (!capture_dir.empty()) {
+        std::error_code ec;
+        std::filesystem::create_directories(capture_dir, ec);
+        STRIX_CHECK(!ec, "--capture-dir ", capture_dir, ": ", ec.message());
+        eng_opts.capture_dir = capture_dir;
+        slog(LogLevel::Info, "startup: capturing every request's tokens and MTP steps to %s", capture_dir.c_str());
+    }
+    std::atomic<bool> gpu_fatal{false};
+    HttpServer *server_ptr = nullptr;  // set before serving; on_fatal only runs once a request did
+    eng_opts.on_fatal = [&](const std::string &) {
+        gpu_fatal = true;
+        if (server_ptr) server_ptr->stop();
+    };
+    Engine engine(backend, tok, eng_opts);
+    HttpServer server(engine, tok, cfg);
+    const int port = server.bind();
+    server_ptr = &server;
+    g_server = &server;
+    std::signal(SIGINT, on_signal);
+    std::signal(SIGTERM, on_signal);
+    slog(LogLevel::Info, "startup: %s", backend.describe().c_str());
+    slog(LogLevel::Info, "startup: serving %s on %s:%d", cfg.model_id.c_str(), cfg.host.c_str(), port);
+    server.serve();
+    g_server = nullptr;
+    if (gpu_fatal) {
+        // No destructors past this point: the backend's would call HIP on the lost context (and may hang there). The
+        // prompt cache is host memory only: its shutdown rule still writes the RAM entries before the exit.
+        slog(LogLevel::Error, "fatal: the GPU context is lost (%s); exiting with status %d for a restart",
+             engine.fatal_error().c_str(), kExitGpuFatal);
+        cache.reset();
+        std::fflush(nullptr);
+        std::_Exit(kExitGpuFatal);
+    }
+    slog(LogLevel::Info, "stopped");
+    return 0;
+}
+
+}  // namespace
+
+int main(int argc, char **argv) {
+    try {
+        return run(argc, argv);
+    } catch (const std::exception &e) {
+        slog(LogLevel::Error, "fatal: %s", e.what());
+        return 1;
+    }
+}

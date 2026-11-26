@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# GLM-5.3-Flash vLLM launcher (AWQ W4A16, TP=2 over TB4-RDMA, MTP on by
+# default). Run INSIDE the vllm-glm container; started by the vsh-glm-manual
+# systemd user unit. Sources the canonical RDMA cluster-env, then execs
+# vllm serve on glm53_api_port from vsh-config.yaml.
+#
+# Memory flags, since they are the ones that bite (same lessons as the DS4
+# stack — see AlexKGwyn/ds4-vllm host/ds4-vllm-manual-serve.sh):
+#   --kv-cache-memory-bytes  Pin KV. Inferring it oversubscribes the box: the
+#     AWQ weight cache and RDMA buffers are allocated AFTER the profiling pass.
+#     The pool is a fixed-size LRU: it does not grow with --max-model-len.
+#   --gpu-memory-utilization  INERT while the pin above is set.
+#   --max-num-batched-tokens  The prefill chunk. 512 was over-cautious: the big
+#     indexer workspace is max_model_len * 40 * 132 bytes and does NOT depend
+#     on this knob, and what does (topk_indices_buffer) is a few MB. Measured
+#     at 128K ctx: 512 -> 4096 takes prefill 151 -> ~200 tok/s (+30%) for
+#     ~0.6 GiB, decode unchanged. vLLM warns while this is below the MTP draft
+#     budget. See PATCHES.md section 8.
+#
+# Do not add comments inside the backslash-continued `vllm serve` command
+# below: a '#' there silently comments out every remaining argument.
+set -u
+source "$HOME/vsh-cluster-env.${VSH_TRANSPORT:-tcp}.sh"
+echo "[vsh-serve] HOME=$HOME VLLM_ROCM_USE_AITER=$VLLM_ROCM_USE_AITER VLLM_ROCM_USE_AITER_MOE=${VLLM_ROCM_USE_AITER_MOE:-unset} DS4_ODL_AR2=${DS4_ODL_AR2:-unset} NCCL_NET_PLUGIN=${NCCL_NET_PLUGIN:-unset}"
+
+MODEL_DIR=${VSH_GLM53_MODEL_DIR:?vsh-config.yaml: glm53_model_dir missing}
+
+PORT=${VSH_GLM53_API_PORT:-1235}
+
+# Speculative decoding. glm53_spec_method: glm5_next_mtp (default; the
+# checkpoint's own NextN drafter) | dflash (the incoai/GLM-5.3-Flash-DFlash2
+# external drafter, 7-token drafts — the MiaAI 2xDGX-Spark kit's winner,
+# ~2.6x over MTP on structured text on their rig; upstream vLLM method).
+SPEC=()
+if [ "${VSH_GLM53_SPEC_METHOD:-glm5_next_mtp}" = "dflash" ]; then
+  DRAFT=${VSH_GLM53_DRAFT_MODEL:-/home/davidcanar/models/GLM-5.3-Flash-DFlash2}
+  KTOK=${VSH_GLM53_MTP_TOKENS:-7}
+  [ "$KTOK" -gt 0 ] || KTOK=7
+  # drafter attention backend override (PATCHES 30); empty = vLLM default
+  DATTN=${VSH_GLM53_DRAFT_ATTN-TRITON_ATTN}
+  DATTN_JSON=""
+  [ -n "$DATTN" ] && DATTN_JSON=",\"attention_backend\":\"$DATTN\""
+  SPEC=(--speculative-config "{\"method\":\"dflash\",\"model\":\"$DRAFT\",\"num_speculative_tokens\":$KTOK$DATTN_JSON}")
+  echo "[vsh-serve] DFlash2 speculative decoding ON (k=$KTOK, draft=$DRAFT)"
+elif [ "${VSH_GLM53_MTP_TOKENS:-0}" -gt 0 ]; then
+  SPEC=(--speculative-config "{\"method\":\"glm5_next_mtp\",\"num_speculative_tokens\":${VSH_GLM53_MTP_TOKENS}}")
+  echo "[vsh-serve] MTP speculative decoding ON (${VSH_GLM53_MTP_TOKENS} draft tokens)"
+else
+  echo "[vsh-serve] speculative decoding OFF"
+fi
+
+PROF=()
+if [ -n "${VSH_GLM53_PROFILER_DIR:-}" ]; then
+  mkdir -p "$VSH_GLM53_PROFILER_DIR"
+  PROF=(--profiler-config "{\"profiler\":\"torch\",\"torch_profiler_dir\":\"${VSH_GLM53_PROFILER_DIR}\",\"torch_profiler_with_stack\":false,\"delay_iterations\":${VSH_GLM53_PROFILER_DELAY:-0},\"active_iterations\":${VSH_GLM53_PROFILER_ACTIVE:-5}}")
+  echo "[vsh-serve] torch profiler ENABLED dir=$VSH_GLM53_PROFILER_DIR"
+fi
+
+# OpenAI-style tool calling + reasoning separation. GLM-5.3 emits the
+# GLM-4.5/4.7 shapes -- <think>...</think> and <tool_call>fn<arg_key>k</arg_key>
+# <arg_value>v</arg_value></tool_call> -- which vllm/parser/glm47_moe.py parses
+# verbatim. "glm45" and "glm47" are aliases for the same classes; glm47 matches
+# the implementation name. With the reasoning parser on, the think block is
+# returned as `reasoning_content` instead of inline in `content`, which is what
+# coding harnesses expect; set glm53_tool_parsing: 0 to serve raw text instead.
+TOOLS=()
+if [ "${VSH_GLM53_TOOL_PARSING:-1}" = "1" ]; then
+  TOOLS=(--enable-auto-tool-choice --tool-call-parser glm47 --reasoning-parser glm47)
+  echo "[vsh-serve] tool-call + reasoning parsers ON (glm47)"
+else
+  echo "[vsh-serve] tool-call + reasoning parsers OFF (glm53_tool_parsing: 0)"
+fi
+
+# KV cache dtype knob. fp8 looked like a +50% capacity win (2,048,218 vs
+# 1,369,198 tokens at the same 16 GiB pin, allocation succeeds) — but on this
+# stack the ROCM_AITER_MLA_SPARSE fp8 decode path asserts on the FIRST request
+# (aiter static_per_tensor_quant: torch.float8_e4m3fn not in
+# _torch_to_aiter_dtype), killing the engine right after startup. Half-wired
+# upstream; keep auto (bf16) until the ROCm fp8 sparse path lands.
+# MiaAI's 2xDGX-Spark kit uses fp8 KV on SM12x where the packed fp8_ds_mla
+# kernel exists; gfx1151 has no equivalent today.
+# [vsh-apc-retention] Retention interval for sliding-window / Mamba (KDA)
+# prefix-cache checkpoints. Stock default (flag absent) is 0 = "keep only the
+# latest replay boundary", the sparsest setting; on this hybrid model that ties
+# every hit to a KDA checkpoint that may not exist yet, so a repeat of the same
+# prompt can miss once before it hits. A positive multiple of the scheduler
+# block size (2304) keeps one checkpoint per segment. Env-gated: unset = stock.
+APCR=()
+if [ -n "${VSH_GLM53_APC_RETENTION:-}" ]; then
+  APCR_V=$VSH_GLM53_APC_RETENTION
+  # Without a drafter the attention block (= scheduler block) is 2176, not 2304
+  # (no drafter KV group to pad for), and vLLM rejects an interval that is not a
+  # multiple of it at engine init. 2026-10-03: this, not a decode bug, was what
+  # stopped spec-off boots.
+  if [ ${#SPEC[@]} -eq 0 ] && [ "$APCR_V" = "2304" ]; then
+    APCR_V=${VSH_GLM53_APC_RETENTION_NOSPEC:-2176}
+  fi
+  APCR=(--prefix-cache-retention-interval "${APCR_V}")
+  echo "[vsh-serve] prefix-cache retention interval: ${APCR_V}"
+fi
+
+KVD=()
+if [ -n "${VSH_GLM53_KV_DTYPE:-}" ] && [ "${VSH_GLM53_KV_DTYPE}" != "auto" ]; then
+  KVD=(--kv-cache-dtype "$VSH_GLM53_KV_DTYPE")
+  echo "[vsh-serve] KV cache dtype: $VSH_GLM53_KV_DTYPE"
+fi
+
+# --enforce-eager has been on since bring-up (it matched the validated DS4
+# profile). Turning it off enables torch.compile + CUDA graphs, which costs a
+# long first-boot compile and is unproven on this hybrid (KDA + sparse-MLA)
+# model, so it stays the default. Set glm53_enforce_eager: 0 to experiment.
+CGS=()
+EAGER=(--enforce-eager)
+if [ "${VSH_GLM53_ENFORCE_EAGER:-1}" != "1" ]; then
+  EAGER=()
+  # This model is not torch-compiled (vLLM: "does not support it"), so
+  # piecewise capture needs the breakable-cudagraph path -- which is what
+  # the @eager_break_during_capture decorators on the kpool indexer and the
+  # KDA _forward exist for. Without it vLLM raises:
+  #   piecewise CUDA graphs unavailable, model is not torch-compiled and
+  #   breakable CUDA graph is off.
+  export VLLM_USE_BREAKABLE_CUDAGRAPH=1
+  # TEST 2026-10-02: cap capture sizes. Single-user decode never exceeds a few
+  # seqs; the large end of the 35-size default list is where rank1 wedged in
+  # KDA Triton launches during capture, and each size costs capture memory.
+  # 2026-10-03 (PATCHES 29): single-user decode is 4 rows (k=3 verify); graph only
+  # pure-decode batches -- prefill-bearing steps stay eager (the KDA chunk-index
+  # host sync lives on that path, #51540).
+  # 2026-10-03 (PATCHES 33): FULL modes hang on the first replay (RCCL inside the
+  # graph); PIECEWISE breakable capture with every TP collective as an eager
+  # break (vsh-cg-eager-collectives) works: 96-100 ms/step vs 101-106 eager.
+  CGS=(--cudagraph-capture-sizes ${VSH_GLM53_CG_SIZES:-1 2 4 8}
+       --compilation-config "{\"cudagraph_mode\": \"${VSH_GLM53_CG_MODE:-PIECEWISE}\"}")
+  echo "[vsh-serve] capture sizes ${VSH_GLM53_CG_SIZES:-1 2 4 8}, cudagraph_mode ${VSH_GLM53_CG_MODE:-PIECEWISE}"
+  echo "[vsh-serve] enforce-eager OFF (CUDA graphs, breakable capture)"
+fi
+
+exec vllm serve "$MODEL_DIR" \
+  --served-model-name glm-5.3-flash \
+  --tensor-parallel-size 2 \
+  --distributed-executor-backend ray \
+  --quantization compressed-tensors \
+  "${EAGER[@]}" "${CGS[@]}" \
+  --skip-mm-profiling \
+  --gpu-memory-utilization ${VSH_GLM53_GPU_UTIL:-0.83} \
+  --kv-cache-memory-bytes ${VSH_GLM53_KV_BYTES:-4294967296} \
+  "${KVD[@]}" "${APCR[@]}" \
+  --max-model-len "${VSH_GLM53_MAX_CTX:-32768}" \
+  --max-num-batched-tokens ${VSH_GLM53_MAX_BATCHED:-512} \
+  --max-num-seqs ${VSH_GLM53_MAX_SEQS:-256} \
+  --trust-remote-code \
+  "${SPEC[@]}" \
+  "${TOOLS[@]}" \
+  "${PROF[@]}" \
+  --host 0.0.0.0 --port "$PORT"

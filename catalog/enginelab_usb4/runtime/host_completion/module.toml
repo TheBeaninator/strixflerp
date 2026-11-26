@@ -1,0 +1,41 @@
+id        = "runtime.enginelab_usb4.host_completion"
+kind      = "runtime"
+summary   = "host completion path: completion path timing (0040), host completion latency tracepoints (0046), host RX-only polled completion (0047) and opt-in host descriptor batching (0048)"
+why       = "the host-path throughput side: about 37 Gb/s a direction over two cables with four streams, about 34 Gb/s inside the engine for large pipelined transfers (README)"
+notes     = "Interface tag: none (no catalogue interface is a USB4 stream device; the nearest are transport.verbs and the collective.* providers over RoCE / TCP). Stable patches 0040, 0046, 0047, 0048 of patches/series; apply the whole series in order to Linux 72d3fcf8. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "patches/0040-completion-path-timing.patch",
+  "patches/0046-host-completion-latency-tracepoints.patch",
+  "patches/0047-host-rx-only-polled-completion.patch",
+  "patches/0048-host-opt-in-descriptor-batching.patch",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-host-completion/-/-"
+api       = "tracepoints and opt-in parameters"
+numeric   = "bytes only"
+regime    = "bulk and prefill activations"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 72d3fcf8 tree on the island); python3 docs/harvest/harvest_enginelab_usb4.py --patch-gate parses it (gate/results/compile/enginelab_usb4.patches.json)"

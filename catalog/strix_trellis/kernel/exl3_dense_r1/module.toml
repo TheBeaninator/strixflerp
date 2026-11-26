@@ -1,0 +1,72 @@
+id        = "kernel.strix_trellis.exl3_dense_r1"
+kind      = "kernel"
+summary   = "Dense R1 plans: the split-K projection with physical output tiling added, so more CTAs share one projection without cutting any declared K accumulation chain. A CTA covers 8 to 128 outputs of one H128 group; partitions fold from fp32 +0 in ascending order before output H128, svh, bias, alpha and beta, and the completing CTA resets the counters. One unit per input width and split count (i1152 / i1280 / i4096 / i5120 at S4, i5120 at S16 and S32), a pair kernel for q_a and kv over one input, grouped kernels for up to 8 linears of one geometry (4096 to 1024) and an owner-fold kernel where the CTA owning an output H128 folds its partials"
+why       = "small attention projections sit far below the read ceiling because one launch's fixed cost dominates them; the R1 plans add output tiling without cutting an accumulation chain, which bought 1.43x on q_a at one row (README.md:475) while keeping each row equal to its own single-row call, the row invariance StrixFold needs for drafts"
+notes     = "Interface tag: linear.decode/exl3. Beside kernel.strixfold.exl3 (glinear, row-invariant). Origin numbers, RC5, synthetic weights, LEGACY identity: q_a (5120, 1280) K4 at 1 row 21.09 us against 30.19 us through strix_gemv, 1.43x, bits equal (README.md:475); grouped o_a K5 at 1 row 51.27 us, 82.9 % of the read ceiling (README.md:545). Switching between S4 and LEGACY is a model identity decision in the origin's words, not a tolerance check. dense_r1_api.inc and dense_r1_group_api.inc, the host side of these plans, are fragments of api.hip in kernel.strix_trellis.c_api. No timing was taken on the pod."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "src/dense_r1.hip",
+  "src/dense_r1.hpp",
+  "src/dense_r1_device.hpp",
+  "src/dense_r1_group_i4096_s16.hip",
+  "src/dense_r1_group_i4096_s32.hip",
+  "src/dense_r1_group_owner.hip",
+  "src/dense_r1_i1152_s4.hip",
+  "src/dense_r1_i1280_s4.hip",
+  "src/dense_r1_i4096_s4.hip",
+  "src/dense_r1_i5120_s16.hip",
+  "src/dense_r1_i5120_s32.hip",
+  "src/dense_r1_i5120_s4.hip",
+  "src/dense_r1_layout.hpp",
+  "src/dense_r1_pair.hip",
+  "src/dense_r1_policy.hpp",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/dense_r1.hip",
+  "src/src/dense_r1_i1152_s4.hip",
+  "src/src/dense_r1_i1280_s4.hip",
+  "src/src/dense_r1_i4096_s4.hip",
+  "src/src/dense_r1_i5120_s4.hip",
+  "src/src/dense_r1_i5120_s16.hip",
+  "src/src/dense_r1_i5120_s32.hip",
+  "src/src/dense_r1_group_i4096_s16.hip",
+  "src/src/dense_r1_group_i4096_s32.hip",
+  "src/src/dense_r1_group_owner.hip",
+  "src/src/dense_r1_pair.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/exl3/f16-f32.strix-trellis-r1"
+api       = "strix_tp_dense_plan_create_r1, strix_tp_dense_r1_workspace_bytes, strix_tp_dense_pair_plan_create_r1, strix_grouped_gemv_plan_create / _submit / _destroy (STRIX_GEMV_ROW_INVARIANT_R1)"
+numeric   = "two declared identities: STRIX_DENSE_R1_S4 (four K16 chains, two fp32 accumulators a lane, four-lane reduction by shuffle offsets 2 then 1) and STRIX_DENSE_R1_LEGACY (S16 for 5120 to 1280 / 1152, S32 for 5120 to 512, S4 elsewhere); row count, tile width, arrival order and prefetch depth never change the association, so every row equals its single-row call (docs/DENSE_R1.md \"Numerical identities\")"
+regime    = "decode, 1..8 rows a call, memory-bound (the origin measures against a 246.7 GB/s cold read ceiling, README.md:231); the shapes of exl3_tp_dense plus the head 5120 to 64640 / 129280, K4 / K5 mul1"
+
+[[requires]]
+module    = "kernel.strix_trellis.trellis_common"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_tp_dense"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libstrix_trellis.a: built by the origin CMake (STRIX_TRELLIS_ENABLE_HIP=ON, -O3 -ffp-contract=off, HIP standard 17, gfx1151), not compiled by this harvest; in the library only with STRIX_TRELLIS_ENABLE_EXPERIMENTAL_TP=ON"

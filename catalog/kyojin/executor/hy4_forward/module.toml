@@ -1,0 +1,36 @@
+id        = "executor.kyojin.hy4_forward"
+kind      = "executor"
+summary   = "Hy4-flash whole-model forward (slow but correct, torch only), its CPU fp32 attention reference and the opt-in decensor edit hook (HY4_ABLIT_SPEC)"
+why       = "the reference every Hy4 lever is checked against. Where the shape would go: an executor.model/hy4-flash/gguf provider beside executor.crucible.flashnext, executor.flerp.dsv41_zip2, executor.flerp.qwen35moe and 25 more, through a port of the python / Triton logic"
+notes     = "Interface tag: executor.model/hy4-flash/gguf. Against the base turboderp-org/exllamav3 8c593e4e: 3 added (ablit_hy4.py, hy4_forward.py, mla_hy4.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/loader/ablit_hy4.py", "exllamav3/loader/hy4_forward.py", "exllamav3/loader/mla_hy4.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.model/hy4-flash/gguf.kyojin"
+api       = "ablit_hy4.py, hy4_forward.py, mla_hy4.py"
+numeric   = "fp32 reference"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

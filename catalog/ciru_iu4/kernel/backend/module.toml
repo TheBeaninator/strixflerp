@@ -1,0 +1,62 @@
+id        = "kernel.ciru_iu4.backend"
+kind      = "kernel"
+summary   = "The CIRU form of ggml-cuda.cu, the HIP backend's op dispatch and graph evaluation (+480 lines over the base): exact short batches (CIRU_EXACT_BATCH_MAX), routing to the C1, Q5_K, QSA-decode, chunked-GDN and HC kernels with the graph matches that feed them, and HC capture / merge / replay helpers (hc-*.inc, fixture.h; the shared device header common.cuh stays in kernel.ciru_iu4.cuda_common); plus ggml-hip/CMakeLists.txt with the gfx1151 per-source options of the Q5_K units"
+why       = "every CIRU kernel is reached through this file, and its environment switches are the knobs CIRU's qualified launch profiles set; an adapter that lifts a CIRU kernel out of ggml starts from the call here"
+notes     = "Interface tags by file: ggml-cuda.cu none; hc-capture.inc none; hc-merge.inc none; hc-replay.inc none; fixture.h none (catalog/ciru_iu4/KERNELS.md has the table). Against the base pwilkin/llama.cpp f5daaa3c: added hc-capture.inc, hc-merge.inc, hc-replay.inc, fixture.h; changed ggml-cuda.cu +480 -9 lines. No timing was taken on the pod. ggml-hip/CMakeLists.txt is the origin build file (+8 lines: -mwavefrontsize64 and -fno-fast-math for the two Q5_K units on gfx1151); not compiled."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = [
+  "ggml/src/ggml-cuda/fixture.h",
+  "ggml/src/ggml-cuda/ggml-cuda.cu",
+  "ggml/src/ggml-cuda/hc-capture.inc",
+  "ggml/src/ggml-cuda/hc-merge.inc",
+  "ggml/src/ggml-cuda/hc-replay.inc",
+  "ggml/src/ggml-hip/CMakeLists.txt",
+]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/ggml/src/ggml-cuda/ggml-cuda.cu"]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.ciru-backend/-/-"
+api       = "ggml-cuda.cu, hc-capture.inc, hc-merge.inc, hc-replay.inc, fixture.h"
+numeric   = "n/a here: each kernel module states its own arithmetic"
+regime    = "host dispatch of the ggml graph on the gfx1151 HIP backend"
+
+[[requires]]
+module    = "kernel.ciru_iu4.cuda_common"
+
+[[requires]]
+module    = "kernel.ciru_iu4.c1"
+
+[[requires]]
+module    = "kernel.ciru_iu4.gdn"
+
+[[requires]]
+module    = "kernel.ciru_iu4.mmb"
+
+[[requires]]
+module    = "kernel.ciru_iu4.q5"
+
+[[requires]]
+module    = "format.ciru_iu4.c1_g16"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_iu4.backend.json"

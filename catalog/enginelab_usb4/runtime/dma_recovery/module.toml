@@ -1,0 +1,43 @@
+id        = "runtime.enginelab_usb4.dma_recovery"
+kind      = "runtime"
+summary   = "DMA lifecycle and recovery: DMA progress, idle reset and quarantine reaping (0006), external dependency errors (0007), detached quarantine and notification lifecycle (0008), domain retirement and cooperative controller recovery (0009), bounded domain release and DMA revocation (0013), and a DMA revoke that proves relaxed ordering is off (0024)"
+why       = "a failed link must never let the controller DMA into memory that was handed back; this is the quarantine-then-reap shape"
+notes     = "Interface tag: none (no catalogue interface is a USB4 stream device; the nearest are transport.verbs and the collective.* providers over RoCE / TCP). Stable patches 0006, 0007, 0008, 0009, 0013, 0024 of patches/series; apply the whole series in order to Linux 72d3fcf8. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "patches/0006-dma-progress-idle-reset-and-quarantine-reaping.patch",
+  "patches/0007-external-dependency-errors.patch",
+  "patches/0008-detached-quarantine-and-notification-lifecycle.patch",
+  "patches/0009-domain-retirement-and-cooperative-controller-recovery.patch",
+  "patches/0013-bounded-domain-release-and-dma-revocation.patch",
+  "patches/0024-dma-revoke-proves-relaxed-ordering-off.patch",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-recovery/-/-"
+api       = "kernel-internal (thunderbolt domain / NHI)"
+numeric   = "bytes only"
+regime    = "controller faults, cable pulls, module unload"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 72d3fcf8 tree on the island); python3 docs/harvest/harvest_enginelab_usb4.py --patch-gate parses it (gate/results/compile/enginelab_usb4.patches.json)"

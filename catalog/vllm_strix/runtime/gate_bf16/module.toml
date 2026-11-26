@@ -1,0 +1,44 @@
+id        = "runtime.vllm_strix.gate_bf16"
+kind      = "runtime"
+summary   = "bf16-weight, fp32-output router gate GEMV: GateLinear tier 4 (torch.mm(out_dtype=fp32) on hipBLASLt) is routed to vsh_w16_gemv for <= 8 rows; tests that GLM's 288 x 4096 and DS4's 256 x 4096 gates engage it and match"
+why       = "on the 73859fec pin GLM-5.3's gate is BF16 with an fp32 output and took ~150 us a layer, ~6 ms a step (PATCHES 32); the same GEMV serves DS4's gate"
+notes     = "Interface tag: moe.gate-logits. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "container/patches/vsh-gate-bf16.py",
+  "scripts/test_gate_bf16.py",
+  "scripts/test_gate_ds4.py",
+  "scripts/test_gate_engage.py",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.gate-logits/bf16/f32"
+api       = "hook on GateLinear tier 4; env VSH_ROUTER_GEMV"
+numeric   = "bf16 weights, fp32 accumulate and output"
+regime    = "M <= 8"
+
+[[requires]]
+module    = "runtime.vllm_strix.w8a16_requant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

@@ -296,7 +296,8 @@ class Server:
         return self.proc.returncode
 
 
-TALLY = re.compile(r"^flerp-adapter (\S+) provider=(\S+) foreign_launches=(\d+) origin_launches=(\d+) \(([^)]*)\)", re.M)
+# The provider label is free text ("panel kernels (Q4Panel16)"): it runs up to " foreign_launches=" (card a9ac7b1c0f).
+TALLY = re.compile(r"^flerp-adapter (\S+) provider=(.+?) foreign_launches=(\d+) origin_launches=(\d+) \(([^)]*)\)$", re.M)
 
 
 def adapter_tallies(log_path):

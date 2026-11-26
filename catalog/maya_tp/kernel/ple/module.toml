@@ -1,0 +1,67 @@
+id        = "kernel.maya_tp.ple"
+kind      = "kernel"
+summary   = "the per-layer embedding (PLE) block's GPU half (ple) and llama.cpp's PLE post-ops (native_ple_postops)"
+why       = "PLE is a Qwen-Next family input path whose table is streamed from disk; the GPU half is what a strixflerp PLE injector would call"
+notes     = "Interface tag: ple.inject/-/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/native_ple_postops.hpp",
+  "include/strata/kernels/ple.hpp",
+  "src/kernels/cuda/native_ple_postops.cu",
+  "src/kernels/cuda/ple.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/native_ple_postops.cu", "src/src/kernels/cuda/ple.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "ple.inject/-/f32.maya-tp"
+api       = "strata::kernels::ple_*, native_ple_postops"
+numeric   = "FP32"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.hyperconn"
+
+[[requires]]
+module    = "kernel.maya_tp.quantize_act"
+
+[[requires]]
+module    = "kernel.maya_tp.s_gemv"
+
+[[requires]]
+module    = "runtime.maya_tp.spec_controller"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.ple.json"

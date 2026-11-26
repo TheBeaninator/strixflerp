@@ -1,0 +1,59 @@
+id        = "runtime.enginelab.gemma4_ref"
+kind      = "runtime"
+summary   = "Gemma 4 host references (src/gemma4/ref): 7 origin files under src/gemma4"
+why       = "references for the EXACT gate; where it would go: a new strixflerp interface verify.kernel-reference-enginelab-gemma4/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, verify.kernel-reference-enginelab-gemma4/-/-. 3 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/ref/README.md",
+  "src/gemma4/ref/host_ref_main.cpp",
+  "src/gemma4/ref/make_rope_tables.py",
+  "src/gemma4/ref/npz.cpp",
+  "src/gemma4/ref/npz.hpp",
+  "src/gemma4/ref/target.cpp",
+  "src/gemma4/ref/target.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/gemma4/ref/host_ref_main.cpp", "src/src/gemma4/ref/npz.cpp", "src/src/gemma4/ref/target.cpp"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.kernel-reference-enginelab-gemma4/-/-"
+api       = "src/gemma4/ref/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_model"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_exl3"
+
+[[requires]]
+module    = "runtime.enginelab.backend_cpu"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

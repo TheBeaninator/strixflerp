@@ -1,0 +1,44 @@
+id        = "kernel.maya_tp.glm_dsa"
+kind      = "kernel"
+summary   = "the glm5-next DSA lightning indexer and absorbed-MLA attention (glm_dsa.cu)"
+why       = "GLM-5's DeepSeek-style sparse attention; under TP2 attention heads are split across the ranks and this is the per-rank head-group kernel"
+notes     = "Interface tag: attn.sparse-dsa-mla/-/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/glm_dsa.hpp", "src/kernels/cuda/glm_dsa.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/glm_dsa.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.sparse-dsa-mla/-/f32.maya-tp"
+api       = "strata::kernels glm_dsa launches (glm_dsa.hpp)"
+numeric   = "FP32 scores and softmax over the selected tokens"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.glm_dsa.json"

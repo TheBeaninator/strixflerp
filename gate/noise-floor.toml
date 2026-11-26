@@ -1,0 +1,37 @@
+# FLERP-V10 exp 1 (card f0609bca0f, parent STRIX-META bd830ae1ca): measurement noise floor on bench box K.
+# Committed before any hardware run; never loosened after it. Shape and review trace: docs/EXPERIMENTS-V10.md.
+# Grounding: gate/results/decode-profile/summary.md ran at load 5.9-9.1 (graph off: 16.71 ms/step over 32 tokens,
+# 24.29 over 64). Gates judge on 3 % and 5 % bars (strixw-panel-decode2 3 %, gufo_recipe 5 %).
+
+[hypothesis]
+prediction    = "on an exclusive K (kbench), ten reps of one binary in one load have CV <= 0.7 % of decode ms/step at 32 and at 64 tokens; under a load-6-to-9 background the CV exceeds 2 %"
+v9_guess      = "quiet (max-min)/median <= 2 % at both token counts"
+confirmed_at  = "quiet CV <= 0.007 at both 32 and 64 tokens"
+refuted_below = "quiet CV > 0.0167 at either token count: a 3 % bar then needs more than 5 reps a side (formula below)"
+
+[criteria]
+statistic        = "per token count, over the 10 reps: CV = stdev/mean (judged), IQR/median and (max-min)/median (recorded)"
+token_counts     = [32, 64]
+reps             = 10
+processes        = "one process per token count per arm (--max-tokens is per process); the 10 reps are 10 --configs entries in that one load"
+binary           = "the 35B generator build/xfer-r1-fold/after/out/flerp-qwen35moe-generate, LD_LIBRARY_PATH from FLERP_ROCM_ROOT=/data/models/tools/therock-10.1 (the /data/tools symlink points into /mnt/ark and is not used)"
+quiet_arm        = "K exclusive under pod-kbench; 1-min load < 1.0 at EVERY rep boundary (start and end of each of the 10 reps); a rep that fails it is discarded and the arm rerun once"
+loaded_arm       = "same, with stress-ng --cpu 8 --vm 2 --vm-bytes 4G running on K's CPU so 1-min load sits in 6-9 at every rep boundary"
+telemetry        = "at every rep start and end, from /sys/class/drm/card0/device: gpu_busy_percent; gpu_metrics average_gfxclk, average_fclk, average_socket_power, temperature_gfx/soc and DRAM read/write counters if the metrics version has them (else N/A, recorded); pp_dpm_sclk/fclk/mclk current level; hwmon power1_average, temp1_input, freq1_input"
+reps_formula     = "for a later gate with bar d (relative) and per-rep CV c from the matching arm: reps a side n = max(3, ceil(15.7 * (c / d)^2)) (two-sided 5 %, power 80 %); exp 2 and exp 5 read c from this result"
+run_shape        = "prompt build/xfer-r1-fold/prompts/code.ids (20 tokens), --staged loopback world 1, --context 4096, --epoch 7; per process --configs is 10 x '1:even:off' then 10 x '1:even:on' (one load); the statistic reads decode_ms_per_step from each 'staged' event; graph off is judged (it is what decode-profile's 16.71 / 24.29 ms grounding measured), graph on is recorded"
+telemetry_rule   = "a 1 Hz sampler runs for the whole process, so every rep boundary is inside a sampled second; the load band must hold on every sample from the first staged event's start to the last one's end"
+verdict          = "PASS if quiet CV <= 0.007 at both counts; the loaded numbers are recorded either way"
+
+[resources]
+nodes   = "K via pod-kbench k_run (queue-only, exclusive); no idle holds"
+hold    = "none: one queued kbench job, ~25 min expected, TTL 37 min"
+weights = "21.7 GB Qwen3.6-35B-A3B-Q4_K_M.gguf, PLACE tier ram to K /dev/shm, staged before the hold"
+loads   = "4 because --max-tokens is per process: 2 token counts x 2 arms, every rep inside its process"
+reps    = "10 because the quantity measured is the spread itself"
+shares  = "K only; a yielding img-k lease is pre-empted by the kbench acquire and relaunches afterwards; no worker or control GPU touched"
+cleanup = "kbench releases K; stress-ng killed by the job's trap; place evict of the 35B unless exp 2 is next in the queue; K idle and img-k back afterwards"
+
+[monitor]
+milestones = "staged by T-5 min; quiet arm done by T+12 min; loaded arm by T+25 min; watched every <= 15 min"
+stop_rule  = "stop at the first runtime fault; rerun an arm once if its load band fails at a rep boundary or average_gfxclk falls more than 10 % across its reps"

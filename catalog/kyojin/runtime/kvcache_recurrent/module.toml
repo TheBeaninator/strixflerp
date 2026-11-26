@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.kvcache_recurrent"
+kind      = "runtime"
+summary   = "Recurrent-state cache (GDN / KDA / Mamba states, checkpoints for speculative rewind)"
+why       = "linear-attention models. Where the shape would go: a kvcache.parked-state/-/- provider beside runtime.strixite.paged_state, through a port of the python / Triton logic"
+notes     = "Interface tag: kvcache.parked-state/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (recurrent.py, recurrent_util.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/cache/recurrent.py", "exllamav3/cache/recurrent_util.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.parked-state-kyojin-recurrent/-/-"
+api       = "recurrent.py, recurrent_util.py"
+numeric   = "fp32 states"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

@@ -60,8 +60,9 @@ module    = "kernel.hipfire.indexer_topk"
 interface = "format.device-view-hipfire/gguf-kquant/-"
 
 [gate]
-parity    = "origin-test:crates/rdna-compute/tests"
+parity    = "flerp:gate/interface/gguf-gemv.toml"
 bench     = "none"
-status    = "builds"
+status    = "parity"
 compile   = "standalone"
-evidence  = "gate/results/compile/kernel.hipfire.gemv_ggml.json"
+evidence  = "gate/results/interface/gguf-gemv/result.json"
+reason    = "parity: interface gate gguf-gemv on control-node (result.json, provider hipfire: pass; the gate overall pass=True); compile gate evidence gate/results/compile/kernel.hipfire.gemv_ggml.json"

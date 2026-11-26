@@ -1,0 +1,51 @@
+id        = "runtime.odinlink5.mac_rdma"
+kind      = "runtime"
+summary   = "Linux to Mac memory over Thunderbolt 5: a macOS kext (OdinLinkNHI, OdinLinkRDMA) that posts 4-KiB RX descriptors into a DART-mapped buffer the app mmaps, the shared wire protocol header, a Mac client and odl_tensor_send on the Linux side; two-sided send / recv, Linux posts TX frames"
+why       = "Apple's own RDMA is Mac-to-Mac and a stub on current macOS; owning both ends is how the project parks tensors in a Mac's unified memory. Outside the pod's hardware, kept for completeness of the origin"
+notes     = "Interface tag: none. Not compiled (macOS kext, Apple SDK). Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "mac/CMakeLists.txt",
+  "mac/README.md",
+  "mac/include/odinlink_mac_proto.h",
+  "mac/kext/Info.plist",
+  "mac/kext/Makefile",
+  "mac/kext/OdinLinkNHI.cpp",
+  "mac/kext/OdinLinkRDMA.cpp",
+  "mac/kext/OdinLinkRDMA.h",
+  "mac/kext/apple_tb5_nhi_mac.h",
+  "mac/linux_test/odl_tensor_send.c",
+  "mac/odl_rdma_client.c",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/mac/include", "src/mac/kext"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.mac-dart-recv/-/-"
+api       = "OdinLinkRDMA.kext user client; odl_tensor_send (mac/linux_test)"
+numeric   = "bytes"
+regime    = "Linux PC (Intel NHI) to a Mac"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c: not compiled by the gate ((macOS kext, Apple SDK))"

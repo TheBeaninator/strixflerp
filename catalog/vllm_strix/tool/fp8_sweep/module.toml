@@ -1,0 +1,37 @@
+id        = "tool.vllm_strix.fp8_sweep"
+kind      = "tool"
+summary   = "tile sweep for the FP8 block-scaled GEMV: fp8sweep.hip holds the kernel with ROWS output rows a wave (activation reused across rows) behind one sweep(variant, ...) entry; fp8sweep.py and time12288.py time the variants against vsh_fp8_gemv at DeepSeek-V4 decode shapes and at K=12288 (DSpark drafter fc, row stride 12544)"
+why       = "the multi-row FP8 GEMV in kernel.vllm_strix.w8a16_gemv was picked by this sweep (PATCHES 38, 40); the sweep is how its tile choice would be re-derived for another checkpoint or clock"
+notes     = "Interface tag: tool.kernel-bench. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["scripts/fp8sweep.hip", "scripts/fp8sweep.py", "scripts/time12288.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/scripts/fp8sweep.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.kernel-bench/fp8-block128/-"
+api       = "extern \"C\" sweep(variant, stream, W, S, X, Y, N, K, M, ldw, ss, sx, sy); python drivers"
+numeric   = "timing only"
+regime    = "decode shapes"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/tool.vllm_strix.fp8_sweep.json"

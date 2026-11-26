@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.hip_jit"
+kind      = "runtime"
+summary   = "One resolver for the hipcc that builds every JIT HIP kernel (EXL3_HIPCC, the rocm-sdk wheel, PATH, /opt/rocm) and the module loader for the resulting code objects"
+why       = "how the JIT kernels above are built and loaded. Where the shape would go: no catalogue interface matches; it stays a reference for a port of the python / Triton logic, kept beside the module it serves"
+notes     = "Interface tag: none. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (hip_compiler.py, hip_lib.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/util/hip_compiler.py", "exllamav3/util/hip_lib.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kernel-abi.kyojin-hip-jit/-/-"
+api       = "hip_compiler.py, hip_lib.py"
+numeric   = "n/a"
+regime    = "host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

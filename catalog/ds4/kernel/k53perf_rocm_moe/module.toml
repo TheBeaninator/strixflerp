@@ -1,0 +1,36 @@
+id        = "kernel.ds4.k53perf_rocm_moe"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-performance f46631e: its copy of the rocm_moe family against antirez/ds4 b3f5018: rocm/ds4_rocm_moe.cuh changed (+525 -25 lines). Kernels not in the base: glm53_rocm_iq2_gate_up_verify_kernel, moe_build_narrow_sorted_tiles_kernel, moe_down_q4K_expert_tile4_row8_kernel, moe_gate_up_mid_q4K_expert_tile4_row8_kernel, moe_v41_down_wave, moe_v41_down_wave_ptrs_kernel, moe_v41_gate_up_wave_pairs_kernel, moe_v41_gate_up_wave_ptrs_kernel. The family: the routed-MoE kernels: active-expert and tile building, gate / up / mid decode (LUT, MXFP4, Q4_K, IQ2) and down products in many tilings (expert tiles of 4 / 8 / 16 rows, quarter-warp, sum-6, hotlist WMMA for Q2_K); a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "kyuz0's later gfx1151 branch: the Halo kernels imported from MadRocK-AI/ds4 551219f (frozen WMMA GEMMs for the attention output projections and shared expert, IQ2 S9 MoE producers, Q2 and Q8 panels, direct-query attention), DeepSeek V4.1 ROCm primitives, Qwen3.8 Flash Next on gfx1151, a gufo-derived DSV4 attention, and two-machine ROCm tensor parallel over TCP or RoCE with its own slot-generation queue (docs/CLUSTERING_ROCM.md); head commit \"rocm: avoid low-confidence GLM MTP verification on gfx1151\". The family in the base: the expert matvecs dominate decode for DSV4 and GLM; this is ds4's whole gfx1151 MoE kernel set"
+notes     = "Overlay kyuz0_glm53_perf: files under overlay/kyuz0_glm53_perf/ are the branch's bytes at f46631e483e1; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_perf.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "f46631e483e19d13f23d3c4bced7ade0d086a3ad"
+branch    = "perf/rocm-gfx1151-glm53-performance"
+paths     = ["overlay/kyuz0_glm53_perf/rocm/ds4_rocm_moe.cuh"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_perf", "src/overlay/kyuz0_glm53_perf/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/iq2_xxs+q2_k+q4_k+mxfp4/f32.ds4-k53perf"
+api       = "see summary"
+numeric   = "quantized weights with F32 accumulation"
+regime    = "decode and small batches"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.k53perf_rocm_backend"

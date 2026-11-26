@@ -1,0 +1,83 @@
+id        = "kernel.enginelab.core_tiled_wmma"
+kind      = "kernel"
+summary   = "the shared tiled prefill core adopted from strix-trellis (namespace strix::core): the register-blocked, double-buffered WMMA GEMM for gfx1151 (wmma_tiled.hip: a block owns BM x BN outputs, decodes each weight tile once into LDS, every wave reuses its A / B fragments; v_wmma_f32_16x16x16_f16 with ascending K16 order from +0), the FP16 tile GEMM and its small-M form, the A4 tiles, the v14 core policy, the VGPR budget and wave-uniform helpers, and src/core/NOTICE.md"
+why       = "this is the WMMA prefill engine every model of the lab shares at 8-32K prompts: the decomposition changes but the per-output K16 order does not, so it keeps the EXACT bits of the plain WMMA core; strixflerp's gemm.wmma-tile providers are the slot it would fill; where it would go: beside the catalogue's gemm.wmma-tile/trellis+iu4+f16/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: gemm.wmma-tile/trellis+iu4+f16/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/core/NOTICE.md",
+  "src/core/a4_tiles.hpp",
+  "src/core/f16_tile_gemm.hpp",
+  "src/core/f16_tile_gemm_core.inc",
+  "src/core/f16_tile_gemm_small.hpp",
+  "src/core/lds_rows.hpp",
+  "src/core/tiled_core.hpp",
+  "src/core/v14_core_policy.hpp",
+  "src/core/vgpr_budget.hpp",
+  "src/core/wave_uniform.hpp",
+  "src/core/wmma_tiled.hip",
+  "src/core/wmma_tiled.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/core/wmma_tiled.hip"]
+includes  = ["src/src", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "gemm.wmma-tile/trellis+iu4+f16/f16-f32.enginelab"
+api       = "strix::core wmma tiled launchers (src/core/wmma_tiled.hpp), f16_tile_gemm*.hpp"
+numeric   = "FP16 operands, FP32 accumulation in ascending K16 tiles; PackedIU4 FAST v1 rescales I32 sums at K64 boundaries (opt-in)"
+regime    = "prefill, M >= 16 rows; tile 128 / 256 rows, rasterisation group 2 (STRIX_TRELLIS_WMMA_RASTER)"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_hadamard"
+
+[[requires]]
+module    = "kernel.enginelab.core_hc"
+
+[[requires]]
+module    = "kernel.enginelab.core_integer"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[[requires]]
+module    = "kernel.enginelab.core_trellis"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.core_tiled_wmma.json"

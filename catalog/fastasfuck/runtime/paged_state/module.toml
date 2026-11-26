@@ -1,0 +1,37 @@
+id        = "runtime.fastasfuck.paged_state"
+kind      = "runtime"
+summary   = "fastasfuck's HIP-free description of a parked conversation for host code: generation id, byte counts and host-readable chunk addresses"
+why       = "the prompt cache saves and restores parked states through this header without including HIP"
+notes     = "Files vs strixite: runtime/paged_state.hpp byte-identical to runtime.strixite.paged_state at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/paged_state.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kvcache.parked-state/-/-"
+api       = "strix::PagedState, strix::PagedChunk"
+numeric   = "the same source as runtime.strixite.paged_state, so its behaviour: n/a"
+regime    = "as runtime.strixite.paged_state: header only, host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host C++ header; the compile gate builds hip-c++ modules only"

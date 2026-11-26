@@ -1,0 +1,36 @@
+id        = "kernel.ds4.rocm_attention_launch"
+kind      = "kernel"
+summary   = "host launch glue for the attention kernels: shape and KV-format dispatch, split choices and the eligibility rules; a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "where ds4 decides which attention kernel runs for a given model, context and batch; the policy half of rocm_attention"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["rocm/ds4_rocm_attention_launch.cuh"]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src", "src/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.ds4-rocm-attention-launch/-/-"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.rocm_backend"

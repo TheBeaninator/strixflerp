@@ -1,0 +1,92 @@
+id        = "runtime.enginelab.direct_transport"
+kind      = "runtime"
+summary   = "the native USB4 stream transport: driver, Linux driver over /dev/tbstreamN, completion, frames, GPU export, lease, native backend and session, pool and pool memory, stream control"
+why       = "the userspace half of the USB4STREAM kernel series (catalog/enginelab_usb4): bounded queues, fail-closed recovery, DMA quiescence before reuse; where it would go: a new strixflerp interface transport.usb4-stream/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, transport.usb4-stream/-/-. 12 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/direct_stream_control.hpp",
+  "include/strix/direct_transport_completion.hpp",
+  "include/strix/direct_transport_driver.hpp",
+  "include/strix/direct_transport_frames.hpp",
+  "include/strix/direct_transport_gpu_export.hpp",
+  "include/strix/direct_transport_lease.hpp",
+  "include/strix/direct_transport_native_backend.hpp",
+  "include/strix/direct_transport_native_session.hpp",
+  "include/strix/direct_transport_pool.hpp",
+  "include/strix/direct_transport_pool_memory.hpp",
+  "include/strix/hip_direct_transport_gpu_export.hpp",
+  "include/strix/linux_direct_transport_driver.hpp",
+  "src/direct_stream_control.cpp",
+  "src/direct_transport_completion.cpp",
+  "src/direct_transport_driver.cpp",
+  "src/direct_transport_frames.cpp",
+  "src/direct_transport_gpu_export.cpp",
+  "src/direct_transport_lease.cpp",
+  "src/direct_transport_native_backend.cpp",
+  "src/direct_transport_native_session.cpp",
+  "src/direct_transport_pool.cpp",
+  "src/direct_transport_pool_memory.cpp",
+  "src/hip_direct_transport_gpu_export.cpp",
+  "src/linux_direct_transport_driver.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/direct_stream_control.cpp",
+  "src/src/direct_transport_completion.cpp",
+  "src/src/direct_transport_driver.cpp",
+  "src/src/direct_transport_frames.cpp",
+  "src/src/direct_transport_gpu_export.cpp",
+  "src/src/direct_transport_lease.cpp",
+  "src/src/direct_transport_native_backend.cpp",
+  "src/src/direct_transport_native_session.cpp",
+  "src/src/direct_transport_pool.cpp",
+  "src/src/direct_transport_pool_memory.cpp",
+  "src/src/hip_direct_transport_gpu_export.cpp",
+  "src/src/linux_direct_transport_driver.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-stream/-/-"
+api       = "strix direct_transport_*.hpp"
+numeric   = "bytes; frames from the stream device"
+regime    = "two hosts on the patched kernel"
+
+[[requires]]
+module    = "runtime.enginelab.direct_gpu_stream"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_control"
+
+[[requires]]
+module    = "runtime.enginelab.dual_link"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,36 @@
+id        = "kernel.ds4.k53perf_rocm_attention"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-performance f46631e: its copy of the rocm_attention family against antirez/ds4 b3f5018: rocm/ds4_rocm_attention.cuh changed (+88 -0 lines). Kernels not in the base: ds41_attention_split_combine_kernel, ds41_attention_split_f32_heads_kernel. The family: DeepSeek V4 attention kernels for raw and mixed (FP8-compressed) KV: prefill raw / mixed with softmax tiles, decode mixed and indexed (8-head online, one-fast), the 16-head WMMA mixed kernel, the 64x64 WMMA output-B projection, head pack / unpack and the non-causal raw batch attention of the DSpark draft block; a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "kyuz0's later gfx1151 branch: the Halo kernels imported from MadRocK-AI/ds4 551219f (frozen WMMA GEMMs for the attention output projections and shared expert, IQ2 S9 MoE producers, Q2 and Q8 panels, direct-query attention), DeepSeek V4.1 ROCm primitives, Qwen3.8 Flash Next on gfx1151, a gufo-derived DSV4 attention, and two-machine ROCm tensor parallel over TCP or RoCE with its own slot-generation queue (docs/CLUSTERING_ROCM.md); head commit \"rocm: avoid low-confidence GLM MTP verification on gfx1151\". The family in the base: the attention core of the DSV4 / V4.1 graph on gfx1151, with WMMA paths; the catalogue's attn.softmax-gqa providers are the comparison set"
+notes     = "Overlay kyuz0_glm53_perf: files under overlay/kyuz0_glm53_perf/ are the branch's bytes at f46631e483e1; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_perf.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "f46631e483e19d13f23d3c4bced7ade0d086a3ad"
+branch    = "perf/rocm-gfx1151-glm53-performance"
+paths     = ["overlay/kyuz0_glm53_perf/rocm/ds4_rocm_attention.cuh"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_perf", "src/overlay/kyuz0_glm53_perf/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+fp8/f32.ds4-k53perf"
+api       = "see summary"
+numeric   = "F32 accumulation; F16 / FP8 KV; rocWMMA where the head count allows"
+regime    = "prefill and decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.k53perf_rocm_backend"

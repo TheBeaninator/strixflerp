@@ -1,0 +1,105 @@
+id        = "runtime.enginelab.levers"
+kind      = "runtime"
+summary   = "levers and profiles: the lever registry and cache, turbo, fast and engine profiles, environment arms and flags, the cost-table cache and partition search; src/profile (catalog levers, model presets, multi-device) and include/strix/profile(s) (per-model profile tables)"
+why       = "the EXACT / FAST / TURBO tiers as data: a lever is a registry row with identity, receipts, regime and per-tier default (AGENTS.md); where it would go: beside the catalogue's tune.table/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: tune.table/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 5 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/cost_table_cache.hpp",
+  "include/strix/engine_profile.hpp",
+  "include/strix/env_arms.hpp",
+  "include/strix/env_flags.hpp",
+  "include/strix/fast_profile.hpp",
+  "include/strix/lever.hpp",
+  "include/strix/lever_cache.hpp",
+  "include/strix/partition_search.hpp",
+  "include/strix/profile/catalog_levers.hpp",
+  "include/strix/profile/gate_records.hpp",
+  "include/strix/profile/model_preset.hpp",
+  "include/strix/profile/multi_device.hpp",
+  "include/strix/profiles/ds41_rtx.hpp",
+  "include/strix/profiles/gemma4.hpp",
+  "include/strix/profiles/hy4.hpp",
+  "include/strix/profiles/inkling2_mini.hpp",
+  "include/strix/profiles/qwen.hpp",
+  "include/strix/profiles/qwen_cuda.hpp",
+  "include/strix/profiles/qwen_dense_cuda.hpp",
+  "include/strix/profiles/qwen_dense_hip.hpp",
+  "include/strix/turbo.hpp",
+  "src/cost_table_cache.cpp",
+  "src/partition_search.cpp",
+  "src/profile/catalog_levers.cpp",
+  "src/profile/model_preset.cpp",
+  "src/profile/multi_device.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/cost_table_cache.cpp",
+  "src/src/partition_search.cpp",
+  "src/src/profile/catalog_levers.cpp",
+  "src/src/profile/model_preset.cpp",
+  "src/src/profile/multi_device.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tune.table-enginelab/-/-"
+api       = "include/strix/lever.hpp, src/profile/catalog_levers.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.qwen_engine"
+
+[[requires]]
+module    = "format.enginelab.model_data"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.integer_projection"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

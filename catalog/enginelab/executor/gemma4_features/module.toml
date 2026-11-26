@@ -1,0 +1,55 @@
+id        = "executor.enginelab.gemma4_features"
+kind      = "executor"
+summary   = "Gemma 4 features (per-layer inputs, media features) (src/gemma4/features): 5 origin files under src/gemma4"
+why       = "model features; where it would go: a new strixflerp interface executor.features-enginelab-gemma4/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, executor.features-enginelab-gemma4/-/-. 3 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/features/README.md",
+  "src/gemma4/features/features.cpp",
+  "src/gemma4/features/features.hpp",
+  "src/gemma4/features/main.cpp",
+  "src/gemma4/features/npz.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/gemma4/features/features.cpp",
+  "src/src/gemma4/features/main.cpp",
+  "src/src/gemma4/features/npz.cpp",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.features-enginelab-gemma4/-/-"
+api       = "src/gemma4/features/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_engine"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_model"
+
+[[requires]]
+module    = "serve.enginelab.gemma4_serve"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

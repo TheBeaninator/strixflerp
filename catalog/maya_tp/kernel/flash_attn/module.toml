@@ -1,0 +1,47 @@
+id        = "kernel.maya_tp.flash_attn"
+kind      = "kernel"
+summary   = "llama.cpp's flash-attention kernel specialised for the engine's shapes (native_flash_attn, from 3cf03257)"
+why       = "a dense softmax-GQA attention with a pinned numerical reference, for the full-attention layers and prompts"
+notes     = "Interface tag: attn.softmax-gqa/kv-f16/f32.maya-tp-native-fa. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/native_flash_attn.hpp", "src/kernels/cuda/native_flash_attn.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/native_flash_attn.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.maya-tp-native-fa"
+api       = "strata::kernels::native_flash_attn"
+numeric   = "FP16 KV, FP32 softmax"
+regime    = "decode and prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.qsa"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.flash_attn.json"

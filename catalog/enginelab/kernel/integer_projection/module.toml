@@ -1,0 +1,95 @@
+id        = "kernel.enginelab.integer_projection"
+kind      = "kernel"
+summary   = "integer and packed projections: the integer projection (HIP), its execution and runtime, packed projection, projection reduction, on-the-fly INT4 (generic and Qwen), low precision, GSQ A8 groups, decode projection groups and the weight sweep"
+why       = "integer-dot projections for the GSQ and on-the-fly INT4 FAST levers; where it would go: beside the catalogue's linear.decode/gsq+iu4/a8-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.decode/gsq+iu4/a8-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 2 HIP unit(s) compiled standalone by the gate; 7 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/decode_projection_group.hpp",
+  "include/strix/decode_weight_sweep.hpp",
+  "include/strix/gsq_a8_groups.hpp",
+  "include/strix/hip_gsq_a8_groups.hpp",
+  "include/strix/hip_integer_projection.hpp",
+  "include/strix/hip_integer_projection_runtime.hpp",
+  "include/strix/hip_qwen_onfly_i4.hpp",
+  "include/strix/integer_projection.hpp",
+  "include/strix/integer_projection_execution.hpp",
+  "include/strix/integer_projection_runtime.hpp",
+  "include/strix/low_precision.hpp",
+  "include/strix/onfly_i4.hpp",
+  "include/strix/packed_projection.hpp",
+  "include/strix/projection_reduction.hpp",
+  "include/strix/qwen_onfly_i4.hpp",
+  "src/hip_integer_projection.hip",
+  "src/hip_integer_projection_runtime.hip",
+  "src/hip_qwen_onfly_i4.cpp",
+  "src/integer_projection.cpp",
+  "src/integer_projection_execution.cpp",
+  "src/integer_projection_runtime.cpp",
+  "src/low_precision.cpp",
+  "src/packed_projection.cpp",
+  "src/projection_reduction.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_integer_projection.hip", "src/src/hip_integer_projection_runtime.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/gsq+iu4/a8-f32.enginelab"
+api       = "hip_integer_projection.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.hip_weight"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.integer_projection.json"

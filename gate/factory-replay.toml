@@ -1,0 +1,65 @@
+# FACTORY-REPLAY (card 2587bc1599, E1 of docs/experiments/ROADMAP.md): the baseline of today's serving config under the
+# frozen factory set. Committed 2026-11-17 before any hardware run; NOT run yet. Shape: docs/EXPERIMENTS.md.
+# Tool and numbers: docs/REPLAY.md "Factory replay". Set: gate/replay/factory-v1.set.json (207 exchanges, 27 streams,
+# set_sha256 176af79dc121f634f6f2ea6def556c5c92cd61c084ccca41030ee8635a293bd7).
+
+[hypothesis]
+# Mechanism, from the set's recorded numbers (factory_replay.py freeze, 2026-11-17): under a cap of 256 the 207 turns
+# draw 49,872 tokens (241 a turn) and prefilled 517,643 as recorded (2,500 a turn). At the recorded single-request rates
+# of strixite-00101 (decode 24.2 tok/s, prefill 828 tok/s) one stream alone spends ~10 s decoding and ~3 s prefilling a
+# turn: ~18 committed tokens a second. Two slots share one GPU, so two in flight land between that and twice that.
+prediction = "committed tokens a second at 2 in flight is 18 to 37 (1x to 2x the one-stream 18)"
+confirmed_at = "median of 3 reps >= 18 and <= 37"
+refuted_below = "median of 3 reps < 18 (two slots commit less than one stream alone would)"
+
+[criteria]
+# What makes the baseline row valid. No speed bar: this run sets the number later gates compare against.
+complete = "result.json: reps_done == 3, every rep 207 turns, errors == 0"
+config   = "engine_slots == 2 (the tool's --expect-slots 2 refuses anything else) and the binary is the worker's pinned serving line, started by strix-solo.sh up with nothing overridden"
+spread   = "(max - min) / median of committed_tokens_per_s over the 3 reps <= 0.03 (V10-NOISE: 3 reps separate a 3 % effect)"
+identity = "reported, not a pass bar: per rep, streams identical to their solo run out of 27; every stream that differs is listed in the report with its turn and exchange id"
+report   = "/data/pod/reports/2026-11/factory-replay-baseline.md holds summary.md verbatim (the line 'committed tokens a second'), the job id, the worker, the binary, and a row in docs/experiments/INDEX.md on card/2587bc1599"
+
+[resources]
+nodes   = "one worker, C, through WINJOB win_run (pod-winjob win_run, owner winjob-2587bc1599-<job>); never B, F or D; no idle holds: the job takes C when it starts and closes the window when the command ends"
+hold    = "~200 min expected, TTL 240 min (win_run's 4 h limit)"
+weights = "0 GB staged: strix-solo.sh up loads the worker's own /cache copy of qwen38-fnext-tpn, the one it serves from today; nothing read from /mnt/nv*, /mnt/ark*, /data/ark or NFS"
+loads   = "1 per launch, the solo pass and all 3 reps inside the same server process"
+reps    = "3 because V10-NOISE measured that 3 reps separate a 3 % effect, the smallest step a later gate claims"
+shares  = "FreeFitty loses C's 2 slots for the hold and its threads queue on the other workers (factory-census.md: about 7 threads a slot); the StrixFold pair on F and D and the interactive worker B are not touched"
+cleanup = "win_run stops the units and processes the job left on C and runs pod-window close; pod-model-keeper restores C's pinned engine; no placements beyond the code kit; control-node doctor green afterwards"
+
+[monitor]
+# T = window granted. Expected from the recorded rates above: solo pass ~66 min (34 decode, 10 prefill, 22 for the
+# 1,078,158 prompt tokens of the 27 cold first turns), each rep up to ~44 min.
+milestones = "engine healthy by T+10 min; solo-1 in summary.md by T+80 min; rep-1 by T+125 min; rep-3 and window closed by T+215 min; watched every <= 15 min (stderr prints every turn)"
+stop_rule  = "stop at the first fault, at errors > 0 after the solo pass, or when a milestone is missed by more than 15 min; win_run then closes the window. A stopped job leaves its finished phases in result.json: they are reported as an incomplete baseline (criteria.complete FAIL), and a smaller rerun is an amendment committed first"
+
+[run]
+# The exact steps for whoever holds the window. Not run by this commit.
+checkout = "a checkout of card/2587bc1599 on control-node at /data/pod/plans/2587bc1599/wt"
+precheck = "python3 /data/pod/plans/2587bc1599/wt/tools/replay/factory_replay.py verify --set /data/pod/plans/2587bc1599/wt/gate/replay/factory-v1.set.json --corpus /data/pod/flerp-replay/corpus-v1"
+kit_make = '{"name": "factory-replay", "files": {"factory_replay.py": "/data/pod/plans/2587bc1599/wt/tools/replay/factory_replay.py", "factory-replay.toml": "/data/pod/plans/2587bc1599/wt/gate/factory-replay.toml"}, "nodes": "C"}'
+win_run  = '{"nodes": "C", "kit": "factory-replay", "for": "4h", "cmd": "/data/pod/tools/strix-solo.sh up $WINDOW_IPS && python3 /data/pod/plans/2587bc1599/wt/tools/replay/factory_replay.py run --set /data/pod/plans/2587bc1599/wt/gate/replay/factory-v1.set.json --corpus /data/pod/flerp-replay/corpus-v1 --url http://$WINDOW_IPS:5300 --model qwen3.8-flash-next --concurrency 2 --reps 3 --max-tokens 256 --solo all --wait-ready 900 --expect-slots 2 --out /data/pod/plans/2587bc1599/baseline"}'
+# Unproven until the first job: that strix-solo.sh up starts the pinned line inside a win_run window (the window's
+# hold stops the engine and the keeper stays probe-only), and that the prompt cache still holds a stream's prefix when
+# the next rep reaches it (if not, every rep prefills the 27 first turns again, ~22 min a rep, and the job runs into
+# the 4 h limit: see stop_rule). The kit only satisfies win_run (it needs one); the command runs on control-node.
+# StrixFold (SF-FACTORY-REPLAY 9ebe1d7c24) reuses the tool with --url of the pair's head node and --model dsv41 under
+# its own gate file.
+
+[amendment_2026_11_17]
+# Dated amendment, committed 2026-11-17 before any hardware run (the gate has not run). The prediction and every
+# threshold above stand (18 to 37, spread <= 0.03, errors == 0, engine_slots == 2). What changes is the size of the
+# run, the worker, and how the engine starts. Where this table and the ones above disagree, this table is the run.
+why = "the prepared hold was ~200 min against win_run's 4 h limit: too long and too risky while 100+ rounds wait in the pod queue"
+cut = "13 of the 27 streams, 68 of the 207 exchanges: factory_replay.py run --first-streams 13 = the first 13 streams by the sha256 of their first turn, ascending (s0006 s0009 s0016 s0008 s0024 s0007 s0012 s0019 s0027 s0015 s0004 s0020 s0001). The 14 other streams (139 exchanges) are not played. 3 reps, the solo pass over all 13, 2 in flight and --max-tokens 256 are kept"
+sizing = "recorded numbers of the 13 streams priced at the gate's rates (828 tok/s prefill, 24.2 tok/s decode): one stream at a time 1,416 s. Worst case = the solo pass and 3 reps each that long (two slots gain nothing, the cache holds nothing between phases) = 94 min, plus ~2 min load. N = 13 is the largest N whose worst case fits 100 min"
+complete = "result.json: reps_done == 3, every rep 68 turns, errors == 0 (replaces 207 turns)"
+hold = "100 min: the client is cut by timeout at 5400 s and the phases it finished are reported as an incomplete baseline. TTL 150 min (win_run for = 150m)"
+worker = "A instead of C: the pin of every Flash-Next worker moved today to strixite_p16fold (weights dir qwen38-fnext-p16, FOLD-1 75f1d18d2f), and A holds both that weights file and the ngram table on /cache, while C reads the ngram table over the rail. Never B, F or D, and not a worker another window holds"
+weights = "0 GB staged: /cache/models/qwen38-fnext-p16/weights.strixw and /cache/ngram/qwen38-fnext-ngram-int8/ngram.table on the worker's own NVMe. serve.sh refuses when either is missing (replaces qwen38-fnext-tpn)"
+engine = "strix-solo.sh up inside a win_run window was never tried, and it would open port 5300, the port FreeFitty routes to, as a root unit win_run's cleanup does not stop. The run uses the way the win_run benches have used all day (75f1d18d2f lenbench, 3ea84b622d ident16, 635876b74c stagebench): a kit script on the worker starts strix_server as a user process. gate/replay/serve.sh spells out the pinned line exactly as strix-solo.sh composes it for strixite_p16fold, with two differences: --port 5311, and a new empty prompt cache directory of 12 GiB under /cache/factory-replay-2587bc1599 in place of the lanes' 32 GiB one (removed when the engine stops). criteria.config reads: engine_slots == 2 and the engine's command line in baseline/engine.txt differs from the pinned line only in those two flags"
+milestones = "T = window granted. Engine healthy by T+5 min, solo-1 in summary.md by T+30 min, rep-1 by T+55 min, rep-3 and window closed by T+100 min. Watched every <= 15 min: the job's stderr and, separately, the engine's /health and /metrics on port 5311 and pod-quad status"
+kit_make = '{"name": "factory-replay", "files": {"serve.sh": "/data/pod/plans/2587bc1599/wt/gate/replay/serve.sh", "factory-replay.toml": "/data/pod/plans/2587bc1599/wt/gate/factory-replay.toml"}, "nodes": "A"}'
+win_run = '{"nodes": "A", "kit": "factory-replay", "for": "150m", "cmd": "bash /data/pod/plans/2587bc1599/wt/gate/replay/baseline-run.sh"}'

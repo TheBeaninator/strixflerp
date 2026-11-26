@@ -1,0 +1,53 @@
+id        = "kernel.enginelab.ops_norm"
+kind      = "kernel"
+summary   = "normalisation ops: norm (device), numeric traits, presets, reference, RMS BF16 rows and row reduction"
+why       = "the shared RMSNorm family; where it would go: beside the catalogue's norm.rmsnorm/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: norm.rmsnorm/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/ops/norm/norm.hpp",
+  "src/ops/norm/norm_device.hpp",
+  "src/ops/norm/norm_numeric_traits.hpp",
+  "src/ops/norm/norm_presets.hpp",
+  "src/ops/norm/reference.hpp",
+  "src/ops/norm/rms_bf16_rows.hpp",
+  "src/ops/norm/row_reduction.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/ops/norm"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "norm.rmsnorm/-/f32.enginelab"
+api       = "src/ops/norm/*.hpp"
+numeric   = "EXACT profile: bitwise the engine's declared reference (fixed fmaf order, -ffp-contract=off, denormals kept); FAST levers change bits only behind the quality gate (AGENTS.md)"
+regime    = "any"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "runtime.enginelab.numeric"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

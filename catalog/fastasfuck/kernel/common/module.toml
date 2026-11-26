@@ -1,0 +1,63 @@
+id        = "kernel.fastasfuck.common"
+kind      = "kernel"
+summary   = "fastasfuck's shared headers: the HIP runtime include point and STRIX_HIP_CHECK (common/), host checks, the cached device info, the split-plane expert row layout and the shared type and math helpers of kernels/"
+why       = "every fastasfuck kernel file includes common/hip_check.hpp and most include kernels/types.hpp, so no family module compiles without these headers; types.hpp and math_utils.hpp are the two shared headers strixite does not have"
+notes     = "Interface tags by file: common/hip_runtime.hpp none (byte-identical to kernel.strixite.hip_common common/hip_runtime.hpp at d19945e); common/hip_check.hpp device.hip-check/- (2 changed lines against kernel.strixite.hip_common common/hip_check.hpp at d19945e); common/check.hpp host.check/- (byte-identical to runtime.strixite.check common/check.hpp at d19945e); kernels/device_info.hpp device.info/- (14 changed lines against kernel.strixite.device_info kernels/device_info.hpp at d19945e); kernels/qsplit.hpp linear.row-layout/strixw-q4 (byte-identical to kernel.strixite.qsplit kernels/qsplit.hpp at d19945e); kernels/types.hpp none (new in fastasfuck, no strixite counterpart); kernels/math_utils.hpp none (new in fastasfuck, no strixite counterpart)."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = [
+  "common/check.hpp",
+  "common/hip_check.hpp",
+  "common/hip_runtime.hpp",
+  "kernels/device_info.hpp",
+  "kernels/math_utils.hpp",
+  "kernels/qsplit.hpp",
+  "kernels/types.hpp",
+]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "device.hip-check/-/-"
+api       = "common/hip_check.hpp"
+numeric   = "derived from kernel.strixite.hip_common (2 changed lines against kernel.strixite.hip_common common/hip_check.hpp at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.hip_common: host side of every launch"
+
+[[provides]]
+interface = "host.check/-/-"
+api       = "common/check.hpp"
+numeric   = "the same source as runtime.strixite.check (byte-identical to runtime.strixite.check common/check.hpp at d19945e), so its arithmetic: n/a"
+regime    = "as runtime.strixite.check: host"
+
+[[provides]]
+interface = "device.info/-/-"
+api       = "kernels/device_info.hpp"
+numeric   = "derived from kernel.strixite.device_info (14 changed lines against kernel.strixite.device_info kernels/device_info.hpp at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.device_info: host, cached"
+
+[[provides]]
+interface = "linear.row-layout/strixw-q4/-"
+api       = "kernels/qsplit.hpp"
+numeric   = "the same source as kernel.strixite.qsplit (byte-identical to kernel.strixite.qsplit kernels/qsplit.hpp at d19945e), so its arithmetic: raw codes, no arithmetic"
+regime    = "as kernel.strixite.qsplit: included by .hip files only; Q5 rows need K % 128 == 0"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside every kernel.fastasfuck.* family module that includes it"

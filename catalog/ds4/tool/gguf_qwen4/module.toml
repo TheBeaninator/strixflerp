@@ -1,0 +1,44 @@
+id        = "tool.ds4.gguf_qwen4"
+kind      = "tool"
+summary   = "Qwen3.8 Flash Next scripts: convert, IQ2, native n-grams, pack and the Unicode table generator"
+why       = "how the Qwen packs are made"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = [
+  "gguf-tools/gen_qwen4_unicode.py",
+  "gguf-tools/qwen4_exp_convert.py",
+  "gguf-tools/qwen4_iq2.py",
+  "gguf-tools/qwen4_native_ngrams.py",
+  "gguf-tools/qwen4_pack.py",
+  "gguf-tools/qwen4_pack_to_qwen4exp.py",
+]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.convert-ds4-qwen4/gguf/-"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Python tool; nothing to compile"

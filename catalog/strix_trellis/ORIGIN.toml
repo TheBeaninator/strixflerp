@@ -1,0 +1,53 @@
+# strix-trellis: an independent inference library for EXL3 / QTIP trellis-quantised weights on AMD Strix Halo
+# (gfx1151, wave32): a HIP runtime with a C ABI (trellis decode, GEMV for 1 to 8 rows, WMMA GEMM for prefill, H128
+# transforms, tensor-parallel rank paths), a NumPy CPU reference and a safetensors loader. Developed and measured
+# against DeepSeek V4.1 Flash, the model StrixFold serves (card ORIGIN-TRELLIS 41e8802da1).
+name      = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+version   = "library 0.3.0, C ABI 1 (CMakeLists.txt:2, include/strix_trellis.h); head of 2026-10-30 (Merge pull request #2 from hyukudan/readme-rc7); the README names RC7 9230a97 as the release checkpoint"
+reference_checkout = "control-node:/data/ark-inbox/src/github.com__hyukudan__strix-trellis (ark copy, a depth-1 clone at a34516b); laptop: ~/Code/strixflerp-upstream-supplement/strix-trellis (the same commit, moved by git bundle)"
+
+[licence]
+spdx      = "Apache-2.0"
+files     = ["LICENSE", "NOTICE"]                          # copied verbatim next to this file
+third_party = "NOTICE: the EXL3 format is defined by exllamav3 (MIT, turboderp) and QTIP is Tseng et al., NeurIPS 2024 (its code is GPL-3.0); no code from either project is included (docs/SOURCES.md lists the revisions read). Test fixtures come from the public EAQ v1 EXL3 checkpoint of DeepSeek V4.1 Flash (MIT) and are not harvested. Weights are not part of the tree."
+
+[toolchain]
+host      = "C11 / C++17, CMake 3.24 or newer; python3 with NumPy for the CPU reference (python/pyproject.toml)"
+device    = "therock-10.1"                               # docs/BUILD.md:55: tools/build_remote.sh configures ROCm /opt/rocm/core-10.1 for gfx1151; the pod has not built it
+build     = "cmake -DSTRIX_TRELLIS_ENABLE_HIP=ON [-DSTRIX_TRELLIS_ENABLE_EXPERIMENTAL_TP=ON] -> libstrix_trellis.a (target strix_trellis::runtime, links hip::host); strix_trellis::api is the header alone. CMake's HIP language compiles every unit with -O3 -ffp-contract=off, HIP standard 17, CMAKE_HIP_ARCHITECTURES gfx1151 (CMakeLists.txt:197-210): 13 units by default, 28 with STRIX_TRELLIS_ENABLE_EXPERIMENTAL_TP. There is no hipcc line per kernel, so this file has no [compile] recipe"
+
+[kernels]
+loading   = "linked into the caller: kernels are C++ templates launched with <<< >>> by the library's own host code on a borrowed hipStream_t; there is no code-object kit, manifest or kernel id (ABI-DIFF.md)"
+selection = "launch_linear picks the kernel and the K split count from shape, bit width, codebook and row count (src/backend.hip, src/gemv_policy.hpp); environment switches for the WMMA core (STRIX_TRELLIS_WMMA_TILED, STRIX_TRELLIS_WMMA_TILED_FUSED; docs/API.md)"
+models    = "DeepSeek V4.1 Flash: dense mul1 K4 with a K5 head (the origin's mix-B) in use in its engine, K2 / K3 routed experts at operator level only (README.md Status)"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_strix_trellis.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".gitattributes",
+  ".github/**",
+  ".gitignore",
+  "AGENTS.md",
+  "CHANGELOG.md",
+  "LICENSE",
+  "NOTICE",
+  "README.md",
+  "bench/**",
+  "docs/**",
+  "experiments/**",
+  "src/design_probe.hip",
+  "src/gemm_bench.hip",
+  "src/gemm_reuse_bench.hip",
+  "src/gemv_bench.hip",
+  "src/gemv_lds_bench.hip",
+  "src/microbench.hip",
+  "src/optimized_microbench.hip",
+  "src/wmma_probe.hip",
+  "tests/**",
+  "tools/**",
+]

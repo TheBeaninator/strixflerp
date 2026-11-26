@@ -1,0 +1,53 @@
+# CiruStrixLink: Ciru's USB4 transport and two-host operator console for AMD Strix Halo, the open part of the
+# GLM5.3-Flash-CIRU-STRIX-IU4 TP2 deployment: a static Go binary plus a 16-patch Linux 7.2.2 USB4STREAM series whose
+# DMA-BUF import lets the USB4 NHI rings move GPU-owned buffers (card ORIGIN-CIRU-LINK 682cd99ba2).
+name      = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main"
+version   = "v0.3.3 line (CHANGELOG.md tops at 0.3.3; docs/architecture.md names the release commit 220060a58b8164ed0676da0cda60b48759989553; the ark pins main at 1c7f1ae, docs/releases/v0.3.3.md)"
+reference_checkout = "control-node:/data/ark-inbox/src/github.com__ciru-ai__CiruStrixLink#1c7f1ae89298c5be2ac4f916b589c77a10c903d8 (ark copy: the tree at the commit with a shallow .git); laptop: ~/Code/strixflerp-upstream-supplement/ciru_link (the same 111 files, by tarball through control-node get); docs/harvest/harvest_ciru_link.py pins the tree digest"
+
+[licence]
+spdx      = "Apache-2.0"
+files     = ["LICENSE"]                                  # copied verbatim next to this file
+third_party = "LICENSE: Apache-2.0, the Go utility. kernel/linux-7.2.2/*.patch are Linux-kernel derivative work under GPL-2.0 (the uapi header thunderbolt-stream.h GPL-2.0 WITH Linux-syscall-note), patches 1-15 from jyatesdotdev/strix-rdma 06c1836 with their authors kept, patch 16 by Ciru; COPYING and LICENSES/ ride in runtime.ciru_link.tbstream_zerocopy. internal/ui/static/assets (IBM Plex fonts, SIL OFL-1.1, no licence text in the tree; Ciru emblem, logo, favicon) is not harvested. The HIP bridge (MIT) and the GLM runtime are in the jcbtc Hugging Face package, not in this tree."
+
+[toolchain]
+host      = "Go 1.22 (go.mod; no module dependencies), static linux/amd64 with CGO_ENABLED=0 -trimpath (Makefile linux-amd64); the gate builds with control-node's /opt/go (go1.27.1) and GOTOOLCHAIN=local"
+device    = "none: no GPU code in this tree. The direct GPU path needs the patched kernel (Linux v7.2.2 + the 16 patches) and the HIP bridge from the GLM runtime package"
+build     = "make build | linux-amd64 | test | vet (Makefile); kernel: apply kernel/linux-7.2.2/0001-0016 in order to a fresh v7.2.2 tree (kernel/linux-7.2.2/README.md)"
+
+[gate]
+go        = "python3 docs/harvest/harvest_ciru_link.py --go-gate on control-node CPU: the six Go modules assembled from catalog/ciru_link into one tree, go vet ./..., go test -run '^$' ./... (tests compiled, none run) and the static binary built (gate/results/compile/<module>.json for the six Go modules, binary sha256 in each)"
+patches   = "python3 docs/harvest/harvest_ciru_link.py --patch-gate: 16 of 16 patches match kernel/linux-7.2.2/SHA256SUMS and parse with git apply --numstat (gate/results/compile/ciru_link.patches.json); not applied or compiled: no Linux 7.2.2 tree on the island"
+hip       = "n/a: the origin holds no HIP source; the bridge was not harvested"
+
+[bridge]                                                 # recorded, not harvested
+source    = "nhi-m8-bf16/vllm_nhi_allreduce.cu inside GLM5.3-Flash-CIRU-STRIX-IU4-kernels-source-v0.1.0-rc1.tar.gz (huggingface.co/jcbtc/GLM5.3-Flash-CIRU-STRIX-IU4 at a1ab828d8bd5, runtime/packages); MIT SPDX notice per docs/architecture.md; not in the ark"
+design    = "a small C ABI over HIP device pointers and the caller's stream (no PyTorch): TX / RX pools from hipExtMallocWithFlags(..., hipDeviceMallocUncached), exported with hipMemGetHandleForAddressRange(..., hipMemRangeHandleTypeDmaBufFd) and imported with TBSTREAM_ZC_IMPORT, enabled with TBSTREAM_ZC_ENABLE. Exact M8 message: BF16 [8,4096] = 65,536 bytes as 16 4-KiB frames plus one 32-byte footer frame (protocol / dtype / rank, epoch, sequence, payload length; commit word at byte 28 written last with a system-scope release store, polled with an acquire load). Both ranks compute BF16(float(local) + float(peer)). Circular addressing modulo the whole 4,095-frame pool. Synchronous call: pack, wait, submit TX, GPU footer wait / validate / sum, reap events, repost RX. Other shapes and collectives stay on RCCL"
+numbers   = "docs/performance.md and README.md, two Ryzen AI Max+ 395 hosts, Linux 7.2.2, ROCm 10: 64-KiB BF16 [8,4096] all-reduce median 109.897-110.807 us direct NHI vs 340.904-342.745 us RCCL (16 warmups, 64 measured calls a rank, 80 of 80 exchanges clean, exact sums; bit-for-bit over 102 calls / 3.34 M elements); single-token activation + credit 45.505 us; T128 activation + credit 1,042.402-1,043.402 us I8G32 vs 1,642.803 us BF16 (experimental codec); 6-MiB BF16 [768,4096] all-reduce 4,516-4,521 us vs RCCL 4,943-4,961 us; TCP echo p50 / p95 / p99 130.975 / 192.473 / 249.991 us. Model effect: the synchronous M8 bridge gave no serving gain; one-deep deferred retirement (not in the published archive) gave +4.05% synthetic all-accept (44.17 -> 45.96 tok/s) and +8.76% natural structured output (21.23 -> 23.09 tok/s) at equal accepted drafts; PP768 prompt 472.241 -> 477.314 tok/s (+1.07%)"
+
+[runtime]                                                # the GLM package this transport serves: proprietary, recorded only
+name      = "jcbtc/GLM5.3-Flash-CIRU-STRIX-IU4 (Hugging Face): GLM-5.3-Flash on two 128-GiB Strix Halos, vLLM V2 with a GLM hybrid loader, gfx1151 IU4 kernels, DFlash2 k=5 speculative decoding, TP2 PP1, 64K / 128K / 256K context profiles (6 / 12 / 8 GiB KV a rank), prefix caching off"
+licence   = "the runtime package is not open-licensed as a whole and is not harvested; the parent GLM-5.3-Flash is MIT, the wtdcode AWQ derivative the weights come from declares no licence (redistribution pending per the model doc); the DFlash2 draft (incoai/GLM-5.3-Flash-DFlash2 bf582e4e) is CC BY-NC-ND 4.0"
+numbers   = "experiments/dflash-256k-20260903/RESULTS.md, 65,680-token prompt, 256 generated, 262,272-token profile, direct NHI: target only 9.38 tok/s; DFlash2 k=3 12.16 tok/s (39.27% acceptance); k=5 15.12 tok/s (37.53%), repeats 12.93 and 14.56 tok/s; TTFT about 175-178 s in every mode (first-use Triton compile of the DeepGEMM paged MQA logits stage); the doc calls it a low-acceptance stress result, not a model-speed baseline"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_ciru_link.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".gitattributes",
+  ".github/**",
+  ".gitignore",
+  "CHANGELOG.md",
+  "LICENSE",
+  "README.md",
+  "SECURITY.md",
+  "docs/**",
+  "experiments/**",
+  "internal/ui/static/assets/**",
+  "package.json",
+  "scripts/**",
+]

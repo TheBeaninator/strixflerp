@@ -1,0 +1,51 @@
+id        = "format.kyojin.gguf_loader"
+kind      = "format"
+summary   = "GGUF loading for the EXL3 engine: the tensor collection (raw quantized payloads with the SafetensorsCollection call shape), the block registry that composes a generic loader from per-family blocks, GGUF-to-HF config, tokenizer from tokenizer.ggml.* (pre-tokenizer table generated from llama.cpp)"
+why       = "runs GGUF files unconverted. Where the shape would go: a format.loader/gguf/- provider beside format.gufo.gguf_kquant, through a port of the python / Triton logic"
+notes     = "Interface tag: format.loader/gguf/-. Against the base turboderp-org/exllamav3 8c593e4e: 14 added (__init__.py, attn.py, engram.py, hyperconnections.py, indexer.py, mla_attn.py) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/loader/gguf_blocks/__init__.py",
+  "exllamav3/loader/gguf_blocks/attn.py",
+  "exllamav3/loader/gguf_blocks/engram.py",
+  "exllamav3/loader/gguf_blocks/hyperconnections.py",
+  "exllamav3/loader/gguf_blocks/indexer.py",
+  "exllamav3/loader/gguf_blocks/mla_attn.py",
+  "exllamav3/loader/gguf_blocks/mlp.py",
+  "exllamav3/loader/gguf_blocks/mtp.py",
+  "exllamav3/loader/gguf_blocks/transformer.py",
+  "exllamav3/loader/gguf_collection.py",
+  "exllamav3/loader/gguf_config.py",
+  "exllamav3/loader/gguf_pre.py",
+  "exllamav3/loader/gguf_registry.py",
+  "exllamav3/loader/gguf_tokenizer.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.loader-kyojin/gguf/-"
+api       = "__init__.py, attn.py, engram.py, hyperconnections.py, indexer.py, mla_attn.py, mlp.py, mtp.py ..."
+numeric   = "raw bytes"
+regime    = "load"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

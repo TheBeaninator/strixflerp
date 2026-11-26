@@ -37,11 +37,23 @@ Recipe keys read here:
                                                 # FLERP_PREBUILT_<NAME> overrides (NAME = last id part, upper case)
     [build.installs]                            # binary name in [binaries] -> path under tree/zig-out
     [build.hipcc_output_pins]                   # optional: code object name -> the cache directory name the
+    [build.path_pins]                           # optional: the absolute paths the reference build ran at.
+    tree         = "/abs/checkout"              # Zig writes the build root, the source directories and its global
+    global_cache = "/abs/.zig-global-x"         # cache path into every binary (DWARF and panic strings), so a tree
+                                                # built anywhere else gives other bytes. With these, build.sh runs Zig
+                                                # under bwrap in a view of the filesystem where tree/ sits at `tree`
+                                                # and build/<recipe>/.zig-global at `global_cache`; every other
+                                                # path is the real one. Nothing is created or shadowed outside the
+                                                # private mount namespace: the nearest existing parent of a pinned
+                                                # path gets the namespace's own tmpfs with its real entries bound in.
     [build.overlay]                             # optional: derived module (SPEC.md section 5) -> its root in the
     "executor.flerp.x" = "flerp/x"              # tree. Each of its files under that root is laid over the file at
                                                 # the origin-relative path (root removed), which must be a file of
                                                 # a module the derived one requires; the catalogue is unchanged and
                                                 # assembly.json records both hashes
+    "executor.strixfold_tp4.x" = "."            # root ".": a sub-origin's module, files at their own origin paths;
+                                                # one that is a file of a required module replaces it, any other
+                                                # is an addition
     "glue.hsaco" = "0b20..."                    # reference build compiled it into. hipcc then runs through
                                                 # build/<recipe>/hipcc-pinned ({hipcc} in options), which compiles
                                                 # to ./.zig-cache/o/<pin>/<name> and copies the object to where Zig
@@ -62,7 +74,8 @@ _REF = re.compile(r'@(import|embedFile)\(\s*"([^"\\]+)"\s*\)')
 _LINE_COMMENT = re.compile(r"(?m)^\s*(//|\\\\).*$")      # comments and multiline string literals
 BUILD_KEYS = {"system": str, "zig": str, "root": str, "steps": list, "options": list, "build_file": str,
               "headers": list, "prebuilt": dict, "installs": dict, "hipcc_output_pins": dict, "c_link": str,
-              "overlay": dict}
+              "overlay": dict, "path_pins": dict}
+PATH_PIN_KEYS = ("tree", "global_cache")
 C_LINK_STD = {"c": "-std=c11", "c++": "-std=c++20"}     # C++20 as the CMake assembly compiles it
 
 
@@ -158,13 +171,18 @@ def overlaid(cat, recipe, asm):
         if mid not in asm.modules or not isinstance(root, str):
             errors.append(f"[build.overlay] {mid} is not a module of the assembly")
             continue
-        m, pre, allowed, n = cat.by_id[mid], root.strip("/") + "/", set(asm.deps(mid)), 0
+        # root "." : a sub-origin's module (docs/SPEC-PROPOSALS.md section 12): its files sit verbatim at their own
+        # origin paths; one that is a file of a module it requires replaces it, any other is an addition of its own
+        own = root.strip("/") == "."
+        m, pre, allowed, n = cat.by_id[mid], "" if own else root.strip("/") + "/", set(asm.deps(mid)), 0
         for rel in m.files():
             if not rel.startswith(pre):
                 continue
             n += 1
             dest = rel[len(pre):]
             owner = next((o for o in allowed if dest in cat.by_id[o].files()), None)
+            if owner is None and own:
+                continue                   # an addition: placed at its own path like any module file
             if owner is None:
                 errors.append(f"[build.overlay] {rel} ({mid}) would replace {dest}, which is in no module {mid} requires")
             elif dest in out:
@@ -220,6 +238,11 @@ def plan(cat, recipe, asm, generated=None):
     group = {mid: cat.by_id[mid].build.get("closure") for mid in asm.modules}
     reach = {mid: set(asm.deps(mid)) | {mid} | {o for o in asm.modules if group[mid] and group[o] == group[mid]}
              for mid in asm.modules}
+    # An overlay module reaches what the modules it replaces files of reach (its files stand in theirs), and a file
+    # it replaced still counts as the replaced module's for the files that import it.
+    base = {mid: set(r) for mid, r in reach.items()}
+    for dest, (mid, _, replaced, _) in over.items():
+        reach[mid] |= base.get(replaced, set())
     for rel, (mid, src) in sorted(tree.items()):
         if not rel.endswith(".zig"):
             continue
@@ -233,6 +256,8 @@ def plan(cat, recipe, asm, generated=None):
                 errors.append(f"{rel} ({mid}): @{kind}(\"{target}\") is in no module of the assembly")
                 continue
             owner = tree[dest][0]
+            if dest in over and over[dest][2] in reach.get(mid, ()):
+                continue
             if mid != "-" and owner != "-" and owner not in reach[mid]:
                 errors.append(f"{rel} ({mid}) reaches into {owner} ({dest}) without requiring it")
     return tree, errors, warnings
@@ -313,12 +338,39 @@ cd "$here/tree"
 rm -rf "$here/tree/zig-out"
 # hipcc would append these after the explicit device flags (the origin's zig_build.sh removes them too); nice 19:
 # the build host serves other work. The caches are this assembly's own, as the origin's wrapper keeps them per tree.
-env -u HIPCC_COMPILE_FLAGS_APPEND -u HIPCC_LINK_FLAGS_APPEND \
-    ZIG_LOCAL_CACHE_DIR="$here/tree/.zig-cache" ZIG_GLOBAL_CACHE_DIR="$here/.zig-global" \
-    nice -n 19 "$zig" @ARGV@ "$jobs" "$@"
+@RUN@
 @LINKS@
 python3 "$root/flerplib/assemble_zig.py" record "$here"
 '''
+
+
+def path_pin_errors(pins):
+    """[build.path_pins]: both keys, absolute normalised paths, neither inside the other."""
+    if pins is None:
+        return []
+    if not isinstance(pins, dict) or set(pins) != set(PATH_PIN_KEYS):
+        return [f"[build.path_pins] needs exactly {', '.join(PATH_PIN_KEYS)}"]
+    errors = [f"[build.path_pins] {k} = {v!r} is not an absolute normalised path" for k, v in pins.items()
+              if not isinstance(v, str) or not v.startswith("/") or os.path.normpath(v) != v or v == "/"]
+    if not errors and (pins["tree"].startswith(pins["global_cache"] + "/") or pins["global_cache"].startswith(pins["tree"] + "/")):
+        errors.append("[build.path_pins] tree and global_cache may not contain each other")
+    return errors
+
+
+def run_lines(pins, argv):
+    """The zig command of build.sh: in place, or under bwrap at the reference build's paths ([build.path_pins])."""
+    env = 'env -u HIPCC_COMPILE_FLAGS_APPEND -u HIPCC_LINK_FLAGS_APPEND \\\n'
+    if not pins:
+        return (env + '    ZIG_LOCAL_CACHE_DIR="$here/tree/.zig-cache" ZIG_GLOBAL_CACHE_DIR="$here/.zig-global" \\\n'
+                '    nice -n 19 "$zig" ' + argv + ' "$jobs" "$@"')
+    tree, cache = pins["tree"], pins["global_cache"]
+    return ('# [build.path_pins]: Zig sees tree/ at ' + tree + ' and .zig-global at ' + cache + ', the reference build\'s paths\n'
+            'command -v bwrap >/dev/null || { echo "build.sh: [build.path_pins] needs bwrap" >&2; exit 2; }\n'
+            'mkdir -p "$here/.zig-global"\n'
+            'mapfile -d "" -t view < <(python3 "$root/flerplib/assemble_zig.py" path-view "$here")\n'
+            '[ "$' '{#view[@]}" -gt 0 ] || { echo "build.sh: path-view gave no bwrap arguments" >&2; exit 2; }\n'
+            + env + '    ZIG_LOCAL_CACHE_DIR="' + tree + '/.zig-cache" ZIG_GLOBAL_CACHE_DIR="' + cache + '" \\\n'
+            '    nice -n 19 "$' '{view[@]}" "$zig" ' + argv + ' "$jobs" "$@"')
 
 
 def generate(cat, recipe, out_dir, licence=None):
@@ -339,6 +391,7 @@ def generate(cat, recipe, out_dir, licence=None):
             errors.append(f"{mid}: lang {m.lang} cannot be assembled by the zig assembler")
         if licence and not licence_matches(m.spdx, licence):
             errors.append(f"{mid}: licence '{m.spdx}' is outside --licence {licence}")
+    errors += path_pin_errors(build.get("path_pins"))
     zig = zig_binary(cat, recipe)
     if zig is None and isinstance(build.get("zig"), str):
         errors.append(f"[build] zig '{build['zig']}' is neither a toolchains.toml entry of kind \"zig\" nor an absolute path")
@@ -398,7 +451,8 @@ def generate(cat, recipe, out_dir, licence=None):
             old = json.load(f)
     except (OSError, ValueError):
         old = None
-    if old is not None and (old.get("zig_argv") != argv or old.get("hipcc_output_pins") != build.get("hipcc_output_pins", {})):
+    if old is not None and (old.get("zig_argv") != argv or old.get("hipcc_output_pins") != build.get("hipcc_output_pins", {})
+                            or old.get("path_pins", {}) != build.get("path_pins", {})):
         shutil.rmtree(os.path.join(tdir, ".zig-cache"), ignore_errors=True)
     pre_lines = []
     for mid, (where, m) in sorted(pre.items()):
@@ -407,7 +461,8 @@ def generate(cat, recipe, out_dir, licence=None):
                          f'python3 "$root/flerplib/assemble_zig.py" verify-prebuilt "${env}" "$root/{cat.rel(m.dir)}"')
     link_lines = [f'ln -sfn "tree/zig-out/{installs[name]}" "$here/{name}"' for name in asm.binaries]
     sub = {"RECIPE": recipe.name, "ROOT_REL": os.path.relpath(cat.root, out_dir), "ZIG": zig, "ROCM": rocm,
-           "PREBUILT": "\n".join(pre_lines), "ARGV": " ".join(f'"{a}"' for a in argv), "LINKS": "\n".join(link_lines)}
+           "PREBUILT": "\n".join(pre_lines), "LINKS": "\n".join(link_lines),
+           "RUN": run_lines(build.get("path_pins", {}), " ".join(f'"{a}"' for a in argv))}
     script = re.sub(r"@([A-Z_]+)@", lambda m: sub[m.group(1)], BUILD_SH)
     with open(os.path.join(out_dir, "build.sh"), "w") as f:
         f.write(script)
@@ -430,7 +485,7 @@ def generate(cat, recipe, out_dir, licence=None):
                 "modules": {mid: {"dir": cat.rel(cat.by_id[mid].dir), "spdx": cat.by_id[mid].spdx,
                                   "files": len(cat.by_id[mid].files())} for mid in asm.modules},
                 "prebuilt": {mid: {"where": where, "env": prebuilt_env(mid)} for mid, (where, _) in pre.items()},
-                "hipcc_output_pins": pins, "files": files, "warnings": warnings}
+                "hipcc_output_pins": pins, "path_pins": build.get("path_pins", {}), "files": files, "warnings": warnings}
     with open(os.path.join(out_dir, "assembly.json"), "w") as f:
         json.dump(manifest, f, indent=1, sort_keys=True)
         f.write("\n")
@@ -495,6 +550,72 @@ def verify_prebuilt(kit_dir, module_dir):
     return 0
 
 
+def path_view(out_dir):
+    """bwrap arguments (NUL-separated on stdout) for [build.path_pins]: the real filesystem, except that tree/ is at
+    the pinned tree path and .zig-global at the pinned cache path, and the command starts in the pinned tree.
+    The view is the host's / bound whole; the nearest existing directory above each pinned path gets a tmpfs of the
+    namespace's own over it, holding binds of its real entries except the pinned ones, so no host directory is
+    created, written or hidden outside this process's namespace, whether or not the pinned paths exist."""
+    with open(os.path.join(out_dir, "assembly.json")) as f:
+        pins = json.load(f).get("path_pins") or {}
+    if not pins or path_pin_errors(pins):
+        print("path-view: assembly.json has no valid path_pins", file=sys.stderr)
+        return 2
+    targets = {pins["tree"]: os.path.join(out_dir, "tree"), pins["global_cache"]: os.path.join(out_dir, ".zig-global")}
+    chain = set()
+    for t in targets:
+        p = os.path.dirname(t)
+        while p != "/" and p not in chain:
+            if os.path.islink(p):
+                print(f"path-view: {p} (above a pinned path) is a symlink", file=sys.stderr)
+                return 2
+            chain.add(p)
+            p = os.path.dirname(p)
+
+    def nearest(t):
+        p = os.path.dirname(t)
+        while p != "/" and not os.path.isdir(p):
+            p = os.path.dirname(p)
+        return p
+
+    tops = sorted({nearest(t) for t in targets})
+    tops = [e for e in tops if not any(e != o and e.startswith(o.rstrip("/") + "/") for o in tops)]
+    if "/" in tops:
+        print("path-view: a pinned path has no existing parent below /", file=sys.stderr)
+        return 2
+    args = ["bwrap", "--die-with-parent", "--bind", "/", "/", "--dev", "/dev", "--proc", "/proc"]
+
+    def fill(d):
+        """d is a directory of the namespace's tmpfs: bind the host's entries of d into it, except pinned paths."""
+        names = sorted(os.listdir(d)) if os.path.isdir(d) else []
+        for n in names:
+            p = os.path.join(d, n)
+            if p in targets:
+                continue
+            if p in chain:
+                fill(p)
+            elif os.path.islink(p):
+                args.extend(["--symlink", os.readlink(p), p])
+            else:
+                args.extend(["--bind", p, p])
+        for p in sorted(chain):
+            if os.path.dirname(p) == d and os.path.basename(p) not in names:
+                fill(p)                    # not on the host: a directory of the tmpfs only
+
+    for e in tops:
+        args.extend(["--tmpfs", e])
+        fill(e)
+    for t, src in sorted(targets.items()):
+        args.extend(["--bind", src, t])
+    args.extend(["--chdir", pins["tree"], "--"])
+    if len(args) > 8000:
+        print(f"path-view: {len(args)} bwrap arguments (bwrap takes 9000): a pinned path's parent has too many entries",
+              file=sys.stderr)
+        return 2
+    sys.stdout.write("\0".join(args) + "\0")
+    return 0
+
+
 def record(out_dir):
     """After a build: sha256 of everything installed under tree/zig-out, written to built.json."""
     zout, out = os.path.join(out_dir, "tree", "zig-out"), {}
@@ -510,7 +631,7 @@ def record(out_dir):
 
 
 if __name__ == "__main__":
-    cmds = {"verify-tree": verify_tree, "verify-prebuilt": verify_prebuilt, "record": record}
+    cmds = {"verify-tree": verify_tree, "verify-prebuilt": verify_prebuilt, "record": record, "path-view": path_view}
     if len(sys.argv) < 3 or sys.argv[1] not in cmds:
-        sys.exit("usage: assemble_zig.py verify-tree DIR | verify-prebuilt KIT_DIR MODULE_DIR | record DIR")
+        sys.exit("usage: assemble_zig.py verify-tree DIR | verify-prebuilt KIT_DIR MODULE_DIR | record DIR | path-view DIR")
     sys.exit(cmds[sys.argv[1]](*sys.argv[2:]))

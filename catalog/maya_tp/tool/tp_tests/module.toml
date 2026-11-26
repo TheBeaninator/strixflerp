@@ -1,0 +1,139 @@
+id        = "tool.maya_tp.tp_tests"
+kind      = "tool"
+summary   = "TP2 delta: the TP unit and pair tests: tests/tp_*.cpp (collective, RDMA communicator, context, control-socket state, partition, slice), tests/ds4_tp_*.cpp / .cu / .py (channel, control, batch, chunk, identity, loaders, workers, sharded DSpark / rollback / sample, pair smoke), tests/glm_tp*, the down-column band test, the server's TP2 boundary and peer-loss tests and tools/test_tp*.py / tools/test_*tp2*.py with the TP calibration script"
+why       = "tests are the executable spec of the TP2 protocol and partition rules; they port with the modules they test"
+notes     = "Interface tag: verify.tp2-unit-tests/-/-. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "serve/test_tp2_boundaries.py",
+  "serve/test_tp2_peer_loss.py",
+  "src/kernels/cpu/native_down_cols_test.cpp",
+  "tests/ds4_tp_batch_channel_test.cpp",
+  "tests/ds4_tp_batch_rdma_test.cpp",
+  "tests/ds4_tp_batch_rows_test.cpp",
+  "tests/ds4_tp_batch_spec_test.cpp",
+  "tests/ds4_tp_batch_test.cpp",
+  "tests/ds4_tp_channel_rdma_test.cpp",
+  "tests/ds4_tp_channel_test.cpp",
+  "tests/ds4_tp_chunk_test.cpp",
+  "tests/ds4_tp_control_fake.hpp",
+  "tests/ds4_tp_control_test.cpp",
+  "tests/ds4_tp_dense_load_test.cpp",
+  "tests/ds4_tp_dense_rdma_test.cu",
+  "tests/ds4_tp_expert_rdma_test.cu",
+  "tests/ds4_tp_identity_exec.py",
+  "tests/ds4_tp_identity_test.cpp",
+  "tests/ds4_tp_model_load_test.cpp",
+  "tests/ds4_tp_model_rdma_test.cpp",
+  "tests/ds4_tp_model_worker_test.cpp",
+  "tests/ds4_tp_pack_file_test.cpp",
+  "tests/ds4_tp_pack_test.cpp",
+  "tests/ds4_tp_pair_smoke.cpp",
+  "tests/ds4_tp_partition_test.cpp",
+  "tests/ds4_tp_preflight_test.cpp",
+  "tests/ds4_tp_rank_load_test.cpp",
+  "tests/ds4_tp_sequences_test.cpp",
+  "tests/ds4_tp_sharded_control_test.cpp",
+  "tests/ds4_tp_sharded_dspark_test.cpp",
+  "tests/ds4_tp_sharded_rollback_test.cpp",
+  "tests/ds4_tp_sharded_sample_test.cpp",
+  "tests/ds4_tp_test_identity.hpp",
+  "tests/ds4_tp_text_rdma_test.cpp",
+  "tests/ds4_tp_upload_real_test.cpp",
+  "tests/ds4_tp_verify_test.cpp",
+  "tests/ds4_tp_worker_state_test.cpp",
+  "tests/glm_tp2_sequences_test.cpp",
+  "tests/glm_tp_batch_test.cpp",
+  "tests/tp_collective_test.cpp",
+  "tests/tp_comm_rdma_test.cpp",
+  "tests/tp_context_test.cpp",
+  "tests/tp_control_socket_state_test.cpp",
+  "tests/tp_partition_test.cpp",
+  "tests/tp_slice_test.cpp",
+  "tools/calibrate_glm_tp.py",
+  "tools/test_ds4_tp2_config.py",
+  "tools/test_ds4_tp2_identity.py",
+  "tools/test_ds4_tp2_launch.py",
+  "tools/test_ds4_tp2_rank.py",
+  "tools/test_glm_tp2_launch.py",
+  "tools/test_tp2_bench.py",
+  "tools/test_tp2_launcher.py",
+  "tools/test_tp2_owned_exec.py",
+  "tools/test_tp_collective.py",
+  "tools/test_tp_config.py",
+  "tools/test_tp_parity.py",
+  "tools/test_tp_partition.py",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.tp2-unit-tests/-/-"
+api       = "the tests' main() / unittest classes"
+numeric   = "exact protocol and partition checks"
+regime    = "one host (fakes) or two hosts (rdma tests)"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_gguf"
+
+[[requires]]
+module    = "kernel.maya_tp.sampler"
+
+[[requires]]
+module    = "kernel.maya_tp.tp_kernels"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_engine"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_control"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_loader"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_worker"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_model"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_tp_batch"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_comm_abi"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_context"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_rdma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

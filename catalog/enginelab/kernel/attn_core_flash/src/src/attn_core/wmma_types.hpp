@@ -1,0 +1,67 @@
+#pragma once
+// attn_core WMMA operand types and the WMMA call (gfx11 wave32, v_wmma_f32_16x16x16_{bf16,f16}). Canonical: every
+// attention core (index_score_wmma, dense_flash_prefill, sparse_flash_wmma) includes this instead of local copies.
+// Rounding: RNE everywhere (bf16 keeps NaN quiet; f16 is the _Float16 cast, which saturates to inf).
+#include <hip/hip_runtime.h>
+
+#include "strix/weight/formats/scalar_float.hpp"
+
+#include <cstdint>
+
+namespace strix::attn_core::tile {
+
+typedef unsigned short Frag __attribute__((ext_vector_type(16)));
+typedef float Acc __attribute__((ext_vector_type(8)));
+typedef unsigned U4 __attribute__((ext_vector_type(4)));
+typedef unsigned U2 __attribute__((ext_vector_type(2)));
+
+enum class Operand : unsigned { bf16 = 1, f16 = 2 };
+
+__device__ __forceinline__ std::uint16_t to_bf16(float x) {  // round to nearest even, NaN stays NaN
+    return weight::scalar_float::bf16_encode(x);
+}
+__device__ __forceinline__ std::uint16_t to_f16(float x) { return __builtin_bit_cast(std::uint16_t, static_cast<_Float16>(x)); }
+template <Operand O> __device__ __forceinline__ std::uint16_t to_operand(float x) {
+    if constexpr (O == Operand::bf16) return to_bf16(x);
+    else return to_f16(x);
+}
+template <Operand O> __device__ __forceinline__ float operand_value(std::uint16_t b) {
+    if constexpr (O == Operand::bf16) return __builtin_bit_cast(float, static_cast<std::uint32_t>(b) << 16U);
+    else return static_cast<float>(__builtin_bit_cast(_Float16, b));
+}
+// Two-term operand: hi = to_operand(x), lo = to_operand(x - hi) (the remainder is exact in FP32); the value is
+// hi + lo. Error <= max(u^2 |x|, h) instead of max(u |x|, h) (u = 2^-11 f16, 2^-8 bf16; h = half the smallest
+// subnormal step, f16 2^-25): relative only while x - hi is a normal number of the format (two_term_model.hpp).
+// The one mechanism of the two-term paths: online_step_split, sparse_flash_keysplit (Split), dense core (kTerms 2).
+struct Terms2 {
+    std::uint16_t hi, lo;
+};
+template <Operand O> __device__ __forceinline__ Terms2 to_operand2(float x) {
+    const std::uint16_t hi = to_operand<O>(x);
+    return Terms2{hi, to_operand<O>(x - operand_value<O>(hi))};
+}
+template <Operand O> __device__ __forceinline__ unsigned pack2_lo(float a, float b) {
+    return static_cast<unsigned>(to_operand2<O>(a).lo) | (static_cast<unsigned>(to_operand2<O>(b).lo) << 16U);
+}
+template <Operand O> __device__ __forceinline__ unsigned pack2(float a, float b) {
+    return static_cast<unsigned>(to_operand<O>(a)) | (static_cast<unsigned>(to_operand<O>(b)) << 16U);
+}
+// Eight FP32 values -> one 16-byte piece of operand elements (idx-wmma's pack8).
+template <Operand O> __device__ __forceinline__ U4 pack8(float4 lo, float4 hi) {
+    return U4{pack2<O>(lo.x, lo.y), pack2<O>(lo.z, lo.w), pack2<O>(hi.x, hi.y), pack2<O>(hi.z, hi.w)};
+}
+// The lo terms of the same eight values (to_operand2).
+template <Operand O> __device__ __forceinline__ U4 pack8_lo(float4 lo, float4 hi) {
+    return U4{pack2_lo<O>(lo.x, lo.y), pack2_lo<O>(lo.z, lo.w), pack2_lo<O>(hi.x, hi.y), pack2_lo<O>(hi.z, hi.w)};
+}
+template <Operand O> __device__ __forceinline__ Acc mma(Frag a, Frag b, Acc c) {
+    if constexpr (O == Operand::bf16) {
+        return STRIX_HIP_WMMA_BF16(a, b, c);
+    } else {
+        typedef _Float16 Half16 __attribute__((ext_vector_type(16)));
+        return STRIX_HIP_WMMA_F16(__builtin_bit_cast(Half16, a), __builtin_bit_cast(Half16, b), c);
+    }
+}
+__device__ __forceinline__ Acc acc_zero() { return Acc{0, 0, 0, 0, 0, 0, 0, 0}; }
+
+}  // namespace strix::attn_core::tile

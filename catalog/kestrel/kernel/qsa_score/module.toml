@@ -1,0 +1,45 @@
+id        = "kernel.kestrel.qsa_score"
+kind      = "kernel"
+summary   = "the optional native QSA scorer with its scalar HIP implementation (src/kernels/cuda/native_qsa_score.cu, 213 lines), its header, the QSA shapes header (qsa_real_shapes: 24 heads, 2 KV heads, head_dim 256, indexer 4 heads x 128, block 4, top-k 2048) and the device parity test"
+why       = "a scalar HIP QSA indexer scorer for the Qwen3.x-FN layout (24 heads, indexer 4 x 128, block 4, top-k 2048), a fourth provider beside kernel.strixite.qsa, the libstrix and hipfire scorers, with its own device parity test"
+notes     = "Interface tag: attn.qsa-indexer/-/f32, the class of kernel.strixite.qsa's f32 variant (Qwen3.x-FN layout). Nothing was compiled, run or timed on the pod."
+
+[provenance]
+origin    = "kestrel"
+repo      = "https://github.com/itechmedic/kestrel"
+commit    = "717c76975cd20d37b2e4162072d7745d6e1576ff"
+branch    = "kestrel"
+paths     = [
+  "include/maya/kernels/native_qsa_score.hpp",
+  "include/maya/kernels/qsa.hpp",
+  "src/kernels/cuda/native_qsa_score.cu",
+  "tests/hip/native_qsa_score.cpp",
+]
+authors   = ["itechmedic", "Project Maya contributors (mw00)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "cuda"
+sources   = ["src/src/kernels/cuda/native_qsa_score.cu"]
+includes  = ["src/include", "src/include/maya/kernels", "src/src/kernels/cuda", "src/tests/hip"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32.kestrel"
+api       = "maya::kernels native QSA score (include/maya/kernels/native_qsa_score.hpp)"
+numeric   = "fp32 pooled keys and queries with a per-block bias; scalar HIP, checked against a host reference by tests/hip/native_qsa_score.cpp"
+regime    = "decode and prompt scoring over 4-cell indexer blocks"
+
+[[requires]]
+module    = "kernel.kestrel.hip_compat"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of Maya's CMake build with MAYA_ENABLE_HIP (cmake/hip_backend.cmake): the .cu file is compiled as HIP through include/maya/hip_compat, for gfx1100 / gfx1201 / gfx1151 (validated) with the engine's include roots and ggml from third_party; it needs headers this harvest leaves in the origin, so it is not compiled here"

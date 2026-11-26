@@ -1,0 +1,44 @@
+id        = "runtime.enginelab.xport_kvshard"
+kind      = "runtime"
+summary   = "KV-shard exchange: the KV-shard channel (host and HIP), its traits and oracle: 4 origin files under src/xport"
+why       = "a two-rank prefill shards the KV cache by position and exchanges shards (GLM kvshard prefill); where it would go: a new strixflerp interface kvcache.shard-exchange/-/bf16.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kvcache.shard-exchange/-/bf16.enginelab. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/xport/kvshard_channel.hpp",
+  "src/xport/kvshard_channel_hip.hpp",
+  "src/xport/kvshard_oracle.hpp",
+  "src/xport/kvshard_traits.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.shard-exchange/-/bf16.enginelab"
+api       = "strix::xport kvshard_channel*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

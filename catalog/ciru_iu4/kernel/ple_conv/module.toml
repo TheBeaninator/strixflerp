@@ -1,0 +1,40 @@
+id        = "kernel.ciru_iu4.ple_conv"
+kind      = "kernel"
+summary   = "CIRU's change to pwilkin's fused PLE causal convolution (ple_conv_kernel and ple_concat_tail, matched in the graph from CONCAT / CONT taps / SILU): the depthwise weights may be BF16 as well as F16 (a template flag decodes the raw 16 bits), and a log switch"
+why       = "part of the Flash-Next PLE path whose exact rounding CIRU qualifies against; small, but a changed kernel file"
+notes     = "Interface tags by file: ple-conv.cu none (catalog/ciru_iu4/KERNELS.md has the table). Against the base pwilkin/llama.cpp f5daaa3c: changed ple-conv.cu +24 -6 lines. No timing was taken on the pod."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = ["ggml/src/ggml-cuda/ple-conv.cu"]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/ggml/src/ggml-cuda/ple-conv.cu"]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.conv-causal/f16+bf16/f32.ciru"
+api       = "ple-conv.cu: ple_conv_kernel, ple_concat_tail (graph match in ggml-cuda.cu)"
+numeric   = "F32 state and output; F16 or BF16 weights widened to F32; multiply and add rounded separately on AMD (the base's inline asm)"
+regime    = "Qwen3.8-Flash-Next PLE stream, prefill and decode"
+
+[[requires]]
+module    = "kernel.ciru_iu4.cuda_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_iu4.ple_conv.json"

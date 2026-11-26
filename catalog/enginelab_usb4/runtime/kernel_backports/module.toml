@@ -1,0 +1,39 @@
+id        = "runtime.enginelab_usb4.kernel_backports"
+kind      = "runtime"
+summary   = "an unmodified upstream Linux fix applied after the series: drm/amdkfd dma_buf reference leak in get_dmabuf_info (e6895021a328), with its README"
+why       = "the leak sits on the DMA-BUF import path the GPU stream uses"
+notes     = "Interface tag: none. Upstream commit, original authorship kept. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "patches/kernel-backports/0001-drm-amdkfd-fix-dma_buf-reference-leak-in-get_dmabuf_info.patch",
+  "patches/kernel-backports/README.md",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-gpu-queue-backport/-/-"
+api       = "AMDKFD_IOC_GET_DMABUF_INFO error path"
+numeric   = "n/a"
+regime    = "the pinned 7.3-rc5 build"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: parsed by the patch gate only"

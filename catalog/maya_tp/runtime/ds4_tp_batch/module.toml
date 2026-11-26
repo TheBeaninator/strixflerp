@@ -1,0 +1,44 @@
+id        = "runtime.maya_tp.ds4_tp_batch"
+kind      = "runtime"
+summary   = "TP2 delta: DeepSeek TP2's opt-in multi-sequence batch metadata (ds4_tp_batch.hpp, ds4_tp_batch_state.hpp): batch plans (up to 4 slots, 16 rows) and commits with emitted / pending tokens, and the per-slot logical state that refuses stale, skipped or out-of-order operations"
+why       = "the batched-serving scheduler state of the DeepSeek pair; with glm_tp_batch it shows one protocol shape serving two engines"
+notes     = "Interface tag: sched.tp2-batch-frames-ds4/-/-. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/ds4/ds4_tp_batch.hpp", "src/ds4/ds4_tp_batch_state.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "sched.tp2-batch-frames-ds4/-/-"
+api       = "strata::ds4::tp2::BatchPlan, BatchCommit, BatchState"
+numeric   = "integer frames"
+regime    = "up to 4 slots"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_control"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the modules that include it"

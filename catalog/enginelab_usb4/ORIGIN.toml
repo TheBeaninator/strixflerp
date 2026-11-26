@@ -1,0 +1,36 @@
+# Strix Halo USB4 driver: a research Linux kernel patch series for the native AMD USB4 host controllers of two Strix
+# Halo machines (USB4STREAM /dev/tbstreamN, the experimental DMA-BUF GPU stream UAPI, AMD NHI lifecycle / recovery
+# fixes). Companion of origin enginelab (card ORIGIN-ENGINELAB bc74e1a17d). Not upstream, tested on one pair.
+name      = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+version   = "49 stable patches (patches/series, 0001-0049) + 3 experimental (patches/experimental) + 1 upstream backport, for Linux 72d3fcf802c45d00b300f25b848a93c3a2bd7c7e (7.3-rc5); README: about 37 Gb/s a direction over two USB4 40 Gb/s cables with four streams, about 34 Gb/s inside the engine for large pipelined transfers, 8.35 us round trip for 64 B, MiniMax decode exchange 2.91 -> 1.89 ms a token"
+reference_checkout = "control-node:/data/ark-inbox/src/github.com__hyukudan__strix-halo-usb4-driver#d5de947cb405d30db65f810c9248d825c1bcedc6 (ark copy, .git without objects); laptop: ~/Code/strixflerp-upstream-supplement/enginelab-usb4 (the same files, by tarball through control-node get); docs/harvest/harvest_enginelab_usb4.py pins the tree digest"
+
+[licence]
+spdx      = "GPL-2.0-only"
+files     = ["COPYING"]                                # copied verbatim next to this file; LICENSES/ (GPL-2.0, Linux-syscall-note) is in runtime.enginelab_usb4.usb4stream_base
+third_party = "ATTRIBUTIONS.md: copied / modified Linux files keep their copyright and SPDX notices; the kernel extension is GPL-2.0-only, the experimental UAPI GPL-2.0 WITH Linux-syscall-note. The GPU stream extension originated in hyukudan/strix-halo-engine-lab; USB4STREAM builds on Intel's code. Two MSI-X fixes in 0001 were adapted from CiruStrixLink's Linux 7.2.2 series (Jonathan Yates, 'thunderbolt: Flush posted MSI-X interrupt clears', original mail in provenance/reference-patches; and 'Clear stale MSI-X status before ring arm', linking Benjamin S. Berman's upstream submission). patches/kernel-backports holds an unmodified upstream drm/amdkfd fix."
+
+[toolchain]
+host      = "a Linux kernel tree at 72d3fcf8 and its build toolchain; python3 for the tools"
+device    = "none"
+build     = "tools/apply-series.sh applies patches/series to the pinned tree; build with a unique local version and config/usb4-gpu.fragment (README 'Build and install'); not done on the island"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_enginelab_usb4.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".gitattributes",
+  ".github/**",
+  ".gitignore",
+  "ATTRIBUTIONS.md",
+  "BUILD.md",
+  "CHANGELOG.md",
+  "COPYING",
+  "README.md",
+  "docs/**",
+  "tests/**",
+]

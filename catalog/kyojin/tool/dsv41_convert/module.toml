@@ -1,0 +1,43 @@
+id        = "tool.kyojin.dsv41_convert"
+kind      = "tool"
+summary   = "DS4.1 pack conversion: driver, pack layout and spec, calibration (streaming), synthetic packs for tests"
+why       = "the public DS4.1 conversion (the Yamz EXL3 conversion pipeline for the published GLM / Qwen packs is private). Where the shape would go: a tool.convert-qwen4exp/-/- provider beside tool.flerp.convert_qwen4exp_p16, tool.strixite.convert_qwen4exp, through a port of the python / Triton logic"
+notes     = "Interface tag: tool.convert-qwen4exp/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 6 added (calib.py, convert_driver.py, pack.py, packspec.py, stream_calib.py, synth_pack.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/dsv41/calib.py",
+  "exllamav3/dsv41/convert_driver.py",
+  "exllamav3/dsv41/pack.py",
+  "exllamav3/dsv41/packspec.py",
+  "exllamav3/dsv41/stream_calib.py",
+  "exllamav3/dsv41/synth_pack.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.convert-qwen4exp-kyojin-dsv41/-/-"
+api       = "calib.py, convert_driver.py, pack.py, packspec.py, stream_calib.py, synth_pack.py"
+numeric   = "n/a"
+regime    = "offline"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

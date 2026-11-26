@@ -1,11 +1,11 @@
 # Gate of the executor ABI over the stages: qwen36-35b-a3b.flerp-serve-stage
 
-Host control-node, written 2026-11-12T01:11:38Z. Criteria: `[criteria]` of `gate/qwen36-35b-a3b.flerp-serve-stage.toml` (committed before the first GPU run). Stage P3 of `docs/PHASE5-FOURNODE-DESIGN.md`.
+Host control-node, written 2026-11-24T19:06:01Z. Criteria: `[criteria]` of `gate/qwen36-35b-a3b.flerp-serve-stage.toml` (committed before the first GPU run). Stage P3 of `docs/PHASE5-FOURNODE-DESIGN.md`.
 
 | stage | result | when (UTC) | failures |
 |---|---|---|---|
-| check | PASS | 2026-11-12T00:45:27Z | 0  |
-| build | PASS | 2026-11-12T00:50:23Z | 0  |
+| check | PASS | 2026-11-24T18:58:26Z | 0  |
+| build | PASS | 2026-11-24T19:06:01Z | 0  |
 | conformance | PASS | 2026-11-12T01:00:06Z | 0  |
 | serve1 | PASS | 2026-11-12T01:02:26Z | 0  |
 | reference | PASS | 2026-11-12T01:04:28Z | 0  |
@@ -19,7 +19,7 @@ Host control-node, written 2026-11-12T01:11:38Z. Criteria: `[criteria]` of `gate
 {"status": "ok", "model": "qwen36-35b-a3b", "front_end": "serve.flerp.http", "executor": "executor.flerp.qwen35moe_abi: Qwen3.6-35B-A3B-Q4_K_M.gguf, 40 blocks, world 1, cuts 0,40, context 4096, decode graph on, one seq, greedy tokens or full rows", "executor_abi": 2, "deliveries": ["full", "tokens"], "sampled_by": "host", "sampler": "greedy (runtime.flerp.sampler_greedy: argmax of each row, temperature 0 only)", "text": "gufo Qwen tokenizer (248320 tokens) and compiled Qwen ChatML formatter; the file's template qwen-chatml-compiled-v1 sha256 e84f32a23fdda27689f868aa4a1a5621f41133e51a48d7f3efcbea2839574259; /data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf", "draft_form": "none", "drafts": 0, "context": 4096, "conversations_at_once": 1, "busy": false, "requests_served": 0, "slots": 1, "busy_slots": 0, "queued": 0, "context_length": 4096}
 ```
 
-`serve1` SIGTERM: exit status {0: 0} in 0.2 s
+`serve1` SIGTERM: exit status {'0': 0} in 0.2 s
 
 `/health` of `serve2` while idle:
 
@@ -27,7 +27,7 @@ Host control-node, written 2026-11-12T01:11:38Z. Criteria: `[criteria]` of `gate
 {"status": "ok", "model": "qwen36-35b-a3b", "front_end": "serve.flerp.http", "executor": "executor.flerp.qwen35moe_abi: Qwen3.6-35B-A3B-Q4_K_M.gguf, 40 blocks, world 2 (loopback, one process), cuts 0,20,40, context 4096, decode graph on, one seq, greedy tokens or full rows", "executor_abi": 2, "deliveries": ["full", "tokens"], "sampled_by": "host", "sampler": "greedy (runtime.flerp.sampler_greedy: argmax of each row, temperature 0 only)", "text": "gufo Qwen tokenizer (248320 tokens) and compiled Qwen ChatML formatter; the file's template qwen-chatml-compiled-v1 sha256 e84f32a23fdda27689f868aa4a1a5621f41133e51a48d7f3efcbea2839574259; /data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf", "draft_form": "none", "drafts": 0, "context": 4096, "conversations_at_once": 1, "busy": false, "requests_served": 0, "slots": 1, "busy_slots": 0, "queued": 0, "context_length": 4096}
 ```
 
-`serve2` SIGTERM: exit status {0: 0} in 0.3 s
+`serve2` SIGTERM: exit status {'0': 0} in 0.3 s
 
 `/health` of `tcp` while idle:
 
@@ -35,7 +35,7 @@ Host control-node, written 2026-11-12T01:11:38Z. Criteria: `[criteria]` of `gate
 {"status": "ok", "model": "qwen36-35b-a3b", "front_end": "serve.flerp.http", "executor": "executor.flerp.qwen35moe_abi: Qwen3.6-35B-A3B-Q4_K_M.gguf, 40 blocks, world 2 (TCP 127.0.0.1:39760), cuts 0,20,40, context 4096, decode graph on, one seq, greedy tokens or full rows", "executor_abi": 2, "deliveries": ["full", "tokens"], "sampled_by": "host", "sampler": "greedy (runtime.flerp.sampler_greedy: argmax of each row, temperature 0 only)", "text": "gufo Qwen tokenizer (248320 tokens) and compiled Qwen ChatML formatter; the file's template qwen-chatml-compiled-v1 sha256 e84f32a23fdda27689f868aa4a1a5621f41133e51a48d7f3efcbea2839574259; /data/ark/models/Qwen__Qwen3.6-35B-A3B-GGUF/gguf/Qwen3.6-35B-A3B-Q4_K_M.gguf", "draft_form": "none", "drafts": 0, "context": 4096, "conversations_at_once": 1, "busy": false, "requests_served": 0, "slots": 1, "busy_slots": 0, "queued": 0, "context_length": 4096}
 ```
 
-`tcp` SIGTERM: exit status {0: 0, 1: 0} in 0.2 s
+`tcp` SIGTERM: exit status {'0': 0, '1': 0} in 0.2 s
 
 ## Shutdown cases (dense model, TCP world 2)
 

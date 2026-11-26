@@ -1,0 +1,75 @@
+id        = "kernel.enginelab.moe_core_prefill"
+kind      = "kernel"
+summary   = "grouped MoE prefill kernel bodies: the HIP MoE prefill cores (p1, core2, g3, da16, GSQ FP16 / WMMA, F16x project and down bodies, k-quant down, LDS epilogue), the DS41 grouped prefill and its variants, the one-split prefill, Qwen grouped tiles and k-quant decode, dense A8 small, k-quant block reads and the EXL3 trellis copy"
+why       = "MoE prefill is where WMMA pays most; this is the shared grouped-GEMM family that Qwen, DS41, GLM and MiniMax prefill bind; where it would go: beside the catalogue's moe.experts-prefill/gguf-kquant+gsq+exl3/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.experts-prefill/gguf-kquant+gsq+exl3/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/moe_core/dense_a8_small.inc",
+  "src/moe_core/dense_a8_small_layout.hpp",
+  "src/moe_core/exl3_trellis.hpp",
+  "src/moe_core/hip_ds41_prefill_grouped.inc",
+  "src/moe_core/hip_ds41_prefill_variants.inc",
+  "src/moe_core/hip_moe_da16_down_body.inc",
+  "src/moe_core/hip_moe_da16_lds_epilogue.inc",
+  "src/moe_core/hip_moe_f16x_down_body.inc",
+  "src/moe_core/hip_moe_f16x_kquant_down.inc",
+  "src/moe_core/hip_moe_f16x_project_body.inc",
+  "src/moe_core/hip_moe_gsq_f16_prefill.inc",
+  "src/moe_core/hip_moe_gsq_weights.inc",
+  "src/moe_core/hip_moe_gsq_wmma_prefill.inc",
+  "src/moe_core/hip_moe_prefill_core2.inc",
+  "src/moe_core/hip_moe_prefill_da16.inc",
+  "src/moe_core/hip_moe_prefill_g3.inc",
+  "src/moe_core/hip_moe_prefill_p1.inc",
+  "src/moe_core/hip_moe_prefill_p1da16.inc",
+  "src/moe_core/kquant_block_reads.hpp",
+  "src/moe_core/one_split_prefill.hpp",
+  "src/moe_core/qwen_grouped_tiles.inc",
+  "src/moe_core/qwen_k_scalar_decode.inc",
+  "src/moe_core/qwen_k_weight_decode.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/moe_core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-kquant+gsq+exl3/f16-f32.enginelab"
+api       = "src/moe_core/hip_*.inc bodies"
+numeric   = "FP32 accumulation, per-tile fixed order"
+regime    = "prefill"
+
+[[requires]]
+module    = "format.enginelab.hip_weight"
+
+[[requires]]
+module    = "kernel.enginelab.core_hadamard"
+
+[[requires]]
+module    = "kernel.enginelab.core_trellis"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

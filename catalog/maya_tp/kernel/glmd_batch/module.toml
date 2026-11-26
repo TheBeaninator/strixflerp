@@ -1,0 +1,50 @@
+id        = "kernel.maya_tp.glmd_batch"
+kind      = "kernel"
+summary   = "the glm-dsa batched prompt kernels (glmd_batch.cu, B9.2-B9.5)"
+why       = "GLM prompt attention over many rows; TP2 prefill chunks are bounded by the transport window and land here"
+notes     = "Interface tag: attn.prefill-causal/-/f32.maya-tp-glmd. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/glmd_batch.hpp", "src/kernels/cuda/glmd_batch.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/glmd_batch.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.prefill-causal/-/f32.maya-tp-glmd"
+api       = "strata::kernels glmd_batch launches (glmd_batch.hpp)"
+numeric   = "FP16 / FP32"
+regime    = "prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_decode"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.glmd_batch.json"

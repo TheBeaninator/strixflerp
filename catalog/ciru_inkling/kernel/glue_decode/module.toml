@@ -1,0 +1,76 @@
+id        = "kernel.ciru_inkling.glue_decode"
+kind      = "kernel"
+summary   = "Inkling 2 Mini decode glue and DSpark draft kernels (hip_glue_decode.hip): short convolution, loop controller, RMSNorm forms, M <= 8 router GEMM and top-8 route, and the draft's QK norm + RoPE, W8 projections, SiLU-and-mul, softcap add and Markov gate"
+notes     = "Interface tags by launch group: launch_hip_sconv_decode: none; launch_hip_loop_decode_down and 2 more: none; launch_hip_pair_rmsnorm and 3 more: norm.rmsnorm/-/bf16; launch_hip_router_gemm_m8: moe.gate-logits/bf16/bf16-f32; launch_hip_route_m8: moe.router/-/f32; launch_hip_qk_norm_rope: pos.rope-heads/-/bf16; launch_hip_dspark_w8: linear.decode/i8-g128/bf16; launch_hip_silu_and_mul: act.swiglu/-/bf16; launch_hip_add_softcap: none; launch_hip_markov_gate: draft.markov/-/bf16 (catalog/ciru_inkling/KERNELS.md has the table). Launch functions take raw device pointers, element strides and a stream (ctypes from ops/hip_runtime.py); none takes a torch tensor. No timing was taken on the pod; figures are the author's (README.md, v1.5.0)."
+
+[provenance]
+origin    = "ciru_inkling"
+repo      = "https://github.com/ciru-ai/Inkling-2-Mini-CIRU-Halo-Agent-gfx1151"
+commit    = "b3870f35926fb322f398e6c373a93098534f8fdb"
+branch    = "main"
+paths     = ["overlay/vllm/models/inkling2/amd/ops/hip_glue_decode.hip"]
+authors   = ["Ciru (CIRU AI)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/vllm/models/inkling2/amd/ops/hip_glue_decode.hip"]
+includes  = ["src/overlay/vllm/models/inkling2/amd/ops"]
+arch      = "gfx1151"
+toolchain = "therock-10.0"
+options   = ["-fPIC", "-O3", "-DINKLING_HIP_ABI_VERSION=3", "-DINKLING_HIP_SRC_HASH_RAW=671b45b80972", "-c"]
+
+[[provides]]
+interface = "norm.rmsnorm/-/bf16.ciru-inkling"
+api       = "launch_hip_pair_rmsnorm, launch_hip_blend_rmsnorm, launch_hip_mix_rmsnorm, launch_hip_rms_norm (extern \"C\", hip_glue_decode.hip)"
+numeric   = "FP32 math, BF16 or FP32 in and out (in_f32 / out_f32 / nw_f32 switches)"
+regime    = "decode rows; hidden 2304"
+
+[[provides]]
+interface = "moe.gate-logits/bf16/bf16-f32.ciru-inkling-m8"
+api       = "launch_hip_router_gemm_m8 (extern \"C\", hip_glue_decode.hip)"
+numeric   = "BF16 X and weight, FP32 logits"
+regime    = "decode; 128 experts"
+
+[[provides]]
+interface = "moe.router/-/f32.ciru-inkling-m8"
+api       = "launch_hip_route_m8 (extern \"C\", hip_glue_decode.hip)"
+numeric   = "FP32; bit-exact IEEE-754 selection order by the file header"
+regime    = "decode, M <= 8 tokens"
+
+[[provides]]
+interface = "pos.rope-heads/-/bf16.ciru-inkling-qk-norm"
+api       = "launch_hip_qk_norm_rope (extern \"C\", hip_glue_decode.hip)"
+numeric   = "BF16 in place, FP32 math"
+regime    = "draft decode"
+
+[[provides]]
+interface = "linear.decode/i8-g128/bf16.ciru-inkling-dspark"
+api       = "launch_hip_dspark_w8 (extern \"C\", hip_glue_decode.hip)"
+numeric   = "BF16 activations, int8 weights with a scale a 128-wide group, FP32 accumulate, BF16 out"
+regime    = "draft decode, M = 8"
+
+[[provides]]
+interface = "act.swiglu/-/bf16.ciru-inkling"
+api       = "launch_hip_silu_and_mul (extern \"C\", hip_glue_decode.hip)"
+numeric   = "BF16, FP32 math"
+regime    = "draft decode"
+
+[[provides]]
+interface = "draft.markov/-/bf16.ciru-inkling-gate"
+api       = "launch_hip_markov_gate (extern \"C\", hip_glue_decode.hip)"
+numeric   = "BF16, FP32 math"
+regime    = "draft decode"
+
+[[requires]]
+module    = "kernel.ciru_inkling.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_inkling.glue_decode.json"

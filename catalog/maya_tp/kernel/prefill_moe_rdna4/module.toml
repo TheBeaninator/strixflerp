@@ -1,0 +1,45 @@
+id        = "kernel.maya_tp.prefill_moe_rdna4"
+kind      = "kernel"
+summary   = "HIP-only GLM prompt experts adapted from Niko1221/Strata fb58e0d (src/prefill/moe_fused_rdna4.cu): IQ prompt experts with int8 activation codes and FP32 scales per 32 values, fused gate / up / down"
+why       = "GLM prompt experts without llama.cpp's MMQ; the RDNA fused expert shape beside kernel.kestrel.prefill_moe"
+notes     = "Interface tag: moe.experts-prefill/gguf-iq+kquant/i8-f32.maya-tp-fused. Not compiled: it includes ggml-cuda's common.cuh, so it needs llama.cpp ggml-cuda sources (MMQ, the pinned 3cf03257 checkout) that the maya-tp tree does not contain (the compile gate of 2026-11-25 stopped at that include) Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/prefill/moe_fused_rdna4.hpp", "src/prefill/moe_fused_rdna4.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-iq+kquant/i8-f32.maya-tp-fused"
+api       = "strata::prefill moe_fused_rdna4 launches"
+numeric   = "int8 activation codes, FP32 scales"
+regime    = "prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+evidence  = "gate/results/compile/kernel.maya_tp.prefill_moe_rdna4.json"
+reason    = "it includes ggml-cuda's common.cuh, so it needs llama.cpp ggml-cuda sources (MMQ, the pinned 3cf03257 checkout) that the maya-tp tree does not contain (the compile gate of 2026-11-25 stopped at that include); compile gate: fail: 1 of 1 units failed; first: src/src/prefill/moe_fused_rdna4.cu: /data/pod/plans/2982083a71/tree/catalog/maya_tp/kernel/prefill_moe_rdna4/src/src/prefill/moe_fused_rdna4.cu:16:10: fatal error: 'common.cuh' file not found"

@@ -1,0 +1,46 @@
+id        = "tool.odinlink5.remote_tensors"
+kind      = "tool"
+summary   = "Python tensor offload over Thunderbolt IP: the TB-Bridge client / server (pure Python, 25-40 Gb/s over TB5 IP, 50-200 us RTT, MLX helpers on the Mac side), RemoteStore (put / get / prefetch_window of PyTorch tensors into a Mac's unified memory), an offload example and its test"
+why       = "the interim, copy-based tier for spilled tensors while the DMA path matures; for strixflerp it is the reference for a host-memory spill tier across a cable"
+notes     = "Interface tag: none. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "bridge/README.md",
+  "bridge/benchmark.py",
+  "bridge/mlx_helpers.py",
+  "bridge/tb_bridge_client.py",
+  "bridge/tb_bridge_server.py",
+  "examples/pytorch_mac_offload.py",
+  "odinlink/__init__.py",
+  "odinlink/remote.py",
+  "tests/test_odinlink_remote.py",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.tensor-offload-ip/-/-"
+api       = "odinlink.RemoteStore; bridge/tb_bridge_client.py, tb_bridge_server.py"
+numeric   = "exact copies"
+regime    = "IP over Thunderbolt"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

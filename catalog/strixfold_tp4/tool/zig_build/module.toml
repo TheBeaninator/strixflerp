@@ -1,0 +1,46 @@
+id        = "tool.strixfold_tp4.zig_build"
+kind      = "tool"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for tool.strixfold.zig_build: 2 file(s) of tool.strixfold.zig_build (cuda.zig, hip_dsv41.zig), laid over the f64b5ff files"
+why       = "tool.strixfold.zig_build is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over tool.strixfold.zig_build without touching it or the TP2 recipes"
+notes     = "Overlay of tool.strixfold.zig_build (overlay.json has every file with both sha256 and its commits). Cards behind the changes: b7eb57e048, 28153e18f3, 023c5d2ad9, e5cb84a995, 01574d76b3. Latest commits: 8ff01127 dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048); 27ea85ea dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma); f706a6d0 dsv41 rrec: tf_ds_route_rec, one thread per (layer, expert) adding a request's gate mass into its stream slot (pod card 28153e18f3); 542162d9 dsv41 reap: pack, ssq, route and norm kernels and the down-y redirect (pod card 023c5d2ad9)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/build/cuda.zig",
+  "zig/build/hip_dsv41.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on tool.strixfold.zig_build (origin strixfold, f64b5ff): 2 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "build.graph/zig/-.tp4"
+api       = "zig build native-hip -Dhipcc= -Drocm= -Dhip-triton-kit="
+numeric   = "n/a"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); build time"
+
+[[requires]]
+module    = "tool.strixfold.zig_build"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

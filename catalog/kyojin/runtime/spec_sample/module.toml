@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.spec_sample"
+kind      = "runtime"
+summary   = "Speculative sampling and acceptance of drafted tokens (greedy and sampled rules)"
+why       = "MTP / DFlash2 / n-gram verify. Where the shape would go: a speculation.accept/-/f32 provider beside kernel.gufo.qwen_sampling, kernel.hipfire.pm_gfx1151, kernel.hipfire.speculation, through a port of the python / Triton logic"
+notes     = "Interface tag: speculation.accept/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (spec_sample.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/generator/spec_sample.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "speculation.accept/-/f32.kyojin"
+api       = "spec_sample.py"
+numeric   = "fp32 probabilities"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

@@ -1,0 +1,65 @@
+id        = "kernel.enginelab.qsa_prefill"
+kind      = "kernel"
+summary   = "QSA (Qwen3.8-Flash-Next sparse attention) prefill kernels: the fast prefill profile (union of TR rows' selections in 4-token blocks, WMMA S^T = K x Q^T and O^T += V^T x P^T with FP32 accumulation, power-of-two Q scaling) with its KV-pair, pipe, shadow and share forms, prefill batch, budget, flash, index and stages, index band and WMMA score, pooled and stage scores, scatter, score scratch, cohort part 2 and committed pool"
+why       = "WMMA sparse prefill at 8-32K for the 12 QSA layers of Qwen3.8-Flash-Next; where it would go: beside the catalogue's attn.qsa-indexer/-/bf16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: attn.qsa-indexer/-/bf16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/qsa_committed_pool.hpp",
+  "include/strix/qsa_prefill_budget.hpp",
+  "include/strix/qsa_prefill_stage_plan.hpp",
+  "include/strix/qsa_score_scratch.hpp",
+  "src/hip_qsa_cohort_part2.inc",
+  "src/hip_qsa_committed_pool.inc",
+  "src/hip_qsa_fast_prefill.inc",
+  "src/hip_qsa_fast_prefill_kv_pair.inc",
+  "src/hip_qsa_fast_prefill_pipe.inc",
+  "src/hip_qsa_fast_prefill_shadow.inc",
+  "src/hip_qsa_fast_prefill_share.inc",
+  "src/hip_qsa_fast_prefill_shpipe.inc",
+  "src/hip_qsa_fast_prefill_shshare.inc",
+  "src/hip_qsa_index_band.inc",
+  "src/hip_qsa_index_score_wmma.inc",
+  "src/hip_qsa_pooled_score.inc",
+  "src/hip_qsa_prefill_batch.inc",
+  "src/hip_qsa_prefill_flash.inc",
+  "src/hip_qsa_prefill_index.inc",
+  "src/hip_qsa_prefill_stages.inc",
+  "src/hip_qsa_scatter.inc",
+  "src/hip_qsa_stage_score.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/bf16-f32.enginelab-prefill"
+api       = "hip_qsa_*.inc (included by hip_indexed_attention_launcher.hip)"
+numeric   = "FP16 WMMA, FP32 accumulation and softmax"
+regime    = "prefill groups of more than 8 rows, head_dim 256"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

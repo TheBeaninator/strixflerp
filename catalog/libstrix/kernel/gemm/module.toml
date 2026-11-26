@@ -1,0 +1,96 @@
+id        = "kernel.libstrix.gemm"
+kind      = "kernel"
+summary   = "libstrix' eight dense linear kernels on quantized checkpoints as vLLM stores them: skinny decode GEMMs and a GEMV with bf16 activations (W8A16, FP8, MXFP4), WMMA prefill GEMMs that decode weights to bf16 while staging them into LDS (W4A16, FP8, MXFP4), an iu8 WMMA GEMM with int8 activations per 128-element group (W8A8, W4A8), an FP8 dequant, and the Qwen3.8-Flash-Next hyper-connection up projection fused with its gate mix"
+why       = "hc_up_gate_mix is a fusion the survey found nowhere else (the origin: 6.7 to 5.2 ms a site at 16k rows with no gate in memory, docs/kernels.md:87), and the skinny W8A16 kernel is what takes the origin's Flash-Next decode from 51 to 37 ms a step (docs/kernels.md:88), to be set against kernel.strixite.linear_q8 on the same model; the FP8 and MXFP4 kernels read checkpoint formats no strixite kernel reads"
+notes     = "Interface tags by file: fp8_dequant.hip none; fp8_wmma_gemm.hip linear.prefill/fp8-e4m3/bf16; hc_up_gate_mix_bf16.hip hc.mix-prefill/bf16/bf16; mxfp4_gemv.hip linear.decode/mxfp4/bf16; mxfp4_wmma_gemm.hip linear.prefill/mxfp4/bf16; w4a16_wmma_gemm.hip linear.prefill/ct-int4/bf16; w8a16_skinny_gemm.hip linear.decode/ct-int8+fp8-e4m3/bf16; w8a8_wmma_gemm.hip linear.prefill/ct-int8+ct-int4/i8-f32 (catalog/libstrix/KERNELS.md has the table). Licence: w8a16_skinny_gemm.hip and w8a8_wmma_gemm.hip are Apache-2.0 (derived from vLLM, NOTICE), the other six files MIT; LICENSES/Apache-2.0.txt rides in this module. Origin numbers: hc_up_gate_mix 6.7 to 5.2 ms a site at 16k rows (docs/kernels.md:87); int8 decode copies read by w8a16_skinny_gemm take Qwen3.8-Flash-Next decode from 51 to 37 ms a step, GSM8K 93 against 92 (docs/kernels.md:88). The survey notes that as an engine the origin is not faster than strixite on decode. No timing was taken on the pod."
+
+[provenance]
+origin    = "libstrix"
+repo      = "https://github.com/asf0/libstrix"
+commit    = "4f1c06f55d520c734a66101e8c31fc5dd9dedeb3"
+branch    = "main"
+paths     = [
+  "LICENSES/Apache-2.0.txt",
+  "csrc/gemm/fp8_dequant.hip",
+  "csrc/gemm/fp8_wmma_gemm.hip",
+  "csrc/gemm/hc_up_gate_mix_bf16.hip",
+  "csrc/gemm/mxfp4_gemv.hip",
+  "csrc/gemm/mxfp4_wmma_gemm.hip",
+  "csrc/gemm/w4a16_wmma_gemm.hip",
+  "csrc/gemm/w8a16_skinny_gemm.hip",
+  "csrc/gemm/w8a8_wmma_gemm.hip",
+]
+authors   = ["asf0"]
+modified  = false
+upstream  = "w8a16_skinny_gemm.hip and w8a8_wmma_gemm.hip are derived from vLLM's csrc/rocm/skinny_gemms.cu through the asf0/strix-vllm fork (Apache-2.0, NOTICE); weight layouts are compressed-tensors' and Quark's as vLLM loads them"
+
+[licence]
+spdx      = "MIT AND Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/csrc/gemm/fp8_dequant.hip",
+  "src/csrc/gemm/fp8_wmma_gemm.hip",
+  "src/csrc/gemm/hc_up_gate_mix_bf16.hip",
+  "src/csrc/gemm/mxfp4_gemv.hip",
+  "src/csrc/gemm/mxfp4_wmma_gemm.hip",
+  "src/csrc/gemm/w4a16_wmma_gemm.hip",
+  "src/csrc/gemm/w8a16_skinny_gemm.hip",
+  "src/csrc/gemm/w8a8_wmma_gemm.hip",
+]
+includes  = ["src/csrc/gemm"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.prefill/fp8-e4m3/bf16.libstrix"
+api       = "torch.ops.strix.fp8_wmma_gemm, torch.ops.strix.fp8_wmma_gemm_cfg, torch.ops.strix.fp8_wmma_gemm_raw, torch.ops.strix.fp8_wmma_gemm_raw_cfg (csrc/gemm/fp8_wmma_gemm.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 activations, never quantized; e4m3 to bf16 is exact, so the scale multiply is the only rounding (bf16 staging), and the raw path keeps the weights exact with fp32 products (file header)"
+regime    = "prefill batches between the skinny kernel and hipBLASLt: M <= 256 raw, M < 768 otherwise; 128x128 block scales (K % 128 == 0) or per-channel scales (K % 64 == 0) (docs/kernels.md:82)"
+
+[[provides]]
+interface = "hc.mix-prefill/bf16/bf16.libstrix-up-gate"
+api       = "torch.ops.strix.hc_up_gate_mix_bf16 (csrc/gemm/hc_up_gate_mix_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "the gate is rounded to bf16 before the sigmoid like the unfused GEMM's output, and the four streams are added in fp32 in stream order 0..3, hc_gate_mix's order (file header)"
+regime    = "prefill; hc_count 4, bf16, K % 64 == 0, batches of 512 rows or more (docs/kernels.md:87)"
+
+[[provides]]
+interface = "linear.decode/mxfp4/bf16.libstrix"
+api       = "torch.ops.strix.mxfp4_gemv (csrc/gemm/mxfp4_gemv.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 activations; an e2m1 nibble becomes its bf16 pattern by one add with the block exponent folded in, exact because the value has at most one mantissa bit"
+regime    = "decode; the plugin routes M <= 2 here (docs/kernels.md:83), the kernel takes M <= 8; Quark layout"
+
+[[provides]]
+interface = "linear.prefill/mxfp4/bf16.libstrix"
+api       = "torch.ops.strix.mxfp4_wmma_gemm, torch.ops.strix.mxfp4_wmma_gemm_cfg, torch.ops.strix.mxfp4_dequant (csrc/gemm/mxfp4_wmma_gemm.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 activations without the fp4 activation quantize of vLLM's emulation kernel; the decode is exact"
+regime    = "the plugin routes M > 2 here; K % 128 == 0 (docs/kernels.md:83)"
+
+[[provides]]
+interface = "linear.prefill/ct-int4/bf16.libstrix"
+api       = "torch.ops.strix.w4a16_wmma_gemm, torch.ops.strix.w4a16_dequant (csrc/gemm/w4a16_wmma_gemm.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 activations, no activation quantization; each weight is rounded once to bf16 at staging"
+regime    = "prefill; the plugin routes group 32 with M > 128 here (docs/kernels.md:81)"
+
+[[provides]]
+interface = "linear.decode/ct-int8+fp8-e4m3/bf16.libstrix"
+api       = "torch.ops.strix.w8a16_skinny_gemm, torch.ops.strix.fp8_skinny_gemm (csrc/gemm/w8a16_skinny_gemm.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "activations stay bf16 / fp16; the dense_w8 use reads an int8 copy of a bf16 weight, each copy checked against bf16 at load (docs/kernels.md:88)"
+regime    = "decode; the op takes M <= 8, the plugin routes M <= 5 (docs/kernels.md:79); K % 128 == 0 for compressed-tensors weights"
+
+[[provides]]
+interface = "linear.prefill/ct-int8+ct-int4/i8-f32.libstrix"
+api       = "torch.ops.strix.w8a8_wmma_gemm, torch.ops.strix.w8a8_wmma_gemm_cfg, torch.ops.strix.w4a8_wmma_gemm (csrc/gemm/w8a8_wmma_gemm.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "out[m, n] = sum over groups of s_a[m][g] * s_w[n][g] * (integer dot of the group), q = clamp(rint(x / s_a), -127, 127), s_a = max |x| of the group / 127 (file header); activations are quantized, so this is not the W8A16 result"
+regime    = "prefill; K % 128 == 0; the plugin routes W8A8 linears and, for int4, M > 5 here (docs/kernels.md:80-81)"
+
+[[requires]]
+module    = "kernel.libstrix.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of python/strix/_C.so: built by the origin CMake (CMakeLists.txt globs every csrc/**/*.hip beside csrc/torch_ops.cpp; HIP standard 20, -O3 -ffp-contract=fast -munsafe-fp-atomics, gfx1151, linked against libtorch). The host half of each file takes torch::Tensor arguments, so no unit compiles without the PyTorch headers; not compiled by this harvest"

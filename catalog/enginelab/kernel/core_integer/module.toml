@@ -1,0 +1,61 @@
+id        = "kernel.enginelab.core_integer"
+kind      = "kernel"
+summary   = "the integer operand for DeepSeek V4.1 GGUF blocks (integer_operand.hpp, integer_math.hpp, the plain / tall / wide / grouped integer main loops and the grouped schedule) and the MoE INT4 arithmetic and chain plans"
+why       = "an exact integer-dot path over GGUF k-quant blocks shared by the dense and the grouped MoE kernels; the lab's local extension of the adopted core; where it would go: beside the catalogue's linear.decode/gguf-kquant/a8-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.decode/gguf-kquant/a8-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/core/chunk_contract.hpp",
+  "src/core/integer_grouped_mainloop.inc",
+  "src/core/integer_grouped_schedule.hpp",
+  "src/core/integer_mainloop.inc",
+  "src/core/integer_math.hpp",
+  "src/core/integer_operand.hpp",
+  "src/core/integer_plan.hpp",
+  "src/core/integer_tall_mainloop.inc",
+  "src/core/integer_wide_mainloop.inc",
+  "src/core/moe_i4_arithmetic.hpp",
+  "src/core/moe_i4_chain.hpp",
+  "src/core/moe_i4_chain_plan.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.decode/gguf-kquant/a8-f32.enginelab-integer"
+api       = "strix::core integer_*.hpp / *.inc main loops"
+numeric   = "integer dot products per block, FP32 scale application in a fixed order"
+regime    = "decode and small-batch verify windows"
+
+[[requires]]
+module    = "kernel.enginelab.core_activation_quant"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.ops_a8"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

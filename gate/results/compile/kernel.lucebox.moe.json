@@ -1,0 +1,41 @@
+{
+ "module": "kernel.lucebox.moe",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-24T22:50:15Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 3,
+ "passed": 3,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 3.3,
+ "results": [
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused.cu -o build/compile-gate/kernel.lucebox.moe/0-moe-fused.cu.o",
+   "rc": 0,
+   "seconds": 1.73,
+   "object_bytes": 119816,
+   "object_sha256": "7aa923111a80ac335c876f896a2e843d66db10549441f2cee29bf76144bc7672"
+  },
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused-combine.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused-combine.cu -o build/compile-gate/kernel.lucebox.moe/1-moe-fused-combine.cu.o",
+   "rc": 0,
+   "seconds": 1.6,
+   "object_bytes": 84192,
+   "object_sha256": "1574281bb23d63cb82d7d01901f0b6b0386ff3816a3a635cdbc37d6c00b59997"
+  },
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/mix-wmma-moe.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/moe/src/server/deps/llama.cpp/ggml/src/ggml-cuda/mix-wmma-moe.cu -o build/compile-gate/kernel.lucebox.moe/2-mix-wmma-moe.cu.o",
+   "rc": 0,
+   "seconds": 3.29,
+   "object_bytes": 253296,
+   "object_sha256": "97310e2d5d1de9d16683c3e725e7f0531d5c0bf586b5db5648782f0f1a6508a1"
+  }
+ ]
+}

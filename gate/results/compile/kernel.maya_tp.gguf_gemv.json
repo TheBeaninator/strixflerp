@@ -1,0 +1,33 @@
+{
+ "module": "kernel.maya_tp.gguf_gemv",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-25T22:54:20Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 2,
+ "passed": 2,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 26.0,
+ "results": [
+  {
+   "unit": "src/src/kernels/cuda/iq_kernels.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/gguf_gemv/src/include -I catalog/maya_tp/kernel/gguf_gemv/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/gguf_gemv/src/src/kernels/cuda/iq_kernels.cu -o build/compile-gate/kernel.maya_tp.gguf_gemv/0-iq_kernels.cu.o",
+   "rc": 0,
+   "seconds": 8.26,
+   "object_bytes": 726392,
+   "object_sha256": "286522b3e11e903d33ca569fcd6a227402f7d707657c649459c3e07c3613162d"
+  },
+  {
+   "unit": "src/src/kernels/cuda/native_mmvq.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/gguf_gemv/src/include -I catalog/maya_tp/kernel/gguf_gemv/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/gguf_gemv/src/src/kernels/cuda/native_mmvq.cu -o build/compile-gate/kernel.maya_tp.gguf_gemv/1-native_mmvq.cu.o",
+   "rc": 0,
+   "seconds": 26.03,
+   "object_bytes": 2019736,
+   "object_sha256": "235a515e9b502c9fad5ab79b628143672459bdee9dd14140fa777e5986456ec5"
+  }
+ ]
+}

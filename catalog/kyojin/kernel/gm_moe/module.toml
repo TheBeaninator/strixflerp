@@ -1,0 +1,42 @@
+id        = "kernel.kyojin.gm_moe"
+kind      = "kernel"
+summary   = "Generic GGUF MoE decode for one token: Q4_K gate / up and Q4_K / Q6_K down experts, SwiGLU, no shared expert, same arithmetic as fq_moe_kq.cu (the .hip file is the hipify output the build compiles)"
+why       = "generic GGUF MoE models without a model-specific path. Where the shape would go: a moe.experts-decode/gguf-kquant/f32 provider beside kernel.flerp.moe_kquant, kernel.flerp.moe_sg, kernel.gufo.qfn_mmq and 1 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-decode/gguf-kquant/f32. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (gm_kq_item.cuh, gm_moe.cu, gm_moe.cuh, gm_moe.hip), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/gm_ext/gm_kq_item.cuh",
+  "exllamav3/gm_ext/gm_moe.cu",
+  "exllamav3/gm_ext/gm_moe.cuh",
+  "exllamav3/gm_ext/gm_moe.hip",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/gm_ext/gm_moe.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-kquant/f32.kyojin-gm"
+api       = "gm_kq_item.cuh, gm_moe.cu, gm_moe.cuh, gm_moe.hip; kernels: gm_quant_rows_kernel, gm_quant_rows_f_kernel, gm_meta_kernel, gm_upgate_q4k_kernel, gm_upgate_q3k_kernel, gm_down_kernel, gm_combine_kernel, gm_gemv3_kernel, gm_gemv_q8_kernel, gm_swiglu_down_q8_kernel"
+numeric   = "q8_1 activations, dp4a"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: gm_moe.hip"

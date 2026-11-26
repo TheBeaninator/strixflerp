@@ -1,0 +1,46 @@
+id        = "runtime.ds4.gpu_api"
+kind      = "runtime"
+summary   = "the backend ABI: ds4_gpu.h (tensor-resident GPU executor API: opaque device tensors and every op the graph issues), ds4_gpu_copy.h (device copy spans) and ds4_gpu_mgpu.h (multi-GPU types and tensor APIs)"
+why       = "the contract every backend (Metal, CUDA, ROCm) implements; what an adapter to strixflerp kernels would target"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["ds4_gpu.h", "ds4_gpu_copy.h", "ds4_gpu_mgpu.h"]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.ds4-gpu-api/-/-"
+api       = "ds4_gpu_*"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "kernel.ds4.dsv41"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_gpu_tp"
+
+[[requires]]
+module    = "runtime.ds4.qwen4_vision"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

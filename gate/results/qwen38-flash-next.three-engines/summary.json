@@ -1,7 +1,7 @@
 {
  "recipe": "qwen38-flash-next.three-engines",
  "host": "control-node",
- "when_utc": "2026-11-11T00:08:44Z",
+ "when_utc": "2026-11-24T19:02:26Z",
  "stages_run": [
   "check",
   "origin",
@@ -14,82 +14,85 @@
   "check": {
    "pass": true,
    "rc": 0,
-   "summary": "flerp check (origin strixite): 105 modules, 8 recipe(s), 0 error(s), 4 warning(s)",
+   "summary": "flerp check (origin strixite): 107 modules, 19 recipe(s), 0 error(s), 8 warning(s), 3 dependency cycle warning(s) inside vendored origins (gufo 3)",
    "catalogue_rc": 0,
-   "catalogue_summary": "flerp check (catalogue): 221 modules, 8 recipe(s), 0 error(s), 34 warning(s)",
-   "evidence": "check.txt, check-catalogue.txt"
+   "catalogue_summary": "flerp check (catalogue): 387 modules, 19 recipe(s), 0 error(s), 30 warning(s), 110 dependency cycle warning(s) inside vendored origins (crucible 17, gufo 93)",
+   "evidence": "check.txt, check-catalogue.txt",
+   "when_utc": "2026-11-24T18:58:26Z"
   },
   "origin": {
    "pass": true,
    "rc": 0,
-   "checkout_head": "20937dce2eb1d994b617229bc1242f2a5572ac91",
-   "origin_toml_commit": "20937dce2eb1d994b617229bc1242f2a5572ac91",
+   "checkout_head": "d19945e5bf5e34366a6448eb4bd9b2aac7c381ac",
+   "origin_toml_commit": "d19945e5bf5e34366a6448eb4bd9b2aac7c381ac",
    "checkout_dirty": false,
-   "summary": "diff-origin origin strixite vs /data/projects/strixite-v070: 105 module(s), 269/269 files byte-identical, 0 problem(s), 29 origin files listed as unharvested",
-   "evidence": "diff-origin.txt"
+   "summary": "diff-origin origin strixite vs /data/projects/strixite-d19945e: 107 module(s), 272/272 files byte-identical, 0 problem(s), 29 origin files listed as unharvested",
+   "evidence": "diff-origin.txt",
+   "when_utc": "2026-11-24T18:58:27Z"
   },
   "build": {
    "tree": "build/qwen38-flash-next.three-engines",
    "evidence": "build.txt",
    "references_origin_checkout": false,
-   "configure_s": 1.6,
-   "build_s": 148.4,
+   "configure_s": 1.2,
+   "build_s": 238.2,
    "binaries": {
     "strixflerp-qwen38-flash-next.three-engines": {
-     "sha256": "deb7cfcd41d5f7d84d9e9a00da63b88418348cabad57c30ab3acdf43f4ae3aef",
-     "bytes": 21983920
+     "sha256": "aee1f2952b09c58cb14c8714df226fbe99b40393c07241e44f0fcdcda754b0d1",
+     "bytes": 22061208
     },
     "convert_qwen4exp": {
-     "sha256": "d2caecb48a35b213f57939354877d5e09816022b342f9824c8272c7629c6760e",
-     "bytes": 723216
+     "sha256": "da228534c69c3da9564281ebe8de3b3050cb15a9faa4f5585552233d3041ab2c",
+     "bytes": 723248
     },
     "convert_ngram_table": {
-     "sha256": "d7852040ec9d30b62a3c724478bebc77c5ceb0e391aea15b63b3a274c8cea59d",
-     "bytes": 186128
+     "sha256": "527fc0db43374c90430745492633bc817e176727f4765b7cde4ebcc4da57399c",
+     "bytes": 186160
     },
     "transcode_ngram_table": {
-     "sha256": "4f481c94a61bf783e346addc82bf6f132e9e56d4f58b6a4f275529e3f1f9a474",
-     "bytes": 133632
+     "sha256": "bd21fe3cd6b68501ce82e46ab1a9cdf0546e87737f64dcdf01fcf22c7e1a9dd6",
+     "bytes": 133664
     },
     "inspect_strixw": {
-     "sha256": "535522a3715ce067e68c5f05f475e1be15ab55ae077464dfcee715c78c5d436f",
+     "sha256": "6f258771d49eed6ffbc85f418e5936f835e608297886d98e8ea5142bcdcaf7be",
      "bytes": 107904
     },
     "check_stream_calls": {
-     "sha256": "0d691ff06a68cac0992a06509e161a4ae3b27236a51db5a266d6cc2b50c93664",
-     "bytes": 488968
+     "sha256": "c39b8d46648e2f8bcfd08803f413522161b570165926efed595a9e6f735a20a3",
+     "bytes": 488984
     },
     "check_logprobs": {
-     "sha256": "ea43bab1ba99d75bab0b81417796fb34b72816bae7dd0758c34f008905fa28dd",
-     "bytes": 1333648
+     "sha256": "fab7cc8e14a7d5e5c1e93301da1f7ae1f95c6a84c6fb27cc5e8586b5fb6f2d4f",
+     "bytes": 1340480
     },
     "sv9_cache_check": {
-     "sha256": "f514bbaa77ae6a8ba1e9290364c1f41f1eca3a4d712aaff305648bc228aa2d2d",
-     "bytes": 984456
+     "sha256": "21b63cad1553e6141e4c28f59446af9c8b106d606d7a2a4415b284460454f936",
+     "bytes": 984520
     },
     "cache_xfer_check": {
-     "sha256": "f1149469db56c1284b26cf62a949ed56f87c551df9367ee80242be854611f9ef",
-     "bytes": 252832
+     "sha256": "ff0492f0a3aa521c3b1f147bcf996e9eb38d79b7f4944d3d73b931a0b751af13",
+     "bytes": 252848
     },
     "strix_vision": {
-     "sha256": "104819efa93bdf343f188f35d6ea8b998d0f3546fdda356075312835d4575f05",
+     "sha256": "fbdec69cd41c654c22dcc5084dfede9eadf132c8882b9036cea1c9ccee666344",
      "bytes": 12001896
     },
     "omf_seg": {
-     "sha256": "0387625802e23e1ad6354e840de5b1d314d85a634c34ce9da0075aa60650bbb6",
-     "bytes": 19081376
+     "sha256": "312a173fb8653b24fad7215bdbd55b02bc736c433c8a72fffb039e92c2c5d211",
+     "bytes": 19105952
     },
     "strix_acts": {
-     "sha256": "d40e3cfbfde5b49b1a86fe719ffdcce8cc6a04c71ac2d614b35e4cfecae830fb",
-     "bytes": 19027328
+     "sha256": "8c5291fa0af9cf66d51af16771d66f640e73196e4c872ef918b3107487f7a724",
+     "bytes": 19051904
     },
     "steer_check": {
-     "sha256": "e7ef1734ac502f190315c152877e0c21b3b6d9b9fdcbc5057a427406ee5cfa4f",
-     "bytes": 18943384
+     "sha256": "5aec2ab62c18082c547782739034a8abab41430939f4f36b370441801cb4d11f",
+     "bytes": 18967960
     }
    },
    "pass": true,
-   "rc": 0
+   "rc": 0,
+   "when_utc": "2026-11-24T19:02:26Z"
   },
   "unit": {
    "pass": true,
@@ -620,5 +623,6 @@
     "engine_processes": []
    }
   }
- }
+ },
+ "config_sha256": "4f4e931d05a6a16efcbb59f90b747e754b42fd0a62ec3348b8d1f04b8fcf1169"
 }

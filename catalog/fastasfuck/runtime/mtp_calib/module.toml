@@ -1,0 +1,46 @@
+id        = "runtime.fastasfuck.mtp_calib"
+kind      = "runtime"
+summary   = "fastasfuck's MTP latency calibration: measures draft and verify step times on the running GPU (warmup, sample counts, tolerance), caches the profile and falls back to built-in gfx1151 figures"
+why       = "the engine picks how many tokens to draft from measured verify cost versus draft cost; strixite has no such file, it is fastasfuck's own addition"
+notes     = "Files vs strixite: serve/mtp_calib.cpp new in fastasfuck; serve/mtp_calib.hpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/mtp_calib.cpp", "serve/mtp_calib.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/mtp_calib.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "draft.mtp-calibration/-/-"
+api       = "strix::MtpCalibrationConfig, strix::MtpHardwareProfile (serve/mtp_calib.hpp)"
+numeric   = "timings in ms, fitted by the file; the draft length chosen from them changes speed, not the tokens"
+regime    = "host, timed on one GPU"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.serve_log"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

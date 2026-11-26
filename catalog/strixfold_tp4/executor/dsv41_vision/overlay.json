@@ -1,0 +1,42 @@
+{
+ "what": "StrixFold 72c0f083's versions of files that a module of origin strixfold also holds; laid over them by a recipe's [build.overlay] \"<id>\" = \".\" (docs/harvest/harvest_strixfold_tp4.py)",
+ "parent_origin": "strixfold",
+ "parent_commit": "f64b5ff",
+ "head_commit": "72c0f083fca18f80fcf73b2358cf8235c3dd5363",
+ "files": [
+  {
+   "path": "zig/src/families/dsv41/picture.zig",
+   "parent_module": "executor.strixfold.dsv41_vision",
+   "parent_sha256": "4d608a9d0945401a046828bb89217fb8d5749c6a7bc0559334898989680ff6cb",
+   "tp4_sha256": "940efdef657bdea5820ac0d5ba635372ca6d3a7395c21fe0fc687325c5ba8cdc",
+   "commits": [
+    "7aae65c0 dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side",
+    "6d2765a2 dsv41 picture: a PNG's inflated data is bounded by the size its header gives; longer data is not inflated past it"
+   ]
+  },
+  {
+   "path": "zig/src/families/dsv41/pil.zig",
+   "parent_module": "executor.strixfold.dsv41_vision",
+   "parent_sha256": "f22f6edc0b51051c22230fc6218e1a49d7fd0b5f75068d8aebbce730a9a1de92",
+   "tp4_sha256": "ccb626c561e500d95018930cd1214a3d3d7485ce01af5b4e75aa9d854e3cd7ec",
+   "commits": [
+    "03d67fc1 server: Pillow for the picture child by TF_PIL_PATH (deploy pylib/), so JPEG and other non-PNG pictures decode on boxes without Pillow (pod card 9757a35411)",
+    "7aae65c0 dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side"
+   ]
+  },
+  {
+   "path": "zig/src/families/dsv41/vision.zig",
+   "parent_module": "executor.strixfold.dsv41_vision",
+   "parent_sha256": "a233baeba8ffc4b43206a8191ec352795f0c1f5491255a2344ce5eabdf6d2b7b",
+   "tp4_sha256": "ad2a21ba5754a700d567d67434f4b3fdd0125a865ab83f54afa066851294973f",
+   "commits": [
+    "c16dc5bf server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)",
+    "4725433f dsv41 vision: a picture's decode buffers go back once it is prepared; the request keeps only its payload",
+    "db0a3694 dsv41 HIP: the vision path's comments are single lines (lean_check) (review)",
+    "adf536fb dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)",
+    "4a65ec73 dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)",
+    "7aae65c0 dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side"
+   ]
+  }
+ ]
+}

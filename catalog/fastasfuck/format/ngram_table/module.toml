@@ -1,0 +1,46 @@
+id        = "format.fastasfuck.ngram_table"
+kind      = "format"
+summary   = "fastasfuck's ngram.table container: a hashed 512-byte header with the checkpoint fingerprint, then fixed-size BF16, FP8 or int8 PLE rows from offset 4096"
+why       = "the PLE n-gram rows are too large for memory, so the served engine reads them from this file one positioned read a row"
+notes     = "Files vs strixite: formats/ngram_table.cpp 27 changed lines against format.strixite.ngram_table at d19945e; formats/ngram_table.hpp byte-identical to format.strixite.ngram_table at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["formats/ngram_table.cpp", "formats/ngram_table.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/ngram_table.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.container/ngram-table/-"
+api       = "strix::NgramTableFile, strix::NgramTableWriter"
+numeric   = "derived from format.strixite.ngram_table (formats/ngram_table.cpp 27 changed lines against format.strixite.ngram_table at d19945e; formats/ngram_table.hpp byte-identical to format.strixite.ngram_table at d19945e); not compared here"
+regime    = "as format.strixite.ngram_table: host; one positioned read per row"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.ple_hash"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_formats) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,85 @@
+id        = "kernel.enginelab.core_hc"
+kind      = "kernel"
+summary   = "the hyper-connection core: HC geometry, expand rows, lane chains, the residual mix and its plan, reference and HIP transition, controller mix and controller RMS rows, the mix catalog and latency plan"
+why       = "GLM-5.3 and DeepSeek V4.1 carry multi-stream hyper-connections (mHC); this is the one shared HC family (hc_pre / hc_post chains) the engines bind; where it would go: beside the catalogue's hc.mix/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: hc.mix/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/core/controller_mix.hpp",
+  "src/core/controller_rms_rows.hpp",
+  "src/core/hc_core.hpp",
+  "src/core/hc_expand_rows.hpp",
+  "src/core/hc_geometry.hpp",
+  "src/core/hc_lane_chain.hpp",
+  "src/core/mix_catalog.hpp",
+  "src/core/mix_latency_plan.hpp",
+  "src/core/residual_mix.hpp",
+  "src/core/residual_mix_plan.hpp",
+  "src/core/residual_reference.hpp",
+  "src/core/residual_transition_hip.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "hc.mix/-/f32.enginelab"
+api       = "strix::core hc_*.hpp, residual_mix*.hpp"
+numeric   = "EXACT profile: bitwise the engine's declared reference (fixed fmaf order, -ffp-contract=off, denormals kept); FAST levers change bits only behind the quality gate (AGENTS.md)"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_mix"
+
+[[requires]]
+module    = "kernel.enginelab.hc_hyper"
+
+[[requires]]
+module    = "kernel.enginelab.ops_norm"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.numeric"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

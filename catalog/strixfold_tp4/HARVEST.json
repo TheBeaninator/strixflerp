@@ -1,0 +1,942 @@
+{
+ "added_because": {
+  "zig/kernels/hip/dsv41/aux_markov.hip": "build graph root / kit registry",
+  "zig/kernels/hip/dsv41/exl3_mlp.hip": "build graph root / kit registry",
+  "zig/kernels/hip/dsv41/reap.hip": "build graph root / kit registry",
+  "zig/kernels/hip/dsv41/route_rec.hip": "build graph root / kit registry",
+  "zig/kernels/hip/dsv41/vision.hip": "build graph root / kit registry",
+  "zig/src/core/cache_wire.zig": "zig/src/core/engine_api.zig",
+  "zig/src/core/cache_wire_test.zig": "zig/src/core/cache_wire.zig",
+  "zig/src/core/lane_host_cache.zig": "zig/src/core/engine_api.zig",
+  "zig/src/core/lane_host_encode_test.zig": "zig/src/core/engine_api.zig",
+  "zig/src/core/lanes/acts.zig": "zig/src/core/lanes/lanes.zig",
+  "zig/src/core/lanes/image_key.zig": "zig/src/core/lanes/lanes.zig",
+  "zig/src/core/lanes/logprobs.zig": "zig/src/core/lanes/lanes.zig",
+  "zig/src/core/lanes/reap_hook.zig": "zig/src/core/lanes/lanes.zig",
+  "zig/src/core/prompt_cache_transfer_test.zig": "zig/src/core/prompt_cache.zig",
+  "zig/src/core/prompt_disk.zig": "zig/src/core/root.zig",
+  "zig/src/core/prompt_disk_format.zig": "zig/src/core/prompt_disk.zig",
+  "zig/src/core/prompt_disk_fs.zig": "zig/src/core/prompt_disk.zig",
+  "zig/src/core/prompt_disk_index.zig": "zig/src/core/prompt_disk.zig",
+  "zig/src/core/prompt_disk_namespace.zig": "zig/src/core/prompt_disk.zig",
+  "zig/src/core/prompt_disk_namespace_test.zig": "zig/src/core/prompt_disk.zig",
+  "zig/src/core/prompt_disk_test.zig": "zig/src/core/prompt_disk.zig",
+  "zig/src/core/prompt_disk_writer.zig": "zig/src/core/prompt_disk.zig",
+  "zig/src/families/dsv41/cache_move.zig": "zig/src/families/dsv41/lanes.zig",
+  "zig/src/families/dsv41/disk.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/disk_identity.zig": "zig/src/families/dsv41/disk.zig",
+  "zig/src/families/dsv41/edit.zig": "zig/src/families/dsv41/model.zig",
+  "zig/src/families/dsv41/encoder.zig": "zig/src/families/dsv41/lanes.zig",
+  "zig/src/families/dsv41/fill_spans.zig": "zig/src/families/dsv41/lanes.zig",
+  "zig/src/families/dsv41/fixtures/reap_export_small.json": "zig/src/families/dsv41/reap.zig",
+  "zig/src/families/dsv41/fixtures/reap_export_small_all.json": "zig/src/families/dsv41/reap.zig",
+  "zig/src/families/dsv41/mask.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/picture_test.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/png_test.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/rdma_core.zig": "zig/src/families/dsv41/rdma_proxy.zig",
+  "zig/src/families/dsv41/rdma_nic.zig": "zig/src/families/dsv41/rdma_proxy.zig",
+  "zig/src/families/dsv41/rdma_proxy4_test.zig": "zig/src/families/dsv41/rdma_proxy.zig",
+  "zig/src/families/dsv41/rdma_proxy_test.zig": "zig/src/families/dsv41/rdma_proxy.zig",
+  "zig/src/families/dsv41/reap.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/reap_dev.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/reslice.zig": "zig/src/families/dsv41/cpu.zig",
+  "zig/src/families/dsv41/route_rec.zig": "zig/src/families/dsv41/model.zig",
+  "zig/src/families/dsv41/route_rec_dev.zig": "zig/src/families/dsv41/model.zig",
+  "zig/src/families/dsv41/stop_marker.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/vit_hip.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/zip2d.zig": "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/gpu/hip/rccl.zig": "zig/src/gpu/hip_facade.zig",
+  "zig/src/native/dsv41_keep_replay.tsv": "zig/src/native/dsv41_keep_replay_test.zig",
+  "zig/src/native/dsv41_keep_replay_test.zig": "zig/src/native/hip.zig",
+  "zig/src/native/dsv41_place_replay.tsv": "zig/src/native/dsv41_keep_replay_test.zig",
+  "zig/src/server/acts_fields.zig": "zig/src/server/chat.zig",
+  "zig/src/server/acts_test.zig": "zig/src/server/root.zig",
+  "zig/src/server/cache_key.zig": "zig/src/server/cache_routes.zig",
+  "zig/src/server/cache_routes_test.zig": "zig/src/server/root.zig",
+  "zig/src/server/http_body_test.zig": "zig/src/server/root.zig",
+  "zig/src/server/image_limits_test.zig": "zig/src/server/root.zig",
+  "zig/src/server/leave.zig": "build graph root / kit registry",
+  "zig/src/server/logprobs_test.zig": "zig/src/server/root.zig",
+  "zig/src/server/queue_cap.zig": "zig/src/server/chat.zig",
+  "zig/src/server/queue_cap_test.zig": "zig/src/server/root.zig",
+  "zig/src/server/reap_routes.zig": "zig/src/server/chat.zig",
+  "zig/src/server/reap_routes_test.zig": "zig/src/server/root.zig",
+  "zig/src/server/route_records_test.zig": "zig/src/server/root.zig",
+  "zig/src/server/route_tag.zig": "zig/src/server/chat.zig",
+  "zig/src/server/shared_messages_test.zig": "zig/src/server/root.zig"
+ },
+ "base": "88ea77961851b60e8a1747fddd2410d29443283c",
+ "commit": "72c0f083fca18f80fcf73b2358cf8235c3dd5363",
+ "files": 400,
+ "gone_from_parent": [
+  "zig/src/families/dsv41/state_file.zig"
+ ],
+ "modules": 28,
+ "origin": "strixfold_tp4",
+ "overlays": [
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/check_main.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/cpu.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/dense.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/dsv41.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/exl3_experts.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/exl3_experts2d.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/exl3_experts2d_rec.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/exl3_linear.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/fixtures/derived_launches.json"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/hip_load.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/lanes.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/lanes_main.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/layer_main.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/load_main.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/model.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/native.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/prompt.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/prompt2d.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/round.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/tri_attn.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/tri_aux.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/tri_hc.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41",
+   "parent_module": "executor.strixfold.dsv41",
+   "path": "zig/src/families/dsv41/tri_norm.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41_vision",
+   "parent_module": "executor.strixfold.dsv41_vision",
+   "path": "zig/src/families/dsv41/picture.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41_vision",
+   "parent_module": "executor.strixfold.dsv41_vision",
+   "path": "zig/src/families/dsv41/pil.zig"
+  },
+  {
+   "module": "executor.strixfold_tp4.dsv41_vision",
+   "parent_module": "executor.strixfold.dsv41_vision",
+   "path": "zig/src/families/dsv41/vision.zig"
+  },
+  {
+   "module": "format.strixfold_tp4.exl3",
+   "parent_module": "format.strixfold.exl3",
+   "path": "zig/src/families/dsv41/plan.zig"
+  },
+  {
+   "module": "format.strixfold_tp4.exl3",
+   "parent_module": "format.strixfold.exl3",
+   "path": "zig/src/families/dsv41/rank_cache_main.zig"
+  },
+  {
+   "module": "format.strixfold_tp4.exl3",
+   "parent_module": "format.strixfold.exl3",
+   "path": "zig/src/families/dsv41/weights.zig"
+  },
+  {
+   "module": "kernel.strixfold_tp4.dense_bf16",
+   "parent_module": "kernel.strixfold.dense_bf16",
+   "path": "zig/kernels/hip/dsv41/dense.hip"
+  },
+  {
+   "module": "kernel.strixfold_tp4.dsv41_abi",
+   "parent_module": "kernel.strixfold.dsv41_abi",
+   "path": "zig/kernels/hip/dsv41/abi.h"
+  },
+  {
+   "module": "kernel.strixfold_tp4.exl3",
+   "parent_module": "kernel.strixfold.exl3",
+   "path": "zig/kernels/hip/dsv41/exl3.hip"
+  },
+  {
+   "module": "kernel.strixfold_tp4.sparse_attn",
+   "parent_module": "kernel.strixfold.sparse_attn",
+   "path": "zig/kernels/hip/dsv41/aux_attn.hip"
+  },
+  {
+   "module": "kernel.strixfold_tp4.triton_kit",
+   "parent_module": "kernel.strixfold.triton_kit",
+   "path": "tools/dsv41-hip/tri/README.md"
+  },
+  {
+   "module": "kernel.strixfold_tp4.triton_kit",
+   "parent_module": "kernel.strixfold.triton_kit",
+   "path": "tools/dsv41-hip/tri/variants.py"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll",
+   "parent_module": "runtime.strixfold.coll",
+   "path": "zig/src/families/dsv41/coll.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll",
+   "parent_module": "runtime.strixfold.coll",
+   "path": "zig/src/families/dsv41/fan.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll",
+   "parent_module": "runtime.strixfold.coll",
+   "path": "zig/src/families/dsv41/link.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll_nccl",
+   "parent_module": "runtime.strixfold.coll_nccl",
+   "path": "zig/src/families/dsv41/comm.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll_rdma",
+   "parent_module": "runtime.strixfold.coll_rdma",
+   "path": "tools/dsv41-hip/rdma_check.py"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll_rdma",
+   "parent_module": "runtime.strixfold.coll_rdma",
+   "path": "zig/src/families/dsv41/rdma_proxy.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll_tcp",
+   "parent_module": "runtime.strixfold.coll_tcp",
+   "path": "zig/src/families/dsv41/tcp_coll.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll_tcp",
+   "parent_module": "runtime.strixfold.coll_tcp",
+   "path": "zig/src/families/dsv41/tcp_proxy.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.coll_tcp",
+   "parent_module": "runtime.strixfold.coll_tcp",
+   "path": "zig/src/families/dsv41/tcp_wire.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.core",
+   "parent_module": "runtime.strixfold.core",
+   "path": "zig/src/core/root.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.dspark_draft",
+   "parent_module": "runtime.strixfold.dspark_draft",
+   "path": "zig/src/families/dsv41/draft.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.dspark_draft",
+   "parent_module": "runtime.strixfold.dspark_draft",
+   "path": "zig/src/families/dsv41/tri_markov.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.engine_host",
+   "parent_module": "runtime.strixfold.engine_host",
+   "path": "zig/src/native/hip.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.gpu_facade",
+   "parent_module": "runtime.strixfold.gpu_facade",
+   "path": "zig/src/gpu/hip/kit.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.gpu_facade",
+   "parent_module": "runtime.strixfold.gpu_facade",
+   "path": "zig/src/gpu/hip/launch.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.gpu_facade",
+   "parent_module": "runtime.strixfold.gpu_facade",
+   "path": "zig/src/gpu/hip_facade.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.kit",
+   "parent_module": "runtime.strixfold.kit",
+   "path": "zig/kernels/hip/dsv41/registry.json"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/engine_api.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lane_host.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lane_host_reuse_test.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lane_host_test.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lanes/backend.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lanes/engine.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lanes/engine_test.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lanes/fake.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lanes/lanes.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.lanes",
+   "parent_module": "runtime.strixfold.lanes",
+   "path": "zig/src/core/lanes/stream.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.prompt_cache",
+   "parent_module": "runtime.strixfold.prompt_cache",
+   "path": "zig/src/core/prompt_cache.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.prompt_cache",
+   "parent_module": "runtime.strixfold.prompt_cache",
+   "path": "zig/src/core/prompt_cache_test.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.sampling",
+   "parent_module": "runtime.strixfold.sampling",
+   "path": "zig/src/core/lanes/sampling.zig"
+  },
+  {
+   "module": "runtime.strixfold_tp4.sampling",
+   "parent_module": "runtime.strixfold.sampling",
+   "path": "zig/src/families/dsv41/sampling.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/anthropic.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/auth.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/cache_routes.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/chat.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/cli.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/errors.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/fields.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/http_body.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/http_conn.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/late_system_test.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/main.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/messages.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/metrics.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/openai.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/prompt.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/responses.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/responses_translate.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/root.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/routes.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/serve.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/server.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/telemetry_reply_test.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/tokens.zig"
+  },
+  {
+   "module": "serve.strixfold_tp4.http",
+   "parent_module": "serve.strixfold.http",
+   "path": "zig/src/server/top_k_test.zig"
+  },
+  {
+   "module": "tool.strixfold_tp4.zig_build",
+   "parent_module": "tool.strixfold.zig_build",
+   "path": "zig/build/cuda.zig"
+  },
+  {
+   "module": "tool.strixfold_tp4.zig_build",
+   "parent_module": "tool.strixfold.zig_build",
+   "path": "zig/build/hip_dsv41.zig"
+  }
+ ],
+ "owner": {
+  "tools/dsv41-hip/ADAPTER.md": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/BUILD_AND_RUN.md": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/COLLECTIVES-DESIGN.md": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/README.md": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/RESULTS.md": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/CREATOR_LICENSE": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/chat_template.jinja": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/checkpoint_files.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/creator_kit_v0.6.1_engram.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/creator_kit_v0.6.1_rope.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/original_files.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/rope_reference_1048576.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/rope_reference_1114112.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/rope_reference_131072.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/rope_reference_262144.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/rope_reference_524288.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/assets/rope_reference_65536.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/bench_stream.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/coll_fault_matrix.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/ctx_sweep.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/deploy_rank0.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/KDEC.md": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/asm.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/bg.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/budget.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/budget_run.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/build_dev.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/build_harness.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/build_harness_r.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/build_pf.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/bw.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/clockcal.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/cmp.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/deploy_at.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/fuse2/aot_fuse2.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/fuse2/route_fuse.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/fuse2/test_route_fuse.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/gpu.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/harness.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/aot_chain.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/aot_fused.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/cmp_dump.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/cnt_test.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/gen_manifest.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/hc_chain.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/hc_fuse.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/hc_session.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/kd_gate.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/kd_session.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/q32.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/q33.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/q34.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/q35.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/recomp.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/test_chain_aot.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/test_hc_chain.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/hc/test_hc_fuse.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/mall.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/mallg.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/mb.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/mk_r2.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/mkconf.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/mkdev.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/mkexp.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/mkexp2.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q20.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q20s.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q21.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q22.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q23.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q23b.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q24.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q25.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/q26.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/runq.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/s2.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/sclk_sample.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/serve_run.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/sum.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/wait_for.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/kdec/xpat.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/receipts/m1_exl3_exact.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/exl3/receipts/m1_exl3_numeric.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/first_light.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/gates.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/gates.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/hip_probe.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/input_common.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/inventory_checkpoint.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/kit_pin.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/linger_guard_test.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/bwload.c": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/d2dcost.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/llink_prompt.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/llink_prompt8.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/llink_split.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/llink_tf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/llink_tf.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/llink_tfgrade.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/reliab.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/tcplat.c": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/tcplat2.c": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/link/umcbw.c": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/lock_sources.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/lock_watch.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/make_edit.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/pidexec.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/preflight.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/preflight_drift.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/prepare_inputs.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/prepare_inputs.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/provenance.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/a23_speed.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/a_grade.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/a_served.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/a_served.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/benchmark.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/calibrate.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/calibrate.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/check_layers.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/compare_runs.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/fault_client.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/gpu_tests.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/holds_check.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/lane_gate.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/lane_rank.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/memledger.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/mkconf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/par_prompts.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/qual_bench.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/qual_lib.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/qual_serve.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/regrade_faults.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/residency.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/run_manifest.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/sampling_check.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/sampling_harness.zig": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/serve_qual.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/serve_verdict.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/served_faults.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/soak.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/spark_compare.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/trace_localize.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qual/trace_verdict.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qualify.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/qualify.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/rank_fixture.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/rdma_check.py": "runtime.strixfold_tp4.coll_rdma",
+  "tools/dsv41-hip/requirements-inputs.lock.txt": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/requirements-inputs.txt": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/reslice_tp4.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/rope_reference.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/run_gpu_tests.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/serve-rank0.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/serve-rank1.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/serve.conf": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/serve_lib.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/snapshot_files.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/source_lock.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/struct/check_samples.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/struct/grammar_tool.zig": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/struct/run_tool.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/struct/struct_run.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/struct/struct_serve.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/test_rank4.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/test_reslice4.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/test_serve_transport.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/test_verify_inputs.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/test_vision_http.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tfp-node0": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tp4.conf": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tp4_orch_test.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tp4fl/gate_judge.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tp4fl/gate_prompts.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tp4fl/mk_tp4_bundle.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tp4fl/prompts8.json": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/README.md": "kernel.strixfold_tp4.triton_kit",
+  "tools/dsv41-hip/tri/bw_probe.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/hiprt.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/kit_add.py": "kernel.strixfold_tp4.triton_kit",
+  "tools/dsv41-hip/tri/kit_strict.py": "kernel.strixfold_tp4.triton_kit",
+  "tools/dsv41-hip/tri/make_hip.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/prof_table.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/refs.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/run_tests.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/status.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_attn.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_basic.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_cover.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_gemm.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_hc.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_hipattn.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_hipattn16.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_hipgate.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_hiphc.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_hipindex.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_hiprope.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_index.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_markov.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_native.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_real.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_route.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/t_wmma.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/variants.py": "kernel.strixfold_tp4.triton_kit",
+  "tools/dsv41-hip/tri/wmma_probe.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/wmma_rate.hip": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_attn.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_attn_ab.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_attn_one.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_attn_phases.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_attn_splits.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_blas32.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_bw.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_crossover.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_gemm_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_hc_ab.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_hipattn16_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_hipattn_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_hipgate_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_hiphc_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_hipindex_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_hiprope_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_index_same.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_kitcmp.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_runs.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_topk_perf.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_tune.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_tune2.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/tri/x_wmma_rate.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/verify_inputs.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/verify_inputs.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/.gitignore": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/README.md": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/SHA256SUMS": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/build.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/declared.hpp": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/ds41_vision.cpp": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/ds41_vision.hpp": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/ds41_vision_math.hpp": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/ds41_vision_prep.cpp": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/ds41_vision_reference.cpp": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/fetch_golden.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/golden.py": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/main.cpp": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/make_golden.sh": "tool.strixfold_tp4.dsv41_hip",
+  "tools/dsv41-hip/vision-reference/package_golden.sh": "tool.strixfold_tp4.dsv41_hip",
+  "zig/build/cuda.zig": "tool.strixfold_tp4.zig_build",
+  "zig/build/hip_dsv41.zig": "tool.strixfold_tp4.zig_build",
+  "zig/kernels/hip/dsv41/abi.h": "kernel.strixfold_tp4.dsv41_abi",
+  "zig/kernels/hip/dsv41/aux_attn.hip": "kernel.strixfold_tp4.sparse_attn",
+  "zig/kernels/hip/dsv41/aux_markov.hip": "kernel.strixfold_tp4.aux_markov",
+  "zig/kernels/hip/dsv41/dense.hip": "kernel.strixfold_tp4.dense_bf16",
+  "zig/kernels/hip/dsv41/exl3.hip": "kernel.strixfold_tp4.exl3",
+  "zig/kernels/hip/dsv41/exl3_mlp.hip": "kernel.strixfold_tp4.exl3_mlp",
+  "zig/kernels/hip/dsv41/reap.hip": "kernel.strixfold_tp4.reap",
+  "zig/kernels/hip/dsv41/registry.json": "runtime.strixfold_tp4.kit",
+  "zig/kernels/hip/dsv41/route_rec.hip": "kernel.strixfold_tp4.route_rec",
+  "zig/kernels/hip/dsv41/vision.hip": "kernel.strixfold_tp4.vision",
+  "zig/src/core/cache_wire.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/cache_wire_test.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/engine_api.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lane_host.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lane_host_cache.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lane_host_encode_test.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lane_host_reuse_test.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lane_host_test.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/acts.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/backend.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/engine.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/engine_test.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/fake.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/image_key.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/lanes.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/logprobs.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/reap_hook.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/lanes/sampling.zig": "runtime.strixfold_tp4.sampling",
+  "zig/src/core/lanes/stream.zig": "runtime.strixfold_tp4.lanes",
+  "zig/src/core/prompt_cache.zig": "runtime.strixfold_tp4.prompt_cache",
+  "zig/src/core/prompt_cache_test.zig": "runtime.strixfold_tp4.prompt_cache",
+  "zig/src/core/prompt_cache_transfer_test.zig": "runtime.strixfold_tp4.prompt_cache",
+  "zig/src/core/prompt_disk.zig": "runtime.strixfold_tp4.core",
+  "zig/src/core/prompt_disk_format.zig": "runtime.strixfold_tp4.core",
+  "zig/src/core/prompt_disk_fs.zig": "runtime.strixfold_tp4.core",
+  "zig/src/core/prompt_disk_index.zig": "runtime.strixfold_tp4.core",
+  "zig/src/core/prompt_disk_namespace.zig": "runtime.strixfold_tp4.core",
+  "zig/src/core/prompt_disk_namespace_test.zig": "runtime.strixfold_tp4.core",
+  "zig/src/core/prompt_disk_test.zig": "runtime.strixfold_tp4.core",
+  "zig/src/core/prompt_disk_writer.zig": "runtime.strixfold_tp4.core",
+  "zig/src/core/root.zig": "runtime.strixfold_tp4.core",
+  "zig/src/families/dsv41/cache_move.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/check_main.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/coll.zig": "runtime.strixfold_tp4.coll",
+  "zig/src/families/dsv41/comm.zig": "runtime.strixfold_tp4.coll_nccl",
+  "zig/src/families/dsv41/cpu.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/dense.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/disk.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/disk_identity.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/draft.zig": "runtime.strixfold_tp4.dspark_draft",
+  "zig/src/families/dsv41/dsv41.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/edit.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/encoder.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/exl3_experts.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/exl3_experts2d.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/exl3_experts2d_rec.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/exl3_linear.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/fan.zig": "runtime.strixfold_tp4.coll",
+  "zig/src/families/dsv41/fill_spans.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/fixtures/derived_launches.json": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/fixtures/reap_export_small.json": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/fixtures/reap_export_small_all.json": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/hip_load.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/lanes.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/lanes_main.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/layer_main.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/link.zig": "runtime.strixfold_tp4.coll",
+  "zig/src/families/dsv41/load_main.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/mask.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/model.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/native.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/picture.zig": "executor.strixfold_tp4.dsv41_vision",
+  "zig/src/families/dsv41/picture_test.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/pil.zig": "executor.strixfold_tp4.dsv41_vision",
+  "zig/src/families/dsv41/plan.zig": "format.strixfold_tp4.exl3",
+  "zig/src/families/dsv41/png_test.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/prompt.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/prompt2d.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/rank_cache_main.zig": "format.strixfold_tp4.exl3",
+  "zig/src/families/dsv41/rdma_core.zig": "runtime.strixfold_tp4.coll_rdma",
+  "zig/src/families/dsv41/rdma_nic.zig": "runtime.strixfold_tp4.coll_rdma",
+  "zig/src/families/dsv41/rdma_proxy.zig": "runtime.strixfold_tp4.coll_rdma",
+  "zig/src/families/dsv41/rdma_proxy4_test.zig": "runtime.strixfold_tp4.coll_rdma",
+  "zig/src/families/dsv41/rdma_proxy_test.zig": "runtime.strixfold_tp4.coll_rdma",
+  "zig/src/families/dsv41/reap.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/reap_dev.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/reslice.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/round.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/route_rec.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/route_rec_dev.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/sampling.zig": "runtime.strixfold_tp4.sampling",
+  "zig/src/families/dsv41/stop_marker.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/tcp_coll.zig": "runtime.strixfold_tp4.coll_tcp",
+  "zig/src/families/dsv41/tcp_proxy.zig": "runtime.strixfold_tp4.coll_tcp",
+  "zig/src/families/dsv41/tcp_wire.zig": "runtime.strixfold_tp4.coll_tcp",
+  "zig/src/families/dsv41/tri_attn.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/tri_aux.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/tri_hc.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/tri_markov.zig": "runtime.strixfold_tp4.dspark_draft",
+  "zig/src/families/dsv41/tri_norm.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/vision.zig": "executor.strixfold_tp4.dsv41_vision",
+  "zig/src/families/dsv41/vit_hip.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/families/dsv41/weights.zig": "format.strixfold_tp4.exl3",
+  "zig/src/families/dsv41/zip2d.zig": "executor.strixfold_tp4.dsv41",
+  "zig/src/gpu/hip/kit.zig": "runtime.strixfold_tp4.gpu_facade",
+  "zig/src/gpu/hip/launch.zig": "runtime.strixfold_tp4.gpu_facade",
+  "zig/src/gpu/hip/rccl.zig": "runtime.strixfold_tp4.gpu_facade",
+  "zig/src/gpu/hip_facade.zig": "runtime.strixfold_tp4.gpu_facade",
+  "zig/src/native/dsv41_keep_replay.tsv": "runtime.strixfold_tp4.engine_host",
+  "zig/src/native/dsv41_keep_replay_test.zig": "runtime.strixfold_tp4.engine_host",
+  "zig/src/native/dsv41_place_replay.tsv": "runtime.strixfold_tp4.engine_host",
+  "zig/src/native/hip.zig": "runtime.strixfold_tp4.engine_host",
+  "zig/src/server/acts_fields.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/acts_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/anthropic.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/auth.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/cache_key.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/cache_routes.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/cache_routes_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/chat.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/cli.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/errors.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/fields.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/http_body.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/http_body_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/http_conn.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/image_limits_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/late_system_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/leave.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/logprobs_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/main.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/messages.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/metrics.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/openai.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/prompt.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/queue_cap.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/queue_cap_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/reap_routes.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/reap_routes_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/responses.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/responses_translate.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/root.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/route_records_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/route_tag.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/routes.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/serve.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/server.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/shared_messages_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/telemetry_reply_test.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/tokens.zig": "serve.strixfold_tp4.http",
+  "zig/src/server/top_k_test.zig": "serve.strixfold_tp4.http"
+ },
+ "parent": "strixfold",
+ "parent_commit": "f64b5ff"
+}

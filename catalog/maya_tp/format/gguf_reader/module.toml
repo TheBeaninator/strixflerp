@@ -1,0 +1,46 @@
+id        = "format.maya_tp.gguf_reader"
+kind      = "format"
+summary   = "the header-only GGUF reader and dequantizer with their CLIs (src/artifact: strata-gguf, strata-dequant; include/strata/artifact)"
+why       = "a small dependency-free GGUF reader is the first piece of any loader; a format.reader provider"
+notes     = "Interface tag: format.reader-maya-tp/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/artifact/dequant.hpp",
+  "include/strata/artifact/gguf_reader.hpp",
+  "src/artifact/dequant.cpp",
+  "src/artifact/gguf_reader.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.reader-maya-tp/-/-"
+api       = "strata::artifact gguf_reader.hpp, dequant.hpp"
+numeric   = "dequant to FP32"
+regime    = "any GGUF"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

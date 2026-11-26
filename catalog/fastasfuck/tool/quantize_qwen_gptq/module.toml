@@ -1,0 +1,49 @@
+id        = "tool.fastasfuck.quantize_qwen_gptq"
+kind      = "tool"
+summary   = "fastasfuck's production GPU GPTQ quantizer (new in 1.1.0): full-rank FP64 ActOrder GPTQ with static groups and Shrink512 over the experts, writing <tensor>.{q,scale,minv} bit-compatible with formats/q4.cpp plus calibration metadata"
+why       = "the 1.1.0 headline (-30.7% held-out KLD against round-to-nearest at the same bytes and speed, README.md) is produced by this script and fed to convert_qwen4exp --prebuilt"
+notes     = "Files vs strixite: tools/quantize_qwen_gptq.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/quantize_qwen_gptq.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.quantize-qwen-gptq/-/-"
+api       = "tools/quantize_qwen_gptq.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[[requires]]
+module    = "tool.fastasfuck.sim_qwen_awq_gptq"
+
+[[requires]]
+module    = "tool.fastasfuck.sim_qwen_calib"
+
+[[requires]]
+module    = "tool.fastasfuck.sim_qwen_gptq_r3"
+
+[[requires]]
+module    = "tool.fastasfuck.sim_qwen_quant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

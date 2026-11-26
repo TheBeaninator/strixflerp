@@ -1,0 +1,73 @@
+id        = "kernel.strata.gdn"
+kind      = "kernel"
+summary   = "the gated delta-net (GDN) layer's non-projection kernels: the reference recurrence, conv step, L2 norm, beta and gate and output norm (gdn), the conv+L2 front end and the step with its output norm in one kernel (fused_gdn), llama.cpp's gated_delta_net recurrence with Strata's state layout (native_gdn) and llama.cpp's conv / SiLU / L2 / gate / output-norm front and back ends (native_gdn_preprocess); src/prefill/gdn_rec_parity.cu is the prompt path's recurrence parity program"
+why       = "36 of Qwen3.8-Flash-Next's 48 layers are GDN, so the decode step is the per-token recurrence these kernels own; fused_gdn is Strata's measured fix for the native step's uncoalesced state reads"
+notes     = "Interface tags by file: gdn.cu mixer.gdn/-/f32; fused_gdn.cu mixer.gdn/-/f32; native_gdn.cu mixer.gdn/-/f32; native_gdn_preprocess.cu mixer.gdn-front/-/f32; none: gdn_rec_parity.cu. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/fused_gdn.hpp",
+  "include/strata/kernels/gdn.hpp",
+  "include/strata/kernels/native_gdn.hpp",
+  "include/strata/kernels/native_gdn_preprocess.hpp",
+  "src/kernels/cuda/fused_gdn.cu",
+  "src/kernels/cuda/gdn.cu",
+  "src/kernels/cuda/native_gdn.cu",
+  "src/kernels/cuda/native_gdn_preprocess.cu",
+  "src/prefill/gdn_rec_parity.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/gdn.cu",
+  "src/src/kernels/cuda/fused_gdn.cu",
+  "src/src/kernels/cuda/native_gdn.cu",
+  "src/src/kernels/cuda/native_gdn_preprocess.cu",
+]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.strata"
+api       = "strata::kernels::gdn_step, gdn_conv_step, gdn_l2_norm, gdn_beta_gate, gdn_out_norm (src/kernels/cuda/gdn.cu)"
+numeric   = "FP32 state and activations"
+regime    = "decode, S = 128"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.strata-fused"
+api       = "strata::kernels::fused_gdn_conv_l2, fused_gdn_ab, fused_gdn_step_norm (src/kernels/cuda/fused_gdn.cu)"
+numeric   = "FP32 state, BF16 alpha / beta weights"
+regime    = "decode, heads of 128"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.strata-native"
+api       = "strata::kernels::native_gdn_step (src/kernels/cuda/native_gdn.cu)"
+numeric   = "FP32; q not pre-scaled, the scale goes on the readout as in the pinned operator; CUDA compiles it with --use_fast_math"
+regime    = "decode, S = 128, h_v a multiple of h_k"
+
+[[provides]]
+interface = "mixer.gdn-front/-/f32.strata-native"
+api       = "strata::kernels::native_gdn_conv_silu, native_gdn_l2_norm, native_gdn_beta_gate, native_gdn_gate, native_gdn_out_norm (src/kernels/cuda/native_gdn_preprocess.cu)"
+numeric   = "FP32; fast-math on CUDA"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.gdn.json"

@@ -1,0 +1,45 @@
+id        = "kernel.kyojin.fla_triton_kda"
+kind      = "kernel"
+summary   = "Vendored fla Triton chain for KDA / GLA, with Kyojin's fused intra, inter-split and fused-h forms"
+why       = "KDA prefill. Where the shape would go: a mixer.kda/-/f32 provider beside kernel.ds4.glmtp_rocm_glm, kernel.ds4.k53flash_rocm_glm, kernel.ds4.k53perf_rocm_glm and 4 more, through a port of the python / Triton logic"
+notes     = "Interface tag: mixer.kda/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 3 added (kda_fused_h.py, kda_inter_split.py, kda_intra_fused.py), 4 changed (gla_chunk.py, kda_chunk_intra.py, kda_chunk_intra_token_parallel.py, kda_wy_fast.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/vendor/fla/gla_chunk.py",
+  "exllamav3/vendor/fla/kda_chunk_intra.py",
+  "exllamav3/vendor/fla/kda_chunk_intra_token_parallel.py",
+  "exllamav3/vendor/fla/kda_fused_h.py",
+  "exllamav3/vendor/fla/kda_inter_split.py",
+  "exllamav3/vendor/fla/kda_intra_fused.py",
+  "exllamav3/vendor/fla/kda_wy_fast.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+upstream  = "flash-linear-attention (MIT)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "mixer.kda/-/f32.kyojin-fla"
+api       = "gla_chunk.py, kda_chunk_intra.py, kda_chunk_intra_token_parallel.py, kda_fused_h.py, kda_inter_split.py, kda_intra_fused.py, kda_wy_fast.py"
+numeric   = "bf16 / fp32"
+regime    = "prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

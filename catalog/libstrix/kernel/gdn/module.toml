@@ -1,0 +1,61 @@
+id        = "kernel.libstrix.gdn"
+kind      = "kernel"
+summary   = "libstrix' three Gated DeltaNet kernels for the Qwen3.x GDN layers: the chunked delta rule for prefill (heads of 128, chunks of 64, an A / P kernel and a state-walking kernel), the prefill front end (width-4 causal conv, then q / k / v with L2 norm and gates) and a HIP port of vLLM's fused speculative-decode kernel"
+why       = "the survey names GDN chunk prefill among the prefill surfaces with one implementation in the catalogue; this MIT one differs from kernel.strixite.gdn in ways its source states (64-token chunks against 32, an A / P kernel for every chunk in parallel before the state walk, a bf16 state accepted in place), so a timing card can test whether any of them transfers"
+notes     = "Interface tags by file: gdn_chunk_k128_v128_c64_bf16.hip mixer.gdn-prefill/-/bf16; gdn_conv_post_bf16.hip mixer.gdn-front/-/bf16; gdn_decode_mtp_bf16.hip mixer.gdn/-/bf16 (catalog/libstrix/KERNELS.md has the table). gdn_decode_mtp_bf16.hip carries SPDX MIT and a vLLM copyright line (a port of vLLM's csrc/gdn/fused_gdn_decode_kernel.cu); the origin's NOTICE does not list it among the Apache-2.0 files, and this module records the licence the file states. No timing was taken on the pod."
+
+[provenance]
+origin    = "libstrix"
+repo      = "https://github.com/asf0/libstrix"
+commit    = "4f1c06f55d520c734a66101e8c31fc5dd9dedeb3"
+branch    = "main"
+paths     = [
+  "csrc/gdn/gdn_chunk_k128_v128_c64_bf16.hip",
+  "csrc/gdn/gdn_conv_post_bf16.hip",
+  "csrc/gdn/gdn_decode_mtp_bf16.hip",
+]
+authors   = ["asf0"]
+modified  = false
+upstream  = "gdn_decode_mtp_bf16.hip is a HIP port of vLLM's csrc/gdn/fused_gdn_decode_kernel.cu (vLLM (Apache-2.0, vllm-project/vllm) and the asf0/strix-vllm fork (branch gfx1151)); the chunk kernel replaces ChunkGatedDeltaRule, the FLA chunk prefill vLLM calls (docs/kernels.md:73)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/csrc/gdn/gdn_chunk_k128_v128_c64_bf16.hip",
+  "src/csrc/gdn/gdn_conv_post_bf16.hip",
+  "src/csrc/gdn/gdn_decode_mtp_bf16.hip",
+]
+includes  = ["src/csrc/gdn"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "mixer.gdn-prefill/-/bf16.libstrix-c64"
+api       = "torch.ops.strix.gdn_chunk_fwd_k128_v128_c64_bf16 (csrc/gdn/gdn_chunk_k128_v128_c64_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 q / k / v, fp32 gates; the recurrent state is read and written as fp32 or bf16 (vLLM's --mamba-ssm-cache-dtype); no in-kernel L2 norm"
+regime    = "prefill; head_k = head_v = 128, chunks of 64 tokens"
+
+[[provides]]
+interface = "mixer.gdn-front/-/bf16.libstrix"
+api       = "torch.ops.strix.gdn_causal_conv1d_w4_bf16, torch.ops.strix.gdn_post_conv_bf16 (csrc/gdn/gdn_conv_post_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 x and conv state, L2 norm on, plain g (docs/kernels.md:74)"
+regime    = "prefill; conv width 4, heads of 128, varlen over cu_seqlens"
+
+[[provides]]
+interface = "mixer.gdn/-/bf16.libstrix-mtp"
+api       = "torch.ops.strix.gdn_decode_mtp_bf16 (csrc/gdn/gdn_decode_mtp_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "same math and thread layout as the vLLM kernel by the file header; bf16 handled as raw uint16"
+regime    = "decode with draft tokens; the schema of vLLM's _C::fused_gdn_decode_post_conv_mtp"
+
+[[requires]]
+module    = "kernel.libstrix.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of python/strix/_C.so: built by the origin CMake (CMakeLists.txt globs every csrc/**/*.hip beside csrc/torch_ops.cpp; HIP standard 20, -O3 -ffp-contract=fast -munsafe-fp-atomics, gfx1151, linked against libtorch). The host half of each file takes torch::Tensor arguments, so no unit compiles without the PyTorch headers; not compiled by this harvest"

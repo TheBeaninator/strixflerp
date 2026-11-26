@@ -1,0 +1,44 @@
+id        = "kernel.strixfold_tp4.exl3_mlp"
+kind      = "kernel"
+summary   = "exl3.hip's decode glinear with a compile-time prefetch depth (2..4 trellis tiles in flight, register or LDS ring), same arguments, grid and accumulate order as exl3.hip so a row's sum is the same bits"
+why       = "Decode glinear on gfx1151 stalls on trellis loads; a deeper ring hides them without changing a single accumulate (pod card e5cb84a995 picks a no-spill schedule per shape through the plan, TF_DS_MLP_SCAN)"
+notes     = "New in the TP4 serving tree (zig/kernels/hip/dsv41/exl3_mlp.hip, not in f64b5ff); compiled into the serving kit by the origin's build graph (zig/build/hip_dsv41.zig, flags as catalog/strixfold ORIGIN.toml [compile]). Cards: e5cb84a995."
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/exl3_mlp.hip",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/exl3_mlp.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = ["--offload-device-only", "--no-gpu-bundle-output", "-O3", "-std=c++20", "-fno-gpu-rdc", "-mno-wavefrontsize64", "-ffp-contract=off", "-fno-fast-math", "-fdenormal-fp-math=ieee", "-D__HIP_PLATFORM_AMD__"]
+
+[[provides]]
+interface = "linear.decode/exl3/f16-f32.row-invariant-prefetch"
+api       = "tf_ds_exl3_glinear_mlp_k<k>_w<warps> (24 variants)"
+numeric   = "the dot2 chain, half-wave, wave and split adds of exl3.hip in its order: bit-equal to exl3.hip's glinear"
+regime    = "decode / verify windows, memory-bound"
+
+[[requires]]
+module    = "kernel.strixfold_tp4.dsv41_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "compiled only inside the recipe dsv41-flash.strixfold-tp4 by the origin's build graph (its object is pinned there and came out as the deployed one); not in gate/compile"

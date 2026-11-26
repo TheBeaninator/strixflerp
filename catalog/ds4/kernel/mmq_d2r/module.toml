@@ -1,0 +1,75 @@
+id        = "kernel.ds4.mmq_d2r"
+kind      = "kernel"
+summary   = "the gated D2R path: the Q2_K MoE down-GEMM and dense Q8_0 on the kind-5 aligned artifact (ds4_mmq_d2r.cu, CUDA build) and the ROCm stubs that stand in for it (test/d2r_stubs.cu, what the ROCm build links)"
+why       = "a derived-to-resident GEMM path and its ROCm placeholder"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["cuda/mmq/ds4_mmq_d2r.cu", "cuda/mmq/ds4_mmq_d2r.cuh", "cuda/mmq/test/d2r_stubs.cu"]
+authors   = ["The ds4.c authors", "DeepSeek", "The ggml authors (llama.cpp 5c0e9468, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/cuda/mmq/test/d2r_stubs.cu"]
+includes  = ["src", "src/cuda/mmq"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "-x",
+  "hip",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-pthread",
+  "-D__HIP_PLATFORM_AMD__",
+  "-Wno-unused-command-line-argument",
+  "-std=c++17",
+  "-DGGML_USE_HIP",
+  "-DDS4_HIP_MMQ_Y=64",
+  "-c",
+]
+
+[[provides]]
+interface = "moe.ds4-d2r/-/-"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "kernel.ds4.mmq_common"
+
+[[requires]]
+module    = "kernel.ds4.mmq_ggml_stubs"
+
+[[requires]]
+module    = "kernel.ds4.mmq_quantize"
+
+[[requires]]
+module    = "kernel.ds4.mmq_mmid"
+
+[[requires]]
+module    = "kernel.ds4.mmq_mmvq"
+
+[[requires]]
+module    = "kernel.ds4.mmq_moe"
+
+[[requires]]
+module    = "kernel.ds4.mmq_repack"
+
+[[requires]]
+module    = "runtime.ds4.linux_memory"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ds4.mmq_d2r.json"

@@ -1,0 +1,59 @@
+id        = "kernel.maya_tp.cpu_iq"
+kind      = "kernel"
+summary   = "the CPU expert rows in SIMD: i-quant rows in 256-bit and 512-bit lanes for several tokens (iq_avx2, iq_avx512), the one-token IQ2_XXS row (iq_avx512_one), Q3_K / Q2_K against Q8_K (kq_avx512), Q2_0 rows with the activation quantizer (q2_avx2) and the Q2_0 expert kernel (expert)"
+why       = "the CPU lane that runs experts not in VRAM; Strix Halo's Zen 5 cores with AVX-512 are a real expert tier and these are its kernels"
+notes     = "Interface tag: moe.experts-decode-cpu/gguf-iq+kquant/q8_k-f32.maya-tp. Not compiled by the gate: per-source x86 options (-mavx2 / -mavx512*) come from CMakeLists.txt and the gate compiles hip-c++ only. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/cpu/expert.hpp",
+  "include/strata/kernels/cpu/iq_avx2.hpp",
+  "include/strata/kernels/cpu/iq_avx512.hpp",
+  "include/strata/kernels/cpu/iq_avx512_one.hpp",
+  "include/strata/kernels/cpu/kq_avx512.hpp",
+  "src/kernels/cpu/expert.cpp",
+  "src/kernels/cpu/iq_avx2.cpp",
+  "src/kernels/cpu/iq_avx512.cpp",
+  "src/kernels/cpu/iq_avx512_one.cpp",
+  "src/kernels/cpu/kq_avx512.cpp",
+  "src/kernels/cpu/q2_avx2.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode-cpu/gguf-iq+kquant/q8_k-f32.maya-tp"
+api       = "strata::kernels::cpu rows (include/strata/kernels/cpu/)"
+numeric   = "integer dots, FP32 out, -ffp-contract=off on iq_avx2"
+regime    = "decode and windows on the CPU"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "per-source x86 options (-mavx2 / -mavx512*) come from CMakeLists.txt and the gate compiles hip-c++ only."

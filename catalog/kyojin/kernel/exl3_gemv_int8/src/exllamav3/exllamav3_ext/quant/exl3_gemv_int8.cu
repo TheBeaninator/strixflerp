@@ -1,0 +1,603 @@
+#if defined(USE_ROCM)
+#include <hip/hip_runtime.h>
+#include <hip/hip_fp16.h>
+#include <hip/hip_cooperative_groups.h>
+#else
+#include <cuda_fp16.h>
+#include <cooperative_groups.h>
+#endif
+#include "exl3_gemv_int8.cuh"
+#include "exl3_gemv_int8_kernel.cuh"
+#include "comp_units/exl3_gemv_int8_instances.cuh"
+#include <c10/cuda/CUDAGuard.h>
+#include <ATen/cuda/CUDAContext.h>
+#include "../util.h"
+#include "../util.cuh"
+#if !defined(USE_ROCM)
+#include "../ptx.cuh"
+#endif
+#include "exl3_dq.cuh"
+#include "exl3_devctx.cuh"
+#include "hadamard_inner.cuh"
+#include <cstdlib>
+#include <cstring>
+#include <set>
+#include <map>
+
+
+// Mode 0: disabled; 1: int8 + error-feedback residual pass (~15-16 bit effective activation
+// precision, KL at parity with fp16 or better); 2: plain int8 (cheaper, ~0.9% output RMS deviation).
+// ROCm: default OFF (0) - the HIP port (gfx1151) is opt-in until measured on more parts; set
+// EXL3_INT8_GEMV=1 or 2 explicitly to enable it.
+static int _exl3_gemv_int8_mode = 0;
+bool _exl3_gemv_int8_mode_chk = false;
+
+static int exl3_gemv_int8_mode()
+{
+    if (_exl3_gemv_int8_mode_chk) return _exl3_gemv_int8_mode;
+    const char* e = getenv("EXL3_INT8_GEMV");
+#if defined(USE_ROCM)
+    _exl3_gemv_int8_mode = e ? atoi(e) : 0;
+#else
+    _exl3_gemv_int8_mode = e ? atoi(e) : 2;
+#endif
+    return _exl3_gemv_int8_mode;
+}
+
+// EXL3_INT8_GEMV_TRACE=1: one stderr line per call the int8 path handled (route proof for tests)
+static bool exl3_gemv_int8_trace()
+{
+    static const bool t = [] { const char* e = getenv("EXL3_INT8_GEMV_TRACE"); return e && *e && *e != '0'; }();
+    return t;
+}
+
+bool exl3_gemv_int8_enabled()
+{
+    return exl3_gemv_int8_mode() != 0;
+}
+
+// Highest K the int8 path accepts; above it the regular kernel wins. The fp16 pipeline must be
+// compute/latency-limited for the reduced per-weight work to matter, and where that ends is
+// per-arch. Ampere is DRAM-bound from K = 6 up (3090: int8 -29/-22/-9/-6% at K=2/3/4/5, then
+// -11..-26% on wide shapes at K=6); Ada is marginal at K=6 (4090: -0..+7%, residual mode loses)
+// and keeps the conservative gate. Hopper's fp16 kernel is per-SM INT-throughput-bound at K = 6
+// (H200, issue #242: +26/+57% per call, +16% e2e), and Blackwell measures the same way (5090:
+// +7..+19% at K=6 across shapes, fp16 kernel at only ~65-78% of DRAM peak; K=7/8 are flat).
+// EXL3_INT8_GEMV_MAX_K overrides the per-arch default for testing on unmeasured parts (kernel
+// instances exist up to K = 8; at m == 1, K = 7..8 fall through to the cooperative kernel)
+int exl3_gemv_int8_max_k(int device)
+{
+    static const int env_max_k = [] { const char* e = getenv("EXL3_INT8_GEMV_MAX_K"); return e ? atoi(e) : 0; }();
+    if (env_max_k) return MIN(env_max_k, 8);
+#if defined(USE_ROCM)
+    // gfx1151 (RDNA 3.5): every instantiated K is allowed; the caller (exl3_gemv on ROCm) already
+    // restricts the path to mul1 tensors at m <= 2, and the mode defaults to off
+    (void) device;
+    return 8;
+#else
+    int cc = DevCtx::instance().get_cc(device);
+    return (cc == CC_HOPPER || cc == CC_BLACKWELL) ? 6 : 5;
+#endif
+}
+
+struct GemvInt8Workspace
+{
+    int* ws = nullptr;
+    size_t ws_ints = 0;
+};
+
+static GemvInt8Workspace gemv_ws[MAX_DEVICES];
+static std::set<void*> gemv_attr_set[MAX_DEVICES];
+static std::map<std::pair<void*, size_t>, int> gemv_occ_cache[MAX_DEVICES];
+
+typedef void (*gemv_int8_coop_fn)
+    (const half*, const uint16_t*, void*, int, int, int, int*, const half*, half*, const half*);
+
+static void* select_gemv_int8_kernel(int K, bool c_fp32, bool residual)
+{
+    switch (K)
+    {
+        case 1: return exl3_gemv_int8_coop_sel_k1(c_fp32, residual);
+        case 2: return exl3_gemv_int8_coop_sel_k2(c_fp32, residual);
+        case 3: return exl3_gemv_int8_coop_sel_k3(c_fp32, residual);
+        case 4: return exl3_gemv_int8_coop_sel_k4(c_fp32, residual);
+        case 5: return exl3_gemv_int8_coop_sel_k5(c_fp32, residual);
+        case 6: return exl3_gemv_int8_coop_sel_k6(c_fp32, residual);
+        case 7: return exl3_gemv_int8_coop_sel_k7(c_fp32, residual);
+        case 8: return exl3_gemv_int8_coop_sel_k8(c_fp32, residual);
+    }
+    return nullptr;
+}
+
+static void* select_gemv_int8_sq_kernel(int K, int M, bool c_fp32, bool residual, bool dual)
+{
+    switch (K)
+    {
+        case 1: return exl3_gemv_int8_sq_sel_k1(M, c_fp32, residual, dual);
+        case 2: return exl3_gemv_int8_sq_sel_k2(M, c_fp32, residual, dual);
+        case 3: return exl3_gemv_int8_sq_sel_k3(M, c_fp32, residual, dual);
+        case 4: return exl3_gemv_int8_sq_sel_k4(M, c_fp32, residual, dual);
+        case 5: return exl3_gemv_int8_sq_sel_k5(M, c_fp32, residual, dual);
+        case 6: return exl3_gemv_int8_sq_sel_k6(M, c_fp32, residual, dual);
+    }
+    return nullptr;
+}
+
+static void* select_gemv_int8_sq_tri_kernel(int K, bool c_fp32)
+{
+    switch (K)
+    {
+        case 1: return exl3_gemv_int8_sq_tri_sel_k1(c_fp32);
+        case 2: return exl3_gemv_int8_sq_tri_sel_k2(c_fp32);
+        case 3: return exl3_gemv_int8_sq_tri_sel_k3(c_fp32);
+        case 4: return exl3_gemv_int8_sq_tri_sel_k4(c_fp32);
+        case 5: return exl3_gemv_int8_sq_tri_sel_k5(c_fp32);
+        case 6: return exl3_gemv_int8_sq_tri_sel_k6(c_fp32);
+    }
+    return nullptr;
+}
+
+// Fixed-size per-device workspace shared by the sq and coop paths, allocated once and never
+// reallocated: the pointer is baked as a kernel argument into captured CUDA graphs, so growing the
+// buffer would leave every previously captured graph with a dangling workspace pointer (and let a
+// reallocation clobber the self-resetting completion counters at the start of the buffer). Zeroed
+// at allocation so the counters begin at zero. Callers must reject work that exceeds the fixed size
+// (returns nullptr) and fall through to a non-workspace path.
+#define GEMV_INT8_WS_INTS (WORKSPACE_SIZE / sizeof(int))    // 16 MB
+static int* gemv_int8_get_ws(int device, size_t ws_ints)
+{
+    if (ws_ints > GEMV_INT8_WS_INTS) return nullptr;
+    GemvInt8Workspace& ws = gemv_ws[device];
+    if (!ws.ws)
+    {
+        cuda_check(cudaMalloc(&ws.ws, GEMV_INT8_WS_INTS * sizeof(int)));
+        cuda_check(cudaMemset(ws.ws, 0, GEMV_INT8_WS_INTS * sizeof(int)));
+        ws.ws_ints = GEMV_INT8_WS_INTS;
+    }
+    return ws.ws;
+}
+
+// EXL3_GEMV_PAIR=0 disables launching a GEMV pair as one kernel (default on; results are bit-identical)
+static int gemv_pair_mode()
+{
+    static const int mode = [] { const char* e = getenv("EXL3_GEMV_PAIR"); return e ? atoi(e) : 1; }();
+    return mode;
+}
+
+// m == 1 fast path: per-slice-scale kernel, regular launch. Returns false to fall through to the
+// cooperative kernel (and from there to the regular fp16 kernel).
+static bool exl3_gemv_int8_sq
+(
+    const half* A_ptr, const uint16_t* B_ptr, void* C_ptr,
+    int size_m, int size_k, int size_n, int K, bool c_fp32, bool residual,
+    const half* suh_ptr, half* A_had_ptr, const half* svh_ptr,
+    int device, int num_sms, cudaStream_t stream, Graph* graph,
+    // Second matrix of a dual launch (same shape, K and output type), all null for a single GEMV
+    const half* A2_ptr = nullptr, const uint16_t* B2_ptr = nullptr, void* C2_ptr = nullptr,
+    const half* suh2_ptr = nullptr, const half* svh2_ptr = nullptr,
+    // tri: B2/C2/suh2/svh2 are the second matrix of width n2, the third is (B3, C3, suh3, svh3, n3); same activations, m == 1
+    int n2 = 0, const uint16_t* B3_ptr = nullptr, void* C3_ptr = nullptr,
+    const half* suh3_ptr = nullptr, const half* svh3_ptr = nullptr, int n3 = 0
+)
+{
+    if (size_m > 2) return false;
+    const bool tri = B3_ptr != nullptr;
+    const bool dual = B2_ptr != nullptr && !tri;
+    if (tri && (size_m != 1 || residual || c_fp32 || n2 > size_n || n3 > size_n || n2 % 256 || n3 % 256)) return false;
+    int M = size_m;
+    void* fn = tri ? select_gemv_int8_sq_tri_kernel(K, c_fp32) : select_gemv_int8_sq_kernel(K, M, c_fp32, residual, dual);
+    if (!fn) return false;
+
+    int rows_max = gemv_int8_sq_rows_max(M, residual);
+    static const int rows_ovr = [] { const char* e = getenv("EXL3_GEMV_ROWS"); return e ? atoi(e) : 0; }();
+    static const int policy = [] { const char* e = getenv("EXL3_GEMV_POLICY"); return e ? atoi(e) : 1; }();
+
+    // Mirror of the kernel's work decomposition (single-wave rule with a half-wave floor)
+    auto decomp = [&] (int grid_, int& ksplit, int& rows_per)
+    {
+        int rows_total = size_k / 16;
+        int nb256 = (size_n + (tri ? n2 + n3 : 0)) / 256;
+        int r = CEIL_DIVIDE(rows_total * nb256, grid_);
+        rows_per = (MAX(r, MIN(2 * r, 32)) + 7) & ~7;
+        rows_per = MAX(rows_per, SQ_MINROWS);
+        rows_per = MIN(rows_per, rows_max);
+        rows_per = MIN(rows_per, (rows_total + 7) & ~7);
+        if (rows_ovr > 0) rows_per = MIN(MIN(rows_ovr, rows_max), (rows_total + 7) & ~7);
+        else if (policy && (K == 4 || K == 5))
+        {
+            // Taller slices than the single-wave rule picks: units well below the grid but >= ~2 per SM keep DRAM
+            // saturated while the per-slice prologue, partial traffic and serial epilogue combine shrink
+            // (3090 sweep: 5120x17408 K4 72 -> 63 us, K5 88 -> 76 us; flat for shapes already near 2 units/SM)
+            int ks_t = MAX(1, CEIL_DIVIDE(2 * num_sms, nb256));
+            int rp_new = (CEIL_DIVIDE(rows_total, ks_t) + 7) & ~7;
+            rp_new = MIN(rp_new, rows_max);
+            rp_new = MIN(rp_new, (rows_total + 7) & ~7);
+            rows_per = MAX(rows_per, rp_new);
+        }
+        ksplit = CEIL_DIVIDE(rows_total, rows_per);
+    };
+    auto smem_for = [&] (int rows_per) -> size_t
+    {
+        size_t stage = gemv_int8_stage_smem(K) ? (size_t) 8 * GEMV_STAGE_D * 16 * K * 4 : 0;
+        return (size_t) rows_per * 16 * 2 + (size_t) rows_per * 16 * 4 * M * (residual ? 2 : 1)
+               + stage + (size_t) 2 * M * 128 * 4;
+    };
+
+#if !defined(USE_ROCM)
+    if (gemv_attr_set[device].find(fn) == gemv_attr_set[device].end())
+    {
+        cudaFuncSetAttribute(fn, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem_for(rows_max));
+        // Match the tensor-core kernels' shared-memory carveout: these kernels interleave with
+        // them (hundreds of launches per decoded token), and a smaller carveout would make the GPU
+        // drain and reconfigure the SMs on every transition - measured at ~4 us per launch in
+        // graph replay
+        cudaFuncSetAttribute(fn, cudaFuncAttributePreferredSharedMemoryCarveout, cudaSharedmemCarveoutMaxShared);
+        gemv_attr_set[device].insert(fn);
+        cuda_check(cudaPeekAtLastError());
+    }
+#else
+    // HIP: no opt-in dynamic LDS attribute or carveout; gemv_int8_sq_rows_max bounds the request
+    // under the 64 KB workgroup limit
+    (void) rows_max;
+#endif
+
+    int ksplit, rows_per;
+    decomp(6 * num_sms, ksplit, rows_per);
+    size_t smem_guess = smem_for(rows_per);
+    int maxb;
+    // A pair takes the grid, and so the slice decomposition, its single-matrix kernel would get: that keeps the pair
+    // bit-identical to two launches even where the pair instantiation needs more registers (lower occupancy)
+    void* fn_occ = (dual || tri) ? select_gemv_int8_sq_kernel(K, M, c_fp32, residual, false) : fn;
+    if (!fn_occ) return false;
+    auto occ_key = std::make_pair(fn_occ, smem_guess);
+    auto occ_it = gemv_occ_cache[device].find(occ_key);
+    if (occ_it != gemv_occ_cache[device].end()) maxb = occ_it->second;
+    else
+    {
+        maxb = 1;
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxb, fn_occ, NUM_THREADS, smem_guess);
+        gemv_occ_cache[device][occ_key] = maxb;
+    }
+    int grid = MIN(MAX(maxb, 1) * num_sms, 1024);
+#if defined(USE_ROCM)
+    // RDNA: the occupancy query (LDS-bound, 2 blocks/CU at the widest slices) leaves the CUs half
+    // empty and the register-staged B pipeline latency-bound. Oversubscribe the persistent grid so
+    // more waves are in flight; EXL3_INT8_GEMV_BLOCKS_PER_CU overrides (0 = occupancy estimate)
+    {
+        static const int bpc = [] { const char* e = getenv("EXL3_INT8_GEMV_BLOCKS_PER_CU"); return e ? atoi(e) : 8; }();
+        if (bpc > 0) grid = MIN(bpc * num_sms, 1024);
+    }
+#endif
+    decomp(grid, ksplit, rows_per);
+    int rows_eff = rows_per;    // the kernel takes the host's slice height (single source of truth)
+    size_t smem = smem_for(rows_per);
+    if (ksplit > SQ_KSPLIT_CAP) return false;
+    const int nmat = tri ? 3 : (dual ? 2 : 1);
+    if (tri ? (size_n + n2 + n3) / 256 > SQ_COUNTERS_CAP : nmat * (size_n / 256) > SQ_COUNTERS_CAP) return false;      // counters, per matrix
+    if (nmat * ksplit * M > 4 * SQ_KSPLIT_CAP) return false;      // (slice, row) scale entries
+
+    int pstride = size_n * (residual ? 2 : 1);
+    int* ws_ptr = gemv_int8_get_ws(device, SQ_WS_RESERVED + (size_t) nmat * ksplit * M * pstride);
+    if (!ws_ptr) return false;
+
+    void* kernelArgs[] =
+    {
+        (void*) &A_ptr,
+        (void*) &B_ptr,
+        (void*) &C_ptr,
+        (void*) &size_m,
+        (void*) &size_k,
+        (void*) &size_n,
+        (void*) &ws_ptr,
+        (void*) &suh_ptr,
+        (void*) &A_had_ptr,
+        (void*) &svh_ptr,
+        (void*) &rows_eff,
+        (void*) &A2_ptr,
+        (void*) &B2_ptr,
+        (void*) &C2_ptr,
+        (void*) &suh2_ptr,
+        (void*) &svh2_ptr,
+        (void*) &n2,
+        (void*) &B3_ptr,
+        (void*) &C3_ptr,
+        (void*) &suh3_ptr,
+        (void*) &svh3_ptr,
+        (void*) &n3
+    };
+
+    cudaError_t err = cudaLaunchKernel(fn, dim3(grid), dim3(NUM_THREADS), kernelArgs, smem, stream);
+    if (err != cudaSuccess)
+    {
+        // Nothing was captured: the caller's fallback kernel records its own parameter sites
+        cudaGetLastError();
+        return false;
+    }
+    if (exl3_gemv_int8_trace())
+        fprintf(stderr, "[exl3_gemv_int8] sq kernel: m=%d k=%d n=%d K=%d residual=%d dual=%d grid=%d rows_per=%d ksplit=%d smem=%zu\n",
+                size_m, size_k, size_n, K, (int) residual, (int) dual, grid, rows_per, ksplit, smem);
+    if (tri)
+    {
+        // The outputs are the caller's statics; only the activation pointer changes between replays
+        if (graph)
+        {
+            graph->record_param(fn, GP_gemm_A, 0);
+            graph->record_param(fn, GP_end, 0);
+        }
+    }
+    else if (dual)
+    {
+        // Only the activation and output pointers change between calls (the weights are static); recorded
+        // in the (A, C, A, C) order of two back-to-back single GEMVs so the caller's patch list is the same
+        if (graph)
+        {
+            graph->record_param(fn, GP_gemm_A, 0);
+            graph->record_param(fn, GP_gemm_C, 2);
+            graph->record_param(fn, GP_gemm_A, 11);
+            graph->record_param(fn, GP_gemm_C, 13);
+            graph->record_param(fn, GP_end, 0);
+        }
+    }
+    else if (graph)
+    {
+        graph->record_param(fn, GP_gemm_A, 0);
+        graph->record_param(fn, GP_gemm_B_trellis, 1);
+        graph->record_param(fn, GP_gemm_C, 2);
+        graph->record_param(fn, GP_gemm_B_suh, 7);
+        graph->record_param(fn, GP_gemm_A_had, 8);
+        graph->record_param(fn, GP_gemm_B_svh, 9);
+        graph->record_param(fn, GP_end, 0);
+    }
+    return true;
+}
+
+bool exl3_gemv_int8
+(
+    const at::Tensor& A,
+    const at::Tensor& B,
+    at::Tensor& C,
+    const c10::optional<at::Tensor>& suh,
+    const c10::optional<at::Tensor>& A_had,
+    const c10::optional<at::Tensor>& svh,
+    cudaStream_t stream,
+    Graph* graph
+)
+{
+    if (!suh.has_value() || !A_had.has_value() || !svh.has_value()) return false;
+
+    int K = B.size(2) / 16;
+    int size_k = A.size(-1);
+    int size_n = B.size(1) * 16;
+    int size_m = A.numel() / size_k;
+    if (size_n % 256) return false;
+    if (size_k % 128) return false;
+
+    int device;
+    cudaGetDevice(&device);
+    if (K < 1 || K > exl3_gemv_int8_max_k(device)) return false;
+    int num_sms = DevCtx::instance().get_num_sms(device);
+    bool c_fp32 = C.dtype() == at::kFloat;
+    bool residual = exl3_gemv_int8_mode() == 1;
+
+    // Per-slice-scale kernel: m == 1, plus m == 2 in plain int8 mode (rows share the decoded
+    // weights and the B stream; measured on 3090, larger m and batched residual lose to the fp16
+    // tensor-core kernel). Falls through to the cooperative kernel on a constraint miss at m == 1;
+    // batched rows beyond the gate go straight to the regular kernel.
+    // EXL3_INT8_GEMV_FORCE_COOP=1 (testing): skip the sq kernel so the cooperative kernel is exercised
+    static const bool force_coop = [] { const char* e = getenv("EXL3_INT8_GEMV_FORCE_COOP"); return e && *e && *e != '0'; }();
+    if (!force_coop && size_m <= (residual ? 1 : 2) && exl3_gemv_int8_sq(
+        (const half*) A.data_ptr(), (const uint16_t*) B.data_ptr(), C.data_ptr(),
+        size_m, size_k, size_n, K, c_fp32, residual,
+        (const half*) suh->data_ptr(), (half*) A_had->data_ptr(), (const half*) svh->data_ptr(),
+        device, num_sms, stream, graph))
+        return true;
+    if (size_m > 1) return false;
+
+    void* fn = select_gemv_int8_kernel(K, c_fp32, residual);
+    if (!fn) return false;
+
+    // Mirror the kernel's work decomposition for the shared memory size; grid = max co-resident
+    // blocks (natural register allocation measures faster than forcing higher occupancy)
+    auto smem_for_grid = [&] (int grid_) -> size_t
+    {
+        int rows_total = size_k / 16;
+        int nb256 = size_n / 256;
+        int smem_rows_max = residual ? 384 : 768;
+        int ksplit = CEIL_DIVIDE(4 * grid_, nb256);
+        ksplit = MAX(ksplit, CEIL_DIVIDE(rows_total, smem_rows_max));
+        ksplit = MIN(ksplit, rows_total);
+        int rows_per = CEIL_DIVIDE(rows_total, ksplit);
+        size_t stage = gemv_int8_stage_smem(K) ? (size_t) 8 * GEMV_STAGE_D * 16 * K * 4 : 0;
+        return MAX((size_t) rows_per * 16 * 4 * (residual ? 2 : 1) + stage, (size_t) 8 * 128 * 4);
+    };
+
+#if !defined(USE_ROCM)
+    if (gemv_attr_set[device].find(fn) == gemv_attr_set[device].end())
+    {
+        // Upper bound over all shapes: smem_rows_max * 64 B
+        cudaFuncSetAttribute(fn, cudaFuncAttributeMaxDynamicSharedMemorySize, 768 * 16 * 4 + GEMV_STAGE_MAX_BYTES);
+        // Match the tensor-core kernels' shared-memory carveout: these kernels interleave with
+        // them (hundreds of launches per decoded token), and a smaller carveout would make the GPU
+        // drain and reconfigure the SMs on every transition - measured at ~4 us per launch in
+        // graph replay
+        cudaFuncSetAttribute(fn, cudaFuncAttributePreferredSharedMemoryCarveout, cudaSharedmemCarveoutMaxShared);
+        gemv_attr_set[device].insert(fn);
+        cuda_check(cudaPeekAtLastError());
+    }
+#endif
+
+    size_t smem_guess = smem_for_grid(6 * num_sms);
+    int maxb;
+    auto occ_key = std::make_pair(fn, smem_guess);
+    auto occ_it = gemv_occ_cache[device].find(occ_key);
+    if (occ_it != gemv_occ_cache[device].end()) maxb = occ_it->second;
+    else
+    {
+        maxb = 1;
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxb, fn, NUM_THREADS, smem_guess);
+        gemv_occ_cache[device][occ_key] = maxb;
+    }
+    int grid = MIN(MAX(maxb, 1) * num_sms, 1024);
+    size_t smem = smem_for_grid(grid);
+
+    // Coop region beyond the sq-reserved prefix: [2n accs][4m qsums][grid partial maxes]
+    size_t ws_ints = SQ_WS_RESERVED + (size_t) 2 * size_n + 4 * size_m + 1024;
+    int* ws_base = gemv_int8_get_ws(device, ws_ints);
+    if (!ws_base) return false;
+    int* ws_ptr = ws_base + SQ_WS_RESERVED;
+
+    const half* A_ptr = (const half*) A.data_ptr();
+    const uint16_t* B_ptr = (const uint16_t*) B.data_ptr();
+    void* C_ptr = C.data_ptr();
+    const half* suh_ptr = (const half*) suh->data_ptr();
+    half* A_had_ptr = (half*) A_had->data_ptr();   // scratch; used through a raw half* like the regular kernel
+    const half* svh_ptr = (const half*) svh->data_ptr();
+
+    void* kernelArgs[] =
+    {
+        (void*) &A_ptr,
+        (void*) &B_ptr,
+        (void*) &C_ptr,
+        (void*) &size_m,
+        (void*) &size_k,
+        (void*) &size_n,
+        (void*) &ws_ptr,
+        (void*) &suh_ptr,
+        (void*) &A_had_ptr,
+        (void*) &svh_ptr
+    };
+
+    auto add_graph_args = [&](void* kernel_ptr)
+    {
+        if (graph)
+        {
+            graph->record_param(kernel_ptr, GP_gemm_A, 0);
+            graph->record_param(kernel_ptr, GP_gemm_B_trellis, 1);
+            graph->record_param(kernel_ptr, GP_gemm_C, 2);
+            graph->record_param(kernel_ptr, GP_gemm_B_suh, 7);
+            graph->record_param(kernel_ptr, GP_gemm_A_had, 8);
+            graph->record_param(kernel_ptr, GP_gemm_B_svh, 9);
+            graph->record_param(kernel_ptr, GP_end, 0);
+        }
+    };
+
+    if (exl3_gemv_int8_trace())
+        fprintf(stderr, "[exl3_gemv_int8] coop kernel: m=%d k=%d n=%d K=%d residual=%d grid=%d smem=%zu\n",
+                size_m, size_k, size_n, K, (int) residual, grid, smem);
+    cudaError_t err = cudaLaunchCooperativeKernel(fn, grid, NUM_THREADS, kernelArgs, smem, stream);
+    if (err != cudaSuccess)
+    {
+        // e.g. cooperative launch unsupported or co-residency violated: fall back to the regular kernel
+        // (which records its own graph parameter sites)
+        if (exl3_gemv_int8_trace())
+            fprintf(stderr, "[exl3_gemv_int8] coop launch FAILED: %s\n", cudaGetErrorString(err));
+        cudaGetLastError();
+        return false;
+    }
+    add_graph_args((void*) fn);
+    return true;
+}
+
+// Gate/up style pair: two GEMVs over the same activations in ONE sq launch (halves the grid fill/drain
+// and the launch count; the units of both matrices share one persistent grid). Returns false to let
+// the caller issue the two GEMVs separately. Bit-identical to two launches: each matrix keeps the slice height of
+// its own single launch and the pair only stacks the two matrices' units (the saving is one launch and one fill/drain).
+bool exl3_gemv_int8_pair
+(
+    const at::Tensor& A,
+    const at::Tensor& B1, at::Tensor& C1, const c10::optional<at::Tensor>& suh1, const c10::optional<at::Tensor>& svh1,
+    const at::Tensor& B2, at::Tensor& C2, const c10::optional<at::Tensor>& suh2, const c10::optional<at::Tensor>& svh2,
+    cudaStream_t stream,
+    Graph* graph
+)
+{
+    if (gemv_pair_mode() == 0 || !exl3_gemv_int8_enabled()) return false;
+    if (!suh1.has_value() || !svh1.has_value() || !suh2.has_value() || !svh2.has_value()) return false;
+    if (B1.sizes() != B2.sizes() || C1.dtype() != C2.dtype()) return false;
+
+    int K = B1.size(2) / 16;
+    int size_k = A.size(-1);
+    int size_n = B1.size(1) * 16;
+    int size_m = A.numel() / size_k;
+    if (size_n % 256 || size_k % 128) return false;
+
+    int device;
+    cudaGetDevice(&device);
+    if (K < 1 || K > exl3_gemv_int8_max_k(device)) return false;
+    bool residual = exl3_gemv_int8_mode() == 1;
+    if (size_m > (residual ? 1 : 2)) return false;
+    // Pair rows cap: at m == 2 the pair kernel (more registers, 2x staging and partials per unit) measures SLOWER than two
+    // single launches on 3090 (gate/up 5120x17408 K4: 134-140 us vs 2 x 64); bit-identical either way. EXL3_GEMV_PAIR_MAXM=2 restores it.
+    static const int pair_maxm = [] { const char* e = getenv("EXL3_GEMV_PAIR_MAXM"); return e ? atoi(e) : 1; }();
+    if (size_m > pair_maxm) return false;
+    int num_sms = DevCtx::instance().get_num_sms(device);
+    return exl3_gemv_int8_sq(
+        (const half*) A.data_ptr(), (const uint16_t*) B1.data_ptr(), C1.data_ptr(),
+        size_m, size_k, size_n, K, C1.dtype() == at::kFloat, residual,
+        (const half*) suh1->data_ptr(), nullptr, (const half*) svh1->data_ptr(),
+        device, num_sms, stream, graph,
+        (const half*) A.data_ptr(), (const uint16_t*) B2.data_ptr(), C2.data_ptr(),
+        (const half*) suh2->data_ptr(), (const half*) svh2->data_ptr());
+}
+
+// Python-facing form (tests, microbenchmarks): current stream, no graph recording
+bool exl3_gemv_int8_pair_eager
+(
+    const at::Tensor& A,
+    const at::Tensor& B1, at::Tensor& C1, const c10::optional<at::Tensor>& suh1, const c10::optional<at::Tensor>& svh1,
+    const at::Tensor& B2, at::Tensor& C2, const c10::optional<at::Tensor>& suh2, const c10::optional<at::Tensor>& svh2
+)
+{
+    const at::cuda::OptionalCUDAGuard device_guard(A.device());
+    return exl3_gemv_int8_pair(A, B1, C1, suh1, svh1, B2, C2, suh2, svh2, at::cuda::getCurrentCUDAStream().stream(), nullptr);
+}
+
+// q/k/v style triple: three mul1 GEMVs of different widths over one activation row in ONE sq launch (m == 1, fp16 outputs).
+// Not bit-identical to three launches (one slice height for the stack); EXL3_GEMV_TRI=0 disables. Returns false for the caller's fallback.
+bool exl3_gemv_int8_tri
+(
+    const at::Tensor& A,
+    const at::Tensor& B1, at::Tensor& C1, const c10::optional<at::Tensor>& suh1, const c10::optional<at::Tensor>& svh1,
+    const at::Tensor& B2, at::Tensor& C2, const c10::optional<at::Tensor>& suh2, const c10::optional<at::Tensor>& svh2,
+    const at::Tensor& B3, at::Tensor& C3, const c10::optional<at::Tensor>& suh3, const c10::optional<at::Tensor>& svh3,
+    cudaStream_t stream,
+    Graph* graph
+)
+{
+    static const int mode = [] { const char* e = getenv("EXL3_GEMV_TRI"); return e ? atoi(e) : 1; }();
+    if (!mode || !exl3_gemv_int8_enabled()) return false;
+    if (!suh1 || !svh1 || !suh2 || !svh2 || !suh3 || !svh3) return false;
+    if (C1.dtype() != at::kHalf || C2.dtype() != at::kHalf || C3.dtype() != at::kHalf) return false;
+    int K = B1.size(2) / 16;
+    if (B2.size(2) / 16 != K || B3.size(2) / 16 != K || B2.size(0) != B1.size(0) || B3.size(0) != B1.size(0)) return false;
+    int size_k = A.size(-1);
+    int size_n = B1.size(1) * 16, n2 = B2.size(1) * 16, n3 = B3.size(1) * 16;
+    int size_m = A.numel() / size_k;
+    if (size_m != 1 || size_n % 256 || size_k % 128) return false;
+    int device;
+    cudaGetDevice(&device);
+    if (K < 1 || K > exl3_gemv_int8_max_k(device)) return false;
+    bool residual = exl3_gemv_int8_mode() == 1;
+    if (residual) return false;
+    int num_sms = DevCtx::instance().get_num_sms(device);
+    return exl3_gemv_int8_sq(
+        (const half*) A.data_ptr(), (const uint16_t*) B1.data_ptr(), C1.data_ptr(),
+        size_m, size_k, size_n, K, false, residual,
+        (const half*) suh1->data_ptr(), nullptr, (const half*) svh1->data_ptr(),
+        device, num_sms, stream, graph,
+        (const half*) A.data_ptr(), (const uint16_t*) B2.data_ptr(), C2.data_ptr(),
+        (const half*) suh2->data_ptr(), (const half*) svh2->data_ptr(),
+        n2, (const uint16_t*) B3.data_ptr(), C3.data_ptr(), (const half*) suh3->data_ptr(), (const half*) svh3->data_ptr(), n3);
+}
+
+bool exl3_gemv_int8_tri_eager
+(
+    const at::Tensor& A,
+    const at::Tensor& B1, at::Tensor& C1, const c10::optional<at::Tensor>& suh1, const c10::optional<at::Tensor>& svh1,
+    const at::Tensor& B2, at::Tensor& C2, const c10::optional<at::Tensor>& suh2, const c10::optional<at::Tensor>& svh2,
+    const at::Tensor& B3, at::Tensor& C3, const c10::optional<at::Tensor>& suh3, const c10::optional<at::Tensor>& svh3
+)
+{
+    const at::cuda::OptionalCUDAGuard device_guard(A.device());
+    return exl3_gemv_int8_tri(A, B1, C1, suh1, svh1, B2, C2, suh2, svh2, B3, C3, suh3, svh3, at::cuda::getCurrentCUDAStream().stream(), nullptr);
+}

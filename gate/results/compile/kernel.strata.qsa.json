@@ -1,0 +1,81 @@
+{
+ "module": "kernel.strata.qsa",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-24T23:07:15Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 8,
+ "passed": 8,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 8.5,
+ "results": [
+  {
+   "unit": "src/src/kernels/cuda/qsa.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/qsa/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I catalog/strata/kernel/kvcache/src/include -I catalog/strata/kernel/rope/src/include -I /data/models/tools/therock-10.2/include catalog/strata/kernel/qsa/src/src/kernels/cuda/qsa.cu -o build/compile-gate/kernel.strata.qsa/0-qsa.cu.o",
+   "rc": 0,
+   "seconds": 2.39,
+   "object_bytes": 79016,
+   "object_sha256": "84528877bb55be3508aa29b35b95dc426fe830be385f13624818addc1ed79280"
+  },
+  {
+   "unit": "src/src/kernels/cuda/qsa_decode_attn.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/qsa/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I catalog/strata/kernel/kvcache/src/include -I catalog/strata/kernel/rope/src/include -I /data/models/tools/therock-10.2/include catalog/strata/kernel/qsa/src/src/kernels/cuda/qsa_decode_attn.cu -o build/compile-gate/kernel.strata.qsa/1-qsa_decode_attn.cu.o",
+   "rc": 0,
+   "seconds": 8.47,
+   "object_bytes": 132864,
+   "object_sha256": "b155c321507a2a0c1e68b647f24f1d31fd90cbb9179827d4a395ed7b64ea67f2"
+  },
+  {
+   "unit": "src/src/kernels/cuda/qsa_prompt_attn.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/qsa/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I catalog/strata/kernel/kvcache/src/include -I catalog/strata/kernel/rope/src/include -I /data/models/tools/therock-10.2/include catalog/strata/kernel/qsa/src/src/kernels/cuda/qsa_prompt_attn.cu -o build/compile-gate/kernel.strata.qsa/2-qsa_prompt_attn.cu.o",
+   "rc": 0,
+   "seconds": 2.64,
+   "object_bytes": 76592,
+   "object_sha256": "0b179defd696ee361024f3b62a0533a324c15687172cb7436bf8bfa34e5d3fc7"
+  },
+  {
+   "unit": "src/src/kernels/cuda/qsa_select.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/qsa/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I catalog/strata/kernel/kvcache/src/include -I catalog/strata/kernel/rope/src/include -I /data/models/tools/therock-10.2/include catalog/strata/kernel/qsa/src/src/kernels/cuda/qsa_select.cu -o build/compile-gate/kernel.strata.qsa/3-qsa_select.cu.o",
+   "rc": 0,
+   "seconds": 4.18,
+   "object_bytes": 171424,
+   "object_sha256": "a6154b555f41a42cbd6570e2148a776d45f3ce62dcd92291656cb6763c5f36d9"
+  },
+  {
+   "unit": "src/src/kernels/cuda/native_qsa.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/qsa/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I catalog/strata/kernel/kvcache/src/include -I catalog/strata/kernel/rope/src/include -I /data/models/tools/therock-10.2/include catalog/strata/kernel/qsa/src/src/kernels/cuda/native_qsa.cu -o build/compile-gate/kernel.strata.qsa/4-native_qsa.cu.o",
+   "rc": 0,
+   "seconds": 2.03,
+   "object_bytes": 40024,
+   "object_sha256": "366180a5257cb2e1c89f2701347f7799c51602b4a70ed7443bedfa2fd808fdc7"
+  },
+  {
+   "unit": "src/src/kernels/cuda/native_qsa_indexer.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/qsa/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I catalog/strata/kernel/kvcache/src/include -I catalog/strata/kernel/rope/src/include -I /data/models/tools/therock-10.2/include catalog/strata/kernel/qsa/src/src/kernels/cuda/native_qsa_indexer.cu -o build/compile-gate/kernel.strata.qsa/5-native_qsa_indexer.cu.o",
+   "rc": 0,
+   "seconds": 2.44,
+   "object_bytes": 75400,
+   "object_sha256": "8ef269a08c628e3adcbd032406aeb90a61f767109fb281b09b2131150e6d42f6"
+  },
+  {
+   "unit": "src/src/kernels/cuda/native_qsa_score.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/qsa/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I catalog/strata/kernel/kvcache/src/include -I catalog/strata/kernel/rope/src/include -I /data/models/tools/therock-10.2/include catalog/strata/kernel/qsa/src/src/kernels/cuda/native_qsa_score.cu -o build/compile-gate/kernel.strata.qsa/6-native_qsa_score.cu.o",
+   "rc": 0,
+   "seconds": 1.92,
+   "object_bytes": 19744,
+   "object_sha256": "f23c0b3265a84fa68ae298fcaa7c9387d29bab52e1ceb75d19d4180165ac63c1"
+  },
+  {
+   "unit": "src/src/kernels/cuda/native_flash_attn.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/qsa/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I catalog/strata/kernel/kvcache/src/include -I catalog/strata/kernel/rope/src/include -I /data/models/tools/therock-10.2/include catalog/strata/kernel/qsa/src/src/kernels/cuda/native_flash_attn.cu -o build/compile-gate/kernel.strata.qsa/7-native_flash_attn.cu.o",
+   "rc": 0,
+   "seconds": 2.61,
+   "object_bytes": 73000,
+   "object_sha256": "39c606ed89abc8b92a871bff8a55825e11ae55a5b154ecc2aadbfb392023e3bd"
+  }
+ ]
+}

@@ -1,0 +1,86 @@
+id        = "executor.strixfold_tp4.dsv41"
+kind      = "executor"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for executor.strixfold.dsv41: 23 file(s) of executor.strixfold.dsv41 and 19 file(s) the TP4 tree adds beside them (cache_move.zig, check_main.zig, cpu.zig, dense.zig, derived_launches.json, disk.zig ...), laid over the f64b5ff files"
+why       = "executor.strixfold.dsv41 is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over executor.strixfold.dsv41 without touching it or the TP2 recipes"
+notes     = "Overlay of executor.strixfold.dsv41 (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 602dfeb13b, b7eb57e048, a1baab5e2d, 848ca944f7, d9ef7a305e, 5bb471d3b9, 023c5d2ad9, 19121aad1c, d6a577e1a1, 1375468e92, 716f35d40a, 4d4c5173d2, 12c50c5d8d, e5cb84a995, 28153e18f3, e96f0f5fa0, 58862dad76, 73bab11681, 4f9ba05838, b9fafca926, 6f42c090eb, 345bacf673, ee6892da53, 3760ed527a, ef450588a1, 18b8d5d277, 01574d76b3, 034bf2c6cd, 96431609cf. Latest commits: e33be4f4 dsv41 sf-disk at world 4: the disk prompt cache and imported (parked) states on the four-node split (pod card 602dfeb13b); cd2d157e dsv41: an exported state's copies off the device and back on both ranks (cache_move, frames 18 and 19, protocol 6); 71986030 dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048); 8ff01127 dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/families/dsv41/cache_move.zig",
+  "zig/src/families/dsv41/check_main.zig",
+  "zig/src/families/dsv41/cpu.zig",
+  "zig/src/families/dsv41/dense.zig",
+  "zig/src/families/dsv41/disk.zig",
+  "zig/src/families/dsv41/disk_identity.zig",
+  "zig/src/families/dsv41/dsv41.zig",
+  "zig/src/families/dsv41/edit.zig",
+  "zig/src/families/dsv41/encoder.zig",
+  "zig/src/families/dsv41/exl3_experts.zig",
+  "zig/src/families/dsv41/exl3_experts2d.zig",
+  "zig/src/families/dsv41/exl3_experts2d_rec.zig",
+  "zig/src/families/dsv41/exl3_linear.zig",
+  "zig/src/families/dsv41/fill_spans.zig",
+  "zig/src/families/dsv41/fixtures/derived_launches.json",
+  "zig/src/families/dsv41/fixtures/reap_export_small.json",
+  "zig/src/families/dsv41/fixtures/reap_export_small_all.json",
+  "zig/src/families/dsv41/hip_load.zig",
+  "zig/src/families/dsv41/lanes.zig",
+  "zig/src/families/dsv41/lanes_main.zig",
+  "zig/src/families/dsv41/layer_main.zig",
+  "zig/src/families/dsv41/load_main.zig",
+  "zig/src/families/dsv41/mask.zig",
+  "zig/src/families/dsv41/model.zig",
+  "zig/src/families/dsv41/native.zig",
+  "zig/src/families/dsv41/picture_test.zig",
+  "zig/src/families/dsv41/png_test.zig",
+  "zig/src/families/dsv41/prompt.zig",
+  "zig/src/families/dsv41/prompt2d.zig",
+  "zig/src/families/dsv41/reap.zig",
+  "zig/src/families/dsv41/reap_dev.zig",
+  "zig/src/families/dsv41/reslice.zig",
+  "zig/src/families/dsv41/round.zig",
+  "zig/src/families/dsv41/route_rec.zig",
+  "zig/src/families/dsv41/route_rec_dev.zig",
+  "zig/src/families/dsv41/stop_marker.zig",
+  "zig/src/families/dsv41/tri_attn.zig",
+  "zig/src/families/dsv41/tri_aux.zig",
+  "zig/src/families/dsv41/tri_hc.zig",
+  "zig/src/families/dsv41/tri_norm.zig",
+  "zig/src/families/dsv41/vit_hip.zig",
+  "zig/src/families/dsv41/zip2d.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on executor.strixfold.dsv41 (origin strixfold, f64b5ff): 23 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "executor.model/deepseek-v4.1-flash/exl3.tp4"
+api       = "lanes.zig (lane Backend), native.zig (native family), tf-dsv41-lanes, tf-dsv41-layer"
+numeric   = "token identity with the served Python lane is the origin gate (layer_main.zig against recordings); decode rows are row-invariant, drafts output-invariant"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); TP2 over two gfx1151 nodes; 30.8 decode tok/s, 1,226..1,432 prefill tok/s measured on F+A over RDMA"
+
+[[requires]]
+module    = "executor.strixfold.dsv41"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

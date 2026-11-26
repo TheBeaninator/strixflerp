@@ -1,0 +1,40 @@
+id        = "kernel.radiance.halo_kv"
+kind      = "kernel"
+summary   = "KV streaming on the device: kv_resolve turns a streamed group's selected block ids into the ring slots that hold them, copies an absent block in from the pinned host mirror and rewrites the selection in place; kv_len_trim gives per-sequence context lengths less a trim"
+why       = "with indexer-selected attention a step reads a small part of the context, so the full KV can be parked and only a ring kept resident; that frees memory for more sequences or bigger experts"
+notes     = "On unified memory the host mirror and the ring are the same RAM pool, so the win on Strix Halo is not VRAM; the shape that carries over is a per-slot resident ring with the full context parked, which is what a slot switch needs."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = ["libhalo/halo_kv_len_trim.hip", "libhalo/halo_kv_resolve.hip"]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/libhalo/halo_kv_resolve.hip", "src/libhalo/halo_kv_len_trim.hip"]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kvcache.tiering-radiance-stream/-/-"
+api       = "halo_rad_kv_resolve, halo_rad_kv_len_trim"
+numeric   = "byte moves; the selection decides what is resident"
+regime    = "indexer-selected attention only: a step reads far less than the context (docs/KV-STREAMING.md in the origin)"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

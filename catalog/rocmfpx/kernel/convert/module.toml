@@ -1,0 +1,63 @@
+id        = "kernel.rocmfpx.convert"
+kind      = "kernel"
+summary   = "ROCmFPX conversions on the HIP backend: dequantize to f16 / f32 for the BLAS and copy paths, CPY between f32 / f16 and the ROCmFPX types (quantize on the GPU), GET_ROWS from ROCmFPX tensors (embedding lookup), SET_ROWS into ROCmFPX tensors (quantized KV store) and the standalone ROCmFP4 dequant kernel"
+why       = "the operations the origin requires before it claims runtime support for a type (ggml/rocmfpx/README.md: CPY, GET_ROWS, SET_ROWS, MUL_MAT, MUL_MAT_ID); GET_ROWS and SET_ROWS are what an embedding table or a KV cache in a ROCmFPX type needs"
+notes     = "Interface tags by file: convert.cu none; getrows.cu embed.lookup/gguf-rocmfpx/f32; set-rows.cu kvcache.store/gguf-rocmfpx/f32; cpy.cu none; cpy-utils.cuh none; rocmfp4_hip.cu none; the template instances none (catalog/rocmfpx/KERNELS.md has the table). No timing was taken on the pod."
+
+[provenance]
+origin    = "rocmfpx"
+repo      = "https://github.com/ciru-ai/ROCmFPX"
+commit    = "efd1ef5a17db576168d849831e1ef3346582881e"
+branch    = "main"
+paths     = [
+  "ggml/rocmfp4/rocmfp4_hip.cu",
+  "ggml/src/ggml-cuda/convert.cu",
+  "ggml/src/ggml-cuda/cpy-utils.cuh",
+  "ggml/src/ggml-cuda/cpy.cu",
+  "ggml/src/ggml-cuda/getrows.cu",
+  "ggml/src/ggml-cuda/set-rows.cu",
+]
+authors   = ["Ciru (ciru-ai)", "the ggml authors"]
+modified  = false
+upstream  = "ggml-org/llama.cpp 15586e2d7165570fb3aa7c26e0d442e289ef69de: the llama.cpp files of this family carry the ROCmFPX code as extra type cases; the q7-*.cuh, the ROCmFP template instances and rocmfp4_hip.cu are ROCmFPX files"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/ggml/src/ggml-cuda/convert.cu",
+  "src/ggml/src/ggml-cuda/getrows.cu",
+  "src/ggml/src/ggml-cuda/set-rows.cu",
+  "src/ggml/src/ggml-cuda/cpy.cu",
+  "src/ggml/rocmfp4/rocmfp4_hip.cu",
+]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src", "src/ggml/rocmfp4"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "embed.lookup/gguf-rocmfpx/f32.rocmfpx"
+api       = "ggml/src/ggml-cuda/getrows.cu: ggml's GET_ROWS with the ROCmFPX dequantizers"
+numeric   = "dequantize: integer code times decoded UE4M3 (FP16 for ROCmFP7) scale; quantize: the device scale search of cpy-utils.cuh (the CPU reference in ggml/rocmfpx and ggml/rocmfp4 is the contract)"
+regime    = "any shape; elementwise and row copies"
+
+[[provides]]
+interface = "kvcache.store/gguf-rocmfpx/f32.rocmfpx"
+api       = "ggml/src/ggml-cuda/set-rows.cu: ggml's SET_ROWS with the ROCmFPX quantizers (the store of a quantized KV cache)"
+numeric   = "dequantize: integer code times decoded UE4M3 (FP16 for ROCmFP7) scale; quantize: the device scale search of cpy-utils.cuh (the CPU reference in ggml/rocmfpx and ggml/rocmfp4 is the contract)"
+regime    = "any shape; elementwise and row copies"
+
+[[requires]]
+module    = "kernel.rocmfpx.common"
+
+[[requires]]
+interface = "format.device-view/gguf-rocmfpx/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.rocmfpx.convert.json"

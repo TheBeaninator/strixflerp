@@ -1,0 +1,58 @@
+id        = "runtime.strixfold_tp4.kit"
+kind      = "runtime"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for runtime.strixfold.kit: 1 file(s) of runtime.strixfold.kit (registry.json), laid over the f64b5ff files"
+why       = "runtime.strixfold.kit is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over runtime.strixfold.kit without touching it or the TP2 recipes"
+notes     = "Overlay of runtime.strixfold.kit (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 28153e18f3, 023c5d2ad9, e5cb84a995, 58862dad76, 4d4c5173d2. Latest commits: f706a6d0 dsv41 rrec: tf_ds_route_rec, one thread per (layer, expert) adding a request's gate mass into its stream slot (pod card 28153e18f3); 542162d9 dsv41 reap: pack, ssq, route and norm kernels and the down-y redirect (pod card 023c5d2ad9); e4710d73 dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995); 84222220 dsv41 registry: exl3.glinear_mlp may spill to scratch (20-92 B), declared so the kit builds (pod card e5cb84a995)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/registry.json",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.kit (origin strixfold, f64b5ff): 1 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.kit-manifest/hsaco/-.tp4"
+api       = "tf-hip-kit scan/merge/verify/coverage, gpu.Kit, gpu.Kernel(id, Params).bind"
+numeric   = "load-time check: exact arch, wave size, per-kernel argument table against the hsaco metadata, sha256 of every object"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); load time"
+
+[[provides]]
+interface = "verify.numerics-contract/-/-.tp4"
+api       = "tools/dsv41-hip/numerics/numerics.json (w-ref contract 1.7.0)"
+numeric   = "per-operator tolerance bands against fp64 references; the contract the non-bit-exact kernels are judged under"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); n/a"
+
+[[requires]]
+module    = "runtime.strixfold.kit"
+
+[[prebuilt]]
+kit       = "dsv41 serving kit (HIP + Triton) of the TP4 serving build 72c0f083fca1"
+objects   = 220
+manifest  = "prebuilt/dsv41-kit.manifest.json"
+manifest_sha256 = "446c43ebb75f0386b6c5ba9ef8de14540c0fbb7f8f814c1faa6ac3888908a0a8"
+where     = "control-node:/data/pod/plans/strixfold/deploy-stage/72c0f083fca1/native-hip/share/tensorfold/hip/gfx1151/dsv41 (built in /data/pod/plans/serve-next-20261123c/wt (run.sh))"
+toolchain = "HIP version: 7.17.26392-0000000"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

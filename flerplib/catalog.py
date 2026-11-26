@@ -5,9 +5,20 @@ import re
 import tomllib
 
 KINDS = ("format", "kernel", "executor", "runtime", "serve", "tool")
-ORIGINS = ("strixite", "strixfold", "strixfold_pr6", "gufo", "hipfire", "crucible", "tensorfold", "sglang", "halogen", "ds4", "radiance", "flerp")
-LANGS = ("hip-c++", "c++", "c", "zig", "hsaco", "triton-aot", "rust", "python", "cuda")
+ORIGINS = ("strixite", "strixfold", "strixfold_pr6", "gufo", "hipfire", "crucible", "tensorfold", "sglang", "halogen", "ds4", "radiance", "strix_trellis", "libstrix", "fastasfuck", "lucebox", "strata", "flerp")
+LANGS = ("hip-c++", "c++", "c", "zig", "hsaco", "triton-aot", "rust", "python", "cuda", "go", "patch")
+ORIGINS += ("ciru_inkling",)  # Ciru's Inkling 2 Mini gfx1151 HIP engine (card 8bd576841e)
+ORIGINS += ("strixfold_tp4",)  # the pod's StrixFold TP4 serving build 72c0f083fca1, a sub-origin over strixfold (docs/DSV41-TP4.md)
 ORIGINS += ("strixfold_reap",)  # the passive Edge-REAP collector, a sub-origin over strixfold_tp4 (docs/EDGE-REAP.md)
+ORIGINS += ("kestrel",)  # Kestrel 717c769, a Project Maya fork with AMD HIP kernels (card 1fac8c61fa)
+ORIGINS += ("ciru_iu4",)  # ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4: what CIRU adds over pwilkin/llama.cpp f5daaa3c (card 314b9e37c3)
+ORIGINS += ("rocmfpx",)  # ciru-ai/ROCmFPX: the ROCmFPX low-bit layer over llama.cpp 15586e2d (card 38c84c0fac)
+ORIGINS += ("ciru_link",)  # ciru-ai/CiruStrixLink 1c7f1ae: USB4 NHI transport (Go) and the Linux 7.2.2 USB4STREAM patches (card 682cd99ba2)
+ORIGINS += ("vllm_strix", "odinlink5")  # davidcanar/vllm-strix-halo fe5ac10 (GLM-5.3 / DS4 TP2 over Thunderbolt) and its OdinLink-Five transport 0315225 (card d2a7b91dec)
+LANGS += tuple(l for l in ("patch", "shell") if l not in LANGS)  # patch: a patch kept to read and apply, never built here; shell: host scripts and units (card d2a7b91dec)
+ORIGINS += ("maya_tp",)  # uv-genai/maya-tp 6951bd7: Project Maya with two-host TP2 over Thunderbolt RDMA (card 2982083a71)
+ORIGINS += ("kyojin",)  # Yamz-Labs/kyojin 116a883: what Kyojin adds over turboderp-org/exllamav3 8c593e4e (card 692a13d6d0)
+ORIGINS += ("enginelab", "enginelab_usb4")  # hyukudan/strix-halo-engine-lab 0598cf6 and its USB4 kernel patch series d5de947 (card bc74e1a17d)
 # `verified` is the first step of a prebuilt kit (hashes checked on the build host); it stands where `builds` does.
 STATUSES = ("harvested", "builds", "verified", "parity", "benched")
 PREBUILT_LANGS = ("hsaco", "triton-aot")
@@ -30,7 +41,8 @@ def split_tag(iface):
 def overlap_class(iface):
     """The interface name without its tag: providers of one class do the same job on the same operands."""
     return split_tag(iface)[0]
-COMPILED = {"hip-c++": (".hip", ".cpp", ".cc"), "c++": (".cpp", ".cc"), "c": (".c",)}
+COMPILED = {"hip-c++": (".hip", ".cpp", ".cc", ".cu"),  # .cu: a CUDA-spelled file compiled as HIP (-x hip), as ggml-hip does (lucebox)
+            "c++": (".cpp", ".cc"), "c": (".c",)}
 
 
 def repo_root():
@@ -213,7 +225,8 @@ class Catalog:
         self.load_errors = []                # (path, message) for files that are not valid TOML
         cat = os.path.join(self.root, "catalog")
         for origin in sorted(os.listdir(cat)) if os.path.isdir(cat) else []:
-            for kind in sorted(self._dirs(os.path.join(cat, origin))):
+            lic_dirs = self._licence_dirs(os.path.join(cat, origin, "ORIGIN.toml"))
+            for kind in sorted(set(self._dirs(os.path.join(cat, origin))) - lic_dirs):
                 for name in sorted(self._dirs(os.path.join(cat, origin, kind))):
                     path = os.path.join(cat, origin, kind, name, "module.toml")
                     if not os.path.isfile(path):
@@ -238,6 +251,17 @@ class Catalog:
                     self.recipes.append(Recipe(os.path.join(rdir, f), data))
         tpath = os.path.join(self.root, "toolchains.toml")
         self.toolchains = (self._read(tpath) or {}) if os.path.isfile(tpath) else {}
+
+    @staticmethod
+    def _licence_dirs(origin_toml):
+        """Top directories of ORIGIN.toml [licence] files and canonical_files (LICENSES/, licenses/, third_party/...):
+        licence texts copied beside ORIGIN.toml, not module kinds."""
+        try:
+            lic = read_toml(origin_toml).get("licence", {})
+        except (tomllib.TOMLDecodeError, OSError, UnicodeDecodeError):
+            return set()
+        files = (lic.get("files", []) + lic.get("canonical_files", [])) if isinstance(lic, dict) else []
+        return {f.split("/", 1)[0] for f in files if isinstance(f, str) and "/" in f}
 
     @staticmethod
     def _dirs(path):

@@ -1,0 +1,36 @@
+id        = "kernel.ds4.rocm_glm"
+kind      = "kernel"
+summary   = "the GLM-5.x ROCm kernels, mirroring the Metal GLM graph entry points: KDA decode and the three-stage KDA prefill (prepare, recurrence, output), BF16 embedding and matvecs, Q4_K x Q8_K matmul, GLM attention (full, indexed split decode with reduce, LoRA-indexed), KV-cache build and compact-KV QKV norm, the indexer (scores, RoPE tail, pool update) and the causal / selected GEMM attention path (gather, RoPE to F16, softmax, scatter); a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "the GLM-5.3 and GLM-5.3-Flash graph on gfx1151, KDA included; the base of every GLM overlay in this origin"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["rocm/ds4_rocm_glm.cuh"]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src", "src/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "mixer.kda/-/f32.ds4-glm"
+api       = "see summary"
+numeric   = "F32 state; BF16 / Q8_0 / Q4_K weights"
+regime    = "prefill and decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.rocm_backend"

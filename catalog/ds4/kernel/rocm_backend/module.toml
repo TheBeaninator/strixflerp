@@ -1,0 +1,149 @@
+id        = "kernel.ds4.rocm_backend"
+kind      = "kernel"
+summary   = "ds4's ROCm backend translation unit: ds4_rocm.cu sets the HIP spellings (64-bit warp masks, hipBLASLt / rocBLAS names) and #includes every rocm/*.cuh module plus the shared V4.1, GLM-5.3 vision and V4 vision kernels in a fixed order into one object; ds4_rocm.h declares the ROCm-only entry points and ds4_iq2_tables_cuda.inc holds the IQ2_XXS grids"
+why       = "the one place where the ROCm kernel modules become a backend: the ds4_gpu.h API (tensor-resident, device-owned activations and KV across a whole prefill / decode command sequence) is implemented here for gfx1151"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["ds4_iq2_tables_cuda.inc", "ds4_rocm.cu", "ds4_rocm.h"]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/ds4_rocm.cu"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.ds4-rocm-backend/-/-"
+api       = "ds4_gpu_* (ds4_gpu.h), ds4_rocm_* (ds4_rocm.h)"
+numeric   = "as the origin builds it"
+regime    = "Strix Halo gfx1151; eager default-stream execution (no graph capture on ROCm)"
+
+[[requires]]
+module    = "kernel.ds4.rocm_attention"
+
+[[requires]]
+module    = "kernel.ds4.rocm_attention_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_common"
+
+[[requires]]
+module    = "kernel.ds4.rocm_compat"
+
+[[requires]]
+module    = "kernel.ds4.rocm_compressor"
+
+[[requires]]
+module    = "kernel.ds4.rocm_current_api_compat"
+
+[[requires]]
+module    = "kernel.ds4.rocm_deepseek4_vision"
+
+[[requires]]
+module    = "kernel.ds4.rocm_embedding_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_fp8_kv"
+
+[[requires]]
+module    = "kernel.ds4.rocm_fp8_kv_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_glm"
+
+[[requires]]
+module    = "kernel.ds4.rocm_hc"
+
+[[requires]]
+module    = "kernel.ds4.rocm_hc_output_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_hipblaslt"
+
+[[requires]]
+module    = "kernel.ds4.rocm_indexer"
+
+[[requires]]
+module    = "kernel.ds4.rocm_matmul"
+
+[[requires]]
+module    = "kernel.ds4.rocm_misc_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_moe"
+
+[[requires]]
+module    = "kernel.ds4.rocm_moe_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_norm_rope"
+
+[[requires]]
+module    = "kernel.ds4.rocm_output"
+
+[[requires]]
+module    = "kernel.ds4.rocm_q8"
+
+[[requires]]
+module    = "kernel.ds4.rocm_router"
+
+[[requires]]
+module    = "kernel.ds4.rocm_runtime"
+
+[[requires]]
+module    = "kernel.ds4.rocm_shared_expert"
+
+[[requires]]
+module    = "kernel.ds4.rocm_unavailable"
+
+[[requires]]
+module    = "kernel.ds4.dsv41"
+
+[[requires]]
+module    = "kernel.ds4.glm53_vision"
+
+[[requires]]
+module    = "kernel.ds4.dsv4_vision"
+
+[[requires]]
+module    = "runtime.ds4.gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.gpu_tp"
+
+[[requires]]
+module    = "runtime.ds4.image"
+
+[[requires]]
+module    = "runtime.ds4.qwen4_vision"
+
+[[requires]]
+module    = "runtime.ds4.linux_memory"
+
+[[requires]]
+module    = "kernel.ds4.mmq_common"
+
+[[requires]]
+module    = "kernel.ds4.mmq_ggml_stubs"
+
+[[requires]]
+module    = "kernel.ds4.mmq_moe"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ds4.rocm_backend.json"
+reason    = "compile gate: fail: 1 of 1 units failed; first: src/ds4_rocm.cu: /data/pod/plans/31224b4ca3/wt/catalog/ds4/kernel/rocm_deepseek4_vision/src/rocm/ds4_rocm_deepseek4_vision.cuh:239:25: error: no matching function for call to 'rsqrtf'"

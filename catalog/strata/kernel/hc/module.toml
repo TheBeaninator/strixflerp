@@ -1,0 +1,87 @@
+id        = "kernel.strata.hc"
+kind      = "kernel"
+summary   = "the hyper-connection (gated residual, gr) kernels of Qwen3.8-Flash-Next's 4-stream residual: gr_read / gr_write after llama.cpp's build_hc_mix / build_hc_combine (gr), the read in two kernels with the previous write folded in (fused_gr), llama.cpp's weighted RMSNorm and GR post-operations (native_gr_norm, native_gr_postops), and a control vector applied to the residual stream after a layer's FFN write (cvec)"
+why       = "the hyper-connection read and write run 96 + 96 times a token; fused_gr cuts the native path's seven kernels to two, and the catalogue already holds hc.mix providers from strixite, crucible and radiance to set it beside"
+notes     = "Interface tags by file: gr.cu hc.mix/bf16/f32; fused_gr.cu hc.mix/bf16/f32; native_gr_norm.cu norm.rmsnorm/-/f32; native_gr_postops.cu hc.mix-post/-/f32; cvec.cu steer.add-rows/-/f32. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/cvec.hpp",
+  "include/strata/kernels/fused_gr.hpp",
+  "include/strata/kernels/gr.hpp",
+  "include/strata/kernels/native_gr_norm.hpp",
+  "include/strata/kernels/native_gr_postops.hpp",
+  "src/kernels/cuda/cvec.cu",
+  "src/kernels/cuda/fused_gr.cu",
+  "src/kernels/cuda/gr.cu",
+  "src/kernels/cuda/native_gr_norm.cu",
+  "src/kernels/cuda/native_gr_postops.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/gr.cu",
+  "src/src/kernels/cuda/fused_gr.cu",
+  "src/src/kernels/cuda/native_gr_norm.cu",
+  "src/src/kernels/cuda/native_gr_postops.cu",
+  "src/src/kernels/cuda/cvec.cu",
+]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "hc.mix/bf16/f32.strata"
+api       = "strata::kernels::gr_read(_multi), gr_write(_multi), gr_workspace_init (src/kernels/cuda/gr.cu)"
+numeric   = "FP32 residual, BF16 projection weights, optional FP32-activation MMVF"
+regime    = "decode and verify windows; hc = 4"
+
+[[provides]]
+interface = "hc.mix/bf16/f32.strata-fused"
+api       = "strata::kernels::fused_gr_read(_multi), fused_gr_supported, fused_gr_set_fast (src/kernels/cuda/fused_gr.cu)"
+numeric   = "BF16 weights unpacked to FP32 once, the same 8-FMA order as the unfused path"
+regime    = "decode; n_embd 2560, hc 4, low rank 320 in the engine"
+
+[[provides]]
+interface = "norm.rmsnorm/-/f32.strata-native-gr"
+api       = "strata::kernels::native_gr_rms_norm_weighted(_multi) (src/kernels/cuda/native_gr_norm.cu)"
+numeric   = "FP32, the pinned XOR reduction tree; fast-math on CUDA"
+regime    = "any row length; 256 threads below 1024 columns, else 1024"
+
+[[provides]]
+interface = "hc.mix-post/-/f32.strata-native"
+api       = "strata::kernels::native_gr_down_silu, native_gr_pre_gated(_multi), native_gr_post(_multi) (src/kernels/cuda/native_gr_postops.cu)"
+numeric   = "FP32"
+regime    = "decode"
+
+[[provides]]
+interface = "steer.add-rows/-/f32.strata-cvec"
+api       = "strata::kernels::cvec_upload, cvec_apply, cvec_set_enabled (src/kernels/cuda/cvec.cu)"
+numeric   = "FP32"
+regime    = "one direction a layer over a layer range"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[[requires]]
+module    = "kernel.strata.bf16_gemv"
+
+[[requires]]
+module    = "kernel.strata.verify"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.hc.json"

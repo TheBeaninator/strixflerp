@@ -4,7 +4,7 @@ Kernel modules take their translation units plus the headers only they include; 
 live in header-only modules, found with docs/harvest/incgraph.py."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from harvestlib import Origin, M, P, run
+from harvestlib import Origin, M, P, run, tlist
 from incgraph import closure
 
 O = Origin('gufo', 'gufo-neuhaus', 'https://github.com/neuhaus/gufo', 'f070a17', 'rdma', 'MIT',
@@ -314,7 +314,10 @@ reference_checkout = "~/Code/strixflerp-upstream/gufo-neuhaus"
 
 [licence]
 spdx      = "MIT"
-files     = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]        # copied verbatim next to this file; licenses/ and src/models/deepseek_v4_flash/LICENSE.ds4 in the origin
+# copied verbatim next to this file at their origin paths: the root texts, licenses/ (the upstream texts the notices
+# retain) and every origin file THIRD_PARTY_NOTICES.md links (LICENCE_FILES in docs/harvest/harvest_gufo.py)
+files     = @LICENCE_FILES@
+source    = "the reference checkout above, byte-identical to f070a17 in control-node:/data/projects/gufo-rdma (git show f070a17:<path>, checked 2026-11-26)"
 third_party = "DeepSeek V4 Flash engine adapted from DS4 84cc8823 (MIT); quantized matrix kernels from llama.cpp 5c0e9468 ggml-cuda (MIT) with xangel82/DS4-GB10-GX10-DSpark-CUDA 910501e changes"
 
 [toolchain]
@@ -345,5 +348,14 @@ LEFT_OUT = {
     'CMakeLists.txt, cmake/, flake.nix, vcpkg.json, docs/, assets/, schemas/, *.md at the root': 'build system and documentation (the per-target compile options are recorded in the manifests)',
 }
 
+# THIRD_PARTY_NOTICES.md links these origin files by relative path; they ship beside it so the links resolve.
+NOTICE_LINKS = ['src/models/deepseek_v4_flash/LICENSE.ds4', 'src/models/deepseek_v4_flash/UPSTREAM.md',
+                'src/models/deepseek_v4_flash/kernels/rocm/mmq/VENDOR.md',
+                'src/models/qwen38_flash_next/kernels/rocm/mmq/VENDOR.md', 'src/models/qwen_image_21/UPSTREAM.md',
+                'docs/models/minimax-h3/QUALITY.md', 'docs/models/minimax-h3/README.md',
+                '.devops/nix/ds4-reference.nix', '.devops/nix/llama-cpp-reference.nix']
+LICENCE_FILES = (['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md'] + [f for f in O.files() if f.startswith('licenses/')]
+                 + NOTICE_LINKS)
+
 if __name__ == '__main__':
-    run(O, mods, ORIGIN_TOML, LEFT_OUT, ['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md'])
+    run(O, mods, ORIGIN_TOML.replace('@LICENCE_FILES@', tlist(LICENCE_FILES)), LEFT_OUT, LICENCE_FILES)

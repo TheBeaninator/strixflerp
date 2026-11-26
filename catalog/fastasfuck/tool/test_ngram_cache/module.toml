@@ -1,0 +1,43 @@
+id        = "tool.fastasfuck.test_ngram_cache"
+kind      = "tool"
+summary   = "fastasfuck's test of the ngram.table reader and its LRU row cache against direct reads"
+why       = "a wrong cached PLE row would silently change every token after it; this test pins the cache"
+notes     = "Files vs strixite: tools/test_ngram_cache.cpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/test_ngram_cache.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/test_ngram_cache.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.test-ngram-cache/-/-"
+api       = "tools/test_ngram_cache.cpp"
+numeric   = "n/a"
+regime    = "host program"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.ngram_table"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable test_ngram_cache) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

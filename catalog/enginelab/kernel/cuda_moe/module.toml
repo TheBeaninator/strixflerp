@@ -1,0 +1,90 @@
+id        = "kernel.enginelab.cuda_moe"
+kind      = "kernel"
+summary   = "CUDA MoE: A8 (MMA), microscaled R1 (step, pipe), R1 route plan, turbo I8, route project / select / softmax, grouped W4A4"
+why       = "the RTX MoE route; where it would go: beside the catalogue's moe.experts-decode/-/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.experts-decode/-/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. CUDA (RTX PRO 6000 route). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/cuda/core/grouped_w4a4.cu",
+  "src/cuda/core/grouped_w4a4.hpp",
+  "src/cuda/core/moe_a8.cuh",
+  "src/cuda/core/moe_a8_mma.cuh",
+  "src/cuda/core/moe_microscaled_r1.cuh",
+  "src/cuda/core/moe_microscaled_step.cu",
+  "src/cuda/core/moe_r1_pipe.cuh",
+  "src/cuda/core/moe_r1_pipe_bench.cu",
+  "src/cuda/core/moe_r1_pipe_bench.cuh",
+  "src/cuda/core/moe_route_plan_r1.cuh",
+  "src/cuda/core/moe_turbo_i8.cuh",
+  "src/cuda/core/route_project.cuh",
+  "src/cuda/core/route_select.cuh",
+  "src/cuda/core/route_softmax.cuh",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-decode/-/f16-f32.enginelab-cuda"
+api       = "src/cuda/core/moe_*.cu"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_dense"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_microscaled"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "runtime.enginelab.cuda_exec"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[[requires]]
+module    = "runtime.enginelab.numeric"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source for the optional RTX PRO route: no CUDA toolkit on the island and no NVIDIA device on the pod, so it is not compiled"

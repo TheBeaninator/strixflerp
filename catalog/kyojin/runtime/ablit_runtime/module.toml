@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.ablit_runtime"
+kind      = "runtime"
+summary   = "Run-time abliteration edit (a projection removed from writer outputs, no weights changed)"
+why       = "kin of the catalogue's steering modules. Where the shape would go: a steer.add-rows/-/f32 provider beside kernel.strata.hc, kernel.strixite.steer, runtime.crucible.ablation, through a port of the python / Triton logic"
+notes     = "Interface tag: steer.add-rows/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (ablit_runtime.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/ablit_runtime.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "steer.add-rows/-/f32.kyojin-ablit"
+api       = "ablit_runtime.py"
+numeric   = "fp32"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

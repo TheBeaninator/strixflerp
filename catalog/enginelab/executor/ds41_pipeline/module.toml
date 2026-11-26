@@ -1,0 +1,77 @@
+id        = "executor.enginelab.ds41_pipeline"
+kind      = "executor"
+summary   = "the DeepSeek V4.1 two-node path: the pipeline front, multi-front and wire, decode transport, prefill transport (HIP) and its traits, state transfer, frames and pieces, staged ready and step trace"
+why       = "DS41 runs across two Strix Halos over USB4 (2K 792, 32K 1,224 tok/s prefill; 26.8 tok/s decode, README): this is the layer-split pipeline that does it; where it would go: a new strixflerp interface runtime.pipeline-2node/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, runtime.pipeline-2node/-/-. 1 HIP unit(s) compiled standalone by the gate; 3 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/deepseek41_state_frames.hpp",
+  "include/strix/deepseek41_state_pieces.hpp",
+  "include/strix/ds41_decode_xport.hpp",
+  "include/strix/ds41_pipeline_front.hpp",
+  "include/strix/ds41_pipeline_multi.hpp",
+  "include/strix/ds41_pipeline_wire.hpp",
+  "include/strix/ds41_state_transfer.hpp",
+  "src/deepseek41_prefill_xport_traits.hpp",
+  "src/ds41_pipeline_front.cpp",
+  "src/ds41_pipeline_multi.cpp",
+  "src/ds41_pipeline_wire.cpp",
+  "src/hip_deepseek41_prefill_xport.hip",
+  "src/hip_deepseek41_prefill_xport.hpp",
+  "src/hip_ds41_staged_ready.hpp",
+  "src/hip_ds41_step_trace.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_deepseek41_prefill_xport.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "runtime.pipeline-2node/-/-"
+api       = "src/ds41_pipeline_front.cpp, hip_deepseek41_prefill_xport.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_attention"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.dist_host_staged"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.ds41_pipeline.json"

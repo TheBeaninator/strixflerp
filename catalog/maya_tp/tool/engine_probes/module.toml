@@ -1,0 +1,58 @@
+id        = "tool.maya_tp.engine_probes"
+kind      = "tool"
+summary   = "the engine's small measurement programs: strata-device (GPU, plan and arena report), strata-load (expert arena load), strata-overlap (does streaming overlap compute?) and the concurrency probe (do the CPU expert path and the GPU stream run at once?)"
+why       = "each answers one yes / no question about a host before an engine is tuned; the overlap and concurrency probes matter on unified memory"
+notes     = "Interface tag: tool.engine-probes/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "src/core/concurrent_main.cpp",
+  "src/core/device_main.cpp",
+  "src/core/load_main.cpp",
+  "src/core/overlap_main.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.engine-probes/-/-"
+api       = "main() of each program"
+numeric   = "timings"
+regime    = "one host"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.s_gemv"
+
+[[requires]]
+module    = "runtime.maya_tp.core_session"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

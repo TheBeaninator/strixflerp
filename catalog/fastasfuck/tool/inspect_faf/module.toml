@@ -1,0 +1,43 @@
+id        = "tool.fastasfuck.inspect_faf"
+kind      = "tool"
+summary   = "fastasfuck's .faf inspector: prints metadata and the tensor index, --verify re-hashes every component"
+why       = "the quick check that a converted or calibrated .faf is whole and what layout it carries"
+notes     = "Files vs strixite: tools/inspect_faf.cpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/inspect_faf.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/inspect_faf.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.inspect-faf/-/-"
+api       = "tools/inspect_faf.cpp"
+numeric   = "n/a"
+regime    = "host program"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "runtime.fastasfuck.args"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable inspect_faf) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

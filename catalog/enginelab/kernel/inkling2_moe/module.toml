@@ -1,0 +1,61 @@
+id        = "kernel.enginelab.inkling2_moe"
+kind      = "kernel"
+summary   = "Inkling 2 Mini MoE and experts (HIP, dispatch, reference, layout): 6 origin files under src/inkling2"
+why       = "its experts; where it would go: beside the catalogue's moe.experts-decode/-/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.experts-decode/-/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/inkling2/inkling2_mini_expert_hip.hpp",
+  "src/inkling2/inkling2_mini_expert_layout.hpp",
+  "src/inkling2/inkling2_mini_moe.hpp",
+  "src/inkling2/inkling2_mini_moe_dispatch.hpp",
+  "src/inkling2/inkling2_mini_moe_hip.hpp",
+  "src/inkling2/inkling2_mini_moe_reference.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/inkling2"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-decode/-/f16-f32.enginelab-inkling2"
+api       = "src/inkling2/inkling2_mini_moe*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_engine"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

@@ -1,0 +1,49 @@
+id        = "runtime.enginelab.logprobs"
+kind      = "runtime"
+summary   = "log-probabilities: logprob partials (HIP and CUDA spellings), the sampled target-logits reader and the teacher logit spool"
+why       = "logprobs for the API and the quality gate; where it would go: beside the catalogue's sample.logprobs/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: sample.logprobs/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/cuda_logprob_partials.hpp",
+  "include/strix/hip_logprob_partials.hpp",
+  "include/strix/hip_sampled_target_logits_reader.hpp",
+  "include/strix/logprob_partials.hpp",
+  "include/strix/teacher_logit_spool.hpp",
+  "src/hip_logprob_partials.hip",
+  "src/hip_sampled_target_logits_reader.cpp",
+  "src/logprob_partials.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_logprob_partials.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "sample.logprobs/-/f32.enginelab"
+api       = "hip_logprob_partials.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.speculation_sampling"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.logprobs.json"

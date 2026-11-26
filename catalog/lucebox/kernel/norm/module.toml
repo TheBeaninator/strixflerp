@@ -1,0 +1,44 @@
+id        = "kernel.lucebox.norm"
+kind      = "kernel"
+summary   = "per-token RMSNorm times weight for the HIP chunk-B graph, built in every HIP build"
+why       = "A small second RMSNorm provider; recorded for completeness of the HIP units"
+notes     = "INTERFACES.md section: 8. Norm and RoPE. Interface tags: norm.rmsnorm/-/f32.lucebox. Units: server/src/rms_norm_hip.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = ["server/src/rms_norm_hip.cu"]
+authors   = ["Luce-Org"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/server/src/rms_norm_hip.cu"]
+includes  = ["src/server/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/src/rms_norm_hip.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1"] }
+
+[[provides]]
+interface = "norm.rmsnorm/-/f32.lucebox"
+api       = "server/src/rms_norm_hip.cu"
+numeric   = "per-token RMS norm then weight multiply (file header)"
+regime    = "qwen3 chunk-B graph path"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.server_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.norm.json"

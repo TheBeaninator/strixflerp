@@ -1,0 +1,64 @@
+id        = "kernel.maya_tp.hyperconn"
+kind      = "kernel"
+summary   = "the gated residual / hyper-connection kernels: gr_read and gr_write (gr), their fused form (fused_gr) and llama.cpp's RMS norm and post-ops of the hyper-connection streams (native_gr_norm, native_gr_postops)"
+why       = "the 4-stream residual of the Qwen-Next family; under TP2 the all-reduce lands on this residual, so its layout fixes what crosses the link"
+notes     = "Interface tag: hc.mix/bf16/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/fused_gr.hpp",
+  "include/strata/kernels/gr.hpp",
+  "include/strata/kernels/native_gr_norm.hpp",
+  "include/strata/kernels/native_gr_postops.hpp",
+  "src/kernels/cuda/fused_gr.cu",
+  "src/kernels/cuda/gr.cu",
+  "src/kernels/cuda/native_gr_norm.cu",
+  "src/kernels/cuda/native_gr_postops.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/fused_gr.cu",
+  "src/src/kernels/cuda/gr.cu",
+  "src/src/kernels/cuda/native_gr_norm.cu",
+  "src/src/kernels/cuda/native_gr_postops.cu",
+]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "hc.mix/bf16/f32.maya-tp"
+api       = "strata::kernels::gr_read, gr_write, fused_gr_*, native_gr_norm / _postops"
+numeric   = "BF16 projections, FP32 streams"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.verify"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.hyperconn.json"

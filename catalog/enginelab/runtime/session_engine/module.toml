@@ -1,0 +1,76 @@
+id        = "runtime.enginelab.session_engine"
+kind      = "runtime"
+summary   = "the session engine contract (include/strix/session, src/session): backends (CPU, HIP), engine, CLI output, cycle pack (HIP), draft-verify runner, head-gate CLI, linear verify step, parallel jobs, prefill session, prompt windows and the speculation default"
+why       = "the contract an engine implements so the shared serve layer can drive it; where it would go: beside the catalogue's executor.backend/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.backend/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 3 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/session/backend.hpp",
+  "include/strix/session/backend_cpu.hpp",
+  "include/strix/session/backend_hip.hpp",
+  "include/strix/session/cli_output.hpp",
+  "include/strix/session/cycle_pack.hpp",
+  "include/strix/session/draft_verify_runner.hpp",
+  "include/strix/session/engine.hpp",
+  "include/strix/session/head_gate_cli.hpp",
+  "include/strix/session/linear_verify_step.hpp",
+  "include/strix/session/parallel_job.hpp",
+  "include/strix/session/prefill_session.hpp",
+  "include/strix/session/prompt_windows.hpp",
+  "include/strix/session/speculation_default.hpp",
+  "src/session/backend_cpu.cpp",
+  "src/session/backend_hip.cpp",
+  "src/session/cycle_pack.hip",
+  "src/session/parallel_job.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/session/cycle_pack.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.backend-enginelab/-/-"
+api       = "strix::session engine.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_expert_tp"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.session_engine.json"

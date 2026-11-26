@@ -338,3 +338,17 @@ the decode loop was lifted out of it.
   the `dlclose`. The close is the origin's order again, and the host now prints a last line when its main
   returns, to tell the return path from the process's exit handlers. Drafts off has not run through the front
   end, and the stage as a whole has not passed.
+- 2026-11-17, the exit crash reproduced on control-node with no device and no weights, and named (card 91a9cda544).
+  The engine dlopens `libhipblas.so.3` (`zig/src/families/dsv41/hipblas.zig`) and closes it when the family is
+  released; hipBLAS brought therock 10.2's `libomp.so`, which is `DF_1_NODELETE` and so stays mapped. The host
+  built on 2026-11-11 (`flerp-executor-conformance.strixfold`), run with no arguments and a preloaded library that
+  opens and closes hipBLAS before main (`tests/cpp/hipblas_exit_shim.c`), prints the driver's usage and
+  `host: main returned 2` and dies of SIGSEGV; without the preload it exits 2. gdb: pc 0, called from
+  `__do_fini` of `libomp.so` (+0x474b8), from the loader's fini calls under `exit` from `__libc_start_main` -
+  the frames of StrixFold's rank 1 at every stop (its card b4aa815a57). That the pair runs above died in this frame
+  is an inference: no backtrace was taken from them; what they share is the binary, the library, the hipBLAS close
+  inside `flerp_close`, and a fault after the last line of the close. Both hosts now leave through
+  `strixfold_abi.zig`'s `leave`: the last line, `fflush(NULL)`, `_exit` (as rank 1 does upstream).
+  `tests/test_strixfold_host_exit.py` runs the reproduction against a built host; `gate/k_close/` is the same on
+  bench box K plus an open that reaches the device (`TF_TP_WORLD=1`: the world is refused before a file of the
+  model is read). A served request followed by `flerp_close` on the fixed build needs the pair and has not run.

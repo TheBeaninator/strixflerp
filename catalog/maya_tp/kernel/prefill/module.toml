@@ -1,0 +1,66 @@
+id        = "kernel.maya_tp.prefill"
+kind      = "kernel"
+summary   = "the prompt path's kernels: the batched prompt kernels (src/prefill/kernels.cu), the dense GEMM dispatch through hipBLAS / hipBLASLt (gemm.cu) and the hipBLASLt solution-table parser (hipblaslt_tuning.hpp)"
+why       = "prefill throughput is GEMM-bound; a tuned hipBLASLt dispatch with tables per gfx target is a shape strixflerp's linear.prefill providers can take directly"
+notes     = "Interface tag: linear.prefill/bf16+f16/f32.maya-tp-blaslt. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/prefill/gemm.hpp",
+  "include/strata/prefill/kernels.hpp",
+  "src/prefill/gemm.cu",
+  "src/prefill/hipblaslt_tuning.hpp",
+  "src/prefill/kernels.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/prefill/gemm.cu", "src/src/prefill/kernels.cu"]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/src/prefill/gemm.cu" = ["-DSTRATA_HIPBLASLT_AVAILABLE=1"] }
+
+[[provides]]
+interface = "linear.prefill/bf16+f16/f32.maya-tp-blaslt"
+api       = "strata::prefill::gemm_*, prefill kernels (include/strata/prefill/)"
+numeric   = "BF16 / FP16 in, FP32 accumulate"
+regime    = "prompt chunks"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.kvcache"
+
+[[requires]]
+module    = "kernel.maya_tp.router"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.prefill_host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.prefill.json"

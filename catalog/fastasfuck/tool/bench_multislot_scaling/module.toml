@@ -1,0 +1,40 @@
+id        = "tool.fastasfuck.bench_multislot_scaling"
+kind      = "tool"
+summary   = "fastasfuck's 1, 2 and 4 slot concurrency bench of aggregate and per-slot speed and inter-token latency"
+why       = "the 4-slot throughput figure in the README is this bench's number"
+notes     = "Files vs strixite: tools/bench/bench_multislot_scaling.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/bench/bench_multislot_scaling.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.bench-multislot-scaling/-/-"
+api       = "tools/bench/bench_multislot_scaling.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[[requires]]
+module    = "tool.fastasfuck.bench_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

@@ -1,0 +1,79 @@
+id        = "kernel.enginelab.attn_core_prepared"
+kind      = "kernel"
+summary   = "prepared attention: prepared GQA and BF16 attention with lane plans and prepared step, chunk decode and chunk exact combine (rule), decode and row-group plans, cache rows and shadow, recurrent attention state, and the block / causal GQA references"
+why       = "the plan-and-bind layer the engines call into, with exact chunk combine so a split decode keeps the single-pass bits; where it would go: beside the catalogue's attn.softmax-gqa/-/bf16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: attn.softmax-gqa/-/bf16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/attn_core/block_gqa_reference.hpp",
+  "src/attn_core/cache_rows.hpp",
+  "src/attn_core/cache_shadow.hpp",
+  "src/attn_core/causal_gqa_reference.hpp",
+  "src/attn_core/chunk_decode.hpp",
+  "src/attn_core/chunk_exact_combine.hpp",
+  "src/attn_core/chunk_exact_combine_rule.hpp",
+  "src/attn_core/decode_plan.hpp",
+  "src/attn_core/prepared_bf16_attention.hpp",
+  "src/attn_core/prepared_bf16_lanes_plan.hpp",
+  "src/attn_core/prepared_gqa.hpp",
+  "src/attn_core/prepared_gqa_attention.hpp",
+  "src/attn_core/prepared_step.hpp",
+  "src/attn_core/recurrent_state.hpp",
+  "src/attn_core/rowgroup_plan.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.softmax-gqa/-/bf16-f32.enginelab-prepared"
+api       = "src/attn_core prepared headers"
+numeric   = "EXACT profile: bitwise the engine's declared reference (fixed fmaf order, -ffp-contract=off, denormals kept); FAST levers change bits only behind the quality gate (AGENTS.md)"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_short_conv"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.recurrent_state"
+
+[[requires]]
+module    = "runtime.enginelab.state_txn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

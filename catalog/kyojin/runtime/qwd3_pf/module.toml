@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.qwd3_pf"
+kind      = "runtime"
+summary   = "Weight prefetch into the infinity cache (MALL, 32 MB, ~700 GB/s on re-reads vs 236 GB/s DRAM) during the latency-bound kernels of a decode token: read-only side-stream reads of weights a later streaming kernel will read, results bit-identical by construction (EXL3_QWD3_PF, default off)"
+why       = "decode on Strix Halo is memory bound; warming the MALL during latency-bound kernels hides DRAM time. Where the shape would go: a runtime.weight-prefetch/-/- provider beside kernel.radiance.halo_model_ops, through a port of the python / Triton logic"
+notes     = "Interface tag: runtime.weight-prefetch/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (qwd3_pf.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/qwd3_pf.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.weight-prefetch-kyojin-mall/-/-"
+api       = "qwd3_pf.py"
+numeric   = "n/a: no arithmetic, reads only"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

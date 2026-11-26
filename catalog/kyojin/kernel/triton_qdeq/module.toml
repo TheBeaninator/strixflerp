@@ -1,0 +1,36 @@
+id        = "kernel.kyojin.triton_qdeq"
+kind      = "kernel"
+summary   = "Quantized paged cache to fp16 staging: the 8-bit H32-rotated cache for the HIP sparse prefill kernel, and any 2..8-bit plane cache to a compact fp16 window (same order as the torch fallback)"
+why       = "prefill over a quantized cache. Where the shape would go: a kvcache.quant8/-/f32 provider beside kernel.fastasfuck.kv8, kernel.strata.kvcache, kernel.strixite.kv8, through a port of the python / Triton logic"
+notes     = "Interface tag: kvcache.quant8/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (qdeq_triton.py, qdeq_window_triton.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/attention_fn/qdeq_triton.py", "exllamav3/modules/attention_fn/qdeq_window_triton.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.quant8/-/f32.kyojin-dequant-window"
+api       = "qdeq_triton.py, qdeq_window_triton.py"
+numeric   = "exact dequant to fp16"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

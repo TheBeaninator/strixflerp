@@ -1,0 +1,161 @@
+id        = "executor.enginelab.minimax_engine"
+kind      = "executor"
+summary   = "the MiniMax M3.1 engine: deployment, linear drafter, engine, common, defaults, fast INT4, kernels, pack, profile table, prefill timeline, route identity; model assets, description and graph; include/strix/minimax; the layer cut"
+why       = "MiniMax M3.1 Flash on two nodes (24.2 tok/s 1K, 621.6 prefill at 8K); where it would go: beside the catalogue's executor.model/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.model/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 2 HIP unit(s) compiled standalone by the gate; 6 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights). Requires kernel.strix_trellis.c_api: the origin builds these against the external strix-trellis library (CMakeLists.txt STRIX_DS41_TRELLIS_INCLUDE_DIR, include <strix_trellis.h>), which is catalog/strix_trellis here."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/minimax/asset_input.hpp",
+  "include/strix/minimax/engine.hpp",
+  "include/strix/minimax/model_assets.hpp",
+  "include/strix/minimax/model_description.hpp",
+  "include/strix/minimax/prefill_types.hpp",
+  "include/strix/minimax/session_cache.hpp",
+  "include/strix/minimax/session_startup.hpp",
+  "include/strix/minimax_layercut.hpp",
+  "src/minimax/engine/deployment.cpp",
+  "src/minimax/engine/deployment.hpp",
+  "src/minimax/engine/draft_lin.hip",
+  "src/minimax/engine/draft_lin.hpp",
+  "src/minimax/engine/engine.hip",
+  "src/minimax/engine/mm_common.hpp",
+  "src/minimax/engine/mm_defaults.cpp",
+  "src/minimax/engine/mm_defaults.hpp",
+  "src/minimax/engine/mm_fast_i4.hpp",
+  "src/minimax/engine/mm_kernels.hpp",
+  "src/minimax/engine/mm_pack.cpp",
+  "src/minimax/engine/mm_profile_table.hpp",
+  "src/minimax/engine/prefill_timeline.hpp",
+  "src/minimax/engine/route_identity.hpp",
+  "src/minimax/model_assets.cpp",
+  "src/minimax/model_description.cpp",
+  "src/minimax/model_graph.cpp",
+  "src/minimax/model_graph.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/minimax/engine/draft_lin.hip", "src/src/minimax/engine/engine.hip"]
+includes  = ["src/src", "src/include", "src/src/minimax/engine"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model-enginelab-minimax/-/-"
+api       = "src/minimax/engine/engine.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.strix_trellis.c_api"
+
+[[requires]]
+module    = "executor.enginelab.minimax_dspark"
+
+[[requires]]
+module    = "format.enginelab.model_data"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.minimax_attn"
+
+[[requires]]
+module    = "kernel.enginelab.minimax_moe"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "runtime.enginelab.deploy"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.minimax_pfx"
+
+[[requires]]
+module    = "runtime.enginelab.minimax_rtxpf"
+
+[[requires]]
+module    = "runtime.enginelab.minimax_xfer"
+
+[[requires]]
+module    = "runtime.enginelab.model_graph"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.pair_pipeline"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "runtime.enginelab.prompt_lookup"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[[requires]]
+module    = "serve.enginelab.minimax_serve"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.minimax_engine.json"
+reason    = "compile gate: fail: 1 of 2 units failed; first: src/src/minimax/engine/engine.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/runtime/minimax_xfer/src/src/minimax/xfer/minimax_traits.hpp:2:10: error: '../../xport/transport_backend.hpp' file not found, did you mean 'xport/transport_backend.hpp'?"

@@ -1,0 +1,36 @@
+id        = "runtime.vllm_strix.dflash_drafter_kv_group"
+kind      = "runtime"
+summary   = "puts the DFlash2 drafter's KV into its own group in _get_kv_cache_groups_glm5_next, so the drafter's attention layers get a KV spec that matches their backend (TRITON_ATTN) instead of the target's sparse MLA groups"
+why       = "DFlash2 k=3 is the default drafter and the fastest mode on this rig (20-28 tok/s, PATCHES 28.7, 30); it could not run until its KV was grouped apart from the target"
+notes     = "Interface tag: speculation.draft. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-dflash-drafter-kv-group.patch"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "speculation.draft/dflash/bf16.kv-group"
+api       = "patch to vllm/v1/core/kv_cache_utils.py"
+numeric   = "n/a"
+regime    = "GLM-5.3 with the DFlash2 drafter"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "patch: applies to vLLM 73859fec or OdinLink-Five 4534f58, neither of which is on the island; --side-gates parses each with git apply --numstat (gate/results/compile/vllm_strix.side-gates.json)"

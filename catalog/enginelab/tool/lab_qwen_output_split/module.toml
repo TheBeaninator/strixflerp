@@ -1,0 +1,58 @@
+id        = "tool.enginelab.lab_qwen_output_split"
+kind      = "tool"
+summary   = "the Qwen output split lab: native target, host tests (lab/qwen_output_split): 9 origin files under lab/qwen_output_split"
+why       = "splitting the Qwen output head; where it would go: kept as a reference program or lab (tool.enginelab-lab-qwen-output-split/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-lab-qwen-output-split/-/-. 2 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "lab/qwen_output_split/CMakeLists.txt",
+  "lab/qwen_output_split/README.md",
+  "lab/qwen_output_split/host_tests.cpp",
+  "lab/qwen_output_split/native-target.cmake",
+  "lab/qwen_output_split/native.cpp",
+  "lab/qwen_output_split/options.hpp",
+  "lab/qwen_output_split/output_split.hpp",
+  "lab/qwen_output_split/register-native.cmake",
+  "lab/qwen_output_split/scalar_q8.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/lab/qwen_output_split/host_tests.cpp", "src/lab/qwen_output_split/native.cpp"]
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.enginelab-lab-qwen-output-split/-/-"
+api       = "lab/qwen_output_split"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

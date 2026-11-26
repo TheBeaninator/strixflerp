@@ -1,0 +1,39 @@
+id        = "runtime.enginelab.support_matrix"
+kind      = "runtime"
+summary   = "the support matrix (models x routes x profiles): 2 origin files under include/strix, src/support"
+why       = "what is supported where, read by the CLI and the docs check; where it would go: a new strixflerp interface host.support-matrix/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, host.support-matrix/-/-. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["include/strix/support/matrix.hpp", "src/support/matrix.cpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/support/matrix.cpp"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "host.support-matrix/-/-"
+api       = "src/support/matrix.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

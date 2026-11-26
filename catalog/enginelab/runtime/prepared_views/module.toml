@@ -1,0 +1,62 @@
+id        = "runtime.enginelab.prepared_views"
+kind      = "runtime"
+summary   = "prepared execution: arena views, prepared execution, the prepared serial session and tensor views"
+why       = "zero-copy views of prepared weights and buffers; where it would go: a new strixflerp interface executor.prepared-views/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, executor.prepared-views/-/-. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/prepared_arena_views.hpp",
+  "include/strix/prepared_execution.hpp",
+  "include/strix/prepared_serial_session.hpp",
+  "include/strix/prepared_tensor_views.hpp",
+  "src/prepared_arena_views.cpp",
+  "src/prepared_execution.cpp",
+  "src/prepared_serial_session.cpp",
+  "src/prepared_tensor_views.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/prepared_arena_views.cpp",
+  "src/src/prepared_execution.cpp",
+  "src/src/prepared_serial_session.cpp",
+  "src/src/prepared_tensor_views.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.prepared-views/-/-"
+api       = "src/prepared_execution.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

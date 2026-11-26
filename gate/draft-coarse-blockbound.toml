@@ -1,0 +1,61 @@
+# FLERP-V10 exp 3 (card f0609bca0f, parent STRIX-META bd830ae1ca): a per-block bound for the coarse draft head.
+# Committed before any hardware run; never loosened after it. Shape and review trace: docs/EXPERIMENTS-V10.md.
+# Grounding: kernel.flerp.draft_coarse cut the draft head from 4.17 to 1.70 ms with kept rows bit-equal, but the global
+# margin tau = 8 x err_rms x ||x|| (mtp_head.hpp) certified 1 of 6,144 steps on the q2 arm, so it ships off. That
+# run's counters (gate/results/ornith-crucible/probe/*.err): q2 arm B, exact argmax outside the 8 kept 128-row blocks
+# on 21 / 6,144 steps, 6,143 fallbacks, 0 wrong ids, max_z 3.97; q4 arm D, 0 / 6,144 outside, 2,296 fallbacks.
+# The hidden states were not saved, so this gate has two parts: a GPU capture, then a CPU replay.
+#
+# Bound (owner's review item 2): for vocab row i the coarse error on this step is e_i = (w_i - c_i) . x, where c_i is
+# the 2-bit row and x the vector the exact head actually multiplies. The exact head (QuantWarpBlockDot, the
+# Q8KBlockGEMV path) quantizes x to Q8_K, so x := x_hat (the Q8_K-dequantized activation) and the reference logit is
+# dequant(Q6_K row) . x_hat, the same bits the head produces. |e_i| <= ||w_i - c_i||_2 ||x_hat||_2 (Cauchy-Schwarz),
+# so a block b's bound is beta_b = (max over rows i in b of ||w_i - c_i||_2) x ||x_hat||_2, the induced (2 -> inf)
+# norm, never the block's Frobenius norm. If the coarse score uses a different x than x_hat, add
+# max_i ||c_i||_2 x ||x - x_hat||_2 to beta_b and record that it was needed.
+# A block b outside the kept set is excluded when (best coarse logit in b) + beta_b < (best exact logit in the kept
+# set) - (that kept block's own beta, 0 because kept logits are exact). The step is certified when every unkept block
+# is excluded.
+
+[hypothesis]
+prediction    = "with exact per-row norms the per-block bound certifies >= 80 % of the 6,144 q2 steps; the coarse copy already keeps the true argmax on 99.7 % (21 misses), so certification, not the copy, is the limit"
+v9_guess      = "certified fraction >= 0.80"
+confirmed_at  = "certified fraction >= 0.80 on the q2 arm, with zero false certificates"
+refuted_below = "certified fraction < 0.30, or any false certificate"
+
+[criteria]
+capture            = "part 1, GPU on K: rerun the q2 and q4 arms of the original draft_coarse probe (same prompts, same 6,144 steps a arm, gate/ornith-crucible.toml probe spec) with a dump hook writing, per step, x_hat (the Q8_K-dequantized head input as the kernel multiplies it, FP32), ||x||_2 and ||x_hat||_2, the exact top-2 ids and logits, and the kept block ids; the original counters must reproduce (21 outside on q2, 0 on q4) or the capture is not the same run and the gate stops"
+row_norms          = "stored once: ||w_i - c_i||_2 per vocab row for the q2 and q4 copies, w_i = dequant(Q6_K row) in FP64 (~1 MB a copy)"
+bound_reference    = "dequantized Q6_K rows dotted with x_hat, which reproduces the head's exact logits; replay checks this to the bit on every step before judging"
+certified_min      = 0.80
+argmax_in_kept     = "record (separates a weak coarse copy from a weak test)"
+false_certificates = "0: a certified step whose exact argmax lies outside the kept blocks fails the gate outright"
+arms               = "q2 judged; q4 recorded"
+verdict            = "PASS if the q2 certified fraction >= 0.80 with 0 false certificates and the replay reproduces every exact logit"
+
+[resources]
+nodes   = "part 1: K via pod-kbench k_run (queue-only, exclusive); part 2: CPU replay on control-node or the laptop; no idle holds"
+hold    = "none: one queued kbench job, ~30 min expected, TTL 45 min; replay under 30 min CPU"
+weights = "21.7 GB Qwen3.6-35B-A3B-Q4_K_M.gguf (with its MTP block), PLACE tier ram to K /dev/shm, staged before the hold; replay reads the head's Q6_K rows and both coarse copies once (834 MB + 318 MB + 159 MB)"
+loads   = "2 because q2 and q4 are separate FLERP_MTP_COARSE settings fixed at Create; every step inside its process"
+reps    = "1: a deterministic capture and a deterministic replay"
+shares  = "K only; a yielding img-k lease is pre-empted and relaunches afterwards"
+cleanup = "kbench releases K; the dump (6,144 x 2 x 8 KB, about 100 MB) kept under gate/results/v10-draft-blockbound outside git per ARTIFACTS.md; place evict of the 35B unless the next queued job uses it"
+
+[monitor]
+milestones = "capture done by T+30 min; replay done within 30 min after; watched every <= 15 min"
+stop_rule  = "stop at the first runtime fault, or if the capture's counters do not reproduce the original run's"
+
+# Amendment 2026-11-17 ~03:25Z (V10-BLOCKBOUND 7abcf5bed1). Committed while the K job was queued/running, so it is
+# stated, not hidden; no threshold changes: certified_min 0.80, false_certificates 0 and refuted_below 0.30 stand.
+# (1) Activation: the exact head is QuantWarpBlockDot on the F32 x (gufo qwen_linear_decode gemv_quant.hip: the "Q8K"
+#     in Q8KBlockGEMVKernel names the weight-block GEMV, not an activation quantization), so x_hat = x and no
+#     ||c|| ||x - x_hat|| term is needed. Checked in the source, as review item 2 asked.
+# (2) Mechanism: instead of dump + CPU replay, the check mode already copies every step's full exact logits and coarse
+#     logits to the host; draft_coarse Build now keeps each row's ||w_r - w~_r||_2 (FP32 over 2,048 terms) and the
+#     check computes the certificates in process on the same steps (branch card/7abcf5bed1 @ ba60adc0). The same
+#     numbers a replay would compute, with no 100 MB dump; FLERP_MTP_COARSE_TRACE writes one JSON line a step for audit.
+# (3) Judged statistic: cert1_block / checked on the q2 arm (top-1 certified by the per-block bound, block = max row
+#     error of its 128 rows). Recorded beside it: cert2_block (top-2 also certified), cert1_row / cert2_row (per-row
+#     bound), bound_violations (must be 0: proves |coarse - exact| <= row_err ||x|| + slack), max_ratio, false_cert.
+#     slack = 1e-5 (|best| + 1) for FP32 summation order.

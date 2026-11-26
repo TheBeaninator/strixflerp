@@ -1,0 +1,40 @@
+id        = "runtime.fastasfuck.host_buffer"
+kind      = "runtime"
+summary   = "fastasfuck's growable host byte buffer on anonymous mmap that pre-faults pages and grows with mremap"
+why       = "the prompt cache's host tier holds saved states in these buffers so growth never copies a state"
+notes     = "Files vs strixite: serve/host_buffer.cpp byte-identical to runtime.strixite.host_buffer at d19945e; serve/host_buffer.hpp byte-identical to runtime.strixite.host_buffer at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/host_buffer.cpp", "serve/host_buffer.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/host_buffer.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.buffer/-/-"
+api       = "strix::HostBuffer"
+numeric   = "the same source as runtime.strixite.host_buffer, so its behaviour: n/a"
+regime    = "as runtime.strixite.host_buffer: host"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

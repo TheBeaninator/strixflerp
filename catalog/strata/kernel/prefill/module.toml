@@ -1,0 +1,84 @@
+id        = "kernel.strata.prefill"
+kind      = "kernel"
+summary   = "batched prompt processing (plan v0.3 P5): native GGUF blocks to BF16 / F16 / F32 on the device (dequant_bf16), the chunk's projections Y = X W^T through hipBLAS / hipBLASLt with a solution table and the BF16-pair trick (gemm), the element-wise and stateful kernels of a prompt chunk (hyper-connection norm and mix, GDN conv and state, PLE conv, SwiGLU) (kernels), and an RDNA3 WMMA FP16 / BF16 GEMM (wmma_gemm, HIP only); src/prefill/gemm_bf16_parity.cu is a parity program"
+why       = "Strata's prompt path is the 762.5 tok/s cold 64K prefill ciru-ai/strataflash measured on Strix Halo, and wmma_gemm is a gfx11 WMMA GEMM beside strixite's linear_wmma and flerp's attn_wmma_gqa"
+notes     = "Interface tags by file: gemm.cu linear.prefill/bf16/bf16-f32; kernels.cu hc.mix-prefill/bf16/f32; wmma_gemm.cu linear.prefill/f16+bf16/f32; none: dequant_bf16.cu, gemm_bf16_parity.cu. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/dequant_bf16.hpp",
+  "include/strata/prefill/gemm.hpp",
+  "include/strata/prefill/kernels.hpp",
+  "src/kernels/cuda/dequant_bf16.cu",
+  "src/prefill/gemm.cu",
+  "src/prefill/gemm_bf16_parity.cu",
+  "src/prefill/hipblaslt_tuning.hpp",
+  "src/prefill/kernels.cu",
+  "src/prefill/wmma_gemm.cu",
+  "src/prefill/wmma_gemm.h",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/dequant_bf16.cu",
+  "src/src/prefill/gemm.cu",
+  "src/src/prefill/kernels.cu",
+  "src/src/prefill/wmma_gemm.cu",
+]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/src/prefill/gemm.cu" = ["-DSTRATA_HIPBLASLT_AVAILABLE=1"] }
+
+[[provides]]
+interface = "linear.prefill/bf16/bf16-f32.strata-blas"
+api       = "strata::prefill::Gemm::bf16, f16, native, bf16_hcd_exact (src/prefill/gemm.cu)"
+numeric   = "BF16 / F16 products with FP32 output; STRATA_PREFILL_BF16X2 adds the BF16 residual of the activation for ~16 mantissa bits"
+regime    = "prefill chunks of T tokens"
+
+[[provides]]
+interface = "hc.mix-prefill/bf16/f32.strata-chunk"
+api       = "strata::prefill::gr_norm(_rs), gr_mix_r, gr_upmix, gr_write_norm_rs, gr_write_cvec_norm_rs, gr_silu and the GDN / PLE chunk kernels (src/prefill/kernels.cu)"
+numeric   = "FP32 with F16 / BF16 copies for the GEMMs; saturated SwiGLU in the FP16 path"
+regime    = "prefill chunks; recurrences walk the chunk in order inside one launch"
+
+[[provides]]
+interface = "linear.prefill/f16+bf16/f32.strata-wmma"
+api       = "strata::prefill::wmma_gemm_* (src/prefill/wmma_gemm.h) (src/prefill/wmma_gemm.cu)"
+numeric   = "F16 / BF16 operands, FP32 accumulation"
+regime    = "prefill; gfx1100 tuned, gfx11 family"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[[requires]]
+module    = "kernel.strata.gguf_gemv"
+
+[[requires]]
+module    = "kernel.strata.kvcache"
+
+[[requires]]
+module    = "kernel.strata.moe"
+
+[[requires]]
+module    = "kernel.strata.prefill_moe_ggml"
+
+[[requires]]
+module    = "kernel.strata.rope"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.prefill.json"

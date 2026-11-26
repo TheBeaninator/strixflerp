@@ -1,0 +1,44 @@
+id        = "runtime.enginelab.xport_crc"
+kind      = "runtime"
+summary   = "wire integrity: CRC32C folding on the device (device_crc32c.hip) and the host (vector and parallel CRC32C, the vector form from Intel ISA-L, BSD-3-Clause), and row folds"
+why       = "every USB4 message carries a checksum; the device form lets a GPU-direct message be checked without a host copy, and deferred checksums were part of the measured MiniMax exchange win; where it would go: a new strixflerp interface verify.wire-crc32c/-/u32.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, verify.wire-crc32c/-/u32.enginelab. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/dist_crc32c_parallel.hpp",
+  "src/dist_crc32c_vector.hpp",
+  "src/xport/crc32c_fold.hpp",
+  "src/xport/device_crc32c.hip",
+  "src/xport/device_crc32c.hpp",
+  "src/xport/row_fold.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND BSD-3-Clause"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/xport/device_crc32c.hip"]
+includes  = ["src/src", "src/src/xport"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.wire-crc32c/-/u32.enginelab"
+api       = "strix::xport device_crc32c.hpp, src/dist_crc32c_*.hpp"
+numeric   = "CRC32C (Castagnoli)"
+regime    = "every exchanged message"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.xport_crc.json"

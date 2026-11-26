@@ -1,0 +1,36 @@
+id        = "kernel.enginelab.core_trellis"
+kind      = "kernel"
+summary   = "the one EXL3 trellis weight codec of the engine (trellis_format.hpp, trellis_codec.hpp: ring, codebook and reader primitives from strix-trellis, gathered without changing their arithmetic) and the EXL3 row plan"
+why       = "DeepSeek V4.1, GLM and MiniMax keep K4 / K5 trellis weights; this is the decode the dense and MoE trellis kernels inline, next to catalog/strix_trellis's own copy; where it would go: beside the catalogue's linear.decode/exl3-trellis/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.decode/exl3-trellis/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["src/core/exl3_rows_plan.hpp", "src/core/trellis_codec.hpp", "src/core/trellis_format.hpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.decode/exl3-trellis/f16-f32.enginelab"
+api       = "strix::core trellis codec headers"
+numeric   = "decoded FP16 weights, bit-exact with the strix-trellis reference"
+regime    = "decode and prefill, K2-K5 trellis"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

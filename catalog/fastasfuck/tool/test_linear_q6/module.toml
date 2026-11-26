@@ -1,0 +1,46 @@
+id        = "tool.fastasfuck.test_linear_q6"
+kind      = "tool"
+summary   = "fastasfuck's Q6 decode and WMMA linear kernel test against the host Q6 reference on random weights"
+why       = "the Q6 kernels serve every dense weight of the shipped layout, so they get their own correctness test"
+notes     = "Files vs strixite: tools/test_linear_q6.cpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/test_linear_q6.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/test_linear_q6.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.test-linear-q6/-/-"
+api       = "tools/test_linear_q6.cpp"
+numeric   = "n/a"
+regime    = "host program"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.linear"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable test_linear_q6) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

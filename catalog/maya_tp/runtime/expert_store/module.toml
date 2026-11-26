@@ -1,0 +1,76 @@
+id        = "runtime.maya_tp.expert_store"
+kind      = "runtime"
+summary   = "the expert storage tier: R4's slot storage and residency table (expert_cache), the expert-source adapter with its three-clause contract (expert_source, 2,114 lines), remote experts (remote_experts) and the hit hook (hit_hook.hpp)"
+why       = "the VRAM expert cache and its source contract decide which experts are resident; a cache module that sits under any MoE executor"
+notes     = "Interface tag: sched.expert-cache/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/expert_cache.hpp",
+  "include/strata/core/expert_source.hpp",
+  "include/strata/core/hit_hook.hpp",
+  "include/strata/core/remote_experts.hpp",
+  "src/core/expert_cache.cpp",
+  "src/core/expert_source.cpp",
+  "src/core/remote_experts.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "sched.expert-cache/-/-"
+api       = "strata::core::ExpertCache, ExpertSource, RemoteExperts"
+numeric   = "no arithmetic of its own"
+regime    = "decode with experts larger than VRAM"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.elementwise"
+
+[[requires]]
+module    = "kernel.maya_tp.exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.moe_experts"
+
+[[requires]]
+module    = "kernel.maya_tp.quantize_act"
+
+[[requires]]
+module    = "runtime.maya_tp.core_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

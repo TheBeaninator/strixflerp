@@ -1,0 +1,127 @@
+id        = "runtime.enginelab.launch"
+kind      = "runtime"
+summary   = "launch plumbing: dispatch fuse and resources, launch context, dispatch and overlap, the launcher catalog, runtime launchers (HIP), kernel registry, event queue trace and the embedding launcher"
+why       = "one kernel table every engine dispatches through; where it would go: beside the catalogue's dispatch.kernel-table/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: dispatch.kernel-table/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 3 HIP unit(s) compiled standalone by the gate; 5 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/dispatch_fuse.hpp",
+  "include/strix/dispatch_resources.hpp",
+  "include/strix/hip_embedding_launcher.hpp",
+  "include/strix/hip_event_queue_trace.hpp",
+  "include/strix/hip_launch_context.hpp",
+  "include/strix/hip_launcher_catalog.hpp",
+  "include/strix/hip_runtime_launchers.hpp",
+  "include/strix/kernel_registry.hpp",
+  "include/strix/launch_dispatch.hpp",
+  "include/strix/launch_overlap.hpp",
+  "include/strix/runtime_launchers.hpp",
+  "src/dispatch_resources.cpp",
+  "src/hip_embedding_launcher.hip",
+  "src/hip_event_queue_trace.hip",
+  "src/hip_launcher_catalog.cpp",
+  "src/hip_runtime_launchers.hip",
+  "src/kernel_registry.cpp",
+  "src/launch_dispatch.cpp",
+  "src/runtime_launchers.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/hip_embedding_launcher.hip",
+  "src/src/hip_event_queue_trace.hip",
+  "src/src/hip_runtime_launchers.hip",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "dispatch.kernel-table-enginelab/-/-"
+api       = "src/kernel_registry.cpp, hip_runtime_launchers.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.gdn_decode"
+
+[[requires]]
+module    = "kernel.enginelab.hc_hyper"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "kernel.enginelab.integer_projection"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.moe_launch"
+
+[[requires]]
+module    = "kernel.enginelab.mtp_draft_head"
+
+[[requires]]
+module    = "kernel.enginelab.ple"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "kernel.enginelab.shared_expert"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.graph"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_forward"
+
+[[requires]]
+module    = "runtime.enginelab.prepared_views"
+
+[[requires]]
+module    = "runtime.enginelab.qpf2k_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.speculative_verify"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.launch.json"

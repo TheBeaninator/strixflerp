@@ -1,0 +1,36 @@
+id        = "runtime.vllm_strix.aiter_gfx1151_gate"
+kind      = "runtime"
+summary   = "unlocks aiter on gfx1151 in vllm/_aiter_ops.py, where the stock check enabled it only for CDNA"
+why       = "the GLM AMD path calls aiter ops (sparse MLA, kpool, mHC); without the gate they were refused on RDNA 3.5 and the model would not run on Strix Halo"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-aiter-gfx1151-gate.patch"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.platform-gate-aiter-gfx1151/-/-"
+api       = "patch to vllm/_aiter_ops.py"
+numeric   = "n/a"
+regime    = "gfx1151"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "patch: applies to vLLM 73859fec or OdinLink-Five 4534f58, neither of which is on the island; --side-gates parses each with git apply --numstat (gate/results/compile/vllm_strix.side-gates.json)"

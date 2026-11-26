@@ -1,0 +1,37 @@
+#!/bin/bash
+# Profile TP2 AR stall breakdown.
+#
+# Usage: run_prof.sh [--model NAME | --pack PATH]
+set -e
+cd "$(dirname "$0")/../.."
+# shellcheck source=model_env.sh
+source tools/tp2/model_env.sh
+
+while (( $# )); do
+  case "$1" in
+    --model) MAYA_MODEL="${2:?--model needs NAME}"; MAYA_PACK=""; shift 2 ;;
+    --pack) MAYA_PACK="${2:?--pack needs PATH}"; shift 2 ;;
+    *) echo "unexpected argument: $1" >&2; exit 2 ;;
+  esac
+done
+
+P=$(maya_resolve_pack)
+[ -d "$P" ] || { echo "pack not found: $P" >&2; exit 1; }
+TOKS=154822,25062,287,29905,371,25,7487,785,6722,315,9621,374
+
+ssh strix-halo-1.local "pkill -x maya-tp2 2>/dev/null" || true
+sleep 1
+
+ssh strix-halo-1.local "MAYA_GLM_NO_MTP=1 STRATA_GLM_PROF=8 /tmp/maya-tp2 --glm-pack '$P' --tokens '$TOKS' --max-new 32 --greedy --max-context 4096 --tp-world-size 2 --tp-rank 0 --tp-bootstrap-port 18515 --tp-rdma-device usb4_rdma5" > /tmp/r0_prof2.txt 2>&1 &
+sleep 8
+
+MAYA_GLM_NO_MTP=1 STRATA_GLM_PROF=8 ./build-hip/maya --glm-pack "$P" --tokens "$TOKS" --max-new 32 --greedy \
+  --max-context 4096 --tp-world-size 2 --tp-rank 1 \
+  --tp-bootstrap-host strix-halo-1.local --tp-bootstrap-port 18515 \
+  --tp-rdma-device usb4_rdma5 > /tmp/r1_prof2.txt 2>&1
+
+echo "=== rank 1 profile ==="
+grep -E "prof|ms/token" /tmp/r1_prof2.txt | head -35
+echo "=== rank 0 profile ==="
+wait || true
+grep -E "prof|ms/token" /tmp/r0_prof2.txt | head -35

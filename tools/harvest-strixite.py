@@ -507,7 +507,10 @@ UNHARVESTED = [
     ".gitignore", "CMakeLists.txt", "CMakePresets.json", "CONTRIBUTING.md", "README.md", "LICENSE",
     "THIRD_PARTY.md", "assets/**", "deploy/**", "docs/**", "tutorial/**",
 ]
-LICENCE_FILES = ["LICENSE", "THIRD_PARTY.md"]
+# LICENSE, THIRD_PARTY.md and the vendored licence texts THIRD_PARTY.md names by path (also inside their modules),
+# copied beside ORIGIN.toml at their origin paths so the notice's paths resolve there
+LICENCE_FILES = ["LICENSE", "THIRD_PARTY.md", "third_party/cpp-httplib/LICENSE", "third_party/libwebp/COPYING",
+                 "third_party/libwebp/PATENTS"]
 SOURCE_EXT = (".cpp", ".hip", ".c")
 UPSTREAM_AUTHORS = {"Shawn Reed": "shawnshekari"}
 
@@ -673,6 +676,7 @@ def main():
             f.write(tomlw.dump(doc))
 
     for lf in LICENCE_FILES:
+        os.makedirs(os.path.dirname(os.path.join(out_root, lf)), exist_ok=True)
         shutil.copyfile(os.path.join(checkout, lf), os.path.join(out_root, lf))
     kinds = {}
     for m in MODULES:

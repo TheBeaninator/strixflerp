@@ -1,0 +1,36 @@
+id        = "kernel.ds4.k53prefill_rocm_moe"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-flash-prefill-restoration 4fef372: its copy of the rocm_moe family against antirez/ds4 b3f5018: rocm/ds4_rocm_moe.cuh changed (+141 -0 lines). The family: the routed-MoE kernels: active-expert and tile building, gate / up / mid decode (LUT, MXFP4, Q4_K, IQ2) and down products in many tilings (expert tiles of 4 / 8 / 16 rows, quarter-warp, sum-6, hotlist WMMA for Q2_K); a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "the glm53-flash branch with the GLM-5.3-Flash prefill path restored and accelerated (head commit \"rocm: accelerate GLM 5.3 Flash prefill\"); same fork point as kyuz0_glm53_flash. The family in the base: the expert matvecs dominate decode for DSV4 and GLM; this is ds4's whole gfx1151 MoE kernel set"
+notes     = "Overlay kyuz0_glm53_prefill: files under overlay/kyuz0_glm53_prefill/ are the branch's bytes at 4fef372a4631; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_prefill.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "4fef372a46315bd6b34b0e58b7fc91a7e5f4f21f"
+branch    = "perf/rocm-gfx1151-glm53-flash-prefill-restoration"
+paths     = ["overlay/kyuz0_glm53_prefill/rocm/ds4_rocm_moe.cuh"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_prefill", "src/overlay/kyuz0_glm53_prefill/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/iq2_xxs+q2_k+q4_k+mxfp4/f32.ds4-k53prefill"
+api       = "see summary"
+numeric   = "quantized weights with F32 accumulation"
+regime    = "decode and small batches"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.k53prefill_rocm_backend"

@@ -1,0 +1,82 @@
+id        = "tool.enginelab.lab_direct_gpu_stream"
+kind      = "tool"
+summary   = "the direct GPU stream commissioning lab: bounded TCP control, observe driver, visibility contract, kernels and campaign, commissioning and visibility notes, the kernel side and tests (lab/direct_gpu_stream)"
+why       = "commissioning of the USB4 GPU-direct path before production; where it would go: kept as a reference program or lab (tool.enginelab-lab-direct-gpu-stream/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-lab-direct-gpu-stream/-/-. 1 HIP unit(s) compiled standalone by the gate; 5 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "lab/direct_gpu_stream/COMMISSIONING.md",
+  "lab/direct_gpu_stream/GPU_VISIBILITY.md",
+  "lab/direct_gpu_stream/bounded_tcp_control.cpp",
+  "lab/direct_gpu_stream/bounded_tcp_control.hpp",
+  "lab/direct_gpu_stream/commission_main.hip",
+  "lab/direct_gpu_stream/kernel/GPL-2.0.txt",
+  "lab/direct_gpu_stream/kernel/Kconfig.patch",
+  "lab/direct_gpu_stream/kernel/Linux-syscall-note.txt",
+  "lab/direct_gpu_stream/kernel/README.md",
+  "lab/direct_gpu_stream/kernel/apply_pinned_kernel.py",
+  "lab/direct_gpu_stream/kernel/build_private_kernel.py",
+  "lab/direct_gpu_stream/kernel/gpu_stream.c",
+  "lab/direct_gpu_stream/kernel/gpu_stream.h",
+  "lab/direct_gpu_stream/kernel/gpu_stream_logic.h",
+  "lab/direct_gpu_stream/kernel/logic_tests.c",
+  "lab/direct_gpu_stream/kernel/stream.patch",
+  "lab/direct_gpu_stream/kernel/test_build_private_kernel.py",
+  "lab/direct_gpu_stream/native_visibility_probe.hpp",
+  "lab/direct_gpu_stream/observe_driver.cpp",
+  "lab/direct_gpu_stream/observe_driver.hpp",
+  "lab/direct_gpu_stream/observe_main.cpp",
+  "lab/direct_gpu_stream/observed_gpu.hpp",
+  "lab/direct_gpu_stream/test_visibility.py",
+  "lab/direct_gpu_stream/tests/main_cases.cpp",
+  "lab/direct_gpu_stream/tests/probe_tests.cpp",
+  "lab/direct_gpu_stream/tests/stubs/bounded_tcp_control.hpp",
+  "lab/direct_gpu_stream/tests/stubs/hip/hip_runtime.h",
+  "lab/direct_gpu_stream/tests/stubs/strix/direct_gpu_stream_commissioning.hpp",
+  "lab/direct_gpu_stream/tests/stubs/strix/direct_gpu_stream_gpu.hpp",
+  "lab/direct_gpu_stream/tests/stubs/strix/hip_direct_gpu_pool_allocator.hpp",
+  "lab/direct_gpu_stream/tests/stubs/strix/hip_direct_gpu_stream_gpu.hpp",
+  "lab/direct_gpu_stream/tests/stubs/strix/model_content_hash.hpp",
+  "lab/direct_gpu_stream/visibility_campaign.py",
+  "lab/direct_gpu_stream/visibility_contract.hpp",
+  "lab/direct_gpu_stream/visibility_kernels.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/lab/direct_gpu_stream/commission_main.hip"]
+includes  = ["src/lab/direct_gpu_stream"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.enginelab-lab-direct-gpu-stream/-/-"
+api       = "lab/direct_gpu_stream"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.direct_gpu_stream"
+
+[[requires]]
+module    = "runtime.enginelab.direct_transport"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/tool.enginelab.lab_direct_gpu_stream.json"

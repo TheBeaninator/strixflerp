@@ -1,0 +1,385 @@
+//! The engine a server drives (``Engine``), and ``LaneHost``: the lane core served on one thread, rounds left to it.
+const std = @import("std");
+const lanes = @import("lanes");
+const Allocator = std.mem.Allocator;
+
+/// The server's name for one request, unique while the process lives.
+pub const Id = u64;
+
+/// One request's sampling (Python's exact_sampling.Sampling); a request without one decodes greedily.
+pub const Sampling = lanes.Sampling;
+
+/// A prompt's reproducible seed (``seed_for``), for requests that name none.
+pub const seedFor = lanes.sampling.seedFor;
+
+/// The request's stop strings, checked on the engine's thread after each committed token (the server decodes the tail).
+pub const Stop = struct {
+    ctx: *anyopaque,
+    check: *const fn (ctx: *anyopaque, emitted: []const u32) bool,
+};
+
+/// A prompt's image (a vision family's): its span and the family's payload (lanes.stream.Image).
+pub const Image = lanes.stream.Image;
+
+/// Per-request dumps and row injection: the switches, the engine's facts and the Writer.
+pub const acts = lanes.acts;
+
+/// A vision family's image input (lanes.stream.Vision): the server renders each image part as the placeholder and the
+/// family's prepare sizes its span.
+pub const Vision = lanes.stream.Vision;
+
+/// tool_choice "required" or a named function: outside a think block the answer opens a call to an offered tool.
+pub const CallGate = struct {
+    /// The token that opens a call, the template text before the name, and the mark that ends the name.
+    opener: u32,
+    lead: []const u8 = "",
+    tail: []const u8 = "",
+    /// Offered names (empty: any); the gate completes a name its prefix starts.
+    names: []const []const u8 = &.{},
+    think_open: ?u32 = null,
+    think_end: ?u32 = null,
+};
+
+/// response_format and the guided_* fields (and a required DeepSeek-V4.1 DSML call, kind `calls`): every token keeps
+/// the reply inside this grammar (lanes.grammar.Structure).
+pub const Structure = lanes.grammar.Structure;
+
+/// Structured output's compiler and machine, for the server's checks before any header (lanes/grammar).
+pub const grammar = lanes.grammar;
+
+/// A reply to decode. The request and every slice in it stay valid until its ``finished`` event.
+pub const Request = struct {
+    prompt: []const u32,
+    /// The prompt's images in order, each span inside the prompt (its positions hold the image token).
+    images: []const Image = &.{},
+    max_tokens: u32,
+    sampling: ?Sampling = null,
+    /// Tokens that end the reply as ``stop`` (the token is delivered); empty when the request ignores EOS.
+    eos: []const u32 = &.{},
+    stop: ?Stop = null,
+    /// false: one token a round and no drafts, the serial reference drafted replies must equal.
+    drafts: bool = true,
+    /// Background work yields to foreground arrivals.
+    background: bool = false,
+    /// Prompt prefix lengths worth keeping for a later turn: the rendered history, then shared system blocks.
+    history_len: u32 = 0,
+    shared_prefixes: []const u32 = &.{},
+    /// Where the prompt's prefill chunks start after 0 (Python's PrefillPlan at ``Info.prefill_step``); empty: the engine's own.
+    chunks: []const u32 = &.{},
+    /// Most reply tokens inside a think block before the engine writes ``think_close`` (0: no limit).
+    think_budget: u32 = 0,
+    think_close: []const u32 = &.{},
+    think_end: ?u32 = null,
+    /// The offered tools as JSON text, for drafters that propose a call's structure; empty: no tools.
+    tools_json: []const u8 = "",
+    /// Set only when ``Info`` says the engine enforces it.
+    call: ?CallGate = null,
+    structure: ?Structure = null,
+    /// What a short exact cycle does (lanes LoopPolicy): off, close the think block, stop the reply, or only count it.
+    loop_policy: LoopPolicy = .off,
+    /// Edge-REAP domain index (0: "default"). Set by the server before the stream is built.
+    reap_bucket: u32 = 0,
+    /// Per-request routing record: the record id the reply carries as tensorfold.route_record,
+    /// the client's route_tag and the reply id. Empty id: no record. The server's strings, alive until the stream ends.
+    route_record: []const u8 = "",
+    route_tag: []const u8 = "",
+    route_request: []const u8 = "",
+    /// Per-request dumps and row injection (pod card 4f9ba05838; lanes/acts.zig). Off by default; any switch on and
+    /// the request is never kept in or resumed from a prompt cache. Set by the server only behind the admin key.
+    acts: acts.Spec = .{},
+    /// Per-token logprobs; set only when ``Info.logprobs``. Null: none, nothing computed.
+    logprobs: ?Logprobs = null,
+};
+
+/// Per-token logprobs (pod card 73bab11681; lanes/logprobs.zig).
+pub const logprobs = lanes.logprobs;
+pub const TokenLogprob = lanes.logprobs.TokenLogprob;
+
+/// A request's per-token logprobs: `top` alternatives each (0..20); `add` gets the logprobs of the tokens the next
+/// `tokens` event carries, in order, just before it (on the engine's thread, as a Sink event).
+pub const Logprobs = struct {
+    top: u8,
+    ctx: *anyopaque,
+    add: *const fn (ctx: *anyopaque, tokens: []const TokenLogprob) void,
+};
+
+/// The loop policy and what it found (lanes/stream.zig).
+pub const LoopPolicy = lanes.stream.LoopPolicy;
+pub const LoopHit = lanes.stream.LoopHit;
+
+/// `loop`: the loop policy `stop` ended the reply at a thinking loop.
+pub const Reason = enum { stop, length, cancelled, failed, loop };
+
+/// What a finished reply's rounds did, for its runtime fields and /metrics.
+pub const Stats = struct {
+    rounds: u64 = 0,
+    drafted: u64 = 0,
+    accepted: u64 = 0,
+    /// The narrowest verify window of the reply's rounds (drafted replies: 2 or more).
+    min_rows: u32 = 0,
+    prefill_widths: []const u32 = &.{},
+    prefill_raised: []const bool = &.{},
+    /// The thinking loop the request's loop policy found (acted on or not), and a loop in the answer (counted only).
+    loop: ?LoopHit = null,
+    answer_loop: ?LoopHit = null,
+    /// Prompt prefill duration measured by the engine host, in seconds.
+    prefill_seconds: ?f64 = null,
+    /// The drafter's own counters as a JSON object, or empty.
+    telemetry_json: []const u8 = "",
+};
+
+pub const Event = union(enum) {
+    /// The prompt is in the cache: ``cached`` of its tokens came from a kept prefix.
+    prefilled: u32,
+    /// Tokens committed for this request, in order; valid only during the call.
+    tokens: []const u32,
+    /// The reply ended; nothing follows. ``message`` says why a failed reply failed.
+    finished: struct { reason: Reason, stats: Stats = .{}, message: []const u8 = "" },
+};
+
+/// Where a request's events go. Called on the engine's thread: it must return at once and not re-enter the engine.
+pub const Sink = struct {
+    ctx: *anyopaque,
+    event: *const fn (ctx: *anyopaque, id: Id, event: *const Event) void,
+};
+
+/// A reasoning effort name and the number a family's chat template takes for it (DeepSeek-V4.1's: "medium" -> 62).
+pub const Effort = struct { name: []const u8, value: i64 };
+
+/// What the engine serves, fixed once it has loaded.
+pub const Info = struct {
+    name: []const u8 = "lanes",
+    lanes: u32 = 1,
+    /// Prompt plus reply tokens one request may use (0: no limit).
+    context_window: u32 = 0,
+    context_fitted: bool = false,
+    /// What the engine enforces; the server refuses requests that need more.
+    call_gates: bool = false,
+    /// The engine observes a request's loop_policy in its lane stream.
+    loop_guard: bool = false,
+    structures: bool = false,
+    /// The largest top_k the engine's sampler draws (0: no limit), and whether a sampled request must set one (its
+    /// sampler has no top_k-off path, the nucleus over the whole vocabulary): the server refuses requests past either.
+    top_k_max: u32 = 0,
+    needs_top_k: bool = false,
+    /// Prompt rows a prefill chunk at most, for the server's chunk starts (0: the engine cuts prompts itself).
+    prefill_step: u32 = 0,
+    /// A prompt pass reads this long between rounds while other streams decode (0: a whole pass at once).
+    fill_slice_ns: u64 = 0,
+    /// After a long whole prompt pass, the streams within this many tokens of their max_tokens decode before the next
+    /// request's pass (0: none is waited for: every queued pass reads first, then their streams decode together).
+    finish_left: u32 = 256,
+    /// A line the server prints once at startup (the engine's memory plan); empty: none.
+    startup: []const u8 = "",
+    /// The reasoning efforts the family's template takes as numbers: each name passes as asked and the template hears
+    /// its number. Empty: the names the template quotes, as text (the nearest one for any other name).
+    efforts: []const Effort = &.{},
+    /// A vision family's image input; null: the server refuses images.
+    vision: ?Vision = null,
+    /// An engine that takes a request's `acts`: its layers, window, row size and Writer; null:
+    /// the server refuses the field.
+    acts: ?acts.Info = null,
+    /// The engine reports per-token logprobs (Request.logprobs, pod card 73bab11681); false: the server refuses them.
+    logprobs: bool = false,
+};
+
+/// A checkpoint family an engine reads: its config ``model_type`` and weight formats, as gate entries name them.
+pub const Family = struct { model_type: []const u8, formats: []const []const u8 };
+
+/// What a server asks of the engine it opens: the checkpoint, and the serve flags an engine reads.
+pub const Open = struct {
+    dir: []const u8,
+    model_type: []const u8,
+    context: ?i64 = null,
+    lanes: u32 = 8,
+    /// --parallel named a number: an engine whose memory fits fewer streams refuses instead of serving fewer.
+    lanes_fixed: bool = false,
+    drafts: bool = true,
+    speed_up: ?[]const u8 = null,
+    prompt_cache_gib: ?f64 = null,
+    prompt_cache_over_cap: bool = false,
+    /// --learn: where shared prompt states are kept on disk for later sessions and servers (null: off).
+    learn: ?[]const u8 = null,
+    /// --learn-gib: what learned states may take on disk, every model and build together.
+    learn_gib: f64 = 32,
+    /// --device and --segments (CUDA); null: the backend's environment fallback, then its default.
+    device: ?u32 = null,
+    segments: ?u32 = null,
+};
+
+/// An opened engine; ``close`` stops its thread and frees its backend.
+pub const Opened = struct {
+    engine: Engine,
+    close: *const fn (ctx: *anyopaque) void,
+    ctx: *anyopaque,
+    /// After ``close`` the process must not run libc exit(): the server leaves through _exit (server/leave.zig).
+    raw_exit: bool = false,
+};
+
+pub const Memory = struct { active: u64 = 0, cache: u64 = 0, peak: u64 = 0 };
+
+/// A backend's words for its own refusals (a request it cannot serve); null: the error's name.
+pub const Explain = struct {
+    ctx: ?*anyopaque = null,
+    text: *const fn (ctx: ?*anyopaque, err: anyerror) ?[]const u8,
+};
+
+/// A backend's own memory counts for LaneHost; read from HTTP threads, so it must not touch the GPU.
+pub const MemorySource = struct {
+    ctx: ?*anyopaque = null,
+    read: *const fn (ctx: ?*anyopaque, reset_peak: bool) ?Memory,
+};
+
+pub const Status = struct {
+    /// Requests in prefill or decode, and those waiting for a lane.
+    running: u32 = 0,
+    waiting: u32 = 0,
+    decode_tokens_per_second: f64 = 0,
+    prefill_tokens_per_second: f64 = 0,
+    /// Requests that gave a lane up to a later one; null when the engine does not count them.
+    preemptions: ?u64 = null,
+    warming: bool = false,
+    /// Live streams written to the caller's buffer: tokens each holds.
+    streams: usize = 0,
+    /// Generated tokens held by live streams, excluding their prompts.
+    generation_tokens: u64 = 0,
+};
+
+pub const SubmitError = error{ Closed, Busy };
+
+/// A prompt-cache transfer (POST /cache/probe, export, import): the request thread fills it and waits for the engine's.
+pub const CacheOp = struct {
+    kind: Kind,
+    prompt: []const u32 = &.{}, // probe, export: the rendered prompt; import: the ids the state carries
+    chunks: []const u32 = &.{}, // probe, export: the prompt's chunk starts (a planned family's)
+    at: u32 = 0, // import: the positions the state covers
+    slot: []const u8 = &.{}, // import: the state's own bytes
+    rows: []const u8 = &.{}, // import: its blocks' rows
+    gpa: Allocator, // export: `out` is allocated here (the caller frees its ids and parts)
+    out: ?prompt_cache.Exported = null, // export: the state off the engine
+    tokens: u32 = 0, // probe: the positions a kept state covers (0: none); export, import: the state's
+    err: ?anyerror = null, // NoState: nothing kept covers the prompt; NoCache: this engine keeps no states
+    done: bool = false,
+
+    pub const Kind = enum { probe, export_state, import_state };
+};
+
+/// What an engine's kept states look like on the wire (prompt_cache's Store.shape).
+pub const CacheShape = cache_wire.Shape;
+
+/// GET /stats/reap. The engine fills `out` (allocator-owned) and `status`.
+/// `domain` empty lists buckets. `modality` empty means both modalities merged.
+pub const ReapQuery = struct {
+    domain: []const u8 = "",
+    modality: []const u8 = "",
+    allocator: Allocator,
+    out: ?[]u8 = null,
+    status: u16 = 200,
+};
+
+pub const Engine = struct {
+    ctx: *anyopaque,
+    vtable: *const VTable,
+
+    pub const VTable = struct {
+        info: *const fn (ctx: *anyopaque) Info,
+        submit: *const fn (ctx: *anyopaque, id: Id, request: *const Request, sink: Sink) SubmitError!void,
+        /// Ends a request between rounds; its ``finished`` (cancelled) still arrives. Unknown ids are ignored.
+        cancel: *const fn (ctx: *anyopaque, id: Id) void,
+        status: *const fn (ctx: *anyopaque, out: *Status, stream_tokens: []u32) void,
+        /// Device memory in bytes, the peak since the last reset; null when the backend keeps no count.
+        memory: *const fn (ctx: *anyopaque, reset_peak: bool) ?Memory,
+        /// The engine's queue as a keepalive target, or null when the backend is not Metal.
+        keepalive: ?*const fn (ctx: *anyopaque) ?keepalive.Target = null,
+        /// One logit per label, and the vocabulary logsumexp. Null until a family scores decisions.
+        score: ?*const fn (ctx: *anyopaque, prompt: []const u32, labels: []const u32, logits: []f64) error{Failed}!f64 = null,
+        /// A prompt-cache transfer, run on the engine's thread; returns when `op.done`. Null: no transfers.
+        cache: ?*const fn (ctx: *anyopaque, op: *CacheOp) void = null,
+        /// What this engine's kept states look like on the wire; null: it moves none (read from HTTP threads).
+        cache_shape: ?*const fn (ctx: *anyopaque) ?CacheShape = null,
+        /// GET /stats/reap, on the HTTP thread. Null: the route answers an empty bucket list.
+        reap: ?*const fn (ctx: *anyopaque, q: *ReapQuery) void = null,
+        /// Admit a domain before generation. 0 and `index` on success; else the message length written into `err`.
+        reap_admit: ?*const fn (ctx: *anyopaque, domain: []const u8, index: *u32, err: []u8) usize = null,
+    };
+
+    pub fn info(e: Engine) Info {
+        return e.vtable.info(e.ctx);
+    }
+    pub fn submit(e: Engine, id: Id, request: *const Request, sink: Sink) SubmitError!void {
+        return e.vtable.submit(e.ctx, id, request, sink);
+    }
+    pub fn cancel(e: Engine, id: Id) void {
+        e.vtable.cancel(e.ctx, id);
+    }
+    pub fn status(e: Engine, out: *Status, stream_tokens: []u32) void {
+        e.vtable.status(e.ctx, out, stream_tokens);
+    }
+    pub fn memory(e: Engine, reset_peak: bool) ?Memory {
+        return e.vtable.memory(e.ctx, reset_peak);
+    }
+    /// The engine's queue as a keepalive target, or null when the backend is not Metal.
+    pub fn keepaliveTarget(e: Engine) ?keepalive.Target {
+        const f = e.vtable.keepalive orelse return null;
+        return f(e.ctx);
+    }
+
+    /// The decision hook, or Unsupported when this engine does not score.
+    pub fn score(e: Engine, prompt: []const u32, labels: []const u32, logits: []f64) error{ Failed, Unsupported }!f64 {
+        const f = e.vtable.score orelse return error.Unsupported;
+        return f(e.ctx, prompt, labels, logits);
+    }
+
+    /// A prompt-cache transfer (`op` filled in on return), or Unsupported when this engine moves no states.
+    pub fn cacheOp(e: Engine, op: *CacheOp) error{Unsupported}!void {
+        const f = e.vtable.cache orelse return error.Unsupported;
+        f(e.ctx, op);
+    }
+
+    /// What this engine's kept states look like on the wire, or null when it moves none.
+    pub fn cacheShape(e: Engine) ?CacheShape {
+        const f = e.vtable.cache_shape orelse return null;
+        return f(e.ctx);
+    }
+};
+
+/// A backend's own driver for a lone greedy stream (the GPU round), which LaneHost runs while the stream is alone.
+pub const Lone = struct {
+    ctx: *anyopaque,
+    sampled: bool = false, // it drives sampled streams too
+    /// Prefills `s` and decodes it until it finishes (false) or `hooks.yield` hands it to the lane core (true).
+    run: *const fn (ctx: *anyopaque, s: *lanes.Stream, hooks: LoneHooks) anyerror!bool,
+};
+
+/// What a lone driver tells the host between rounds: tokens landed; and asks: hand the stream over now?
+pub const LoneHooks = struct {
+    ctx: *anyopaque,
+    committed: *const fn (ctx: *anyopaque) void,
+    yield: *const fn (ctx: *anyopaque) bool,
+};
+
+/// The lane core served to the HTTP threads (lane_host.zig).
+pub const LaneHost = @import("lane_host.zig").LaneHost;
+
+/// Exact prompt reuse between requests, for any family (prompt_cache.zig).
+pub const prompt_cache = @import("prompt_cache.zig");
+
+/// A kept prompt state on the wire (cache_wire.zig): the signed header and sf-disk's payload layout.
+pub const cache_wire = @import("cache_wire.zig");
+
+/// Learned prompt-cache states on disk (prompt_imprint.zig).
+pub const prompt_imprint = @import("prompt_imprint.zig");
+
+/// The idle keepalive's ticker and target contract.
+pub const keepalive = @import("keepalive.zig");
+
+test {
+    _ = @import("cache_wire.zig");
+    _ = @import("lane_host.zig");
+    _ = @import("lane_host_cache.zig");
+    _ = @import("lane_host_reuse_test.zig");
+    _ = @import("lane_host_encode_test.zig");
+    _ = @import("prompt_cache.zig");
+    _ = @import("prompt_imprint.zig");
+    _ = @import("keepalive.zig");
+}

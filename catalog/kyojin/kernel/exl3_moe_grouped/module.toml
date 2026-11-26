@@ -1,0 +1,53 @@
+id        = "kernel.kyojin.exl3_moe_grouped"
+kind      = "kernel"
+summary   = "Grouped prefill tier of the fused MoE: token-parallel Hadamards and a grouped GEMM where one CTA owns one (expert, row tile, 128-column tile) output block, for experts with token counts in [count_lo, count_hi]"
+why       = "mid-size expert batches at prefill. Where the shape would go: a moe.experts-prefill/exl3/f16-f32 provider beside kernel.crucible.moe_prefill, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-prefill/exl3/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 3 added (exl3_moe_gemm.cuh, exl3_moe_grouped.cu, exl3_moe_grouped.cuh), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/quant/exl3_moe_gemm.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_moe_grouped.cu",
+  "exllamav3/exllamav3_ext/quant/exl3_moe_grouped.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/quant/exl3_moe_grouped.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-prefill/exl3/f16-f32.kyojin-grouped"
+api       = "exl3_moe_gemm.cuh, exl3_moe_grouped.cu, exl3_moe_grouped.cuh; kernels: exl3_moe_gemm_kernel, exl3_moe_grouped_in_kernel, exl3_moe_grouped_act_kernel, exl3_moe_grouped_out_kernel"
+numeric   = "fp16 activations, fp32 accumulation"
+regime    = "prefill"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: exl3_moe_grouped.cu"

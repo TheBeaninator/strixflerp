@@ -1,0 +1,63 @@
+# FLERP-V10 exp 5 (card f0609bca0f, parent STRIX-META bd830ae1ca): why Ornith prefill missed its projection, as a
+# per-stage sweep of sub-chunk rows on the 35B proxy, on K. Committed before any hardware run; never loosened after it.
+# Shape and review trace: docs/EXPERIMENTS-V10.md.
+# Grounding: docs/CHAMPIONS.md, Ornith 397B world 4 F D A C at 4,096-row chunks x 16 sub-chunks: 527 tok/s at 16K, 503
+# at 32K against a ~2,500 projection (PROJECTION MISSED, about 5x). The stated cause (256-row sub-chunks on the weight
+# bandwidth roof plus a 16 % fill and drain a 4K call, 3 / (16 + 3) = 15.8 %) is inferred. gate/ornith-subchunk.toml
+# (card 6abf28258c) has since set a 1,024-row floor, and records that four ranks on one GPU cannot overlap stages.
+#
+# Method (owner's review item 3): loopback hides pipeline bubbles, because idle ranks hand the GPU to the busy one. So
+# each stage is measured ALONE: world 1, the executor loading one quarter of the 35B's blocks (the four ranges of the
+# world-4 split, one process each), timing every sub-chunk's compute with HIP events. The four-node wall time is then
+# reconstructed, not measured: with M = 16,384 / rows sub-chunks a call and per-stage sub-chunk times t_1..t_4,
+# makespan = sum over the M sub-chunks of max_s t_s + sum over s of t_s - max_s t_s (fill and drain), plus transport
+# measured separately (not modelled here; recorded as 0 and stated as a lower bound).
+# Expert normalization: a sub-chunk of R rows gives each used expert about R k / E rows. 35B: E 256, k 8 (R / 32);
+# the 397B's E and k are read from its GGUF header and its knee is predicted at the same rows per expert.
+
+[hypothesis]
+prediction    = "a stage's prefill tok/s rises with sub-chunk rows because each stage leaves the weight-bandwidth roof: per-stage tok/s at 1,024 rows >= 2x at 256 rows, at a 16,384-row outer call"
+confirmed_at  = "median over the 4 stages of tok/s(1,024) / tok/s(256) >= 2.0"
+refuted_below = "that ratio < 1.5: the miss is elsewhere (transport, fill and drain, host gaps) and the per-stage trace says where"
+
+[criteria]
+ratio_1024_over_256_min = 2.0
+subchunk_rows           = [256, 512, 1024, 2048]
+outer_call_rows         = 16384
+microbatches_recorded   = "M = 16,384 / rows for every size (64, 32, 16, 8), printed with each result"
+prompt_tokens           = [16384]
+stage_isolation         = "world 1 per stage, the world-4 block ranges, one stage process at a time; the job asserts no other process holds the GPU during a stage"
+reconstruction          = "the makespan formula above per sub-chunk size, with fill and drain share printed; transport is 0 and the figure is labelled a lower bound on four-node time"
+fidelity                = "mean KL vs FP32 <= 0.0176 at every sub-chunk size, measured on the full world-1 model at each size (the prefill area's floor)"
+short_prompts           = "200, 500 and 1,000-token prompts at grouped floors of 64, 32 and 16 rows; recorded, not judged"
+rows_per_expert         = "for each size, R x k / E for the 35B and for the 397B (E, k from its header), so the 397B's knee is read at matching rows per expert"
+kv_reset                = "every process exits between the 16K sweep and the short-prompt arm, so no KV pages carry over"
+reps                    = "n from gate/noise-floor.toml reps_formula with d = 0.25 and the quiet CV; at least 3"
+verdict                 = "PASS (diagnosis holds) if the median stage ratio >= 2.0 and fidelity holds at every size"
+
+[resources]
+nodes   = "K via pod-kbench k_run (queue-only, exclusive); no worker, no four-worker window; no idle holds"
+hold    = "none: one queued kbench job, ~60 min expected, TTL 90 min"
+weights = "21.7 GB Qwen3.6-35B-A3B-Q4_K_M.gguf, PLACE tier ram to K /dev/shm, staged before the hold (each stage process reads only its block range)"
+loads   = "9 because each of the 4 stages is its own process, plus the full model for fidelity and the 4 short-prompt floors; every size and rep inside each"
+reps    = "from exp 1's formula at d = 0.25 because the decision is a 2.0 vs 1.5 ratio; at least 3"
+shares  = "K only; a yielding img-k lease is pre-empted and relaunches afterwards"
+cleanup = "kbench releases K; place evict of the 35B; K idle and img-k back afterwards"
+
+[monitor]
+milestones = "stages swept by T+40 min; fidelity and short prompts by T+60 min; watched every <= 15 min"
+stop_rule  = "stop at the first runtime fault"
+
+# Amendment 2026-11-17 ~03:40Z, before any run of this gate (V10-SUBCHUNK bcf5450397); no threshold changes
+# (ratio_1024_over_256_min 2.0, refute below 1.5 stand).
+# (1) Stage isolation: flerp-qwen35moe-generate --staged loopback runs the four stages as views of one load in ONE
+#     process on one GPU stream, so every stage's per-sub-chunk time in the staged event (stages[r].chunks[].ms) is
+#     that stage computing alone: no other rank runs at the same time. This replaces "world 1 per stage" (same
+#     isolation, one load instead of four). Configs 4:even:off x 3 reps a process; --prompt-subchunks S
+#     --subchunk-min-rows 1 with S in 64, 32, 16, 8 (256, 512, 1,024, 2,048 rows of a 16,384-row call) and S = 1 (the
+#     whole call, the identity reference); FLERP_MAX_PROMPT_BATCH=16384; the prefill champion's arm Z env
+#     (FLERP_MOE_GROUPED, FLERP_DENSE_GROUPED, FLERP_ATTN_GQA, FLERP_KG_LIVE, FLERP_ROUTER_TILED, FLERP_MOE_COMBINE_FAST = 1).
+#     Prompt: the first 16,384 ids of the strixflerp docs/source text (the V10-QSA text), tokenized by the 35B GGUF.
+# (2) Fidelity: the logits sha256 of every recorded step at every S must equal S = 1's (bit-identical logits carry
+#     arm Z's KL vs FP32 0.00399 unchanged); a mismatch fails fidelity for that S.
+# (3) short_prompts is not run in this pass (record-only item); stated in the report.

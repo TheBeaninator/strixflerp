@@ -1,0 +1,33 @@
+{
+ "module": "kernel.strata.rope",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-24T23:07:16Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 2,
+ "passed": 2,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 0.8,
+ "results": [
+  {
+   "unit": "src/src/kernels/cuda/rope.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/rope/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/rope/src/src/kernels/cuda/rope.cu -o build/compile-gate/kernel.strata.rope/0-rope.cu.o",
+   "rc": 0,
+   "seconds": 0.69,
+   "object_bytes": 20792,
+   "object_sha256": "36422c4400af8fb2c457a92fe87565e923d838e8a8b977ee5fb2360889fc196e"
+  },
+  {
+   "unit": "src/src/kernels/cuda/native_rope.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/rope/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/rope/src/src/kernels/cuda/native_rope.cu -o build/compile-gate/kernel.strata.rope/1-native_rope.cu.o",
+   "rc": 0,
+   "seconds": 0.84,
+   "object_bytes": 63800,
+   "object_sha256": "472a2aa4fa44e3b6383f73ffae0f6f91e6b23a8800a508ff39160ae11da45d82"
+  }
+ ]
+}

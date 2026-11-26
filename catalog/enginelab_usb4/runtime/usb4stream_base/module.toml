@@ -1,0 +1,47 @@
+id        = "runtime.enginelab_usb4.usb4stream_base"
+kind      = "runtime"
+summary   = "patch 0001, the USB4STREAM source as the series starts it: configfs-created /dev/tbstreamN character devices for host memory over the AMD USB4 NHI, the DMA-BUF GPU stream extension and its UAPI header linux/strix_gpu_stream.h, built on Intel's USB4STREAM code; with the two MSI-X fixes adapted from CiruStrixLink (the original mail is in provenance/reference-patches); plus patches/series, patches/audit-series, the provenance manifests and the kernel's LICENSES/ texts (GPL-2.0, Linux-syscall-note) that COPYING points to"
+why       = "the base every other patch modifies: a host-to-host and iGPU-to-iGPU byte stream over a USB4 cable, the transport the engine lab's two-node path runs on (catalog/ciru_link carries a different USB4 stream series for Linux 7.2.2)"
+notes     = "Interface tag: none (no catalogue interface is a USB4 stream device; the nearest are transport.verbs and the collective.* providers over RoCE / TCP). Stable patches 0001 of patches/series; apply the whole series in order to Linux 72d3fcf8. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "LICENSES/exceptions/Linux-syscall-note",
+  "LICENSES/preferred/GPL-2.0",
+  "patches/0001-usb4-current-source.patch",
+  "patches/audit-series",
+  "patches/series",
+  "provenance/lifecycle-base.json",
+  "provenance/recovery-base.json",
+  "provenance/reference-patches/0011-thunderbolt-Flush-posted-MSI-X-interrupt-clears.patch",
+  "provenance/software-validation.json",
+  "provenance/source-manifest.json",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only AND GPL-2.0-only WITH Linux-syscall-note"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-stream-enginelab/-/-"
+api       = "/dev/tbstreamN (configfs), linux/strix_gpu_stream.h ioctls"
+numeric   = "bytes only"
+regime    = "two Strix Halo hosts on USB4 40 Gb/s, Linux 72d3fcf8 (7.3-rc5)"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 72d3fcf8 tree on the island); python3 docs/harvest/harvest_enginelab_usb4.py --patch-gate parses it (gate/results/compile/enginelab_usb4.patches.json)"

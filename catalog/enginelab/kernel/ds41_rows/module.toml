@@ -1,0 +1,122 @@
+id        = "kernel.enginelab.ds41_rows"
+kind      = "kernel"
+summary   = "DS41 dense rows: F16 rows, fast F8 rows, native FP8, the integer operand, formats, packed weights, the IQ2_XXS grid (from ggml, MIT), the dense adapter, FP16 dense, geometry and plan, and the RN wide rows (STRIX_DS41_RN_WIDE: a per site x format x rows table choosing between the engine kernel and multi-row forms for Q8_0 / U6 rows 2-8, all variants bitwise equal)"
+why       = "the non-expert projections of DS41 in its native FP8 / GGUF forms; where it would go: beside the catalogue's linear.decode/fp8+gguf/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.decode/fp8+gguf/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 6 HIP unit(s) compiled standalone by the gate; 3 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/ds41_dense_geometry.hpp",
+  "include/strix/ds41_dense_plan.hpp",
+  "include/strix/ds41_formats.hpp",
+  "include/strix/ds41_iq2_xxs_grid.inc",
+  "include/strix/ds41_native_fp8.hpp",
+  "include/strix/ds41_packed.hpp",
+  "include/strix/hip_ds41_dense_fp16.hpp",
+  "include/strix/hip_ds41_f16_rows.hpp",
+  "include/strix/hip_ds41_f8_rows_fast.hpp",
+  "include/strix/hip_ds41_formats.hpp",
+  "include/strix/hip_ds41_rn_table.hpp",
+  "include/strix/hip_ds41_rn_wide.hpp",
+  "src/ds41_dense_adapter.hpp",
+  "src/ds41_formats.cpp",
+  "src/ds41_integer_operand.hpp",
+  "src/ds41_native_fp8.cpp",
+  "src/ds41_packed.cpp",
+  "src/hip_ds41_dense_fp16.hip",
+  "src/hip_ds41_f16_rows.hip",
+  "src/hip_ds41_f8_rows_fast.hip",
+  "src/hip_ds41_formats.hip",
+  "src/hip_ds41_rn_table.hip",
+  "src/hip_ds41_rn_wide.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/hip_ds41_dense_fp16.hip",
+  "src/src/hip_ds41_f16_rows.hip",
+  "src/src/hip_ds41_f8_rows_fast.hip",
+  "src/src/hip_ds41_formats.hip",
+  "src/src/hip_ds41_rn_table.hip",
+  "src/src/hip_ds41_rn_wide.hip",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/fp8+gguf/f16-f32.enginelab-ds41"
+api       = "hip_ds41_f16_rows.hip, hip_ds41_f8_rows_fast.hip, ds41_native_fp8.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "format.enginelab.model_data"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_engram"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_expert_tp"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_routes"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_trellis"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "kernel.enginelab.ops_a8"
+
+[[requires]]
+module    = "runtime.enginelab.dist_host_staged"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.ds41_rows.json"

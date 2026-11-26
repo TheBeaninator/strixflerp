@@ -1,0 +1,36 @@
+id        = "runtime.vllm_strix.triton_ptr_cache"
+kind      = "runtime"
+summary   = "memoises Triton AMD's pointer to device-pointer lookup: extractPointer() in triton/backends/amd/driver.c called hipPointerGetAttribute on every launch for every pointer argument, and the patch caches the answer per pointer; validated bit-exact, off"
+why       = "root-caused with gdb on the live worker and measured at ~0.3 % of a step, so it stays off (PATCHES 21); recorded because every Triton launch on ROCm pays it"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-triton-ptr-cache.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.launch-pointer-cache/-/-"
+api       = "patch script over the pinned triton/backends/amd/driver.c"
+numeric   = "n/a"
+regime    = "every Triton launch"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

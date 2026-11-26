@@ -1,0 +1,43 @@
+id        = "runtime.fastasfuck.capture"
+kind      = "runtime"
+summary   = "fastasfuck's opt-in per-request capture files: a JSON header, prompt and generated token ids, and a drafted/accepted/emitted record per decode step"
+why       = "the captures are the raw data for MTP acceptance studies such as tools/measure_verify_curve and the adaptive draft margin"
+notes     = "Files vs strixite: serve/capture.cpp byte-identical to runtime.strixite.capture at d19945e; serve/capture.hpp byte-identical to runtime.strixite.capture at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/capture.cpp", "serve/capture.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/capture.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.capture/-/-"
+api       = "strix::write_capture, strix::read_capture, strix::CaptureRecord"
+numeric   = "the same source as runtime.strixite.capture, so its behaviour: n/a"
+regime    = "as runtime.strixite.capture: host"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,70 @@
+id        = "kernel.ds4.k53prefill_rocm_glm_selected_multihead"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-flash-prefill-restoration 4fef372: its copy of the rocm_glm_selected_multihead family against antirez/ds4 b3f5018: rocm/ds4_rocm_glm_selected_multihead.cu added (234 lines). Kernels not in the base: glm_selected_multihead_kernel. The family: a stand-alone HIP translation unit with the GLM selected (sparse, indexer-chosen) multi-head attention kernel"
+why       = "the glm53-flash branch with the GLM-5.3-Flash prefill path restored and accelerated (head commit \"rocm: accelerate GLM 5.3 Flash prefill\"); same fork point as kyuz0_glm53_flash. The family in the base: GLM-5.3-Flash decode attention over the selected cells in one kernel for all heads"
+notes     = "Same file as in kyuz0_glm53_flash. Overlay kyuz0_glm53_prefill: files under overlay/kyuz0_glm53_prefill/ are the branch's bytes at 4fef372a4631; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_prefill.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "4fef372a46315bd6b34b0e58b7fc91a7e5f4f21f"
+branch    = "perf/rocm-gfx1151-glm53-flash-prefill-restoration"
+paths     = ["overlay/kyuz0_glm53_prefill/rocm/ds4_rocm_glm_selected_multihead.cu"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/kyuz0_glm53_prefill/rocm/ds4_rocm_glm_selected_multihead.cu"]
+includes  = ["src/overlay/kyuz0_glm53_prefill", "src/overlay/kyuz0_glm53_prefill/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "-x",
+  "hip",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-pthread",
+  "-D__HIP_PLATFORM_AMD__",
+  "-Wno-unused-command-line-argument",
+  "-std=c++17",
+  "-c",
+]
+
+[[provides]]
+interface = "attn.ds4-glm-selected-multihead/-/f32.ds4-k53prefill"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "kernel.ds4.k53prefill_mmq_ggml_stubs"
+
+[[requires]]
+module    = "runtime.ds4.k53prefill_gpu_api"
+
+[[requires]]
+module    = "kernel.ds4.mmq_ggml_stubs"
+
+[[requires]]
+module    = "runtime.ds4.gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.gpu_tp"
+
+[[requires]]
+module    = "runtime.ds4.gpu_args"
+
+[[requires]]
+module    = "runtime.ds4.linux_memory"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ds4.k53prefill_rocm_glm_selected_multihead.json"

@@ -1,0 +1,383 @@
+//! DeepSeek-V4.1-Flash behind the native CUDA family interface, tensor parallel over two GPUs: the server's process is
+//! rank 0 (the lane core over lanes.zig's Backend on model.zig), rank 1 is `tf-dsv41-lanes` following it on the other
+//! node (the same model directory, rank cache, kit, pool and port). The ranks link over TCP and NCCL; the inputs
+//! beyond the checkpoint come from the environment:
+//!   TF_TP_WORLD (2), TF_TP_MASTER, TF_TP_PORT   the ranks: rank 0's fabric address and port (rank 1 connects)
+//!   TF_DS_RANK_CACHE                            the lane's per-rank weight files (the Python lane's TF_DS_RANK_CACHE)
+//!   TF_DS_KIT                                   cubins/ (the served extension cubins), the served RoPE tables
+//!                                               (rope-*.f32, as many rows as the context) and engram.json
+//!   TF_DS_ENGRAM, TF_DS_TOKEN_MAP               the Engram tables and the compressed token map
+//!   TF_DS_HIP_KIT                               HIP: the AMD kit (unset: the server's, native/hip.zig)
+//!   TF_DS_AUX                                   HIP: hip (default), triton, or a list of attn,index,hc: which Triton
+//!                                               launches take w-tri's HIP kernels (tri_aux.zig; both ranks alike)
+//!   TF_DS_ARENA_GIB                             a first block of device memory for the buffers (unset: they take what
+//!                                               they need, the pool's caches by the context)
+//!   TF_DS_ROUND_MS                              the lane core's round costs by rows (ms, comma separated; the
+//!                                               served ROUND_MS unless set: a four-node lane's rounds cost less)
+//!   TF_DS_DRAFT_MS                              the same profile's drafter pass cost (ms; GB10's 3.5 unless set)
+//!   TF_DS_ROUND_ROWS, TF_DS_STREAMS             a round's rows at most (16; the four-node lane's 48) and the pool's
+//!                                               streams (4; its 16): --parallel at most the streams
+//!   TF_RDMA_DEVICES                             the decode gathers over the RDMA ring on these devices (else NCCL)
+//!   TF_DS_GRAPHS=1                              the rounds' stretches as CUDA graphs
+//!   TF_DS_HC_SIDE=1                             the mixes' side work on a stream of its own
+//!   TF_DS_L2_PREFETCH=1                         the paced L2 prefetch of the next kernels' weights
+//!   TF_DS_ENGRAM_AIO=1                          a round's Engram reads by Linux AIO on O_DIRECT
+//!   TF_DS_FIX_K=K                               a measurement: every drafted stream verifies K drafts a round
+//!   TF_HC_CHAIN=1                               hc_pre2's whole decode chain, the post alone included, as one launch
+//!                                                 a site (tri_hc: the same bits; needs the kit's _hc_chain;
+//!                                                 windows of up to 6 rows, chain_rows)
+//!   TF_FUSE2=1                                  a decode token's router as one launch a layer, _rowmm_route for
+//!                                                 _rowmm_parts + _route_parts (tri_norm.gateRoute: the same bits;
+//!                                                 needs the kit's _rowmm_route; windows of up to 6 rows, fuse2_rows)
+//!   TF_DS_TP4_FILL=1                            a 2D node's wq_b, wo_a and wo_b take more K splits on a decode
+//!                                                 window of up to 16 rows (exl3_linear.planFor: the same kernel, a
+//!                                                 different fp32 partial-sum order). Default off: the plan, the
+//!                                                 launch and the bytes stay today's. TP2, world 1 and the drafter
+//!                                                 never set it, even when this is 1
+//!   TF_DS_TP4_FILL=exact                        the same three linears and the same window, at TP2's sk and wk and
+//!                                                 TP2's fp32 order, on exl3.glinear_mlp (exl3_mlp.hip: the register
+//!                                                 schedule picked per k2, wk). Default off. TP2, world 1 and the
+//!                                                 drafter never set it. An older kit without those symbols still
+//!                                                 loads; a rank with exact set refuses to open
+//!   TF_DS_TP4_FILL=exact_lds                    the same plan and the same fp32 order, on exl3.glinear_mlp_lds
+//!                                                 (trellis tiles parked in LDS). A (k2, wk) with no LDS symbol
+//!                                                 uses the register kernel. Default off. The same ranks as exact
+//! The kernel set (TENSORFOLD_CUDA_KERNELS) is the recorded Triton set (aot_pack.py). The pool holds TF_DS_POOL
+//! positions for every stream together (each takes an extent: its prompt, its max_tokens and a round's rows).
+//! TF_TP_WORLD=4: the four nodes of the exact 2D split (prompt2d.zig), ranks 1-3 `tf-dsv41-lanes` following on the
+//! other nodes; TF_RDMA_DEVICES (and TF_DS_RDMA_KERNELS: rdma_gather.cu's fatbin, unset: the embedded one) put its
+//! decode-size exchanges on the RDMA rings, as the four-node Python lane's TF_RDMA_DEVICES does.
+const std = @import("std");
+const gpu = @import("gpu");
+const lanes = @import("lanes");
+const model = @import("model.zig");
+const lanes_mod = @import("lanes.zig");
+const cache_move = @import("cache_move.zig");
+const round = @import("round.zig");
+const draft_mod = @import("draft.zig");
+const link = @import("link.zig");
+const rank_cache = @import("rank_cache.zig");
+const sampling = @import("sampling.zig");
+const encoder_mod = @import("encoder.zig");
+/// The vision tower (gpu.features.vision): CUDA's and HIP's behind vision.zig.
+const vision_mod = if (gpu.features.vision) @import("vision.zig") else struct {
+    pub const Vision = lanes_mod.VisionTower;
+};
+
+pub const model_type = "deepseek_v41";
+pub const formats: []const []const u8 = &.{"exl3-mul1"};
+/// The Python lane's default window; the server's --context moves it up to the model's 1,048,576.
+pub const default_context: i64 = 262144;
+pub const max_segments: u32 = 1;
+/// The served build's prompt chunk (TF_DS_PREFILL_CHUNK).
+pub const prompt_rows: u32 = 2048;
+/// The served lane's reasoning effort numbers (text.zig): the server passes each name and the template hears its number.
+pub const efforts = @import("text.zig").efforts;
+/// The served sampler's top_k (sampling.zig: top_k + MARGIN candidates, at most 64), which a sampled request must set:
+/// the nucleus path for top_k off is not ported (U49). The server refuses the rest before the engine sees them.
+pub const top_k_max: u32 = sampling.max_candidates - sampling.margin;
+pub const needs_top_k = true;
+/// Per-token logprobs: rank 0's draws put each row in a requesting stream's ring (lanes.zig).
+pub const logprobs = true;
+
+/// `modalities` null: TF_DS_MODALITIES (text or text_image), else the backend's default (model.default_modalities).
+pub const Options = struct { context: usize, drafts: bool, segments: usize = 1, modalities: ?model.Modalities = null };
+pub const Modalities = model.Modalities;
+
+/// The request kinds this rank serves: the caller's, else TF_DS_MODALITIES, else the backend's default.
+pub fn modalities(o: Options) !Modalities {
+    if (o.modalities) |x| return x;
+    const v = getenv("TF_DS_MODALITIES") orelse return model.default_modalities;
+    return std.meta.stringToEnum(Modalities, v) orelse error.BadModalities;
+}
+
+/// A lone drafted stream's own driver: decodes it until it finishes (false) or `yield` hands it over (true).
+pub const LoneRun = *const fn (ctx: *anyopaque, s: *lanes.Stream, hooks: *anyopaque, committed: *const fn (*anyopaque) void, yield: *const fn (*anyopaque) bool) anyerror!bool;
+
+/// What the native server drives: the lane backend, the facts its round loop reads, and how to free it.
+pub const Loaded = struct {
+    backend: lanes.backend.Backend,
+    facts: lanes.Model,
+    rows: u32,
+    /// Device bytes each admitted stream allocates for its own sequence.
+    stream_bytes: usize,
+    ctx: *anyopaque,
+    deinit: *const fn (*anyopaque) void,
+    lone: ?LoneRun = null,
+    /// Kept prompt states for the host's prompt cache (core/prompt_cache Snapshots: `ptr` and its functions).
+    snaps: ?Snaps = null,
+    /// The prompt pass resumes and keeps prompts with images (lanes.zig keys their states by each picture's digest).
+    cache_images: bool = false,
+    /// Images in requests (the server renders their placeholders; the tower runs on this rank).
+    vision: ?lanes.stream.Vision = null,
+    /// Structured output and required calls (the tokenizer's vocabulary read at open).
+    structures: bool = false,
+    /// The context window the server advertises and checks requests against: the most prompt plus max_tokens tokens
+    /// the pool holds (lanes.usableContext), below --context by a round's rows and the extents' chunk alignment.
+    context_window: ?usize = null,
+    /// TF_DS_ACTS_DIR set: requests may carry `acts` (dumps, row injection, logits) behind the
+    /// admin key; null: the server refuses the field.
+    acts: ?lanes.acts.Info = null,
+};
+
+pub const Snaps = struct {
+    ptr: *anyopaque,
+    bytes: *const fn (*anyopaque, u32) u64,
+    save: *const fn (*anyopaque, ?*anyopaque, u32) anyerror!*anyopaque,
+    restore: *const fn (*anyopaque, ?*anyopaque, *anyopaque) anyerror!void,
+    drop: *const fn (*anyopaque, *anyopaque) void,
+    /// Whether a kept state still restores for a prompt of that many tokens (lanes.zig snapRestoresFn); null: always.
+    restores: ?*const fn (*anyopaque, *anyopaque, u32) bool = null,
+    /// POST /cache/export and /cache/import: a kept state off the engine in sf-disk's layout and back (cache_move.zig).
+    export_state: ?*const fn (*anyopaque, *anyopaque, std.mem.Allocator, *[]u8, *[]u8) anyerror!void = null,
+    import_state: ?*const fn (*anyopaque, u32, []const u8, []const u8) anyerror!*anyopaque = null,
+    /// What the states look like on the wire (the identity namespace and sizes); null: no transfers.
+    shape: ?cache_move.Shape = null,
+    /// States are kept at chunk ends only (model.chunk_rows): the prompt cache lands its marks and shared cuts there.
+    grain: u32 = 0,
+};
+
+/// The rank's model and the backend over it (what `open` hands the server, freed by `deinit`).
+const State = struct {
+    gpa: std.mem.Allocator,
+    m: *model.Model,
+    lanes: lanes_mod.Lanes,
+    vision: ?*vision_mod.Vision = null,
+    encoder: ?*encoder_mod.Encoder = null, // HIP: the tower's own thread
+    vocab: ?*lanes.grammar.Vocab = null,
+    acts: ?*lanes.acts.Writer = null, // TF_DS_ACTS_DIR: per-request dumps' writer
+};
+
+fn getenv(name: [:0]const u8) ?[]const u8 {
+    return std.mem.span(std.c.getenv(name) orelse return null);
+}
+
+/// An empty variable as none (a container passes TF_RDMA_DEVICES empty when it is unset).
+fn nonEmpty(v: ?[]const u8) ?[]const u8 {
+    const s = v orelse return null;
+    return if (s.len == 0) null else s;
+}
+
+/// The streams' shared pool: TF_DS_POOL (unset: the context), at least the context; HIP only (CUDA: the context).
+fn poolOf(context: usize) !usize {
+    return poolFrom(nonEmpty(getenv("TF_DS_POOL")), context, gpu.backend == .hip);
+}
+
+fn poolFrom(v: ?[]const u8, context: usize, hip: bool) !usize {
+    const t = v orelse return context;
+    if (!hip) return error.PoolNeedsHip;
+    const p = std.fmt.parseInt(usize, t, 10) catch return error.BadPool;
+    if (p < context) return error.BadPool;
+    return p;
+}
+
+test "TF_DS_POOL: the context unless set, never below it, and only on HIP" {
+    try std.testing.expectEqual(@as(usize, 1048527), try poolFrom(null, 1048527, true));
+    try std.testing.expectEqual(@as(usize, 1048527), try poolFrom(null, 1048527, false));
+    try std.testing.expectError(error.PoolNeedsHip, poolFrom("2097152", 1048527, false));
+    try std.testing.expectEqual(@as(usize, 2097152), try poolFrom("2097152", 1048527, true));
+    try std.testing.expectError(error.BadPool, poolFrom("65536", 1048527, true));
+    try std.testing.expectError(error.BadPool, poolFrom("2M", 1048527, true));
+}
+
+/// The device bytes this rank's weights take, for the host's memory check: its file in TF_DS_RANK_CACHE (the
+/// checkpoint holds both ranks'); 0 when there is none to read (open then says what to set).
+pub fn weightBytes(io: std.Io, dir: []const u8) u64 {
+    _ = dir;
+    var d = std.Io.Dir.cwd().openDir(io, getenv("TF_DS_RANK_CACHE") orelse return 0, .{ .iterate = true }) catch return 0;
+    defer d.close(io);
+    var buf: [512]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&buf);
+    const world = std.fmt.parseInt(u32, getenv("TF_TP_WORLD") orelse "2", 10) catch return 0;
+    const name = rank_cache.find(fba.allocator(), io, d, 0, world) catch return 0;
+    const st = d.statFile(io, name, .{}) catch return 0;
+    return st.size;
+}
+
+/// Loads rank 0 and links rank 1 (which must start against TF_TP_MASTER:TF_TP_PORT); the pool holds TF_DS_POOL
+/// positions (else `o.context`), a request at most `o.context`. Needs `ctx` current.
+pub fn open(gpa: std.mem.Allocator, io: std.Io, ctx: *const gpu.Context, dir: []const u8, kernels: []const u8, o: Options) !Loaded {
+    const world = std.fmt.parseInt(u32, getenv("TF_TP_WORLD") orelse "2", 10) catch return error.BadWorld;
+    if (world != 2 and world != 4) return error.BadWorld; // TP2, or the four-node 2D split
+    const master = link.parseIp(getenv("TF_TP_MASTER") orelse return error.NoMaster) catch return error.BadMaster;
+    const port = std.fmt.parseInt(u16, getenv("TF_TP_PORT") orelse "29620", 10) catch return error.BadPort;
+    const arena_gib = if (getenv("TF_DS_ARENA_GIB")) |t| std.fmt.parseInt(usize, t, 10) catch return error.BadArena else 0;
+    // each prompt's logits' SHA-256 in the log (rank 1: --logits-sha), to compare two builds or settings
+    if (getenv("TF_DS_LOGITS_SHA")) |v| lanes_mod.logits_sha = !std.mem.eql(u8, v, "0");
+    // each verify window's position, ids and drawn tokens on stderr (rank 0; comparing two runs' schedules)
+    if (getenv("TF_DS_TRACE_ROUNDS")) |v| lanes_mod.trace_rounds = std.fmt.parseInt(u8, v, 10) catch return error.BadSetting;
+    // the scheduler's cost profile, measured on this backend (the model keeps its own copy)
+    const round_costs = if (getenv("TF_DS_ROUND_MS")) |v| lanes_mod.parseMs(gpa, v) catch return error.BadRoundMs else null;
+    defer if (round_costs) |v| gpa.free(v);
+    const draft_cost = if (getenv("TF_DS_DRAFT_MS")) |v| draft_mod.scheduler_costs.parseDraft(v) catch return error.BadDraftMs else draft_mod.draft_ms;
+    const mods = try modalities(o);
+    const st = try gpa.create(State);
+    errdefer gpa.destroy(st);
+    st.gpa = gpa;
+    st.m = try model.Model.open(gpa, io, ctx, .{
+        .model_dir = dir,
+        .cache_dir = getenv("TF_DS_RANK_CACHE") orelse return error.NoRankCache,
+        .kit_dir = getenv("TF_DS_KIT") orelse return error.NoKit,
+        .aot_dir = kernels,
+        .rank = 0,
+        .world = world,
+        .master = master,
+        .port = port,
+        .engram_dir = getenv("TF_DS_ENGRAM"),
+        .token_map = getenv("TF_DS_TOKEN_MAP"),
+        // the verbs ring is CUDA's; on HIP TF_RDMA_DEVICES names rdma_proxy's devices, which reads it itself
+        .rdma_devices = if (gpu.features.verbs_rdma) nonEmpty(getenv("TF_RDMA_DEVICES")) else null,
+        .rdma_kernels = getenv("TF_DS_RDMA_KERNELS"),
+        .graphs = if (getenv("TF_DS_GRAPHS")) |v| !std.mem.eql(u8, v, "0") else false,
+        .side = if (getenv("TF_DS_HC_SIDE")) |v| !std.mem.eql(u8, v, "0") else false,
+        .prefetch = if (getenv("TF_DS_L2_PREFETCH")) |v| !std.mem.eql(u8, v, "0") else false,
+        .engram_aio = if (getenv("TF_DS_ENGRAM_AIO")) |v| !std.mem.eql(u8, v, "0") else false,
+        .pool = poolOf(o.context) catch |err| return if (err == error.PoolNeedsHip) err else error.BadPool,
+        .context = o.context,
+        .drafts = o.drafts,
+        .arena_bytes = arena_gib << 30,
+        .round_rows = if (getenv("TF_DS_ROUND_ROWS")) |v| std.fmt.parseInt(usize, v, 10) catch return error.BadRoundRows else round.default_rows,
+        .round_ms = round_costs,
+        .draft_ms = draft_cost,
+        .streams = if (getenv("TF_DS_STREAMS")) |v| std.fmt.parseInt(usize, v, 10) catch return error.BadStreams else model.max_streams_default,
+        .modalities = mods,
+        // a request's image tokens at most (serve.conf IMAGE_TOKENS; rank 1 --image-tokens, the same value)
+        .image_rows = if (nonEmpty(getenv("TF_DS_IMAGE_TOKENS"))) |v| try model.Model.parseImageRows(v) else model.Model.image_rows_reserved,
+        .hip_kit = getenv("TF_DS_HIP_KIT") orelse if (gpu.backend == .hip) kernels else null, // HIP: the host's kit
+        .open_coll = if (gpu.backend == .hip and try @import("comm.zig").chosen(world) == .tcp) @import("tcp_coll.zig").open else null, // HIP: TF_DS_COLL
+        .disk = @import("disk.zig").wanted(world), // TF_DS_PROMPT_DISK_*: kept prompt states on disk (disk.zig)
+    });
+    errdefer st.m.close();
+    st.lanes = lanes_mod.Lanes.init(gpa, st.m);
+    // sf-disk: this rank's tier, reconciled with rank 1's before the server takes a request (off: nothing changes)
+    try st.lanes.attachDisk();
+    if (getenv("TF_DS_FIX_K")) |t| st.lanes.fix_k = std.fmt.parseInt(usize, t, 10) catch return error.BadFixK;
+    // structured output: each token's bytes, for the draws that keep a reply inside its grammar (rank 0 draws)
+    st.vocab = lanes.grammar.vocab.load(gpa, io, dir) catch |e| blk: {
+        std.log.warn("structured output off: {s}/tokenizer.json is not a byte-level BPE vocabulary this engine reads ({s})", .{ dir, @errorName(e) });
+        break :blk null;
+    };
+    errdefer if (st.vocab) |v| v.deinit(gpa);
+    st.lanes.vocab = st.vocab;
+    // a vision checkpoint's tower on this rank (CUDA: the kit's vision/; HIP: TF_DS_VISION_DIR, a sidecar made by
+    // make_vision_sidecar.py, else the model's index), unless this rank serves text only: config.json still declares
+    // the tower, nothing of it is opened, and the server refuses image parts (Loaded.vision null)
+    st.vision = null;
+    if (st.m.cfg.vision and mods == .text) std.log.info("config.json declares a vision tower; not opened (text capability)", .{});
+    if (gpu.features.vision and st.m.cfg.vision and mods == .text_image) {
+        const weights_dir = if (gpu.backend == .hip) (getenv("TF_DS_VISION_DIR") orelse dir) else dir;
+        st.vision = try vision_mod.Vision.open(gpa, io, st.m, weights_dir, getenv("TF_DS_KIT").?);
+    }
+    errdefer if (gpu.features.vision) if (st.vision) |v| v.close();
+    st.lanes.vision = st.vision;
+    st.encoder = null;
+    if (gpu.features.vision and gpu.backend == .hip) if (st.vision) |v| {
+        const enc = try gpa.create(encoder_mod.Encoder);
+        enc.* = .init(gpa, io, v.encoderTower(), st.m.image_rows);
+        // the picture cache (serve.conf ENCODE_CACHE_MIB): rows kept by picture digest, unset 512 MiB, 0 off
+        enc.picture_cap = if (nonEmpty(getenv("TF_DS_ENCODE_CACHE_MIB"))) |x| encoder_mod.Encoder.parseCacheMib(x) catch |err| {
+            gpa.destroy(enc);
+            return err;
+        } else encoder_mod.default_picture_cache;
+        enc.start() catch |err| {
+            gpa.destroy(enc);
+            return err;
+        };
+        st.encoder = enc;
+    };
+    errdefer if (st.encoder) |enc| stopEncoder(gpa, enc);
+    st.lanes.encoder = st.encoder;
+    var hook: ?lanes.stream.Vision = if (gpu.features.vision) (if (st.vision) |v| v.hook() else null) else null;
+    if (hook) |*x| x.max_tokens = if (st.m.imageRowsCap()) |cap| @intCast(cap) else 0;
+    if (hook) |*x| if (st.encoder) |enc| {
+        x.encode = enc.hook();
+    };
+    // per-request dumps and row injection: on when the conf names a dump dir (ACTS_DIR). Rank 0
+    // only, and nothing else changes: ranks 1-3 take a dump pass's replay and chunks from rank 0's frames.
+    st.acts = null;
+    var acts_info: ?lanes.acts.Info = null;
+    if (nonEmpty(getenv("TF_DS_ACTS_DIR"))) |acts_dir| {
+        const limits = try lanes.acts.limitsFrom(nonEmpty(getenv("TF_DS_ACTS_REQUEST_MB")), nonEmpty(getenv("TF_DS_ACTS_TOTAL_MB")), nonEmpty(getenv("TF_DS_ACTS_QUEUE_MB")));
+        const w = try lanes.acts.Writer.open(gpa, io, acts_dir, limits);
+        st.acts = w;
+        st.m.acts = .{ .writer = w, .n_layers = st.m.cfg.layers, .dump_rows = try model.Model.parseDumpRows(nonEmpty(getenv("TF_DS_ACTS_DUMP_ROWS"))) };
+        if (st.m.acts.?.dump_rows > 0) std.log.info("acts: dump units of at most {d} rows (TF_DS_ACTS_DUMP_ROWS)", .{st.m.acts.?.dump_rows});
+        acts_info = .{ .layers = @intCast(st.m.cfg.layers), .window = @intCast(st.m.cfg.window), .row_bytes = @intCast(st.m.cfg.hidden * 2), .rows_dir = nonEmpty(getenv("TF_DS_ACTS_ROWS_DIR")) orelse "", .writer = w };
+        std.log.info("acts on: dumps to {s} (request {d} MiB, total {d} MiB, queue {d} MiB), rows from {s}", .{ acts_dir, limits.request_bytes >> 20, limits.total_bytes >> 20, limits.queue_bytes >> 20, acts_info.?.rows_dir });
+    }
+    errdefer if (st.acts) |w| w.close();
+    // the pool is the model's (preallocated): a stream takes no device memory of its own
+    const L = lanes_mod.Lanes;
+    const snaps: Snaps = .{ .ptr = &st.lanes, .bytes = L.snapBytesFn, .save = L.snapSaveFn, .restore = L.snapRestoreFn, .drop = L.snapDropFn, .restores = L.snapRestoresFn, .export_state = cache_move.exportFn, .import_state = cache_move.importFn, .shape = cache_move.shapeOf(gpa, st.m), .grain = model.chunk_rows };
+    return .{ .backend = st.lanes.backend(), .facts = st.lanes.facts(), .rows = @intCast(st.m.eng.round_rows), .stream_bytes = 0, .ctx = st, .deinit = deinitFn, .snaps = snaps, .cache_images = true, .vision = hook, .structures = st.vocab != null, .context_window = lanes_mod.usableContext(st.m.context_cap, st.m.eng.round_rows), .acts = acts_info };
+}
+
+fn stopEncoder(gpa: std.mem.Allocator, enc: *encoder_mod.Encoder) void {
+    enc.stop();
+    gpa.destroy(enc);
+}
+
+fn deinitFn(ptr: *anyopaque) void {
+    const st: *State = @ptrCast(@alignCast(ptr));
+    if (st.encoder) |enc| stopEncoder(st.gpa, enc); // before the tower it drives
+    st.lanes.deinit(); // rank 1 hears done
+    if (st.vocab) |v| v.deinit(st.gpa);
+    if (gpu.features.vision) if (st.vision) |v| v.close();
+    st.m.close();
+    if (st.acts) |w| w.close(); // after the server and the engine: its queue drains, every closed request finishes
+    st.gpa.destroy(st);
+}
+
+/// A request or a start this engine refuses, in words; null: none of its own.
+pub fn explain(_: ?*anyopaque, err: anyerror) ?[]const u8 {
+    return switch (err) {
+        error.BadWorld => "the native DeepSeek-V4.1 engine runs tensor parallel over two GPUs or the four nodes of the 2D split (CUDA builds): set TF_TP_WORLD=2, or 4 on CUDA",
+        error.NotPortedYet => "this request reaches a path the port does not have yet (the engine's log names its site)",
+        error.NeedsTopK => "sampling with top_k off (the nucleus over the whole vocabulary) is not ported yet: send top_k from 1 to 56, or temperature 0",
+        error.TooManyCandidates => "top_k above 56 is beyond this engine's sampler (top_k + 8 candidates, at most 64): send top_k from 1 to 56",
+        error.NoMaster, error.BadMaster => "set TF_TP_MASTER to rank 0's fabric address (rank 1: tf-dsv41-lanes MODEL CACHE 1 2 MASTER PORT KIT; ranks 1-3 of four: ... G 4 ...)",
+        error.NoRdmaKernels => "TF_RDMA_DEVICES at world 4 needs TF_DS_RDMA_KERNELS (rdma_gather.cu's fatbin) in a build without the kernel images",
+        error.BadActs, error.BadActsTaps, error.NoActs => "a request's acts reached the engine in a form the server should have refused",
+        error.BadActsDir => "TF_DS_ACTS_DIR (serve.conf ACTS_DIR): a directory this rank can create and write, at most 400 bytes",
+        error.BadActsSetting => "TF_DS_ACTS_REQUEST_MB, TF_DS_ACTS_TOTAL_MB, TF_DS_ACTS_QUEUE_MB: whole MiB above 0, the request's at most the total",
+        error.NoRankCache => "set TF_DS_RANK_CACHE to the lane's per-rank weight files",
+        error.NoKit => "set TF_DS_KIT to the kernel kit (cubins/, the RoPE tables, engram.json)",
+        error.NoFreeSlot => "this engine serves TF_DS_STREAMS streams at once (default 4): --parallel at most that",
+        error.BadRoundRows => "TF_DS_ROUND_ROWS: a round's rows at most, 16 .. 48",
+        error.BadRoundMs => "TF_DS_ROUND_MS: a round's cost in ms by its rows from 1, comma separated, each finite and above 0 (at most 48)",
+        error.BadDraftMs => "TF_DS_DRAFT_MS: a drafter pass's cost in ms, finite and not negative",
+        error.BadStreams => "TF_DS_STREAMS: the pool's streams, 1 .. 16",
+        error.BadPool => "TF_DS_POOL: the streams' shared pool in positions, at least --context (unset: --context)",
+        error.PoolNeedsHip => "TF_DS_POOL is HIP only: CUDA's rank 1 has no --pool, so unset it (the pool is --context)",
+        error.ContextFull => "the streams' prompts and budgets fill the context's pool: lower max_tokens, or retry when a stream ends",
+        error.PromptTooLong => "the prompt and its max_tokens do not fit the context window",
+        error.NoVisionKit => if (gpu.backend == .hip) "text_image needs the image routing biases: TF_DS_KIT's vision/gate_bias_vl.safetensors (tools/dsv41-zig/kit/make_bias_vl.py)" else "this checkpoint reads images: its kit (TF_DS_KIT) needs vision/torch_fmha_sm120.cubin and vision/gate_bias_vl.safetensors",
+        error.NoVisionKernels => "text_image on HIP needs the AMD kit's vision.* kernels (vision.hip): a kit built before them",
+        error.NoVisionWeights => "text_image on HIP needs the vision tower's weights: TF_DS_VISION_DIR (a sidecar made by tools/dsv41-zig/kit/make_vision_sidecar.py) with model.safetensors.index.json",
+        error.MissingVisionTensor, error.BadVisionTensor => "the vision weights (TF_DS_VISION_DIR) lack a tower tensor or hold one of another dtype or shape",
+        error.TooManyImageRows => std.fmt.comptimePrint("a request's images take more image tokens than this engine reserved (serve.conf IMAGE_TOKENS, {d} unless set: four pictures at the largest size): send fewer or smaller images", .{model.Model.image_rows_reserved}),
+        error.BadImageTokens => std.fmt.comptimePrint("TF_DS_IMAGE_TOKENS (serve.conf IMAGE_TOKENS; rank 1 --image-tokens): a request's image tokens at most, a whole number from 1 to {d} (empty: {d}), the same on both ranks", .{ model.Model.image_rows_max, model.Model.image_rows_reserved }),
+        error.BadEncodeCache => "TF_DS_ENCODE_CACHE_MIB (serve.conf ENCODE_CACHE_MIB, rank 0): the picture cache's MiB, a whole number from 0 (off) to 65536 (empty: 512)",
+        error.VisionUnsupported => "image input is not implemented on this backend: serve text only (TF_DS_MODALITIES=text)",
+        error.BadModalities => "TF_DS_MODALITIES: text or text_image",
+        error.NoCollective => "this build has no collectives transport for the ranks yet (HIP: w-link's TCP transport, model.Options.open_coll)",
+        error.MissingKernel => "the kernel kit lacks a kernel this configuration reaches (the log names its id; EXL3's are w-exl3's exl3.* entries)",
+        error.NoVerbsRdma => "TF_RDMA_DEVICES: the verbs RDMA ring is CUDA's; this build exchanges over its collectives transport",
+        error.NoL2Prefetch => "TF_DS_L2_PREFETCH needs the kit's L2 prefetch kernel (CUDA: tf_ds_l2_prefetch_kernel; HIP: exl3.l2_prefetch), and this kit has none",
+        error.GraphsNeedCapturableCollective => "TF_DS_GRAPHS=1 needs a collectives transport that runs inside graphs; this one does not: unset it",
+        error.NoStructures => "structured output needs the checkpoint's tokenizer.json as a byte-level BPE vocabulary (the engine's log says why it was not read)",
+        error.BadStructure => "the request's structure does not compile (the engine's log has the compiler's words)",
+        else => null,
+    };
+}
+
+test "refusals name what to set" {
+    try std.testing.expect(std.mem.indexOf(u8, explain(null, error.NoMaster).?, "TF_TP_MASTER") != null);
+    try std.testing.expect(std.mem.indexOf(u8, explain(null, error.NoFreeSlot).?, "TF_DS_STREAMS") != null);
+    try std.testing.expect(std.mem.indexOf(u8, explain(null, error.BadWorld).?, "TF_TP_WORLD") != null);
+    // a request that reaches an unported path is not told to change the ranks (U49)
+    try std.testing.expect(std.mem.indexOf(u8, explain(null, error.NotPortedYet).?, "TF_TP_WORLD") == null);
+    try std.testing.expect(std.mem.indexOf(u8, explain(null, error.NeedsTopK).?, "top_k") != null);
+    try std.testing.expect(std.mem.indexOf(u8, explain(null, error.TooManyCandidates).?, "top_k") != null);
+    try std.testing.expectEqual(@as(?[]const u8, null), explain(null, error.OutOfMemory));
+}

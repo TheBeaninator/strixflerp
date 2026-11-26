@@ -79,5 +79,21 @@ traffic before its keep-set means anything: `compute_edge_reap_keepset` damps ex
 tokens, so plan on tens of thousands of tokens per domain, and more sampled rows (`norm_rows` in the export) for
 the saliency to settle.
 
+## Masks for the engine's MASK_EXPERTS (KCUT)
+
+`mask_keepset.py` turns a domain's snapshots into the file the engine's `MASK_EXPERTS` loads (the removed experts, one
+`layer:e1,e2,...` line a layer), for masked trials before any checkpoint is cut:
+
+```bash
+python3 $T/mask_keepset.py --snap-dir snapshots --domain code --keep 0.5 --out code-k50.mask --report code-k50.json
+```
+
+Per layer: budget = round(keep x 384), never below 6 (the engine refuses fewer); an expert holding at least
+`--hub-share` (0.02) of the layer's gate mass in any snapshot of any domain in the directory is kept; the rest of the
+budget goes to the highest `reap_saliency` (ties to the lower id; `--count-tau` damps rare experts as the script's
+score does). MTP layers and the shared expert are never named. `--report` writes the per-layer coverage of saliency
+mass, traffic and gate mass (json and a .md beside it). Tests: `tests/test_mask_keepset.py` (the mask is parsed with
+`tools/ablate.py`'s `parse_mask`, which pins the engine's refusals and canonical id).
+
 Tests: `tests/test_edge_reap_keepset.py` (a report the script's own collector exports, and the engine's export
 format, round-tripped into keep-sets; merges; refusals).

@@ -1,0 +1,40 @@
+id        = "runtime.fastasfuck.think_nudge"
+kind      = "runtime"
+summary   = "fastasfuck's ThinkWatch: detects self-repeating long reasoning by 8-gram hashes and feeds a short nudge sentence at a paragraph break"
+why       = "long thinking loops waste decode time; this is the engine-side guard against them"
+notes     = "Files vs strixite: serve/think_nudge.cpp byte-identical to runtime.strixite.think_nudge at d19945e; serve/think_nudge.hpp byte-identical to runtime.strixite.think_nudge at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/think_nudge.cpp", "serve/think_nudge.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/think_nudge.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.think-nudge/-/-"
+api       = "strix::ThinkWatch"
+numeric   = "the same source as runtime.strixite.think_nudge, so its behaviour: n/a"
+regime    = "as runtime.strixite.think_nudge: host; 8-token repeats over a 1024-token window"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

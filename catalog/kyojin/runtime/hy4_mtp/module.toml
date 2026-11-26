@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.hy4_mtp"
+kind      = "runtime"
+summary   = "Hy4 MTP draft head (the GGUF next-n block with two Triton expert kernels) and the split draft chain (base graph + tail graph, HY4_SPEC2_GATE)"
+why       = "Hy4 speculative decode (tau 2.7-2.9). Where the shape would go: a draft.mtp/gguf-q8_0/f32 provider beside kernel.gufo.qfn_kernels, through a port of the python / Triton logic"
+notes     = "Interface tag: draft.mtp/gguf-q8_0/f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (mtp_gate.py, mtp_head.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/loader/mtp_gate.py", "exllamav3/loader/mtp_head.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "draft.mtp/gguf-q8_0/f32.kyojin-hy4"
+api       = "mtp_gate.py, mtp_head.py"
+numeric   = "n/a"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

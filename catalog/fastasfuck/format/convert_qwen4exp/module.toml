@@ -1,0 +1,58 @@
+id        = "format.fastasfuck.convert_qwen4exp"
+kind      = "format"
+summary   = "fastasfuck's converter library from Qwen3.8-Flash-Next safetensors to weights.faf: merge plan, per-class --layout quantization, the HC fold and, new in 1.1.0, a --prebuilt store that takes GPTQ-calibrated <tensor>.{q,scale,minv} instead of quantizing"
+why       = "the 1.1.0 release is this file: PrebuiltStore lets offline GPTQ weights enter a .faf with the same layout and bytes as round-to-nearest ones and records the calibration and its fingerprint in the metadata"
+notes     = "Files vs strixite: formats/convert_qwen4exp.cpp 301 changed lines against format.strixite.convert_qwen4exp at d19945e; formats/convert_qwen4exp.hpp 19 changed lines against format.strixite.convert_qwen4exp at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here. Interface tag: its own, because fastasfuck changed the job (strixite's format.strixite.convert_qwen4exp provides format.convert/strixw/-)."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["formats/convert_qwen4exp.cpp", "formats/convert_qwen4exp.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/convert_qwen4exp.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.convert/faf/-"
+api       = "strix::convert_qwen4exp (formats/convert_qwen4exp.hpp, ConvertOptions)"
+numeric   = "round-to-nearest per-group quantization as format.fastasfuck.q4 .. q8; a --prebuilt tensor is copied as given, its bytes and dtype checked"
+regime    = "host, offline"
+
+[[provides]]
+interface = "format.prebuilt-import/faf/-"
+api       = "ConvertOptions::prebuilt_dir (--prebuilt DIR of *.safetensors plus calib_meta.json)"
+numeric   = "exact copy of the prebuilt codes, BF16 scale and min; every prebuilt base must be consumed"
+regime    = "host, offline (new in 1.1.0)"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "format.fastasfuck.merge_plan"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "format.fastasfuck.safetensors"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_formats) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

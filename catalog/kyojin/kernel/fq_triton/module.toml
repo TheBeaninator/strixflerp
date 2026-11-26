@@ -1,0 +1,44 @@
+id        = "kernel.kyojin.fq_triton"
+kind      = "kernel"
+summary   = "Triton kernels of the foreign formats: IQ and gap-format GEMVs, row gathers, shared-gate, f16 GEMV, MXFP4 MoE and its prefill"
+why       = "foreign formats where no HIP kernel exists. Where the shape would go: a moe.experts-prefill/mxfp4/bf16 provider beside kernel.ciru_inkling.moe_prefill, kernel.ciru_iu4.c1, kernel.ciru_iu4.mmb and 24 more, through a port of the python / Triton logic"
+notes     = "Interface tag: moe.experts-prefill/mxfp4/bf16. Against the base turboderp-org/exllamav3 8c593e4e: 7 added (moe_mxfp4_prefill.py, triton_f16gemv.py, triton_gap.py, triton_iq.py, triton_moe_mxfp4.py, triton_rows.py) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/foreign_quant/moe_mxfp4_prefill.py",
+  "exllamav3/foreign_quant/triton_f16gemv.py",
+  "exllamav3/foreign_quant/triton_gap.py",
+  "exllamav3/foreign_quant/triton_iq.py",
+  "exllamav3/foreign_quant/triton_moe_mxfp4.py",
+  "exllamav3/foreign_quant/triton_rows.py",
+  "exllamav3/foreign_quant/triton_shgate.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-prefill/mxfp4/bf16.kyojin-triton"
+api       = "moe_mxfp4_prefill.py, triton_f16gemv.py, triton_gap.py, triton_iq.py, triton_moe_mxfp4.py, triton_rows.py, triton_shgate.py"
+numeric   = "fp32 accumulation"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

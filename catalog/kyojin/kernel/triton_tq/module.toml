@@ -1,0 +1,36 @@
+id        = "kernel.kyojin.triton_tq"
+kind      = "kernel"
+summary   = "TurboQuant cache kernels: paged window dequant for the prefill staging scratch (32-value groups, power-of-two bit planes, one fp16 norm per head vector)"
+why       = "the TurboQuant KV cache (runtime.kyojin.kvcache_tq). Where the shape would go: a kvcache.rotate/tq3/f32 provider beside kernel.lucebox.kvquant, through a port of the python / Triton logic"
+notes     = "Interface tag: kvcache.rotate/tq3/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (tq_triton.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/attention_fn/tq_triton.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.rotate/tq3/f32.kyojin"
+api       = "tq_triton.py"
+numeric   = "Lloyd-Max codes times an fp16 norm"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

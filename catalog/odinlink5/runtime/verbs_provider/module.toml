@@ -1,0 +1,59 @@
+id        = "runtime.odinlink5.verbs_provider"
+kind      = "runtime"
+summary   = "a libibverbs provider over OdinLink: devices, protection domains, memory regions, completion queues, queue pairs and post / poll ops mapped onto the stream API, usable two ways, as an LD_PRELOAD interposer that wraps ibv_open_device for /dev/odl_tb5_* and passes real InfiniBand / RoCE through, or as an rdma-core provider plugin (libodl_tb5-rdmav34.so) so ibv_devinfo lists odl_tb5; with a mock and loopback / dmabuf tests and the technical manual"
+why       = "verbs is the API MPI, NCCL's IB transport and ggml-rpc RDMA already speak; a provider makes the cable look like an RDMA NIC to them without code changes, the way strixflerp's RoCE rail is reached today (transport.verbs)"
+notes     = "Interface tag: transport.verbs (an ibverbs device, like the catalogue's RoCE provider). Needs libibverbs headers to compile. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "verbs/CMakeLists.txt",
+  "verbs/VERBS_PROVIDER.md",
+  "verbs/src/odl_tb5_provider_plugin.c",
+  "verbs/src/odl_tb5_verbs.h",
+  "verbs/src/odl_tb5_verbs_cq.c",
+  "verbs/src/odl_tb5_verbs_debug.h",
+  "verbs/src/odl_tb5_verbs_device.c",
+  "verbs/src/odl_tb5_verbs_discovery.c",
+  "verbs/src/odl_tb5_verbs_main.c",
+  "verbs/src/odl_tb5_verbs_mr.c",
+  "verbs/src/odl_tb5_verbs_ops.c",
+  "verbs/src/odl_tb5_verbs_pd.c",
+  "verbs/src/odl_tb5_verbs_qp.c",
+  "verbs/src/odl_tb5_verbs_wrapper.h",
+  "verbs/tests/odl_tb5_verbs_mock.c",
+  "verbs/tests/test_verbs_basic.c",
+  "verbs/tests/test_verbs_dmabuf.c",
+  "verbs/tests/test_verbs_mock_loopback.c",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/verbs/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.verbs-odl/-/-"
+api       = "ibv_* through libodl_tb5_verbs.so (LD_PRELOAD) or the rdma-core provider plugin"
+numeric   = "bytes; two-sided semantics underneath"
+regime    = "one Thunderbolt / USB4 link"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/runtime.odinlink5.verbs_provider.json"
+reason    = "c: compiled by the C gate, not gate/compile/run.py (python3 docs/harvest/harvest_odinlink5.py --c-gate on control-node CPU, gcc with the include paths of the origin's CMake)"

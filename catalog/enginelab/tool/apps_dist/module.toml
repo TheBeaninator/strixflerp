@@ -1,0 +1,73 @@
+id        = "tool.enginelab.apps_dist"
+kind      = "tool"
+summary   = "transport probes: GPU, host exchange bench, TCP probe and the transfer probe: 4 origin files under apps/dist_gpu_probe_main.cpp, apps/dist_host_exchange_bench_main.cpp, apps/dist_tcp_probe_main.cpp, apps/xfer_probe_main.cpp"
+why       = "bring-up of the pair link; where it would go: kept as a reference program or lab (tool.enginelab-dist-probe/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-dist-probe/-/-. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "apps/dist_gpu_probe_main.cpp",
+  "apps/dist_host_exchange_bench_main.cpp",
+  "apps/dist_tcp_probe_main.cpp",
+  "apps/xfer_probe_main.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/apps/dist_gpu_probe_main.cpp",
+  "src/apps/dist_host_exchange_bench_main.cpp",
+  "src/apps/dist_tcp_probe_main.cpp",
+  "src/apps/xfer_probe_main.cpp",
+]
+includes  = ["src/apps"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.enginelab-dist-probe/-/-"
+api       = "apps/dist_*_main.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.dist_gpu_direct"
+
+[[requires]]
+module    = "runtime.enginelab.dist_host_staged"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

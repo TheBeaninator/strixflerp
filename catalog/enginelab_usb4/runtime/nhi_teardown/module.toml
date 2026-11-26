@@ -1,0 +1,43 @@
+id        = "runtime.enginelab_usb4.nhi_teardown"
+kind      = "runtime"
+summary   = "AMD NHI teardown: CM unlinks tunnels on stop (0012), AMD interface reset when idle (0018), NHI shutdown releases ring interrupts (0020), teardown reset pending until idle (0029) and surviving requests, contention and suspend (0038), and opt-in per-CPU high-priority completion work (0044)"
+why       = "lifecycle fixes for the AMD USB4 host controller found on real hardware"
+notes     = "Interface tag: none (no catalogue interface is a USB4 stream device; the nearest are transport.verbs and the collective.* providers over RoCE / TCP). Stable patches 0012, 0018, 0020, 0029, 0038, 0044 of patches/series; apply the whole series in order to Linux 72d3fcf8. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "patches/0012-cm-unlink-tunnels-on-stop.patch",
+  "patches/0018-amd-teardown-interface-reset-when-idle.patch",
+  "patches/0020-nhi-shutdown-releases-ring-interrupts.patch",
+  "patches/0029-amd-teardown-reset-pending-until-idle.patch",
+  "patches/0038-teardown-reset-pending-survives-requests-contention-suspend.patch",
+  "patches/0044-nhi-opt-in-per-cpu-highpri-completion-work.patch",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-nhi/-/-"
+api       = "kernel-internal (NHI)"
+numeric   = "bytes only"
+regime    = "driver stop, suspend, reset"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 72d3fcf8 tree on the island); python3 docs/harvest/harvest_enginelab_usb4.py --patch-gate parses it (gate/results/compile/enginelab_usb4.patches.json)"

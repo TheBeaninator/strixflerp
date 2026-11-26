@@ -1,0 +1,43 @@
+id        = "format.fastasfuck.q6"
+kind      = "format"
+summary   = "fastasfuck's Q6 host quantizer: the Q4 low plane plus a 2-bit high plane per row, 6.25 bits per weight at G128"
+why       = "the shipped .faf keeps every dense attention, GDN-out and shared-expert weight at q6g64 (README.md), so this quantizer writes a large share of the served model"
+notes     = "Files vs strixite: formats/q6.cpp byte-identical to format.strixite.q6 at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["formats/q6.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/q6.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.host/strixw-q6/-"
+api       = "strix::Q6Weight, quantize_q6, dequantize_q6, append_rows_q6"
+numeric   = "the same source as format.strixite.q6, so its behaviour: s = bf16((max - min) / 63), q = clamp(round_half_even((w - m) / s), 0, 63), all fp32"
+regime    = "as format.strixite.q6: 6.25 bits per weight at G = 128; K % 64 == 0"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_formats) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

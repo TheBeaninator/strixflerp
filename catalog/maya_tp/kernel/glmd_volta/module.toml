@@ -1,0 +1,53 @@
+id        = "kernel.maya_tp.glmd_volta"
+kind      = "kernel"
+summary   = "the glm-dsa Volta / native kernels: lightning-indexer scorers with WMMA or CUDA cores and F32 / FP16 keys (glmd_volta_idx) and the fused sparse-gather MLA decode (glmd_volta_mla)"
+why       = "a second, matrix-core indexer and MLA decode for the same op; the WMMA scorer is the shape gfx1151's WMMA would take"
+notes     = "Interface tag: attn.indexer-score/-/f32.maya-tp-volta. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/kernels/cuda/glmd_volta_idx.cu", "src/kernels/cuda/glmd_volta_mla.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/glmd_volta_idx.cu", "src/src/kernels/cuda/glmd_volta_mla.cu"]
+includes  = ["src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.indexer-score/-/f32.maya-tp-volta"
+api       = "strata::kernels glmd_volta launches (glmd_volta.hpp)"
+numeric   = "F32 / FP16 keys, WMMA or scalar"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_decode"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.glmd_volta.json"

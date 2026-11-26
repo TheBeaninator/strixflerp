@@ -1,0 +1,82 @@
+id        = "serve.fastasfuck.fastasfuck_server"
+kind      = "serve"
+summary   = "fastasfuck's server main program: option table and config file, startup memory plan, loads weights.faf, the n-gram table and the tokenizer, serves on port 5300 until SIGTERM"
+why       = "the program the author's throughput figures come from; it is strixite's strix_server renamed and carried on the fork"
+notes     = "Files vs strixite: tools/fastasfuck_server.cpp no file of that path in serve.strixite.strix_server. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/fastasfuck_server.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/fastasfuck_server.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.program/qwen4exp/-"
+api       = "main (strix_server)"
+numeric   = "derived from serve.strixite.strix_server (tools/fastasfuck_server.cpp no file of that path in serve.strixite.strix_server); not compared here"
+regime    = "as serve.strixite.strix_server: one process, one GPU"
+
+[[requires]]
+module    = "executor.fastasfuck.qwen4exp"
+
+[[requires]]
+module    = "executor.fastasfuck.qwen4exp_backend"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.vision"
+
+[[requires]]
+module    = "runtime.fastasfuck.engine"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.memory_plan"
+
+[[requires]]
+module    = "runtime.fastasfuck.mtp_calib"
+
+[[requires]]
+module    = "runtime.fastasfuck.prompt_cache"
+
+[[requires]]
+module    = "runtime.fastasfuck.serve_log"
+
+[[requires]]
+module    = "runtime.fastasfuck.tokenizer"
+
+[[requires]]
+module    = "runtime.fastasfuck.vision_request"
+
+[[requires]]
+module    = "runtime.fastasfuck.vocab_filter"
+
+[[requires]]
+module    = "serve.fastasfuck.http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable fastasfuck_server) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

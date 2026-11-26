@@ -1,0 +1,40 @@
+id        = "runtime.kyojin.tune_cache"
+kind      = "runtime"
+summary   = "Per-pack tuning cache of the EXL3 GEMM autotuner, the shipped dense GEMM seed and the dense warm-up"
+why       = "tuned kernels from the first request. Where the shape would go: a tune.table/hip/- provider beside runtime.tensorfold.hip, through a port of the python / Triton logic"
+notes     = "Interface tag: tune.table/hip/-. Against the base turboderp-org/exllamav3 8c593e4e: 3 added (dense_gemm_tune_seed.txt, dense_warmup.py, tune_cache.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/model/dense_gemm_tune_seed.txt",
+  "exllamav3/model/dense_warmup.py",
+  "exllamav3/util/tune_cache.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tune.table-kyojin-pack/hip/-"
+api       = "dense_gemm_tune_seed.txt, dense_warmup.py, tune_cache.py"
+numeric   = "n/a"
+regime    = "host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

@@ -1,0 +1,123 @@
+id        = "kernel.strixfold_tp4.triton_kit"
+kind      = "kernel"
+summary   = "The TP4 Triton kit gfx1151-v6f2c38-tp4 (pod card 4d4c5173d2): the TP2 kit's variants plus the shapes a quarter of the heads and columns takes at world 4, AOT-compiled into 204 gfx1151 code objects for 254 launch variants, and the generator files the TP4 tree changes or adds"
+why       = "A TP4 rank launches Triton kernels at shapes the TP2 kit was never compiled for: built against the TP2 kit af9276f296 the first request fails with MissingTritonVariant (pod card 96431609cf); the serving build 72c0f083 was built with -Dhip-triton-kit naming this kit"
+notes     = "Overlay of kernel.strixfold.triton_kit (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 58862dad76, 4d4c5173d2. Latest commits: b3ce8682 dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76); c6473460 dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2); 5415f366 dsv41 tri: derive the indexer's context launches up to a 1,048,527-position pool"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "tools/dsv41-hip/tri/README.md",
+  "tools/dsv41-hip/tri/kit_add.py",
+  "tools/dsv41-hip/tri/kit_strict.py",
+  "tools/dsv41-hip/tri/variants.py",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on kernel.strixfold.triton_kit (origin strixfold, f64b5ff): 2 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "triton-aot"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+variants  = 254
+
+[[provides]]
+interface = "hc.mix-decode/dsv41-mhc-f32/bf16.tp4"
+api       = "tri._hc_partial, _hc_finish, _hc_finish_s, _hc_sinkhorn, _hc_mix_part, _hc_post, _hc_post_only, _collapse, _collapse_norm"
+numeric   = "Triton codegen is the reference: bits are whatever this kit computes; the served engine and the Zig port launch the same objects"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "hc.mix-prefill/dsv41-mhc-f32/bf16.triton-bits-tp4"
+api       = "tri._hc_mix_pf"
+numeric   = "Triton bits (kernel.strixfold.mhc_mix replaces it within hc_mix_fp32_bound)"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[provides]]
+interface = "norm.rmsnorm/-/bf16.triton-bits-tp4"
+api       = "tri._rmsnorm, _rmsnorm_rot, _q_kv_norm, _kv_norm_rope"
+numeric   = "Triton bits; norm fused with rotation / RoPE in the _rot and _rope variants"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "pos.rope-heads/-/bf16.triton-bits-tp4"
+api       = "tri._rope_heads"
+numeric   = "Triton bits (kernel.strixfold.rope_heads is bit-equal)"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "moe.router/-/bf16-f32.tp4"
+api       = "tri._rowmm2, _rowmm2r, _rowmm_parts, _route, _route_parts"
+numeric   = "router row GEMMs in split parts then top-k route; Triton bits"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "attn.indexer-score/kv-fp4-e2m1/bf16.triton-bits-tp4"
+api       = "tri._index_score, _index_score_rows, _index_score_cand, _score_keys, _gather_tiles"
+numeric   = "Triton bits"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "attn.indexer-topk/-/i64-keys.triton-tp4"
+api       = "tri._topk_sel, _topk_finish"
+numeric   = "exact selection on int64 keys"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-fp4-e2m1/bf16.triton-bits-tp4"
+api       = "tri._sparse_attn_part, _sparse_attn_merge, _sparse_attn_merge_rot2"
+numeric   = "split partials (m, l, acc) merged in fixed order; Triton bits (kernel.strixfold.sparse_attn replaces the part kernel within its contract)"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "kvcache.store/fp4-e2m1/bf16.tp4"
+api       = "tri._fp4_store, _fp4qd_p2"
+numeric   = "FP4 (E2M1) codes with an E4M3 scale per 16 elements (attention keys) or E8M0 per 32 (indexer keys); E4M3 round trip written as _e4m3_rt in the port"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "draft.markov/f16/bf16.tp4"
+api       = "tri._bias, _score, _finish, _pick, _tap"
+numeric   = "DSpark Markov loop kernels; drafts are output-invariant (verified by the target)"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); draft rows"
+
+[[provides]]
+interface = "linear.prefill/exl3/f16-f32.triton-tp4"
+api       = "tri._gemm"
+numeric   = "prompt GEMM of exl3/prefill.py; Triton bits"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[provides]]
+interface = "embed.lookup/bf16/bf16.dsv41-tp4"
+api       = "tri._embed_init, _engram_gate"
+numeric   = "embedding rows into the 4 mHC streams; Engram gate"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.strixfold.triton_kit"
+
+[[prebuilt]]
+kit       = "dsv41 Triton AOT kit for TP4 (gfx1151-v6f2c38-tp4)"
+objects   = 204
+where     = "control-node:/data/pod/plans/4d4c5173d2/kit/gfx1151-v6f2c38-tp4/hsaco/<sha256>.hsaco"
+manifest  = "prebuilt/aot.json"
+manifest_sha256 = "ef63db9893f7a7050017082c03778096897557ed4e35da86e4b4d97c2ad5e9fb"
+hashes    = "prebuilt/SHA256SUMS"
+hashes_digest = "sha256 of the sorted object hashes = e2f7d6362478ab18af226fe39ada49e5388b2259b595d3738bf0cfd03bb3387e"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "verified"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "prebuilt"
+reason    = "prebuilt code objects (Triton AOT, pod card 4d4c5173d2); build.sh verifies every object and aot.json against this record before the recipe builds"

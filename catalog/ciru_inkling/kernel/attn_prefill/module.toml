@@ -1,0 +1,46 @@
+id        = "kernel.ciru_inkling.attn_prefill"
+kind      = "kernel"
+summary   = "Inkling 2 Mini attention prefill (hip_attn_prefill.hip): K/V short convolution with the paged cache write, Q / R clip, paged K/V gather, and BF16-WMMA flash attention with the learned relative-position bias, window, output gate and sink"
+notes     = "Interface tags by launch group: launch_hip_kv_conv_1w: kvcache.store/kv-bf16/bf16; launch_hip_qr_clip: none; launch_hip_gather_paged_kv_hnd: none; launch_hip_flash_rel_attn_prefill and 1 more: attn.prefill-causal/kv-bf16/bf16 (catalog/ciru_inkling/KERNELS.md has the table). Launch functions take raw device pointers, element strides and a stream (ctypes from ops/hip_runtime.py); none takes a torch tensor. No timing was taken on the pod; figures are the author's (README.md, v1.5.0)."
+
+[provenance]
+origin    = "ciru_inkling"
+repo      = "https://github.com/ciru-ai/Inkling-2-Mini-CIRU-Halo-Agent-gfx1151"
+commit    = "b3870f35926fb322f398e6c373a93098534f8fdb"
+branch    = "main"
+paths     = ["overlay/vllm/models/inkling2/amd/ops/hip_attn_prefill.hip"]
+authors   = ["Ciru (CIRU AI)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/vllm/models/inkling2/amd/ops/hip_attn_prefill.hip"]
+includes  = ["src/overlay/vllm/models/inkling2/amd/ops"]
+arch      = "gfx1151"
+toolchain = "therock-10.0"
+options   = ["-fPIC", "-O3", "-DINKLING_HIP_ABI_VERSION=3", "-DINKLING_HIP_SRC_HASH_RAW=671b45b80972", "-c"]
+
+[[provides]]
+interface = "kvcache.store/kv-bf16/bf16.ciru-inkling-conv"
+api       = "launch_hip_kv_conv_1w (extern \"C\", hip_attn_prefill.hip)"
+numeric   = "BF16 in and out, FP32 conv math; head_dim 128, 32 lanes x 4 BF16; static or dynamic (per-token) conv weights"
+regime    = "prefill; any KV block size; positions int32 or int64"
+
+[[provides]]
+interface = "attn.prefill-causal/kv-bf16/bf16.ciru-inkling-rel"
+api       = "launch_hip_flash_rel_attn_prefill, launch_hip_flash_rel_attn_near_merge (extern \"C\", hip_attn_prefill.hip)"
+numeric   = "BF16 Q, K, V, online softmax in FP32 with exp2 (scale_log2); R in BF16 or FP16 (r_fp16); optional BF16 rounding of the bias"
+regime    = "prefill; head_dim 128, GQA groups of num_heads / 8 KV heads, any page size"
+
+[[requires]]
+module    = "kernel.ciru_inkling.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_inkling.attn_prefill.json"

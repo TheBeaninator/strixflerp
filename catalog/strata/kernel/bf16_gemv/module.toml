@@ -1,0 +1,50 @@
+id        = "kernel.strata.bf16_gemv"
+kind      = "kernel"
+summary   = "GEMVs for BF16 weights: the naive and the warp-split BF16 x BF16 GEMV (bf16_gemv) and llama.cpp's MMVF with FP32 activations, single, multi-column and multi-matrix forms (native_bf16)"
+why       = "six tensors a layer stay BF16 in a Strata pack (router, shared-expert gate, hyper-connection projections), so every token runs these; a second BF16 GEMV family next to strixite's and flerp's dense kernels"
+notes     = "Interface tags by file: bf16_gemv.cu linear.dense/bf16/bf16-f32; native_bf16.cu linear.dense/bf16/f32. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/bf16_gemv.hpp",
+  "src/kernels/cuda/bf16_gemv.cu",
+  "src/kernels/cuda/native_bf16.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/bf16_gemv.cu", "src/src/kernels/cuda/native_bf16.cu"]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.dense/bf16/bf16-f32.strata"
+api       = "strata::kernels::bf16_gemv, bf16_gemv_split (src/kernels/cuda/bf16_gemv.cu)"
+numeric   = "BF16 activations and weights, FP32 accumulation and output"
+regime    = "decode"
+
+[[provides]]
+interface = "linear.dense/bf16/f32.strata-mmvf"
+api       = "strata::kernels::bf16_gemv_fp32_mmvf(_cols, _multi, _multi_aux) (src/kernels/cuda/native_bf16.cu)"
+numeric   = "FP32 activations, BF16 weights, llama.cpp's reduction order"
+regime    = "decode, one to a few columns"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.bf16_gemv.json"

@@ -1,0 +1,40 @@
+id        = "kernel.lucebox.server_headers"
+kind      = "kernel"
+summary   = "the server side of the #include closure of the nine Lucebox server HIP units: server/include, the server/src headers they reach, and the server/hip_compat CUDA-to-HIP shim headers"
+why       = "the server units include their C contracts and the hip_compat shim from here"
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/hip_compat/cuda_fp16.h",
+  "server/hip_compat/cuda_runtime.h",
+  "server/src/common/gpu_runtime_compat.h",
+]
+authors   = ["Luce-Org"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/server/hip_compat", "src/server/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.lucebox-server/-/-"
+api       = "server/hip_compat/*.h and the server/src C headers of the HIP units"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the kernel.lucebox.* modules with server units"

@@ -1,0 +1,49 @@
+id        = "kernel.ds4.k53perf_rocm_unavailable"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-performance f46631e: its copy of the rocm_unavailable family against antirez/ds4 b3f5018: ds4_rocm_unavailable.cu changed (+0 -3 lines). The family: C-linkage stubs for the CUDA-only fused and multi-device hooks that the shared graph code references but ROCm validation never selects"
+why       = "kyuz0's later gfx1151 branch: the Halo kernels imported from MadRocK-AI/ds4 551219f (frozen WMMA GEMMs for the attention output projections and shared expert, IQ2 S9 MoE producers, Q2 and Q8 panels, direct-query attention), DeepSeek V4.1 ROCm primitives, Qwen3.8 Flash Next on gfx1151, a gufo-derived DSV4 attention, and two-machine ROCm tensor parallel over TCP or RoCE with its own slot-generation queue (docs/CLUSTERING_ROCM.md); head commit \"rocm: avoid low-confidence GLM MTP verification on gfx1151\". The family in the base: keeps the ROCm link closed without #ifdefs in ds4.c; the list of what ROCm lacks against CUDA"
+notes     = "Overlay kyuz0_glm53_perf: files under overlay/kyuz0_glm53_perf/ are the branch's bytes at f46631e483e1; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_perf.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "f46631e483e19d13f23d3c4bced7ade0d086a3ad"
+branch    = "perf/rocm-gfx1151-glm53-performance"
+paths     = ["overlay/kyuz0_glm53_perf/ds4_rocm_unavailable.cu"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/kyuz0_glm53_perf/ds4_rocm_unavailable.cu"]
+includes  = ["src/overlay/kyuz0_glm53_perf"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "-x",
+  "hip",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-pthread",
+  "-D__HIP_PLATFORM_AMD__",
+  "-Wno-unused-command-line-argument",
+  "-std=c++20",
+  "-c",
+]
+
+[[provides]]
+interface = "kernel-abi.ds4-rocm-unavailable-ds4-k53perf/-/-"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ds4.k53perf_rocm_unavailable.json"

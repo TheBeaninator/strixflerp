@@ -1,0 +1,343 @@
+#pragma once
+#include "strix/engine_profile.hpp"
+#include "strix/onfly_i4.hpp"
+#include "strix/prefill_identity.hpp"
+#include "strix/session/kv_precision.hpp"
+#include <array>
+#include <cstdlib>
+#include <functional>
+#include <optional>
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+#include "strix/serve/json.hpp"
+
+namespace strix::qwen::profile {
+using ::strix::profile::Name;
+using ::strix::profile::Kind;
+using ::strix::profile::Status;
+using ::strix::profile::Lever;
+using ::strix::profile::Entry;
+using ::strix::profile::name;
+using ::strix::profile::kind_name;
+using ::strix::profile::status_name;
+#include "strix/qwen_profile_table.hpp"
+inline std::span<const Lever> levers() { return table; }
+using ::strix::profile::parse;  // shared tier words: exact (= default)|fast|quality|turbo
+inline constexpr std::string_view kTurboVersion = "qwen-turbo-v1";
+// KV precision (--kv, strix/session/kv_precision.hpp): native BF16; the HIP 8-bit form is int8 (kv-int8-tok-v1, admitted
+// routes in validate_resolved_attention_kv_storage). gfx1151 has no FP8, so --kv fp8 is refused and turbo keeps BF16.
+inline constexpr ::strix::session::kv_precision::Caps kKvCaps{
+    "qwen-hip", ::strix::session::kv_precision::Precision::bf16,
+    ::strix::session::kv_precision::bit(::strix::session::kv_precision::Precision::int8), {}, {},
+    "the HIP 8-bit KV form is --kv int8 (kv-int8-tok-v1)"};
+// Weight sources this build loads under turbo (onfly / converted flip to runnable with their loaders).
+inline constexpr ::strix::profile::turbo::WeightCaps kWeightCaps{
+    {true, true, false}, {false, false, false, false, true, false, false, false, false}, "rtn-g64",
+    "onfly INT4 g64 is built for decode dense projections only (qwen)", "converted low-bit pack loader is not implemented in this build"};
+struct Resolution {
+    Name profile = Name::standard;
+    std::vector<Entry> entries;
+    ::strix::profile::turbo::Weights weights{};  // weight toggle (native outside turbo)
+    ::strix::onfly_i4::Resolved onfly{};
+    bool is_turbo() const { return profile == Name::turbo; }
+    std::string versioned() const { return is_turbo() ? std::string(kTurboVersion) : std::string(name(profile)); }
+    // Effective lever values (not how they were set), as in the shared strix::profile::Resolution::fingerprint().
+    std::uint64_t fingerprint() const {
+        auto h = ::strix::host_fnv::field(::strix::host_fnv::offset64, versioned());
+        h = ::strix::host_fnv::field(h, qualification());
+        h = ::strix::host_fnv::field(h, weights.identity());
+        for (const auto& entry : entries) {
+            h = ::strix::host_fnv::field(h, entry.lever->name);
+            h = ::strix::host_fnv::field(h, entry.value);
+        }
+        return h;
+    }
+    // TURBO cache namespace: the profile, not only its switches, names the cache space (every lever off included).
+    std::string cache_namespace() const {
+        return is_turbo() ? ::strix::profile::turbo::cache_namespace(kTurboVersion, fingerprint(), weights.identity()) : std::string();
+    }
+    const Entry* find(std::string_view key) const & {
+        for (const auto& entry : entries) if (entry.lever->name == key) return &entry;
+        return nullptr;
+    }
+    // A temporary resolution can return an owned entry, never a borrowed pointer.
+    std::optional<Entry> find(std::string_view key) const && {
+        if (const auto* entry = find(key)) return *entry;
+        return std::nullopt;
+    }
+    std::string qualification() const {
+        std::string provisional, unqualified;
+        for (const auto& entry : entries) {
+            auto* rows = entry.status == Status::provisional ? &provisional :
+                entry.status == Status::unqualified ? &unqualified : nullptr;
+            if (rows) *rows += (rows->empty() ? "" : ",") + std::string(entry.lever->name);
+        }
+        std::string out;
+        if (!provisional.empty()) out = "qualification in progress: " + provisional;
+        if (!unqualified.empty()) out += (out.empty() ? "" : "; ") + std::string("unqualified: ") + unqualified;
+        return out.empty() ? "qualified" : out;
+    }
+    std::vector<std::string> notices() const {
+        std::vector<std::string> out;
+        if (profile == Name::quality) out.emplace_back("quality: no quality rows for this model, using default");
+        if (!weights.honoured()) out.push_back("profile turbo: " + weights.describe().substr(0, weights.describe().size() - 1U));
+        for (const auto& entry : entries) if (entry.ladder_lowered) out.push_back(entry.ladder);
+        for (const auto& entry : entries) if (entry.status == Status::provisional)
+            out.push_back(std::string("profile ") + name(profile) + ": " + std::string(entry.lever->name) +
+                " is bit-changing; qualification in progress");
+        for (const auto& entry : entries) if (entry.status == Status::pending)
+            out.push_back(std::string("profile ") + name(profile) + ": " + std::string(entry.lever->name) +
+                " pending " + entry.target + " (" + entry.value + " runs)" +
+                (entry.reason.empty() ? "" : ": " + entry.reason));
+        return out;
+    }
+    std::string json() const {
+        auto out = serve::Json::object(), rows = serve::Json::object();
+        auto pending = serve::Json::array(), provisional = serve::Json::array(), unqualified = serve::Json::array();
+        out.set("profile", serve::Json(name(profile)));
+        out.set("qualification", serve::Json(qualification()));
+        if (profile == Name::quality) out.set("note", serve::Json("quality: no quality rows for this model, using default"));
+        for (const auto& entry : entries) {
+            const auto& lever = *entry.lever;
+            auto row = serve::Json::object();
+            row.set("value", serve::Json(entry.value));
+            row.set("status", serve::Json(status_name(entry.status)));
+            row.set("switch", serve::Json(std::string(lever.env.empty() ? lever.option : lever.env)));
+            row.set("kind", serve::Json(kind_name(lever.kind)));
+            row.set("source", serve::Json(std::string(lever.source)));
+            if (!entry.ladder.empty()) row.set("ladder", serve::Json(entry.ladder));
+            if (!entry.reason.empty()) row.set("reason", serve::Json(entry.reason));
+            rows.set(std::string(lever.name), std::move(row));
+            if (entry.status == Status::pending) {
+                auto item = serve::Json::object();
+                item.set("lever", serve::Json(std::string(lever.name)));
+                item.set("target", serve::Json(entry.target));
+                item.set("runs", serve::Json(entry.value));
+                if (!entry.reason.empty()) item.set("reason", serve::Json(entry.reason));
+                pending.push(std::move(item));
+            }
+            if (entry.status == Status::provisional) provisional.push(serve::Json(std::string(lever.name)));
+            if (entry.status == Status::unqualified) unqualified.push(serve::Json(std::string(lever.name)));
+        }
+        out.set("levers", std::move(rows));
+        if (is_turbo()) {
+            auto t = serve::Json::object();
+            t.set("version", serve::Json(std::string(kTurboVersion)));
+            t.set("weights_requested", serve::Json(weights.requested_text()));
+            t.set("weights", serve::Json(onfly.active() ? onfly.identity() : weights.identity()));
+            if (onfly.active()) t.set("onfly", serve::parse_json(onfly.json()));
+            t.set("weights_origin", serve::Json(weights.origin));
+            t.set("weights_reason", serve::Json(weights.reason));
+            t.set("cache_namespace", serve::Json(cache_namespace()));
+            out.set("turbo", std::move(t));
+        }
+        out.set("pending", std::move(pending));
+        out.set("provisional", std::move(provisional));
+        out.set("unqualified", std::move(unqualified));
+        return out.dump();
+    }
+};
+using ::strix::profile::Lookup;
+using ::strix::profile::Pairs;
+struct Inputs {
+    Pairs cli;
+    Lookup env;
+    bool allow_pending = false;
+    ::strix::profile::turbo::WeightsRequest weights{};  // --turbo-weights / --turbo-weight-bits / --turbo-weights-pack
+    // What the calling backend loads (nullptr: kWeightCaps of the HIP engine). The CUDA engine passes kCudaWeightCaps.
+    const ::strix::profile::turbo::WeightCaps* caps = nullptr;
+    // Regime: the longest prompt this process prefills (CLI: the prompt; serving: the context bound), 0 = unknown, and
+    // the rows that qualify fast cells per regime (the HIP engine passes fast_regimes; empty: table flags only).
+    std::uint64_t max_prompt_tokens = 0;
+    std::span<const ::strix::profile::RegimeGate> regimes{};
+    ::strix::profile::Regime regime{};
+    std::span<const ::strix::profile::LadderRow> ladder{};
+};
+// CUDA engine (sm_120): onfly 4-bit = NVFP4 images of the dense Q8_0 roles (src/cuda/qwen_prefill_driver.cu
+// convert_onfly, shared core strix/cuda/core/nvfp4_a8.hpp); converted packs need the owner's OK (pending).
+inline constexpr ::strix::profile::turbo::WeightCaps kCudaWeightCaps{
+    {true, true, false},
+    {false, false, false, false, true, false, false, false, false},
+    "rtn-g16",
+    "nvfp",
+    "onfly low-bit load is not implemented in this build",
+    "converted low-bit pack loader is not implemented in this build (needs the owner's OK)"};
+using ::strix::profile::environment;
+// Export provenance survives a future re-exec. A changed inherited value
+// is explicit again; matching profile exports retain their original status.
+inline std::string marker_key(const Lever& lever) { return "STRIX_QWEN_PROFILE_OWNED_" + std::string(lever.name); }
+inline std::string marker(Name profile, Status status, std::string_view value) {
+    return std::string(name(profile)) + ":" + status_name(status) + ":" + std::string(value);
+}
+// `registered`: the ladder rows of `rows` (timing receipts and incumbent grants), always read; inputs.ladder adds rows.
+inline Resolution resolve(Name profile, const Inputs& inputs = {}, std::span<const Lever> rows = levers(),
+                          std::span<const ::strix::profile::LadderRow> registered = ladder_rows) {
+    Resolution out{profile, {}, {}, {}};
+    std::vector<::strix::profile::LadderRow> ladder(inputs.ladder.begin(), inputs.ladder.end());
+    ladder.insert(ladder.end(), registered.begin(), registered.end());
+    const char* allow = environment(inputs.env, "STRIX_QWEN_PROFILE_ALLOW_PENDING");
+    const bool allow_pending = inputs.allow_pending || (allow && std::string_view(allow) == "1");
+    const bool preset = ::strix::profile::model_preset();
+    out.weights = ::strix::profile::turbo::resolve_weights(out.is_turbo(), inputs.weights,
+        [&inputs](const char* key) { return environment(inputs.env, key); }, inputs.caps ? *inputs.caps : kWeightCaps);
+    const auto admit_of = [&](const Lever& lever, unsigned c) {
+        const bool qualified = c == static_cast<unsigned>(Name::fast) &&
+            ::strix::profile::regime_gate(inputs.regimes, lever.name, lever.value[c], inputs.max_prompt_tokens);
+        return ::strix::profile::admit_profile_column(
+            lever.ready[c] || qualified, lever.runnable[c], allow_pending,
+            lever.provisional[c] && !qualified, preset);
+    };
+    // An env value this profile exported itself (marker) is inherited, not explicit.
+    const auto inherited_env = [&](const Lever& lever, const char* env) {
+        bool inherited = false;
+        const char* owned = environment(inputs.env, marker_key(lever));
+        for (const auto status : {Status::set, Status::unqualified, Status::provisional})
+            inherited |= owned && std::string_view(owned) == marker(profile, status, env);
+        return inherited;
+    };
+    const auto arms = ::strix::profile::ladder_arms(rows, std::span<const ::strix::profile::LadderRow>(ladder),
+        inputs.regime, admit_of, [&](const Lever& lever) -> std::optional<std::string_view> {
+            if (const auto* cli = ::strix::profile::last_setting(inputs.cli, lever.name)) return std::string_view(*cli);
+            const char* env = lever.env.empty() ? nullptr : environment(inputs.env, std::string(lever.env));
+            if (env && !inherited_env(lever, env)) return env;
+            return std::nullopt;
+        }, allow_pending);
+    for (const auto& lever : rows) {
+        const auto column = ::strix::profile::value_column(lever, profile);  // empty turbo cell: the fast cell
+        const std::string* cli = nullptr;
+        for (const auto& [key, value] : inputs.cli) if (key == lever.name) cli = &value;
+        const char* env = lever.env.empty() ? nullptr : environment(inputs.env, std::string(lever.env));
+        const auto wanted = lever.value[column];
+        const auto admit = [&](unsigned c) { return admit_of(lever, c); };
+        const auto admission = admit(column);
+        const bool inherited = env && !cli && inherited_env(lever, env);
+        Entry entry{&lever, std::string(lever.builtin), Status::builtin, {}, false, {}, std::string(wanted)};
+        if (cli || (env && !inherited)) {
+            entry.cli_override = cli != nullptr;
+            entry.value = cli ? *cli : env;
+            entry.requested = entry.value;
+            entry.status = cli ? Status::explicit_cli : Status::explicit_env;
+            if ((!lever.off.empty() && entry.value == lever.off) || entry.value == "off") entry.status = Status::off;
+            bool runnable = false;
+            for (bool available : lever.runnable) runnable |= available;
+            if (!runnable && entry.status != Status::off && entry.value != lever.builtin)
+                throw std::invalid_argument(std::string(lever.env.empty() ? lever.option : lever.env) + "=" + entry.value +
+                    " is not in this build (" + std::string(lever.source) + ")");
+        } else if (wanted.empty()) continue;
+        else if (admission == Status::pending) {
+            entry.status = Status::pending;
+            entry.target = std::string(lever.target.empty() ? wanted : lever.target);
+        } else {
+            entry.value = std::string(wanted);
+            entry.status = admission;
+            if (entry.status == Status::set && wanted == lever.builtin) entry.status = Status::builtin;
+        }
+        if (!cli && (!env || inherited))
+            ::strix::profile::apply_ladder(entry, ladder, profile, inputs.regime, admit, allow_pending, arms);
+        out.entries.push_back(std::move(entry));
+    }
+    return out;
+}
+using ::strix::profile::Export;
+using ::strix::profile::export_environment;
+using Erase = std::function<bool(const char*)>;
+inline bool erase_environment(const char* key) {
+#ifdef _WIN32
+    return _putenv_s(key, "") == 0;
+#else
+    return ::unsetenv(key) == 0;
+#endif
+}
+// A re-exec can inherit a proposal that its new route declines. Remove only
+// switches whose matching marker proves profile ownership; explicit env wins.
+inline void withdraw_declined(const Resolution& resolution, const Lookup& get = {}, const Erase& erase = erase_environment) {
+    for (const auto& entry : resolution.entries) {
+        if (::strix::profile::applied(entry.status) || entry.cli_override || entry.lever->env.empty() ||
+            (entry.status != Status::pending && entry.status != Status::builtin)) continue;
+        const auto key = std::string(entry.lever->env), owned_key = marker_key(*entry.lever);
+        const char* value = environment(get, key);
+        const char* owned = environment(get, owned_key);
+        if (!value || !owned) continue;
+        bool inherited = false;
+        for (const auto status : {Status::set, Status::unqualified, Status::provisional})
+            inherited |= std::string_view(owned) == marker(resolution.profile, status, value);
+        if (inherited && (!erase(key.c_str()) || !erase(owned_key.c_str())))
+            throw std::runtime_error("cannot withdraw profile switch " + key);
+    }
+}
+// Pure proposal for a local map, including pending weights during inspection.
+inline void propose_exports(const Resolution& resolution, const Export& put) {
+    if (resolution.is_turbo() && !put(std::string(::strix::profile::turbo::kCacheNamespaceEnv).c_str(),
+                                      resolution.cache_namespace().c_str()))
+        throw std::runtime_error("cannot export " + std::string(::strix::profile::turbo::kCacheNamespaceEnv));
+    for (const auto& entry : resolution.entries) {
+        const auto& lever = *entry.lever;
+        // Native CLI overrides already live in Options; exporting them would
+        // change the historical environment receipt even with profile=default.
+        if (lever.env.empty() || (entry.status != Status::set && entry.status != Status::unqualified && entry.status != Status::provisional &&
+            !(entry.cli_override && !lever.native_option))) continue;
+        if (!put(std::string(lever.env).c_str(), entry.value.c_str()) ||
+            !put(marker_key(lever).c_str(), marker(resolution.profile, entry.status, entry.value).c_str()))
+            throw std::runtime_error("cannot export profile switch " + std::string(lever.env));
+    }
+}
+// Admit execution after route resolution and before device switch readers.
+inline void apply(const Resolution& resolution, const Export& put = export_environment) {
+    resolution.weights.require_honoured();
+    propose_exports(resolution, put);
+}
+// Profile policy has no numerical identity bytes of its own. Only applied
+// arithmetic switches belong in session/prefix identities.
+inline bool metadata_environment(std::string_view key) {
+    return key == "STRIX_QWEN_PROFILE_ALLOW_PENDING" || key.starts_with("STRIX_QWEN_PROFILE_OWNED_");
+}
+inline bool policy_option(std::string_view key) {
+    return key == "--profile" || key == "--allow-pending";
+}
+inline bool take_option(int argc, char** argv, int& i, std::optional<Name>& profile, Inputs& inputs,
+        std::span<const Lever> rows = levers()) {
+    const std::string_view arg = argv[i];
+    const auto equal = arg.find('=');
+    const auto key = arg.substr(0, equal);
+    if (arg == "--allow-pending") { inputs.allow_pending = true; return true; }
+    namespace tb = ::strix::profile::turbo;
+    if (key == tb::kWeightsOption || key == tb::kBitsOption || key == tb::kPackOption) {
+        const auto value = equal != std::string_view::npos ? arg.substr(equal + 1U) :
+            (i + 1 < argc ? std::string_view(argv[++i]) : std::string_view{});
+        if (value.empty() || value.starts_with("--")) throw std::invalid_argument(std::string(key) + " requires a value");
+        (key == tb::kWeightsOption ? inputs.weights.source : key == tb::kBitsOption ? inputs.weights.bits :
+            inputs.weights.pack) = std::string(value);
+        return true;
+    }
+    const Lever* lever = nullptr;
+    for (const auto& row : rows) if (!row.native_option && key == row.option) lever = &row;
+    if (key != "--profile" && !lever) return false;
+    const auto value = equal != std::string_view::npos ? arg.substr(equal + 1U) :
+        (i + 1 < argc ? std::string_view(argv[++i]) : std::string_view{});
+    if (value.empty() || value.starts_with("--")) throw std::invalid_argument(std::string(key) + " requires a value");
+    if (key == "--profile") {
+        if (profile) throw std::invalid_argument("duplicate --profile");
+        profile = parse(value);
+    } else inputs.cli.emplace_back(lever->name, value);
+    return true;
+}
+// Host metadata only: callers attach verified assets, execution provenance and
+// observed digests later. A compiled/native lineage must be supplied by its owner;
+// the product profile and the prefill option name are not a compiled lineage.
+inline ::strix::profile::ExecutionReceipt host_receipt(const NumericalProfilePair& pair,
+        unsigned prefill_mask, bool gsq, std::string_view prefill_lineage = {}) {
+    ::strix::profile::ExecutionReceipt receipt;
+    receipt.engine = "qwen";
+    receipt.identity.arithmetic_contract = "qwen;decode=" + std::string(numerical_profile_name(pair.decode)) +
+        ";prefill=" + std::string(numerical_profile_name(pair.prefill)) +
+        ";fast_components=" + std::to_string(pair.fast_components) +
+        ";prefill_options=" + prefill_identity_name(prefill_mask) +
+        ";arithmetic_identity=" + ::strix::profile::hex_identity(prefill_arithmetic_identity(pair, prefill_mask, gsq));
+    receipt.identity.prefill_lineage = prefill_lineage;
+    return receipt;
+}
+} // namespace strix::qwen::profile

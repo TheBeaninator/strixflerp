@@ -1,0 +1,61 @@
+id        = "kernel.fastasfuck.embedding"
+kind      = "kernel"
+summary   = "fastasfuck's token embedding gather from a BF16 or Q8 table into F32 or BF16 rows with an out-of-range id error word"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its embedding kernel file so a timing card can set it against kernel.strixite.embedding, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/embedding.hip embed.lookup/bf16, embed.lookup/strixw-q8 (byte-identical to kernel.strixite.embedding kernels/embedding.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/embedding.hip", "kernels/embedding.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/embedding.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "embed.lookup/bf16/bf16"
+api       = "strix::kernels::check_embedding_error, embedding_lookup, report_embedding_error, reset_embedding_error (kernels/embedding.hpp)"
+numeric   = "the same source as kernel.strixite.embedding (byte-identical to kernel.strixite.embedding kernels/embedding.hip at d19945e), so its arithmetic: table rows copied (bf16) or widened exactly (f32); an out-of-range id zeroes its row and is reported"
+regime    = "as kernel.strixite.embedding: one launch per forward; copies > 1 broadcasts into the hyper-connection streams"
+
+[[provides]]
+interface = "embed.lookup/bf16/f32"
+api       = "strix::kernels::check_embedding_error, embedding_lookup, report_embedding_error, reset_embedding_error (kernels/embedding.hpp)"
+numeric   = "the same source as kernel.strixite.embedding (byte-identical to kernel.strixite.embedding kernels/embedding.hip at d19945e), so its arithmetic: table rows copied (bf16) or widened exactly (f32); an out-of-range id zeroes its row and is reported"
+regime    = "as kernel.strixite.embedding: one launch per forward; copies > 1 broadcasts into the hyper-connection streams"
+
+[[provides]]
+interface = "embed.lookup/strixw-q8/bf16"
+api       = "strix::kernels::check_embedding_error, embedding_lookup, report_embedding_error, reset_embedding_error (kernels/embedding.hpp)"
+numeric   = "the same source as kernel.strixite.embedding (byte-identical to kernel.strixite.embedding kernels/embedding.hip at d19945e), so its arithmetic: Q8 row dequantized (code * scale + min) and stored in the activation dtype"
+regime    = "as kernel.strixite.embedding: one launch per forward"
+
+[[provides]]
+interface = "embed.lookup/strixw-q8/f32"
+api       = "strix::kernels::check_embedding_error, embedding_lookup, report_embedding_error, reset_embedding_error (kernels/embedding.hpp)"
+numeric   = "the same source as kernel.strixite.embedding (byte-identical to kernel.strixite.embedding kernels/embedding.hip at d19945e), so its arithmetic: Q8 row dequantized (code * scale + min) and stored in the activation dtype"
+regime    = "as kernel.strixite.embedding: one launch per forward"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.embedding.json"

@@ -1,0 +1,69 @@
+id        = "runtime.enginelab.distributed_control"
+kind      = "runtime"
+summary   = "distributed control: the control wire, greedy control, remote control, token transactions, position completion and flow control between ranks"
+why       = "the control plane of a two-node decode: which rank commits which token and when, with replay-safe transactions; where it would go: a new strixflerp interface runtime.distributed-control/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, runtime.distributed-control/-/-. 5 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/distributed_control_wire.hpp",
+  "include/strix/distributed_flow.hpp",
+  "include/strix/distributed_greedy_control.hpp",
+  "include/strix/distributed_position_completion.hpp",
+  "include/strix/distributed_remote_control.hpp",
+  "include/strix/distributed_token_transaction.hpp",
+  "src/distributed_control_wire.cpp",
+  "src/distributed_flow.cpp",
+  "src/distributed_greedy_control.cpp",
+  "src/distributed_remote_control.cpp",
+  "src/distributed_token_transaction.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/distributed_control_wire.cpp",
+  "src/src/distributed_flow.cpp",
+  "src/src/distributed_greedy_control.cpp",
+  "src/src/distributed_remote_control.cpp",
+  "src/src/distributed_token_transaction.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.distributed-control/-/-"
+api       = "src/distributed_*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.dual_link"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

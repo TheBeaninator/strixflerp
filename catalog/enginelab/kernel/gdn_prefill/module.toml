@@ -1,0 +1,47 @@
+id        = "kernel.enginelab.gdn_prefill"
+kind      = "kernel"
+summary   = "gated delta-net prefill: the prefill scan and overlap, chunked and FP16 chunked recurrence, the qpf2k prefill and 64-wide gates, and islands"
+why       = "chunked GDN for the 36 linear-attention layers of Qwen3.8-Flash-Next at long prompts; where it would go: beside the catalogue's mixer.gdn-prefill/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: mixer.gdn-prefill/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/gdn_chunk.hpp",
+  "include/strix/gdn_prefill_overlap.hpp",
+  "include/strix/hip_gdn_islands.hpp",
+  "src/hip_gdn_fp16_chunk.inc",
+  "src/hip_gdn_prefill_scan.inc",
+  "src/hip_gdn_qpf2k_gates64.inc",
+  "src/hip_gdn_qpf2k_prefill.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "mixer.gdn-prefill/-/f32.enginelab"
+api       = "hip_gdn_prefill_scan.inc, hip_gdn_fp16_chunk.inc"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

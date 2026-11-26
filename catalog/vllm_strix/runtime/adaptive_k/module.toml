@@ -1,0 +1,36 @@
+id        = "runtime.vllm_strix.adaptive_k"
+kind      = "runtime"
+summary   = "adaptive draft length for speculative decoding wired for async scheduling: an EMA of acceptance sets the verified draft length per step in the scheduler (not in update_draft_token_ids, which async scheduling never calls), with a live JSON override and the fix that lets the JSON force reach the gate; installed, instrumented, off"
+why       = "measured off because step time does not depend on draft length on this rig (PATCHES 17), but the scheduler seam and the EMA policy are what strixflerp would need on hardware where it does"
+notes     = "Interface tag: speculation.draft (policy, not a drafter). Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-adaptive-k-json-gate.py", "container/patches/vsh-adaptive-k.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "speculation.draft-length-ema/-/-"
+api       = "patch scripts over vllm/v1/core/sched/scheduler.py; env VSH_ADAPTIVE_K, VSH_ADAPTIVE_K_FORCE, JSON override file"
+numeric   = "n/a"
+regime    = "async scheduling with a drafter"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

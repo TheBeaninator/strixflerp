@@ -1,0 +1,37 @@
+id        = "kernel.kyojin.gm_pfmoe"
+kind      = "kernel"
+summary   = "Generic GGUF MoE prefill experts for gfx1151 WMMA: fused dequant of the stored k-quant bytes and a grouped fp16 GEMM over expert row blocks, per-expert pointer tables, no row floor"
+why       = "generic GGUF MoE prefill. Where the shape would go: a moe.experts-prefill/gguf-kquant/f16-f32 provider beside kernel.flerp.moe_kgrouped, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-prefill/gguf-kquant/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (gm_pfmoe.cu, gm_pfmoe.hip), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/gm_ext/gm_pfmoe.cu", "exllamav3/gm_ext/gm_pfmoe.hip"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/gm_ext/gm_pfmoe.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-kquant/f16-f32.kyojin-gm"
+api       = "gm_pfmoe.cu, gm_pfmoe.hip; kernels: gm_pf_gu_k, gm_pf_down_k"
+numeric   = "fp16 WMMA, fp32 accumulation"
+regime    = "prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: gm_pfmoe.hip"

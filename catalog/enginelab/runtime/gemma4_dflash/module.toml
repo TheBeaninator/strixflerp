@@ -1,0 +1,68 @@
+id        = "runtime.enginelab.gemma4_dflash"
+kind      = "runtime"
+summary   = "the DFlash drafter of Nemotron 3.5 Bolt E4B (host reference in the declared arithmetic g4-dflash-v1.1: five pre-norm layers projecting committed target taps into K/V, a block of draft rows attended non-causally) (src/gemma4/dflash)"
+why       = "block drafting for the Bolt E4B engine; the file says it is pending device and full-workload qualification; where it would go: beside the catalogue's draft.dflash/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: draft.dflash/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 5 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/dflash/README.md",
+  "src/gemma4/dflash/controller.cpp",
+  "src/gemma4/dflash/device.hip",
+  "src/gemma4/dflash/device.hpp",
+  "src/gemma4/dflash/device_probe_main.cpp",
+  "src/gemma4/dflash/dflash.hpp",
+  "src/gemma4/dflash/dflash_probe_main.cpp",
+  "src/gemma4/dflash/dflash_reference_main.cpp",
+  "src/gemma4/dflash/host.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/gemma4/dflash/device.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "draft.dflash/-/f32.enginelab-gemma4"
+api       = "src/gemma4/dflash/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_model"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_exl3"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_kernels"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_contracts"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_ref"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.gemma4_dflash.json"

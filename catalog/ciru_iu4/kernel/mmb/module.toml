@@ -1,0 +1,59 @@
+id        = "kernel.ciru_iu4.mmb"
+kind      = "kernel"
+summary   = "CIRU's additions to the pwilkin MMB (BF16 WMMA matrix-batch) path: routed C1 expert kernels with and without the fused GLU, a Q5_K tile loader from HaloBox for prefill, the hyper-connection down / inject Q8_0 pair kernel, and the BF16 v4 merge of the routed MoE weighted reduction"
+why       = "these are the prefill-side expert and dense kernels CIRU's v5 / v6 releases measure; the C1 MMB path and the HC Q8_0 pair have no counterpart in the catalogue, and the Q5_K loader is HaloBox's, which is not otherwise harvested"
+notes     = "Interface tags by file: mmb.cu moe.experts-prefill/c1-g16/bf16; mmb.cuh none; hc_q8_pair.cuh none; hc_q8_pair_kernel.cuh hc.mix-prefill/gguf-q8_0/f32; moe-weighted-reduction.cu moe.combine/-/bf16 (catalog/ciru_iu4/KERNELS.md has the table). Against the base pwilkin/llama.cpp f5daaa3c: added hc_q8_pair.cuh, hc_q8_pair_kernel.cuh; changed mmb.cu +708 -46 lines against the base; mmb.cuh +1 line; moe-weighted-reduction.cu +43 -1 lines. No timing was taken on the pod."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = [
+  "ggml/src/ggml-cuda/hc_q8_pair.cuh",
+  "ggml/src/ggml-cuda/hc_q8_pair_kernel.cuh",
+  "ggml/src/ggml-cuda/mmb.cu",
+  "ggml/src/ggml-cuda/mmb.cuh",
+  "ggml/src/ggml-cuda/moe-weighted-reduction.cu",
+]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+upstream  = "the Q5_K tile loader of mmb_f32_halo_kernel follows HaloBox (halo-box/strix-llama.cpp) 25fda3478 (MIT); the MMB path itself is pwilkin's"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/ggml/src/ggml-cuda/mmb.cu", "src/ggml/src/ggml-cuda/moe-weighted-reduction.cu"]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.experts-prefill/c1-g16/bf16.ciru-mmb"
+api       = "mmb.cu: mmb_routed_c1_kernel, mmb_routed_c1_glu_kernel, mmb_f32_halo_kernel, mmb_cvt_bf16_f16"
+numeric   = "BF16 WMMA with F32 accumulation; C1 and Q8_0 rows are decoded to BF16 (round to nearest even) in the LDS tile; the Q5_K loader builds q+32 and subtracts 32 packed, exact for q in [0, 31] (file comments)"
+regime    = "prefill: routed experts above LLAMA_C1_MMB_MIN_T tokens, HC down / inject with T up to 128-token tiles"
+
+[[provides]]
+interface = "hc.mix-prefill/gguf-q8_0/f32.ciru-q8-pair"
+api       = "hc_q8_pair_kernel.cuh: hc_q8_pair_kernel"
+numeric   = "BF16 WMMA with F32 accumulation; C1 and Q8_0 rows are decoded to BF16 (round to nearest even) in the LDS tile; the Q5_K loader builds q+32 and subtracts 32 packed, exact for q in [0, 31] (file comments)"
+regime    = "prefill: routed experts above LLAMA_C1_MMB_MIN_T tokens, HC down / inject with T up to 128-token tiles"
+
+[[provides]]
+interface = "moe.combine/-/bf16.ciru-v4-merge"
+api       = "moe-weighted-reduction.cu: moe_weighted_reduction_bf16_v4_merge"
+numeric   = "BF16 WMMA with F32 accumulation; C1 and Q8_0 rows are decoded to BF16 (round to nearest even) in the LDS tile; the Q5_K loader builds q+32 and subtracts 32 packed, exact for q in [0, 31] (file comments)"
+regime    = "prefill: routed experts above LLAMA_C1_MMB_MIN_T tokens, HC down / inject with T up to 128-token tiles"
+
+[[requires]]
+module    = "kernel.ciru_iu4.cuda_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_iu4.mmb.json"

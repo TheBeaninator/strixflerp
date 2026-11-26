@@ -1,0 +1,44 @@
+id        = "runtime.enginelab_usb4.stream_rx_latency"
+kind      = "runtime"
+summary   = "stream RX completion and latency: NAPI-style hybrid RX completion (0010), per-stream NAPI and IRQ steering (0011), spinning outside the device mutex with IRQ restore (0015), RX counters before posting (0023), a bounded spin_us parameter (0030), opt-in CPU latency QoS (0042) and opt-in contiguous DMA buffers (0045)"
+why       = "the small-message latency side: 8.35 us round trip for 64 B with interrupts on (README); the decode exchange is many small messages a token"
+notes     = "Interface tag: none (no catalogue interface is a USB4 stream device; the nearest are transport.verbs and the collective.* providers over RoCE / TCP). Stable patches 0010, 0011, 0015, 0023, 0030, 0042, 0045 of patches/series; apply the whole series in order to Linux 72d3fcf8. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "patches/0010-stream-rx-napi-hybrid-completion.patch",
+  "patches/0011-stream-per-stream-napi-and-irq-steering.patch",
+  "patches/0015-stream-spin-outside-device-mutex-and-irq-restore.patch",
+  "patches/0023-stream-rx-counters-before-posting.patch",
+  "patches/0030-stream-spin-us-parameter-bounded.patch",
+  "patches/0042-stream-opt-in-cpu-latency-qos.patch",
+  "patches/0045-stream-opt-in-contiguous-dma-buffers.patch",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-stream-latency/-/-"
+api       = "module parameters and per-stream controls"
+numeric   = "bytes only"
+regime    = "per-layer decode exchanges"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 72d3fcf8 tree on the island); python3 docs/harvest/harvest_enginelab_usb4.py --patch-gate parses it (gate/results/compile/enginelab_usb4.patches.json)"

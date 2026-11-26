@@ -1,0 +1,42 @@
+id        = "runtime.vllm_strix.odl_mq_hook"
+kind      = "runtime"
+summary   = "the shm_broadcast hook that lets MessageQueue Handles carry an odl_mq stream id and makes remote readers and writers use odl_mq when the device and library are present (DS4_ODL_MQ), fail-open to zmq on any init failure"
+why       = "the data plane only helps if the queue picks it up without breaking same-box readers; the hook declines for a same-host \"remote\" reader and keeps zmq for it"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-odl-mq-dataplane.patch"]
+authors   = [
+  "davidcanar (vllm-strix-halo)",
+  "AlexKGwyn/ds4-vllm (design of the DS4_ODL_AR2 hook and odl_mq, Apache-2.0)",
+]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.message-queue-dispatch/-/-"
+api       = "patch to vllm/distributed/device_communicators/shm_broadcast.py"
+numeric   = "n/a"
+regime    = "TP=2 across boxes"
+
+[[requires]]
+module    = "runtime.vllm_strix.odl_mq"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "patch: applies to vLLM 73859fec or OdinLink-Five 4534f58, neither of which is on the island; --side-gates parses each with git apply --numstat (gate/results/compile/vllm_strix.side-gates.json)"

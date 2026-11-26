@@ -1,0 +1,65 @@
+id        = "runtime.ds4.k53prefill_engine"
+kind      = "runtime"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-flash-prefill-restoration 4fef372: its copy of the engine family against antirez/ds4 b3f5018: LICENSE changed (+0 -1 lines); ds4.c changed (+1308 -17336 lines); ds4.h changed (+5 -94 lines). The family: ds4.c and ds4.h, the engine: mmap GGUF loading, the fixed DeepSeek V4 / V4.1 / Pro, GLM-5.2 / 5.3 / 5.3-Flash and Qwen3.8-Flash-Next layouts and their graph drivers, CPU reference kernels, sessions (one mutable inference timeline owning KV and logits; ds4_session_sync reuses, extends or rebuilds), MTP and DSpark speculation control, the TP and distributed hooks, tokenizer wiring"
+why       = "the glm53-flash branch with the GLM-5.3-Flash prefill path restored and accelerated (head commit \"rocm: accelerate GLM 5.3 Flash prefill\"); same fork point as kyuz0_glm53_flash. The family in the base: the whole host side of the engine in one deliberately vertical file; every backend and transport module plugs into it"
+notes     = "Overlay kyuz0_glm53_prefill: files under overlay/kyuz0_glm53_prefill/ are the branch's bytes at 4fef372a4631; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_prefill.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "4fef372a46315bd6b34b0e58b7fc91a7e5f4f21f"
+branch    = "perf/rocm-gfx1151-glm53-flash-prefill-restoration"
+paths     = [
+  "overlay/kyuz0_glm53_prefill/LICENSE",
+  "overlay/kyuz0_glm53_prefill/ds4.c",
+  "overlay/kyuz0_glm53_prefill/ds4.h",
+]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_prefill"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model-ds4-k53prefill/gguf/-"
+api       = "ds4_engine_*, ds4_session_* (ds4.h)"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "runtime.ds4.distributed"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_tp"
+
+[[requires]]
+module    = "runtime.ds4.gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.image"
+
+[[requires]]
+module    = "runtime.ds4.layer_pack"
+
+[[requires]]
+module    = "runtime.ds4.ssd"
+
+[[requires]]
+module    = "runtime.ds4.streaming_hotlist"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

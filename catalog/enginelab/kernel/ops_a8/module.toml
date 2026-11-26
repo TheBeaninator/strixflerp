@@ -1,0 +1,42 @@
+id        = "kernel.enginelab.ops_a8"
+kind      = "kernel"
+summary   = "A8 activation ops: group and quant device kernels; and the chain prep plan: 3 origin files under src/ops"
+why       = "activation quantisation for integer kernels; where it would go: beside the catalogue's act.quantize/-/a8 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: act.quantize/-/a8 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["src/ops/a8/a8_group_device.hpp", "src/ops/a8/a8_quant_device.hpp", "src/ops/chain/prep_plan.hpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/ops", "src/src/ops/a8"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "act.quantize/-/a8.enginelab"
+api       = "src/ops/a8/*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

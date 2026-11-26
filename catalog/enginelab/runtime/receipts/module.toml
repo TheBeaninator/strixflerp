@@ -1,0 +1,76 @@
+id        = "runtime.enginelab.receipts"
+kind      = "runtime"
+summary   = "receipts and offline tuning: the receipt writer, validator, step-profile report and legacy form; raw baseline recording; offline compile provenance, tuning cache and preparation"
+why       = "every measured claim comes with a receipt the tools can check; where it would go: a new strixflerp interface verify.receipt/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, verify.receipt/-/-. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/offline_compile_provenance.hpp",
+  "include/strix/offline_tuning_cache.hpp",
+  "include/strix/offline_tuning_preparation.hpp",
+  "include/strix/raw_baseline_recording.hpp",
+  "include/strix/receipt/legacy.hpp",
+  "include/strix/receipt/receipt.hpp",
+  "include/strix/receipt/step_profile_report.hpp",
+  "include/strix/receipt/validator.hpp",
+  "include/strix/receipt/writer.hpp",
+  "src/offline_compile_provenance.cpp",
+  "src/offline_tuning_cache.cpp",
+  "src/offline_tuning_preparation.cpp",
+  "src/raw_baseline_recording.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/offline_compile_provenance.cpp",
+  "src/src/offline_tuning_cache.cpp",
+  "src/src/offline_tuning_preparation.cpp",
+  "src/src/raw_baseline_recording.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.receipt/-/-"
+api       = "include/strix/receipt/writer.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

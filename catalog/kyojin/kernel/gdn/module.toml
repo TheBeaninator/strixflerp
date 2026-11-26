@@ -1,0 +1,46 @@
+id        = "kernel.kyojin.gdn"
+kind      = "kernel"
+summary   = "Gated DeltaNet recurrent kernels of the extension, much extended by Kyojin (2,160 lines): register-resident-state decode variants, multi-row verify, state rewind for speculative rounds, and timing-only ablation arms"
+why       = "the linear-attention layers of Qwen3.8-Flash-Next and Kimi-Linear decode through it. Where the shape would go: a mixer.gdn/-/f32 provider beside kernel.ciru_iu4.gdn, kernel.crucible.gdn, kernel.ds4.k53perf_rocm_qwen4 and 12 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: mixer.gdn/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (gdn.cu, gdn.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/gdn.cu", "exllamav3/exllamav3_ext/gdn.cuh"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/gdn.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.kyojin-ext"
+api       = "gdn.cu, gdn.cuh; kernels: gated_delta_net_fused_op_kernel, gated_delta_net_fused_op_2_kernel, mamba2_dt_op_kernel, cuda_recurrent_gated_delta_rule_kernel, cuda_recurrent_gated_delta_rule_kernel_128, mamba2_fused_op_kernel, conv1d_update_kernel, gated_delta_net_fused_op_3_kernel, gdn_ba_gemv_kernel, gdn_lowrank_gemv_f_kernel ..."
+numeric   = "fp32 state, bf16 / fp16 q / k / v"
+regime    = "decode and verify"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.graph"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: gdn.cu"

@@ -1,0 +1,52 @@
+id        = "serve.maya_tp.server"
+kind      = "serve"
+summary   = "the Maya HTTP server (serve/server.py and its helpers: frontend, models and model API, model pulls, GPU map, telemetry, savings, loop guard, update): OpenAI- and Anthropic-compatible endpoints, streaming, cached follow-ups, cancellation, thinking budgets, and in maya-tp the TP2 peer health and recovery reporting"
+why       = "the serving shape that drives a TP2 pair as one model; peer-loss handling at the HTTP layer is what strixflerp's serve modules lack for multi-node engines"
+notes     = "Interface tag: serve.http-maya-tp/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "serve/__init__.py",
+  "serve/frontend.py",
+  "serve/gpu_map.py",
+  "serve/loop_guard.py",
+  "serve/model_api.py",
+  "serve/model_pull.py",
+  "serve/models.py",
+  "serve/savings.py",
+  "serve/server.py",
+  "serve/telemetry.py",
+  "serve/update.py",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.http-maya-tp/-/-"
+api       = "serve/server.py"
+numeric   = "no arithmetic"
+regime    = "one engine or a TP2 pair"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

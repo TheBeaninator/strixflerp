@@ -1,0 +1,61 @@
+id        = "kernel.libstrix.torch_ops"
+kind      = "kernel"
+summary   = "libstrix' calling surface and build: csrc/torch_ops.cpp declares the host entry of every kernel and registers 36 schemas as torch.ops.strix.* (TORCH_LIBRARY(strix), implemented for the CUDA dispatch key), python/strix loads _C.so, registers fake implementations and holds the kernel table (registry.py: one row a kernel with the geometry it accepts and how it is built, queried by select / explain / geometries), and CMakeLists.txt with build.sh define the one shared object"
+why       = "a libstrix kernel has no C ABI of its own: the schema registered here is the only statement of each entry point's operands, and the registry table is the only statement of the geometry each kernel accepts; an adapter to strixflerp's executor ABI starts from these two files"
+notes     = "Interface tag: none. This is the layer an adapter replaces: strixflerp executors call kernels through by-value argument structs or strix::kernels functions, not through torch. The _cfg ops are bench-only (fixed tile configs for bench/kernels). The vLLM plugin that builds its dispatch gates from the table (python/strix_vllm) is not harvested."
+
+[provenance]
+origin    = "libstrix"
+repo      = "https://github.com/asf0/libstrix"
+commit    = "4f1c06f55d520c734a66101e8c31fc5dd9dedeb3"
+branch    = "main"
+paths     = [
+  "CMakeLists.txt",
+  "build.sh",
+  "csrc/torch_ops.cpp",
+  "python/strix/__init__.py",
+  "python/strix/registry.py",
+]
+authors   = ["asf0"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/csrc/torch_ops.cpp"]
+includes  = ["src/csrc"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.libstrix-torch-ops/-/-"
+api       = "torch.ops.strix.* (36 schemas, csrc/torch_ops.cpp); strix.select(op, **geometry), strix.explain, strix.geometries, strix.kernels, strix.ops (python/strix/registry.py)"
+numeric   = "n/a here: each kernel module states its own arithmetic"
+regime    = "host calls on torch tensors; a kernel rejects any shape it was not built for, and select() returning None means the caller keeps its own path (README.md)"
+
+[[requires]]
+module    = "kernel.libstrix.common"
+
+[[requires]]
+module    = "kernel.libstrix.attn"
+
+[[requires]]
+module    = "kernel.libstrix.gdn"
+
+[[requires]]
+module    = "kernel.libstrix.gemm"
+
+[[requires]]
+module    = "kernel.libstrix.moe"
+
+[[requires]]
+module    = "kernel.libstrix.norm"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "the registration unit of python/strix/_C.so (compiled as HIP by the origin CMake, linked against libtorch); needs the PyTorch headers; not compiled by this harvest"

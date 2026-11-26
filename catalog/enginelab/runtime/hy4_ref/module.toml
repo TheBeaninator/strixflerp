@@ -1,0 +1,77 @@
+id        = "runtime.enginelab.hy4_ref"
+kind      = "runtime"
+summary   = "Hy4 host references (DFly and host): 4 origin files under src/hy4"
+why       = "the BASE reference of Hy4 FAST arms; where it would go: a new strixflerp interface verify.kernel-reference-enginelab-hy4/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, verify.kernel-reference-enginelab-hy4/-/-. 2 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/hy4/ref/hy4_dfly_ref.cpp",
+  "src/hy4/ref/hy4_dfly_ref.hpp",
+  "src/hy4/ref/hy4_host_ref.cpp",
+  "src/hy4/ref/hy4_host_ref.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/hy4/ref/hy4_dfly_ref.cpp", "src/src/hy4/ref/hy4_host_ref.cpp"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.kernel-reference-enginelab-hy4/-/-"
+api       = "src/hy4/ref/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "executor.enginelab.hy4_engine"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_engram"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_trellis"
+
+[[requires]]
+module    = "kernel.enginelab.hc_hyper"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "kernel.enginelab.ops_rope"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

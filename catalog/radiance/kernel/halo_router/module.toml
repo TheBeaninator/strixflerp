@@ -1,0 +1,61 @@
+id        = "kernel.radiance.halo_router"
+kind      = "kernel"
+summary   = "MoE routing: softmax plus exact top-k a wave a row, sigmoid routing with a correction bias (GLM), and the fused forms: selection and the slot sort in one workgroup, and the router GEMM, its top-k, the slot sort and the shared expert's gate in one launch"
+why       = "the router is tiny work behind a full launch, so radiance folds its GEMM, selection and slot sort into one launch to stop paying the launch floor three times a layer"
+notes     = "strixite runs router GEMV, top-k and the grouping as separate launches (48 router launches a step; FOLD-2 folds the top-k into the last block of the router GEMV)."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_router_gemm_scatter.hip",
+  "libhalo/halo_router_scatter.hip",
+  "libhalo/halo_router_sigmoid.h",
+  "libhalo/halo_router_sigmoid_topk_f32.hip",
+  "libhalo/halo_router_topk.h",
+  "libhalo/halo_router_topk_bf16.hip",
+]
+authors   = ["Deadcode", "keptn42", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_router_topk_bf16.hip",
+  "src/libhalo/halo_router_sigmoid_topk_f32.hip",
+  "src/libhalo/halo_router_scatter.hip",
+  "src/libhalo/halo_router_gemm_scatter.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.router/-/bf16.radiance"
+api       = "halo_router_topk, halo_router_topk_scatter, halo_router_gemm_scatter, halo_router_sigmoid_topk"
+numeric   = "bf16 logits, exact top-k, ties to the lower id; the fused rows share one row body with the plain ones"
+regime    = "decode: one launch a layer for GEMM + top-k + sort"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_moe"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_int"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

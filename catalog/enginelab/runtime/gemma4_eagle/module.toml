@@ -1,0 +1,75 @@
+id        = "runtime.enginelab.gemma4_eagle"
+kind      = "runtime"
+summary   = "Gemma 4 EAGLE / MTP drafter (with the drafter export script) (src/gemma4/eagle): 16 origin files under src/gemma4"
+why       = "EAGLE-style drafting; where it would go: a new strixflerp interface draft.eagle/-/f32.enginelab-gemma4, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, draft.eagle/-/f32.enginelab-gemma4. 2 HIP unit(s) compiled standalone by the gate; 6 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/eagle/FORMAT.md",
+  "src/gemma4/eagle/device.hip",
+  "src/gemma4/eagle/device.hpp",
+  "src/gemma4/eagle/device_session.cpp",
+  "src/gemma4/eagle/eagle.hpp",
+  "src/gemma4/eagle/host.cpp",
+  "src/gemma4/eagle/mtp/device.hip",
+  "src/gemma4/eagle/mtp/device.hpp",
+  "src/gemma4/eagle/mtp/device_session.cpp",
+  "src/gemma4/eagle/mtp/export_drafter.py",
+  "src/gemma4/eagle/mtp/host.cpp",
+  "src/gemma4/eagle/mtp/mtp.hpp",
+  "src/gemma4/eagle/mtp/session.cpp",
+  "src/gemma4/eagle/mtp/session.hpp",
+  "src/gemma4/eagle/session.cpp",
+  "src/gemma4/eagle/session.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/gemma4/eagle/device.hip", "src/src/gemma4/eagle/mtp/device.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "draft.eagle/-/f32.enginelab-gemma4"
+api       = "src/gemma4/eagle/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_engine"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_model"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_kernels"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_contracts"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_dflash"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_kv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.gemma4_eagle.json"

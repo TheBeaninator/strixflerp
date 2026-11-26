@@ -1,0 +1,45 @@
+id        = "runtime.enginelab_usb4.gpu_queue"
+kind      = "runtime"
+summary   = "the GPU stream queue: batched GPU ring submission (0003), fence and stop lifetime (0004), GPU queues, fences and session recovery (0005), a kernel-validated terminal frame (0016), non-blocking submit that sleeps on neither the mutex (0031) nor the DMA lock (0036), opt-in polled completion (0041) and a TX progress stall detector (0043)"
+why       = "the DMA-BUF path with bounded queues, sync_file fences and fail-closed recovery: what makes GPU-to-GPU DMA safe to leave running under an inference server"
+notes     = "Interface tag: none (no catalogue interface is a USB4 stream device; the nearest are transport.verbs and the collective.* providers over RoCE / TCP). Stable patches 0003, 0004, 0005, 0016, 0031, 0036, 0041, 0043 of patches/series; apply the whole series in order to Linux 72d3fcf8. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "patches/0003-batch-gpu-ring-submission.patch",
+  "patches/0004-fence-and-stop-lifetime.patch",
+  "patches/0005-gpu-queues-fences-and-session-recovery.patch",
+  "patches/0016-gpu-kernel-validated-terminal-frame.patch",
+  "patches/0031-gpu-nonblock-submit-does-not-sleep-on-mutex.patch",
+  "patches/0036-gpu-nonblock-submit-does-not-sleep-on-dma-lock.patch",
+  "patches/0041-gpu-opt-in-polled-completion.patch",
+  "patches/0043-gpu-tx-progress-stall-detector.patch",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only AND GPL-2.0-only WITH Linux-syscall-note"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-gpu-queue/-/-"
+api       = "strix_gpu_stream UAPI submit / fence / poll"
+numeric   = "bytes only"
+regime    = "GPU-direct messages; the routing per message class picks them by size"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 72d3fcf8 tree on the island); python3 docs/harvest/harvest_enginelab_usb4.py --patch-gate parses it (gate/results/compile/enginelab_usb4.patches.json)"

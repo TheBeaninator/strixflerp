@@ -1,0 +1,37 @@
+id        = "kernel.kyojin.exl3_moe_valu"
+kind      = "kernel"
+summary   = "VALU grouped-MoE decode matvec for gfx11.5 (default on for K1 / K2 / K3 experts): replaces the WMMA / LDS body of the grouped and dedup decode launches; index arithmetic in a pure C++ header shared with a CPU bounds checker"
+why       = "decode experts at batch 1 are matvecs: VALU beats a padded WMMA tile. Where the shape would go: a moe.experts-decode/exl3/f32 provider beside kernel.kestrel.exl3, kernel.maya_tp.cpu_exl3, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-decode/exl3/f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (exl3_moe_valu.cuh, exl3_moe_valu_idx.h), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/quant/exl3_moe_valu.cuh", "exllamav3/exllamav3_ext/quant/exl3_moe_valu_idx.h"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/f32.kyojin-valu"
+api       = "exl3_moe_valu.cuh, exl3_moe_valu_idx.h; kernels: moe_valu_kernel"
+numeric   = "fp16 activations, v_dot2 into fp32"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the units that include it"

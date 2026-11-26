@@ -1,0 +1,119 @@
+id        = "runtime.enginelab.execution"
+kind      = "runtime"
+summary   = "compiled execution: arena, binding, buffers, IO, memory, plan, resources, runtime, telemetry, tensor access and tensor binding, and the compiled execution"
+why       = "a model forward compiled once into a plan of bound buffers and launches, replayed per step; where it would go: a new strixflerp interface executor.compiled-plan/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, executor.compiled-plan/-/-. 12 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/compiled_execution.hpp",
+  "include/strix/execution_arena.hpp",
+  "include/strix/execution_binding.hpp",
+  "include/strix/execution_buffers.hpp",
+  "include/strix/execution_io.hpp",
+  "include/strix/execution_memory.hpp",
+  "include/strix/execution_plan.hpp",
+  "include/strix/execution_resources.hpp",
+  "include/strix/execution_runtime.hpp",
+  "include/strix/execution_telemetry.hpp",
+  "include/strix/execution_tensor_access.hpp",
+  "include/strix/execution_tensor_binding.hpp",
+  "src/compiled_execution.cpp",
+  "src/execution_arena.cpp",
+  "src/execution_binding.cpp",
+  "src/execution_buffers.cpp",
+  "src/execution_io.cpp",
+  "src/execution_memory.cpp",
+  "src/execution_plan.cpp",
+  "src/execution_resources.cpp",
+  "src/execution_runtime.cpp",
+  "src/execution_telemetry.cpp",
+  "src/execution_tensor_access.cpp",
+  "src/execution_tensor_binding.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/compiled_execution.cpp",
+  "src/src/execution_arena.cpp",
+  "src/src/execution_binding.cpp",
+  "src/src/execution_buffers.cpp",
+  "src/src/execution_io.cpp",
+  "src/src/execution_memory.cpp",
+  "src/src/execution_plan.cpp",
+  "src/src/execution_resources.cpp",
+  "src/src/execution_runtime.cpp",
+  "src/src/execution_telemetry.cpp",
+  "src/src/execution_tensor_access.cpp",
+  "src/src/execution_tensor_binding.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.compiled-plan/-/-"
+api       = "src/execution_*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.gdn_decode"
+
+[[requires]]
+module    = "kernel.enginelab.hc_hyper"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "kernel.enginelab.moe_q4k_a8"
+
+[[requires]]
+module    = "kernel.enginelab.ple"
+
+[[requires]]
+module    = "kernel.enginelab.q8_rows"
+
+[[requires]]
+module    = "kernel.enginelab.shared_expert"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.graph"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.qsa_plan"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

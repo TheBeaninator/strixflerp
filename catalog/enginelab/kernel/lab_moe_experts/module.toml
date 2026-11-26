@@ -1,0 +1,37 @@
+id        = "kernel.enginelab.lab_moe_experts"
+kind      = "kernel"
+summary   = "the MoE experts lab kernel (lab/moe_experts): 3 origin files under lab/moe_experts"
+why       = "grouped expert kernel prototype; where it would go: a new strixflerp interface kernel-research.enginelab-lab-moe-experts/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kernel-research.enginelab-lab-moe-experts/-/-. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["lab/moe_experts/CMakeLists.txt", "lab/moe_experts/README.md", "lab/moe_experts/moe_experts.hip"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/lab/moe_experts/moe_experts.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-research.enginelab-lab-moe-experts/-/-"
+api       = "lab/moe_experts"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.lab_moe_experts.json"

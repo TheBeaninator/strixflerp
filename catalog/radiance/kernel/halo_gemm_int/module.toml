@@ -1,0 +1,75 @@
+id        = "kernel.radiance.halo_gemm_int"
+kind      = "kernel"
+summary   = "Integer-weight GEMMs: 2-, 4-, 5- and 8-bit weights against int8 activations (w2a8, w4a8, w8a8, the asymmetric w4a8i8 / w5a8i8) or f16 activations (w4a16, w5a16, w8a16), each as a skinny form up to 64 rows and a tiled prefill form with double-buffered LDS, and the 4-bit weight unpacked to row-major bf16 for prefill"
+why       = "decode on Strix Halo is weight bytes over memory bandwidth, so integer weights at 2 to 8 bits with integer activations are how radiance buys speed and how it fits a 113 GiB model in a rank's memory"
+notes     = "The W8A8 trunk is radiance's served form of Qwen3.8-Flash-Next (int8 trunk and lm_head, w4 experts: docs/MOE-W4.md, KL 0.0789 all / 0.0239 text vs bf16, floor 0.0399 / 0.0111). strixite serves Q8 weights with bf16 activations (linear_q8); int8 activations halve the activation bytes a verify GEMM re-reads at M = 2..16 (the PF-13 surface)."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_dequant_w4_bf16.hip",
+  "libhalo/halo_gemm_args.h",
+  "libhalo/halo_gemm_w2a8_nt.hip",
+  "libhalo/halo_gemm_w4a16_nt_m64.hip",
+  "libhalo/halo_gemm_w4a8_nt_m64.hip",
+  "libhalo/halo_gemm_w4a8_tiled.hip",
+  "libhalo/halo_gemm_w5a16_nt_m64.hip",
+  "libhalo/halo_gemm_w8a16_nt_m64.hip",
+  "libhalo/halo_gemm_w8a8_nt_m64.hip",
+  "libhalo/halo_gemm_w8a8_tiled.hip",
+  "libhalo/halo_gemm_wpa8i8_tiled.hip",
+]
+authors   = ["Deadcode", "keptn42", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_gemm_w2a8_nt.hip",
+  "src/libhalo/halo_gemm_w4a8_nt_m64.hip",
+  "src/libhalo/halo_gemm_w4a8_tiled.hip",
+  "src/libhalo/halo_gemm_w8a8_nt_m64.hip",
+  "src/libhalo/halo_gemm_w8a8_tiled.hip",
+  "src/libhalo/halo_gemm_wpa8i8_tiled.hip",
+  "src/libhalo/halo_gemm_w4a16_nt_m64.hip",
+  "src/libhalo/halo_gemm_w5a16_nt_m64.hip",
+  "src/libhalo/halo_gemm_w8a16_nt_m64.hip",
+  "src/libhalo/halo_dequant_w4_bf16.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/radiance-int/i8+f16-f32"
+api       = "halo_gemm_w4a8_nt_m64, halo_gemm_w8a8_nt_m64, halo_gemm_w4a16_nt_m64, halo_gemm_w5a16_nt_m64, halo_gemm_w8a16_nt_m64, halo_gemm_w2a8_nt"
+numeric   = "integer or f16 products, fp32 accumulate, a scale per (row, group of K); int8 activations are written by the producer (kernel.radiance.halo_quant_act)"
+regime    = "decode and verify heights (1..64 rows), a weight stream bound by ~256 GB/s LPDDR5X"
+
+[[provides]]
+interface = "linear.prefill/radiance-int/i8-f32"
+api       = "halo_gemm_w4a8_tiled, halo_gemm_w8a8_tiled, halo_gemm_w4a8i8_tiled / w5a8i8_tiled, halo_dequant_w4_bf16"
+numeric   = "as decode"
+regime    = "prefill row counts (tiled), compute-bound on the wave32 WMMA cores"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_chain"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

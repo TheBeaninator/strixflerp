@@ -25,6 +25,10 @@ Why: the waste of 2026-11-14 all came from experiments with no resource plan: a 
 each of 16 processes (half its 4 h), PLACE staging ran two fetches against one USB disk and hung worker B, agents staged weights with
 raw dd/cp, and holds sat idle for hours.
 
+Since 2026-11-17 a finished experiment also records how it ended: a row in `docs/experiments/INDEX.md` (and a record file when
+the row is not enough), committed on the card's branch. `docs/experiments/README.md` has the record shape; `ROADMAP.md` there
+holds the ordered experiments not yet run.
+
 Future gate tomls copy the template below. Existing gates are not rewritten; when one is next amended, add the table in that commit.
 
 ```toml

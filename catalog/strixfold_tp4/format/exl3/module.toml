@@ -1,0 +1,53 @@
+id        = "format.strixfold_tp4.exl3"
+kind      = "format"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for format.strixfold.exl3: 3 file(s) of format.strixfold.exl3 (plan.zig, rank_cache_main.zig, weights.zig), laid over the f64b5ff files"
+why       = "format.strixfold.exl3 is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over format.strixfold.exl3 without touching it or the TP2 recipes"
+notes     = "Overlay of format.strixfold.exl3 (overlay.json has every file with both sha256 and its commits). Cards behind the changes: b7eb57e048, e5cb84a995. Latest commits: 71986030 dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048); e4710d73 dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995); 5fb89c0d dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995); cfb1105e dsv41 plan: TF_DS_TP4_FILL raises K splits on a 2D node's halved attention linears (pod card e5cb84a995)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/families/dsv41/plan.zig",
+  "zig/src/families/dsv41/rank_cache_main.zig",
+  "zig/src/families/dsv41/weights.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on format.strixfold.exl3 (origin strixfold, f64b5ff): 3 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "format.device-view/exl3/-.tp4"
+api       = "weights.zig Weights, plan.zig Split, rank_cache.zig"
+numeric   = "bytes as the Python loader writes them (digests per device tensor against weights.py)"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); load time"
+
+[[provides]]
+interface = "format.loader/exl3-safetensors/-.tp4"
+api       = "checkpoint.zig, rank_cache.zig (TFDSRK01)"
+numeric   = "exact"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); load time"
+
+[[requires]]
+module    = "format.strixfold.exl3"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

@@ -1,0 +1,66 @@
+id        = "kernel.kyojin.exl3_gemm"
+kind      = "kernel"
+summary   = "EXL3 GEMM (trellis decode fused into the MMA tiles) with Kyojin's changes, including fp16 accumulation folded into fp32 once per k-slice for m=1"
+why       = "the EXL3 dense projections at prefill and multi-row verify. Where the shape would go: a linear.prefill/exl3/f16-f32 provider beside kernel.crucible.exl3_gemm, kernel.kestrel.exl3, kernel.strix_trellis.exl3_wmma_gemm and 4 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: linear.prefill/exl3/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 4 changed (exl3_gemm.cu, exl3_gemm.cuh, exl3_gemm_inner.cuh, exl3_gemm_kernel.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/quant/exl3_gemm.cu",
+  "exllamav3/exllamav3_ext/quant/exl3_gemm.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_gemm_inner.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_gemm_kernel.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/quant/exl3_gemm.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.prefill/exl3/f16-f32.kyojin"
+api       = "exl3_gemm.cu, exl3_gemm.cuh, exl3_gemm_inner.cuh, exl3_gemm_kernel.cuh; kernels: exl3_gemm_kernel, exl3_mgemm_kernel"
+numeric   = "fp16 activations, fp32 accumulation"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_coop_autotune"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemv"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemv_int8"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_kernel_map"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.graph"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: exl3_gemm.cu"

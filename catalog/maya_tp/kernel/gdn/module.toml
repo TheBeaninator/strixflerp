@@ -1,0 +1,58 @@
+id        = "kernel.maya_tp.gdn"
+kind      = "kernel"
+summary   = "the gated delta-net layer kernels: the reference step with conv, L2 norm, beta gate and output norm (gdn), the fused conv+L2 and step+norm (fused_gdn), llama.cpp's gated_delta_net recurrence (native_gdn) and its front / back ends (native_gdn_preprocess)"
+why       = "the linear-attention recurrence of the Qwen-Next family Maya also serves; the same shapes as kernel.strata.gdn in a later revision"
+notes     = "Interface tag: mixer.gdn/-/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/fused_gdn.hpp",
+  "include/strata/kernels/gdn.hpp",
+  "include/strata/kernels/native_gdn.hpp",
+  "include/strata/kernels/native_gdn_preprocess.hpp",
+  "src/kernels/cuda/fused_gdn.cu",
+  "src/kernels/cuda/gdn.cu",
+  "src/kernels/cuda/native_gdn.cu",
+  "src/kernels/cuda/native_gdn_preprocess.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/fused_gdn.cu",
+  "src/src/kernels/cuda/gdn.cu",
+  "src/src/kernels/cuda/native_gdn.cu",
+  "src/src/kernels/cuda/native_gdn_preprocess.cu",
+]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.maya-tp"
+api       = "strata::kernels::gdn_step, fused_gdn_step_norm, native_gdn_step"
+numeric   = "FP32 state"
+regime    = "decode, heads of 128"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.gdn.json"

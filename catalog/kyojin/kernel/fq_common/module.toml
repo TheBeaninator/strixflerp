@@ -1,0 +1,46 @@
+id        = "kernel.kyojin.fq_common"
+kind      = "kernel"
+summary   = "Shared layer of the foreign-quant kernels (GGUF k-quants and IQ formats, NVFP4, FP8 on the EXL3 engine): host entry points, IQ2_XXS / IQ3_XXS tables (verbatim llama.cpp), device-inline block decoders, lane dot products, the Q4_K / Q6_K v2 items and the gfx11 WMMA multi-row path"
+why       = "lets Kyojin run GGUF weights unconverted (Hy4-flash Q3_K, generic GGUF); every fq_* kernel includes it. Where the shape would go: a format.device-view/gguf-kquant/- provider beside format.flerp.gguf_placed, format.gufo.gguf_kquant, format.hipfire.loader, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: format.device-view/gguf-kquant/-. Against the base turboderp-org/exllamav3 8c593e4e: 8 added (fq_api.h, fq_dequant.cuh, fq_gemv.cuh, fq_iq3_tables.cuh, fq_kq_item.cuh, fq_kq_wmma.cuh) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/foreign_quant/fq_api.h",
+  "exllamav3/exllamav3_ext/foreign_quant/fq_dequant.cuh",
+  "exllamav3/exllamav3_ext/foreign_quant/fq_gemv.cuh",
+  "exllamav3/exllamav3_ext/foreign_quant/fq_iq3_tables.cuh",
+  "exllamav3/exllamav3_ext/foreign_quant/fq_kq_item.cuh",
+  "exllamav3/exllamav3_ext/foreign_quant/fq_kq_wmma.cuh",
+  "exllamav3/exllamav3_ext/foreign_quant/fq_mmvq_api.h",
+  "exllamav3/exllamav3_ext/foreign_quant/fq_tables.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.device-view-kyojin-fq/gguf-kquant/-"
+api       = "fq_api.h, fq_dequant.cuh, fq_gemv.cuh, fq_iq3_tables.cuh, fq_kq_item.cuh, fq_kq_wmma.cuh, fq_mmvq_api.h, fq_tables.cuh; kernels: fq_kq_wpack_q4_kernel, fq_gemv_kq_wmma_q4_kernel"
+numeric   = "bit-exact block decode, fp32 dots"
+regime    = "decode and prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the units that include it"

@@ -1,0 +1,36 @@
+id        = "format.ciru_iu4.ple_pager"
+kind      = "format"
+summary   = "CIRU's SSD-paged PLE embedding table (CIRUPLE1): the Qwen3.8-Flash-Next per-layer-embedding rows stay in a payload file and are paged into a bounded host cache by the model as tokens arrive, instead of being held in memory"
+why       = "the PLE table is the 52 GB part of the release (docs/PROVENANCE.md); this pager is how CIRU serves it on a 128 GB machine, beside strixite's and crucible's PLE row readers"
+notes     = "Interface tag: none (ple.ngram-rows is the nearest catalogue class, but CIRUPLE1 pages plain rows, not n-gram hashes). Includes llama internals (llama-model.h and friends) that are not harvested."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = ["src/models/qwen4exp-ple-pager.cpp", "src/models/qwen4exp-ple-pager.h"]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "ple.rows-paged/ciruple1/-"
+api       = "qwen4exp-ple-pager.h (the pager class and its sidecar file layout)"
+numeric   = "rows copied verbatim from the payload file"
+regime    = "host side, one model"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host code of libllama: includes llama internals that are not harvested; builds only inside the origin tree"

@@ -1,0 +1,39 @@
+id        = "runtime.vllm_strix.idx_pool_subchunks"
+kind      = "runtime"
+summary   = "GLM indexer prefill split into pool-aligned sub-chunks: vLLM's mla/indexer.py (replaced whole) cuts prefill indexer work at pool boundaries so no chunk splits a 4-token pool"
+why       = "a chunk boundary inside a pool made the compressed pool see half its tokens; aligning sub-chunks to pools keeps the kpool compression exact across chunked prefill"
+notes     = "Interface tag: none. A whole vLLM file with the change inside. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-idx-pool-aligned-subchunks-indexer.py"]
+authors   = [
+  "vLLM project contributors (upstream code; this repo ports or patches it)",
+  "davidcanar (vllm-strix-halo)",
+]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.indexer-chunking-pool-aligned/-/-"
+api       = "replacement vllm/v1/attention/backends/mla/indexer.py"
+numeric   = "n/a"
+regime    = "chunked prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

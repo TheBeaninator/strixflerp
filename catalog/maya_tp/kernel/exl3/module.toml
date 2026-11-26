@@ -1,0 +1,45 @@
+id        = "kernel.maya_tp.exl3"
+kind      = "kernel"
+summary   = "the EXL3 trellis-quant kernels: the current decode / prompt GEMVs and expert kernels (exl3, compiled -ffp-contract=on so fused multiply-adds sit where the source writes them) and v1.1.8's legacy kernels for pre-sm_80 GPUs (exl3_legacy)"
+why       = "EXL3 is Maya's second weight family (DeepSeek / MiniMax / GLM EXL3 packs); the same op as kernel.kestrel.exl3 at Maya-TP's revision"
+notes     = "Interface tag: linear.decode/exl3/f32-f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/exl3.hpp", "src/kernels/cuda/exl3.cu", "src/kernels/cuda/exl3_legacy.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/exl3.cu", "src/src/kernels/cuda/exl3_legacy.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/src/kernels/cuda/exl3.cu" = ["-ffp-contract=on"] }
+
+[[provides]]
+interface = "linear.decode/exl3/f32-f32.maya-tp"
+api       = "strata::kernels::exl3_*"
+numeric   = "EXL3 codebooks and trellis, FP32 out; fused where written (-ffp-contract=on)"
+regime    = "decode and prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.exl3.json"

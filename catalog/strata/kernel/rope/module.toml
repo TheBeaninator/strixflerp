@@ -1,0 +1,53 @@
+id        = "kernel.strata.rope"
+kind      = "kernel"
+summary   = "rotary position embedding: NEOX partial RoPE (64 of 256 dimensions) with the YaRN-style scaling tables (rope, rope_scaling.hpp, mrope.hpp), and llama.cpp's text-only IMRoPE with the fused QSA norm + RoPE (native_rope)"
+why       = "every QSA layer rotates q and k, and the two kernels are the reference and the llama.cpp-pinned form of the same op that strixite's and gufo's pos.rope modules provide"
+notes     = "Interface tags by file: rope.cu pos.rope/-/f32; native_rope.cu pos.rope/-/f32. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/mrope.hpp",
+  "include/strata/kernels/native_rope.hpp",
+  "include/strata/kernels/rope.hpp",
+  "include/strata/kernels/rope_scaling.hpp",
+  "src/kernels/cuda/native_rope.cu",
+  "src/kernels/cuda/rope.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/rope.cu", "src/src/kernels/cuda/native_rope.cu"]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "pos.rope/-/f32.strata-neox"
+api       = "strata::kernels::rope_neox_apply, build_rope_table, rope_table_set (src/kernels/cuda/rope.cu)"
+numeric   = "FP32; tables built in FP64 on the host"
+regime    = "head 256, n_rot 64"
+
+[[provides]]
+interface = "pos.rope/-/f32.strata-imrope"
+api       = "strata::kernels::native_rope_apply, native_qsa_rms_norm_rope (src/kernels/cuda/native_rope.cu)"
+numeric   = "FP32; the pinned rope_yarn arithmetic"
+regime    = "head 128 or 256, 64 rotated channels"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.rope.json"

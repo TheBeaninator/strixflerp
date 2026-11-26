@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.draft2s"
+kind      = "runtime"
+summary   = "Two-stage drafter module (draft2s) of the speculative path"
+why       = "speculative decoding drafts. Where the shape would go: a speculation.draft/mtp/f32 provider beside executor.hipfire.arch_deepseek4, executor.hipfire.arch_qwen4, kernel.tensorfold.hip_draft and 2 more, through a port of the python / Triton logic"
+notes     = "Interface tag: speculation.draft/mtp/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (draft2s.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/draft2s.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "speculation.draft/mtp/f32.kyojin-draft2s"
+api       = "draft2s.py"
+numeric   = "n/a"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

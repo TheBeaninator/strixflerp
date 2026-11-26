@@ -1,0 +1,36 @@
+id        = "kernel.vllm_strix.idx_logits"
+kind      = "kernel"
+summary   = "Triton prefill indexer logits for DeepSeek-V4 on gfx1151 on fp16 WMMA: logits[q, k] = kv_scale[k] * sum_h w[q, h] * relu(Q[q, h, :] . K[k, :]) over k in [ks[q], ke[q]), several query rows a program so K tiles are reused, with its exactness test against aiter fp8_mqa_logits and a context sweep of the indexer ops"
+why       = "the indexer scores every earlier compressed position, the quadratic term of DS4 prefill; aiter ran it at ~3 TFLOPS on gfx1151, and this kernel is one of the three changes that took DS4 prefill to ~460 tok/s at 8K and 331 at 128K (PATCHES 42)"
+notes     = "Interface tag: attn.indexer-score. The install hook is runtime.vllm_strix.ds4_idx_logits_hook. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh_idx_logits.py", "scripts/idx_bench.py", "scripts/test_idx_logits.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.indexer-score/fp8-ds4/f32.wmma"
+api       = "vsh_idx_logits(q, kv, kv_scale, weights, ks, ke) (Triton)"
+numeric   = "fp16 WMMA dot of dequantised operands, fp32 logits; selected top-k exact vs aiter"
+regime    = "prefill, 2048-token chunks"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

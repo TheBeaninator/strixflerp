@@ -1,0 +1,36 @@
+id        = "kernel.ds4.glmtp_rocm_attention"
+kind      = "kernel"
+summary   = "davidcanar/ds4 glm-tp-rocm 8ebf672 (antirez/ds4 PR #1024, stacked on #813, #835 and #1018): its copy of the rocm_attention family against antirez/ds4 b3f5018: rocm/ds4_rocm_attention.cuh changed (+12 -5 lines). The family: DeepSeek V4 attention kernels for raw and mixed (FP8-compressed) KV: prefill raw / mixed with softmax tiles, decode mixed and indexed (8-head online, one-fast), the 16-head WMMA mixed kernel, the 64x64 WMMA output-B projection, head pack / unpack and the non-causal raw batch attention of the DSpark draft block; a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "GLM-5.3-Flash tensor parallel across two ROCm machines: the KDA heads split between the ranks, the routed experts split 50/50, and the TP slab in host-mapped pinned memory that GPU kernels and the CPU transport thread share on Strix Halo (rocm/ds4_rocm_tp.cuh); the branch head is \"GLM TP: keep the transport slab unified on ROCm builds\". The family in the base: the attention core of the DSV4 / V4.1 graph on gfx1151, with WMMA paths; the catalogue's attn.softmax-gqa providers are the comparison set"
+notes     = "Overlay glm_tp_rocm: files under overlay/glm_tp_rocm/ are the branch's bytes at 8ebf67295a4f; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/glm_tp_rocm.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/davidcanar/ds4"
+commit    = "8ebf67295a4f4663c326aa415145a35175e02b84"
+branch    = "glm-tp-rocm"
+paths     = ["overlay/glm_tp_rocm/rocm/ds4_rocm_attention.cuh"]
+authors   = ["davidcanar", "The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/glm_tp_rocm", "src/overlay/glm_tp_rocm/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+fp8/f32.ds4-glmtp"
+api       = "see summary"
+numeric   = "F32 accumulation; F16 / FP8 KV; rocWMMA where the head count allows"
+regime    = "prefill and decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.glmtp_rocm_backend"

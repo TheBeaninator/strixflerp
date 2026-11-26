@@ -1,0 +1,50 @@
+id        = "runtime.kyojin.moe_handoff"
+kind      = "runtime"
+summary   = "Persistent-worker handoff for CPU-offloaded experts: pinned shared-memory flags, GPU publish / wait kernels and a spin-parked child process consuming a job ring; moe_handoff_amdgpu.cu is the HIP port"
+why       = "GPU-CPU expert handoff without host syncs: a transport between the device stream and CPU workers. Where the shape would go: a collective.device-proxy/-/- provider beside kernel.strixfold.coll_proxy, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: collective.device-proxy/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (moe_handoff_amdgpu.cu), 2 changed (moe_handoff.cu, moe_handoff.h). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/cpu/moe_handoff.cu",
+  "exllamav3/exllamav3_ext/cpu/moe_handoff.h",
+  "exllamav3/exllamav3_ext/cpu/moe_handoff_amdgpu.cu",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/exllamav3/exllamav3_ext/cpu/moe_handoff.cu",
+  "src/exllamav3/exllamav3_ext/cpu/moe_handoff_amdgpu.cu",
+]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.device-proxy-kyojin-moe-handoff/-/-"
+api       = "moe_handoff.cu, moe_handoff.h, moe_handoff_amdgpu.cu; kernels: moe_flag_write_kernel, moe_flag_wait_kernel, moe_flag_write_kernel_hip, moe_flag_wait_kernel_hip, moe_flag_wait_fine_kernel_hip"
+numeric   = "n/a"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.cpu_moe_mul1"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: moe_handoff.cu, moe_handoff_amdgpu.cu"

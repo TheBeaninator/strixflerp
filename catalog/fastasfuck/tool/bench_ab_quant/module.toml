@@ -1,0 +1,40 @@
+id        = "tool.fastasfuck.bench_ab_quant"
+kind      = "tool"
+summary   = "fastasfuck's A/B bench of two quantization layouts on one server config: sterile solo runs with bit-identity, MTP acceptance, 4-slot concurrency and 4k/8k prefill (new in 1.1.0)"
+why       = "the 1.1.0 speed-parity claim for GPTQ against round-to-nearest weights was measured with this bench"
+notes     = "Files vs strixite: tools/bench/bench_ab_quant.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/bench/bench_ab_quant.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.bench-ab-quant/-/-"
+api       = "tools/bench/bench_ab_quant.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[[requires]]
+module    = "tool.fastasfuck.bench_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

@@ -1,0 +1,51 @@
+id        = "tool.ciru_link.prereq"
+kind      = "tool"
+summary   = "host prerequisites and install plans in Go: a versioned, UI-safe report of the kernel, modules, tools (ip, ethtool, ping, NetworkManager) and permissions the transport needs (internal/prereq), and allowlisted install plans by package manager that never change kernels, reboot or edit declarative OS state (internal/install)"
+why       = "a prerequisites report with stable status words is the bring-up check a pod node pair would run before arming a link"
+notes     = "Interface tag: none. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "internal/install/install.go",
+  "internal/install/install_test.go",
+  "internal/prereq/prereq.go",
+  "internal/prereq/prereq_test.go",
+]
+authors   = ["Ciru (ciru-ai)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "go"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.host-prereq-usb4/-/-"
+api       = "prereq.Check (internal/prereq/prereq.go)"
+numeric   = "n/a"
+regime    = "Linux x86-64 hosts (Ubuntu / Debian, Fedora / RHEL, Arch, NixOS)"
+
+[[provides]]
+interface = "tool.install-plan-usb4/-/-"
+api       = "install.Build, install.Apply (internal/install/install.go)"
+numeric   = "n/a"
+regime    = "allowlisted package installs only"
+
+[[requires]]
+module    = "runtime.ciru_link.usb4net"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/tool.ciru_link.prereq.json"
+reason    = "go: built by the Go gate, not gate/compile/run.py (python3 docs/harvest/harvest_ciru_link.py --go-gate on control-node CPU: go vet, the tests compiled without running, the static binary built)"

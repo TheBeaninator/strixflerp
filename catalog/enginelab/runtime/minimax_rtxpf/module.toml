@@ -1,0 +1,43 @@
+id        = "runtime.enginelab.minimax_rtxpf"
+kind      = "runtime"
+summary   = "MiniMax RTX FP32 identity (device, reference, tests): 5 origin files under src/minimax"
+why       = "the RTX prefill route with an FP32 identity; where it would go: a new strixflerp interface runtime.hetero-route-enginelab-minimax/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, runtime.hetero-route-enginelab-minimax/-/-. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/minimax/rtxpf/fp32_identity.hip",
+  "src/minimax/rtxpf/fp32_identity.hpp",
+  "src/minimax/rtxpf/fp32_identity_device.inc",
+  "src/minimax/rtxpf/fp32_identity_ref.hpp",
+  "src/minimax/rtxpf/fp32_identity_tests.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/minimax/rtxpf/fp32_identity.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "runtime.hetero-route-enginelab-minimax/-/-"
+api       = "src/minimax/rtxpf/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.minimax_rtxpf.json"

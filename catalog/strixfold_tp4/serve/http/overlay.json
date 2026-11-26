@@ -1,0 +1,411 @@
+{
+ "what": "StrixFold 72c0f083's versions of files that a module of origin strixfold also holds; laid over them by a recipe's [build.overlay] \"<id>\" = \".\" (docs/harvest/harvest_strixfold_tp4.py)",
+ "parent_origin": "strixfold",
+ "parent_commit": "f64b5ff",
+ "head_commit": "72c0f083fca18f80fcf73b2358cf8235c3dd5363",
+ "files": [
+  {
+   "path": "zig/src/server/anthropic.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "cab524a0ea988939a40fb8adef8364fed7627a890393b5d16578d442f806c884",
+   "tp4_sha256": "a982fbf4f80b1b972ebd108499a1edc1d045c2c0c02da71773a69c87a40337cf",
+   "commits": [
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)",
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)",
+    "fbae6f74 server: restore the trailing newline of anthropic.zig and responses.zig (pod card f34d18ab39)",
+    "06819404 server: loop-stopped replies are visible on /v1/messages and /v1/responses (pod card f34d18ab39)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)",
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)",
+    "4bd8e663 server: count_tokens takes image blocks; HTTP regression of the image routes"
+   ]
+  },
+  {
+   "path": "zig/src/server/auth.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "8be7f3bc83881268d79081f12378386a1959c3772b107d10ab3a3555299e792a",
+   "tp4_sha256": "b2b88ae770e2ce65d7b2751ccd66a9ef90b24b4120536f441b01d6a379bfec07",
+   "commits": [
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+   ]
+  },
+  {
+   "path": "zig/src/server/cache_routes.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "f60d6e4a6d0e04fe1a006d57a06434d77654fa705abdb18dbb2b4d448692202f",
+   "tp4_sha256": "4f478e21e6fff9b88b0aca73bffcf055ffa41504800db776ff1f241997491e77",
+   "commits": [
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+   ]
+  },
+  {
+   "path": "zig/src/server/chat.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "5b10033a1fcbbf14c166d92cf36a3b79596185deb3cc143025127a602573fa5d",
+   "tp4_sha256": "b0e6e6c91f56c377038febf7c0136372d261a23ec93b011795a2de117c8d7530",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)",
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)",
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)",
+    "9c7bf49a server: shared_messages, a chat request's own shared prefix as a shared cut of the prompt cache"
+   ]
+  },
+  {
+   "path": "zig/src/server/cli.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "67c2e2b610fd2629d57b595d4ee2165130465b9cea5c87c3f479727214bcb685",
+   "tp4_sha256": "32464b517f6c36387078e27d782e48f354f0a4bc1532342748bd61004a9605dd",
+   "commits": [
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped",
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)",
+    "0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+   ]
+  },
+  {
+   "path": "zig/src/server/errors.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "ff4b153112a0385f71a269971b99b88d5da6cd23fd8c0db67a4cb0442c39f0e8",
+   "tp4_sha256": "869306be8f1906a5fff97ed9b1a21f0438ae6d730c74872488256b50c6ebbbc6",
+   "commits": [
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)",
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+   ]
+  },
+  {
+   "path": "zig/src/server/fields.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "350ce9e01e640c4314460b45e650d9a02deabe9c688def1a98e2898301531cb8",
+   "tp4_sha256": "c122c97eda0e9c7c68f356df798c7014564a8a3e84009ed114465a3dbaadbaeb",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+   ]
+  },
+  {
+   "path": "zig/src/server/http_body.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "142af62203e710c0753bc1f993afd9e617ce2913a195678a2da737be7df66622",
+   "tp4_sha256": "6b03bec1ef57c2d4018d301a19869acda96dff19845b53d5173180b37e7ed7f5",
+   "commits": [
+    "8c30702f server: request body limit 32 -> 256 MiB (64 full-size base64 pictures) + host test (pod card 9757a35411)",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+   ]
+  },
+  {
+   "path": "zig/src/server/http_conn.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "b213574a58fb51b199a768466f493dc2490317169f059a2087f9ed19f59196f2",
+   "tp4_sha256": "48b4d4b70f77b0df687a79f1c4ba84b3284fd6cc31692582b4535c25ddd61baf",
+   "commits": [
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)",
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+   ]
+  },
+  {
+   "path": "zig/src/server/late_system_test.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "f01cf2e1e010e21b55545c2f750b00fd5aff3c1ff9a25d2b1f1a344253a7174d",
+   "tp4_sha256": "807e69c530e5d92143079a536d70c2039aeed5a10bfe79779c918dea0b386636",
+   "commits": [
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+   ]
+  },
+  {
+   "path": "zig/src/server/main.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "8d34c5b8b1675adc29e26a2388c6e422607965e4d97b540be588dd581e9a6075",
+   "tp4_sha256": "86e5550fdf805ef91a0c291af0948f2ad735efa9b9e982ee4e6192418d91fc73",
+   "commits": [
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)",
+    "6c9bc923 server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults",
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)",
+    "0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+   ]
+  },
+  {
+   "path": "zig/src/server/messages.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "bbf472b6030e9d6dd29b397e6f1e78e2aff9a604fb57f1680f882e1d9c1d1f40",
+   "tp4_sha256": "93878bd9c898efbbbc0cd19e44175219f8e763b0fdbe2c3c9ac2cbdf0f1ed246",
+   "commits": [
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+   ]
+  },
+  {
+   "path": "zig/src/server/metrics.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "93b1e73e9570a0c2375dd7f65816f1c5dece936d6e34d0ff310b8049627a6270",
+   "tp4_sha256": "c1342dd555d83d0ef3244e8f8ea3877cab76e84d4fde08f9d3923edd15ee470b",
+   "commits": [
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+   ]
+  },
+  {
+   "path": "zig/src/server/openai.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "01ffd178339d6510330046869b5366539903e3b735d3d505342a275416ec6701",
+   "tp4_sha256": "d9751d0e35186319405b5d91d2b15c9a51f572dbd1195f8f62e13233f9ed37b4",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)",
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped",
+    "9c7bf49a server: shared_messages, a chat request's own shared prefix as a shared cut of the prompt cache",
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)",
+    "0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+   ]
+  },
+  {
+   "path": "zig/src/server/prompt.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "f1d2d61ea6b9831fe9d3e2ee5b52d13734a665daf898a5b57e51359971b0b5eb",
+   "tp4_sha256": "7f0c025b864cbae13535223e39ba3fdbd21be5520e46846414b4e2cee1a2cffa",
+   "commits": [
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest",
+    "9c7bf49a server: shared_messages, a chat request's own shared prefix as a shared cut of the prompt cache",
+    "c16dc5bf server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)",
+    "f925e82a server: a request whose images take more tokens than the engine holds is refused with 400 before it queues (review)",
+    "0ae5d118 server: bind each image to its placeholder by index (from PR #6)",
+    "76805a12 server: render image requests once, after normalizeImages (from PR #6)"
+   ]
+  },
+  {
+   "path": "zig/src/server/responses.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "92a47fb5c13999e007910b74c4cc3b820a5aa81d54c51bc9fb76a90078aed514",
+   "tp4_sha256": "2170c538976f031d60276f48129824fad945621dfad462e9177864cb2c6aa2dc",
+   "commits": [
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)",
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)",
+    "fbae6f74 server: restore the trailing newline of anthropic.zig and responses.zig (pod card f34d18ab39)",
+    "06819404 server: loop-stopped replies are visible on /v1/messages and /v1/responses (pod card f34d18ab39)"
+   ]
+  },
+  {
+   "path": "zig/src/server/responses_translate.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "90f44a72d05b5608c9a420ad95c1fe7935e45b0f86a734c285365c457a568a9b",
+   "tp4_sha256": "4f98cddd1f088729419376d5a27101c746fb9341911023d250f76d057fb4f2b8",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+   ]
+  },
+  {
+   "path": "zig/src/server/root.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "56584ecdd2b1537f01b1d408bad5f80a9ed1af810f1178a97dc75db3256081e0",
+   "tp4_sha256": "11c1d07f16a3ca90a3f12ffcc0d7558f19403d782b070f6e64e4fa9fa4ba8e72",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)",
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "8c30702f server: request body limit 32 -> 256 MiB (64 full-size base64 pictures) + host test (pod card 9757a35411)",
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest",
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped",
+    "60b3a16d server: shared_messages host tests: k = 0, k at or past the end, a cut under 512, tools, the cut in shared_prefixes (review)",
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+   ]
+  },
+  {
+   "path": "zig/src/server/routes.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "463569f9874640b6068f87332bd8fc8931700d6cd045c85ec13674ae5e09e801",
+   "tp4_sha256": "5819bcdb1fdf973361a3f76337e0de6f600daa961dc0ed110dee381c75f079d2",
+   "commits": [
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+   ]
+  },
+  {
+   "path": "zig/src/server/serve.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "e6ab3a510d66f70cf9c6b965e0e026d78a55309683a66e5f9e6ae8d5efe541ac",
+   "tp4_sha256": "f02a65cd67af7970a9c4f30c73e0e35fae45f3f9e3dd8546026850a23d8a1053",
+   "commits": [
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)",
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped",
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+   ]
+  },
+  {
+   "path": "zig/src/server/server.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "b9586d442c2dec5a84d7855433c7c20b98ad3f52b357fc55c5bb365660c12209",
+   "tp4_sha256": "512db30bcd6c57e740497f95147d54d947cbe48875b8cd1540a32f593a39c1da",
+   "commits": [
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)",
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped",
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)",
+    "0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+   ]
+  },
+  {
+   "path": "zig/src/server/telemetry_reply_test.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "056a8226329590a52cb1d2c37098982c0b7d18d9af2902c919a8b22b0ea0153b",
+   "tp4_sha256": "10f91a2b9f834f4176cf058ab86714b77876e9b6552eff2daea0158f7b01049b",
+   "commits": [
+    "06819404 server: loop-stopped replies are visible on /v1/messages and /v1/responses (pod card f34d18ab39)",
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+   ]
+  },
+  {
+   "path": "zig/src/server/tokens.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "9e5d55dff5ef7499494fdcf29b0e3583d5aeee6bb4c3340c1c3ee7d15b130d85",
+   "tp4_sha256": "a65c56776a8eb29f0e599ac435db8425a27fbc8300262c04e93d1a35686afc47",
+   "commits": [
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)",
+    "76805a12 server: render image requests once, after normalizeImages (from PR #6)"
+   ]
+  },
+  {
+   "path": "zig/src/server/top_k_test.zig",
+   "parent_module": "serve.strixfold.http",
+   "parent_sha256": "218581f30c42b459d8cb809cce21b4d918329e77dfda4ef70e0b837ef74393a5",
+   "tp4_sha256": "3486174dc790eda0db8a38c2fc8f54f22725a04fa1e8961a994489cf01a5e0b3",
+   "commits": [
+    "0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+   ]
+  },
+  {
+   "path": "zig/src/server/acts_fields.zig",
+   "added": true,
+   "tp4_sha256": "98461483f693904561fe2273d7de5c5ea2d890aefab803b11aa80ea03c5654dd",
+   "commits": [
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+   ]
+  },
+  {
+   "path": "zig/src/server/acts_test.zig",
+   "added": true,
+   "tp4_sha256": "5a287eaaa50dc1a0db0c3e3af1a3e0f275b935e0701908b9a5974f5e7726b6ec",
+   "commits": [
+    "e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+   ]
+  },
+  {
+   "path": "zig/src/server/cache_key.zig",
+   "added": true,
+   "tp4_sha256": "ba9e71005f5aabeec9d82d1d439e3039a7cc04e2e25156428798990c88761b05",
+   "commits": [
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+   ]
+  },
+  {
+   "path": "zig/src/server/cache_routes_test.zig",
+   "added": true,
+   "tp4_sha256": "03a381057027d7e81aeb89e3b8ddd5e5de21cb9ae962c8f0880a8bab6f38a903",
+   "commits": [
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+   ]
+  },
+  {
+   "path": "zig/src/server/http_body_test.zig",
+   "added": true,
+   "tp4_sha256": "6a1ddd545a4d5ccba8d650d279bbaa1736091e8d676dcb3d31b0acb72924d2fe",
+   "commits": [
+    "8c30702f server: request body limit 32 -> 256 MiB (64 full-size base64 pictures) + host test (pod card 9757a35411)"
+   ]
+  },
+  {
+   "path": "zig/src/server/image_limits_test.zig",
+   "added": true,
+   "tp4_sha256": "d043d60e3d68f75e9faa1bef075f9cc80b94c92c498e7c5475a35ceba13221a0",
+   "commits": [
+    "e9ede312 server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+   ]
+  },
+  {
+   "path": "zig/src/server/leave.zig",
+   "added": true,
+   "tp4_sha256": "5e8b3378bcf5424ee54c3fae5deb497231115c1dcc0cc1ea13dccd5e27ccb44f",
+   "commits": [
+    "6c9bc923 server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults"
+   ]
+  },
+  {
+   "path": "zig/src/server/logprobs_test.zig",
+   "added": true,
+   "tp4_sha256": "ceb892bd430bf2c355d0fad424cdc7d55de965bc0224c74940e3c5a7e5f24fd5",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+   ]
+  },
+  {
+   "path": "zig/src/server/queue_cap.zig",
+   "added": true,
+   "tp4_sha256": "34eaf3720d31523ac9040859c1e028f58f9e065af44c9fcca26cf1e7e44ebe8a",
+   "commits": [
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+   ]
+  },
+  {
+   "path": "zig/src/server/queue_cap_test.zig",
+   "added": true,
+   "tp4_sha256": "b48d8748421fbc6526449d56bb7088be475041609dc7870f236f8bea6f879b1c",
+   "commits": [
+    "37b2db2a server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+   ]
+  },
+  {
+   "path": "zig/src/server/reap_routes.zig",
+   "added": true,
+   "tp4_sha256": "d34109956d28e2a81eb61c9ac5bb2b325c14ef79348fe7bd359c48215b9d2eea",
+   "commits": [
+    "62878ca5 server: x-reap-domain on messages and completions, 503 Retry-After (pod card 023c5d2ad9)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+   ]
+  },
+  {
+   "path": "zig/src/server/reap_routes_test.zig",
+   "added": true,
+   "tp4_sha256": "50e34a648d94b4ac7ec8189e2154ec5a630b07ebc9d9908568b3972ffc8ae4a1",
+   "commits": [
+    "62878ca5 server: x-reap-domain on messages and completions, 503 Retry-After (pod card 023c5d2ad9)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+   ]
+  },
+  {
+   "path": "zig/src/server/route_records_test.zig",
+   "added": true,
+   "tp4_sha256": "54ba585b54bd9433969f4bcad2fd3d81170c0bb5fe117dc60e00666b26d64880",
+   "commits": [
+    "fbdaf8b4 server: route records test builds under zig_test.sh (no ** on strings, one Reply) and matches the reply's \": \" spacing (pod card 28153e18f3)",
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+   ]
+  },
+  {
+   "path": "zig/src/server/route_tag.zig",
+   "added": true,
+   "tp4_sha256": "f3274c97742c22cf62830cb0168b8dc3d6ce627ba28d345d02b9b14843a81d23",
+   "commits": [
+    "c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+   ]
+  },
+  {
+   "path": "zig/src/server/shared_messages_test.zig",
+   "added": true,
+   "tp4_sha256": "1f867f7053ddcc3a2bf10bc7f183eb4b5815676083aa97abc06a6c661b52fcd4",
+   "commits": [
+    "60b3a16d server: shared_messages host tests: k = 0, k at or past the end, a cut under 512, tools, the cut in shared_prefixes (review)"
+   ]
+  }
+ ]
+}

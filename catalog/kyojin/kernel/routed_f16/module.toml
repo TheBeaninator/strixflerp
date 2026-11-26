@@ -1,0 +1,41 @@
+id        = "kernel.kyojin.routed_f16"
+kind      = "kernel"
+summary   = "Routed F16-WMMA prefill MoE for gfx1151: RoutedPairF16 / RoutedDownF16 / pad-bounds / scatter kernels and the MoE epilogue (combine with the shared-expert term), adapted from Gufo"
+why       = "GGUF MoE prefill through dequant to fp16 tiles and WMMA. Where the shape would go: a moe.experts-prefill/gguf-kquant/f16-f32 provider beside kernel.flerp.moe_kgrouped, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-prefill/gguf-kquant/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (routed_f16.cu, routed_f16.h), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/rocm/routed_f16/routed_f16.cu",
+  "exllamav3/exllamav3_ext/rocm/routed_f16/routed_f16.h",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+upstream  = "adapted from Gufo 07e1191 kernels.hip.cpp (RoutedPairF16Kernel, RoutedDownF16Kernel, RoutedPadBoundsKernel, RoutedScatterKernel, MoeEpilogueVec4Kernel; MIT)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/rocm/routed_f16/routed_f16.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-kquant/f16-f32.kyojin-routed-f16"
+api       = "routed_f16.cu, routed_f16.h; kernels: RoutedDownF16Kernel, RoutedPairF16Kernel, RoutedPadBoundsKernel, RoutedScatterKernel, RoutedCombineKernel, RoutedCombineSharedKernel"
+numeric   = "fp16 WMMA, fp32 accumulation"
+regime    = "prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: routed_f16.cu"

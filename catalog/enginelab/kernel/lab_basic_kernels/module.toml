@@ -1,0 +1,37 @@
+id        = "kernel.enginelab.lab_basic_kernels"
+kind      = "kernel"
+summary   = "the basic HIP kernels lab (vector ops, reductions) with its CMake and README (lab/basic_kernels)"
+why       = "the first kernels brought up on gfx1151; where it would go: a new strixflerp interface kernel-research.enginelab-lab-basic-kernels/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kernel-research.enginelab-lab-basic-kernels/-/-. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["lab/basic_kernels/CMakeLists.txt", "lab/basic_kernels/README.md", "lab/basic_kernels/basic_kernels.hip"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/lab/basic_kernels/basic_kernels.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-research.enginelab-lab-basic-kernels/-/-"
+api       = "lab/basic_kernels"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.lab_basic_kernels.json"

@@ -1,0 +1,37 @@
+id        = "tool.fastasfuck.solve_qwen_quant"
+kind      = "tool"
+summary   = "fastasfuck's CPU multiple-choice knapsack (MILP) optimizer picking a per-class or per-layer quantization layout under a byte budget from measured KLD (new in 1.1.0)"
+why       = "it turns the simulators' sensitivity data into a layout without running the GPU"
+notes     = "Files vs strixite: tools/solve_qwen_quant.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/solve_qwen_quant.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.solve-qwen-quant/-/-"
+api       = "tools/solve_qwen_quant.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

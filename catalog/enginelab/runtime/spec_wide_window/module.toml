@@ -1,0 +1,54 @@
+id        = "runtime.enginelab.spec_wide_window"
+kind      = "runtime"
+summary   = "wide verify windows (include/strix/spec): the backend-neutral pricing of a wide window (rows-1 copied proposals plus the pending token in one forward of rows rows, against the narrow path, with a declared keep stride), tree windows, the verify cost table, commit tail, row rule and draft rows"
+why       = "MTP wide drafting: a long, confident copy span is verified in one wide forward instead of several 8-row windows; tokens never change with the decision, only the cost; where it would go: a new strixflerp interface speculation.window-verify-wide/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, speculation.window-verify-wide/-/-. 2 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/spec/commit_tail.hpp",
+  "include/strix/spec/draft_rows.hpp",
+  "include/strix/spec/row_rule.hpp",
+  "include/strix/spec/tree_window.hpp",
+  "include/strix/spec/verify_cost_table.hpp",
+  "include/strix/spec/wide_window.hpp",
+  "src/spec/draft_rows.cpp",
+  "src/spec/row_rule.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/spec/draft_rows.cpp", "src/src/spec/row_rule.cpp"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "speculation.window-verify-wide/-/-"
+api       = "strix::spec wide_window.hpp, verify_cost_table.hpp"
+numeric   = "host only; the decision changes cost, never tokens"
+regime    = "one request, long copy spans (edit / JSON / code)"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

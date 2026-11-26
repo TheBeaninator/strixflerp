@@ -1,0 +1,46 @@
+id        = "runtime.fastasfuck.ngram_table"
+kind      = "runtime"
+summary   = "fastasfuck's serving PLE row source: on-demand reads from the converted ngram.table with deduplication, up to 64 concurrent preads, BF16 decode and an LRU row cache"
+why       = "every decoded token needs 16 PLE rows; this reader keeps that off the critical path on an SSD-backed table"
+notes     = "Files vs strixite: runtime/ngram_table.cpp 303 changed lines against runtime.strixite.ngram_table at d19945e; runtime/ngram_table.hpp 47 changed lines against runtime.strixite.ngram_table at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/ngram_table.cpp", "runtime/ngram_table.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/ngram_table.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.ngram-rows/ngram-table/-"
+api       = "strix::NgramRowSource, strix::NgramTableRows"
+numeric   = "derived from runtime.strixite.ngram_table (runtime/ngram_table.cpp 303 changed lines against runtime.strixite.ngram_table at d19945e; runtime/ngram_table.hpp 47 changed lines against runtime.strixite.ngram_table at d19945e); not compared here"
+regime    = "as runtime.strixite.ngram_table: up to 64 concurrent preads; the table stays on SSD"
+
+[[requires]]
+module    = "format.fastasfuck.ngram_table"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.ple_hash"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_model) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

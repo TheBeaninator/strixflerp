@@ -1,0 +1,69 @@
+id        = "tool.odinlink5.daemon"
+kind      = "tool"
+summary   = "odl-tb5-daemon, a GLib background service: D-Bus API for peer status (com.odinlink.Tb5Daemon), cable plug / unplug monitoring, a file-sync engine with its own protocol and a catalogue, export of RCCL shared-memory stats, a FUSE mount of the peer filesystem and a link self-test, with its systemd and D-Bus unit files"
+why       = "operational plumbing around a link (who is connected, how RCCL traffic is doing) that a pod pair would want surfaced; strixflerp would take the stats export, not the sync engine"
+notes     = "Interface tag: none. Not compiled by the gate: needs GLib / gio, FUSE 3 and gdbus-codegen output that CMake generates. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "daemon/CMakeLists.txt",
+  "daemon/data/com.odinlink.Tb5Daemon.service",
+  "daemon/data/odl-tb5-daemon.service",
+  "daemon/dbus/com.odinlink.Tb5Daemon.xml",
+  "daemon/src/odl_tb5_daemon_catalog.c",
+  "daemon/src/odl_tb5_daemon_catalog.h",
+  "daemon/src/odl_tb5_daemon_config.c",
+  "daemon/src/odl_tb5_daemon_config.h",
+  "daemon/src/odl_tb5_daemon_dbus.c",
+  "daemon/src/odl_tb5_daemon_dbus.h",
+  "daemon/src/odl_tb5_daemon_fuse.c",
+  "daemon/src/odl_tb5_daemon_fuse.h",
+  "daemon/src/odl_tb5_daemon_fuse_stubs.c",
+  "daemon/src/odl_tb5_daemon_main.c",
+  "daemon/src/odl_tb5_daemon_monitor.c",
+  "daemon/src/odl_tb5_daemon_monitor.h",
+  "daemon/src/odl_tb5_daemon_rccl_stats.c",
+  "daemon/src/odl_tb5_daemon_rccl_stats.h",
+  "daemon/src/odl_tb5_daemon_sync.c",
+  "daemon/src/odl_tb5_daemon_sync.h",
+  "daemon/src/odl_tb5_daemon_sync_proto.c",
+  "daemon/src/odl_tb5_daemon_sync_proto.h",
+  "daemon/src/odl_tb5_daemon_sysinfo.c",
+  "daemon/src/odl_tb5_daemon_sysinfo.h",
+  "daemon/src/odl_tb5_daemon_test.c",
+  "daemon/src/odl_tb5_daemon_test.h",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/daemon/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.link-daemon/-/-"
+api       = "D-Bus com.odinlink.Tb5Daemon (daemon/dbus/com.odinlink.Tb5Daemon.xml)"
+numeric   = "n/a"
+regime    = "desktop / server Linux"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[[requires]]
+module    = "tool.odinlink5.cli"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c: not compiled by the gate (by the gate: needs GLib / gio, FUSE 3 and gdbus-codegen output that CMake generates)"

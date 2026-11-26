@@ -1,0 +1,40 @@
+id        = "tool.vllm_strix.odl_pingpong"
+kind      = "tool"
+summary   = "RTT latency bench over the OdinLink stream layer: server echoes, client sends [4-byte size][payload in <= ODL_CHUNK frames] on one stream and records CLOCK_MONOTONIC round trips; min / p50 / p90 / p99 / max and the raw RTTs to a file"
+why       = "the numbers that justified odl_ar2 over RCCL for decode came from this bench; the framing mirrors odl_stress and the RCCL plugin, so it measures what the collectives see"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["odinlink/odl_pingpong.c"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.link-bench-rtt/-/-"
+api       = "odl_pingpong server|client <dev> <msg_bytes> <iters> [warmup]"
+numeric   = "timing"
+regime    = "one stream"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/tool.vllm_strix.odl_pingpong.json"
+reason    = "c: compiled by --side-gates with gcc against runtime.odinlink5.lib on control-node CPU (gate/results/compile/<module>.json)"

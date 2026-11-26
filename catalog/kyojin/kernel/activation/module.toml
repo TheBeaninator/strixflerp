@@ -1,0 +1,43 @@
+id        = "kernel.kyojin.activation"
+kind      = "kernel"
+summary   = "Gated activations of the extension (silu(x) * y and the gelu / relu2 forms, in place when the output aliases an input) and activation_rocm.cu, a ROCm-only x * sigmoid(y @ w) + z gate"
+why       = "the MLP and shared-expert activations of every model Kyojin serves; the ROCm file is Kyojin's. Where the shape would go: an act.swiglu/-/f32 provider beside kernel.ds4.kmultinode_rocm_output, kernel.ds4.rocm_output, kernel.fastasfuck.swiglu and 3 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: act.swiglu/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (activation_rocm.cu), 1 changed (activation.cu). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/activation.cu", "exllamav3/exllamav3_ext/activation_rocm.cu"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/activation.cu", "src/exllamav3/exllamav3_ext/activation_rocm.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "act.swiglu/-/f32.kyojin-ext"
+api       = "activation.cu, activation_rocm.cu; kernels: deinterleave_qg_kernel, add_sigmoid_proj_kernel_f"
+numeric   = "fp16 / bf16 in and out, fp32 math"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: activation.cu, activation_rocm.cu"

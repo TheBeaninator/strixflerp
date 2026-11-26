@@ -1,0 +1,65 @@
+id        = "kernel.strix_trellis.c_api"
+kind      = "kernel"
+summary   = "strix-trellis' C ABI v1 (include/strix_trellis.h) and the host code that answers it: descriptor validation, weight preparation from an EXL3 transport blob or from four separate host regions into one device allocation, workspace queries, the strix_gemv / strix_gemm dispatch (backend.hip: kernel and split selection, the staged or fused transforms), prepared plans, the pre-routed grouped MoE call, and the tensor-parallel plan creators that the .inc fragments add to api.hip; with the origin's CMake file, which defines the library and its options"
+why       = "the survey gave strix-trellis a harvest verdict because it has a C header as its ABI where StrixFold has by-value kernel argument structs; the adapter question in ABI-DIFF.md is answered from this module, and nothing else in the origin can be called without it"
+notes     = "Interface tag: none. catalog/strix_trellis/ABI-DIFF.md compares this header with StrixFold's zig/kernels/hip/dsv41/abi.h (kernel.strixfold.dsv41_abi). api.hip is one translation unit; with STRIX_TRELLIS_ENABLE_EXPERIMENTAL_TP off the TP creators return STRIX_ERROR_NOT_IMPLEMENTED (docs/TP_RANK.md). The origin README says its sibling strix-halo-engine-lab links this library for attention, shared-expert projections and the head on two nodes."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "CMakeLists.txt",
+  "include/strix_trellis.h",
+  "src/api.hip",
+  "src/backend.hip",
+  "src/dense_r1_api.inc",
+  "src/dense_r1_group_api.inc",
+  "src/tp_api.inc",
+  "src/tp_split_api.inc",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/api.hip", "src/src/backend.hip"]
+includes  = ["src/include", "src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.strix-trellis-c/-/-"
+api       = "strix_context_create / _destroy, strix_weights_prepare / _prepare_parts / _device_span / _destroy, strix_matmul_workspace_bytes, strix_gemv, strix_gemm, strix_linear_plan_*, strix_grouped_moe, strix_tp_dense_*, strix_grouped_gemv_plan_*, strix_tp_moe_* (STRIX_TRELLIS_ABI_VERSION 1, library 0.3.0)"
+numeric   = "n/a here: the operator Y = alpha * Linear(X) + beta * Y is stated in the origin's docs/API.md and each kernel module states its accumulation order"
+regime    = "host calls that validate and enqueue on a borrowed hipStream_t; no synchronisation is promised and device errors surface through HIP"
+
+[[requires]]
+module    = "kernel.strix_trellis.trellis_common"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_gemv"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_wmma_gemm"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_tp_dense"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_dense_r1"
+
+[[requires]]
+module    = "kernel.strix_trellis.exl3_tp_moe"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libstrix_trellis.a: built by the origin CMake (STRIX_TRELLIS_ENABLE_HIP=ON, -O3 -ffp-contract=off, HIP standard 17, gfx1151), not compiled by this harvest"

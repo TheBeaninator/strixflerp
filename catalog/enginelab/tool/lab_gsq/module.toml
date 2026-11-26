@@ -1,0 +1,42 @@
+id        = "tool.enginelab.lab_gsq"
+kind      = "tool"
+summary   = "the GSQ lab: content identity, tensor dequantisation and a dequant comparison against llama.cpp (lab/gsq)"
+why       = "GSQ format checks; where it would go: kept as a reference program or lab (tool.enginelab-lab-gsq/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-lab-gsq/-/-. 3 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["lab/gsq/content_identity.cpp", "lab/gsq/dequant_tensor.cpp", "lab/gsq/dequant_vs_llama.cpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/lab/gsq/content_identity.cpp", "src/lab/gsq/dequant_tensor.cpp", "src/lab/gsq/dequant_vs_llama.cpp"]
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.enginelab-lab-gsq/-/-"
+api       = "lab/gsq"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

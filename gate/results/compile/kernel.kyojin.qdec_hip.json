@@ -1,0 +1,25 @@
+{
+ "module": "kernel.kyojin.qdec_hip",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-25T23:00:40Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 1,
+ "passed": 1,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 1.9,
+ "results": [
+  {
+   "unit": "src/exllamav3/modules/attention_fn/qdec.hip",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -ffp-contract=off --offload-device-only -c -DHD=256 -DKB=4 -DVB=4 -DNKV=2 -DNQH=24 -DQLEN=1 -DPAGE=256 -DNW=4 -DDW=2 -DCAUSAL=1 -DHAS_SINKS=0 -DKEY_LO=0 -DTQ=0 -DVPF=1 -DSMM1=0 -DSCALE=0.0625f -I /data/models/tools/therock-10.2/include catalog/kyojin/kernel/qdec_hip/src/exllamav3/modules/attention_fn/qdec.hip -o build/compile-gate/kernel.kyojin.qdec_hip/0-qdec.hip.o",
+   "rc": 0,
+   "seconds": 1.93,
+   "object_bytes": 28072,
+   "object_sha256": "76c310ce42f63a1263a00ee58a0f16daf91703ba7c8d12185f08a349c59058c2"
+  }
+ ]
+}

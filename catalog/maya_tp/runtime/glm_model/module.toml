@@ -1,0 +1,116 @@
+id        = "runtime.maya_tp.glm_model"
+kind      = "runtime"
+summary   = "the glm5-next / GLM-5.3-Flash runner (glm_model.cu, 4,206 lines) with several conversations decoded together (glm_rows, glm_multi), the residual seams (glm_residual), the state arena and its layout descriptor (glm_state_bind, glm_state_layout), the memory map and split-device rules"
+why       = "the executor that the TP2 context plugs into: where the two all-reduce points sit in a layer and how a rank's slices are bound; the executor shape a strixflerp GLM recipe would follow"
+notes     = "Interface tag: executor.glm5-next/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/glm_model.hpp",
+  "include/strata/core/glm_state_layout.hpp",
+  "src/core/glm_memory.hpp",
+  "src/core/glm_model.cu",
+  "src/core/glm_multi.cu",
+  "src/core/glm_residual.cu",
+  "src/core/glm_residual.hpp",
+  "src/core/glm_rows.cu",
+  "src/core/glm_rows_state.hpp",
+  "src/core/glm_state_bind.cpp",
+  "src/core/glm_state_layout.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.glm5-next/-/-"
+api       = "strata::Glm5Model (include/strata/core/glm_model.hpp)"
+numeric   = "per-kernel numerics"
+regime    = "one host or one rank of two"
+
+[[requires]]
+module    = "format.maya_tp.gguf_reader"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_dsa"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_ffn"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_hc"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_kda"
+
+[[requires]]
+module    = "kernel.maya_tp.router"
+
+[[requires]]
+module    = "kernel.maya_tp.sampler"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_dflash"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_dsa_decode"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_mtp"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_ngram"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_tiers"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_context"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

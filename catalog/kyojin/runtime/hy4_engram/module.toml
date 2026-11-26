@@ -1,0 +1,41 @@
+id        = "runtime.kyojin.hy4_engram"
+kind      = "runtime"
+summary   = "Hy4 Engram: row lookup (E4M3 / E8M0 tables, F8 rows), the GPU Engram (distinct rows preaded, nothing of the hidden state leaves the device), fused Engram block in two Triton launches, vectorised host staging for graph replays"
+why       = "Hy4-flash Engram layers. Where the shape would go: a ple.ngram-rows/ngram-table/- provider beside runtime.strixite.ngram_table, through a port of the python / Triton logic"
+notes     = "Interface tag: ple.ngram-rows/ngram-table/-. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (engram_fused.py, engram_gpu.py, engram_rows.py, engram_stage.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/loader/engram_fused.py",
+  "exllamav3/loader/engram_gpu.py",
+  "exllamav3/loader/engram_rows.py",
+  "exllamav3/loader/engram_stage.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "ple.ngram-rows-kyojin-hy4/ngram-table/-"
+api       = "engram_fused.py, engram_gpu.py, engram_rows.py, engram_stage.py"
+numeric   = "exact row decode"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

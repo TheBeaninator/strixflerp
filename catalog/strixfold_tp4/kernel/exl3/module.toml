@@ -1,0 +1,62 @@
+id        = "kernel.strixfold_tp4.exl3"
+kind      = "kernel"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for kernel.strixfold.exl3: 1 file(s) of kernel.strixfold.exl3 (exl3.hip), laid over the f64b5ff files"
+why       = "kernel.strixfold.exl3 is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over kernel.strixfold.exl3 without touching it or the TP2 recipes"
+notes     = "Overlay of kernel.strixfold.exl3 (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 4d4c5173d2. Latest commits: c6473460 dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/exl3.hip",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on kernel.strixfold.exl3 (origin strixfold, f64b5ff): 1 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/exl3/f16-f32.row-invariant-tp4"
+api       = "tf_ds_exl3_rot_many, tf_ds_exl3_glinear_k<K2>_w<W> (12 variants)"
+numeric   = "input rotated (Hadamard 128, sign vectors) into fp16; each 16x16 weight tile decoded exactly once a wave (MUL1), v_dot2_f32_f16 with fp32 accumulation in a fixed order (split-K partials and wave sums added in fixed order); contract exl3.linear of numerics.json (tolerance vs CUDA bits, not bit-equal)"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); 1..63 rows glinear; memory-bound"
+
+[[provides]]
+interface = "linear.prefill/exl3/f16-f32.tp4"
+api       = "tf_ds_exl3_rot_in, tf_ds_exl3_gemm_k<K2>_m<M> (8), tf_ds_exl3_unpack_k<K2> (6)"
+numeric   = "v_wmma_f32_16x16x16_f16, fp16 operands, fp32 accumulation; contract exl3.linear"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/bf16.tp4"
+api       = "tf_ds_exl3_experts_decode_prep, tf_ds_exl3_experts_grouped_cp_lo<L>_hi<H>_epi<E> (6), tf_ds_exl3_experts_gateup_epilogue, tf_ds_exl3_experts_down_combine"
+numeric   = "epoch / ready protocol of the decode experts, SwiGLU and combine epilogues in the CUDA order; contract exl3.experts_grouped"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "moe.experts-prefill/exl3/bf16.grouped-tp4"
+api       = "tf_ds_exl3_experts_group_count, _group_place, _work_list, _rot_in, _grouped_mma_* (3), _grouped_rows_* (3)"
+numeric   = "picks grouped by expert; contract exl3.experts_grouped"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); prompt chunks (64..1024 rows), compute-bound on WMMA"
+
+[[requires]]
+module    = "kernel.strixfold.exl3"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

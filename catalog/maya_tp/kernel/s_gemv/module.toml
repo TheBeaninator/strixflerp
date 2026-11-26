@@ -1,0 +1,62 @@
+id        = "kernel.maya_tp.s_gemv"
+kind      = "kernel"
+summary   = "GEMVs over the S-family weight planes (S2 = Q2_0 codes packed four a byte with one FP32 scale per 64 values; S4 / S8 with a codebook): the S2 decode, the naive S2 GEMV, the measured-neutral fast and quads variants kept as records, the S2 GEMV over Q8_0 activations and the generic S-family GEMV with FP16, Q8_K and Q8_0 activation forms"
+why       = "the Qwen-family expert matvec of the Strata lineage as Maya-TP carries it; a 2-bit Q2_0-plane GEMV shape strixflerp has only from kernel.strata.s_gemv"
+notes     = "Interface tag: linear.decode/strata-s/f16+q8_k+q8_0-f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/dequant_s2.hpp",
+  "include/strata/kernels/s2_gemv.hpp",
+  "include/strata/kernels/s2_gemv_q8.hpp",
+  "include/strata/kernels/s_gemv.hpp",
+  "src/kernels/cuda/dequant_s2.cu",
+  "src/kernels/cuda/s2_gemv.cu",
+  "src/kernels/cuda/s2_gemv_fast.cu",
+  "src/kernels/cuda/s2_gemv_q8.cu",
+  "src/kernels/cuda/s2_gemv_quads.cu",
+  "src/kernels/cuda/s_gemv.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/dequant_s2.cu",
+  "src/src/kernels/cuda/s2_gemv.cu",
+  "src/src/kernels/cuda/s2_gemv_fast.cu",
+  "src/src/kernels/cuda/s2_gemv_q8.cu",
+  "src/src/kernels/cuda/s2_gemv_quads.cu",
+  "src/src/kernels/cuda/s_gemv.cu",
+]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/strata-s/f16+q8_k+q8_0-f32.maya-tp"
+api       = "strata::kernels::s2_gemv, s2_gemv_q8, s_gemv(_split, _q8k, _q8_0_split)"
+numeric   = "FP16 / Q8_0 / Q8_K activations, FP32 accumulation"
+regime    = "decode, one token"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.s_gemv.json"

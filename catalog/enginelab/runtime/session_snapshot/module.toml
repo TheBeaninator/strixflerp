@@ -1,0 +1,104 @@
+id        = "runtime.enginelab.session_snapshot"
+kind      = "runtime"
+summary   = "session state: executor handoff, restore, snapshot (memory, transfer, HIP transfer), state cache, layout and memory"
+why       = "save, move and restore a decode session (KV, recurrent state, positions); where it would go: beside the catalogue's cache.snapshot-copy/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: cache.snapshot-copy/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 9 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_session_snapshot_transfer.hpp",
+  "include/strix/session_executor_handoff.hpp",
+  "include/strix/session_restore.hpp",
+  "include/strix/session_snapshot.hpp",
+  "include/strix/session_snapshot_memory.hpp",
+  "include/strix/session_snapshot_transfer.hpp",
+  "include/strix/session_state_cache.hpp",
+  "include/strix/session_state_layout.hpp",
+  "include/strix/session_state_memory.hpp",
+  "src/hip_session_snapshot_transfer.cpp",
+  "src/session_executor_handoff.cpp",
+  "src/session_restore.cpp",
+  "src/session_snapshot.cpp",
+  "src/session_snapshot_memory.cpp",
+  "src/session_snapshot_transfer.cpp",
+  "src/session_state_cache.cpp",
+  "src/session_state_layout.cpp",
+  "src/session_state_memory.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/hip_session_snapshot_transfer.cpp",
+  "src/src/session_executor_handoff.cpp",
+  "src/src/session_restore.cpp",
+  "src/src/session_snapshot.cpp",
+  "src/src/session_snapshot_memory.cpp",
+  "src/src/session_snapshot_transfer.cpp",
+  "src/src/session_state_cache.cpp",
+  "src/src/session_state_layout.cpp",
+  "src/src/session_state_memory.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "cache.snapshot-copy-enginelab/-/-"
+api       = "src/session_snapshot.cpp, hip_session_snapshot_transfer.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.gdn_decode"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "kernel.enginelab.qwen_rotary"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

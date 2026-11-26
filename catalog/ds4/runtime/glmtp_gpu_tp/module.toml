@@ -1,0 +1,37 @@
+id        = "runtime.ds4.glmtp_gpu_tp"
+kind      = "runtime"
+summary   = "davidcanar/ds4 glm-tp-rocm 8ebf672 (antirez/ds4 PR #1024, stacked on #813, #835 and #1018): its copy of the gpu_tp family against antirez/ds4 b3f5018: ds4_gpu_tp.h changed (+41 -2 lines). The family: the TP gate interface between the graph and a backend: gate sequences both ranks must issue, the optional pinned slab shared by an integrated GPU and the transport, arrival / release ordering"
+why       = "GLM-5.3-Flash tensor parallel across two ROCm machines: the KDA heads split between the ranks, the routed experts split 50/50, and the TP slab in host-mapped pinned memory that GPU kernels and the CPU transport thread share on Strix Halo (rocm/ds4_rocm_tp.cuh); the branch head is \"GLM TP: keep the transport slab unified on ROCm builds\". The family in the base: how a backend joins the TP exchange without knowing the transport"
+notes     = "Overlay glm_tp_rocm: files under overlay/glm_tp_rocm/ are the branch's bytes at 8ebf67295a4f; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/glm_tp_rocm.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/davidcanar/ds4"
+commit    = "8ebf67295a4f4663c326aa415145a35175e02b84"
+branch    = "glm-tp-rocm"
+paths     = ["overlay/glm_tp_rocm/ds4_gpu_tp.h"]
+authors   = ["davidcanar", "The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/overlay/glm_tp_rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.interface-ds4-gpu-tp-glmtp/-/-"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

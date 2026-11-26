@@ -1,0 +1,40 @@
+id        = "kernel.vllm_strix.kpool_paged_logits"
+kind      = "kernel"
+summary   = "Triton decode indexer-logits reader for the GLM-5.3 kpool cache on gfx1151: each indexer page is [page_size x 128 fp8 e4m3fn in 16x16 SHUFFLE order][page_size fp32 scales], and the kernel scores every pool of the page-level block table directly (no fp8 copy), with unit tests on the real cache layout for decode and prefill"
+why       = "aiter stage1 scored this layout at random on gfx1151, so decode attention past ~2K tokens attended to arbitrary pools (one of the four stacked long-context bugs, PATCHES 27); the reader also dropped a 12.6 ms a step fp8 copy. A paged, layout-aware indexer scorer is what a strixflerp GLM-5.3 sparse-attention path needs"
+notes     = "Interface tag: attn.indexer-score. The install hook is runtime.vllm_strix.kpool_paged_logits_hook. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "container/patches/vsh_kpool_paged_logits.py",
+  "scripts/test_kpool_logits.py",
+  "scripts/test_prefill_logits.py",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.indexer-score/fp8-kpool-shuffle/f32"
+api       = "vsh_kpool_paged_logits(q_fp8 / q, weights, kv_cache, block_table, seq_lens, ...) (Triton)"
+numeric   = "fp8 e4m3fn K with fp32 per-pool scales, fp32 logits"
+regime    = "decode, page = 64 pools = 256 tokens"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

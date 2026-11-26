@@ -1,0 +1,53 @@
+id        = "kernel.kyojin.exl3_quantize"
+kind      = "kernel"
+summary   = "EXL3 trellis quantizer (Viterbi over tail-biting rings): the templated kernel, sm_120-tuned dense specialisations and quantize_tiles_rdna.cuh, a grouped gfx11 quantizer for K = 2..4 giving the same indices"
+why       = "conversion-time kernels; the RDNA form lets a Strix Halo quantize EXL3 itself. Where the shape would go: a format.convert/exl3/- provider beside format.flerp.convert_qwen4exp_p16, format.strixite.convert_qwen4exp, tool.ds4.gguf_dsv41 and 3 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: format.convert/exl3/-. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (quantize_tiles_rdna.cuh), 5 changed (quantize_tiles_instances.cuh, quantize.cu, quantize.cuh, quantize_tiles_kernel.cuh, quantize_tiles_optimized.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/quant/comp_units/quantize_tiles_instances.cuh",
+  "exllamav3/exllamav3_ext/quant/quantize.cu",
+  "exllamav3/exllamav3_ext/quant/quantize.cuh",
+  "exllamav3/exllamav3_ext/quant/quantize_tiles_kernel.cuh",
+  "exllamav3/exllamav3_ext/quant/quantize_tiles_optimized.cuh",
+  "exllamav3/exllamav3_ext/quant/quantize_tiles_rdna.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/quant/quantize.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.convert-kyojin-trellis-quantize/exl3/-"
+api       = "quantize_tiles_instances.cuh, quantize.cu, quantize.cuh, quantize_tiles_kernel.cuh, quantize_tiles_optimized.cuh, quantize_tiles_rdna.cuh; kernels: quantize_codebook_kernel, test_distribution_kernel, quantize_tiles_kernel, quantize_tiles_optimized_kernel, quantize_tiles_rdna_kernel"
+numeric   = "half arithmetic, first-minimum tie rule"
+regime    = "conversion"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: quantize.cu"

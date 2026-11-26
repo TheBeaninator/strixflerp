@@ -1,0 +1,75 @@
+id        = "runtime.enginelab.glm_xfer"
+kind      = "runtime"
+summary   = "GLM exchange: post exchange and fast post, sequence parallel, traits, the transfer (device, exchange) and its bench"
+why       = "GLM's pair exchange over the shared channel; where it would go: a new strixflerp interface transport.glm-exchange/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, transport.glm-exchange/-/-. 5 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/glm/xfer/glm_post_exchange.hip",
+  "src/glm/xfer/glm_post_exchange.hpp",
+  "src/glm/xfer/glm_post_fast.hip",
+  "src/glm/xfer/glm_post_fast.hpp",
+  "src/glm/xfer/glm_seqpar.hpp",
+  "src/glm/xfer/glm_traits.hpp",
+  "src/glm/xfer/glm_xfer.hip",
+  "src/glm/xfer/glm_xfer.hpp",
+  "src/glm/xfer/glm_xfer_device.hpp",
+  "src/glm/xfer/glm_xfer_exchange.hip",
+  "src/glm/xfer/glm_xfer_exchange.hpp",
+  "src/glm/xfer/glmxch_bench.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/glm/xfer/glm_post_exchange.hip",
+  "src/src/glm/xfer/glm_post_fast.hip",
+  "src/src/glm/xfer/glm_xfer.hip",
+  "src/src/glm/xfer/glm_xfer_exchange.hip",
+  "src/src/glm/xfer/glmxch_bench.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "transport.glm-exchange/-/-"
+api       = "src/glm/xfer/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.glm_engine"
+
+[[requires]]
+module    = "kernel.enginelab.glm_kernels"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.glm_rtxpf"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.glm_xfer.json"
+reason    = "compile gate: fail: 4 of 5 units failed; first: src/src/glm/xfer/glm_post_exchange.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/runtime/glm_xfer/src/src/glm/xfer/glm_xfer.hpp:5:10: error: '../../xport/channel_hip.hpp' file not found, did you mean 'xport/channel_hip.hpp'?"

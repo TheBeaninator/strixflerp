@@ -1,0 +1,82 @@
+id        = "kernel.enginelab.ds41_engram"
+kind      = "kernel"
+summary   = "engram lookup: the hasher, read-ahead, row prep, row reader and spec (src/engram, include/strix/engram) with its HIP inject and row kernels, and DS41's engram and diagnostics"
+why       = "a hashed n-gram embedding table read ahead of the layer that injects it; StrixFold's engram is the pod's counterpart; where it would go: a new strixflerp interface embed.engram/-/bf16.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, embed.engram/-/bf16.enginelab. 5 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/ds41_engram.hpp",
+  "include/strix/engram/hasher.hpp",
+  "include/strix/engram/inject.hpp",
+  "include/strix/engram/read_ahead.hpp",
+  "include/strix/engram/row_prep.hpp",
+  "include/strix/engram/row_reader.hpp",
+  "include/strix/engram/spec.hpp",
+  "src/ds41_engram.cpp",
+  "src/engram/hasher.cpp",
+  "src/engram/hip/inject_kernel.hpp",
+  "src/engram/hip/row_kernel.hpp",
+  "src/engram/read_ahead.cpp",
+  "src/engram/row_reader.cpp",
+  "src/engram/spec.cpp",
+  "src/hip_ds41_engram_diag.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/ds41_engram.cpp",
+  "src/src/engram/hasher.cpp",
+  "src/src/engram/read_ahead.cpp",
+  "src/src/engram/row_reader.cpp",
+  "src/src/engram/spec.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "embed.engram/-/bf16.enginelab"
+api       = "strix::engram row_reader.hpp, inject.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.numeric"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

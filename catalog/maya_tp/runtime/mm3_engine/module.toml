@@ -1,0 +1,102 @@
+id        = "runtime.maya_tp.mm3_engine"
+kind      = "runtime"
+summary   = "maya-mm3, MiniMax-M3.1-Flash on Maya: the model with loading, placement and forward (mm3_model), the program (mm3_main), the CPU expert lane (mm3_cpu, mm3_cpu_gg), sampling, slots, lane plans, pack and geometry readers and the weight scan"
+why       = "the third engine of the tree and the host for the single-host mm3 TP; the placement-over-GPUs logic is reusable"
+notes     = "Interface tag: executor.minimax-m31-maya-tp/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "src/mm3/mm3_ablate.hpp",
+  "src/mm3/mm3_cands.hpp",
+  "src/mm3/mm3_cpu.cpp",
+  "src/mm3/mm3_cpu.hpp",
+  "src/mm3/mm3_cpu_gg.cpp",
+  "src/mm3/mm3_env.hpp",
+  "src/mm3/mm3_geo.hpp",
+  "src/mm3/mm3_host.cpp",
+  "src/mm3/mm3_host.hpp",
+  "src/mm3/mm3_lane_plan.hpp",
+  "src/mm3/mm3_main.cpp",
+  "src/mm3/mm3_model.cu",
+  "src/mm3/mm3_model.hpp",
+  "src/mm3/mm3_os.hpp",
+  "src/mm3/mm3_pack.hpp",
+  "src/mm3/mm3_sample.hpp",
+  "src/mm3/mm3_slots.hpp",
+  "src/mm3/mm3_wscan.hpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/mm3"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.minimax-m31-maya-tp/-/-"
+api       = "mm3::Model (mm3_model.hpp)"
+numeric   = "per-kernel numerics"
+regime    = "one or several GPUs"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_gguf"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_kernels"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_vision"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_cpu"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_engine"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_store"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_tools"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_dspark"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_tp"
+
+[[requires]]
+module    = "runtime.maya_tp.spec_controller"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

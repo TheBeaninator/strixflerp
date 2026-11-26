@@ -1,0 +1,39 @@
+id        = "runtime.vllm_strix.mxfp4_direct"
+kind      = "runtime"
+summary   = "direct HIP MXFP4 MoE for DeepSeek-V4 decode: a hook that, for <= 64 token-expert pairs on gfx1151, replaces UnfusedOAITritonExperts (triton_kernels matmul with in-kernel upcast, routing-data build, activation, index_add combine) with the vsh_moe_mxfp4 kernels on the same swizzled weights; test against the stock pipeline"
+why       = "the stock path took ~99 ms of the DS4 decode step (PATCHES 38); the direct kernels brought DS4 to June-stack parity and then past it with the v5 kernel. The shape, MXFP4 experts decoded in the GEMV itself, fits strixflerp's DeepSeek-V4.1 MXFP4 experts"
+notes     = "Interface tag: moe.experts-decode. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-mxfp4-direct.py", "scripts/test_mxfp4_direct.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-decode-direct/mxfp4/bf16"
+api       = "hook on the OAI Triton experts; env VSH_MXFP4_DIRECT (version and tile from env)"
+numeric   = "e2m1 + e8m0 decoded in-kernel, fp32 accumulate"
+regime    = "decode, E=256"
+
+[[requires]]
+module    = "runtime.vllm_strix.moe_int4_dispatch"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

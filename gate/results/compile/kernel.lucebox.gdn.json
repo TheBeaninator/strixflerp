@@ -1,0 +1,57 @@
+{
+ "module": "kernel.lucebox.gdn",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-24T22:48:55Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 5,
+ "passed": 5,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 3.2,
+ "results": [
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-conv.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gdn/src/server/src/common -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-conv.cu -o build/compile-gate/kernel.lucebox.gdn/0-gdn-conv.cu.o",
+   "rc": 0,
+   "seconds": 3.23,
+   "object_bytes": 89064,
+   "object_sha256": "21684f6313cf1b32ed66123d2f31a9130258f97376c13d1c143222536ba51cdf"
+  },
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-chain-commit.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gdn/src/server/src/common -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-chain-commit.cu -o build/compile-gate/kernel.lucebox.gdn/1-gdn-chain-commit.cu.o",
+   "rc": 0,
+   "seconds": 2.55,
+   "object_bytes": 17752,
+   "object_sha256": "b5489d9a058263ab87684e80ce5989c0239143941e40e1887173a13998175500"
+  },
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-replay-log.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gdn/src/server/src/common -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-replay-log.cu -o build/compile-gate/kernel.lucebox.gdn/2-gdn-replay-log.cu.o",
+   "rc": 0,
+   "seconds": 3.05,
+   "object_bytes": 79064,
+   "object_sha256": "6a54d8050455acab313cc6f2db40d7d46cc4d58b7a7a80f13944b9dec5b970e2"
+  },
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gated-norm.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gdn/src/server/src/common -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda/gated-norm.cu -o build/compile-gate/kernel.lucebox.gdn/3-gated-norm.cu.o",
+   "rc": 0,
+   "seconds": 2.6,
+   "object_bytes": 38264,
+   "object_sha256": "393260d6f0ae4626c289706d4ee9ada7ea43db2531052ac44e16f56342285f9d"
+  },
+  {
+   "unit": "src/server/src/common/specla_commit_cuda.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DLUCE_BACKEND_HIP=1 -DLUCE_HAVE_DRAFT_TOPK=1 -DLUCE_HAVE_KVFLASH_FUSED_MASS=1 -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gdn/src/server/src/common -I catalog/lucebox/kernel/gdn/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/gdn/src/server/src/common/specla_commit_cuda.cu -o build/compile-gate/kernel.lucebox.gdn/4-specla_commit_cuda.cu.o",
+   "rc": 0,
+   "seconds": 1.25,
+   "object_bytes": 40120,
+   "object_sha256": "f884e8707c9a011bd8f566fd78e35be9448eeac81466e89db390042fc9b4618d"
+  }
+ ]
+}

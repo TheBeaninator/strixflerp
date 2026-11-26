@@ -1,0 +1,44 @@
+id        = "runtime.odinlink5.compress"
+kind      = "runtime"
+summary   = "optional link compression: a wire header [odl_compress_header | compressed payload | padding], an nvCOMP backend (gdeflate / lz4 / snappy on the GPU) and a stub when nvCOMP is absent, selected by ODL_COMPRESS, ODL_COMPRESS_ALGO, ODL_COMPRESS_THRESHOLD (256 KiB) and ODL_COMPRESS_LEVEL, with a bench"
+why       = "a 40-80 Gb/s cable is slower than GPU memory, so compressing large collectives on the GPU can win; the stub keeps the plugin linkable where no compressor exists (AMD hosts)"
+notes     = "Interface tag: none. odl_nvcomp.cpp and the bench need CUDA and nvCOMP and are not compiled. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "compress/CMakeLists.txt",
+  "compress/include/odl_tb5/odl_compress.h",
+  "compress/src/odl_compress_common.c",
+  "compress/src/odl_compress_stub.c",
+  "compress/src/odl_nvcomp.cpp",
+  "compress/tests/odl_compress_bench.cpp",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/compress/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.payload-compress/-/-"
+api       = "odl_compress_* (compress/include/odl_tb5/odl_compress.h)"
+numeric   = "lossless"
+regime    = "payloads >= threshold; both peers must match"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/runtime.odinlink5.compress.json"
+reason    = "c: compiled by the C gate, not gate/compile/run.py (python3 docs/harvest/harvest_odinlink5.py --c-gate on control-node CPU, gcc with the include paths of the origin's CMake)"

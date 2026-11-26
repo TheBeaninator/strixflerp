@@ -1,0 +1,50 @@
+id        = "kernel.kyojin.kvcache_quant"
+kind      = "kernel"
+summary   = "Quantized KV cache writer / reader of the extension as Kyojin changed it: Hadamard-rotated (H4 in registers, H8 across the subgroup) 2..8-bit groups with fp16 scales, and lmq.cuh's cubic codebook (encode / decode in a few FMAs)"
+why       = "the quantized paged KV cache of the Kyojin servers (CUDA build; on ROCm the Triton writer in kernel.kyojin.triton_qwrite stands in). Where the shape would go: a kvcache.quant8/-/f32 provider beside kernel.fastasfuck.kv8, kernel.strata.kvcache, kernel.strixite.kv8, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: kvcache.quant8/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 3 changed (lmq.cuh, q_cache.cu, q_cache_kernels.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/cache/lmq.cuh",
+  "exllamav3/exllamav3_ext/cache/q_cache.cu",
+  "exllamav3/exllamav3_ext/cache/q_cache_kernels.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/cache/q_cache.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kvcache.quant8/-/f32.kyojin-hadamard"
+api       = "lmq.cuh, q_cache.cu, q_cache_kernels.cuh; kernels: quant_cache_cont_kernel, dequant_cache_cont_kernel, quant_cache_paged_kernel, dequant_cache_paged_kernel"
+numeric   = "fp16 K / V in, packed 2..8-bit codes plus an fp16 scale per 32-value group"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: q_cache.cu"

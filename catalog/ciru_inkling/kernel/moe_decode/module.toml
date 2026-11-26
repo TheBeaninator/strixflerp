@@ -1,0 +1,41 @@
+id        = "kernel.ciru_inkling.moe_decode"
+kind      = "kernel"
+summary   = "Inkling 2 Mini MoE decode (hip_moe_decode.hip): the 16-to-32-row route block planner and one single-pass-per-expert WMMA kernel over all four expert banks, the multi-stream (B = 8) decode path"
+why       = "the card names the 8-stream decode kernels first: this unit carries the author's 194-208 tok/s B = 8 decode (README.md:19, 33) and bears on the M = 8 gap of WRENCH-M8 e9d0b002da and LIVE-KTRACE 2007c996cf: one pass a expert over 16 / 32-row route blocks, weights unpacked in registers and shared by both halves of a paired block"
+notes     = "Interface tags by launch group: launch_hip_moe_decode_plan: none; launch_hip_moe_decode_unified: moe.experts-decode/nvfp4+int4-g32+ciru-c1/bf16 (catalog/ciru_inkling/KERNELS.md has the table). Launch functions take raw device pointers, element strides and a stream (ctypes from ops/hip_runtime.py); none takes a torch tensor. No timing was taken on the pod; figures are the author's (README.md, v1.5.0)."
+
+[provenance]
+origin    = "ciru_inkling"
+repo      = "https://github.com/ciru-ai/Inkling-2-Mini-CIRU-Halo-Agent-gfx1151"
+commit    = "b3870f35926fb322f398e6c373a93098534f8fdb"
+branch    = "main"
+paths     = ["overlay/vllm/models/inkling2/amd/ops/hip_moe_decode.hip"]
+authors   = ["Ciru (CIRU AI)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/vllm/models/inkling2/amd/ops/hip_moe_decode.hip"]
+includes  = ["src/overlay/vllm/models/inkling2/amd/ops"]
+arch      = "gfx1151"
+toolchain = "therock-10.0"
+options   = ["-fPIC", "-O3", "-DINKLING_HIP_ABI_VERSION=3", "-DINKLING_HIP_SRC_HASH_RAW=671b45b80972", "-c"]
+
+[[provides]]
+interface = "moe.experts-decode/nvfp4+int4-g32+ciru-c1/bf16.ciru-inkling-m16"
+api       = "launch_hip_moe_decode_unified (extern \"C\", hip_moe_decode.hip)"
+numeric   = "X in FP16 or BF16 (converted when staged), w13 output FP16 or BF16, w2 output BF16; weights from four expert banks chosen by a mode argument (BANK_MODE 0 source: the checkpoint's NVFP4, E2M1 nibbles with positive E4M3 group-16 scales and an FP32 outer scale an expert; 10 mixed1: per-expert kind 0 (NVFP4) or 1 (signed INT4 G32, BF16 scales); 20 mixed2: kind 0 or 2 (Flash C1: 4-bit codes with group tags, FP16 row multipliers and FP16 [256, 2] affine tables an expert); 2 coda: C1 only)"
+regime    = "decode with up to 8 sequences and draft tokens (the B = 8 multi-stream path); author figures: about 220-225 GB/s, B = 8 throughput +13.0% (8 x 256 tokens, 194.1 tok/s) and +17.4-18.7% (8 x 512, 205.5-207.8 tok/s) (README.md:33)"
+
+[[requires]]
+module    = "kernel.ciru_inkling.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_inkling.moe_decode.json"

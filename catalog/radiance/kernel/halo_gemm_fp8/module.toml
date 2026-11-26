@@ -1,0 +1,72 @@
+id        = "kernel.radiance.halo_gemm_fp8"
+kind      = "kernel"
+summary   = "Block-scaled FP8 (E4M3) GEMMs on a part with no fp8 matrix instruction: the matvec against the checkpoint's own bytes (fp8a16_m1), the fp8a8 skinny, tiled and biased rows, canonical E4M3 with exact f32 block scales, the stored layouts, and the lm_head projection over a head whose rows carry their scales (fp8 and i8)"
+why       = "most published checkpoints ship block-scaled FP8, and gfx1151 has no fp8 matrix instruction, so serving them needs an exact widen to f16 inside the GEMM instead of a converted copy of the weights"
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_fp8_args.h",
+  "libhalo/halo_fp8_frag.h",
+  "libhalo/halo_fp8_layout.cpp",
+  "libhalo/halo_fp8_lm.h",
+  "libhalo/halo_fp8_wmma.h",
+  "libhalo/halo_gemm_fp8_f32scale.hip",
+  "libhalo/halo_gemm_fp8a16_m1.hip",
+  "libhalo/halo_gemm_fp8a8.hip",
+  "libhalo/halo_logits_gemm.hip",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_gemm_fp8a16_m1.hip",
+  "src/libhalo/halo_gemm_fp8a8.hip",
+  "src/libhalo/halo_gemm_fp8_f32scale.hip",
+  "src/libhalo/halo_logits_gemm.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/radiance-fp8/bf16+e4m3-f32"
+api       = "halo_gemm_fp8a16_nt_m1, halo_gemm_fp8a8_nt_m16"
+numeric   = "E4M3 widened exactly to f16 (halo_fp8::e4m3_pk), fp32 accumulate"
+regime    = "decode and verify heights (1..64 rows), a weight stream bound by ~256 GB/s LPDDR5X"
+
+[[provides]]
+interface = "linear.prefill/radiance-fp8/e4m3-f32"
+api       = "halo_gemm_fp8a8_tiled, halo_gemm_fp8_f32scale"
+numeric   = "as decode"
+regime    = "prefill row counts (tiled), compute-bound on the wave32 WMMA cores"
+
+[[provides]]
+interface = "logits.head/radiance-fp8+i8/f32"
+api       = "halo_logits_gemm_fp8, halo_logits_gemm_i8"
+numeric   = "f32 logits"
+regime    = "M rows over the vocabulary"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[[requires]]
+module    = "kernel.radiance.halo_hc"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

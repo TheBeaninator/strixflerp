@@ -1,0 +1,43 @@
+id        = "kernel.kyojin.exl3_coop_autotune"
+kind      = "kernel"
+summary   = "Autotuner of the cooperative EXL3 GEMM: times candidate kernels on the first call of every (row class, K, N, bits, dtype, device) and caches the winner (runtime.kyojin.tune_cache persists it per pack)"
+why       = "day-0 tuning of the GEMM per pack and device. Where the shape would go: a tune.table/hip/- provider beside runtime.tensorfold.hip, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: tune.table/hip/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (coop_autotune.cu, coop_autotune.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/quant/coop_autotune.cu", "exllamav3/exllamav3_ext/quant/coop_autotune.cuh"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/quant/coop_autotune.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tune.table-kyojin-coop/hip/-"
+api       = "coop_autotune.cu, coop_autotune.cuh"
+numeric   = "n/a"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: coop_autotune.cu"

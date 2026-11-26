@@ -1,0 +1,161 @@
+id        = "kernel.enginelab.hy4_hip"
+kind      = "kernel"
+summary   = "Hy4 HIP forward, plan and rows: 5 origin files under src/hy4"
+why       = "Hy4-flash on gfx1151 (16.8 tok/s one node, 1,270 prefill on the pair); where it would go: beside the catalogue's executor.forward/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.forward/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/hy4/hip/hy4_hip_forward.hip",
+  "src/hy4/hip/hy4_hip_forward.hpp",
+  "src/hy4/hip/hy4_hip_plan.hpp",
+  "src/hy4/hip/hy4_hip_rows.hpp",
+  "src/hy4/hip/hy4_hip_rows.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hy4/hip/hy4_hip_forward.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.forward-enginelab-hy4/-/-"
+api       = "src/hy4/hip/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.hy4_engine"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_select"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_sparse_mla"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_hc"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_engram"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_routes"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "kernel.enginelab.hc_hyper"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "kernel.enginelab.moe_q4k_a8"
+
+[[requires]]
+module    = "kernel.enginelab.mtp_draft_head"
+
+[[requires]]
+module    = "kernel.enginelab.ops_a8"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "kernel.enginelab.ops_norm"
+
+[[requires]]
+module    = "kernel.enginelab.ops_rope"
+
+[[requires]]
+module    = "kernel.enginelab.q8_rows"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.hy4_ref"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[[requires]]
+module    = "runtime.enginelab.pair_pipeline"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[[requires]]
+module    = "runtime.enginelab.spec_core"
+
+[[requires]]
+module    = "runtime.enginelab.xport_tp_gather"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.hy4_hip.json"
+reason    = "compile gate: fail: 1 of 1 units failed; first: src/src/hy4/hip/hy4_hip_forward.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/kernel/ops_glu/src/src/ops/glu/q8_rows_glu_pair.hpp:13:10: error: '../../hip_q8_rows_gemv.hpp' file not found, did you mean 'hip_q8_rows_gemv.hpp'?"

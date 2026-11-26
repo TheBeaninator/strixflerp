@@ -1,0 +1,40 @@
+id        = "serve.maya_tp.tools_mcp"
+kind      = "serve"
+summary   = "tool and attachment handling in the server: MCP client (mcp.py), attachments (attach.py) and PDF text extraction (pdf.py, pdf_text.py)"
+why       = "coding-agent use needs tools and file inputs; an MCP client at the serve layer is a piece strixflerp's serve has no counterpart for"
+notes     = "Interface tag: serve.tools-mcp/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["serve/attach.py", "serve/mcp.py", "serve/pdf.py", "serve/pdf_text.py"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.tools-mcp/-/-"
+api       = "serve/mcp.py"
+numeric   = "no arithmetic"
+regime    = "HTTP"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

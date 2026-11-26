@@ -1,0 +1,37 @@
+id        = "kernel.libstrix.common"
+kind      = "kernel"
+summary   = "Shared gfx1151 (RDNA3.5, wave32) device helpers of the libstrix kernels (csrc/strix_common.h): DPP quad permutes, ds_swizzle and v_permlanex16 lane selects behind a shuffle-xor that skips ds_bpermute's LDS round trip for power-of-two strides, sums over aligned lane groups and the WMMA fragment helpers; with the one-wave test unit that pins the fragment layout (D[16, 16] = A[16, K] @ B[16, K]^T)"
+why       = "every libstrix kernel but three includes this header for its lane permutes, lane-group sums and WMMA fragment helpers, so no family module can be read or compiled without it; the test unit pins the fragment layout those helpers assume on gfx1151"
+notes     = "Interface tag: none. fp8_dequant.hip, w8a16_skinny_gemm.hip and w8a8_wmma_gemm.hip do not include the header. docs/kernels.md \"Hardware notes that shaped the kernels\" gives three rules of the origin: pad weight row pitch (rows 4-16 KiB apart read at the same column offset are 4-8x slower), keep staging registers in ext_vector_type vectors, use strix::barrier() for LDS hand-offs."
+
+[provenance]
+origin    = "libstrix"
+repo      = "https://github.com/asf0/libstrix"
+commit    = "4f1c06f55d520c734a66101e8c31fc5dd9dedeb3"
+branch    = "main"
+paths     = ["csrc/strix_common.h", "csrc/testing/wmma_layout_test.hip"]
+authors   = ["asf0"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/csrc/testing/wmma_layout_test.hip"]
+includes  = ["src/csrc", "src/csrc/testing"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.libstrix-device/-/-"
+api       = "namespace strix in csrc/strix_common.h; torch.ops.strix._wmma_bf16_tile (csrc/testing/wmma_layout_test.hip)"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of python/strix/_C.so: built by the origin CMake (CMakeLists.txt globs every csrc/**/*.hip beside csrc/torch_ops.cpp; HIP standard 20, -O3 -ffp-contract=fast -munsafe-fp-atomics, gfx1151, linked against libtorch). The host half of each file takes torch::Tensor arguments, so no unit compiles without the PyTorch headers; not compiled by this harvest"

@@ -43,7 +43,15 @@ from flerplib.catalog import Catalog, Module, Recipe, read_toml  # noqa: E402
 import strixite_recipe as guard  # noqa: E402  (GPU-free check and lease: one implementation for every gate)
 
 CONFIG_DIR = os.path.join(ROOT, "gate", "interface")
-TALLY = re.compile(r"^flerp-adapter (\S+) provider=(\S+) foreign_launches=(\d+) origin_launches=(\d+) \(exit\)", re.M)
+# adapter_rt.hpp's Tally line. The provider is a free-text label and may hold spaces and parentheses (linear_q4p:
+# "panel kernels (Q4Panel16)"), so it runs up to " foreign_launches=", not to the first space (card a9ac7b1c0f).
+TALLY = re.compile(r"^flerp-adapter (\S+) provider=(.+?) foreign_launches=(\d+) origin_launches=(\d+) \(exit\)$", re.M)
+
+
+def adapter_tallies(text):
+    """The adapters' exit lines in a driver's output."""
+    return [{"adapter": a, "provider": p, "foreign_launches": int(fl), "origin_launches": int(ol)}
+            for a, p, fl, ol in TALLY.findall(text)]
 # bit-identical: the CPU reference's bits. order-bound: within the bound any summation order satisfies.
 # structure: the discrete part (flags, selected ids) equal, values reported. report: recorded, never decides.
 PARITY_LEVELS = ("bit-identical", "order-bound", "structure", "report")
@@ -99,9 +107,13 @@ def provider_cases(cfg, provider):
 
 
 def case_lines(cfg, provider):
+    """The driver's case file for one provider. A provider's case_args (key = value) are added to each of its cases,
+    for what only that provider's binding can take (strixw-decode: panel tensors for the panel adapters); a key the
+    case sets itself is not overridden."""
     lines = []
+    extra = provider.get("case_args", {})
     for c in provider_cases(cfg, provider):
-        kv = " ".join(f"{k}={v}" for k, v in c.items() if k not in ("name", "require", "note", "shape", "dump"))
+        kv = " ".join(f"{k}={v}" for k, v in {**extra, **c}.items() if k not in ("name", "require", "note", "shape", "dump"))
         lines.append(f"{c['name']} {kv}")
     return "\n".join(lines) + "\n"
 
@@ -177,8 +189,7 @@ def run_provider(cfg, provider, tree, res):
            "host_loadavg_after": [round(x, 2) for x in os.getloadavg()], "gpu_before": state}
     with open(log, errors="replace") as f:
         text = f.read()
-    out["adapter_tallies"] = [{"adapter": a, "provider": p, "foreign_launches": int(fl), "origin_launches": int(ol)}
-                              for a, p, fl, ol in TALLY.findall(text)]
+    out["adapter_tallies"] = adapter_tallies(text)
     if out["ran"]:
         with open(out_json) as f:
             out["cases"] = json.load(f)
@@ -305,7 +316,9 @@ def pairwise(cfg, trees):
 def summary_md(doc):
     lines = [f"# Interface gate: {doc['interface']}", "",
              f"Host {doc['host']}, {doc['when_utc']}. Config `gate/interface/{doc['name']}.toml` "
-             f"(sha256 {doc['config_sha256'][:16]}). Consumer API: `{doc['api']}`.", "",
+             f"(sha256 {doc['config_sha256'][:16]}). Consumer API: `{doc['api']}`."
+             + (f" Re-judged {doc['rejudged_utc']} from the recorded driver output (nothing re-run)."
+                if doc.get("rejudged_utc") else ""), "",
              f"Overall: **{'PASS' if doc['pass'] else 'FAIL'}**", "",
              "| provider | module that runs | built | parity vs CPU reference | adapter launches (foreign / origin) | gate |",
              "|---|---|---|---|---|---|"]
@@ -363,6 +376,31 @@ def summary_md(doc):
     return "\n".join(lines) + "\n"
 
 
+def rejudge(cfg, doc, res_root):
+    """Applies the criteria again to each provider's recorded driver output (driver.json, driver.txt), for a fixed
+    reading of that output. Runs nothing; refuses a result recorded under other criteria."""
+    if doc.get("config_sha256") != cfg["_sha256"]:
+        raise SystemExit("result.json was recorded under another config; re-run the gate instead")
+    for p in cfg["provider"]:
+        entry = doc["providers"].get(p["name"])
+        if not entry or "run" not in entry:
+            continue
+        res = os.path.join(res_root, p["name"])
+        run = dict(entry["run"])
+        with open(os.path.join(res, "driver.txt"), errors="replace") as f:
+            run["adapter_tallies"] = adapter_tallies(f.read())
+        if run.get("ran"):
+            with open(os.path.join(res, "driver.json")) as f:
+                run["cases"] = json.load(f)
+        entry["run"] = {k: v for k, v in run.items() if k != "cases"}
+        ok, rows, problems = judge(cfg, p, run)
+        entry.update({"pass": ok and run.get("ran", False), "cases": rows, "problems": problems,
+                      "parity": classify(rows), "order_evidence": order_evidence(rows)})
+    doc["pass"] = bool(doc.get("complete")) and all(e.get("pass") for e in doc["providers"].values())
+    doc["rejudged_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return doc
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("name", nargs="?")
@@ -370,6 +408,9 @@ def main():
     ap.add_argument("--only", help="comma-separated provider names; the others keep their recorded results")
     ap.add_argument("--build-only", action="store_true")
     ap.add_argument("--summarize", action="store_true", help="rewrite summary.md from the recorded result.json; runs nothing")
+    ap.add_argument("--rejudge", action="store_true",
+                    help="apply the criteria again to the recorded driver output and rewrite result.json and summary.md; "
+                         "runs nothing")
     a = ap.parse_args()
     if a.module:
         found = configs_for_module(a.module)
@@ -383,9 +424,14 @@ def main():
         ap.error("give an interface gate name")
     cfg = load_config(a.name)
     res_root = os.path.join(ROOT, "gate", "results", "interface", a.name)
-    if a.summarize:
+    if a.summarize or a.rejudge:
         with open(os.path.join(res_root, "result.json")) as f:
             doc = json.load(f)
+        if a.rejudge:
+            doc = rejudge(cfg, doc, res_root)
+            with open(os.path.join(res_root, "result.json"), "w") as f:
+                json.dump(doc, f, indent=1)
+                f.write("\n")
         md = summary_md(doc)
         with open(os.path.join(res_root, "summary.md"), "w") as f:
             f.write(md)

@@ -1,0 +1,45 @@
+id        = "executor.enginelab.glm_vision"
+kind      = "executor"
+summary   = "GLM vision: 2 origin files under src/glm"
+why       = "image input for GLM; where it would go: a new strixflerp interface vision.splice/-/bf16.enginelab-glm, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, vision.splice/-/bf16.enginelab-glm. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["src/glm/vision/glm_vision.cpp", "src/glm/vision/glm_vision.hpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/glm/vision/glm_vision.cpp"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "vision.splice/-/bf16.enginelab-glm"
+api       = "src/glm/vision/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.vision"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.model_data"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

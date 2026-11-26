@@ -1,0 +1,403 @@
+//! kernels.py's sparse attention and packed FP4 rows: sparse_attn (the split keys and their merge, the merge with the
+//! inverse RoPE and wo_a's input rotation, or one pass for prompt chunks), fp4_store and fp4_qd_p2, as Python launches them.
+const std = @import("std");
+const gpu = @import("gpu");
+const tri = @import("tri.zig");
+const tri_aux = @import("tri_aux.zig");
+const aot = gpu.aot;
+const Tri = tri.Tri;
+const u = tri.u;
+const p = aot.ptr;
+
+/// kernels.DECODE_ROWS (TF_DS_DECODE_ROWS unset in the served build): calls of up to this many rows split the keys.
+pub const decode_rows = 16;
+/// kernels.ATTN_SPLITS: the key splits of a decode / verify window's rows.
+pub const attn_splits = 8;
+
+fn ci(name: []const u8, v: usize) aot.Const {
+    return aot.ci(name, @intCast(v));
+}
+
+fn cb(name: []const u8, v: bool) aot.Const {
+    return aot.ci(name, @intFromBool(v));
+}
+
+/// kernels._pow2: n is a power of two.
+fn isPow2(n: usize) bool {
+    return n > 0 and n & (n - 1) == 0;
+}
+
+/// sparse_attn's compressed keys: none, bf16 rows [N, HD], or a packed FP4 pair (codes u8 [N, HD/2], scales u8 [N, HD/16]).
+pub const Comp = union(enum) { none, bf16: u64, fp4: struct { codes: u64, scales: u64 } };
+
+/// sparse_attn's rot = (cos, sin, rope dim, wo_a's suh concatenated, its rotated rows' buffer, heads a slice).
+pub const Rot = struct { cos: u64, sin: u64, rd: usize, suh: u64, xh: u64, gh: usize };
+
+/// A split call's partials (rows <= decode_rows; Python allocates them): pm, pl fp32 [R * H * 8], po fp32 [R * H * 8 * HD].
+pub const Parts = struct { pm: u64, pl: u64, po: u64 };
+
+/// sparse_attn's arguments, Python's keyword defaults as field defaults.
+pub const Attn = struct {
+    /// q [rows, h, hd] bf16; out the same shape (Python: empty_like(q) when not given)
+    q: u64,
+    out: u64,
+    rows: usize,
+    h: usize,
+    hd: usize,
+    /// sink fp32 [h]
+    sink: u64,
+    /// the window keys bf16 [wsrc_rows, hd]: a ring (slot = position % ring size) or rows from position wlo[0] (int64 [1])
+    wsrc: u64,
+    wsrc_rows: usize,
+    wlo: u64,
+    ring: bool,
+    comp: Comp = .none,
+    /// int64 [rows, n_idx] (-1 = none; n_idx 0: no idx); prompt chunks read rows of n_idx rounded up to 16, -1 past n_idx
+    idx: u64 = 0,
+    n_idx: usize = 0,
+    /// pos int64 [rows]
+    pos: u64,
+    /// Python's float as Triton passes it: rounded to fp32 (hd ** -0.5: 0x3d3504f3)
+    scale: f32,
+    window: usize,
+    /// per-row ring / compressed row bases, int64 [rows] (concurrent rounds and batched drafts: rings only)
+    wbase: ?u64 = null,
+    cbase: ?u64 = null,
+    /// a pool's ring size (0: none, wsrc's rows)
+    ring_rows: usize = 0,
+    rot: ?Rot = null,
+    /// unused by prompt chunks (rows > decode_rows): one split writes out directly
+    parts: Parts = .{ .pm = 0, .pl = 0, .po = 0 },
+    /// a small prompt chunk run as a large one (one split, out directly: the prompt chunks' variant)
+    one_split: bool = false,
+};
+
+/// sparse_attn: q -> out (o [R, H, HD]); window keys from wsrc, compressed keys comp[idx[r, j]].
+pub fn sparseAttn(t: Tri, a: Attn) !void {
+    const hb = 16;
+    const bn = 32;
+    const has = a.comp != .none and a.n_idx > 0;
+    const pack = has and a.comp == .fp4;
+    const codes: u64 = if (!has) a.wsrc else switch (a.comp) {
+        .none => unreachable,
+        .bf16 => |k| k,
+        .fp4 => |k| k.codes,
+    };
+    const csc: u64 = if (pack) a.comp.fp4.scales else a.wsrc;
+    const ct: []const u8 = if (pack) "*u8" else "*bf16";
+    var n_idx: usize = if (has) a.n_idx else 0;
+    const sp: usize = if (a.rows <= tri.decode_rows and !a.one_split) attn_splits else 1;
+    const groups = a.h / hb;
+    const final = sp == 1;
+    var picks: usize = if (has) tri.cdiv(n_idx, bn) else 0;
+    if (final and picks > 0) {
+        // prompt chunks: the pick list padded with -1 to a multiple of 16 entries, the pick blocks to a power of two
+        n_idx = (n_idx + 15) / 16 * 16;
+        picks = tri.pow2(picks);
+    }
+    const nblk = a.window / bn + picks;
+    const ring_size: usize = if (a.ring) (if (a.ring_rows != 0) a.ring_rows else a.wsrc_rows) else 16;
+    const pp: Parts = if (final) .{ .pm = a.out, .pl = a.out, .po = a.out } else a.parts;
+    const pt: []const u8 = if (final) "*bf16" else "*fp32";
+    const based = a.wbase != null;
+    if (based and !a.ring) return error.BasesNeedRing;
+    const rbase = a.wbase orelse a.pos;
+    const cbase = if (based) a.cbase orelse a.wbase.? else a.pos;
+    // switch "attn_pf" (on in the served build): a split's window keys into L2 before its PDL wait
+    const wpf = a.ring and !final;
+    // aux.sparse_attn's build for this rank's heads: 32 (TP2) or 16 (TP4), the same bits a head
+    const hip = if (t.aux) |x| x.attnFor(a.h) else null;
+    if (hip != null and a.hd == tri_aux.attn_hd and a.window == tri_aux.attn_window and n_idx <= tri_aux.attn_max_idx) {
+        // aux.sparse_attn: the same keys (and picks list) in one pass, or the same split partials for the merge below
+        const flags = @as(i32, @intFromBool(a.ring)) | @as(i32, @intFromBool(has)) << 1 | @as(i32, @intFromBool(pack)) << 2 |
+            @as(i32, @intFromBool(final)) << 3 | @as(i32, @intFromBool(based)) << 4;
+        try t.runHip("aux.sparse_attn", hip.?, .{ u(a.rows), 1, u(sp) }, tri_aux.AttnArgs{
+            .q = a.q, .wsrc = a.wsrc, .wlo = a.wlo, .comp = codes, .csc = csc, .idx = if (has) a.idx else a.pos, .pos = a.pos,
+            .pm = pp.pm, .pl = pp.pl, .po = pp.po, .sink = a.sink, .out = a.out, .rbase = rbase, .cbase = cbase,
+            .ring_size = @intCast(ring_size), .n_idx = @intCast(n_idx), .rows = @intCast(a.rows), .heads = @intCast(a.h),
+            .win = @intCast(a.window), .splits = @intCast(sp), .flags = flags, .scale = a.scale,
+        });
+    } else try t.run("_sparse_attn_part", .{ u(a.rows), u(groups), u(sp) }, &.{
+        p("Q", "*bf16", a.q),              p("WSRC", "*bf16", a.wsrc),                  p("WLO", "*i64", a.wlo),    p("COMP", ct, codes),
+        p("CSC", ct, csc),                 p("IDX", "*i64", if (has) a.idx else a.pos), p("POS", "*i64", a.pos),    p("PM", pt, pp.pm),
+        p("PL", pt, pp.pl),                p("PO", pt, pp.po),                          p("SINK", "*fp32", a.sink), p("OUT", "*bf16", a.out),
+        aot.float("scale", a.scale),       p("RBASE", "*i64", rbase),                   p("CBASE", "*i64", cbase),  aot.int("ring_size", @intCast(ring_size)),
+        aot.int("n_idx", @intCast(n_idx)),
+    }, &.{
+        ci("H", a.h),       ci("HD", a.hd),        ci("HB", hb),       ci("WIN", a.window), ci("BN", bn),
+        cb("RING", a.ring), cb("HAS_COMP", has),   cb("PACKED", pack), ci("SPLITS", sp),    ci("NBLK", nblk),
+        cb("FINAL", final), cb("HAS_BASE", based), t.pdlConst(),       cb("WPF", wpf),
+    });
+    if (final) return;
+    const merged = [_]aot.Arg{ p("PM", "*fp32", pp.pm), p("PL", "*fp32", pp.pl), p("PO", "*fp32", pp.po), p("SINK", "*fp32", a.sink), p("OUT", "*bf16", a.out) };
+    if (a.rot) |r| {
+        // switch "merge_reg" (on in the served build): the head's row kept in registers when HD is a power of two
+        const merge: []const u8 = if (isPow2(a.hd)) "_sparse_attn_merge_rot2" else "_sparse_attn_merge_rot";
+        // TF_EXL3_L2_DISCARD unset in the served build (on): the merge drops the split outputs it read from L2
+        const discard = a.hd % 32 == 0 and isPow2(sp * (a.hd / 32));
+        const args = merged ++ [_]aot.Arg{ p("COS", "*fp32", r.cos), p("SIN", "*fp32", r.sin), p("POS", "*i64", a.pos), p("SUH", "*fp16", r.suh), p("XH", "*fp16", r.xh), aot.int("rows", @intCast(a.rows)) };
+        try t.run(merge, .{ u(a.rows), u(a.h), 1 }, &args, &.{
+            ci("H", a.h), ci("HD", a.hd), ci("HB", hb), ci("SPLITS", sp), ci("RD", r.rd), ci("GH", r.gh), cb("DISCARD", discard), t.pdlConst(),
+        });
+    } else {
+        try t.run("_sparse_attn_merge", .{ u(a.rows), u(groups), 1 }, &merged, &.{ ci("H", a.h), ci("HD", a.hd), ci("HB", hb), ci("SPLITS", sp), t.pdlConst() });
+    }
+}
+
+/// fp4_store: model.store_rows(cache, rows, x, block, e4m3) of a packed cache (codes, scales); x [n, d] bf16, row stride xs.
+pub fn fp4Store(t: Tri, x: u64, xs: usize, codes: u64, scales: u64, rows: u64, n: usize, d: usize, block: usize, e4m3: bool) !void {
+    try t.run("_fp4_store", .{ u(n), 1, 1 }, &.{ p("X", "*bf16", x), aot.int("xs", @intCast(xs)), p("CODES", "*u8", codes), p("SCALES", "*u8", scales), p("ROWS", "*i64", rows) }, &.{ ci("D", d), ci("BLOCK", block), cb("E4M3", e4m3), t.pdlConst() });
+}
+
+/// fp4_qd_p2: ops.fp4_qd(x, 32, e4m3_scale=False) of bf16 x (numel elements, a multiple of 32) into out, x's shape.
+pub fn fp4QdP2(t: Tri, x: u64, out: u64, numel: usize) !void {
+    const nblk = numel / 32;
+    const blks = 32;
+    try t.run("_fp4qd_p2", .{ tri.cdiv(nblk, blks), 1, 1 }, &.{ p("X", "*bf16", x), p("OUT", "*bf16", out), aot.int("nblk", @intCast(nblk)) }, &.{ ci("BLKS", blks), t.pdlConst() });
+}
+
+// -- conformance with the recorded launches ----------------------------------------------------------------------
+
+const Case = tri.Case;
+
+fn dtype(c: Case, tensor: []const u8) []const u8 {
+    return c.v.get("tensors").?.object.get(tensor).?.array.items[0].string;
+}
+
+test "sparse_attn's split keys and prompt chunks launch as recorded" {
+    try tri.conform("_sparse_attn_part", struct {
+        fn call(t: Tri, c: Case) !void {
+            // a pick list with keys was given when IDX is [R, n]; else the kernel reads pos there
+            const has = c.rank("IDX") == 2;
+            const fp4 = std.mem.eql(u8, dtype(c, "COMP"), "uint8");
+            const comp: Comp = if (!has) .none else if (fp4) .{ .fp4 = .{ .codes = c.ptr("COMP"), .scales = c.ptr("CSC") } } else .{ .bf16 = c.ptr("COMP") };
+            const ring = c.constInt("RING") != 0;
+            // wbase given or not: no tensor tells (RBASE and CBASE are pos otherwise), so HAS_BASE from the case
+            const based = c.constInt("HAS_BASE") != 0;
+            // the caller's ring_rows (a pool's ring size, not wsrc's rows): the recorded ring_size where it differs from them
+            const rs: usize = @intCast(c.int("ring_size"));
+            try sparseAttn(t, .{
+                .q = c.ptr("Q"),
+                .out = c.ptr("OUT"),
+                .rows = c.dim("Q", 0),
+                .h = c.dim("Q", 1),
+                .hd = c.dim("Q", 2),
+                .sink = c.ptr("SINK"),
+                .wsrc = c.ptr("WSRC"),
+                .wsrc_rows = c.dim("WSRC", 0),
+                .wlo = c.ptr("WLO"),
+                .ring = ring,
+                .comp = comp,
+                .idx = if (has) c.ptr("IDX") else 0,
+                .n_idx = if (has) c.dim("IDX", 1) else 0,
+                .pos = c.ptr("POS"),
+                .scale = c.float("scale"),
+                .window = @intCast(c.constInt("WIN")),
+                .wbase = if (based) c.ptr("RBASE") else null,
+                .cbase = if (based) c.ptr("CBASE") else null,
+                .ring_rows = if (ring and rs != c.dim("WSRC", 0)) rs else 0,
+                .parts = .{ .pm = c.ptr("PM"), .pl = c.ptr("PL"), .po = c.ptr("PO") },
+            });
+        }
+    }.call);
+}
+
+/// sparse_attn's arguments for a recorded merge: the merge's from the case, the split pass's own (not recorded) fixed.
+fn mergeArgs(c: Case, rot: ?Rot) Attn {
+    return .{
+        .q = 0x7e00_0000_0000,
+        .out = c.ptr("OUT"),
+        .rows = c.dim("OUT", 0),
+        .h = c.dim("OUT", 1),
+        .hd = c.dim("OUT", 2),
+        .sink = c.ptr("SINK"),
+        .wsrc = 0x7e00_0000_0100,
+        .wsrc_rows = 576,
+        .wlo = 0x7e00_0000_0200,
+        .ring = true,
+        .pos = if (c.has("POS")) c.ptr("POS") else 0x7e00_0000_0300,
+        .scale = 0.044194173,
+        .window = 128,
+        .ring_rows = 144,
+        .rot = rot,
+        .parts = .{ .pm = c.ptr("PM"), .pl = c.ptr("PL"), .po = c.ptr("PO") },
+    };
+}
+
+test "sparse_attn's merges launch as recorded" {
+    try tri.conform("_sparse_attn_merge", struct {
+        fn call(t: Tri, c: Case) !void {
+            try sparseAttn(t, mergeArgs(c, null));
+        }
+    }.call);
+    try tri.conform("_sparse_attn_merge_rot2", struct {
+        fn call(t: Tri, c: Case) !void {
+            const rot: Rot = .{ .cos = c.ptr("COS"), .sin = c.ptr("SIN"), .rd = @intCast(c.constInt("RD")), .suh = c.ptr("SUH"), .xh = c.ptr("XH"), .gh = @intCast(c.constInt("GH")) };
+            try sparseAttn(t, mergeArgs(c, rot));
+        }
+    }.call);
+}
+
+test "a prompt chunk's pick list is padded to 16 entries and its pick blocks to a power of two" {
+    var log: tri.Log = .{ .gpa = std.testing.allocator };
+    defer log.deinit();
+    const comp: Comp = .{ .fp4 = .{ .codes = 0x600, .scales = 0x700 } };
+    try sparseAttn(.{ .log = &log }, .{ .q = 0x100, .out = 0x200, .rows = 17, .h = 32, .hd = 512, .sink = 0x300, .wsrc = 0x400, .wsrc_rows = 17, .wlo = 0x500, .ring = false, .comp = comp, .idx = 0x800, .n_idx = 70, .pos = 0x900, .scale = 0.044194173, .window = 128 });
+    try std.testing.expectEqual(@as(usize, 1), log.items.items.len);
+    const k = log.items.items[0];
+    const n_idx = for (k.args) |x| {
+        if (std.mem.eql(u8, x.name, "n_idx")) break x.value.i32;
+    } else return error.TestUnexpectedResult;
+    const nblk = for (k.consts) |x| {
+        if (std.mem.eql(u8, x.name, "NBLK")) break x.int;
+    } else return error.TestUnexpectedResult;
+    try std.testing.expectEqual(@as(i32, 80), n_idx);
+    try std.testing.expectEqual(@as(?i64, 128 / 32 + 4), nblk);
+}
+
+test "fp4_store launches as recorded" {
+    try tri.conform("_fp4_store", struct {
+        fn call(t: Tri, c: Case) !void {
+            try fp4Store(t, c.ptr("X"), c.stride("X", 0), c.ptr("CODES"), c.ptr("SCALES"), c.ptr("ROWS"), c.dim("X", 0), c.dim("X", 1), @intCast(c.constInt("BLOCK")), c.constInt("E4M3") != 0);
+        }
+    }.call);
+}
+
+test "fp4_qd_p2 launches as recorded" {
+    try tri.conform("_fp4qd_p2", struct {
+        fn call(t: Tri, c: Case) !void {
+            var numel: usize = 1;
+            for (0..c.rank("X")) |i| numel *= c.dim("X", i);
+            try fp4QdP2(t, c.ptr("X"), c.ptr("OUT"), numel);
+        }
+    }.call);
+}
+
+test "aux.sparse_attn takes the part launch it fits (the merge stays Triton), and leaves the rest to Triton" {
+    var log: tri.Log = .{ .gpa = std.testing.allocator };
+    defer log.deinit();
+    const f: gpu.Function = undefined; // a logging Tri launches nothing
+    const aux: tri_aux.Aux = .{ .attn = f };
+    const t: Tri = .{ .log = &log, .aux = &aux };
+    const fp4: Comp = .{ .fp4 = .{ .codes = 0x600, .scales = 0x700 } };
+    const prompt: Attn = .{ .q = 0x100, .out = 0x200, .rows = 2048, .h = 32, .hd = 512, .sink = 0x300, .wsrc = 0x400, .wsrc_rows = 2048, .wlo = 0x500, .ring = false, .comp = fp4, .idx = 0x800, .n_idx = 500, .pos = 0x900, .scale = 0.044194173, .window = 128 };
+    // a prompt chunk: one pass, the picks list as Triton reads it (500 padded to 512), straight into out
+    try sparseAttn(t, prompt);
+    try std.testing.expectEqual(@as(usize, 1), log.items.items.len);
+    try std.testing.expectEqualStrings("aux.sparse_attn", log.items.items[0].name);
+    try std.testing.expectEqual([3]u32{ 2048, 1, 1 }, log.items.items[0].grid);
+    var a = log.hipArgs(tri_aux.AttnArgs, 0);
+    try std.testing.expectEqual(@as(i32, 512), a.n_idx);
+    try std.testing.expectEqual(@as(i32, 2 | 4 | 8), a.flags);
+    try std.testing.expectEqual(@as(u64, 0x200), a.out);
+    try std.testing.expect(a.idx == 0x800 and a.comp == 0x600 and a.csc == 0x700 and a.splits == 1 and a.heads == 32 and a.win == 128);
+    log.deinit();
+    log.items = .empty;
+    // a decode window on a pool's rings with per-row bases: 8 splits into the partials, then Triton's merge
+    var dec = prompt;
+    dec.rows = 4;
+    dec.ring = true;
+    dec.ring_rows = 256;
+    dec.wbase = 0xa00;
+    dec.cbase = 0xb00;
+    dec.n_idx = 64;
+    dec.parts = .{ .pm = 0xc00, .pl = 0xd00, .po = 0xe00 };
+    try sparseAttn(t, dec);
+    try std.testing.expectEqual(@as(usize, 2), log.items.items.len);
+    try std.testing.expectEqualStrings("aux.sparse_attn", log.items.items[0].name);
+    try std.testing.expectEqual([3]u32{ 4, 1, attn_splits }, log.items.items[0].grid);
+    a = log.hipArgs(tri_aux.AttnArgs, 0);
+    try std.testing.expectEqual(@as(i32, 1 | 2 | 4 | 16), a.flags);
+    try std.testing.expect(a.pm == 0xc00 and a.pl == 0xd00 and a.po == 0xe00 and a.rbase == 0xa00 and a.cbase == 0xb00);
+    try std.testing.expect(a.ring_size == 256 and a.n_idx == 64 and a.splits == attn_splits);
+    try std.testing.expectEqualStrings("_sparse_attn_merge", log.items.items[1].name);
+    log.deinit();
+    log.items = .empty;
+    // more picks than the kernel reads, another head count, no compressed keys at all
+    var long = prompt;
+    long.n_idx = 1024;
+    var heads = prompt;
+    heads.h = 16;
+    var plain = prompt;
+    plain.comp = .none;
+    try sparseAttn(t, long);
+    try sparseAttn(t, heads);
+    try sparseAttn(t, plain);
+    try std.testing.expectEqualStrings("_sparse_attn_part", log.items.items[0].name);
+    try std.testing.expectEqualStrings("_sparse_attn_part", log.items.items[1].name);
+    try std.testing.expectEqualStrings("aux.sparse_attn", log.items.items[2].name);
+    try std.testing.expectEqual(@as(i32, 8), log.hipArgs(tri_aux.AttnArgs, 2).flags);
+    try std.testing.expectEqual(@as(i32, 0), log.hipArgs(tri_aux.AttnArgs, 2).n_idx);
+}
+
+test "TP4 ranks (16 heads) take aux.sparse_attn's 16-head build; TP2 launches (32 heads) are what they were" {
+    var f32_: gpu.Function = undefined;
+    var f16_: gpu.Function = undefined;
+    @memset(std.mem.asBytes(&f32_), 0x32);
+    @memset(std.mem.asBytes(&f16_), 0x16);
+    const same = struct {
+        fn f(x: ?gpu.Function, y: gpu.Function) bool {
+            return x != null and std.mem.eql(u8, std.mem.asBytes(&x.?), std.mem.asBytes(&y));
+        }
+    }.f;
+    const old: tri_aux.Aux = .{ .attn = f32_ }; // a kit before the 16-head build
+    const both: tri_aux.Aux = .{ .attn = f32_, .attn16 = f16_ };
+    try std.testing.expect(same(both.attnFor(32), f32_) and same(both.attnFor(16), f16_));
+    try std.testing.expect(both.attnFor(24) == null and both.attnFor(64) == null and old.attnFor(16) == null);
+    const fp4: Comp = .{ .fp4 = .{ .codes = 0x600, .scales = 0x700 } };
+    const prompt: Attn = .{ .q = 0x100, .out = 0x200, .rows = 2048, .h = 32, .hd = 512, .sink = 0x300, .wsrc = 0x400, .wsrc_rows = 2048, .wlo = 0x500, .ring = false, .comp = fp4, .idx = 0x800, .n_idx = 500, .pos = 0x900, .scale = 0.044194173, .window = 128 };
+    var dec = prompt;
+    dec.rows = 4;
+    dec.ring = true;
+    dec.ring_rows = 256;
+    dec.wbase = 0xa00;
+    dec.cbase = 0xb00;
+    dec.n_idx = 64;
+    dec.parts = .{ .pm = 0xc00, .pl = 0xd00, .po = 0xe00 };
+    var cases: [4]Attn = .{ prompt, dec, prompt, dec };
+    cases[2].h = 16;
+    cases[3].h = 16;
+    // TP2: every launch (name, grid, block, argument bytes, Triton args and consts) the same with the 16-head build bound
+    var l_old: tri.Log = .{ .gpa = std.testing.allocator };
+    defer l_old.deinit();
+    var l_new: tri.Log = .{ .gpa = std.testing.allocator };
+    defer l_new.deinit();
+    for (cases[0..2]) |c| {
+        try sparseAttn(.{ .log = &l_old, .aux = &old }, c);
+        try sparseAttn(.{ .log = &l_new, .aux = &both }, c);
+    }
+    try std.testing.expectEqual(@as(usize, 3), l_new.items.items.len); // prompt one pass; decode split + Triton merge
+    try std.testing.expectEqual(l_old.items.items.len, l_new.items.items.len);
+    for (l_old.items.items, l_new.items.items) |x, y| {
+        try std.testing.expectEqualStrings(x.name, y.name);
+        try std.testing.expectEqual(x.grid, y.grid);
+        try std.testing.expectEqual(x.block, y.block);
+        try std.testing.expectEqualSlices(u8, x.hip, y.hip);
+        try std.testing.expectEqual(x.args.len, y.args.len);
+        try std.testing.expectEqual(x.consts.len, y.consts.len);
+    }
+    try std.testing.expectEqual(@as(i32, 32), l_new.hipArgs(tri_aux.AttnArgs, 0).heads);
+    // TP4: the same calls at 16 heads: aux.sparse_attn (heads 16, the same grid and flags), the merge at 16 heads;
+    // with the old kit they stay on Triton's _sparse_attn_part
+    var l4: tri.Log = .{ .gpa = std.testing.allocator };
+    defer l4.deinit();
+    for (cases[2..4]) |c| try sparseAttn(.{ .log = &l4, .aux = &both }, c);
+    try std.testing.expectEqual(@as(usize, 3), l4.items.items.len);
+    try std.testing.expectEqualStrings("aux.sparse_attn", l4.items.items[0].name);
+    try std.testing.expectEqual([3]u32{ 2048, 1, 1 }, l4.items.items[0].grid);
+    try std.testing.expectEqual(@as(u32, 256), l4.items.items[0].block);
+    var a = l4.hipArgs(tri_aux.AttnArgs, 0);
+    try std.testing.expect(a.heads == 16 and a.flags == 2 | 4 | 8 and a.n_idx == 512 and a.splits == 1 and a.out == 0x200);
+    try std.testing.expectEqualStrings("aux.sparse_attn", l4.items.items[1].name);
+    try std.testing.expectEqual([3]u32{ 4, 1, attn_splits }, l4.items.items[1].grid);
+    a = l4.hipArgs(tri_aux.AttnArgs, 1);
+    try std.testing.expect(a.heads == 16 and a.flags == 1 | 2 | 4 | 16 and a.pm == 0xc00 and a.splits == attn_splits);
+    try std.testing.expectEqualStrings("_sparse_attn_merge", l4.items.items[2].name);
+    try std.testing.expectEqual([3]u32{ 4, 1, 1 }, l4.items.items[2].grid); // 16 heads: one head group
+    var l4o: tri.Log = .{ .gpa = std.testing.allocator };
+    defer l4o.deinit();
+    for (cases[2..4]) |c| try sparseAttn(.{ .log = &l4o, .aux = &old }, c);
+    try std.testing.expectEqualStrings("_sparse_attn_part", l4o.items.items[0].name);
+    try std.testing.expectEqualStrings("_sparse_attn_part", l4o.items.items[1].name);
+    try std.testing.expectEqual([3]u32{ 4, 1, attn_splits }, l4o.items.items[1].grid);
+}

@@ -1,0 +1,65 @@
+id        = "kernel.kestrel.exl3"
+kind      = "kernel"
+summary   = "Maya's EXL3 device kernels as Kestrel 0.1.6 ships them (src/kernels/cuda/exl3.cu, 3,836 lines; trellis codebooks and window arithmetic after exllamav3): the decode GEMV (block_gemv: 256 threads own 128 outputs over a k slice of at most 4096, up to 8 activations a pass, v_dot2_f32_f16 on RDNA3 / 4, the input rotated inside each block), verify-window and token-path routed experts (moe_gate_up / moe_down, win_gu / win_down with 2 / 4 / 8-row instances), the prompt set kernels (scalar hip_set and hip_scalar_set with NR rows, gfx11 v_wmma_f32_16x16x16_f16, gfx12 WMMA, CDNA MFMA) and the GEMM, with the NVIDIA-only legacy decode file, the format header, the policy and device tests and the EXL3 docs"
+why       = "the only other EXL3 HIP implementation for DeepSeek-V4.1 beside kernel.strixfold.exl3, validated by its origin on gfx1151 (docs/EXL3_HIP.md); /data/pod/reports/2026-11/origin-kestrel.md compares the two at the Wrench TP2 shapes and draws three ideas for few-row decode from it (row capacity by template, rotation inside the GEMV, an occupancy-driven split rule)"
+notes     = "Interface tags: linear.decode/exl3/f32-f32, moe.experts-decode/exl3/f32, linear.prefill/exl3/f16-f32 (the same <family>.<op> as kernel.strixfold.exl3; not a drop-in: different input contract and sum order, /data/pod/reports/2026-11/origin-kestrel.md). Kestrel's delta over Maya v1.1.78 in exl3.cu: gfx12 defaults to 32 WMMA rows (an R9700: -12 % expert time on a 20K prompt) and a profiling hook in win_experts. exl3_legacy.cu is v1.1.8's NVIDIA-only decode (before sm_80) and is not built for HIP. Nothing was compiled, run or timed on the pod."
+
+[provenance]
+origin    = "kestrel"
+repo      = "https://github.com/itechmedic/kestrel"
+commit    = "717c76975cd20d37b2e4162072d7745d6e1576ff"
+branch    = "kestrel"
+paths     = [
+  "docs/EXL3-HELPER.md",
+  "docs/EXL3_HIP.md",
+  "docs/EXL3_HIP_SCALAR_ROWS.md",
+  "docs/EXL3_RDNA4.md",
+  "include/maya/kernels/dp4a.hpp",
+  "include/maya/kernels/exl3.hpp",
+  "src/kernels/cuda/exl3.cu",
+  "src/kernels/cuda/exl3_hip_scalar.hpp",
+  "src/kernels/cuda/exl3_legacy.cu",
+  "tests/exl3_hip_scalar_policy_test.cpp",
+  "tests/exl3_test.cu",
+  "tests/hip/ds4_exl3_helper.cpp",
+]
+authors   = ["itechmedic", "Project Maya contributors (mw00)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "cuda"
+sources   = ["src/src/kernels/cuda/exl3.cu", "src/src/kernels/cuda/exl3_legacy.cu"]
+includes  = ["src/include", "src/include/maya/kernels", "src/src/kernels/cuda", "src/tests", "src/tests/hip"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "linear.decode/exl3/f32-f32.kestrel"
+api       = "maya::kernels::exl3::mv(const MvJob*, int, cudaStream_t) (include/maya/kernels/exl3.hpp; src/kernels/cuda/exl3.cu)"
+numeric   = "per block 8 waves, a lane holds an MMA-A fragment (2 outputs x 4 inputs of a 16 x 16 slice), one v_dot2_f32_f16 per weight pair per activation, fp32 sums reduced over 4 lanes by DPP xor, split-K added in split order by the last block; an activation's sums do not depend on the other columns (row-invariant within this kernel, not bit-equal to kernel.strixfold.exl3)"
+regime    = "decode and verify windows, 1-8 activations a pass (DS4_EXL3_MV1: a 1-row kernel by default on HIP); f32 or q8_1 input, rotated in-kernel"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/f32.kestrel"
+api       = "maya::kernels::exl3::moe_gate_up, moe_down, win_experts (exl3.hpp)"
+numeric   = "the token path's arithmetic per entry: a window's token gets moe_gate_up + moe_down's bits for it alone"
+regime    = "decode and verify windows; routed expert widths up to 8192 (DeepSeek-V4.1 n_embd 5120)"
+
+[[provides]]
+interface = "linear.prefill/exl3/f16-f32.kestrel"
+api       = "maya::kernels::exl3::gemm_rows, set_gate_up, set_down (exl3.hpp)"
+numeric   = "scalar FP32 / DOT2 tiles on HIP with NR rows (MAYA_EXL3_HIP_SCALAR_ROWS, gfx12 only), v_wmma_f32_16x16x16_f16 on gfx11 (EXL3_WMMA_ROWS 16, 32 on gfx12 since Kestrel), fp32 accumulate"
+regime    = "prompt chunks"
+
+[[requires]]
+module    = "kernel.kestrel.hip_compat"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of Maya's CMake build with MAYA_ENABLE_HIP (cmake/hip_backend.cmake): the .cu file is compiled as HIP through include/maya/hip_compat, for gfx1100 / gfx1201 / gfx1151 (validated) with the engine's include roots and ggml from third_party; it needs headers this harvest leaves in the origin, so it is not compiled here"

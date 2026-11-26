@@ -1,0 +1,49 @@
+id        = "runtime.fastasfuck.qweight"
+kind      = "runtime"
+summary   = "fastasfuck's header-only quantized-weight view that records the Q4/Q5/Q6/Q8 format a .faf tensor declares and dispatches to the matching GEMV, WMMA or grouped-expert kernel"
+why       = "it is the switch that lets one forward run any per-class layout a .faf names without recompiling"
+notes     = "Files vs strixite: runtime/qweight.hpp 44 changed lines against runtime.strixite.qweight at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/qweight.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.dispatch/strixw/-"
+api       = "strix::QWeightView, strix::QChunkMajorView, strix::kernels::linear_qw"
+numeric   = "derived from runtime.strixite.qweight (runtime/qweight.hpp 44 changed lines against runtime.strixite.qweight at d19945e); not compared here"
+regime    = "as runtime.strixite.qweight: header only; format read from the strixw file, never guessed"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.linear"
+
+[[requires]]
+module    = "kernel.fastasfuck.moe_grouped"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host C++ header; the compile gate builds hip-c++ modules only"

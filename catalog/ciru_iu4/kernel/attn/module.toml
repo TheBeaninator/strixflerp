@@ -1,0 +1,87 @@
+id        = "kernel.ciru_iu4.attn"
+kind      = "kernel"
+summary   = "CIRU's attention changes on the pwilkin tree: the QSA3 sparse attention reworked (one 128-lane workgroup a query merging sorted selected rows, query grouping), a per-query selected-key QSA decode path for MTP and appends of up to 512 tokens (plain and WMMA partials with a merge), the compact lightning-indexer form whose mask comes from per-row limits, an index-mask fallback in flash attention, mask-bound fixes in the shared FA code and the MMA kernel, and an argsort for rows longer than a block (QSA's 2051 selected cells, wide image prompts)"
+why       = "QSA is Qwen3.8-Flash-Next's sparse attention; CIRU's decode path and grouping are what its \"sequence-safe QSA\" and concurrent MTP releases measure, against kernel.strixite.qsa and the other QSA providers"
+notes     = "Interface tags by file: qsa.cu attn.softmax-gqa/kv-f16/f32; qsa-decode.cu attn.softmax-gqa/kv-f16/f32; qsa-decode.cuh none; qsa-decode-wmma.cuh attn.softmax-gqa/kv-f16/f32; lightning-indexer.cu attn.qsa-indexer/-/f32; fattn.cu attn.softmax-gqa/kv-f16/f32; fattn-common.cuh none; fattn-mma-f16.cuh none; argsort.cu attn.indexer-topk/-/i32 (catalog/ciru_iu4/KERNELS.md has the table). Against the base pwilkin/llama.cpp f5daaa3c: added qsa-decode.cu, qsa-decode.cuh, qsa-decode-wmma.cuh; changed qsa.cu +107 -71 lines; lightning-indexer.cu +25 -8 lines; fattn.cu +95 lines; fattn-common.cuh +23 -3 lines; fattn-mma-f16.cuh +19 lines; argsort.cu +26 -25 lines. No timing was taken on the pod."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = [
+  "ggml/src/ggml-cuda/argsort.cu",
+  "ggml/src/ggml-cuda/fattn-common.cuh",
+  "ggml/src/ggml-cuda/fattn-mma-f16.cuh",
+  "ggml/src/ggml-cuda/fattn.cu",
+  "ggml/src/ggml-cuda/lightning-indexer.cu",
+  "ggml/src/ggml-cuda/qsa-decode-wmma.cuh",
+  "ggml/src/ggml-cuda/qsa-decode.cu",
+  "ggml/src/ggml-cuda/qsa-decode.cuh",
+  "ggml/src/ggml-cuda/qsa.cu",
+]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+upstream  = "QSA, the lightning indexer and the MMB / FA kernels these files change are pwilkin's Strix Halo reference work on llama.cpp"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/ggml/src/ggml-cuda/qsa.cu",
+  "src/ggml/src/ggml-cuda/qsa-decode.cu",
+  "src/ggml/src/ggml-cuda/lightning-indexer.cu",
+  "src/ggml/src/ggml-cuda/fattn.cu",
+  "src/ggml/src/ggml-cuda/argsort.cu",
+]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.ciru-qsa3"
+api       = "qsa.cu: qsa3_launch"
+numeric   = "F16 K/V (the release runs an f16 KV cache), F32 softmax and accumulation; QSA selects keys per query from the indexer scores"
+regime    = "QSA3 for long ubatches, the per-query decode path for MTP and appends up to 512 tokens; dense flash attention otherwise"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.ciru-qsa-decode"
+api       = "qsa-decode.cu: qsa_decode_unique_ids, qsa_decode_partial, qsa_decode_merge"
+numeric   = "F16 K/V (the release runs an f16 KV cache), F32 softmax and accumulation; QSA selects keys per query from the indexer scores"
+regime    = "QSA3 for long ubatches, the per-query decode path for MTP and appends up to 512 tokens; dense flash attention otherwise"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.ciru-qsa-decode-wmma"
+api       = "qsa-decode-wmma.cuh: qsa_decode_wmma_partial"
+numeric   = "F16 K/V (the release runs an f16 KV cache), F32 softmax and accumulation; QSA selects keys per query from the indexer scores"
+regime    = "QSA3 for long ubatches, the per-query decode path for MTP and appends up to 512 tokens; dense flash attention otherwise"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32.ciru-compact"
+api       = "lightning-indexer.cu: host path"
+numeric   = "F16 K/V (the release runs an f16 KV cache), F32 softmax and accumulation; QSA selects keys per query from the indexer scores"
+regime    = "QSA3 for long ubatches, the per-query decode path for MTP and appends up to 512 tokens; dense flash attention otherwise"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.ciru-fattn"
+api       = "fattn.cu: flash_attn_index_mask_set, flash_attn_index_mask_clear, flash_attn_index_mask_empty"
+numeric   = "F16 K/V (the release runs an f16 KV cache), F32 softmax and accumulation; QSA selects keys per query from the indexer scores"
+regime    = "QSA3 for long ubatches, the per-query decode path for MTP and appends up to 512 tokens; dense flash attention otherwise"
+
+[[provides]]
+interface = "attn.indexer-topk/-/i32.ciru-wide-argsort"
+api       = "argsort.cu: host path"
+numeric   = "F16 K/V (the release runs an f16 KV cache), F32 softmax and accumulation; QSA selects keys per query from the indexer scores"
+regime    = "QSA3 for long ubatches, the per-query decode path for MTP and appends up to 512 tokens; dense flash attention otherwise"
+
+[[requires]]
+module    = "kernel.ciru_iu4.cuda_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_iu4.attn.json"

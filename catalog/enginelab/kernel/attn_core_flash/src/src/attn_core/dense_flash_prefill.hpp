@@ -1,0 +1,710 @@
+#pragma once
+
+#include "masks.hpp"
+// Shared FAST dense causal GQA flash-attention prefill core (f16/bf16 WMMA 16x16x16 -> FP32, FP32 online softmax).
+// Tile helpers (operand rounding, fragments, WMMA call) come from flash_tile.hpp (namespace tile, canonical).
+//
+// Identity: FAST, opt-in per engine (gemma4: STRIX_G4_PREFILL_ATTN=flash). Nothing here runs unless an engine
+// launches it. Lossy against exact attention: Q, K, V and the probabilities are Policy::kOp WMMA operands, the score and
+// PV sums run in WMMA order, and the softmax is the online (running max) form with exp2. Judged on end metrics.
+//
+// Shape: one work-group = one KV head x Group query heads x Positions consecutive query positions (Group *
+// Positions query rows, 16-row WMMA tiles). Every K/V tile of 16 keys is staged into LDS ONCE per work-group and
+// reused by all its query rows (GQA: the whole KV group), instead of once per 16-row tile. Wave w = (row tile
+// w / Split, head-dim slice w % Split): the slice's FP16 queries stay in registers as A fragments for the whole
+// row tile, the wave computes the slice's partial scores Q[16][D/Split] . K[16][D/Split]^T and owns the output
+// accumulators O[16][D/Split]. Per key tile:
+//   1. stage: the prefetched K rows ([key][D], padded pitch) and V^T rows ([d][16 keys], the slot32 rows of
+//      core/lds_rows.hpp: conflict-free PV fragment reads, plain [d][16] rows read 2-way) go to LDS;    barrier
+//      the next tile's global loads are issued right away and land during the math;
+//   2. QK on WMMA, the Split partials go to LDS as FP32;                                             barrier
+//   3. every wave of the row tile sums the partials (fixed order), scales by scale*log2(e), applies the causal and
+//      sliding-window mask, updates its running max/sum and builds the FP16 P fragment (the two half-waves split
+//      the exponentials), rescales O by alpha and adds P[16][16] . V[16][D/Split] on WMMA;           barrier
+// Split-K (splits > 1, grid z): work-group z walks its share of the block's key tiles and writes the unnormalised
+// O, the running max m (log2 units) and sum l to a workspace; combine<P> merges the splits per (row, head):
+// out = sum_z 2^(m_z - M) O_z / sum_z 2^(m_z - M) l_z. Fills the GPU when rows x KV heads give few work-groups.
+// Key tiles outside [lo(first row), last row] are never visited (causal + window block skip); tiles a row tile
+// cannot see are skipped per wave. Epilogue: O / l to the policy's FP32 output.
+// LDS: 16 x (D + 8) x 2 (K) + D x 32 (V^T) + waves x 16 x 20 x 4 (partials) = 53,504 B at D512 / 16 waves.
+//
+// Policy P (all __device__ static unless noted):
+//   using Args;  using Shape = dense::Shape<D, Group, Split, Positions>;  static constexpr float kScaleLog2;
+//   static constexpr tile::Operand kOp;             operand type of Q/K/V/P (K/V stored in it)
+//   bool valid(const Args&)                         geometry check (false: failure |= 2, nothing written)
+//   unsigned rows(const Args&)                      query rows (consecutive positions) - also host
+//   unsigned position(const Args&)                  absolute position of row 0
+//   unsigned window(const Args&)                    sliding window (keys p-window+1 .. p), 0 = full causal
+//   mask::Range key_range(const Args&)               optional fixed key range for all queries
+//   const float* query(const Args&, row, head)      FP32 [D], 16-B aligned
+//   float* out(const Args&, row, head)              FP32 [D]
+//   const uint16_t* key(const Args&, pos, kv_head)  kOp [D] of key pos, 16-B aligned (finite for every pos of a
+//                                                   visited 16-key tile; masked keys are multiplied by zero)
+//   const uint16_t* value_t(const Args&, kv_head, d) kOp V^T row: element pos = V[pos][d]; 16-B aligned at pos%16==0
+//   unsigned* failure(const Args&)                  bit 1 nonfinite output, bit 4 operand query overflow
+// The denominator sums the operand-rounded p (what PV accumulates) in key order across both half-waves.
+// Optional two-term operands (static constexpr unsigned kTerms = 2; absent or 1 = one term, the bytes above):
+//   const uint16_t* key_lo(const Args&, pos, kv_head)   lo terms of key(), same layout (tile::to_operand2)
+//   const uint16_t* value_t_lo(const Args&, kv_head, d) lo terms of value_t(), same layout
+// Q, K, V and P are carried as hi + lo and every product runs as hi.hi + hi.lo + lo.hi into the same FP32 chain
+// (lo.lo dropped): 3x the QK and PV WMMA. Per product, about 2u |ab| -> 3u^2 |ab| (f16 u = 2^-11: 2^-10 -> 2^-20.4)
+// while the remainders are normal f16; below that a 2^-25 absolute floor, and no gain for |x| < 2^-14. The FP32
+// chain adds about 2^-24 x sum |a_i b_i| per WMMA step, so cancellation is not covered. Bounds and a host model of
+// these products in this order: two_term_model.hpp.
+// The denominator sums hi + lo of p. LDS adds 16 x (D + 8) x 2 + D x 32 B; Q lo stays in registers.
+// Optional occupancy override: static constexpr unsigned kWavesPerEu (waves per SIMD of flash_prefill<P>; absent = the
+// VGPR budget rule of dense_flash_budget.hpp). For a policy whose launch measured slower at the rule's target.
+// Optional score_bias(const Args&, row, head, query_pos, key_pos) supplies an additive logit in natural units.
+// Only live, unmasked keys call this policy. Positions are absolute, including for a wrapped KV cache.
+// Optional projected bias instead (DenseProjectedBias, not with score_bias): static constexpr unsigned kBiasWidth,
+// kBiasMaxExtent and RelativeBiasProjection bias_projection(const Args&) (relative_bias.hpp; weights 16-B aligned,
+// extent % 8 == 0, extent <= kBiasMaxExtent): the logit of backward distance d < extent is relative_bias_chain of the
+// row's features and W[.][d], the bits of the producer's [row][head][distance] image. W is staged transposed in LDS
+// (kBiasWidth x kBiasMaxExtent x 2 B); bit 1 of failure is set exactly when that image has a non-finite logit at any
+// distance (relative_bias_bounded, else every distance is evaluated), as the producer's check did.
+// Optional one-term traits (absent: the code paths above, unchanged; used by the MLA expanded-MHA prefill form):
+//   float sink(const Args&, row, head)               learned sink logit (natural units): out = O / (l + 2^(z log2(e) - m)),
+//                                                    the sink column of the softmax with no value (sparse_flash_wmma's rule)
+//   static constexpr bool kRebaseSink = true;         opt in to rescaling if the sink mass overflows FP32
+//   static constexpr bool kValueRows = true;          V given as rows instead of value_t:
+//   const uint16_t* value(const Args&, pos, kv_head) kOp V[pos][0..D), 16-B aligned; staged transposed into the same LDS
+//   static constexpr unsigned kRope;                  MLA decoupled rope key: K[pos][head] = key(pos, head)[0 .. D - kRope)
+//   const uint16_t* rope_key(const Args&, pos)       followed by rope_key(pos)[0 .. kRope) shared by every head (16-B aligned)
+// rows() is __host__ __device__. Launch: launch<P>(args, heads, stream, workspace, splits) - grid (row blocks, heads / Group, splits), longest
+// blocks first; workspace_floats(rows, heads, D, splits) FP32 when splits > 1.
+#include <hip/hip_runtime.h>
+
+#include <cstdint>
+#include <type_traits>
+
+#include "dense_flash_budget.hpp"
+#include "dense_flash_keysplit.hpp"
+#include "flash_core.hpp"
+#include "relative_bias.hpp"
+#include "strix/attn/cache_rows.hpp"
+
+namespace strix::attn_core::dense {
+
+using tile::Acc;
+using tile::Frag;
+using tile::U4;
+
+template <unsigned Dim, unsigned Group, unsigned Split, unsigned Positions = 16>
+struct Shape {
+    static_assert(Dim % (16 * Split) == 0, "head dim must split into 16-wide slices");
+    static_assert(Positions % 16 == 0, "16 consecutive positions per row tile");
+    static constexpr unsigned dim = Dim, group = Group, split = Split, positions = Positions;
+    static constexpr unsigned tiles = Group * Positions / 16, waves = tiles * Split, threads = 32 * waves;
+    static constexpr unsigned slice = Dim / Split, frags = slice / 16;
+    static constexpr unsigned kpitch = Dim + 8, spitch = 20; // halfs / floats
+    static constexpr unsigned pieces = 2 * Dim, per_thread = (pieces + threads - 1) / threads;
+    static constexpr unsigned lds_bytes = 16 * kpitch * 2 + Dim * 16 * 2 + waves * 16 * spitch * 4;
+    static_assert(threads <= 1024, "work-group too large");
+    static_assert(lds_bytes <= 65536, "LDS budget");
+};
+
+// FP16 terms per operand of a policy: P::kTerms when declared, else 1.
+template <class P, class = void> struct terms_of { static constexpr unsigned value = 1; };
+template <class P> struct terms_of<P, std::void_t<decltype(P::kTerms)>> { static constexpr unsigned value = P::kTerms; };
+// The optional traits (see the policy list above).
+template <class P> concept DenseScoreBias = requires(const typename P::Args& a, float& z) {
+    z = P::score_bias(a, 0U, 0U, 0U, 0U);
+};
+template <class P> concept DenseProjectedBias = requires(const typename P::Args& a, RelativeBiasProjection& z) {
+    z = P::bias_projection(a);
+    P::kBiasWidth;
+    P::kBiasMaxExtent;
+};
+template <class P> constexpr unsigned projected_width() {
+    if constexpr (DenseProjectedBias<P>) return P::kBiasWidth;
+    else return 8U;
+}
+template <class P> constexpr unsigned projected_extent() {
+    if constexpr (DenseProjectedBias<P>) return P::kBiasMaxExtent;
+    else return 0U;
+}
+template <class P> concept DenseSink = requires(const typename P::Args& a, float& z) { z = P::sink(a, 0U, 0U); };
+template <class P> concept DenseRebasedSink = DenseSink<P> && requires { P::kRebaseSink; } && P::kRebaseSink;
+template <class P> concept DenseValueRows = requires { P::kValueRows; } && P::kValueRows;
+template <class P> concept DenseRopeKey = requires { P::kRope; };
+// Test-only capture of the lane-score rescale (hip_dense_flash_bench): a policy that declares kRescaleProbe = true and
+// __device__ static void probe(const Args&, unsigned key_tile, unsigned frag, bool rescale, float alpha, const Acc& in,
+// const Acc& post, const Acc& incumbent) receives, per key tile and fragment, the incoming accumulator, the wave's
+// rescale vote, this lane's alpha, the accumulator the kernel hands to the matrix unit (post) and what the unconditional
+// multiply by the alpha factors yields (incumbent). Absent in every production policy: the probe code is discarded at
+// compile time and the production machine code is unchanged.
+template <class P> concept DenseRescaleProbe = requires { P::kRescaleProbe; } && P::kRescaleProbe;
+template <class P> constexpr unsigned rope_of() {
+    if constexpr (DenseRopeKey<P>) return P::kRope;
+    else return 0U;
+}
+
+__device__ inline unsigned window_lo(unsigned p, unsigned window) { return window && p >= window ? p - window + 1U : 0U; }
+
+struct SinkRebase {
+    float half_scale = 1.0F;
+
+    __device__ __forceinline__ void add(float log2_mass, float& denominator) {
+        if (log2_mass < 128.0F) {
+            denominator += __builtin_amdgcn_exp2f(log2_mass);
+        } else {
+            // The key mass is at most 2^32, so its contribution relative to the sink
+            // rounds away in FP32 here. Two half exponents can preserve a finite
+            // output even when the full reciprocal mass would underflow.
+            half_scale = __builtin_amdgcn_exp2f(-0.5F * log2_mass);
+        }
+    }
+
+    __device__ __forceinline__ float divide(float numerator, float denominator) const {
+        return half_scale == 1.0F ? numerator / denominator : (numerator * half_scale) * half_scale;
+    }
+};
+
+// block_x is the work-group's row-block index: blockIdx.x for flash_prefill; a lanes grid (prepared_bf16_attention.hpp)
+// binds one single-block lane per blockIdx.x and passes 0. The split is always blockIdx.z, the KV head blockIdx.y.
+template <class P>
+__device__ __forceinline__ void flash_body(typename P::Args a, float* ws, unsigned splits, unsigned seg_tiles,
+                                           unsigned block_x) {
+    using S = typename P::Shape;
+    constexpr unsigned D = S::dim, KP = S::kpitch, SP = S::spitch, F = S::frags, T = S::threads;
+    constexpr auto O = P::kOp;
+    constexpr bool Two = terms_of<P>::value == 2U;
+    static_assert(terms_of<P>::value == 1U || Two, "kTerms is 1 or 2");
+    static_assert(S::lds_bytes + (Two ? 16 * KP * 2 + D * 16 * 2 : 0) <= 65536, "LDS budget (two-term)");
+    constexpr bool VRows = DenseValueRows<P>;
+    // One head-dim slice per row tile: the QK scores stay in registers (no partial-sum LDS pass, one barrier less).
+    constexpr bool kLaneScores = !Two && S::split == 1U;
+    [[maybe_unused]] constexpr unsigned KR = rope_of<P>(), KN = D - KR;  // key columns from key() / from rope_key()
+    static_assert(!Two || (!VRows && KR == 0U), "row-major V and the shared rope key are one-term traits");
+    static_assert(KR % 8U == 0U && KR < D, "the rope key is whole 16-byte pieces");
+    __shared__ __attribute__((aligned(16))) std::uint16_t ks[16 * KP];
+    __shared__ __attribute__((aligned(16))) std::uint16_t vs[D * 16];
+    [[maybe_unused]] __shared__ __attribute__((aligned(16))) std::uint16_t ks_lo[Two ? 16 * KP : 8];
+    [[maybe_unused]] __shared__ __attribute__((aligned(16))) std::uint16_t vs_lo[Two ? D * 16 : 8];
+    __shared__ __attribute__((aligned(16))) float part[S::waves * 16 * SP];
+    const unsigned tid = threadIdx.x, lane = tid & 31U, wave = tid >> 5, rr = lane & 15U, hw = lane >> 4;
+    const unsigned tile = wave / S::split, piece = wave % S::split;
+    if (!P::valid(a)) {
+        if (!tid) atomicOr(P::failure(a), 2U);
+        return;
+    }
+    const unsigned rows = P::rows(a), blocks = (rows + S::positions - 1U) / S::positions;
+    const unsigned block = blocks - 1U - block_x, kvh = blockIdx.y, row_base = block * S::positions;
+    const unsigned p0 = P::position(a), window = P::window(a);
+    const unsigned block_rows = min(S::positions, rows - row_base);
+    const unsigned pos_first = p0 + row_base, pos_last = pos_first + block_rows - 1U;
+    const auto key_range = [&] {
+        if constexpr (requires { P::key_range(a); }) return P::key_range(a);
+        else return mask::Range{};
+    };
+    constexpr bool fixed_keys = requires { P::key_range(a); };
+    const auto fixed = key_range();
+    const unsigned key_begin = (fixed_keys ? fixed.begin : window_lo(pos_first, window)) & ~15U;
+    const unsigned key_last = fixed_keys ? fixed.end - 1U : pos_last;
+    const unsigned tiles_total = (key_last >> 4) - (key_begin >> 4) + 1U, share = (tiles_total + splits - 1U) / splits;
+    unsigned kt_begin = key_begin + 16U * min(tiles_total, blockIdx.z * share);
+    unsigned kt_end = key_begin + 16U * min(tiles_total, (blockIdx.z + 1U) * share); // exclusive
+    if (seg_tiles) { // chunkinv-attn-state-v1: segment z = absolute key tiles [z * seg_tiles, (z + 1) * seg_tiles)
+        const unsigned lo = 16U * blockIdx.z * seg_tiles, hi = lo + 16U * seg_tiles, end = 16U * ((key_last >> 4) + 1U);
+        kt_begin = max(key_begin, lo);
+        kt_end = max(kt_begin, min(end, hi));
+    }
+    // This wave's 16 rows: one query head, 16 consecutive positions.
+    const unsigned head = kvh * S::group + tile % S::group, sub = tile / S::group * 16U;
+    const bool wave_live = sub < block_rows;
+    const unsigned tile_last = fixed_keys ? key_last : pos_first + min(sub + 15U, block_rows - 1U);
+    const unsigned tile_lo = fixed_keys ? fixed.begin : window_lo(pos_first + sub, window);
+    const unsigned my_row = row_base + sub + rr, my_pos = p0 + my_row;
+    const unsigned my_lo = fixed_keys ? fixed.begin : window_lo(my_pos, window);
+    const unsigned my_last = fixed_keys ? key_last : my_pos;
+    const bool live = wave_live && sub + rr < block_rows;
+    const unsigned d0 = piece * S::slice;
+    bool bad_half = false;
+    Frag qf[F];
+    [[maybe_unused]] Frag qf_lo[Two ? F : 1];
+    {
+        const float* q = live ? P::query(a, my_row, head) + d0 : nullptr;
+        constexpr unsigned short exponent = O == tile::Operand::f16 ? 0x7c00U : 0x7f80U;
+#pragma unroll
+        for (unsigned f = 0; f < F; ++f) {
+            qf[f] = live ? tile::frag_from_f32<O>(q + 16U * f) : Frag{};
+            if constexpr (Two) qf_lo[f] = live ? tile::frag_lo_from_f32<O>(q + 16U * f) : Frag{};
+#pragma unroll
+            for (unsigned i = 0; i < 16; ++i) bad_half |= (qf[f][i] & exponent) == exponent;
+        }
+    }
+    U4 kreg[S::per_thread], vreg[S::per_thread];
+    [[maybe_unused]] U4 klreg[Two ? S::per_thread : 1], vlreg[Two ? S::per_thread : 1];
+    const auto fetch = [&](unsigned kt) {
+#pragma unroll
+        for (unsigned i = 0; i < S::per_thread; ++i) {
+            const unsigned idx = tid + i * T;
+            if (S::pieces % T == 0 || idx < S::pieces) {
+                const unsigned key = idx / (D / 8U), c = idx % (D / 8U);
+                if constexpr (KR != 0U) {  // MLA: the head's own columns, then the rope key every head shares
+                    const std::uint16_t* kp = 8U * c < KN ? P::key(a, kt + key, kvh) + 8U * c : P::rope_key(a, kt + key) + (8U * c - KN);
+                    kreg[i] = *reinterpret_cast<const U4*>(kp);
+                } else {
+                    kreg[i] = *reinterpret_cast<const U4*>(P::key(a, kt + key, kvh) + 8U * c);
+                }
+                if constexpr (VRows) {  // piece = 8 columns of one key row; consecutive threads = consecutive keys
+                    vreg[i] = *reinterpret_cast<const U4*>(P::value(a, kt + idx % 16U, kvh) + 8U * (idx / 16U));
+                } else {
+                    const unsigned d = idx >> 1, h = idx & 1U;
+                    vreg[i] = *reinterpret_cast<const U4*>(P::value_t(a, kvh, d) + kt + 8U * h);
+                }
+                if constexpr (Two) {
+                    const unsigned d = idx >> 1, h = idx & 1U;
+                    klreg[i] = *reinterpret_cast<const U4*>(P::key_lo(a, kt + key, kvh) + 8U * c);
+                    vlreg[i] = *reinterpret_cast<const U4*>(P::value_t_lo(a, kvh, d) + kt + 8U * h);
+                }
+            }
+        }
+    };
+    const auto stage = [&] {
+#pragma unroll
+        for (unsigned i = 0; i < S::per_thread; ++i) {
+            const unsigned idx = tid + i * T;
+            if (S::pieces % T == 0 || idx < S::pieces) {
+                const unsigned key = idx / (D / 8U), c = idx % (D / 8U);
+                *reinterpret_cast<U4*>(&ks[key * KP + 8U * c]) = kreg[i];
+                [[maybe_unused]] const unsigned d = idx >> 1, h = idx & 1U;
+                if constexpr (VRows) {  // V[key][8 vc + e] -> the V^T row d = 8 vc + e, column key (same slot32 rows)
+                    const unsigned vk = idx % 16U, vc = idx / 16U, vh = vk / 8U, vo = vk % 8U;
+#pragma unroll
+                    for (unsigned e = 0; e < 4U; ++e) {
+                        vs[8U * ::strix::core::lds_rows::slot32(8U * vc + 2U * e, vh) + vo] = static_cast<std::uint16_t>(vreg[i][e] & 0xffffU);
+                        vs[8U * ::strix::core::lds_rows::slot32(8U * vc + 2U * e + 1U, vh) + vo] = static_cast<std::uint16_t>(vreg[i][e] >> 16U);
+                    }
+                } else {
+                    *reinterpret_cast<U4*>(&vs[8U * ::strix::core::lds_rows::slot32(d, h)]) = vreg[i];
+                }
+                if constexpr (Two) {
+                    *reinterpret_cast<U4*>(&ks_lo[key * KP + 8U * c]) = klreg[i];
+                    *reinterpret_cast<U4*>(&vs_lo[8U * ::strix::core::lds_rows::slot32(d, h)]) = vlreg[i];
+                }
+            }
+        }
+    };
+    constexpr float neg_inf = -__builtin_huge_valf();
+    float maximum = neg_inf, denominator = 0.0F;
+    Acc acc[F];
+#pragma unroll
+    for (unsigned f = 0; f < F; ++f) acc[f] = tile::acc_zero();
+    // Projected bias: the weights transposed to [d][k] in LDS once per work-group, this lane's row features in registers.
+    constexpr bool Proj = DenseProjectedBias<P>;
+    constexpr unsigned BW = projected_width<P>(), BE = projected_extent<P>();
+    static_assert(!(Proj && DenseScoreBias<P>), "score_bias or the projected bias, not both");
+    static_assert(BW % 8U == 0U, "projected bias rows are whole 16-byte pieces");
+    static_assert(S::lds_bytes + (Proj ? BW * BE * 2U + 4U : 0U) +
+                      (Two ? 16 * KP * 2 + D * 16 * 2 : 0) <= 65536,
+                  "LDS budget (projected bias)");
+    [[maybe_unused]] __shared__ __attribute__((aligned(16))) std::uint16_t wl[Proj ? BW * BE : 8];
+    [[maybe_unused]] __shared__ unsigned wl_top;
+    [[maybe_unused]] float bx[BW] = {};
+    [[maybe_unused]] unsigned bias_extent = 0U;
+    [[maybe_unused]] const auto projected_bias = [&](unsigned d) __attribute__((always_inline)) {
+        std::uint32_t pairs[BW / 2U];
+#pragma unroll
+        for (unsigned c = 0; c < BW / 8U; ++c) {
+            const U4 w = *reinterpret_cast<const U4*>(&wl[d * BW + 8U * c]);
+#pragma unroll
+            for (unsigned j = 0; j < 4U; ++j) pairs[4U * c + j] = w[j];
+        }
+        return relative_bias_chain<BW>(bx, pairs);
+    };
+    if constexpr (Proj) {
+        const RelativeBiasProjection pr = P::bias_projection(a);
+        bias_extent = pr.extent;
+        if (tid == 0U) wl_top = 0U;
+        __syncthreads();
+        unsigned top = 0U;  // largest |w| as BF16 magnitude bits (>= 0x7f80 when a weight is not finite)
+        const unsigned per_k = pr.extent / 8U;
+        for (unsigned idx = tid; idx < BW * per_k; idx += T) {
+            const unsigned k = idx / per_k, d = 8U * (idx % per_k);
+            const U4 w = *reinterpret_cast<const U4*>(pr.weights + std::size_t{k} * pr.extent + d);
+#pragma unroll
+            for (unsigned j = 0; j < 4U; ++j) {
+                const unsigned lo = w[j] & 0xffffU, hi = w[j] >> 16U;
+                wl[(d + 2U * j) * BW + k] = static_cast<std::uint16_t>(lo);
+                wl[(d + 2U * j + 1U) * BW + k] = static_cast<std::uint16_t>(hi);
+                top = max(top, max(lo & 0x7fffU, hi & 0x7fffU));
+            }
+        }
+        if (top) atomicMax(&wl_top, top);
+        if (live && pr.extent) {
+            const float* f = pr.features + (std::size_t{my_row} * pr.heads + head) * BW;
+#pragma unroll
+            for (unsigned k = 0; k < BW; k += 4U) {
+                const float4 piece4 = *reinterpret_cast<const float4*>(f + k);
+                bx[k] = piece4.x;
+                bx[k + 1U] = piece4.y;
+                bx[k + 2U] = piece4.z;
+                bx[k + 3U] = piece4.w;
+            }
+        }
+        __syncthreads();
+        // The producer flagged a non-finite logit at any distance, masked or not: one lane per (row, head) does too.
+        if (pr.extent && blockIdx.z == 0U && live && piece == 0U && hw == 0U &&
+            !relative_bias_bounded<BW>(bx, ::strix::weight::scalar_float::u2f(wl_top << 16U))) {
+            for (unsigned d = 0; d < pr.extent; ++d) {
+                if (!::strix::attn::cache_rows::finite(projected_bias(d))) {
+                    atomicOr(P::failure(a), 1U);
+                    break;
+                }
+            }
+        }
+    }
+    // Score bias of this lane's 8 keys of a tile, loaded one key tile ahead of its use (with the K/V prefetch of that
+    // tile) so the global loads land during the barriers, staging and QK instead of after them. Same calls under the
+    // same mask, same expression: the softmax bits are unchanged.
+    [[maybe_unused]] float bias[8];
+    const auto fetch_bias = [&](unsigned kt) __attribute__((always_inline)) {
+        if constexpr (DenseScoreBias<P>) {
+#pragma unroll
+            for (unsigned i = 0; i < 8; ++i) {
+                const unsigned key = kt + 8U * hw + i;
+                bias[i] = live && key >= my_lo && key <= my_pos ? P::score_bias(a, my_row, head, my_pos, key) : 0.0F;
+            }
+        } else if constexpr (Proj) {  // the same logits (score_bias of the image: 0 past the extent)
+#pragma unroll
+            for (unsigned i = 0; i < 8; ++i) {
+                const unsigned key = kt + 8U * hw + i;
+                bias[i] = live && key >= my_lo && key <= my_pos && my_pos - key < bias_extent
+                    ? projected_bias(my_pos - key) : 0.0F;
+            }
+        }
+    };
+    if (kt_begin < kt_end) {
+        fetch(kt_begin);
+        fetch_bias(kt_begin);
+    }
+    for (unsigned kt = kt_begin; kt < kt_end; kt += 16U) {
+        stage();
+        __syncthreads();
+        if (kt + 16U < kt_end) fetch(kt + 16U);
+        const bool active = wave_live && kt <= tile_last && kt + 15U >= tile_lo; // wave-uniform
+        // Each half-wave owns 8 of the 16 keys of its row (j = 8 hw + i).
+        float sc[8];
+        if (active) {
+            // Two independent WMMA chains (even / odd 16-wide steps) halve the dependent latency.
+            Acc s = tile::acc_zero(), s1 = tile::acc_zero();
+#pragma unroll
+            for (unsigned f = 0; f < F; f += 2) {
+                if constexpr (Two) {  // the small products first, then hi.hi, in each chain
+                    const unsigned at = rr * KP + d0 + 16U * f;
+                    const Frag kh = tile::frag32(&ks[at]);
+                    s = tile::mma<O>(qf[f], tile::frag32(&ks_lo[at]), s);
+                    s = tile::mma<O>(qf_lo[f], kh, s);
+                    s = tile::mma<O>(qf[f], kh, s);
+                    if (f + 1 < F) {
+                        const Frag kh1 = tile::frag32(&ks[at + 16U]);
+                        s1 = tile::mma<O>(qf[f + 1], tile::frag32(&ks_lo[at + 16U]), s1);
+                        s1 = tile::mma<O>(qf_lo[f + 1], kh1, s1);
+                        s1 = tile::mma<O>(qf[f + 1], kh1, s1);
+                    }
+                } else if constexpr (kLaneScores) {
+                    // K as the A operand and Q as B: the same products in the same k order per score, with the
+                    // accumulator holding query rr in this lane and keys 2 e + hw in its 8 registers.
+                    s = tile::mma<O>(tile::frag32(&ks[rr * KP + d0 + 16U * f]), qf[f], s);
+                    if (f + 1 < F) s1 = tile::mma<O>(tile::frag32(&ks[rr * KP + d0 + 16U * f + 16U]), qf[f + 1], s1);
+                } else {
+                    s = tile::mma<O>(qf[f], tile::frag32(&ks[rr * KP + d0 + 16U * f]), s);
+                    if (f + 1 < F) s1 = tile::mma<O>(qf[f + 1], tile::frag32(&ks[rr * KP + d0 + 16U * f + 16U]), s1);
+                }
+            }
+            s += s1;
+            if constexpr (kLaneScores) {
+                // Keys 8 hw .. 8 hw + 7 of query rr: this lane's even (hw 0) or odd (hw 1) keys of that half, the
+                // others from lane ^ 16. Same sum as the one-slice LDS path (0 + partial).
+#pragma unroll
+                for (unsigned j = 0; j < 4U; ++j) {
+                    const float other = __shfl_xor(hw == 0U ? s[4U + j] : s[j], 16, 32);
+                    sc[2U * j] = 0.0F + (hw == 0U ? s[j] : other);
+                    sc[2U * j + 1U] = 0.0F + (hw == 0U ? other : s[4U + j]);
+                }
+            } else {
+                float* pw = part + wave * 16U * SP;
+#pragma unroll
+                for (unsigned e = 0; e < 8; ++e) pw[(2U * e + hw) * SP + rr] = s[e];
+            }
+        }
+        if constexpr (!kLaneScores) __syncthreads();
+        if (active) {
+            // Max and presence meet over lane ^ 16.
+            if constexpr (!kLaneScores) {
+#pragma unroll
+                for (unsigned i = 0; i < 8; ++i) sc[i] = 0.0F;
+#pragma unroll
+                for (unsigned p = 0; p < S::split; ++p) {
+                    const float* pp = part + (tile * S::split + p) * 16U * SP + rr * SP + 8U * hw;
+#pragma unroll
+                    for (unsigned c = 0; c < 2; ++c) {
+                        const float4 v = reinterpret_cast<const float4*>(pp)[c];
+                        sc[4U * c] += v.x; sc[4U * c + 1] += v.y; sc[4U * c + 2] += v.z; sc[4U * c + 3] += v.w;
+                    }
+                }
+            }
+            float m = maximum;
+            bool mine = false;
+#pragma unroll
+            for (unsigned i = 0; i < 8; ++i) {
+                const unsigned key = kt + 8U * hw + i;
+                const bool v = live && key >= my_lo && key <= my_last;
+                sc[i] = v ? sc[i] * P::kScaleLog2 : neg_inf;
+                if constexpr (DenseScoreBias<P> || Proj) {
+                    if (v) sc[i] += bias[i] * 1.4426950408889634F;
+                }
+                m = sc[i] > m ? sc[i] : m;
+                mine |= v;
+            }
+            {
+                const float other = __shfl_xor(m, 16, 32);
+                m = other > m ? other : m;
+            }
+            const bool present = mine || __shfl_xor(int(mine), 16, 32) != 0;
+            // The online update is spelled out, not routed through online_step (flash_core.hpp): identical
+            // math through the shared step adds 4-24 B of scratch per kernel on gfx1151 (remarks, R1-7).
+            Frag pa;
+            [[maybe_unused]] Frag pl;
+            const float alpha = present ? __builtin_amdgcn_exp2f(maximum - m) : 1.0F;
+            {
+                float own[8];
+#pragma unroll
+                for (unsigned i = 0; i < 8; ++i) own[i] = present ? __builtin_amdgcn_exp2f(sc[i] - m) : 0.0F;
+                float sum = 0.0F;
+                if constexpr (kLaneScores) {
+                    // Each lane rounds only its own 8 probabilities and the half-wave pair swaps the rounded operands
+                    // as packed 16-bit pairs: the same 16 operands in the same order as rounding all 16 floats.
+                    std::uint16_t ours[8];
+                    std::uint32_t theirs[4];
+#pragma unroll
+                    for (unsigned i = 0; i < 8; ++i) ours[i] = tile::to_operand<O>(own[i]);
+#pragma unroll
+                    for (unsigned k = 0; k < 4; ++k)
+                        theirs[k] = static_cast<std::uint32_t>(__shfl_xor(
+                            static_cast<int>(std::uint32_t{ours[2U * k]} | (std::uint32_t{ours[2U * k + 1U]} << 16U)),
+                            16, 32));
+#pragma unroll
+                    for (unsigned j = 0; j < 16; ++j) {
+                        const unsigned i = j % 8U;
+                        const std::uint16_t p = j / 8U == hw
+                            ? ours[i] : static_cast<std::uint16_t>(theirs[i / 2U] >> (16U * (i % 2U)));
+                        sum += tile::operand_value<O>(p);
+                        pa[j] = p;
+                    }
+                } else {
+#pragma unroll
+                    for (unsigned j = 0; j < 16; ++j) {
+                        const float other = __shfl_xor(own[j % 8U], 16, 32);
+                        const float x = j / 8U == hw ? own[j % 8U] : other;
+                        if constexpr (Two) {
+                            const tile::Terms2 t = tile::to_operand2<O>(x);
+                            sum += tile::operand_value<O>(t.hi) + tile::operand_value<O>(t.lo);
+                            pa[j] = t.hi;
+                            pl[j] = t.lo;
+                        } else {
+                            const std::uint16_t p = tile::to_operand<O>(x);
+                            sum += tile::operand_value<O>(p);
+                            pa[j] = p;
+                        }
+                    }
+                }
+                denominator = denominator * alpha + sum;
+                maximum = m;
+            }
+            if constexpr (kLaneScores) {
+                // Tiles where no row of the wave moved its maximum: every factor is exactly 1.0F (a NaN alpha votes
+                // for the rescale) and c * 1.0F is c bit for bit: finite c including subnormals (IEEE denormal mode),
+                // +-0, +-Inf, and a quiet NaN (gfx11 v_mul_f32 in IEEE mode returns the NaN operand quieted, sign and
+                // payload kept); an accumulator only holds WMMA / FMA results, never a signalling NaN. So the rescale
+                // and its shuffles are skipped. Native evidence against the incumbent kernel, the same output bytes
+                // and failure word: hip_dense_flash_bench cases xn / xo / xt (NaN payloads in V, an FP32 PV overflow
+                // followed by alpha 0 and tied maxima, subnormal products and signed zeros).
+                const bool rescale = __any(alpha != 1.0F);
+                float scale[8] = {};
+                if (DenseRescaleProbe<P> || rescale) {
+#pragma unroll
+                    for (unsigned e = 0; e < 8; ++e) scale[e] = __shfl(alpha, int(2U * e + hw), 32);
+                }
+#pragma unroll
+                for (unsigned f = 0; f < F; ++f) {
+                    Acc c = acc[f];
+                    [[maybe_unused]] const Acc incoming = c;
+                    if (rescale) {
+#pragma unroll
+                        for (unsigned e = 0; e < 8; ++e) c[e] *= scale[e];
+                    }
+                    if constexpr (DenseRescaleProbe<P>) {
+                        Acc incumbent = incoming;
+#pragma unroll
+                        for (unsigned e = 0; e < 8; ++e) incumbent[e] *= scale[e];
+                        P::probe(a, kt >> 4U, f, rescale, alpha, incoming, c, incumbent);
+                    }
+                    acc[f] = tile::mma<O>(pa, tile::frag_slot32(vs, d0 + 16U * f + rr), c);
+                }
+            } else {
+                float scale[8];
+#pragma unroll
+                for (unsigned e = 0; e < 8; ++e) scale[e] = __shfl(alpha, int(2U * e + hw), 32);
+#pragma unroll
+                for (unsigned f = 0; f < F; ++f) {
+                    Acc c = acc[f];
+#pragma unroll
+                    for (unsigned e = 0; e < 8; ++e) c[e] *= scale[e];
+                    if constexpr (Two) {
+                        const unsigned at = d0 + 16U * f + rr;
+                        const Frag vh = tile::frag_slot32(vs, at);
+                        c = tile::mma<O>(pa, tile::frag_slot32(vs_lo, at), c);
+                        c = tile::mma<O>(pl, vh, c);
+                        acc[f] = tile::mma<O>(pa, vh, c);
+                    } else {
+                        acc[f] = tile::mma<O>(pa, tile::frag_slot32(vs, d0 + 16U * f + rr), c);
+                    }
+                }
+            }
+        }
+        if (kt + 16U < kt_end) fetch_bias(kt + 16U);
+        __syncthreads();
+    }
+    bool bad_value = false;
+    const unsigned heads = gridDim.y * S::group;
+    if (splits > 1U) {
+        if (wave_live) {
+            float* acc_ws = ws + ((std::size_t(blockIdx.z) * rows + row_base + sub) * heads + head) * D + d0;
+#pragma unroll
+            for (unsigned e = 0; e < 8; ++e) {
+                if (sub + 2U * e + hw >= block_rows) continue;
+                float* o = acc_ws + std::size_t(2U * e + hw) * heads * D;
+#pragma unroll
+                for (unsigned f = 0; f < F; ++f) o[16U * f + rr] = acc[f][e];
+            }
+            if (live && piece == 0U && hw == 0U) {
+                float* st = ws + std::size_t(splits) * rows * heads * D + ((std::size_t(blockIdx.z) * rows + my_row) * heads + head) * 2U;
+                st[0] = maximum; st[1] = denominator;
+            }
+        }
+        if (bad_half) atomicOr(P::failure(a), 4U);
+        return;
+    }
+    if (wave_live) {
+#pragma unroll
+        for (unsigned e = 0; e < 8; ++e) {
+            const unsigned r = sub + 2U * e + hw;
+            float total = __shfl(denominator, int(2U * e + hw), 32);
+            [[maybe_unused]] const float row_max = DenseSink<P> ? __shfl(maximum, int(2U * e + hw), 32) : 0.0F;
+            if (r < block_rows) {
+                [[maybe_unused]] SinkRebase rebase;
+                if constexpr (DenseRebasedSink<P>)
+                    rebase.add(P::sink(a, row_base + r, head) * 1.4426950408889634F - row_max, total);
+                else if constexpr (DenseSink<P>)  // the sink column: 2^(z log2(e) - m), no value
+                    total += __builtin_amdgcn_exp2f(P::sink(a, row_base + r, head) * 1.4426950408889634F - row_max);
+                float* o = P::out(a, row_base + r, head) + d0;
+#pragma unroll
+                for (unsigned f = 0; f < F; ++f) {
+                    float value;
+                    if constexpr (DenseRebasedSink<P>) value = rebase.divide(acc[f][e], total);
+                    else value = acc[f][e] / total;
+                    bad_value |= (__builtin_bit_cast(unsigned, value) & 0x7f800000U) == 0x7f800000U;
+                    o[16U * f + rr] = value;
+                }
+            }
+        }
+    }
+    if (bad_value) atomicOr(P::failure(a), 1U);
+    if (bad_half) atomicOr(P::failure(a), 4U);
+}
+// Occupancy target (waves per SIMD): the highest whose VGPR budget holds the key loop without spills
+// (dense_flash_budget.hpp; placement only, same bits).
+template <class P> constexpr unsigned waves_per_eu() {
+    if constexpr (requires { P::kWavesPerEu; }) return P::kWavesPerEu;
+    else return occupancy_target(P::Shape::frags, P::Shape::per_thread, terms_of<P>::value, P::Shape::waves);
+}
+template <class P>
+__global__ __launch_bounds__(P::Shape::threads) __attribute__((amdgpu_waves_per_eu(waves_per_eu<P>()))) void flash_prefill(
+    typename P::Args a, float* ws, unsigned splits, unsigned seg_tiles) {
+    if constexpr (requires { P::bind_device_step(a); }) {
+        splits = P::bind_device_step(a);
+        if (blockIdx.z >= splits) return;
+    }
+    flash_body<P>(a, ws, splits, seg_tiles, blockIdx.x);
+}
+
+// Split-K merge of one (row, head): D / 4 threads x 4 components, splits ascending.
+template <class P>
+__device__ __forceinline__ void combine_body(const typename P::Args& a, const float* ws, unsigned splits, unsigned row,
+                                             unsigned head, unsigned heads) {
+    constexpr unsigned D = P::Shape::dim;
+    const unsigned rows = P::rows(a), d = threadIdx.x * 4U;
+    const float* st = ws + std::size_t(splits) * rows * heads * D;
+    float m = -__builtin_huge_valf();
+    for (unsigned z = 0; z < splits; ++z) { const float v = st[((std::size_t(z) * rows + row) * heads + head) * 2U]; m = v > m ? v : m; }
+    float l = 0.0F, o[4] = {0.0F, 0.0F, 0.0F, 0.0F};
+    for (unsigned z = 0; z < splits; ++z) {
+        const std::size_t at = (std::size_t(z) * rows + row) * heads + head;
+        const float mz = st[at * 2U];
+        if (!(mz > -__builtin_huge_valf())) continue; // empty split
+        const float w = __builtin_amdgcn_exp2f(mz - m);
+        l += w * st[at * 2U + 1U];
+        const float4 v = *reinterpret_cast<const float4*>(ws + at * D + d);
+        o[0] += w * v.x; o[1] += w * v.y; o[2] += w * v.z; o[3] += w * v.w;
+    }
+    [[maybe_unused]] SinkRebase rebase;
+    if constexpr (DenseRebasedSink<P>) rebase.add(P::sink(a, row, head) * 1.4426950408889634F - m, l);
+    else if constexpr (DenseSink<P>) l += __builtin_amdgcn_exp2f(P::sink(a, row, head) * 1.4426950408889634F - m);
+    float* out = P::out(a, row, head) + d;
+    bool bad = false;
+#pragma unroll
+    for (unsigned i = 0; i < 4; ++i) {
+        float value;
+        if constexpr (DenseRebasedSink<P>) value = rebase.divide(o[i], l);
+        else value = o[i] / l;
+        bad |= (__builtin_bit_cast(unsigned, value) & 0x7f800000U) == 0x7f800000U;
+        out[i] = value;
+    }
+    if (bad) atomicOr(P::failure(a), 1U);
+}
+
+// Split-K merge: one work-group per (row, head).
+template <class P>
+__global__ __launch_bounds__(P::Shape::dim / 4U) void combine(typename P::Args a, const float* ws, unsigned splits) {
+    if constexpr (requires { P::bind_device_step(a); }) {
+        splits = P::bind_device_step(a);
+        if (splits <= 1U) return;
+    }
+    combine_body<P>(a, ws, splits, blockIdx.x, blockIdx.y, gridDim.y);
+}
+template <class P, bool CheckLaunch = false>
+// Call cuts: the P.V WMMA rounds keys (2i, 2i+1) as a pair even when P of key 2i+1 is zero, so a call ending at an
+// even absolute position gives its last row other bits than a run that also holds the next key's V (packed pad = 0
+// here). The kernel cannot see that V; callers commit at chunk_contract::kWmmaKPairRows and recompute the open row
+// (src/core/chunk_contract.hpp section 4). Every other row and every aligned call keep their bits.
+// seg_tiles != 0 (identity dense-flash-absseg-v1/s<seg_tiles>, opt-in): split z covers the ABSOLUTE key tiles
+// [z * seg_tiles, (z + 1) * seg_tiles), so a row's partials and their ascending combine do not depend on the call's
+// rows or neighbouring queries (src/core/chunk_contract.hpp). The caller passes splits >= absolute_segment_count of the
+// call's last key; segments a row cannot see stay empty and combine skips them. seg_tiles == 0: block share (default).
+// CheckLaunch reports each enqueue status and skips combine after a failed prefill enqueue.
+inline std::conditional_t<CheckLaunch, hipError_t, void> launch(
+    const typename P::Args& a, unsigned heads, hipStream_t stream, float* ws = nullptr, unsigned splits = 1,
+    unsigned seg_tiles = 0) {
+    using S = typename P::Shape;
+    const unsigned rows = P::rows(a);
+    if (!rows) {
+        if constexpr (CheckLaunch) return hipSuccess;
+        else return;
+    }
+    if (!ws) splits = 1;
+    if (splits == 1U) seg_tiles = 0; // one segment: the direct path is bitwise the one-segment combine
+    const dim3 grid((rows + S::positions - 1U) / S::positions, heads / S::group, splits);
+    STRIX_HIP_LAUNCH_GGL(Rdna3Layout, flash_prefill<P>, grid, dim3(S::threads), 0, stream, a, ws, splits, seg_tiles);
+    if constexpr (CheckLaunch) {
+        if (const auto status = hipGetLastError(); status != hipSuccess) return status;
+    }
+    if (splits > 1U) {
+        STRIX_HIP_LAUNCH_GGL(Rdna3Layout, combine<P>, dim3(rows, heads), dim3(S::dim / 4U), 0, stream, a, ws, splits);
+        if constexpr (CheckLaunch) return hipGetLastError();
+    }
+    if constexpr (CheckLaunch) return hipSuccess;
+}
+
+} // namespace strix::attn_core::dense

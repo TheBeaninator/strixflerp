@@ -1,0 +1,81 @@
+id        = "runtime.enginelab.serial_session"
+kind      = "runtime"
+summary   = "the serial (one-request) decode path: decode reference and replay, host state shadow, prefix cache and lifecycle, request and session"
+why       = "the reference decode loop the EXACT gate compares against; where it would go: beside the catalogue's executor.decode-loop/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.decode-loop/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 6 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/serial_decode_reference.hpp",
+  "include/strix/serial_decode_replay.hpp",
+  "include/strix/serial_host_state_shadow.hpp",
+  "include/strix/serial_prefix_cache.hpp",
+  "include/strix/serial_prefix_lifecycle.hpp",
+  "include/strix/serial_request.hpp",
+  "include/strix/serial_session.hpp",
+  "src/serial_decode_reference.cpp",
+  "src/serial_decode_replay.cpp",
+  "src/serial_prefix_cache.cpp",
+  "src/serial_prefix_lifecycle.cpp",
+  "src/serial_request.cpp",
+  "src/serial_session.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/serial_decode_reference.cpp",
+  "src/src/serial_decode_replay.cpp",
+  "src/src/serial_prefix_cache.cpp",
+  "src/src/serial_prefix_lifecycle.cpp",
+  "src/src/serial_request.cpp",
+  "src/src/serial_session.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.decode-loop-enginelab/-/-"
+api       = "src/serial_session.cpp, serial_decode_reference.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.power"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

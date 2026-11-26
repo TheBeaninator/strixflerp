@@ -1,0 +1,41 @@
+id        = "runtime.kyojin.layer_split"
+kind      = "runtime"
+summary   = "Contiguous layer split across two devices: the serve-side split plan, an async host-staged bridge (part0 and part1 in either order; on RX 9070 over USB4 + Strix Halo there is no fast peer path, so activations stage through host memory), the device map and row split"
+why       = "an eGPU or second device beside a Strix Halo. Where the shape would go: a transport.stage-relay/-/f32 provider beside runtime.ds4.distributed, runtime.ds4.glmtp_distributed, runtime.ds4.kmultinode_distributed and 1 more, through a port of the python / Triton logic"
+notes     = "Interface tag: transport.stage-relay/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (bridge.py, device_map.py, row_split.py, serve_split.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/bridge.py",
+  "exllamav3/device_map.py",
+  "exllamav3/modules/row_split.py",
+  "exllamav3/serve_split.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.stage-relay/-/f32.kyojin-bridge"
+api       = "bridge.py, device_map.py, row_split.py, serve_split.py"
+numeric   = "activations copied verbatim"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

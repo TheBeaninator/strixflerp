@@ -1,15 +1,35 @@
 #!/usr/bin/env python3
 """Write docs/HARVEST.md from the catalogue: module counts, the compile gate's results and what was left out.
-Run after the harvest scripts and after pulling gate/results/compile. Standard library only."""
+Run after the harvest scripts and after pulling gate/results/compile. Standard library only.
+
+Every origin under catalog/ is covered: the harvested origins (a HARVEST.json beside ORIGIN.toml), the ones with
+modules but no HARVEST.json (strixite from phase 1, flerp's own code, single-module cuts), and the ones recorded with
+harvest = "none"."""
 import collections, glob, json, os, tomllib
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-ORIGINS = ['strixfold', 'gufo', 'hipfire']
 KINDS = ['kernel', 'format', 'executor', 'runtime', 'serve', 'tool']
 
 
 def load(p):
     with open(p, 'rb') as f:
         return tomllib.load(f)
+
+
+ALL = sorted(d for d in os.listdir(os.path.join(REPO, 'catalog')) if os.path.isfile(os.path.join(REPO, 'catalog', d, 'ORIGIN.toml')))
+OTOML = {og: load(os.path.join(REPO, 'catalog', og, 'ORIGIN.toml')) for og in ALL}
+ORIGINS = [og for og in ALL if os.path.isfile(os.path.join(REPO, 'catalog', og, 'HARVEST.json'))]   # harvested by a script
+NONE = [og for og in ALL if OTOML[og].get('harvest') == 'none']                                     # recorded, not harvested
+OTHER = [og for og in ALL if og not in ORIGINS and og not in NONE]                                  # modules, no HARVEST.json
+
+
+def spdx(oc):
+    lic = oc.get('licence')
+    return lic.get('spdx', '?') if isinstance(lic, dict) else '?'
+
+
+def gate_origin(module_id):
+    parts = module_id.split('.')
+    return parts[1] if len(parts) > 2 else None
 
 
 mods = collections.defaultdict(list)
@@ -19,7 +39,8 @@ for p in sorted(glob.glob(os.path.join(REPO, 'catalog/*/*/*/module.toml'))):
 res = {}
 for p in glob.glob(os.path.join(REPO, 'gate/results/compile/*.json')):
     j = json.load(open(p))
-    res[j['module']] = j
+    if 'module' in j:          # <origin>.side-gates.json / <origin>.patches.json are origin-wide checks, not module results
+        res[j['module']] = j
 o = []
 w = o.append
 w('# Harvest: phase 2, the catalogue beyond strixite')
@@ -30,16 +51,27 @@ w('## What is in the catalogue')
 w('')
 w('| origin | commit | licence | ' + ' | '.join(KINDS) + ' | modules | files |')
 w('|---|---|---|' + '---|' * (len(KINDS) + 2))
-for og in ORIGINS:
-    oc = load(os.path.join(REPO, 'catalog', og, 'ORIGIN.toml'))
-    hv = json.load(open(os.path.join(REPO, 'catalog', og, 'HARVEST.json')))
+def nfiles(og):
+    hp = os.path.join(REPO, 'catalog', og, 'HARVEST.json')
+    if os.path.isfile(hp):
+        return json.load(open(hp))['files']
+    root = os.path.join(REPO, 'catalog', og)
+    return sum(len(fs) for d, _, fs in os.walk(root) if 'src' in os.path.relpath(d, root).split(os.sep))
+
+
+for og in ORIGINS + OTHER:
+    oc = OTOML[og]
     c = collections.Counter(m['kind'] for m in mods[og])
-    w(f"| {og} | `{oc['commit']}` | {oc['licence']['spdx']} | " + ' | '.join(str(c.get(k, 0)) for k in KINDS) + f" | {len(mods[og])} | {hv['files']} |")
-for og in ('sglang', 'halogen'):
-    oc = load(os.path.join(REPO, 'catalog', og, 'ORIGIN.toml'))
-    w(f"| {og} | `{oc['commit']}` | {oc['licence']['spdx']} | " + ' | '.join('-' for _ in KINDS) + ' | 0 (`harvest = "none"`) | 0 |')
+    w(f"| {og} | `{oc.get('commit', '?')}` | {spdx(oc)} | " + ' | '.join(str(c.get(k, 0)) for k in KINDS) + f" | {len(mods[og])} | {nfiles(og)} |")
+for og in NONE:
+    oc = OTOML[og]
+    w(f"| {og} | `{oc['commit']}` | {spdx(oc)} | " + ' | '.join('-' for _ in KINDS) + ' | 0 (`harvest = "none"`) | 0 |')
 w('')
-w('`catalog/strixite` (105 modules) belongs to phase 1 and is not described here.')
+w(f'{len(ALL)} origins: {len(ORIGINS)} harvested by a script under `docs/harvest/`, {len(NONE)} recorded with `harvest = "none"`, and ' +
+  ', '.join(f'`{og}`' for og in OTHER) + ' without a HARVEST.json (' +
+  '; '.join(f"`{og}`: {OTOML[og].get('harvest', {}).get('tool', 'code written here') if isinstance(OTOML[og].get('harvest'), dict) else 'code written here'}" for og in OTHER) +
+  '). `catalog/strixite` belongs to phase 1; its records are described in `SPEC.md`, not here.')
+w('Files counts the origin files copied into modules (HARVEST.json), or the files under the modules\' `src/` where there is none.')
 w('')
 w('Sources are copied verbatim to `catalog/<origin>/<kind>/<name>/src/<origin-relative path>`. `flerp diff-origin --origin <o> <checkout>`')
 w('proves it against the reference checkouts: gufo 542 of 542 and hipfire 1,522 of 1,522 files byte-identical. StrixFold is checked on control-node')
@@ -55,9 +87,7 @@ w('')
 w('## How it was made, and how to redo it')
 w('')
 w('```')
-w('python3 docs/harvest/harvest_strixfold.py     # each script rebuilds catalog/<origin> from the reference checkout')
-w('python3 docs/harvest/harvest_gufo.py')
-w('python3 docs/harvest/harvest_hipfire.py')
+w('python3 docs/harvest/harvest_<origin>.py      # each script rebuilds catalog/<origin> from the reference checkout')
 w('tools/pod-push.sh --card <card-id> && tools/pod-run.sh \'python3 gate/compile/run.py\' && tools/pod-pull.sh gate/results')
 w('python3 docs/harvest/harvest_<origin>.py      # again: gate.status = "builds" is written from gate/results/compile')
 w('python3 docs/harvest/make_harvest_md.py && python3 flerp check')
@@ -74,21 +104,41 @@ w('## Compile gate')
 w('')
 w('`gate/compile/run.py` on control-node compiles every `hip-c++` kernel module whose `[gate].compile` is `standalone`, with the command')
 w('its origin uses (`catalog/<origin>/ORIGIN.toml [compile]`), for `gfx1151`. Nothing is loaded or run on the GPU.')
+w('A row whose toolchain is not a ROCm one (Go, GCC) counts that origin\'s own module gate results in `gate/results/compile`; a result')
+w('with no unit count reads 0 of 0 units.')
 w('')
 w('| origin | toolchain | compiler | modules passed | units passed | how a unit is defined |')
 w('|---|---|---|---|---|---|')
 how = {'strixfold': 'one `.hip` source to one raw `.hsaco` (`hipcc --offload-device-only`)',
        'gufo': 'one translation unit to one object (`clang++ -x hip -c`), per-source options from the origin\'s CMake',
        'hipfire': 'one source constant of `rdna-compute` (defines + sources concatenated) to one bundle (`hipcc --genco`)'}
+
+
+def n_units(r):
+    u = r.get('units')
+    return len(u) if isinstance(u, list) else (u or 0)
+
+
+def n_passed(r):
+    p = r.get('passed')
+    if isinstance(p, int):
+        return p
+    return n_units(r) if r.get('status') == 'pass' else 0
+
+
 tot_m = tot_p = tot_u = tot_up = 0
-for og in ORIGINS:
-    rs = [r for k, r in res.items() if k.split('.')[1] == og]
+for og in ALL:
+    rs = [r for k, r in sorted(res.items()) if gate_origin(k) == og]
     if not rs:
         continue
     passed = sum(1 for r in rs if r['status'] == 'pass')
-    units, up = sum(r['units'] for r in rs), sum(r['passed'] for r in rs)
+    units, up = sum(n_units(r) for r in rs), sum(n_passed(r) for r in rs)
     tot_m += len(rs); tot_p += passed; tot_u += units; tot_up += up
-    w(f"| {og} | {rs[0]['toolchain']} (`{rs[0]['toolchain_root']}`) | {rs[0]['compiler'].replace(' | ', '; ')[:95]} | {passed} of {len(rs)} | {up} of {units} | {how[og]} |")
+    r0 = next((r for r in rs if r.get('compiler')), rs[0])
+    root = f" (`{r0['toolchain_root']}`)" if r0.get('toolchain_root') else ''
+    comp = (r0.get('compiler') or OTOML[og].get('compile', {}).get('driver', '')).replace(' | ', '; ')[:95]
+    w(f"| {og} | {r0.get('toolchain', '')}{root} | {comp} | {passed} of {len(rs)} | {up} of {units} | "
+      f"{how.get(og, 'per `catalog/%s/ORIGIN.toml [compile]` and each module\'s `[gate]`' % og)} |")
 w(f'| total | | | {tot_p} of {tot_m} | {tot_up} of {tot_u} | |')
 w('')
 w('Kernel modules that are not compiled standalone, and why:')
@@ -101,7 +151,7 @@ for og in ORIGINS:
         if m['kind'] == 'kernel' and g.get('compile') != 'standalone':
             w(f"| `{m['id']}` | {g.get('compile')} | {g.get('reason', '')} |")
 w('')
-fails = [r for r in res.values() if r['status'] != 'pass' and r['module'].split('.')[1] in ORIGINS]
+fails = [r for k, r in sorted(res.items()) if r['status'] != 'pass' and gate_origin(k) in ALL]
 if fails:
     w('Failures:')
     w('')
@@ -182,11 +232,10 @@ for og in ORIGINS:
         v = v if len(v) < 900 else v[:900] + ' ...'
         w(f'| `{k}` | {v} |')
     w('')
-w('### sglang, halogen')
+w('### ' + ', '.join(NONE) + ' (`harvest = "none"`)')
 w('')
-for og in ('sglang', 'halogen'):
-    oc = load(os.path.join(REPO, 'catalog', og, 'ORIGIN.toml'))
-    w(f"- **{og}**: {oc['harvest_reason']}")
+for og in NONE:
+    w(f"- **{og}**: {OTOML[og].get('harvest_reason', '')}")
 w('')
 w('## Not verified')
 w('')

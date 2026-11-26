@@ -1,0 +1,52 @@
+id        = "serve.enginelab.serve_tokenizer"
+kind      = "serve"
+summary   = "tokenizers: BPE tokenizer, tokenizer interface and UTF-8, the o200k pre-tokenizer and its Unicode tables, the Unicode tables and the token memo"
+why       = "one tokenizer stack for every model; where it would go: beside the catalogue's text.tokenizer/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: text.tokenizer/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 2 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/serve/bpe_tokenizer.hpp",
+  "include/strix/serve/token_memo.hpp",
+  "include/strix/serve/tokenizer.hpp",
+  "src/serve/bpe_tokenizer.cpp",
+  "src/serve/o200k_pretokenizer.hpp",
+  "src/serve/o200k_unicode_tables.inc",
+  "src/serve/token_memo.cpp",
+  "src/serve/tokenizer_utf8.hpp",
+  "src/serve/unicode_tables.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/serve/bpe_tokenizer.cpp", "src/src/serve/token_memo.cpp"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "text.tokenizer-enginelab/-/-"
+api       = "strix::serve bpe_tokenizer.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

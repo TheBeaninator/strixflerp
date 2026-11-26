@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.sched_row_groups"
+kind      = "runtime"
+summary   = "Row invariance of multi-job and multi-row verify forwards: jobs grouped so a row gets the same bits whatever else is decoded with it (EXL3_ROW_INV)"
+why       = "determinism across batch composition. Where the shape would go: an executor.decode-loop/-/- provider beside runtime.flerp.decode_loop, through a port of the python / Triton logic"
+notes     = "Interface tag: executor.decode-loop/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (row_groups.py, row_inv.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/generator/row_groups.py", "exllamav3/util/row_inv.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.decode-loop-kyojin-row-invariant/-/-"
+api       = "row_groups.py, row_inv.py"
+numeric   = "n/a"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

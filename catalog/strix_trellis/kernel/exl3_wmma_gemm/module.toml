@@ -1,0 +1,48 @@
+id        = "kernel.strix_trellis.exl3_wmma_gemm"
+kind      = "kernel"
+summary   = "EXL3 prefill matmul behind strix_gemm on wave32 WMMA: the trellis tile is decoded to fp16 into LDS and multiplied 16x16x16 with fp32 accumulation over K16 tiles in ascending order per split (wmma_core, row tiles of 16 or 64; wmma_packed's decoder_core is that core with the packed-stream lane decoder, selected for measured mul1 5- and 6-bit shapes at 64, 128 and 256 rows); the register-blocked core (wmma_tiled tiled_core, mul1 at 4 to 6 bits from 128 rows) tiles 128x256, 256x128 or 128x128 by row count, visits two row blocks a column so activation rows are reused while hot, and with one split can apply the output transform in its own epilogue"
+why       = "docs/SHAPE-TRANSFERS.md records that StrixFold's prompt experts pay about 12 ms a pass that is neither trellis decode nor DRAM bytes; a second EXL3 prefill product with its own tile schedule (register-blocked, activation rows reused while hot) is the comparison that surface lacks"
+notes     = "Interface tag: linear.prefill/exl3. Beside kernel.strixfold.exl3 (exl3.gemm, exl3.unpack), kernel.strixfold.exl3_pf_experts and kernel.crucible.exl3_gemm. Origin numbers: q_b (1280, 32768) 5-bit, the register-blocked core against its previous revision, 2.22x at 128 rows and 1.81x at 256 rows (README.md:361-362). Run-time switches read from the environment: STRIX_TRELLIS_WMMA_TILED, STRIX_TRELLIS_WMMA_TILED_FUSED (auto fuses the epilogue from 21 blocks on gfx1151). No timing was taken on the pod."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "src/gemm.hip",
+  "src/gemm.hpp",
+  "src/wmma_packed.hip",
+  "src/wmma_packed.hpp",
+  "src/wmma_tiled.hip",
+  "src/wmma_tiled.hpp",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/gemm.hip", "src/src/wmma_tiled.hip", "src/src/wmma_packed.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.prefill/exl3/f16-f32.strix-trellis"
+api       = "strix_gemm (include/strix_trellis.h) -> launch_linear(prefer_wmma) -> wmma_core, tiled_core, decoder_core"
+numeric   = "the fp16 operands of the decode path; v_wmma_f32_16x16x16_f16 with fp32 accumulation, split bounds and K16 order kept, so the register-blocked core is bit-identical to the previous core (README.md \"Prefill (WMMA GEMM)\"); fp32 reductions may differ from the GEMV path (docs/API.md)"
+regime    = "prefill, rank-2 input of any row count (register-blocked core from 128 rows), compute-bound on wave32 WMMA"
+
+[[requires]]
+module    = "kernel.strix_trellis.trellis_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libstrix_trellis.a: built by the origin CMake (STRIX_TRELLIS_ENABLE_HIP=ON, -O3 -ffp-contract=off, HIP standard 17, gfx1151), not compiled by this harvest"

@@ -1,0 +1,53 @@
+id        = "runtime.enginelab.state_txn"
+kind      = "runtime"
+summary   = "state declarations and transactions (src/state, include/strix/state): decl, lane view, table and txn"
+why       = "declared session state with transactional updates; where it would go: a new strixflerp interface runtime.state-table/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, runtime.state-table/-/-. 3 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/state/decl.hpp",
+  "include/strix/state/lane_view.hpp",
+  "include/strix/state/table.hpp",
+  "include/strix/state/txn.hpp",
+  "src/state/decl.cpp",
+  "src/state/table.cpp",
+  "src/state/txn.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/state/decl.cpp", "src/src/state/table.cpp", "src/src/state/txn.cpp"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.state-table/-/-"
+api       = "strix::state table.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.graph"
+
+[[requires]]
+module    = "runtime.enginelab.pair_state"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,52 @@
+id        = "kernel.fastasfuck.rope"
+kind      = "kernel"
+summary   = "fastasfuck's partial RoPE with YaRN and interleaved mRoPE, and its device math header"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its rope kernel file so a timing card can set it against kernel.strixite.rope, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/rope.hip pos.rope/- (byte-identical to kernel.strixite.rope kernels/rope.hip at d19945e); kernels/rope_math.hpp pos.rope-math/- (14 changed lines against kernel.strixite.rope_math kernels/rope_math.hpp at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/rope.hip", "kernels/rope.hpp", "kernels/rope_math.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/rope.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "pos.rope/-/bf16"
+api       = "strix::kernels::rope (kernels/rope.hpp)"
+numeric   = "the same source as kernel.strixite.rope (byte-identical to kernel.strixite.rope kernels/rope.hip at d19945e), so its arithmetic: transformers' arithmetic: angle = fp32(pos * inv_freq), products and sum rounded separately (no FMA); bf16 also rounds cos/sin and each step through bf16"
+regime    = "as kernel.strixite.rope: theta 1e7, rot_dim 64 of head_dim 256 on the target models"
+
+[[provides]]
+interface = "pos.rope/-/f32"
+api       = "strix::kernels::rope (kernels/rope.hpp)"
+numeric   = "the same source as kernel.strixite.rope (byte-identical to kernel.strixite.rope kernels/rope.hip at d19945e), so its arithmetic: transformers' arithmetic: angle = fp32(pos * inv_freq), products and sum rounded separately (no FMA); bf16 also rounds cos/sin and each step through bf16"
+regime    = "as kernel.strixite.rope: theta 1e7, rot_dim 64 of head_dim 256 on the target models"
+
+[[provides]]
+interface = "pos.rope-math/-/-"
+api       = "kernels/rope_math.hpp"
+numeric   = "derived from kernel.strixite.rope_math (14 changed lines against kernel.strixite.rope_math kernels/rope_math.hpp at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.rope_math: device inline"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.rope.json"

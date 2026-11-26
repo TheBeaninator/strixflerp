@@ -1,0 +1,41 @@
+{
+ "module": "kernel.maya_tp.router",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-25T22:59:21Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 3,
+ "passed": 3,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 1.9,
+ "results": [
+  {
+   "unit": "src/src/kernels/cuda/native_router.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/router/src/include -I catalog/maya_tp/kernel/router/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/router/src/src/kernels/cuda/native_router.cu -o build/compile-gate/kernel.maya_tp.router/0-native_router.cu.o",
+   "rc": 0,
+   "seconds": 1.87,
+   "object_bytes": 32240,
+   "object_sha256": "bd2267ad3b60d55893aedf481026c1c9bd0ac2a2415ee0fed5b26760736e4a83"
+  },
+  {
+   "unit": "src/src/kernels/cuda/router_sigmoid.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/router/src/include -I catalog/maya_tp/kernel/router/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/router/src/src/kernels/cuda/router_sigmoid.cu -o build/compile-gate/kernel.maya_tp.router/1-router_sigmoid.cu.o",
+   "rc": 0,
+   "seconds": 1.82,
+   "object_bytes": 19912,
+   "object_sha256": "adcd52ba612931aceebe615c701de3644e4ca821a74f01fe373e0466a484a822"
+  },
+  {
+   "unit": "src/src/kernels/cuda/router_top10.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++20 -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' '-DSTRATA_VERSION=\"1.1.45\"' -include cuda_runtime.h -c -I catalog/maya_tp/kernel/router/src/include -I catalog/maya_tp/kernel/router/src/src/kernels/cuda -I catalog/maya_tp/kernel/common/src/include/strata/hip_compat -I catalog/maya_tp/kernel/common/src/include -I catalog/maya_tp/kernel/common/src/third_party/ggml -I /data/models/tools/therock-10.2/include catalog/maya_tp/kernel/router/src/src/kernels/cuda/router_top10.cu -o build/compile-gate/kernel.maya_tp.router/2-router_top10.cu.o",
+   "rc": 0,
+   "seconds": 1.8,
+   "object_bytes": 21168,
+   "object_sha256": "6f82b3ebf8070702b025f4d5baff65f539faa7603811de7d2348539d09641d65"
+  }
+ ]
+}

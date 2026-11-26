@@ -1,0 +1,42 @@
+id        = "runtime.vllm_strix.odl_mq"
+kind      = "runtime"
+summary   = "odl_mq, an OdinLink stream data plane for vLLM's MessageQueue remote readers: the writer opens an auto-assigned stream and advertises it, a cross-box reader answers with a 4-byte hello from its own stream before its zmq subscribe, and data then moves as [4-byte length][<= 4000-byte frames] carrying pickle out-of-band buffers; zmq stays for the handshake and is the fallback"
+why       = "the per-step input broadcast (EngineCore box1 to the TP1 worker on box2) and the response queue crossed thunderbolt-net TCP and blocked each decode step; moving them onto streams removed the per-step TCP dependency (PATCHES 15.2). A two-host strixflerp pair has the same control-plane hop"
+notes     = "Interface tag: none (transport.stage-relay moves activations, not control messages). Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/rootfs/opt/venv/lib/python3.12/site-packages/odl_mq.py"]
+authors   = [
+  "davidcanar (vllm-strix-halo)",
+  "AlexKGwyn/ds4-vllm (design of the DS4_ODL_AR2 hook and odl_mq, Apache-2.0)",
+]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.message-queue-odl/-/-"
+api       = "python odl_mq (ctypes over libodl_tb5.so.0); env ODL_MQ_DEV, ODL_MQ_LIB"
+numeric   = "bytes"
+regime    = "single cross-box reader a queue; fail-open to zmq"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

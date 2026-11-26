@@ -1,0 +1,51 @@
+# FLERP-V10 exp 4 (card f0609bca0f, parent STRIX-META bd830ae1ca): QSA indexer cost and selection stability,
+# Qwen3.8-Flash-Next on strixite's executor (12 of 48 layers carry the indexer), on one worker. Measurement only: no kernel
+# change, no fidelity risk. Committed before any hardware run; never loosened after it.
+# Shape and review trace: docs/EXPERIMENTS-V10.md. v9 called this gate/qsa-index-overlap.toml.
+# Grounding: qsa.hpp times qsa_topk alone (7-30 us to 32K blocks); qsa_scores is untimed. SFX-PKG (1fd5fa6482)
+# measured cross-layer recall with tool.flerp.qsa_overlap (adjacent indexer layers, decode: 0.727 at 8K, 0.647 at
+# 32K); nobody has measured token-to-token stability or the indexer's share of a token.
+# Unit: 4-token blocks, k = 512, clamped to min(k, complete blocks). Random baseline Jaccard for two independent
+# k-subsets of n blocks is about k / (2n - k): 0.34 at 1,000 blocks, 0.068 at 4,000, 0.016 at 16,000.
+# Pinned blocks: qsa_topk pins none (the query's 0-3 tail tokens are attended outside k). The first 4 and last 16
+# blocks are still stripped in a second statistic, as the owner's review asks.
+# Scheduling: a WINJOB window on one worker, which already holds the file locally; it costs no control-GPU slot and
+# cannot contend with exp 1 (K).
+
+[hypothesis]
+prediction    = "cost: qsa_scores + qsa_topk are under 3 % of a decode token at 64K context (16,000 blocks); stability: consecutive decode tokens' selections per indexer layer have Jaccard > 0.9 at 4,000 and 16,000 blocks, and cross-layer Jaccard is lower"
+v9_guess      = "indexer share < 0.03; token-to-token Jaccard > 0.9 on 4,000/16,000"
+
+[hypothesis.cost]
+confirmed_at  = "indexer share < 0.03 of decode step GPU time at 16,000 blocks: the indexer is not worth optimizing, whatever the overlaps"
+refuted_below = "indexer share >= 0.03 at 16,000 blocks: the selection is worth optimizing and the stability verdict says how"
+
+[hypothesis.stability]
+confirmed_at  = "median over indexer layers of token-to-token Jaccard >= 0.9 at both 4,000 and 16,000 blocks (full set): seeding the Filter cut-off from the previous token's set is open"
+refuted_below = "median token-to-token Jaccard < 0.7 at 16,000 blocks: previous-token reuse is closed"
+
+[criteria]
+contexts_tokens        = [4000, 16000, 64000]
+contexts_blocks        = [1000, 4000, 16000]
+text                   = "real text, as SFX-PKG: strixflerp docs and source concatenated, the same file for every context, prefilled then 128 greedy decode tokens"
+decode_coverage        = "the job asserts each context's decode actually runs at that depth (position of the first decode token >= contexts_tokens) and prints it"
+trace_scope            = "autoregressive decode steps only; prefill rows excluded from every overlap statistic"
+logging                = "selected block ids (qsa_sel, qsa_nsel probe points of tool.flerp.qsa_overlap) written into one preallocated device buffer and copied to the host once at exit; no per-token D2H"
+timing                 = "indexer share from a separate run of the same contexts with logging off, under the kernel trace: (qsa_block_keys + qsa_scores + qsa_topk GPU time) / decode step GPU time, median of the 128 steps"
+token_to_token_jaccard = "per indexer layer, |S_t ∩ S_t-1| / |S_t ∪ S_t-1| over consecutive decode tokens; median and p10 per context; reported on the full set and with the first 4 and last 16 blocks removed"
+cross_layer_jaccard    = "between consecutive indexer layers on the same token, same two forms; recorded"
+random_baseline        = "k / (2n - k) per context, printed next to every Jaccard"
+verdict                = "two verdicts, cost and stability, each per its [hypothesis.*] table; neither depends on the other"
+
+[resources]
+nodes   = "one worker (C or D, whichever pod-winjob grants first) via WINJOB win_run, owner winjob-8ed7cc2c42; owner 2026-11-17: use a different node than K, whose /dev/shm (66.8 GB) cannot hold the file; no idle holds"
+hold    = "one worker window, ~45 min expected (3 contexts x 2 runs, 64K prefill dominates), TTL 67 min"
+weights = "74.6 GB Qwen3.8-Flash-Next v4 weights.strixw already on the worker's local NVMe at /cache/models/qwen38-fnext-tpn (the file its strixite engine serves); nothing staged; never from /mnt/ark*, /mnt/nv* or NFS"
+loads   = "2 because the logged run and the unlogged timing run must be separate processes; all three contexts inside each"
+reps    = "1 per context for the selections (greedy, deterministic); timing reps from exp 1's formula at d = 0.5 (a 3 % bar measured as a share), at least 3"
+shares  = "that worker's strixite engine and its 2 FreeFitty slots are out for the window; the other four workers keep serving"
+cleanup = "win_run stops the job's units and closes the window; strixite back on the worker and FreeFitty on all 10 slots afterwards; the logging build stays on a card branch, nothing lands on main"
+
+[monitor]
+milestones = "staged by T-5 min; logged run done by T+25 min; timing run by T+45 min; watched every <= 15 min"
+stop_rule  = "stop at the first runtime fault, or if a context's decode does not reach its depth"

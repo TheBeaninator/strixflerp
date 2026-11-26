@@ -1,0 +1,82 @@
+id        = "runtime.enginelab.memory"
+kind      = "runtime"
+summary   = "memory: host memory and upload (backend), host phase timing, pinned host buffers, the memory plan, UMA owner inventory and Linux UMA observation, the runtime allocator (HIP), registered backing lifetime and owned layer ordinals"
+why       = "one memory owner on 128 GB unified memory: who holds which bytes; where it would go: beside the catalogue's device.memory/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: device.memory/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 7 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_host_upload_backend.hpp",
+  "include/strix/hip_runtime_allocator.hpp",
+  "include/strix/host_memory.hpp",
+  "include/strix/host_phase_timing.hpp",
+  "include/strix/host_upload.hpp",
+  "include/strix/linux_uma_observation.hpp",
+  "include/strix/memory_plan.hpp",
+  "include/strix/owned_layer_ordinals.hpp",
+  "include/strix/pinned_host.hpp",
+  "include/strix/registered_backing_lifetime.hpp",
+  "include/strix/runtime_allocator.hpp",
+  "include/strix/uma_owner_inventory.hpp",
+  "src/hip_host_upload_backend.cpp",
+  "src/hip_runtime_allocator.cpp",
+  "src/host_upload.cpp",
+  "src/linux_uma_observation.cpp",
+  "src/memory_plan.cpp",
+  "src/runtime_allocator.cpp",
+  "src/uma_owner_inventory.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/hip_host_upload_backend.cpp",
+  "src/src/hip_runtime_allocator.cpp",
+  "src/src/host_upload.cpp",
+  "src/src/linux_uma_observation.cpp",
+  "src/src/memory_plan.cpp",
+  "src/src/runtime_allocator.cpp",
+  "src/src/uma_owner_inventory.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "device.memory-enginelab/-/-"
+api       = "src/runtime_allocator.cpp, hip_runtime_allocator.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

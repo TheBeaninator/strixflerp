@@ -1,0 +1,49 @@
+id        = "kernel.kyojin.exl3_pack"
+kind      = "kernel"
+summary   = "EXL3 tile packing and reconstruction (packed 16x128 tiles back to fp16 weights)"
+why       = "conversion and the dequant fallback. Where the shape would go: a format.convert/exl3/- provider beside format.flerp.convert_qwen4exp_p16, format.strixite.convert_qwen4exp, tool.ds4.gguf_dsv41 and 3 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: format.convert/exl3/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (pack.cu, reconstruct.cu). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/quant/pack.cu", "exllamav3/exllamav3_ext/quant/reconstruct.cu"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/quant/pack.cu", "src/exllamav3/exllamav3_ext/quant/reconstruct.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.convert-kyojin-pack/exl3/-"
+api       = "pack.cu, reconstruct.cu; kernels: pack_trellis_kernel, unpack_trellis_kernel, pack_signs_kernel, reconstruct_kernel, reconstruct_batch_kernel, reconstruct_had_kernel, reconstruct_had_batch_kernel"
+numeric   = "trellis codes to fp16"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_quantize"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: pack.cu, reconstruct.cu"

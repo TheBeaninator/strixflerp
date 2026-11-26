@@ -1,0 +1,40 @@
+id        = "runtime.fastasfuck.memory_governor"
+kind      = "runtime"
+summary   = "fastasfuck's header-only owner of the unified-memory RAM budget: a MemAvailable floor and pure room and shortfall rules on one reading"
+why       = "on a 128 GB unified-memory machine running a 65 GiB model, every cache decision has to agree on one budget or the machine hangs"
+notes     = "Files vs strixite: serve/memory_governor.hpp 40 changed lines against runtime.strixite.memory_governor at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/memory_governor.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.memory-governor/-/-"
+api       = "strix::MemoryGovernor"
+numeric   = "derived from runtime.strixite.memory_governor (serve/memory_governor.hpp 40 changed lines against runtime.strixite.memory_governor at d19945e); not compared here"
+regime    = "as runtime.strixite.memory_governor: header only"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host C++ header; the compile gate builds hip-c++ modules only"

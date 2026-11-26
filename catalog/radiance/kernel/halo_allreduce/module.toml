@@ -1,0 +1,81 @@
+id        = "kernel.radiance.halo_allreduce"
+kind      = "kernel"
+summary   = "Tensor-parallel collectives as device kernels: one-shot and two-shot (reduce-scatter + all-gather) all-reduce and all-gather at 2, 3, 4 and 8 ranks over peer-mapped memory, on an exact wire (bf16 / f16 / f32) or a lossy one (Walsh-Hadamard rotated 6-bit, three-tier int8), with the handshake, link-hold and shard rules; and the all-reduce fused with the residual add, RMS norm, block Hadamard and int8 quantiser that always follow it"
+why       = "tensor parallelism spends its time in collectives, so radiance runs them as device kernels with a compressed wire and fuses the work that always follows a reduce"
+notes     = "Written for cards that map each other's memory over PCIe; the pod's ranks are separate machines on a 100 GbE RoCE rail (runtime.strixfold.coll_rdma, kernel.strixfold.coll_proxy). What carries over: the compressed wire (the rail carries fp32 partials today) and the fused all-reduce + norm + quantise epilogue. docs/TP4.md in the origin lists every TP4 lever tried and what closed it."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_ar_entry.hip",
+  "libhalo/halo_ar_gather_2rank.hip",
+  "libhalo/halo_ar_gather_Nrank.hip",
+  "libhalo/halo_ar_hc.h",
+  "libhalo/halo_ar_links.h",
+  "libhalo/halo_ar_ln_had_quant_i8.hip",
+  "libhalo/halo_ar_oneshot_2rank_exact.hip",
+  "libhalo/halo_ar_oneshot_2rank_wht6.h",
+  "libhalo/halo_ar_oneshot_2rank_wht6.hip",
+  "libhalo/halo_ar_oneshot_Nrank_exact.hip",
+  "libhalo/halo_ar_seq.h",
+  "libhalo/halo_ar_shards.h",
+  "libhalo/halo_ar_ti8.h",
+  "libhalo/halo_ar_twoshot_Nrank_exact.hip",
+  "libhalo/halo_ar_twoshot_Nrank_ti8.hip",
+  "libhalo/halo_ar_wide.h",
+  "libhalo/halo_p2p_copy2d.hip",
+]
+authors   = ["tcclaviger", "goodman-b", "keptn42", "Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_ar_entry.hip",
+  "src/libhalo/halo_ar_gather_2rank.hip",
+  "src/libhalo/halo_ar_gather_Nrank.hip",
+  "src/libhalo/halo_ar_oneshot_2rank_exact.hip",
+  "src/libhalo/halo_ar_oneshot_2rank_wht6.hip",
+  "src/libhalo/halo_ar_oneshot_Nrank_exact.hip",
+  "src/libhalo/halo_ar_twoshot_Nrank_exact.hip",
+  "src/libhalo/halo_ar_twoshot_Nrank_ti8.hip",
+  "src/libhalo/halo_ar_ln_had_quant_i8.hip",
+  "src/libhalo/halo_p2p_copy2d.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "collective.allreduce-p2p/-/bf16+f32"
+api       = "halo_ar_oneshot_{2,3,4,8}rank_exact, halo_ar_twoshot_{3,4,8}rank_exact, halo_ar_gather_{2,3,4,8}rank"
+numeric   = "exact wire: the sum in rank order"
+regime    = "peer GPUs on one PCIe fabric; a decode or prefill collective a layer"
+
+[[provides]]
+interface = "collective.allreduce-p2p/-/wht6+ti8"
+api       = "halo_ar_oneshot_2rank_wht6, halo_ar_twoshot_{3,4}rank_ti8, halo_ar_ln_had_quant_i8"
+numeric   = "lossy wire: Hadamard-rotated 6-bit or tiered int8 payload"
+regime    = "as above, where the link is the bound"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_chain"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

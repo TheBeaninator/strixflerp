@@ -1,0 +1,42 @@
+id        = "kernel.kyojin.hip_kq_moe_dec"
+kind      = "kernel"
+summary   = "Decode MoE kernels for GGUF k-quants as a device-only gfx1151 code object (built by hip_kq/build_moe.sh, loaded by loader/moe_dec_hip.py): same arithmetic and accumulation order as fq_moe_kq.cu, with unrolled-load / LDS-activation v3 arms"
+why       = "a code object loaded beside the extension: the shape of a strixflerp kernel kit. Where the shape would go: a moe.experts-decode/gguf-kquant/f32 provider beside kernel.flerp.moe_kquant, kernel.flerp.moe_sg, kernel.gufo.qfn_mmq and 1 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-decode/gguf-kquant/f32. Against the base turboderp-org/exllamav3 8c593e4e: 3 added (build_moe.sh, moe_dec.cu, moe_dec_hip.py), 0 changed. No timing was taken on the pod. The origin builds it at first use with hipcc --genco --offload-arch=gfx1151 -O3 (-ffp-contract=off) into a code object; the gate compiles it device-only the same way."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/hip_kq/build_moe.sh",
+  "exllamav3/exllamav3_ext/hip_kq/moe_dec.cu",
+  "exllamav3/loader/moe_dec_hip.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/hip_kq/moe_dec.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = ["-x", "hip", "-std=c++17", "-O3", "-ffp-contract=off", "--offload-device-only", "-c"]
+
+[[provides]]
+interface = "moe.experts-decode/gguf-kquant/f32.kyojin-co"
+api       = "build_moe.sh, moe_dec.cu, moe_dec_hip.py; kernels: moe_sort, moe_quant_q8_1, moe_combine, ug_q3_ref, ug_q4_ref, dn_q4_ref"
+numeric   = "q8_1 activations, dp4a, bit-equal to fq_moe_kq"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.kyojin.hip_kq_moe_dec.json"

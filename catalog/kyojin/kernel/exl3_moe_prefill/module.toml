@@ -1,0 +1,49 @@
+id        = "kernel.kyojin.exl3_moe_prefill"
+kind      = "kernel"
+summary   = "Grouped EXL3 MoE prefill for gfx11.5 WMMA (2,027 lines): tokens sorted by expert, every projection one launch over all experts (8 launches a layer, independent of the expert count), trellis tiles decoded into LDS inside the GEMM, gate + up in one launch"
+why       = "Kyojin's Strix Halo MoE prefill (the 580-633 tok/s GLM-5.3-Flash prefill rides on it). Where the shape would go: a moe.experts-prefill/exl3/f16-f32 provider beside kernel.crucible.moe_prefill, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-prefill/exl3/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (exl3_moe_prefill.cu, exl3_moe_prefill.cuh), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/quant/exl3_moe_prefill.cu",
+  "exllamav3/exllamav3_ext/quant/exl3_moe_prefill.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/quant/exl3_moe_prefill.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-prefill/exl3/f16-f32.kyojin-wmma"
+api       = "exl3_moe_prefill.cu, exl3_moe_prefill.cuh; kernels: mpw_metadata_kernel, mpw_gather_had_kernel, mpw_act_kernel, mpw_reduce_had_kernel, mpw_gather_had2_kernel, mpw_reduce_had2_kernel, mpw_gemm_kernel, mpw2_gemm_kernel, mpw2x_gemm_kernel, mpw_dense_metadata_kernel"
+numeric   = "fp16 activations, WMMA f32 accumulation"
+regime    = "prefill"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: exl3_moe_prefill.cu"

@@ -1,0 +1,58 @@
+id        = "tool.maya_tp.hipblaslt_tuning"
+kind      = "tool"
+summary   = "the hipBLASLt tuning tables and tuner (tools/hip): solution tables per gfx target and hipBLASLt version (gfx1151 GLM-5.3 tables included), the tuner tune_hipblaslt.cpp and the prefill bench driver"
+why       = "measured GEMM solution tables for gfx1151 are directly reusable by any strixflerp prefill module on the same toolchain"
+notes     = "Interface tag: tool.hipblaslt-tables/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "tools/hip/bench_prefill.py",
+  "tools/hip/build_maya_windows.bat",
+  "tools/hip/gfx1100-glm-hipblaslt-100202.txt",
+  "tools/hip/gfx1100-glm-hipblaslt-100401.txt",
+  "tools/hip/gfx1100-glm-hipblaslt-100500.txt",
+  "tools/hip/gfx1100-hipblaslt-100100.txt",
+  "tools/hip/gfx1100-hipblaslt-100200.txt",
+  "tools/hip/gfx1151-glm-hipblaslt-100202.txt",
+  "tools/hip/gfx1151-glm-hipblaslt-100401-b.txt",
+  "tools/hip/gfx1151-glm-hipblaslt-100401.txt",
+  "tools/hip/gfx1151-glm-hipblaslt-100500.txt",
+  "tools/hip/gfx1151-glm53-hipblaslt-100202.txt",
+  "tools/hip/gfx1201-glm-hipblaslt-100202.txt",
+  "tools/hip/gfx1201-hipblaslt-100202.txt",
+  "tools/hip/gfx1201-hipblaslt-100500.txt",
+  "tools/hip/tune_hipblaslt.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.hipblaslt-tables/-/-"
+api       = "tools/hip/tune_hipblaslt.cpp, gfx*-hipblaslt-*.txt"
+numeric   = "solution ids per GEMM shape"
+regime    = "gfx1100 / gfx1151 / gfx1201"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

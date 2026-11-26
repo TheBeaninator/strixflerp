@@ -1,0 +1,43 @@
+id        = "runtime.kyojin.tp_python"
+kind      = "runtime"
+summary   = "Python side of the native tensor-parallel backend (allocation, backend, shared arena, functions) and the CPU MoE host as Kyojin changed them"
+why       = "TP across devices with the CPU-assisted collectives. Where the shape would go: a collective.interface/-/- provider beside runtime.strixfold.coll, runtime.strixfold_tp4.coll, through a port of the python / Triton logic"
+notes     = "Interface tag: collective.interface/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 6 changed (model_tp.py, model_tp_alloc.py, model_tp_backend.py, model_tp_fn.py, model_tp_shared.py, moe_cpu_host.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/model/model_tp.py",
+  "exllamav3/model/model_tp_alloc.py",
+  "exllamav3/model/model_tp_backend.py",
+  "exllamav3/model/model_tp_fn.py",
+  "exllamav3/model/model_tp_shared.py",
+  "exllamav3/model/moe_cpu_host.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "collective.interface-kyojin-tp/-/-"
+api       = "model_tp.py, model_tp_alloc.py, model_tp_backend.py, model_tp_fn.py, model_tp_shared.py, moe_cpu_host.py"
+numeric   = "n/a"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

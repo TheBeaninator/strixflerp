@@ -1,14 +1,14 @@
 # Front end gate (StrixFold executor): dsv41-flash.flerp-serve-tp2
 
-Host control-node, 2026-11-11T02:54:55Z. Stages run: check, build, pair; not run: none.
+Host control-node, 2026-11-24T19:04:37Z. Stages run: check, build, pair; not run: none.
 
 - **check**: PASS
 - **build**: PASS
 - **pair**: FAIL - RemoteDisconnected: Remote end closed connection without response
 
-Built `strixflerp-dsv41-flash.flerp-serve-tp2`: 30987664 bytes, sha256 48338f6bf4196d69; 44 modules, 335 tree files, 5 C and C++ units linked by the Zig build.
+Built `strixflerp-dsv41-flash.flerp-serve-tp2`: 31575160 bytes, sha256 0d8acdea5962851f; 45 modules, 337 tree files, 6 C and C++ units linked by the Zig build.
 
-Without a GPU or a worker: usage: ok; text_and_executor_refusal: ok (`startup: text strixfold HfText (tokenizer.json and the checkpoint's chat template), 129280 tokens, /mnt/nv4/models/LibertAIDAI__DeepSeek-V4.1-Flash-1017-EXL3-2.`).
+Without a GPU or a worker: usage: ok; text_and_executor_refusal: ok (`er.json and the checkpoint's chat template), 129280 tokens, /mnt/nv4/models/LibertAIDAI__DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw/raw`).
 
 Drafts on:
 

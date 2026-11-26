@@ -1,0 +1,141 @@
+id        = "executor.enginelab.inkling2_engine"
+kind      = "executor"
+summary   = "the Inkling 2 Mini engine: calibration, checkpoint, config, controller and residual device code, dense HIP, forward, host, messages, prefill rows, schedule, state, weights and the vision tower"
+why       = "Inkling 2 Mini binding (catalog/ciru_inkling has another engine for it); where it would go: beside the catalogue's executor.model/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.model/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 3 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/inkling2/inkling2_mini_calibration.hpp",
+  "src/inkling2/inkling2_mini_checkpoint.cpp",
+  "src/inkling2/inkling2_mini_checkpoint.hpp",
+  "src/inkling2/inkling2_mini_config.hpp",
+  "src/inkling2/inkling2_mini_controller_device.hpp",
+  "src/inkling2/inkling2_mini_controller_operands.hpp",
+  "src/inkling2/inkling2_mini_dense_hip.hpp",
+  "src/inkling2/inkling2_mini_forward.hpp",
+  "src/inkling2/inkling2_mini_host.cpp",
+  "src/inkling2/inkling2_mini_host.hpp",
+  "src/inkling2/inkling2_mini_messages.hpp",
+  "src/inkling2/inkling2_mini_prefill_rows.hpp",
+  "src/inkling2/inkling2_mini_residual_device.hpp",
+  "src/inkling2/inkling2_mini_schedule.hpp",
+  "src/inkling2/inkling2_mini_state.hpp",
+  "src/inkling2/inkling2_mini_weight_device.hpp",
+  "src/inkling2/inkling2_mini_weight_options.hpp",
+  "src/inkling2/inkling2_vision.cpp",
+  "src/inkling2/inkling2_vision.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/inkling2/inkling2_mini_checkpoint.cpp",
+  "src/src/inkling2/inkling2_mini_host.cpp",
+  "src/src/inkling2/inkling2_vision.cpp",
+]
+includes  = ["src/src", "src/src/inkling2"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.model-enginelab-inkling2/-/-"
+api       = "src/inkling2/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_resident"
+
+[[requires]]
+module    = "executor.enginelab.vision"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.core_bf16"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_hc"
+
+[[requires]]
+module    = "kernel.enginelab.core_head"
+
+[[requires]]
+module    = "kernel.enginelab.inkling2_attention"
+
+[[requires]]
+module    = "kernel.enginelab.inkling2_moe"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "kernel.enginelab.ops_norm"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.inkling2_dspark"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_prefix"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

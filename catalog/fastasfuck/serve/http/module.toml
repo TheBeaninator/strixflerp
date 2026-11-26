@@ -1,0 +1,73 @@
+id        = "serve.fastasfuck.http"
+kind      = "serve"
+summary   = "fastasfuck's HTTP surface on cpp-httplib (chat and text completions as JSON or SSE, models, health, metrics, cache routes) and its option table read from a key = value config"
+why       = "the server's routes and every operator setting live here; the vendored cpp-httplib is not harvested"
+notes     = "Files vs strixite: serve/http_server.cpp 1220 changed lines against serve.strixite.http at d19945e; serve/http_server.hpp 40 changed lines against serve.strixite.http at d19945e; serve/server_config.cpp 134 changed lines against serve.strixite.http at d19945e; serve/server_config.hpp 5 changed lines against serve.strixite.http at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/http_server.cpp", "serve/http_server.hpp", "serve/server_config.cpp", "serve/server_config.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/http_server.cpp", "src/serve/server_config.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.http/openai/-"
+api       = "strix::HttpServer, strix::ServerConfig, strix::ServerSettings"
+numeric   = "derived from serve.strixite.http (serve/http_server.cpp 1220 changed lines against serve.strixite.http at d19945e; serve/http_server.hpp 40 changed lines against serve.strixite.http at d19945e; serve/server_config.cpp 134 changed lines against serve.strixite.http at d19945e; serve/server_config.hpp 5 changed lines against serve.strixite.http at d19945e); not compared here"
+regime    = "as serve.strixite.http: POST /v1/chat/completions, /v1/completions; GET /v1/models, /health, /cache, /metrics"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.args"
+
+[[requires]]
+module    = "runtime.fastasfuck.chat_template"
+
+[[requires]]
+module    = "runtime.fastasfuck.engine"
+
+[[requires]]
+module    = "runtime.fastasfuck.grammar_cache"
+
+[[requires]]
+module    = "runtime.fastasfuck.prompt_cache"
+
+[[requires]]
+module    = "runtime.fastasfuck.response_store"
+
+[[requires]]
+module    = "runtime.fastasfuck.serve_log"
+
+[[requires]]
+module    = "runtime.fastasfuck.tokenizer"
+
+[[requires]]
+module    = "runtime.fastasfuck.vision_request"
+
+[[requires]]
+module    = "serve.fastasfuck.openai"
+
+[[requires]]
+module    = "serve.fastasfuck.responses_api"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

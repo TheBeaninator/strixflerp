@@ -1,0 +1,204 @@
+id        = "kernel.fastasfuck.linear"
+kind      = "kernel"
+summary   = "fastasfuck's dense linear kernels: BF16-weight matmul, Q4 / Q5 / Q6 / Q8 decode GEMVs (with the per-token MoE expert gather and combine in linear_q4.hip) and the WMMA prefill matmul for all five weight types"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its linear kernel files so a timing card can set it against kernel.strixite.linear, kernel.strixite.linear_q4, kernel.strixite.linear_q56, kernel.strixite.linear_q8 and kernel.strixite.linear_wmma, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/linear.hip linear.dense/bf16 (byte-identical to kernel.strixite.linear kernels/linear.hip at d19945e); kernels/linear_q4.hip linear.decode/strixw-q4, moe.experts-decode/strixw-q4, moe.experts-decode/strixw-q5 (139 changed lines against kernel.strixite.linear_q4 kernels/linear_q4.hip at d19945e); kernels/linear_q5.hip linear.decode/strixw-q5 (272 changed lines against kernel.strixite.linear_q56 kernels/linear_q56.hip at d19945e); kernels/linear_q6.hip linear.decode/strixw-q6 (270 changed lines against kernel.strixite.linear_q56 kernels/linear_q56.hip at d19945e); kernels/linear_q8.hip linear.decode/strixw-q8 (98 changed lines against kernel.strixite.linear_q8 kernels/linear_q8.hip at d19945e); kernels/linear_wmma.hip linear.prefill/bf16, linear.prefill/strixw-q4, linear.prefill/strixw-q5, linear.prefill/strixw-q6, linear.prefill/strixw-q8 (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = [
+  "kernels/linear.hip",
+  "kernels/linear.hpp",
+  "kernels/linear_q4.hip",
+  "kernels/linear_q4.hpp",
+  "kernels/linear_q5.hip",
+  "kernels/linear_q5.hpp",
+  "kernels/linear_q6.hip",
+  "kernels/linear_q6.hpp",
+  "kernels/linear_q8.hip",
+  "kernels/linear_q8.hpp",
+  "kernels/linear_wmma.hip",
+  "kernels/linear_wmma.hpp",
+]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/kernels/linear.hip",
+  "src/kernels/linear_q4.hip",
+  "src/kernels/linear_q5.hip",
+  "src/kernels/linear_q6.hip",
+  "src/kernels/linear_q8.hip",
+  "src/kernels/linear_wmma.hip",
+]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.dense/bf16/bf16"
+api       = "strix::kernels::linear_bf16w (kernels/linear.hpp)"
+numeric   = "the same source as kernel.strixite.linear (byte-identical to kernel.strixite.linear kernels/linear.hip at d19945e), so its arithmetic: fp32 accumulate, one rounding at the end; a bf16 -> f32 call stores the accumulator unrounded"
+regime    = "as kernel.strixite.linear: untuned; any M"
+
+[[provides]]
+interface = "linear.dense/bf16/f32"
+api       = "strix::kernels::linear_bf16w (kernels/linear.hpp)"
+numeric   = "the same source as kernel.strixite.linear (byte-identical to kernel.strixite.linear kernels/linear.hip at d19945e), so its arithmetic: fp32 accumulate, one rounding at the end; a bf16 -> f32 call stores the accumulator unrounded"
+regime    = "as kernel.strixite.linear: untuned; any M"
+
+[[provides]]
+interface = "linear.decode/strixw-q4/bf16"
+api       = "strix::kernels::check_expert_error, linear_q4, linear_q4_experts_combine, linear_q4_experts_gather, linear_q4_experts_gather_swiglu, linear_q5_experts_combine, linear_q5_experts_gather, linear_q5_experts_gather_swiglu, report_expert_error (kernels/linear_q4.hpp)"
+numeric   = "derived from kernel.strixite.linear_q4 (139 changed lines against kernel.strixite.linear_q4 kernels/linear_q4.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q4: decode: small M, memory-bound; M == 1 has its own instantiation, larger M runs 8 rows per pass; K % 32 == 0"
+
+[[provides]]
+interface = "linear.decode/strixw-q4/f32"
+api       = "strix::kernels::check_expert_error, linear_q4, linear_q4_experts_combine, linear_q4_experts_gather, linear_q4_experts_gather_swiglu, linear_q5_experts_combine, linear_q5_experts_gather, linear_q5_experts_gather_swiglu, report_expert_error (kernels/linear_q4.hpp)"
+numeric   = "derived from kernel.strixite.linear_q4 (139 changed lines against kernel.strixite.linear_q4 kernels/linear_q4.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q4: decode: small M, memory-bound; M == 1 has its own instantiation, larger M runs 8 rows per pass; K % 32 == 0"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q4/bf16"
+api       = "strix::kernels::check_expert_error, linear_q4, linear_q4_experts_combine, linear_q4_experts_gather, linear_q4_experts_gather_swiglu, linear_q5_experts_combine, linear_q5_experts_gather, linear_q5_experts_gather_swiglu, report_expert_error (kernels/linear_q4.hpp)"
+numeric   = "derived from kernel.strixite.linear_q4 (139 changed lines against kernel.strixite.linear_q4 kernels/linear_q4.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q4: one launch covers every (token, active expert) slot; reads an expert's rows once per slot"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q4/f32"
+api       = "strix::kernels::check_expert_error, linear_q4, linear_q4_experts_combine, linear_q4_experts_gather, linear_q4_experts_gather_swiglu, linear_q5_experts_combine, linear_q5_experts_gather, linear_q5_experts_gather_swiglu, report_expert_error (kernels/linear_q4.hpp)"
+numeric   = "derived from kernel.strixite.linear_q4 (139 changed lines against kernel.strixite.linear_q4 kernels/linear_q4.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q4: one launch covers every (token, active expert) slot; reads an expert's rows once per slot"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q5/bf16"
+api       = "strix::kernels::check_expert_error, linear_q4, linear_q4_experts_combine, linear_q4_experts_gather, linear_q4_experts_gather_swiglu, linear_q5_experts_combine, linear_q5_experts_gather, linear_q5_experts_gather_swiglu, report_expert_error (kernels/linear_q4.hpp)"
+numeric   = "derived from kernel.strixite.linear_q4 (139 changed lines against kernel.strixite.linear_q4 kernels/linear_q4.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q4: K % 128 == 0"
+
+[[provides]]
+interface = "moe.experts-decode/strixw-q5/f32"
+api       = "strix::kernels::check_expert_error, linear_q4, linear_q4_experts_combine, linear_q4_experts_gather, linear_q4_experts_gather_swiglu, linear_q5_experts_combine, linear_q5_experts_gather, linear_q5_experts_gather_swiglu, report_expert_error (kernels/linear_q4.hpp)"
+numeric   = "derived from kernel.strixite.linear_q4 (139 changed lines against kernel.strixite.linear_q4 kernels/linear_q4.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q4: K % 128 == 0"
+
+[[provides]]
+interface = "linear.decode/strixw-q5/bf16"
+api       = "strix::kernels::linear_q5 (kernels/linear_q5.hpp)"
+numeric   = "derived from kernel.strixite.linear_q56 (272 changed lines against kernel.strixite.linear_q56 kernels/linear_q56.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q56: decode: 1-8 waves per output row (split-K, ~2048 codes a wave); K % 128 == 0"
+
+[[provides]]
+interface = "linear.decode/strixw-q5/f32"
+api       = "strix::kernels::linear_q5 (kernels/linear_q5.hpp)"
+numeric   = "derived from kernel.strixite.linear_q56 (272 changed lines against kernel.strixite.linear_q56 kernels/linear_q56.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q56: decode: 1-8 waves per output row (split-K, ~2048 codes a wave); K % 128 == 0"
+
+[[provides]]
+interface = "linear.decode/strixw-q6/bf16"
+api       = "strix::kernels::linear_q6 (kernels/linear_q6.hpp)"
+numeric   = "derived from kernel.strixite.linear_q56 (270 changed lines against kernel.strixite.linear_q56 kernels/linear_q56.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q56: decode: 1-8 waves per output row (split-K); K % 64 == 0"
+
+[[provides]]
+interface = "linear.decode/strixw-q6/f32"
+api       = "strix::kernels::linear_q6 (kernels/linear_q6.hpp)"
+numeric   = "derived from kernel.strixite.linear_q56 (270 changed lines against kernel.strixite.linear_q56 kernels/linear_q56.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q56: decode: 1-8 waves per output row (split-K); K % 64 == 0"
+
+[[provides]]
+interface = "linear.decode/strixw-q8/bf16"
+api       = "strix::kernels::linear_q8 (kernels/linear_q8.hpp)"
+numeric   = "derived from kernel.strixite.linear_q8 (98 changed lines against kernel.strixite.linear_q8 kernels/linear_q8.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q8: decode: 16 codes per 16-byte load, 1-8 waves per output row; M == 1 has its own instantiation"
+
+[[provides]]
+interface = "linear.decode/strixw-q8/f32"
+api       = "strix::kernels::linear_q8 (kernels/linear_q8.hpp)"
+numeric   = "derived from kernel.strixite.linear_q8 (98 changed lines against kernel.strixite.linear_q8 kernels/linear_q8.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_q8: decode: 16 codes per 16-byte load, 1-8 waves per output row; M == 1 has its own instantiation"
+
+[[provides]]
+interface = "linear.prefill/strixw-q4/bf16"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q4/f32"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q5/bf16"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q5/f32"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q6/bf16"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q6/f32"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q8/bf16"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/strixw-q8/f32"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: tiles of 64 x-rows by 128 weight rows, K % 64 == 0"
+
+[[provides]]
+interface = "linear.prefill/bf16/bf16"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: K % 64 == 0 (the router)"
+
+[[provides]]
+interface = "linear.prefill/bf16/f32"
+api       = "strix::kernels::linear_bf16w_wmma, linear_q4_wmma, linear_q5_wmma, linear_q6_wmma, linear_q8_wmma (kernels/linear_wmma.hpp)"
+numeric   = "derived from kernel.strixite.linear_wmma (89 changed lines against kernel.strixite.linear_wmma kernels/linear_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.linear_wmma: prefill: K % 64 == 0 (the router)"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.wmma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.linear.json"

@@ -1,0 +1,98 @@
+id        = "kernel.radiance.halo_attn"
+kind      = "kernel"
+summary   = "Attention on gfx1151 in a transposed core (S^T = K.Q^T, a lane owns a query row): paged decode / MTP-verify at head_dim 256 and 128 over grouped-query ratios 1, 2, 4, 6, 8 and 12 (12 = Qwen3.8-Flash-Next's QSA layers, 24 query heads over 2 KV heads; 6 with a 4-token page is its TP4 leg), sliding windows, bf16 / f16 / E4M3 KV, the prefill form, dense and prefix-self forms, and the fused QKV preambles (norm, partial RoPE, gate)"
+why       = "attention kernels are shape-specialised (head size, grouped-query ratio, KV dtype, window), and each shape had to be re-derived for gfx1151's fragment order; this is the complete set for the models radiance serves"
+notes     = "libhalo/halo_dt16.h is the whole gfx12 -> gfx1151 porting story for attention bodies."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_attn_args.h",
+  "libhalo/halo_attn_decode_h256_gqa6.hip",
+  "libhalo/halo_attn_dense_bf16.hip",
+  "libhalo/halo_attn_gen.hip",
+  "libhalo/halo_attn_paged_gqa8.hip",
+  "libhalo/halo_attn_paged_h128_gqa1.hip",
+  "libhalo/halo_attn_paged_h128_gqa2.hip",
+  "libhalo/halo_attn_paged_h128_gqa2w.hip",
+  "libhalo/halo_attn_paged_h128_gqa4.hip",
+  "libhalo/halo_attn_paged_h256_gqa12.hip",
+  "libhalo/halo_attn_paged_h256_gqa2.hip",
+  "libhalo/halo_attn_paged_h256_gqa4.hip",
+  "libhalo/halo_attn_paged_h256_gqa6.hip",
+  "libhalo/halo_attn_paged_h256_gqa6_bs4.hip",
+  "libhalo/halo_attn_paged_window.hip",
+  "libhalo/halo_attn_prefill_h256_gqa6.hip",
+  "libhalo/halo_qk_norm_rope_gate.hip",
+  "libhalo/halo_qkv_norm_rope.hip",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_attn_decode_h256_gqa6.hip",
+  "src/libhalo/halo_attn_paged_gqa8.hip",
+  "src/libhalo/halo_attn_paged_h128_gqa1.hip",
+  "src/libhalo/halo_attn_paged_h128_gqa2.hip",
+  "src/libhalo/halo_attn_paged_h128_gqa2w.hip",
+  "src/libhalo/halo_attn_paged_h128_gqa4.hip",
+  "src/libhalo/halo_attn_paged_h256_gqa12.hip",
+  "src/libhalo/halo_attn_paged_h256_gqa2.hip",
+  "src/libhalo/halo_attn_paged_h256_gqa4.hip",
+  "src/libhalo/halo_attn_paged_h256_gqa6.hip",
+  "src/libhalo/halo_attn_paged_h256_gqa6_bs4.hip",
+  "src/libhalo/halo_attn_paged_window.hip",
+  "src/libhalo/halo_attn_prefill_h256_gqa6.hip",
+  "src/libhalo/halo_attn_dense_bf16.hip",
+  "src/libhalo/halo_attn_gen.hip",
+  "src/libhalo/halo_qk_norm_rope_gate.hip",
+  "src/libhalo/halo_qkv_norm_rope.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-bf16+f16+e4m3/bf16.radiance"
+api       = "halo_attn_paged_* (h128 / h256, gqa 1..12), halo_attn_decode_h256_gqa6"
+numeric   = "f16 operands on WMMA, lazy reference-max online softmax, fp32 statistics"
+regime    = "decode and MTP verify over the indexer's page-id table"
+
+[[provides]]
+interface = "attn.prefill-causal/kv-bf16+e4m3/bf16.radiance"
+api       = "halo_attn_prefill_h256_gqa6, halo_attn_dense_bf16, halo_attn_prefix_self"
+numeric   = "as decode"
+regime    = "prefill row counts (tiled), compute-bound on the wave32 WMMA cores"
+
+[[provides]]
+interface = "attn.qk-norm-rope-store/-/bf16.radiance"
+api       = "halo_qk_norm_rope_gate, halo_qkv_norm_rope"
+numeric   = "per-head RMS norm, partial NeoX RoPE, gate; one pass"
+regime    = "one launch a layer"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_chain"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

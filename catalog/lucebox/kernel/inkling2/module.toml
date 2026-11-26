@@ -1,0 +1,44 @@
+id        = "kernel.lucebox.inkling2"
+kind      = "kernel"
+summary   = "fused HIP kernels of Inkling2-Loop and its bundled DSpark speculator, all graph-safe (deterministic grids, pool allocations)"
+why       = "The DSpark speculator kernels are what the card ORIGIN-LUCEBOX named as Lucebox's value beside the plain kernels"
+notes     = "INTERFACES.md section: 11. Drafts and speculation. Interface tags: draft.dspark/-/f32.lucebox-inkling2. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/inkling2-ops.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/inkling2-ops.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/inkling2-ops.cuh",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda/inkling2-ops.cu"]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/deps/llama.cpp/ggml/src/ggml-cuda/inkling2-ops.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "draft.dspark/-/f32.lucebox-inkling2"
+api       = "GGML ops in inkling2-ops.cu"
+numeric   = "launches asynchronously on ctx.stream(), HIP-graph and CUDA-graph safe (file header)"
+regime    = "Inkling2-Loop and its DSpark speculator"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.inkling2.json"

@@ -1,0 +1,45 @@
+id        = "format.ciru_iu4.c1_g16"
+kind      = "format"
+summary   = "The C1 weight type CIRU adds to ggml for its IU4 routed experts: GGML_TYPE_C1_G16_K2560 (block 2560 values in 1440 bytes) and GGML_TYPE_C1_G16_K640 (640 in 360) in ggml.h and the ggml.c type traits, and the same two ids in gguf-py; a row is K/2 bytes of 4-bit codes followed by K/16 bytes of table indices, and two FP16 tensors ride beside each expert weight (row multipliers [rows, n_expert], affine table [2, 256, n_expert])"
+why       = "the device view the kernel.ciru_iu4.c1 and mmb kernels read; the files are the whole ggml.h / ggml.c / constants.py, of which CIRU changed 16, 32 and 4 lines"
+notes     = "Also in these files and changed by CIRU: the ggml_lightning_indexer_compact graph op (ggml.h, ggml.c). The loader that creates the C1 aux tensors and checks their types is in src/models/qwen4exp.cpp (load_one, lines 380-410), which is model code and not harvested. The CPU backend refuses C1 (ggml-cpu.cpp), not harvested. Interface tag: none (no catalogue format reads C1)."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = ["ggml/include/ggml.h", "ggml/src/ggml.c", "gguf-py/gguf/constants.py"]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/ggml/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.device-view/c1-g16/-"
+api       = "GGML_TYPE_C1_G16_K2560 = 43, GGML_TYPE_C1_G16_K640 = 44 (ggml/include/ggml.h); type traits blck_size / type_size (ggml/src/ggml.c); GGMLQuantizationType.C1_G16_* (gguf-py/gguf/constants.py)"
+numeric   = "codes are unsigned 4-bit (code - 8 as int8 on the device); value = table[index] affine of the code, times the row multiplier (src/models/qwen4exp.cpp loads the aux tensors, not harvested)"
+regime    = "Qwen3.8-Flash-Next routed experts: gate / up K2560, down K640"
+
+[[provides]]
+interface = "graph.op-lightning-indexer-compact/-/-"
+api       = "ggml_lightning_indexer_compact(ctx, q, k, weights, mask, limits, full_blocks, first) (ggml.h / ggml.c)"
+numeric   = "builds GGML_OP_LIGHTNING_INDEXER with src[4] = I32 limits; kernel.ciru_iu4.attn computes it"
+regime    = "QSA indexer over compact per-row limits"
+
+[[requires]]
+module    = "kernel.ciru_iu4.cuda_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "type definitions inside ggml's core C library; compiled with all of ggml by the origin CMake, not standalone"

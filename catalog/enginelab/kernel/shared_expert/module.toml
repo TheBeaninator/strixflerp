@@ -1,0 +1,98 @@
+id        = "kernel.enginelab.shared_expert"
+kind      = "kernel"
+summary   = "the shared expert: launcher (HIP), prefetch and rows diagnostic: 6 origin files under include/strix, src/hip_shared_expert_launcher.hip, src/shared_expert_prefetch.cpp"
+why       = "the always-on expert of each MoE layer; where it would go: a new strixflerp interface moe.shared-expert/-/f16-f32.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, moe.shared-expert/-/f16-f32.enginelab. 1 HIP unit(s) compiled standalone by the gate; 1 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_shared_expert_launcher.hpp",
+  "include/strix/hip_shared_expert_rows_diagnostic.hpp",
+  "include/strix/shared_expert_prefetch.hpp",
+  "include/strix/shared_expert_rows_diagnostic_contract.hpp",
+  "src/hip_shared_expert_launcher.hip",
+  "src/shared_expert_prefetch.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_shared_expert_launcher.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.shared-expert/-/f16-f32.enginelab"
+api       = "hip_shared_expert_launcher.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.dense_launch"
+
+[[requires]]
+module    = "kernel.enginelab.integer_projection"
+
+[[requires]]
+module    = "kernel.enginelab.moe_q4k_a8"
+
+[[requires]]
+module    = "kernel.enginelab.mtp_draft_head"
+
+[[requires]]
+module    = "kernel.enginelab.q8_rows"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_forward"
+
+[[requires]]
+module    = "runtime.enginelab.prepared_views"
+
+[[requires]]
+module    = "serve.enginelab.serving_cohort"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.shared_expert.json"

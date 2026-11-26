@@ -1,0 +1,46 @@
+id        = "kernel.kyojin.exl3_hadamard"
+kind      = "kernel"
+summary   = "Hadamard rotations of EXL3 (device butterflies and the host Paley construction of non-power-of-two sizes)"
+why       = "the input / output rotations of every EXL3 projection. Where the shape would go: a rotate.fwht/-/f32 provider beside kernel.hipfire.norm_rope, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: rotate.fwht/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (hadamard.cpp, hadamard.cu). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/hadamard.cpp", "exllamav3/exllamav3_ext/quant/hadamard.cu"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/hadamard.cpp", "src/exllamav3/exllamav3_ext/quant/hadamard.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "rotate.fwht/-/f32.kyojin"
+api       = "hadamard.cpp, hadamard.cu; kernels: had_hf_r_128_kernel, had_ff_r_128_kernel, had_hf_r_128_dual_kernel, had_ff_r_128_dual_kernel, had_hf_r_128_batch_kernel, had_ff_r_128_batch_kernel"
+numeric   = "fp16 / fp32"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_quantize"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: hadamard.cpp, hadamard.cu"

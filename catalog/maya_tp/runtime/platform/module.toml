@@ -1,0 +1,57 @@
+id        = "runtime.maya_tp.platform"
+kind      = "runtime"
+summary   = "platform helpers: direct (O_DIRECT) file reads, memory queries, the memory planner CLI (src/plan) and the platform / plan headers (env switches and aliases, idle gate, stall watch, GPU-shared memory, dedicated memory, CPU relax, commit)"
+why       = "unified-memory accounting and direct I/O are what make weight streaming work on an APU; small pieces any engine can take"
+notes     = "Interface tag: platform.memory-io/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/plan/plan.hpp",
+  "include/strata/platform/commit.hpp",
+  "include/strata/platform/cpu_relax.hpp",
+  "include/strata/platform/dedicated.hpp",
+  "include/strata/platform/direct_file.hpp",
+  "include/strata/platform/env_alias.hpp",
+  "include/strata/platform/env_report.hpp",
+  "include/strata/platform/env_switch.hpp",
+  "include/strata/platform/gpu_shared.hpp",
+  "include/strata/platform/idle_gate.hpp",
+  "include/strata/platform/memory.hpp",
+  "include/strata/platform/stall_watch.hpp",
+  "src/plan/plan_main.cpp",
+  "src/platform/direct_file.cpp",
+  "src/platform/memory.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "platform.memory-io/-/-"
+api       = "strata::platform (include/strata/platform/), strata-plan"
+numeric   = "no arithmetic"
+regime    = "any host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

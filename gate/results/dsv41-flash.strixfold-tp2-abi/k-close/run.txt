@@ -1,0 +1,23 @@
+host ltsp-k 2026-11-17T19:04:59Z; ROCm /data/models/tools/therock-10.2; sha256 fixed 6f1d2a3e89818938 crash 1f1e3e018ac966c1
+=== crash shim: LD_PRELOAD=/var/tmp/kbench/91a9cda544/src-data_pod_plans_91a9cda544_k_src/shim.so crash/flerp-executor-conformance.strixfold
+shim: dlopen libhipblas.so.3: ok
+shim: dlclose: 0
+usage: conformance --out FILE [--delivery tokens|candidates|full] key=value ... [--case NAME] --ids FILE [--paths plain,speculative,snapshot,loop,loop-drop] [--new N] [--draft D] [--snap-at P] [--snap-new M] [--cut P]... [--no-drop] [--no-snapshot] [--cross-shape require|observe] [--max-tokens N] [--mtp-draft D] [--mtp-margin M] [--end-ids ID,ID] [--n-valid V] [--turn P] [--fed AT:ID,ID,..]... [--
+host: main returned 2; the process exits
+timeout: the monitored command dumped core
+exit status 139 (crash shim)
+=== crash world1: TF_TP_WORLD=1 crash/flerp-executor-conformance.strixfold
+conformance: flerp_open: flerp_open (strixfold): /nonexistent/91a9cda544-no-weights with kit /nonexistent/91a9cda544-no-kit did not load: BadWorld the native DeepSeek-V4.1 engine runs tensor parallel over two GPUs or the four nodes of the 2D split (CUDA builds): set TF_TP_WORLD=2, or 4 on CUDA
+host: main returned 2; the process exits
+exit status 2 (crash world1)
+=== fixed shim: LD_PRELOAD=/var/tmp/kbench/91a9cda544/src-data_pod_plans_91a9cda544_k_src/shim.so fixed/flerp-executor-conformance.strixfold
+shim: dlopen libhipblas.so.3: ok
+shim: dlclose: 0
+usage: conformance --out FILE [--delivery tokens|candidates|full] key=value ... [--case NAME] --ids FILE [--paths plain,speculative,snapshot,loop,loop-drop] [--new N] [--draft D] [--snap-at P] [--snap-new M] [--cut P]... [--no-drop] [--no-snapshot] [--cross-shape require|observe] [--max-tokens N] [--mtp-draft D] [--mtp-margin M] [--end-ids ID,ID] [--n-valid V] [--turn P] [--fed AT:ID,ID,..]... [--
+host: main returned 2; the process leaves by _exit
+exit status 2 (fixed shim)
+=== fixed world1: TF_TP_WORLD=1 fixed/flerp-executor-conformance.strixfold
+conformance: flerp_open: flerp_open (strixfold): /nonexistent/91a9cda544-no-weights with kit /nonexistent/91a9cda544-no-kit did not load: BadWorld the native DeepSeek-V4.1 engine runs tensor parallel over two GPUs or the four nodes of the 2D split (CUDA builds): set TF_TP_WORLD=2, or 4 on CUDA
+host: main returned 2; the process leaves by _exit
+exit status 2 (fixed world1)
+result: PASS

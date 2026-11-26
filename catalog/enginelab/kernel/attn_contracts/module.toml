@@ -1,0 +1,46 @@
+id        = "kernel.enginelab.attn_contracts"
+kind      = "kernel"
+summary   = "attention contracts and host references: the MLA contract and reference, the group indexer and its reference, group pool, FP8 plan, cache rows / shadow and prepared lanes (include/strix/attn)"
+why       = "the declared operand contracts the attention kernels are tested against; where it would go: beside the catalogue's verify.numerics-contract/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: verify.numerics-contract/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 2 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/attn/cache_rows.hpp",
+  "include/strix/attn/cache_shadow.hpp",
+  "include/strix/attn/fp8_plan.hpp",
+  "include/strix/attn/group_indexer.hpp",
+  "include/strix/attn/group_pool.hpp",
+  "include/strix/attn/mla_contract.hpp",
+  "include/strix/attn/prepared_lanes.hpp",
+  "src/attn/group_indexer_ref.cpp",
+  "src/attn/mla_ref.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/attn/group_indexer_ref.cpp", "src/src/attn/mla_ref.cpp"]
+includes  = ["src/src", "src/include", "src/include/strix/attn"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.numerics-contract-enginelab-attn/-/-"
+api       = "include/strix/attn/*.hpp, src/attn/*_ref.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

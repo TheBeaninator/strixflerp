@@ -1,0 +1,53 @@
+id        = "tool.odinlink5.tests"
+kind      = "tool"
+summary   = "smoke and stress tests: device ioctl, library API and plugin suites in one plain-C runner, an RCCL DMA-BUF test, lifecycle and RDMA bulk-transfer stress (mirrors ggml-rpc's 256-KiB chunks with 24 pre-posted receives and verifies every byte), and odl_stress, which reproduces the RCCL plugin's framing over N concurrent streams sharing one handle with sequence numbers to catch lost, reordered or short messages"
+why       = "odl_stress and odl_rdma_stress are how silent message loss in the stream layer was isolated without RCCL or vLLM in the way; they are the conformance tests any USB4 transport on the pod would have to pass"
+notes     = "Interface tag: none. odl_rdma_stress.c needs libibverbs headers. tests/test_odinlink_remote.py belongs to tool.odinlink5.remote_tensors. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "odl_stress.c",
+  "tests/CMakeLists.txt",
+  "tests/odl_lifecycle_test.c",
+  "tests/odl_rdma_stress.c",
+  "tests/odl_tb5_test_device.c",
+  "tests/odl_tb5_test_lib_api.c",
+  "tests/odl_tb5_test_main.c",
+  "tests/odl_tb5_test_plugin.c",
+  "tests/odl_tb5_test_rccl_dmabuf.c",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.transport-conformance/-/-"
+api       = "odl_tb5_test [suite], odl_stress server|client <N> <bytes> <iters>, odl_rdma_stress"
+numeric   = "pass / fail, byte-exact"
+regime    = "one link"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[[requires]]
+module    = "runtime.odinlink5.rccl_net_plugin"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/tool.odinlink5.tests.json"
+reason    = "c: compiled by the C gate, not gate/compile/run.py (python3 docs/harvest/harvest_odinlink5.py --c-gate on control-node CPU, gcc with the include paths of the origin's CMake)"

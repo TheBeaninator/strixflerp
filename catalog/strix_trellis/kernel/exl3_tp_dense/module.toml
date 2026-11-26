@@ -1,0 +1,50 @@
+id        = "kernel.strix_trellis.exl3_tp_dense"
+kind      = "kernel"
+summary   = "Per-rank dense projections for two-way tensor parallelism in one launch each: strix_tp_dense_plan freezes a matmul descriptor and its kernel does scales, input H128, trellis decode, product, output H128, bias and alpha / beta for 1 to 8 rows of a K4 or K5 mul1 weight (tp_dense projection); the split-K form partitions the input dimension across CTAs with partial planes and integer arrival counters in a caller workspace, as one kernel or as a split kernel and a reduce kernel (tp_splitk)"
+why       = "StrixFold serves DeepSeek-V4.1-Flash on two ranks, and these kernels are written for exactly the per-rank halves of its projections with the whole operator in one launch, where the generic path spends up to three (input transform, core, output transform); the launch count per projection is what a decode step of many small linears pays"
+notes     = "Interface tag: linear.decode/exl3. Beside kernel.strixfold.exl3 (glinear on a rank of the F+D pair). The origin reports these plans in use at every attention projection of its two-node DeepSeek-V4.1-Flash engine (README.md \"Status\"); docs/TP_RANK.md and docs/TP_DECODE_PLAN.md in the origin describe the plans by rank and were not copied."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "src/tp_activation.hpp",
+  "src/tp_dense.hip",
+  "src/tp_dense.hpp",
+  "src/tp_dense_policy.hpp",
+  "src/tp_fused_device.hpp",
+  "src/tp_split_layout.hpp",
+  "src/tp_splitk.hip",
+  "src/tp_splitk.hpp",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/tp_dense.hip", "src/src/tp_splitk.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/exl3/f16-f32.strix-trellis-tp"
+api       = "strix_tp_dense_plan_create, _create_tiled, _create_splitk, strix_tp_dense_workspace_bytes, strix_tp_dense_plan_submit / _destroy, strix_tp_dense_pair_plan_*, strix_tp_swiglu_plan_*"
+numeric   = "the S4 identity: four K16 accumulator chains per output, each row the arithmetic of its own single-row call; a local rank contribution, the inter-rank reduction is the caller's (docs/TP_RANK.md section 1)"
+regime    = "decode, 1..8 rows a call, memory-bound (the origin measures against a 246.7 GB/s cold read ceiling, README.md:231); local shapes q_b (1280, 16384), o_b (4096, 5120), shared gate / up (5120, 1152) and down (1152, 5120), q_a (5120, 1280), kv (5120, 512) (README.md \"Per-rank shapes\")"
+
+[[requires]]
+module    = "kernel.strix_trellis.trellis_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libstrix_trellis.a: built by the origin CMake (STRIX_TRELLIS_ENABLE_HIP=ON, -O3 -ffp-contract=off, HIP standard 17, gfx1151), not compiled by this harvest; in the library only with STRIX_TRELLIS_ENABLE_EXPERIMENTAL_TP=ON"

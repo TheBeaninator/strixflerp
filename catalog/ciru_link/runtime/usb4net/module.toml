@@ -1,0 +1,42 @@
+id        = "runtime.ciru_link.usb4net"
+kind      = "runtime"
+summary   = "USB4NET discovery and setup in Go (internal/link): finds thunderbolt-net interfaces and Thunderbolt paths, loads the driver, plans complementary /30 addresses for roles a and b, MTU and route, applies or rolls back the plan through ip / NetworkManager commands, and verifies the path MTU to the peer"
+why       = "the portable baseline every NHI arm starts from (carrier, exact peer route, source address); the pod links its nodes over 100 GbE, so this is the shape for a USB4 side link, not a replacement"
+notes     = "Interface tag: none. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "internal/link/link.go",
+  "internal/link/link_test.go",
+  "internal/link/root_linux.go",
+  "internal/link/root_other.go",
+]
+authors   = ["Ciru (ciru-ai)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "go"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4net-setup/-/-"
+api       = "link.Discover, ProbeLocal, SelectInterface, RouteTo, RoleAddresses, BuildSetupPlan, BuildRollbackPlan, Apply, VerifyPathMTU (internal/link/link.go)"
+numeric   = "n/a (control path)"
+regime    = "Linux thunderbolt-net, point-to-point /30"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/runtime.ciru_link.usb4net.json"
+reason    = "go: built by the Go gate, not gate/compile/run.py (python3 docs/harvest/harvest_ciru_link.py --go-gate on control-node CPU: go vet, the tests compiled without running, the static binary built)"

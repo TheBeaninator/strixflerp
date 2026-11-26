@@ -1,0 +1,193 @@
+# DeepSeek-V4.1-Flash at TP4 (four gfx1151 nodes), reassembled from the catalogue: the build the pod serves, StrixFold
+# serve-next-20261123c @ 72c0f083fca1 (deployed to F D C A as ~/tfp/deploy/72c0f083fca1, tp4-serve1-image-v7.conf).
+# catalog/strixfold (f64b5ff, the TP2 pair's build) with catalog/strixfold_tp4 laid over it: 92 files replaced, 308 the
+# TP4 tree adds, 242 of them the rest of the launcher directory tools/dsv41-hip (docs/DSV41-TP4.md says why a sub-origin and not a
+# re-cut, and which serving fixes this carries). tools/flerp-stage.py turns the build into the deploy directory
+# ([deploy.stage]). With the pins below, 650 of the stage's 654 files are the served stage deploy-stage/72c0f083fca1's
+# bytes; the four binaries differ only in .strtab, in __anon_<n> symbol names whose high bits are the Zig compiler
+# thread id, which varies run to run (flerp-stage.py ends STAGE-EQUAL-BUT-SYMBOL-NAMES, exit 3; docs/DSV41-TP4.md,
+# "The stage, file by file").
+# The host is Zig: the assembly is a source tree built by the origin's own build graph (flerplib/assemble_zig.py).
+# The engine is the served one, vision included (vision.hip; rank 0 encodes pictures); the gate's eight prompts are text.
+name      = "dsv41-flash.strixfold-tp4"
+model     = "deepseek-v4.1-flash-1017"
+reference = { engine = "strixfold", build = "/data/pod/plans/strixfold/fork @ 72c0f083fca1 (serve-next-20261123c, built in /data/pod/plans/serve-next-20261123c/wt by run.sh)", deployment = "~/tfp/deploy/72c0f083fca1 on workers F D C A (stage /data/pod/plans/strixfold/deploy-stage/72c0f083fca1)" }
+toolchain = "therock-10.2"
+
+[build]
+system    = "zig"
+zig       = "zig-0.17"
+root      = "tool.strixfold.zig_build"
+steps     = ["native-hip"]
+# The reference build's options (run.sh: zig_build.sh native-hip --summary all -Dhip-triton-kit=<TP4 kit>
+# -Dhipcc=<therock-10.2>/bin/hipcc -Drocm=<therock-10.2>). hipcc hashes its own argument strings into each code
+# object's compile unit id, not Zig's option order; the pins below fix the -o path string it hashes.
+options   = ["-Dhipcc={hipcc}", "-Drocm={rocm}", "-Dhip-triton-kit={prebuilt:kernel.strixfold_tp4.triton_kit}"]
+
+[build.prebuilt]          # where a [[prebuilt]] kit lives on the build host; verified against the catalogue record
+# The TP4 Triton kit (pod card 4d4c5173d2), not TP2's af9276f296: the TP2 kit fails the first TP4 request with
+# MissingTritonVariant (pod card 96431609cf).
+"kernel.strixfold_tp4.triton_kit" = "/data/pod/plans/4d4c5173d2/kit/gfx1151-v6f2c38-tp4"
+
+# The cache directory names the reference build (control-node:/data/pod/plans/serve-next-20261123c/wt at 72c0f083fca1, the
+# build the stage 72c0f083fca1 was made from) compiled each of the sixteen HIP code objects into, read from its Zig cache
+# (object sha256 = the served kit manifest's). With them the kit comes out byte for byte: manifest sha256
+# 446c43ebb75f0386b6c5ba9ef8de14540c0fbb7f8f814c1faa6ac3888908a0a8 (220 objects, 402 kernels).
+[build.hipcc_output_pins]
+"aux.hsaco"        = "df3d96ef4808ec78055862ef1611d481"
+"aux_attn.hsaco"   = "1e1e49f2d3b99ab9a930805f3cb68849"
+"aux_gate.hsaco"   = "83009e115cabe499f7e048132ded95b1"
+"aux_hc.hsaco"     = "30a75bd3e9db9ffc1571aa8e50d9fefc"
+"aux_index.hsaco"  = "8e9ded215e5a2fb7909be2704e902e31"
+"aux_markov.hsaco" = "afeefba618cefec47e94c4ac4ef2e12c"
+"aux_rope.hsaco"   = "c0fe1f11fe01c89a60c4db7f45116bb7"
+"coll.hsaco"       = "9d4e433909adba975a20fbfdf378fd95"
+"dense.hsaco"      = "f8ad37ca624e5ee4bf1d871523b9c075"
+"exl3.hsaco"       = "3935522cf5372a0c5be79e420936230c"
+"exl3_mlp.hsaco"   = "92d8d3d9536f95d48a781de65fe858a6"
+"exl3_pf.hsaco"    = "de3993acc73d87bfac99fca9c084da38"
+"glue.hsaco"       = "1228532c655dae57f9ee003b795e18f0"
+"reap.hsaco"       = "86a62ab76fb33805e75af161ad518ce4"
+"route_rec.hsaco"  = "1bdb49aa98f980b561c0bbcbffcb8bcf"
+"vision.hsaco"     = "48c84e84ff1c2a82b1f663cb95ff9d7a"
+
+# Zig writes the build root, the source directories and its global cache path into all four binaries (5, 5, 5 and 4
+# strings), so a tree built anywhere else differs in those bytes. build.sh runs Zig under bwrap in a private view
+# where tree/ is at the reference checkout's path and .zig-global at its global cache (zig_build.sh's
+# <parent>/.zig-global-<name>); nothing outside the build directory is created or written (flerplib/assemble_zig.py).
+# What the path pins cannot fix: the __anon_<n> symbol names above (compiler thread id bits), so the binaries stay unequal.
+[build.path_pins]
+tree         = "/data/pod/plans/serve-next-20261123c/wt"
+global_cache = "/data/pod/plans/serve-next-20261123c/.zig-global-wt"
+
+# catalog/strixfold_tp4's modules over catalog/strixfold's: root "." = their files sit at their own origin paths; a
+# file of the parent module is replaced whole, any other file is an addition (flerplib/assemble_zig.py).
+[build.overlay]
+"executor.strixfold_tp4.dsv41"        = "."
+"executor.strixfold_tp4.dsv41_vision" = "."
+"format.strixfold_tp4.exl3"           = "."
+"kernel.strixfold_tp4.dense_bf16"     = "."
+"kernel.strixfold_tp4.dsv41_abi"      = "."
+"kernel.strixfold_tp4.exl3"           = "."
+"kernel.strixfold_tp4.sparse_attn"    = "."
+"kernel.strixfold_tp4.triton_kit"     = "."
+"runtime.strixfold_tp4.coll"          = "."
+"runtime.strixfold_tp4.coll_nccl"     = "."
+"runtime.strixfold_tp4.coll_rdma"     = "."
+"runtime.strixfold_tp4.coll_tcp"      = "."
+"runtime.strixfold_tp4.core"          = "."
+"runtime.strixfold_tp4.dspark_draft"  = "."
+"runtime.strixfold_tp4.engine_host"   = "."
+"runtime.strixfold_tp4.gpu_facade"    = "."
+"runtime.strixfold_tp4.kit"           = "."
+"runtime.strixfold_tp4.lanes"         = "."
+"runtime.strixfold_tp4.prompt_cache"  = "."
+"runtime.strixfold_tp4.sampling"      = "."
+"serve.strixfold_tp4.http"            = "."
+"tool.strixfold_tp4.zig_build"        = "."
+
+[build.installs]          # binary -> what the origin's step installs under zig-out
+"strixflerp-dsv41-flash.strixfold-tp4" = "native-hip/bin/tensorfold-native"
+
+# interface -> module, as the TP2 recipe: the TP4 changes enter as overlays of these modules, not as other bindings.
+[modules]
+"format.loader/engram-fp8/-"               = "format.strixfold.engram"
+"format.device-view/exl3/-"                = "format.strixfold.exl3"
+"format.reader-strixfold/safetensors/-"    = "format.strixfold.safetensors"
+"executor.model/deepseek-v4.1-flash/exl3"  = "executor.strixfold.dsv41"
+"attn.indexer-topk/-/i64-keys"             = "kernel.strixfold.aux"
+"collective.device-proxy/-/-"              = "kernel.strixfold.coll_proxy"
+"linear.dense/bf16/bf16-f32.row-invariant" = "kernel.strixfold.dense_bf16"
+"linear.decode/exl3/f16-f32.row-invariant" = "kernel.strixfold.exl3"
+"linear.prefill/exl3/f16-f32"              = "kernel.strixfold.exl3"
+"moe.experts-decode/exl3/bf16"             = "kernel.strixfold.exl3"
+"moe.experts-prefill/exl3/bf16.jobs"       = "kernel.strixfold.exl3_pf_experts"
+"residual.add2/-/f32-bf16"                 = "kernel.strixfold.glue"
+"attn.indexer-score/kv-fp4-e2m1/bf16"      = "kernel.strixfold.indexer_score"
+"hc.mix-prefill/dsv41-mhc-f32/bf16"        = "kernel.strixfold.mhc_mix"
+"moe.gate-logits/f16/bf16-f32"             = "kernel.strixfold.moe_gate"
+"pos.rope-heads/-/bf16.hip"                = "kernel.strixfold.rope_heads"
+"attn.sparse-sink/kv-fp4-e2m1/bf16"        = "kernel.strixfold.sparse_attn"
+"draft.markov/f16/bf16"                    = "kernel.strixfold.triton_kit"
+"hc.mix-decode/dsv41-mhc-f32/bf16"         = "kernel.strixfold.triton_kit"
+"kvcache.store/fp4-e2m1/bf16"              = "kernel.strixfold.triton_kit"
+"moe.router/-/bf16-f32"                    = "kernel.strixfold.triton_kit"
+"norm.rmsnorm/-/bf16.triton-bits"          = "kernel.strixfold.triton_kit"
+"pos.rope-heads/-/bf16.triton-bits"        = "kernel.strixfold.triton_kit"
+"collective.interface/-/-"                 = "runtime.strixfold.coll"
+"collective.allgather-nccl/-/f32"          = "runtime.strixfold.coll_nccl"
+"collective.allgather-rdma/-/f32"          = "runtime.strixfold.coll_rdma"
+"collective.allgather-tcp/-/f32"           = "runtime.strixfold.coll_tcp"
+"text.chat-template-strixfold/jinja/-"     = "runtime.strixfold.core"
+"text.tokenizer-strixfold/-/-"             = "runtime.strixfold.core"
+"speculation.draft/dspark/bf16"            = "runtime.strixfold.dspark_draft"
+"executor.host/hip/-"                      = "runtime.strixfold.engine_host"
+"device.facade/hip/-"                      = "runtime.strixfold.gpu_facade"
+"grammar.matcher-strixfold/-/-"            = "runtime.strixfold.grammar"
+"verify.kit-manifest/hsaco/-"              = "runtime.strixfold.kit"
+"executor.lane-backend/-/-"                = "runtime.strixfold.lanes"
+"cache.prompt-strixfold/-/-"               = "runtime.strixfold.prompt_cache"
+"sample.next-token/-/f64"                  = "runtime.strixfold.sampling"
+"tool.checkpoint-cli/-/-"                  = "tool.strixfold.checkpoint_cli"
+
+# The build graph itself and the TP4 overlays. Rank 1..3's process (tf-dsv41-lanes), the layer gate (tf-dsv41-layer)
+# and the kit tool (tf-hip-kit) are installed by the same step next to the server; the kit goes to
+# zig-out/native-hip/share/tensorfold/hip/gfx1151/dsv41.
+[include]
+modules = ["tool.strixfold.zig_build",
+            "executor.strixfold_tp4.dsv41",
+            "executor.strixfold_tp4.dsv41_vision",
+            "format.strixfold_tp4.exl3",
+            "kernel.strixfold_tp4.aux_markov",
+            "kernel.strixfold_tp4.dense_bf16",
+            "kernel.strixfold_tp4.dsv41_abi",
+            "kernel.strixfold_tp4.exl3",
+            "kernel.strixfold_tp4.exl3_mlp",
+            "kernel.strixfold_tp4.reap",
+            "kernel.strixfold_tp4.route_rec",
+            "kernel.strixfold_tp4.sparse_attn",
+            "kernel.strixfold_tp4.triton_kit",
+            "kernel.strixfold_tp4.vision",
+            "runtime.strixfold_tp4.coll",
+            "runtime.strixfold_tp4.coll_nccl",
+            "runtime.strixfold_tp4.coll_rdma",
+            "runtime.strixfold_tp4.coll_tcp",
+            "runtime.strixfold_tp4.core",
+            "runtime.strixfold_tp4.dspark_draft",
+            "runtime.strixfold_tp4.engine_host",
+            "runtime.strixfold_tp4.gpu_facade",
+            "runtime.strixfold_tp4.kit",
+            "runtime.strixfold_tp4.lanes",
+            "runtime.strixfold_tp4.prompt_cache",
+            "runtime.strixfold_tp4.sampling",
+            "serve.strixfold_tp4.http",
+            "tool.strixfold_tp4.dsv41_hip",
+            "tool.strixfold_tp4.zig_build"]
+
+[binaries]
+"strixflerp-dsv41-flash.strixfold-tp4" = { main = "serve.strixfold.http", entry = "zig/src/server/main.zig" }
+
+[deploy]
+topology = "tp4"
+
+# tools/flerp-stage.py <this recipe> <dir>: the deploy directory as restore-tfp.sh stage makes it (git archive of
+# tools/dsv41-hip + the native-hip install + the Pillow of TF_PIL_PATH, SHA256SUMS, DEPLOY.json), from this build.
+[deploy.stage]
+commit    = "72c0f083fca18f80fcf73b2358cf8235c3dd5363"
+reference = "/data/pod/plans/strixfold/deploy-stage/72c0f083fca1"
+collation = "en_US.UTF-8"     # control-node's LANG when restore-tfp.sh sorted the reference's SHA256SUMS
+
+[deploy.stage.copy]
+"native-hip"      = "tree:zig-out/native-hip"
+"tools/dsv41-hip" = "tree:tools/dsv41-hip"
+"pylib"           = "input:pylib"
+
+# Pillow 12.3.0 for the server's picture child (TF_PIL_PATH, pod card 9757a35411): a third-party wheel, not catalogue
+# source; recorded by hash and copied from where 9757a35411 installed it (equal to every stage's pylib since 03d67fc1).
+[deploy.stage.inputs.pylib]
+where      = "/data/pod/plans/9757a35411/pylib"
+sha256sums = "docs/harvest/data/strixfold_tp4/pylib-SHA256SUMS"
+
+[gate]
+runner    = "gate/dsv41_tp4.py"
+criterion = "token-identity"      # ids and prompt-logits sha256 of a four-node run equal to the deployed 72c0f083fca1's

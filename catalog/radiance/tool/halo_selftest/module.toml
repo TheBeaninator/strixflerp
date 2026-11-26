@@ -1,0 +1,58 @@
+id        = "tool.radiance.halo_selftest"
+kind      = "tool"
+summary   = "libhalo's checks and build: halo_selftest (every row against recorded cases shared with libr4d), halo_parity (is libhalo the same plugin interface as libr4d), the stub and unit-list generator, the CMake file and the porting guide"
+why       = "a kernel library ported by renaming is only trusted through cases recorded once and replayed against every library, plus a check that the port still answers the same interface"
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/CMakeLists.txt",
+  "libhalo/PORTING.md",
+  "libhalo/README.md",
+  "libhalo/gen_stubs.py",
+  "libhalo/halo_parity.cpp",
+  "libhalo/halo_selftest.cpp",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/libhalo/halo_selftest.cpp", "src/libhalo/halo_parity.cpp"]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "verify.kernel-selftest/radiance/-"
+api       = "halo_selftest <libhalo.so> --case <row>; halo_parity <libr4d.so> <libhalo.so>; python3 libhalo/gen_stubs.py --check"
+numeric   = "against libref outputs"
+regime    = "offline, on the card"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[[requires]]
+module    = "kernel.radiance.halo_allreduce"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[[requires]]
+module    = "kernel.radiance.halo_hc"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

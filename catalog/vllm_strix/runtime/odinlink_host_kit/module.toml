@@ -1,0 +1,47 @@
+id        = "runtime.vllm_strix.odinlink_host_kit"
+kind      = "runtime"
+summary   = "the OdinLink host kit: fetch OdinLink-Five at the pin and apply the local patch, build odl_tb5.ko against stock kernel headers and libodl_tb5 (no sudo), install driver, library, udev rule, odl-state and odinlink.service, and odl-swap.sh, the load path (MOK signing when a key is enrolled, unload stale thunderbolt_ibverbs, load, wait for READY); plus uninstall-tbv.sh for rigs that ran the old patched-core stack"
+why       = "the transport is only as good as its bring-up: the kit encodes the single-cable rule (mainline gives callbacks no source XDomain, so two links put the peer at the same route) and leaves every module parameter but ring size at default"
+notes     = "Interface tag: none. Read, not run. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "odinlink/71-odl-tb5.rules",
+  "odinlink/README.md",
+  "odinlink/build-odinlink.sh",
+  "odinlink/install-odinlink.sh",
+  "odinlink/odl-swap.sh",
+  "odinlink/systemd/odinlink.service",
+  "odinlink/uninstall-tbv.sh",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "shell"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.transport-install-odinlink/-/-"
+api       = "shell scripts, udev rule, systemd unit"
+numeric   = "n/a"
+regime    = "Ubuntu-class host, stock kernel, one cable"
+
+[[requires]]
+module    = "runtime.vllm_strix.odinlink_local_patch"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "shell: scripts and units, read and not run (host plumbing for the two-box rig)"

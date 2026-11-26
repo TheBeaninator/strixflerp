@@ -1,0 +1,88 @@
+id        = "format.enginelab.hip_weight"
+kind      = "format"
+summary   = "device weight sources (src/hip/weight): ggml and GSQ sources, GSQ FP16 and group codecs, GSQ plan and partial trace, trellis sources and partial trace, registry, runtime and source; and the Q6P pack (pack, registry, weights: a 6-bit packed copy that decodes to exactly the target tensor's bytes), which ggml_sources.hpp includes"
+why       = "weights decoded and uploaded on the device; where it would go: beside the catalogue's format.device-loader/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: format.device-loader/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 3 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_q6p_pack.hpp",
+  "include/strix/q6p_registry.hpp",
+  "src/hip/weight/arch/gfx1151_gsq.hpp",
+  "src/hip/weight/arch/gfx1151_sources.hpp",
+  "src/hip/weight/ggml_sources.hpp",
+  "src/hip/weight/gsq_f16_codec.hpp",
+  "src/hip/weight/gsq_group_codec.hpp",
+  "src/hip/weight/gsq_partial_trace.hpp",
+  "src/hip/weight/gsq_plan.hpp",
+  "src/hip/weight/gsq_sources.hpp",
+  "src/hip/weight/registry.hip",
+  "src/hip/weight/registry.hpp",
+  "src/hip/weight/runtime.cpp",
+  "src/hip/weight/runtime.hpp",
+  "src/hip/weight/source.hpp",
+  "src/hip/weight/trellis_partial_trace.hpp",
+  "src/hip/weight/trellis_sources.hpp",
+  "src/hip_q6p_pack.cpp",
+  "src/hip_q6p_weights.hpp",
+  "src/q6p_registry.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip/weight/registry.hip"]
+includes  = ["src/src", "src/include", "src/include/strix", "src/src/hip"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.device-loader-enginelab/-/-"
+api       = "src/hip/weight/*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.qwen_engine"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.core_hadamard"
+
+[[requires]]
+module    = "kernel.enginelab.core_trellis"
+
+[[requires]]
+module    = "kernel.enginelab.integer_projection"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/format.enginelab.hip_weight.json"

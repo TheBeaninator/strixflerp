@@ -1,0 +1,70 @@
+id        = "runtime.enginelab.glm_load"
+kind      = "runtime"
+summary   = "GLM loading: model description, peer load, rank plan (graph, main): 8 origin files under src/glm"
+why       = "which rank loads which layers; where it would go: beside the catalogue's format.loader/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: format.loader/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 4 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/glm/load/glm_model_description.cpp",
+  "src/glm/load/glm_model_description.hpp",
+  "src/glm/load/glm_peerload.hip",
+  "src/glm/load/glm_rank_plan.cpp",
+  "src/glm/load/glm_rank_plan.hpp",
+  "src/glm/load/glm_rank_plan_graph.cpp",
+  "src/glm/load/glm_rank_plan_graph.hpp",
+  "src/glm/load/glm_rank_plan_main.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/glm/load/glm_peerload.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.loader-enginelab-glm/-/-"
+api       = "src/glm/load/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.glm_rtxpf"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_graph"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.xport_crc"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.glm_load.json"

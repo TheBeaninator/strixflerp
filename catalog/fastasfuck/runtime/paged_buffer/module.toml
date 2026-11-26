@@ -1,0 +1,43 @@
+id        = "runtime.fastasfuck.paged_buffer"
+kind      = "runtime"
+summary   = "fastasfuck's header-only growable device arrays on HIP virtual memory: one reserved range, physical pages mapped in as the used prefix grows"
+why       = "the K/V caches and parked states of up to 4 slots grow in place through it without reallocating or copying"
+notes     = "Files vs strixite: runtime/paged_buffer.hpp byte-identical to runtime.strixite.paged_buffer at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/paged_buffer.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "device.paged-buffer/-/-"
+api       = "strix::PagedDeviceBuffer, strix::VmmReservation, strix::PageHandle"
+numeric   = "the same source as runtime.strixite.paged_buffer, so its behaviour: n/a"
+regime    = "as runtime.strixite.paged_buffer: hipMemAddressReserve + hipMemCreate; pages are never unmapped at runtime and only map back into their own reservation (gfx1151 hazards)"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host C++ header; the compile gate builds hip-c++ modules only"

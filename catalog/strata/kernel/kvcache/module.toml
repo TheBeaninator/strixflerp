@@ -1,0 +1,62 @@
+id        = "kernel.strata.kvcache"
+kind      = "kernel"
+summary   = "the QSA layers' KV storage: Q4_0 KV with a 256-point Walsh-Hadamard rotation (kv_q4, from PR #21 by code-martin), INT8 KV with an FP16 scale a 64-value group (kv_q8), and KV streaming, where the authoritative K / V live in pinned device-mapped host memory and VRAM holds a ring of pages resolved through the page table (kv_stream)"
+why       = "KV size is what lets a 262K context fit beside streamed experts on a 12 GB card, and the rotated Q4_0 and the host-backed page ring are two KV forms strixflerp does not have yet"
+notes     = "Interface tags by file: kv_q4.cu kvcache.store/q4_0-wht/f32; kv_q8.cu kvcache.quant8/-/f32; kv_stream.cu kvcache.tiering/-/-. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/kv_q4.hpp",
+  "include/strata/kernels/kv_q8.hpp",
+  "include/strata/kernels/kv_stream.hpp",
+  "src/kernels/cuda/kv_q4.cu",
+  "src/kernels/cuda/kv_q8.cu",
+  "src/kernels/cuda/kv_stream.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "code-martin (PR #21)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/kv_q4.cu", "src/src/kernels/cuda/kv_q8.cu", "src/src/kernels/cuda/kv_stream.cu"]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kvcache.store/q4_0-wht/f32.strata"
+api       = "strata::kernels::fwht256_cuda, kv_append_q4(_step, _steps), kv_gather_q4_step (src/kernels/cuda/kv_q4.cu)"
+numeric   = "q4_0 blocks of rotated values; a deterministic group maximum added on merge"
+regime    = "QSA layers; 576 B a cell for K and V of both heads"
+
+[[provides]]
+interface = "kvcache.quant8/-/f32.strata"
+api       = "strata::kernels::kv_append_q8_step(s), kv_gather_q8_step (src/kernels/cuda/kv_q8.cu)"
+numeric   = "symmetric int8, FP16 scales"
+regime    = "QSA layers"
+
+[[provides]]
+interface = "kvcache.tiering-strata-stream/-/-"
+api       = "strata::kernels::kv_stream_reset, kv_stream_resolve, kv_ring_table, kv_ring_restore, kv_stage_from_host, kv_unstage_to_host (src/kernels/cuda/kv_stream.cu)"
+numeric   = "bytes copied as stored (FP16, INT8 or Q4_0)"
+regime    = "long contexts; pages of 4 cells (docs/kv-streaming-design.md)"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[[requires]]
+module    = "kernel.strata.qsa"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.kvcache.json"

@@ -1,0 +1,57 @@
+id        = "kernel.ciru_iu4.c1"
+kind      = "kernel"
+summary   = "CIRU's native IU4 routed-expert projections for the C1 weight type (GGML_TYPE_C1_G16_K2560 / K640): MUL_MAT_ID over 4-bit codes with a G16 affine table, run on the gfx1151 iu4 WMMA (__builtin_amdgcn_wmma_i32_16x16x16_iu4_w32) or its same-value IU8 arm; vector paths (one wave per row, or four rows sharing an activation packet) for up to eight tokens, a grouped WMMA projection (four N16 waves share each per-expert table) for longer contiguous batches, and an F32 reference kernel"
+why       = "the IU4 expert format is what lets CIRU hold Qwen3.8-Flash-Next's routed experts at 4.5175 bits a weight and multiply them on the integer WMMA without dequantizing; no catalogue kernel reads C1, and the other iu4 WMMA users are hipfire's, on its own formats (qwen4_moe_iu4_sym.gfx1151.hip in kernel.hipfire.moe, the *_iu4 kernels of kernel.hipfire.gemm_mq), the nearest thing to compare against"
+notes     = "Interface tags by file: c1.cu moe.experts-decode/c1-g16/f32; c1.cuh none; c1-grouped.cuh moe.experts-prefill/c1-g16/f32; c1-vector-r4.cuh moe.experts-decode/c1-g16/f32 (catalog/ciru_iu4/KERNELS.md has the table). Against the base pwilkin/llama.cpp f5daaa3c: added c1.cu, c1.cuh, c1-grouped.cuh, c1-vector-r4.cuh; nothing changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = [
+  "ggml/src/ggml-cuda/c1-grouped.cuh",
+  "ggml/src/ggml-cuda/c1-vector-r4.cuh",
+  "ggml/src/ggml-cuda/c1.cu",
+  "ggml/src/ggml-cuda/c1.cuh",
+]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/ggml/src/ggml-cuda/c1.cu"]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.experts-decode/c1-g16/f32.ciru-iu4"
+api       = "c1.cu: c1_pack_q8_runtime, c1_vector_runtime, c1_mat_id_reference"
+numeric   = "weights: per output row K/2 bytes of 4-bit codes then K/16 bytes of table indices (one index per 16 values into a per-expert FP16 affine table [2, 256]), times an FP16 row multiplier; activations packed to int8 (c1_pack_q8_runtime), integer dot on the iu4 or iu8 WMMA, the sum correction applied with an FMA after rounding the dot (file comments)"
+regime    = "Qwen3.8-Flash-Next routed experts: gate / up K2560, down K640; vector paths up to 8 tokens, grouped WMMA above"
+
+[[provides]]
+interface = "moe.experts-prefill/c1-g16/f32.ciru-iu4"
+api       = "c1-grouped.cuh: project, route_count, route_describe, route_scatter"
+numeric   = "weights: per output row K/2 bytes of 4-bit codes then K/16 bytes of table indices (one index per 16 values into a per-expert FP16 affine table [2, 256]), times an FP16 row multiplier; activations packed to int8 (c1_pack_q8_runtime), integer dot on the iu4 or iu8 WMMA, the sum correction applied with an FMA after rounding the dot (file comments)"
+regime    = "Qwen3.8-Flash-Next routed experts: gate / up K2560, down K640; vector paths up to 8 tokens, grouped WMMA above"
+
+[[provides]]
+interface = "moe.experts-decode/c1-g16/f32.ciru-iu4-r4"
+api       = "c1-vector-r4.cuh: c1_vector_r4_runtime, c1_vector_r4_lut_runtime"
+numeric   = "weights: per output row K/2 bytes of 4-bit codes then K/16 bytes of table indices (one index per 16 values into a per-expert FP16 affine table [2, 256]), times an FP16 row multiplier; activations packed to int8 (c1_pack_q8_runtime), integer dot on the iu4 or iu8 WMMA, the sum correction applied with an FMA after rounding the dot (file comments)"
+regime    = "Qwen3.8-Flash-Next routed experts: gate / up K2560, down K640; vector paths up to 8 tokens, grouped WMMA above"
+
+[[requires]]
+module    = "kernel.ciru_iu4.cuda_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_iu4.c1.json"

@@ -1,0 +1,82 @@
+id        = "kernel.strata.s_gemv"
+kind      = "kernel"
+summary   = "Strata's GEMVs over its own S-family weight planes (docs/pack-format.md: S2 = Q2_0's canonical form, codes packed 4 a byte LSB-first with one FP32 scale a 64-element group; S4 / S8 with a codebook and an offset): the S2 decode, the naive S2 GEMV, two measured-neutral S2 variants kept as negative results (s2_gemv_fast, s2_gemv_quads), the S2 GEMV over Q8_0 activations and the generic S-family GEMV with FP16, Q8_K and Q8_0 activation forms"
+why       = "the S2 expert matvec is the engine's hottest decode path (48 layers x 10 experts x 3 roles a token over 31.64 GiB of Q2_0 weights), and these are its reference kernels; strixflerp has no 2-bit Q2_0-plane GEMV of this shape"
+notes     = "Interface tags by file: s2_gemv.cu linear.decode/strata-s2/f16-f32; s2_gemv_fast.cu linear.decode/strata-s2/f16-f32; s2_gemv_quads.cu linear.decode/strata-s2/f16-f32; s2_gemv_q8.cu linear.decode/strata-s2/q8_0-f32; s_gemv.cu linear.decode/strata-s/f16+q8_k+q8_0-f32; none: dequant_s2.cu. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/dequant_s2.hpp",
+  "include/strata/kernels/s2_gemv.hpp",
+  "include/strata/kernels/s2_gemv_q8.hpp",
+  "include/strata/kernels/s_gemv.hpp",
+  "src/kernels/cuda/dequant_s2.cu",
+  "src/kernels/cuda/s2_gemv.cu",
+  "src/kernels/cuda/s2_gemv_fast.cu",
+  "src/kernels/cuda/s2_gemv_q8.cu",
+  "src/kernels/cuda/s2_gemv_quads.cu",
+  "src/kernels/cuda/s_gemv.cu",
+]
+authors   = ["Niko1221", "Strata contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/dequant_s2.cu",
+  "src/src/kernels/cuda/s2_gemv.cu",
+  "src/src/kernels/cuda/s2_gemv_fast.cu",
+  "src/src/kernels/cuda/s2_gemv_quads.cu",
+  "src/src/kernels/cuda/s2_gemv_q8.cu",
+  "src/src/kernels/cuda/s_gemv.cu",
+]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/strata-s2/f16-f32.strata"
+api       = "strata::kernels::s2_gemv (src/kernels/cuda/s2_gemv.cu)"
+numeric   = "FP16 activations, FP32 accumulation and output"
+regime    = "decode, one token"
+
+[[provides]]
+interface = "linear.decode/strata-s2/f16-f32.strata-fast"
+api       = "strata::kernels::s2_gemv_fast (src/kernels/cuda/s2_gemv_fast.cu)"
+numeric   = "as s2_gemv"
+regime    = "decode; not the engine's fast path (file header)"
+
+[[provides]]
+interface = "linear.decode/strata-s2/f16-f32.strata-quads"
+api       = "strata::kernels::s2_gemv_quads (src/kernels/cuda/s2_gemv_quads.cu)"
+numeric   = "as s2_gemv"
+regime    = "decode"
+
+[[provides]]
+interface = "linear.decode/strata-s2/q8_0-f32.strata"
+api       = "strata::kernels::s2_gemv_q8 (src/kernels/cuda/s2_gemv_q8.cu)"
+numeric   = "Q8_0 activation blocks, integer dot per block, FP32 output"
+regime    = "decode"
+
+[[provides]]
+interface = "linear.decode/strata-s/f16+q8_k+q8_0-f32.strata"
+api       = "strata::kernels::s_gemv, s_gemv_split, s_gemv_split_async, s_gemv_q8k(_split), s_gemv_q8_0_split (src/kernels/cuda/s_gemv.cu)"
+numeric   = "FP16, Q8_K or Q8_0 activations, FP32 output"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.s_gemv.json"

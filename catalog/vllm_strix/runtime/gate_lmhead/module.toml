@@ -1,0 +1,45 @@
+id        = "runtime.vllm_strix.gate_lmhead"
+kind      = "runtime"
+summary   = "two decode linears off hipBLASLt: GateLinear with fp32 weights routed to the w32 GEMV for <= 8 rows (tier \"vsh\"), and an int8 copy of lm_head used for target and drafter logits; test of the w32 GEMV"
+why       = "the fp32 router gate cost ~150 us x 42 layers a step through x.float() + an fp32 hipBLASLt GEMM, and the BF16 lm_head is the largest single GEMV of a step; both paid more than their arithmetic (PATCHES 30)"
+notes     = "Interface tag: moe.gate-logits. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-gate-lmhead.py", "scripts/test_w32.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.gate-logits/f32/f32"
+api       = "hook on GateLinear (tier vsh); env VSH_ROUTER_GEMV"
+numeric   = "fp32 weights and accumulate, rel err ~2e-6"
+regime    = "M <= 8"
+
+[[provides]]
+interface = "logits.lm-head/w8a16-g128/bf16"
+api       = "int8 lm_head copy; env VSH_W8A16_LMHEAD"
+numeric   = "int8 group-128 weights"
+regime    = "decode, target and DFlash2 drafter"
+
+[[requires]]
+module    = "runtime.vllm_strix.w8a16_requant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

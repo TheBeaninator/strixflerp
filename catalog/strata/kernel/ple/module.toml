@@ -1,0 +1,64 @@
+id        = "kernel.strata.ple"
+kind      = "kernel"
+summary   = "the per-layer embedding (PLE) block's GPU half (build_ple of the qwen4exp graph): sixteen gathered n-gram rows of 160 through the key / value projections, grouped norms and a dilated causal conv into a residual-stack update (ple), and llama.cpp's post-projection operations for it (native_ple_postops)"
+why       = "the PLE block is part of every Qwen3.8-Flash-Next layer and runs a token-history conv; the catalogue's ple.inject providers come from other models, so this is the Flash-Next form"
+notes     = "Interface tags by file: ple.cu ple.inject/-/f32; native_ple_postops.cu ple.inject/-/f32. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/native_ple_postops.hpp",
+  "include/strata/kernels/ngram.hpp",
+  "include/strata/kernels/ple.hpp",
+  "src/kernels/cuda/native_ple_postops.cu",
+  "src/kernels/cuda/ple.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/ple.cu", "src/src/kernels/cuda/native_ple_postops.cu"]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "ple.inject/-/f32.strata"
+api       = "strata::kernels::ple_block(_projected), ple_history_advance (src/kernels/cuda/ple.cu)"
+numeric   = "FP32 with BF16 or quantized projection weights"
+regime    = "decode; 16 rows of 160, history 9, conv width 4 dilation 3"
+
+[[provides]]
+interface = "ple.inject/-/f32.strata-native-postops"
+api       = "strata::kernels::native_ple_postops(_batch) (src/kernels/cuda/native_ple_postops.cu)"
+numeric   = "FP32, the pinned reduce_rows / sumrows order"
+regime    = "embd 2560, streams 4, history 9"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[[requires]]
+module    = "kernel.strata.bf16_gemv"
+
+[[requires]]
+module    = "kernel.strata.gguf_gemv"
+
+[[requires]]
+module    = "kernel.strata.hc"
+
+[[requires]]
+module    = "kernel.strata.s_gemv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.ple.json"

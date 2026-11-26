@@ -1,0 +1,90 @@
+id        = "serve.enginelab.glm_serve"
+kind      = "serve"
+summary   = "GLM serving: control, import, lead, prefix cache, self-test, vision and the session owner"
+why       = "strix-serve for the GLM pair; where it would go: beside the catalogue's serve.engine/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: serve.engine/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/glm/serve/glm_serve_control.hpp",
+  "src/glm/serve/glm_serve_import.hpp",
+  "src/glm/serve/glm_serve_lead.hpp",
+  "src/glm/serve/glm_serve_prefix_cache.hpp",
+  "src/glm/serve/glm_serve_selftest.hpp",
+  "src/glm/serve/glm_serve_vision.hpp",
+  "src/glm/serve/glm_session_owner.cpp",
+  "src/glm/serve/glm_session_owner.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/glm/serve/glm_session_owner.cpp"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.engine-enginelab-glm/-/-"
+api       = "src/glm/serve/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.glm_engine"
+
+[[requires]]
+module    = "executor.enginelab.glm_vision"
+
+[[requires]]
+module    = "executor.enginelab.vision"
+
+[[requires]]
+module    = "runtime.enginelab.glm_spec"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[[requires]]
+module    = "runtime.enginelab.pair_state"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "serve.enginelab.serve_chat"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_prefix"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,42 @@
+id        = "runtime.vllm_strix.ds4_mhc_cfg"
+kind      = "runtime"
+summary   = "gfx1151 tile configs and a fused / unfused crossover for aiter's manifold hyper-connection (mHC) kernels, with the sweeps that found them (fused post+pre GEMM tiles, unfused mhc_post / mhc_pre by split-k) and equality / timing tests"
+why       = "aiter ships mHC tables for gfx950 / gfx942 / gfx1250 only; its fallback ran the fused GEMM at 13-16 GB/s, 2.6 ms a call at a 512-token chunk (PATCHES 42); GLM uses the tables too (PATCHES 44). strixflerp's DeepSeek-V4.1 path has the same 4-stream mHC"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "container/patches/vsh-ds4-mhc-cfg.py",
+  "scripts/mhc_aiter_sweep.py",
+  "scripts/mhc_aiter_unfused.py",
+  "scripts/test_mhc_cfg.py",
+  "scripts/test_mhc_small.py",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "mixer.hyper-connection/-/bf16.gfx1151-tiles"
+api       = "patch script installing aiter mHC configs and the crossover (Triton)"
+numeric   = "same outputs as the default config"
+regime    = "DS4 hc 4, hidden 4096"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

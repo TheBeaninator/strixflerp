@@ -1,0 +1,48 @@
+id        = "runtime.ciru_link.tbstream_ring_fixes"
+kind      = "runtime"
+summary   = "NHI ring reliability fixes: flush posted MSI-X interrupt clears (0011), prime the RX ring before enabling the DMA paths (0012), skip CLOSE toward an already-closed peer (0015), and Ciru's patch 16, which clears and flushes stale non-auto-clear MSI-X status before a reused ring is armed and reads the enable register back"
+why       = "patch 16 fixes a reproduced missing-first-completion failure on a reused ring; every fix here is about the first completion after an arm or the last one before a close, the moments a two-host transport loses messages"
+notes     = "Interface tag: none. In the series these interleave with 0013-0014 by number; apply all 16 in order. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "kernel/linux-7.2.2/0011-thunderbolt-Flush-posted-MSI-X-interrupt-clears.patch",
+  "kernel/linux-7.2.2/0012-thunderbolt-stream-Prime-Rx-ring-before-enabling-DMA.patch",
+  "kernel/linux-7.2.2/0015-thunderbolt-stream-Skip-CLOSE-toward-an-already-closed-peer.patch",
+  "kernel/linux-7.2.2/0016-thunderbolt-Clear-stale-MSI-X-status-before-ring-arm.patch",
+]
+authors   = [
+  "Jonathan Yates (jyatesdotdev/strix-rdma 06c1836)",
+  "Jordan Yates (jyatesdotdev/strix-rdma 06c1836)",
+  "Ciru (ciru-ai; the patch names \"Codex USB4STREAM Analysis\" as author)",
+]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-ring-arm/-/-"
+api       = "drivers/thunderbolt/nhi.c ring arm / MSI-X handling; drivers/thunderbolt/stream.c RX priming and close"
+numeric   = "n/a (control path)"
+regime    = "reused rings on the AMD USB4 NHI of Strix Halo"
+
+[[requires]]
+module    = "runtime.ciru_link.tbstream_zerocopy"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 7.2.2 tree on the island); python3 docs/harvest/harvest_ciru_link.py --patch-gate checks every patch against SHA256SUMS and parses it with git apply --numstat (gate/results/compile/ciru_link.patches.json)"

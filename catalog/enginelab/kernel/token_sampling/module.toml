@@ -1,0 +1,62 @@
+id        = "kernel.enginelab.token_sampling"
+kind      = "kernel"
+summary   = "token sampling: host and device samplers (HIP) and timing: 9 origin files under include/strix, src/hip_token_sampling.hip, src/hip_token_sampling_device.hip, src/token_sampling.cpp"
+why       = "one sampler shared by the replica and served paths; where it would go: beside the catalogue's sample.next-token/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: sample.next-token/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 2 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_token_sampling.hpp",
+  "include/strix/hip_token_sampling_device.hpp",
+  "include/strix/token_sampling.hpp",
+  "include/strix/token_sampling_device.hpp",
+  "include/strix/token_sampling_timing.hpp",
+  "src/hip_token_sampling.hip",
+  "src/hip_token_sampling_device.hip",
+  "src/token_sampling.cpp",
+  "src/token_sampling_device.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_token_sampling.hip", "src/src/hip_token_sampling_device.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "sample.next-token/-/f32.enginelab"
+api       = "hip_token_sampling.hip, hip_token_sampling_device.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.core_head"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.speculation_sampling"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.token_sampling.json"

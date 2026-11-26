@@ -1,0 +1,53 @@
+id        = "runtime.maya_tp.ds4_store"
+kind      = "runtime"
+summary   = "maya-ds4's weight and state storage: the expert store and pool (ds4_store, ds4_pool), the engram (prompt state) file I/O (ds4_engram_io), RAM slices, borrowed buffers, the pack info reader (ds4_packinfo) and the OS helpers (ds4_os)"
+why       = "how DeepSeek weights and saved states move between disk, host and GPU; the engram file is a prompt-state cache format"
+notes     = "Interface tag: cache.prompt-engram-maya-tp/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "src/ds4/ds4_borrow.hpp",
+  "src/ds4/ds4_engram_io.hpp",
+  "src/ds4/ds4_os.hpp",
+  "src/ds4/ds4_packinfo.cpp",
+  "src/ds4/ds4_packinfo.hpp",
+  "src/ds4/ds4_pool.hpp",
+  "src/ds4/ds4_ram_slice.hpp",
+  "src/ds4/ds4_store.hpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "cache.prompt-engram-maya-tp/-/-"
+api       = "ds4 store / engram I/O"
+numeric   = "bytes"
+regime    = "DeepSeek states and experts"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

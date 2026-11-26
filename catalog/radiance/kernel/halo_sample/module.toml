@@ -1,0 +1,70 @@
+id        = "kernel.radiance.halo_sample"
+kind      = "kernel"
+summary   = "Sampling on the device: the vLLM chain for one position in one workgroup (temperature, softmax, top-k, top-p, min-p, renormalise, draw) with the second draw and accept probability speculative sampling needs, the decomposed stage ops, the windowed no-repeat-ngram ban, the exact per-row top-R of a wide bf16 matrix for a sharded draft head, and the global argmax over gathered (id, value) pairs"
+why       = "sampling on the host forces a logits copy and a round trip every token; drawing on the device keeps tokens there and lets speculative sampling accept or reject without leaving the stream"
+notes     = "Sampled (temperature > 0) speculative decoding with the accept test on the device; strixite samples on the host from the top 20 candidates."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_pair_argmax_f32.hip",
+  "libhalo/halo_rowtopk_bf16.hip",
+  "libhalo/halo_sample_chain_f32.hip",
+  "libhalo/halo_sample_ngram_f32.hip",
+  "libhalo/halo_sample_stages_f32.hip",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_sample_chain_f32.hip",
+  "src/libhalo/halo_sample_stages_f32.hip",
+  "src/libhalo/halo_sample_ngram_f32.hip",
+  "src/libhalo/halo_rowtopk_bf16.hip",
+  "src/libhalo/halo_pair_argmax_f32.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "sample.next-token/-/f32.radiance"
+api       = "halo_sample_chain_f32, halo_sample_stages_*"
+numeric   = "f32, Philox draws keyed by seed and position (abi/rad_philox.h)"
+regime    = "one workgroup a position; tokens stay on the device"
+
+[[provides]]
+interface = "logits.topk/-/bf16.radiance"
+api       = "halo_rowtopk_bf16, halo_pair_argmax"
+numeric   = "exact top-R, ties to the lower id"
+regime    = "draft head shards"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[[requires]]
+module    = "kernel.radiance.halo_chain"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_int"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

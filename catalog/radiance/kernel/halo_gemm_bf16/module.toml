@@ -1,0 +1,74 @@
+id        = "kernel.radiance.halo_gemm_bf16"
+kind      = "kernel"
+summary   = "Unquantised GEMMs: bf16 skinny forms (16 and any M up to 64), the tiled prefill form, the biased and f32 variants, the f32 routing and index gate projection with a fixed accumulation order, and runtime LoRA shrink / expand with a slot per row"
+why       = "unquantised projections remain for protected experts, small models, biased layers and LoRA, and they are the reference every quantised GEMM is checked against"
+notes     = "Per-row LoRA slots serve several adapters over one base model in one batch: the shape for lens / expert variants sharing a worker's weights."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_gemm_bf16_nt_m16.hip",
+  "libhalo/halo_gemm_bf16_nt_m64.hip",
+  "libhalo/halo_gemm_bf16_nt_tiled.hip",
+  "libhalo/halo_gemm_f32_nt_bias.hip",
+  "libhalo/halo_gemm_nt_bias.hip",
+  "libhalo/halo_gemm_nt_f32.hip",
+  "libhalo/halo_lora_bf16.hip",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_gemm_bf16_nt_m16.hip",
+  "src/libhalo/halo_gemm_bf16_nt_m64.hip",
+  "src/libhalo/halo_gemm_bf16_nt_tiled.hip",
+  "src/libhalo/halo_gemm_nt_bias.hip",
+  "src/libhalo/halo_gemm_f32_nt_bias.hip",
+  "src/libhalo/halo_gemm_nt_f32.hip",
+  "src/libhalo/halo_lora_bf16.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.dense/bf16/bf16.radiance"
+api       = "halo_gemm_bf16_nt_m16, halo_gemm_bf16_nt_m64, halo_gemm_bf16_nt_tiled, halo_gemm_bf16_nt_bias_tiled, halo_gemm_nt_f32_bf16"
+numeric   = "bf16 in and out, fp32 accumulate"
+regime    = "decode and verify heights (1..64 rows), a weight stream bound by ~256 GB/s LPDDR5X; tiled at prefill"
+
+[[provides]]
+interface = "adapter.lora/bf16/bf16"
+api       = "halo_lora_shrink, halo_lora_expand (per-row slot)"
+numeric   = "fp32 accumulate"
+regime    = "any row count; a different adapter per row of one batch"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_chain"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_int"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

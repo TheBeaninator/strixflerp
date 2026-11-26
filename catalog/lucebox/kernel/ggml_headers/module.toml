@@ -1,0 +1,78 @@
+id        = "kernel.lucebox.ggml_headers"
+kind      = "kernel"
+summary   = "the ggml side of the #include closure of every Lucebox ggml-cuda kernel unit: ggml public headers, ggml-impl and ggml-common, the ggml-cuda common, convert, mma, MMQ / MMVQ, fattn and vendor (hip.h) headers, with VENDOR.md and the vendored ggml LICENSE"
+why       = "Lucebox kernels are ggml ops: they cannot compile without these headers"
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/LICENSE",
+  "server/deps/llama.cpp/VENDOR.md",
+  "server/deps/llama.cpp/ggml/include/ggml-alloc.h",
+  "server/deps/llama.cpp/ggml/include/ggml-backend.h",
+  "server/deps/llama.cpp/ggml/include/ggml-cuda-gdn-chain.h",
+  "server/deps/llama.cpp/ggml/include/ggml-cuda.h",
+  "server/deps/llama.cpp/ggml/include/ggml.h",
+  "server/deps/llama.cpp/ggml/include/gguf.h",
+  "server/deps/llama.cpp/ggml/rocmfp4/rocmfp4.h",
+  "server/deps/llama.cpp/ggml/rocmfpx/rocmfpx.h",
+  "server/deps/llama.cpp/ggml/src/ggml-backend-impl.h",
+  "server/deps/llama.cpp/ggml/src/ggml-common.h",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/common.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/convert.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/cpy-utils.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/dequantize.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-env.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-common.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/fattn.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mma.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mmid.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mmvq.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/norm.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/qwen4exp-common.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/unary.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vecdotq.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vendors/cuda.h",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vendors/hip.h",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vendors/musa.h",
+  "server/deps/llama.cpp/ggml/src/ggml-impl.h",
+  "server/src/hip_compat/cuda_bf16.h",
+  "server/src/hip_compat/cuda_fp16.h",
+]
+authors   = ["The ggml authors", "Luce-Org"]
+modified  = false
+upstream  = "vendored ggml: Luce-Org/lucebox-ggml luce-dflash@6fbe72d plus PRs 35, 37, 39, llama.cpp 22298 and the hub-local patch set of lucebox 505 (server/deps/llama.cpp/VENDOR.md)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = [
+  "src/server/src/hip_compat",
+  "src/server/deps/llama.cpp/ggml/include",
+  "src/server/deps/llama.cpp/ggml/src",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.lucebox-ggml/-/-"
+api       = "ggml/include/*.h, ggml/src/ggml-impl.h, ggml/src/ggml-common.h, ggml-cuda/common.cuh and vendors/hip.h"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[requires]]
+module    = "kernel.lucebox.server_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside every kernel.lucebox.* family module"

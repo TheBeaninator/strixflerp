@@ -1,0 +1,46 @@
+id        = "kernel.fastasfuck.moe_router"
+kind      = "kernel"
+summary   = "fastasfuck's MoE router: top-k, renormalized weights and the shared-expert slot"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its moe_router kernel file so a timing card can set it against kernel.strixite.moe_router, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/moe_router.hip moe.router/- (byte-identical to kernel.strixite.moe_router kernels/moe_router.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/moe_router.hip", "kernels/moe_router.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/moe_router.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.router/-/bf16"
+api       = "strix::kernels::check_router_error, moe_router, moe_shared_add, moe_shared_add_inject, report_router_error (kernels/moe_router.hpp)"
+numeric   = "the same source as kernel.strixite.moe_router (byte-identical to kernel.strixite.moe_router kernels/moe_router.hip at d19945e), so its arithmetic: all fp32, coefficients stored fp32 (never rounded to bf16); ties go to the lower expert index; a non-finite logit fails that token and is reported"
+regime    = "as kernel.strixite.moe_router: k in 1..min(E, 32), E in 1..1024"
+
+[[provides]]
+interface = "moe.router/-/f32"
+api       = "strix::kernels::check_router_error, moe_router, moe_shared_add, moe_shared_add_inject, report_router_error (kernels/moe_router.hpp)"
+numeric   = "the same source as kernel.strixite.moe_router (byte-identical to kernel.strixite.moe_router kernels/moe_router.hip at d19945e), so its arithmetic: all fp32, coefficients stored fp32 (never rounded to bf16); ties go to the lower expert index; a non-finite logit fails that token and is reported"
+regime    = "as kernel.strixite.moe_router: k in 1..min(E, 32), E in 1..1024"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.moe_router.json"

@@ -1,0 +1,40 @@
+id        = "runtime.fastasfuck.memory_plan"
+kind      = "runtime"
+summary   = "fastasfuck's startup RAM check after every GPU buffer exists, failing with the settings that would fit"
+why       = "the server refuses to start rather than hang later when the model, K/V and cache margin do not fit"
+notes     = "Files vs strixite: serve/memory_plan.cpp 8 changed lines against runtime.strixite.memory_plan at d19945e; serve/memory_plan.hpp 2 changed lines against runtime.strixite.memory_plan at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/memory_plan.cpp", "serve/memory_plan.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/memory_plan.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.memory-plan/-/-"
+api       = "strix::plan_memory, strix::MemoryPlan"
+numeric   = "derived from runtime.strixite.memory_plan (serve/memory_plan.cpp 8 changed lines against runtime.strixite.memory_plan at d19945e; serve/memory_plan.hpp 2 changed lines against runtime.strixite.memory_plan at d19945e); not compared here"
+regime    = "as runtime.strixite.memory_plan: host, once at startup"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

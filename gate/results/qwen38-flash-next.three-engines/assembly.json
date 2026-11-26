@@ -42,6 +42,7 @@
     "runtime.strixite.token_mask",
     "runtime.strixite.structured_output",
     "runtime.strixite.think_nudge",
+    "runtime.strixite.tool_grammar",
     "runtime.strixite.engine",
     "runtime.strixite.chat_template",
     "runtime.strixite.libwebp",
@@ -411,6 +412,7 @@
     "runtime.strixite.token_mask",
     "runtime.strixite.structured_output",
     "runtime.strixite.think_nudge",
+    "runtime.strixite.tool_grammar",
     "runtime.strixite.engine",
     "runtime.strixite.vision_request",
     "tool.strixite.strix_vision"
@@ -507,6 +509,7 @@
     "runtime.strixite.token_mask",
     "runtime.strixite.structured_output",
     "runtime.strixite.think_nudge",
+    "runtime.strixite.tool_grammar",
     "runtime.strixite.engine",
     "executor.strixite.qwen4exp_backend",
     "runtime.strixite.memory_plan",
@@ -552,6 +555,7 @@
     "runtime.strixite.token_mask",
     "runtime.strixite.structured_output",
     "runtime.strixite.think_nudge",
+    "runtime.strixite.tool_grammar",
     "runtime.strixite.engine",
     "runtime.strixite.libwebp",
     "runtime.strixite.vision_preprocess",
@@ -656,8 +660,8 @@
   },
   "kernel.gufo.qfn_kernels": {
    "commands": [
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O3 -ffast-math -fno-finite-math-only -Wno-unused-command-line-argument -UNDEBUG -c -DQFN_ROCM_BUILD=1 -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_kernels/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_kernels/src/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp -o @OUT@",
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O3 -ffast-math -fno-finite-math-only -Wno-unused-command-line-argument -UNDEBUG -c -DQFN_ROCM_BUILD=1 -DENGINE_ENABLE_HIP=1 -mwavefrontsize64 -I catalog/gufo/kernel/qfn_kernels/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_kernels/src/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip -o @OUT@"
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++20 -O3 -ffast-math -fno-finite-math-only -Wno-unused-command-line-argument -UNDEBUG -c -DQFN_ROCM_BUILD=1 -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_kernels/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qfn_kernels/src/src/models/qwen38_flash_next/kernels/rocm/kernels.hip.cpp -o @OUT@",
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++20 -O3 -ffast-math -fno-finite-math-only -Wno-unused-command-line-argument -UNDEBUG -c -DQFN_ROCM_BUILD=1 -DENGINE_ENABLE_HIP=1 -mwavefrontsize64 -I catalog/gufo/kernel/qfn_kernels/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qfn_kernels/src/src/models/qwen38_flash_next/kernels/rocm/w8a8_wave64.hip -o @OUT@"
    ],
    "origin": "gufo",
    "product": "host-object",
@@ -665,12 +669,12 @@
   },
   "kernel.gufo.qfn_mmq": {
    "commands": [
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/mmid.hip.cpp -o @OUT@",
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/mmvq.hip.cpp -o @OUT@",
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -mwavefrontsize64 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/moe_wave64.hip.cpp -o @OUT@",
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_ggml_stubs.hip.cpp -o @OUT@",
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq.hip.cpp -o @OUT@",
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/quantize.hip.cpp -o @OUT@"
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/mmid.hip.cpp -o @OUT@",
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/mmvq.hip.cpp -o @OUT@",
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -mwavefrontsize64 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/moe_wave64.hip.cpp -o @OUT@",
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_ggml_stubs.hip.cpp -o @OUT@",
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/qfn_mmq.hip.cpp -o @OUT@",
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++17 -O3 -ffast-math -fno-finite-math-only -Wno-unused-value -Wno-unused-command-line-argument -fPIC -UNDEBUG -c -DGGML_HIP_NO_VMM -DENGINE_ENABLE_HIP=1 -I catalog/gufo/kernel/qfn_mmq/src -I catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qfn_mmq/src/src/models/qwen38_flash_next/kernels/rocm/mmq/quantize.hip.cpp -o @OUT@"
    ],
    "origin": "gufo",
    "product": "host-object",
@@ -683,7 +687,7 @@
   },
   "kernel.gufo.qwen_sampling": {
    "commands": [
-    "/data/tools/therock-10.1.0a20260823/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/tools/therock-10.1.0a20260823 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_sampling/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/tools/therock-10.1.0a20260823/include catalog/gufo/kernel/qwen_sampling/src/src/families/qwen/kernels/sample.hip -o @OUT@"
+    "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=gnu++20 -O2 -UNDEBUG -DENGINE_ENABLE_HIP=1 -c -I catalog/gufo/kernel/qwen_sampling/src -I catalog/gufo/kernel/core_headers/src -I catalog/gufo/kernel/core_headers/src/include -I catalog/gufo/kernel/qwen_ops/src -I catalog/gufo/runtime/sampling/src -I catalog/gufo/runtime/platform/src -I catalog/gufo/format/gguf_kquant/src -I /data/models/tools/therock-10.1/include catalog/gufo/kernel/qwen_sampling/src/src/families/qwen/kernels/sample.hip -o @OUT@"
    ],
    "origin": "gufo",
    "product": "host-object",
@@ -1580,6 +1584,15 @@
    ],
    "spdx": "AGPL-3.0-only"
   },
+  "runtime.strixite.tool_grammar": {
+   "dir": "catalog/strixite/runtime/tool_grammar",
+   "files": 2,
+   "linked": true,
+   "sources": [
+    "src/serve/tool_grammar.cpp"
+   ],
+   "spdx": "AGPL-3.0-only"
+  },
   "runtime.strixite.trace": {
    "dir": "catalog/strixite/runtime/trace",
    "files": 1,
@@ -1767,6 +1780,7 @@
    "spdx": "AGPL-3.0-only"
   }
  },
+ "overlays": {},
  "recipe": "qwen38-flash-next.three-engines",
  "renames": {
   "kernel.strixite.linear": {

@@ -1,0 +1,81 @@
+id        = "runtime.maya_tp.core_headers"
+kind      = "runtime"
+summary   = "the engine headers of include/strata/core and include/strata/kernels that no other module owns by name (glm_model.hpp, glm_arch, glm_env, session, layer, verify, mtp, prefill pieces and the kernel launch headers shared across families)"
+why       = "a single header module so every engine and kernel module above resolves its #include lines the way the origin's include/ directory does"
+notes     = "Interface tag: kernel-abi.maya-tp-engine-headers/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/exl3_mma_rows.hpp",
+  "include/strata/core/glm_arch.hpp",
+  "include/strata/core/glm_cpu_affinity.hpp",
+  "include/strata/core/glm_split_devices.hpp",
+  "include/strata/core/on_device.hpp",
+  "include/strata/core/prefill_chunks.hpp",
+  "include/strata/core/prefill_gaps.hpp",
+  "include/strata/core/prefill_pieces.hpp",
+  "include/strata/core/prefix_cut.hpp",
+  "include/strata/core/progress.hpp",
+  "include/strata/core/split_groups.hpp",
+  "include/strata/core/vram_mark.hpp",
+  "include/strata/kernels/glm_expert_bench.hpp",
+  "include/strata/kernels/glmd_decode_policy.hpp",
+  "include/strata/kernels/glmd_f16_guard.hpp",
+  "include/strata/kernels/glmd_forward.hpp",
+  "include/strata/kernels/glmd_mmq_pad.hpp",
+  "include/strata/kernels/glmd_random_route.hpp",
+  "include/strata/kernels/glmd_route.hpp",
+  "include/strata/kernels/glmd_volta.hpp",
+  "include/strata/kernels/mrope.hpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.maya-tp-engine-headers/-/-"
+api       = "include/strata/core/*.hpp, include/strata/kernels/*.hpp"
+numeric   = "declarations only"
+regime    = "all engines"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_decode"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_mixer"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_tools"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the modules that include it"

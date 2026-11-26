@@ -1,0 +1,108 @@
+#!/bin/bash
+# /usr/local/sbin/pod-worker-ssh-gate (LTSP worker image) - card d74915b5d6
+# The forced command on the shared worker client key (/etc/ssh/keys/pod: command="...gate...",from=...,no-pty,...).
+# A worker-to-worker login with that key can do exactly the StrixFold serving path's rank-1 -> rank-0 calls (and,
+# for the four-node split, rank 1 -> followers 2 and 3) and nothing else (owner 2026-11-13, option 1; reviewed with agent). control-node's own key is NOT gated.
+#
+# Accepted SSH_ORIGINAL_COMMAND shapes, whole-string, single-space separated, every field pattern-checked:
+#   bash tfp/run/conf/stage-engram.sh                        strixfold-pair.sh's engram staging (file written by control-node)
+#   tfp-node0 uptime                                         (tfp-node0 = that word, or tfp/deploy/<name>/tools/dsv41-hip/tfp-node0)
+#   tfp-node0 health PORT                                    curl 127.0.0.1:PORT/health
+#   tfp-node0 quiet on|off TAG                               ~/bin/halo-quiet, when installed
+#   tfp-node0 rank0 VERB RUN_ID DEPLOY CONF [ARG]            DEPLOY/tools/dsv41-hip/serve-rank0.sh VERB [ARG]
+#       VERB  check|lock|unlock|start|ready|stop|status|bench|down
+#       ARG   lock: WAIT_S (digits); start: --locked; others: none
+#       RUN_ID [A-Za-z0-9][A-Za-z0-9._-]{0,63}; DEPLOY tfp/deploy/<name>; CONF tfp/run/conf/<name>.conf or -
+#       down = stop + unlock + stop this run's tfp-lock0 unit and any tfp-lock0 unit whose tfp-rank0 is gone
+#   tfp-node0 rankf G VERB RUN_ID DEPLOY CONF [ARG]       SERVE_RANK=G DEPLOY/tools/dsv41-hip/serve-rank1.sh VERB [ARG]
+#       a follower of the four-node split (TP4-ORCH a1baab5e2d: first_light.sh on rank 1's box reaches ranks 2 and 3)
+#       G     1-3
+#       VERB  check|lock|unlock|start|wait-linked|stop|status|mark|down (mark: the run's stop marker on this box)
+#       ARG, RUN_ID, DEPLOY, CONF as for rank0; down = stop + unlock + this run's and any stale tfp-lock<G> unit
+# No shell ever parses the command: it is split on spaces with globbing off and executed as an argv.
+# The key can write no file, so nothing it runs can have been put there by it (deploys and confs come from control-node).
+# Everything else, an empty command (interactive login) included, is refused with exit 126 and logged to journald.
+# Test hooks: GATE_DRY=1 prints the argv instead of running it; GATE_LOG=0 skips the journald line.
+set -f -u
+export PATH=/usr/local/bin:/usr/bin:/bin
+# Two ways in, one rule set:
+#   gated     the key's forced command: no arguments, the request is SSH_ORIGINAL_COMMAND
+#   argv      run by a login shell on a box that is not gated (old image, or control-node's unrestricted key) as
+#             ~/tfp/deploy/<name>/tools/dsv41-hip/tfp-node0 ARGS... (first_light.sh calls it by that path, so the same
+#             call works before and after a box boots the gated image); the arguments are checked exactly the same way
+if [ "$#" -gt 0 ]; then CMD="tfp-node0 $*"; else CMD=${SSH_ORIGINAL_COMMAND-}; fi
+H=${HOME:-/home/pod}
+
+refuse() {
+  [ "${GATE_LOG:-1}" = 1 ] && logger -t pod-worker-ssh-gate -p auth.warning -- \
+    "refused from ${SSH_CLIENT%% *}: $1: $(printf '%q' "$CMD" | cut -c1-300)" 2>/dev/null
+  echo "pod-worker-ssh-gate: refused ($1)" >&2; exit 126; }
+run() {
+  [ "${GATE_LOG:-1}" = 1 ] && logger -t pod-worker-ssh-gate -p auth.info -- "allowed from ${SSH_CLIENT%% *}: $CMD" 2>/dev/null
+  if [ "${GATE_DRY:-0}" = 1 ]; then printf 'RUN'; [ -n "${SERVE_RANK:-}" ] && printf ' SERVE_RANK=%s' "$SERVE_RANK"; printf ' %s' "$@"; echo; exit 0; fi
+  exec "$@"; }
+
+[ -n "$CMD" ] || refuse "interactive login"
+[ "${#CMD}" -le 300 ] || refuse "too long"
+# the whole command may only hold these bytes: no quote, $, `, ;, &, |, <, >, (, ), *, ?, ~, \, newline, tab
+case $CMD in *[!A-Za-z0-9._/\ -]*) refuse "character outside [A-Za-z0-9._/ -]";; esac
+case $CMD in *..*|*//*|' '*|*' '|*'  '*) refuse "'..', '//' or stray spaces";; esac
+read -r -a a <<<"$CMD"
+
+RID='^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'
+NAME='^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'
+
+if [ "${#a[@]}" = 2 ] && [ "${a[0]}" = bash ] && [ "${a[1]}" = tfp/run/conf/stage-engram.sh ]; then
+  cd "$H" || refuse "no home"; run bash "$H/tfp/run/conf/stage-engram.sh"
+fi
+# the first word: tfp-node0, or the deployed copy's path (handled here, never executed)
+[ "${a[0]}" = tfp-node0 ] || [[ ${a[0]} =~ ^tfp/deploy/[A-Za-z0-9][A-Za-z0-9._-]{0,63}/tools/dsv41-hip/tfp-node0$ ]] \
+  || refuse "not an allowed command"
+case "${a[1]-}" in
+  uptime) [ "${#a[@]}" = 2 ] || refuse "uptime takes no argument"; run uptime ;;
+  health) [ "${#a[@]}" = 3 ] && [[ ${a[2]} =~ ^[1-9][0-9]{0,4}$ ]] && [ "${a[2]}" -le 65535 ] || refuse "health PORT"
+          run curl -sS -m 5 "http://127.0.0.1:${a[2]}/health" ;;
+  quiet)  [ "${#a[@]}" = 4 ] && [[ ${a[2]} =~ ^(on|off)$ ]] && [[ ${a[3]} =~ $NAME ]] || refuse "quiet on|off TAG"
+          [ -x "$H/bin/halo-quiet" ] || { echo "no halo-quiet on $(hostname)"; exit 0; }
+          run "$H/bin/halo-quiet" "${a[2]}" "${a[3]}" ;;
+  rank0|rankf)
+    # rank0 VERB ... runs serve-rank0.sh; rankf G VERB ... runs serve-rank1.sh as follower G (the same checks after G)
+    if [ "${a[1]}" = rankf ]; then
+      [ "${#a[@]}" = 7 ] || [ "${#a[@]}" = 8 ] || refuse "rankf G VERB RUN_ID DEPLOY CONF [ARG]"
+      [[ ${a[2]} =~ ^[1-3]$ ]] || refuse "rankf G (1-3)"
+      g=${a[2]} verb=${a[3]} rid=${a[4]} dep=${a[5]} conf=${a[6]} arg=${a[7]-} script=serve-rank1.sh
+      [[ $verb =~ ^(check|lock|unlock|start|wait-linked|stop|status|mark|down)$ ]] || refuse "rankf verb"
+    else
+      [ "${#a[@]}" = 6 ] || [ "${#a[@]}" = 7 ] || refuse "rank0 VERB RUN_ID DEPLOY CONF [ARG]"
+      g=0 verb=${a[2]} rid=${a[3]} dep=${a[4]} conf=${a[5]} arg=${a[6]-} script=serve-rank0.sh
+      [[ $verb =~ ^(check|lock|unlock|start|ready|stop|status|bench|down)$ ]] || refuse "rank0 verb"
+    fi
+    [[ $rid =~ $RID ]] || refuse "RUN_ID"
+    [[ $dep =~ ^tfp/deploy/[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ ]] || refuse "DEPLOY"
+    [ "$conf" = - ] || [[ $conf =~ ^tfp/run/conf/[A-Za-z0-9][A-Za-z0-9._-]{0,63}\.conf$ ]] || refuse "CONF"
+    case $verb in
+      lock)  [ -z "$arg" ] || [[ $arg =~ ^[0-9]{1,5}$ ]] || refuse "lock WAIT_S" ;;
+      start) [ -z "$arg" ] || [ "$arg" = --locked ] || refuse "start [--locked]" ;;
+      *)     [ -z "$arg" ] || refuse "$verb takes no argument" ;;
+    esac
+    # the deploy must really live under ~/tfp/deploy (a symlink like current -> <sha> is fine, one pointing out is not)
+    d=$(readlink -f "$H/$dep" 2>/dev/null); case $d in "$H"/tfp/deploy/?*) ;; *) refuse "DEPLOY resolves outside ~/tfp/deploy";; esac
+    s=$d/tools/dsv41-hip/$script
+    [ "${GATE_DRY:-0}" = 1 ] || [ -x "$s" ] || refuse "no $script in $dep"
+    export RUN_ID=$rid XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+    [ "$g" = 0 ] || export SERVE_RANK=$g
+    if [ "$conf" = - ]; then unset TF_SERVE_CONF; else export TF_SERVE_CONF=$H/$conf; fi
+    if [ "$verb" = down ]; then
+      [ "${GATE_DRY:-0}" = 1 ] && { echo "RUN ${SERVE_RANK:+SERVE_RANK=$g }$s stop; $s unlock; stop tfp-lock$g units (run $rid, stale)"; exit 0; }
+      "$s" stop; "$s" unlock
+      u=tfp-lock$g-$(printf '%s' "$rid" | tr -dc '0-9A-Za-z' | tail -c 24)
+      systemctl --user stop "$u.service" 2>/dev/null && echo "stopped $u on $(hostname)"
+      for u in $(systemctl --user list-units "tfp-lock$g-*" --state=active --no-legend --plain 2>/dev/null | cut -d' ' -f1); do
+        r=${u#tfp-lock"$g"-}; systemctl --user is-active -q "tfp-rank$g-$r" && continue
+        systemctl --user stop "$u" && echo "stale GPU lock $u stopped on $(hostname)"
+      done
+      exit 0
+    fi
+    if [ -n "$arg" ]; then run "$s" "$verb" "$arg"; else run "$s" "$verb"; fi ;;
+  *) refuse "tfp-node0 verb" ;;
+esac

@@ -1,0 +1,50 @@
+id        = "kernel.maya_tp.gguf_gemv"
+kind      = "kernel"
+summary   = "decode GEMVs on native GGUF blocks adapted from llama.cpp's MMVQ at 3cf03257: Q2_0-Q8_0, the K-quants and IQ4 against q8_1 activations (native_mmvq) and the i-quants IQ1_M-IQ3_S with the K-quant helpers (iq_kernels, iq_kquant.cuh)"
+why       = "GLM-5.3-Flash's Maya-S / M / L packs are IQ2_XXS / IQ3 / K-quant GGUFs, so this is the dense and shared-weight decode GEMV under the TP2 split as well as one host"
+notes     = "Interface tag: linear.decode/gguf-kquant+iq/q8_1-f32.maya-tp-mmvq. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/iq_kernels.hpp",
+  "include/strata/kernels/native_mmvq.hpp",
+  "src/kernels/cuda/iq_kernels.cu",
+  "src/kernels/cuda/iq_kquant.cuh",
+  "src/kernels/cuda/native_mmvq.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/iq_kernels.cu", "src/src/kernels/cuda/native_mmvq.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/gguf-kquant+iq/q8_1-f32.maya-tp-mmvq"
+api       = "strata::kernels::native_<type>_mmvq, iq_mmvq, quantize_q8_1_rows"
+numeric   = "q8_1 activations, llama.cpp's integer dots, FP32 out"
+regime    = "decode, one to a few columns"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.gguf_gemv.json"

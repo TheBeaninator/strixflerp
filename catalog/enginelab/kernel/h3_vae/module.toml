@@ -1,0 +1,83 @@
+id        = "kernel.enginelab.h3_vae"
+kind      = "kernel"
+summary   = "H3 image VAE (src/h3/vae): 30 origin files under src/h3"
+why       = "the decoder of MiniMax-H3-Image; where it would go: a new strixflerp interface media.vae/-/f32.enginelab-h3, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, media.vae/-/f32.enginelab-h3. 5 HIP unit(s) compiled standalone by the gate; 8 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/h3/vae/audio_decoder.hip",
+  "src/h3/vae/audio_decoder.hpp",
+  "src/h3/vae/audio_ref.cpp",
+  "src/h3/vae/audio_ref.hpp",
+  "src/h3/vae/enc_gpu.hip",
+  "src/h3/vae/enc_gpu.hpp",
+  "src/h3/vae/enc_ref.cpp",
+  "src/h3/vae/enc_ref.hpp",
+  "src/h3/vae/fast_decoder.hip",
+  "src/h3/vae/fast_decoder.hpp",
+  "src/h3/vae/image.cpp",
+  "src/h3/vae/image.hpp",
+  "src/h3/vae/latent_stats.hpp",
+  "src/h3/vae/precision.hpp",
+  "src/h3/vae/precision_types.hpp",
+  "src/h3/vae/vae_decoder.hip",
+  "src/h3/vae/vae_decoder.hpp",
+  "src/h3/vae/vae_half.hpp",
+  "src/h3/vae/vae_host_decode.cpp",
+  "src/h3/vae/vae_io.cpp",
+  "src/h3/vae/vae_io.hpp",
+  "src/h3/vae/vae_kernels.hip",
+  "src/h3/vae/vae_kernels.hpp",
+  "src/h3/vae/vae_plan.cpp",
+  "src/h3/vae/vae_plan.hpp",
+  "src/h3/vae/vae_ref.cpp",
+  "src/h3/vae/vae_ref.hpp",
+  "src/h3/vae/vae_shard.cpp",
+  "src/h3/vae/vae_shard.hpp",
+  "src/h3/vae/vae_threads.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/h3/vae/audio_decoder.hip",
+  "src/src/h3/vae/enc_gpu.hip",
+  "src/src/h3/vae/fast_decoder.hip",
+  "src/src/h3/vae/vae_decoder.hip",
+  "src/src/h3/vae/vae_kernels.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "media.vae/-/f32.enginelab-h3"
+api       = "src/h3/vae/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.h3_block"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.h3_vae.json"

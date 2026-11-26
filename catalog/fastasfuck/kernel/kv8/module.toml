@@ -1,0 +1,46 @@
+id        = "kernel.fastasfuck.kv8"
+kind      = "kernel"
+summary   = "fastasfuck's 8-bit K/V cache: group quantize on commit and dequantize, with the shared device math"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its kv8 kernel file so a timing card can set it against kernel.strixite.kv8, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/kv8.hip kvcache.quant8/- (4 changed lines against kernel.strixite.kv8 kernels/kv8.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/kv8.hip", "kernels/kv8.hpp", "kernels/kv8_math.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/kv8.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kvcache.quant8/-/bf16"
+api       = "strix::kernels::kv8_bytes, kv8_commit, kv8_dequant, kv8_tail_bytes, report_kv8_error (kernels/kv8.hpp)"
+numeric   = "derived from kernel.strixite.kv8 (4 changed lines against kernel.strixite.kv8 kernels/kv8.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.kv8: about 56% of bf16 storage; what a query sees depends only on its own position"
+
+[[provides]]
+interface = "kvcache.quant8/-/f32"
+api       = "strix::kernels::kv8_bytes, kv8_commit, kv8_dequant, kv8_tail_bytes, report_kv8_error (kernels/kv8.hpp)"
+numeric   = "derived from kernel.strixite.kv8 (4 changed lines against kernel.strixite.kv8 kernels/kv8.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.kv8: about 56% of bf16 storage; what a query sees depends only on its own position"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.kv8.json"

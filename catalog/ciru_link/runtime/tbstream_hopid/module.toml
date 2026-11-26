@@ -1,0 +1,42 @@
+id        = "runtime.ciru_link.tbstream_hopid"
+kind      = "runtime"
+summary   = "HopID ownership between thunderbolt-net and thunderbolt_stream: the network driver records which receive HopID it owns (0008), and the stream driver attaches its HopIDs in one transaction with rollback on failure (0009)"
+why       = "USB4NET keeps HopID 8 for control and portable traffic while the stream device takes 9/9 on the same cable, so the two never steal each other's path; the same split (a control link beside a data path) is what a pod pair over USB4 would run"
+notes     = "Interface tag: none. Applies after patches 0001-0007. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "kernel/linux-7.2.2/0008-thunderbolt-net-Track-receive-HopID-ownership.patch",
+  "kernel/linux-7.2.2/0009-thunderbolt-stream-Make-HopID-attachment-trans.patch",
+]
+authors   = ["Jonathan Yates (jyatesdotdev/strix-rdma 06c1836)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-hopid-ownership/-/-"
+api       = "thunderbolt-net receive HopID tracking (drivers/net/thunderbolt/main.c); transactional HopID attach in drivers/thunderbolt/stream.c"
+numeric   = "n/a (control path)"
+regime    = "USB4NET HopID 8 and stream HopID 9/9 on the qualified profile"
+
+[[requires]]
+module    = "runtime.ciru_link.tbstream_zerocopy"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 7.2.2 tree on the island); python3 docs/harvest/harvest_ciru_link.py --patch-gate checks every patch against SHA256SUMS and parses it with git apply --numstat (gate/results/compile/ciru_link.patches.json)"

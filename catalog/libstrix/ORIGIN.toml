@@ -1,0 +1,51 @@
+# libstrix: HIP kernels tuned for AMD Strix Halo (gfx1151, wave32) and a vLLM plugin that swaps them into stock vLLM:
+# attention on the paged KV cache, Gated DeltaNet, grouped MoE expert GEMMs, dense GEMMs on W8A16 / W8A8 / W4A16 / FP8 /
+# MXFP4 checkpoints, and the Qwen3.8-Flash-Next QSA and hyper-connection kernels. One .hip file a kernel, each compiled
+# for one geometry named in its entry point (card ORIGIN-LIBSTRIX dd6f98d883).
+name      = "libstrix"
+repo      = "https://github.com/asf0/libstrix"
+commit    = "4f1c06f55d520c734a66101e8c31fc5dd9dedeb3"
+branch    = "main"
+version   = "libstrix 0.0.1 (pyproject.toml:7); head of 2026-11-08 (docker: MTP_VOCAB (Flash-Next MTP draft vocab subset), NPU + MTP at GPU_UTIL 0.80)"
+reference_checkout = "laptop: ~/Code/strixflerp-upstream-supplement/libstrix (holds 4f1c06f55d52, moved by git bundle from the control-node ark copy when it was a depth-1 clone at that commit; every harvested file byte-identical). The control-node ark copies /data/ark-inbox/src/github.com__asf0__libstrix and /data/ark/software/src/github.com__asf0__libstrix are shallow and now at e3a1c45 (updated 2026-11-23), so they no longer hold 4f1c06f"
+
+[licence]
+spdx      = "MIT"
+files     = ["LICENSE", "NOTICE"]                          # copied verbatim next to this file
+third_party = "NOTICE: libstrix is MIT except three files that hold vLLM code under Apache-2.0 and keep that licence in their header: csrc/gemm/w8a16_skinny_gemm.hip and csrc/gemm/w8a8_wmma_gemm.hip (derived from vLLM's csrc/rocm/skinny_gemms.cu; both in kernel.libstrix.gemm, which is MIT AND Apache-2.0 and carries LICENSES/Apache-2.0.txt) and python/strix_vllm/triton_unified_attention.py (vendored, not harvested). pyproject.toml declares the package MIT AND Apache-2.0. csrc/gdn/gdn_decode_mtp_bf16.hip states MIT with a vLLM copyright line (a port of vLLM's csrc/gdn/fused_gdn_decode_kernel.cu) and is not in NOTICE. Weights are not part of the tree."
+
+[toolchain]
+host      = "C++20, CMake 3.26 or newer with Ninja (build.sh); python 3.10 or newer with PyTorch for ROCm, whose headers and libraries the one shared object is built against"
+device    = "therock-10.1"                               # README.md:53 and docker/Dockerfile:65-67: ROCm 10.1.0 wheels with torch 2.14.0+rocm10.1.0 for gfx1151; the pod has not built it
+build     = "build.sh: cmake -G Ninja with CMAKE_HIP_COMPILER = $ROCM_PATH/lib/llvm/bin/clang++ -> python/strix/_C.so (target _C: csrc/torch_ops.cpp and every csrc/**/*.hip, HIP standard 20, -O3 -ffp-contract=fast -munsafe-fp-atomics, defines __HIP_PLATFORM_AMD__ and USE_ROCM, STRIX_GPU_ARCH gfx1151, linked against TORCH_LIBRARIES; CMakeLists.txt:16-25). There is no hipcc line per kernel and no kernel builds without libtorch, so this file has no [compile] recipe"
+
+[kernels]
+loading   = "linked into one torch extension: python/strix/__init__.py loads _C.so with torch.ops.load_library and the kernels are called as torch.ops.strix.<entry>; device kernels are launched by the host function in the same .hip file. There is no code-object kit, manifest or kernel id"
+selection = "strix.select(op, **geometry) over python/strix/registry.py returns the kernel for a shape or None; in vLLM the plugin (python/strix_vllm, entry point vllm.general_plugins strix) builds its gates from that table and STRIX_DISABLE / STRIX_ENABLE turn kernels off and on by name (docs/kernels.md)"
+models    = "as a vLLM plugin: Qwen3.6, Qwen3.8 (27B and Flash-Next), gemma-4, LFM2.5, MiniCPM-V, Muse-Glimmer and Flint (README.md); the QSA and hyper-connection kernels are Qwen3.8-Flash-Next's. Engine level, Flash-Next AWQ at 128k: 1,518 tok/s prefill, 24.2 tok/s decode (docs/performance.md:90)"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_libstrix.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".dockerignore",
+  ".github/**",
+  ".gitignore",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "LICENSE",
+  "NOTICE",
+  "README.md",
+  "bench/container/**",
+  "bench/model/**",
+  "bench/results.py",
+  "bench/run_guarded.sh",
+  "bench/upstream.sh",
+  "docker/**",
+  "docs/**",
+  "npu/**",
+  "pyproject.toml",
+  "python/strix_vllm/**",
+  "tools/**",
+]

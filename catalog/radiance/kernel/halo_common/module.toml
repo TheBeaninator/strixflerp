@@ -1,0 +1,55 @@
+id        = "kernel.radiance.halo_common"
+kind      = "kernel"
+summary   = "libhalo's shared device layer for gfx1151: the plain C entry points (halo.h), argument readers, the one launch path (halo_emit.h), wave32 WMMA fragment algebra and 16-bit operand traits (16 x 16-bit fragments, k = e, lanes 16-31 replicate), software bf16 and E4M3 packs for the instructions gfx1151 lacks, a wave-local Walsh-Hadamard and the register-blocked f32 tile"
+why       = "gfx1151 and gfx1201 disagree on the WMMA fragment order and gfx1151 lacks the fp8 and bf16 pack instructions, so every ported unit needs one measured layer that states the lane-to-element rules once"
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo.h",
+  "libhalo/halo_args.h",
+  "libhalo/halo_common.h",
+  "libhalo/halo_dt16.h",
+  "libhalo/halo_emit.h",
+  "libhalo/halo_enc.h",
+  "libhalo/halo_f32_tile.h",
+  "libhalo/halo_fwht.h",
+  "libhalo/halo_launch.h",
+  "libhalo/halo_plugin.h",
+  "libhalo/halo_q8.h",
+  "libhalo/halo_wmma.h",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.radiance-halo/-/-"
+api       = "halo_* C entries (halo.h), halo_rad_<row> shims (halo_plugin.h), halo::mma, DT16<0|1>, halo::pk_bf16"
+numeric   = "n/a"
+regime    = "n/a"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "headers only; compiled inside every kernel.radiance.halo_* unit"

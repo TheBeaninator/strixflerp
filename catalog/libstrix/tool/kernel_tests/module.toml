@@ -1,0 +1,83 @@
+id        = "tool.libstrix.kernel_tests"
+kind      = "tool"
+summary   = "libstrix' per-kernel checks, all Python through torch.ops.strix: tests/ holds the pytest files that compare kernels with torch references (conftest.py, an architecture gate, a file a kernel or weight format, and the tests of the registry table and of bench/results.py), and bench/kernels/ holds a timing script a kernel (attention prefill, GDN chunk and conv, gated RMSNorm, MoE bf16 / WNA16 / FP8, FP8 and MXFP4 GEMM and GEMV, W8A16 decode, W8A8, QSA indexer / sparse / union, the dense_w8 row sweep and two NPU projection benches)"
+why       = "the survey counted a bench script a kernel among the reasons libstrix is the cheapest origin to harvest; these scripts and the torch-reference tests define what correct and faster mean for each kernel in the origin's own terms, which the timing card against the strixite modules needs before it writes its own"
+notes     = "Interface tag: none. Not run here: the pod has not built _C.so. bench/model, bench/container, bench/results.py, bench/run_guarded.sh and bench/upstream.sh (model-level and container checks) are not harvested."
+
+[provenance]
+origin    = "libstrix"
+repo      = "https://github.com/asf0/libstrix"
+commit    = "4f1c06f55d520c734a66101e8c31fc5dd9dedeb3"
+branch    = "main"
+paths     = [
+  "bench/kernels/attn_prefill.py",
+  "bench/kernels/dense_w8_rows.py",
+  "bench/kernels/fp8_gemm.py",
+  "bench/kernels/gdn_chunk.py",
+  "bench/kernels/gdn_conv.py",
+  "bench/kernels/gdn_gated_rmsnorm.py",
+  "bench/kernels/moe_fp8.py",
+  "bench/kernels/moe_gemm.py",
+  "bench/kernels/moe_wna16.py",
+  "bench/kernels/mxfp4_gemm.py",
+  "bench/kernels/mxfp4_gemv.py",
+  "bench/kernels/npu_proj.py",
+  "bench/kernels/npu_proj_qwen35.py",
+  "bench/kernels/qsa_indexer.py",
+  "bench/kernels/qsa_sparse.py",
+  "bench/kernels/qsa_union.py",
+  "bench/kernels/w8a16_decode.py",
+  "bench/kernels/w8a8_gemm.py",
+  "tests/conftest.py",
+  "tests/test_arch_gate.py",
+  "tests/test_attn_prefill.py",
+  "tests/test_attn_prefill32.py",
+  "tests/test_fp8.py",
+  "tests/test_gdn_chunk.py",
+  "tests/test_gdn_conv_post.py",
+  "tests/test_gdn_decode_mtp.py",
+  "tests/test_gdn_gated_rmsnorm.py",
+  "tests/test_hc_up_gate_mix.py",
+  "tests/test_moe_fp8.py",
+  "tests/test_moe_fp8_raw.py",
+  "tests/test_moe_gate.py",
+  "tests/test_moe_gemm.py",
+  "tests/test_moe_w4a8.py",
+  "tests/test_moe_w8a16.py",
+  "tests/test_moe_wna16.py",
+  "tests/test_mxfp4.py",
+  "tests/test_qsa_indexer.py",
+  "tests/test_qsa_union.py",
+  "tests/test_registry.py",
+  "tests/test_results.py",
+  "tests/test_w8a16.py",
+  "tests/test_w8a8_int8.py",
+  "tests/test_wmma_layout.py",
+]
+authors   = ["asf0"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.kernel-reference-libstrix/-/-"
+api       = "pytest tests/; python bench/kernels/<kernel>.py"
+numeric   = "each test states its own reference and tolerance"
+regime    = "offline, on a gfx1151 GPU with _C.so built; not run by this harvest"
+
+[[requires]]
+module    = "kernel.libstrix.torch_ops"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

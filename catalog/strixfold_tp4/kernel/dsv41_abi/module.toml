@@ -1,0 +1,44 @@
+id        = "kernel.strixfold_tp4.dsv41_abi"
+kind      = "kernel"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for kernel.strixfold.dsv41_abi: 1 file(s) of kernel.strixfold.dsv41_abi (abi.h), laid over the f64b5ff files"
+why       = "kernel.strixfold.dsv41_abi is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over kernel.strixfold.dsv41_abi without touching it or the TP2 recipes"
+notes     = "Overlay of kernel.strixfold.dsv41_abi (overlay.json has every file with both sha256 and its commits). Cards behind the changes: -. Latest commits: ab1a7db4 draft_temperature: single-line comments, no new lean_check findings (review); 0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/abi.h",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on kernel.strixfold.dsv41_abi (origin strixfold, f64b5ff): 1 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.dsv41-hip/-/-.tp4"
+api       = "TF_DS_HIP_ABI_VERSION, tf_ds_*_args structs"
+numeric   = "fixed-width fields, natural alignment, size and offset static asserts per struct"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); n/a"
+
+[[requires]]
+module    = "kernel.strixfold.dsv41_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

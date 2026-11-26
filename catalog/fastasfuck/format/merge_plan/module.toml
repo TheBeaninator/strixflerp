@@ -1,0 +1,46 @@
+id        = "format.fastasfuck.merge_plan"
+kind      = "format"
+summary   = "fastasfuck's table of linear weights that read the same input (GDN qkv+z+b+a, attention q+k+v plus indexer, expert gate+up), row-concatenated at conversion"
+why       = "the merged rows are why one GEMV serves several projections; the converter and the forward agree on them through this table"
+notes     = "Files vs strixite: formats/merge_plan.cpp byte-identical to format.strixite.merge_plan at d19945e; formats/merge_plan.hpp byte-identical to format.strixite.merge_plan at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["formats/merge_plan.cpp", "formats/merge_plan.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/merge_plan.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.merge-plan/strixw/-"
+api       = "strix::merge_plan, strix::resolve_merge, strix::quantize_merged"
+numeric   = "the same source as format.strixite.merge_plan, so its behaviour: row concatenation at quantization time is exact"
+regime    = "as format.strixite.merge_plan: host, converter and loaders"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "format.fastasfuck.safetensors"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_formats) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

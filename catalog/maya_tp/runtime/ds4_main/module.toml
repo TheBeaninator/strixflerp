@@ -1,0 +1,74 @@
+id        = "runtime.maya_tp.ds4_main"
+kind      = "runtime"
+summary   = "the maya-ds4 program (ds4_main.cpp, 4,122 lines): options, the TP2 rank setup, DSpark drafting and the serve loop"
+why       = "where the DeepSeek pair is launched and its control channel wired; the entry a TP2 launcher calls on each host"
+notes     = "Interface tag: serve.program-ds4-maya-tp/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/ds4/ds4_main.cpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "serve.program-ds4-maya-tp/-/-"
+api       = "main() (ds4_main.cpp)"
+numeric   = "no arithmetic of its own"
+regime    = "one host or rank 0 / 1"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_gguf"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_iq"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_engine"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_store"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_control"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_worker"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[[requires]]
+module    = "runtime.maya_tp.spec_controller"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_rdma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

@@ -1,0 +1,287 @@
+id        = "kernel.ds4.k53perf_rocm_halo_output_a_uncached"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-performance f46631e: its copy of the rocm_halo_output_a_uncached family against antirez/ds4 b3f5018: rocm/ds4_rocm_halo_output_a_uncached.cuh added (81 lines); rocm/halo/output_a_uncached/index.hpp added (12 lines). Kernels not in the base: __launch_bounds__. The family: the Halo output projection A without the cached partial: XOR-ranked fragment stores into a 32 KiB partial buffer"
+why       = "kyuz0's later gfx1151 branch: the Halo kernels imported from MadRocK-AI/ds4 551219f (frozen WMMA GEMMs for the attention output projections and shared expert, IQ2 S9 MoE producers, Q2 and Q8 panels, direct-query attention), DeepSeek V4.1 ROCm primitives, Qwen3.8 Flash Next on gfx1151, a gufo-derived DSV4 attention, and two-machine ROCm tensor parallel over TCP or RoCE with its own slot-generation queue (docs/CLUSTERING_ROCM.md); head commit \"rocm: avoid low-confidence GLM MTP verification on gfx1151\". The family in the base: the uncached variant of output A"
+notes     = "Overlay kyuz0_glm53_perf: files under overlay/kyuz0_glm53_perf/ are the branch's bytes at f46631e483e1; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_perf.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "f46631e483e19d13f23d3c4bced7ade0d086a3ad"
+branch    = "perf/rocm-gfx1151-glm53-performance"
+paths     = [
+  "overlay/kyuz0_glm53_perf/rocm/ds4_rocm_halo_output_a_uncached.cuh",
+  "overlay/kyuz0_glm53_perf/rocm/halo/output_a_uncached/index.hpp",
+]
+authors   = [
+  "kyuz0",
+  "The ds4.c authors",
+  "The ggml authors",
+  "MadRocK-AI/ds4 551219f (Halo import, docs/HALO_THIRD_PARTY.md)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_perf", "src/overlay/kyuz0_glm53_perf/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.prefill/f16/f32.ds4-halo-output-a-uncached-k53perf"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_attention"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_attention_gufo"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_attention_launch"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_backend"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_compat"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_current_api_compat"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_glm"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_attention"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_direct_qk"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_hc"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_indexer"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_moe"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_output_a"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_output_b"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_q2"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_q8"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_shapes"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_shared_down"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_shared_gu"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_halo_static_query"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_hc_sgemm"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_hipblaslt"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_indexer"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_matmul"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_moe"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_moe_launch"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_norm_rope"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_q8"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_qwen4"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_qwen4_attention_wmma"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_router"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_runtime"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_tp"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_unavailable"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_v41"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_rocm_v41_gate_up"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_dsv41"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_glm53_vision"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_dsv4_vision"
+
+[[requires]]
+module    = "runtime.ds4.k53perf_gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.k53perf_gpu_tp"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_mmq_common"
+
+[[requires]]
+module    = "kernel.ds4.k53perf_mmq_moe"
+
+[[requires]]
+module    = "kernel.ds4.rocm_attention"
+
+[[requires]]
+module    = "kernel.ds4.rocm_attention_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_backend"
+
+[[requires]]
+module    = "kernel.ds4.rocm_common"
+
+[[requires]]
+module    = "kernel.ds4.rocm_compat"
+
+[[requires]]
+module    = "kernel.ds4.rocm_compressor"
+
+[[requires]]
+module    = "kernel.ds4.rocm_current_api_compat"
+
+[[requires]]
+module    = "kernel.ds4.rocm_deepseek4_vision"
+
+[[requires]]
+module    = "kernel.ds4.rocm_embedding_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_fp8_kv"
+
+[[requires]]
+module    = "kernel.ds4.rocm_fp8_kv_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_glm"
+
+[[requires]]
+module    = "kernel.ds4.rocm_hc"
+
+[[requires]]
+module    = "kernel.ds4.rocm_hc_output_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_hipblaslt"
+
+[[requires]]
+module    = "kernel.ds4.rocm_indexer"
+
+[[requires]]
+module    = "kernel.ds4.rocm_matmul"
+
+[[requires]]
+module    = "kernel.ds4.rocm_misc_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_moe"
+
+[[requires]]
+module    = "kernel.ds4.rocm_moe_launch"
+
+[[requires]]
+module    = "kernel.ds4.rocm_norm_rope"
+
+[[requires]]
+module    = "kernel.ds4.rocm_output"
+
+[[requires]]
+module    = "kernel.ds4.rocm_q8"
+
+[[requires]]
+module    = "kernel.ds4.rocm_router"
+
+[[requires]]
+module    = "kernel.ds4.rocm_runtime"
+
+[[requires]]
+module    = "kernel.ds4.rocm_shared_expert"
+
+[[requires]]
+module    = "kernel.ds4.rocm_unavailable"
+
+[[requires]]
+module    = "kernel.ds4.dsv41"
+
+[[requires]]
+module    = "kernel.ds4.glm53_vision"
+
+[[requires]]
+module    = "kernel.ds4.dsv4_vision"
+
+[[requires]]
+module    = "runtime.ds4.gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.gpu_tp"
+
+[[requires]]
+module    = "runtime.ds4.image"
+
+[[requires]]
+module    = "runtime.ds4.qwen4_vision"
+
+[[requires]]
+module    = "runtime.ds4.linux_memory"
+
+[[requires]]
+module    = "kernel.ds4.mmq_common"
+
+[[requires]]
+module    = "kernel.ds4.mmq_ggml_stubs"
+
+[[requires]]
+module    = "kernel.ds4.mmq_moe"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.k53perf_rocm_backend"

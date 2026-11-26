@@ -1,0 +1,59 @@
+# radiance: an inference server for AMD GPUs in C++ and HIP (language, image, video, speech and music models);
+# architectures, kernel libraries and quantisers are .so plugins. Harvested here: libhalo, its kernel library for
+# Strix Halo (gfx1151), and the plugin ABI headers (card ORIGIN-RADIANCE b0c1db5993).
+name      = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+version   = "head of 2026-11-16 (chat: a tool-call delimiter is not a turn terminator)"
+reference_checkout = "laptop: ~/Code/strixflerp-upstream-supplement/radiance (libhalo/, abi/, LICENSE, NOTICE, git ls-files list; holds 38c182a2baa3, every harvested file byte-identical). The control-node ark copy /data/ark-inbox/src/codeberg.org__StillDeadcode__radiance is shallow and now at 689f554 (updated 2026-11-21), so it no longer holds 38c182a2baa3"
+
+[licence]
+spdx      = "Apache-2.0"
+files     = ["LICENSE", "NOTICE"]                          # copied verbatim next to this file
+third_party = "NOTICE names the contributors (tcclaviger: N-rank all-reduce; ggz14: MXFP4 GEMM, GDN overflow guards; slydlake: MXFP4 decode and prefill GEMMs; goodman-b: four-rank tensor parallelism for Qwen3.8-Flash-Next; keptn42: fused router launch, routed GEMM decode loads, n-gram table in RAM, and more). vendor/ in the origin is not harvested. Weights are not part of the tree."
+
+[toolchain]
+host      = "C++ and CMake (CMakePresets.json); libhalo also builds standalone against an installed radiance (cmake -S libhalo -DCMAKE_PREFIX_PATH=<radiance prefix>)"
+device    = "ROCm HIP for gfx1151; built only when RAD_GPU_TARGETS names gfx1151"
+build     = "cmake --preset <preset> -DRAD_GPU_TARGETS=gfx1151 -> radiance_home/kernels/libhalo.so; every unit compiles -ffp-contract=off (rad_hipify)"
+
+[kernels]
+loading   = "libhalo.so is a kernel plugin: rad_plugin_open declares rows (op, constraint band, priority) and the engine selects a row per op and shape; libraries are taken in file-name order, so libhalo comes ahead of libr3d on a gfx1151; unported units are weak stubs returning RAD_E_UNSUPPORTED"
+models    = "arch/qwen4exp_fp8 is the origin's Qwen3.8-Flash-Next plugin (served container: w4 experts, int8 trunk, MTP, vision; 113 GiB); not harvested"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_radiance.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".dockerignore",
+  ".gitignore",
+  "CMakeLists.txt",
+  "CMakePresets.json",
+  "Dockerfile",
+  "LICENSE",
+  "NOTICE",
+  "README.md",
+  "arch/**",
+  "build.sh",
+  "cmake/**",
+  "core/**",
+  "dashboard/**",
+  "data/**",
+  "deploy/**",
+  "docker/**",
+  "docs/**",
+  "integrations/**",
+  "libavx/**",
+  "libquant/**",
+  "libr3d/**",
+  "libr4d/**",
+  "libref/**",
+  "plugin/**",
+  "scripts/**",
+  "spec.md",
+  "tests/**",
+  "tools/**",
+  "vendor/**",
+]

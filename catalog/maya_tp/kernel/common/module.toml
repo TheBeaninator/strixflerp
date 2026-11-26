@@ -1,0 +1,54 @@
+id        = "kernel.maya_tp.common"
+kind      = "kernel"
+summary   = "Maya-TP's HIP compatibility layer and shared device headers: include/strata/hip_compat (cuda_runtime.h, force-included into every .cu, mapping CUDA runtime, warp intrinsics and cuBLAS names to HIP, with the wave64 logical-32-lane mapping for gfx908), the kernel headers no other family owns (bf16 / f16 bits, dp4a, gfx-architecture predicates) and llama.cpp's block layouts (third_party/ggml/ggml-common.h)"
+why       = "every other kernel.maya_tp module compiles against these headers; it is the CUDA-to-HIP port the whole engine rides on, a newer copy of kernel.strata.common / kernel.kestrel.hip_compat"
+notes     = "Interface tag: kernel-abi.maya-tp-hip-compat/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/hip_compat/cublas_v2.h",
+  "include/strata/hip_compat/cuda_fp16.h",
+  "include/strata/hip_compat/cuda_profiler_api.h",
+  "include/strata/hip_compat/cuda_runtime.h",
+  "include/strata/hip_compat/cuda_runtime_api.h",
+  "include/strata/hip_compat/intrinsics.hpp",
+  "include/strata/kernels/bf16_bits.hpp",
+  "include/strata/kernels/dp4a.hpp",
+  "include/strata/kernels/f16_bits.hpp",
+  "third_party/ggml/LICENSE",
+  "third_party/ggml/VERSION.txt",
+  "third_party/ggml/ggml-common.h",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include/strata/hip_compat", "src/include", "src/third_party/ggml"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.maya-tp-hip-compat/-/-"
+api       = "include/strata/hip_compat/cuda_runtime.h (force-included with -include), intrinsics.hpp"
+numeric   = "CUDA names mapped to HIP; wave32 assumed, wave64 through a logical 32-lane mapping"
+regime    = "gfx1151 (the fork's target), gfx1100 / gfx1201 / gfx908 in cmake/hip_backend.cmake"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the modules that include it"

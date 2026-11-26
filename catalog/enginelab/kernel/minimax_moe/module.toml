@@ -1,0 +1,105 @@
+id        = "kernel.enginelab.minimax_moe"
+kind      = "kernel"
+summary   = "MiniMax MoE: mmx MoE and traits, prefill (core, IU4) and trellis device; the MoE (HIP) entry"
+why       = "MiniMax routed experts; where it would go: beside the catalogue's moe.experts-decode/exl3-trellis+iu4/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.experts-decode/exl3-trellis+iu4/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 3 HIP unit(s) compiled standalone by the gate; 1 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_minimax_moe.hpp",
+  "include/strix/minimax_moe.hpp",
+  "src/hip_minimax_moe.hip",
+  "src/minimax/moe/mmx_moe.hip",
+  "src/minimax/moe/mmx_moe.hpp",
+  "src/minimax/moe/mmx_moe_traits.hpp",
+  "src/minimax/moe/mmx_prefill.hip",
+  "src/minimax/moe/mmx_prefill.hpp",
+  "src/minimax/moe/mmx_prefill_core.hpp",
+  "src/minimax/moe/mmx_prefill_iu4.inc",
+  "src/minimax/moe/mmx_trellis_device.hpp",
+  "src/minimax_moe.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_minimax_moe.hip", "src/src/minimax/moe/mmx_moe.hip", "src/src/minimax/moe/mmx_prefill.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/exl3-trellis+iu4/f16-f32.enginelab-minimax"
+api       = "src/minimax/moe/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.minimax_engine"
+
+[[requires]]
+module    = "format.enginelab.model_data"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.core_activation_quant"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_integer"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.core_trellis"
+
+[[requires]]
+module    = "kernel.enginelab.minimax_attn"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.minimax_moe.json"
+reason    = "compile gate: fail: 3 of 3 units failed; first: src/src/hip_minimax_moe.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/kernel/minimax_moe/src/src/minimax/moe/mmx_trellis_device.hpp:4:10: error: '../../moe_core/exl3_trellis.hpp' file not found, did you mean 'moe_core/exl3_trellis.hpp'?"

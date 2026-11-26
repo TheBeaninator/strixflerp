@@ -1,0 +1,76 @@
+id        = "runtime.ds4.engine"
+kind      = "runtime"
+summary   = "ds4.c and ds4.h, the engine: mmap GGUF loading, the fixed DeepSeek V4 / V4.1 / Pro, GLM-5.2 / 5.3 / 5.3-Flash and Qwen3.8-Flash-Next layouts and their graph drivers, CPU reference kernels, sessions (one mutable inference timeline owning KV and logits; ds4_session_sync reuses, extends or rebuilds), MTP and DSpark speculation control, the TP and distributed hooks, tokenizer wiring"
+why       = "the whole host side of the engine in one deliberately vertical file; every backend and transport module plugs into it"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["ds4.c", "ds4.h"]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model-ds4/gguf/-"
+api       = "ds4_engine_*, ds4_session_* (ds4.h)"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "runtime.ds4.distributed"
+
+[[requires]]
+module    = "runtime.ds4.dspark"
+
+[[requires]]
+module    = "runtime.ds4.engram"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_tp"
+
+[[requires]]
+module    = "runtime.ds4.gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.image"
+
+[[requires]]
+module    = "runtime.ds4.layer_pack"
+
+[[requires]]
+module    = "runtime.ds4.linux_memory"
+
+[[requires]]
+module    = "runtime.ds4.qwen4_unicode"
+
+[[requires]]
+module    = "runtime.ds4.ssd"
+
+[[requires]]
+module    = "runtime.ds4.streaming_hotlist"
+
+[[requires]]
+module    = "serve.ds4.server"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

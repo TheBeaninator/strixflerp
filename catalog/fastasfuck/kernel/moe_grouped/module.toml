@@ -1,0 +1,64 @@
+id        = "kernel.fastasfuck.moe_grouped"
+kind      = "kernel"
+summary   = "fastasfuck's grouped MoE expert kernels for multi-token forwards on Q4 / Q5 expert rows, with a fused combine-reduce + hc inject for prefill"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its moe_grouped kernel file so a timing card can set it against kernel.strixite.moe_grouped, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/moe_grouped.hip moe.experts-prefill/strixw-q4, moe.experts-prefill/strixw-q5 (225 changed lines against kernel.strixite.moe_grouped kernels/moe_grouped.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/moe_grouped.hip", "kernels/moe_grouped.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/moe_grouped.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q4/bf16"
+api       = "strix::kernels::linear_q4_experts_combine_grouped, linear_q4_experts_gather_grouped, linear_q4_experts_gather_grouped_swiglu, linear_q5_experts_combine_grouped, linear_q5_experts_gather_grouped, moe_group_routes, moe_route_workspace_bytes (kernels/moe_grouped.hpp)"
+numeric   = "derived from kernel.strixite.moe_grouped (225 changed lines against kernel.strixite.moe_grouped kernels/moe_grouped.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.moe_grouped: prefill and MTP verify; tiles of 16 (fp32) or 64/128 (WMMA) slots; E <= 1023; WMMA needs K % 64 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q4/f32"
+api       = "strix::kernels::linear_q4_experts_combine_grouped, linear_q4_experts_gather_grouped, linear_q4_experts_gather_grouped_swiglu, linear_q5_experts_combine_grouped, linear_q5_experts_gather_grouped, moe_group_routes, moe_route_workspace_bytes (kernels/moe_grouped.hpp)"
+numeric   = "derived from kernel.strixite.moe_grouped (225 changed lines against kernel.strixite.moe_grouped kernels/moe_grouped.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.moe_grouped: prefill and MTP verify; tiles of 16 (fp32) or 64/128 (WMMA) slots; E <= 1023; WMMA needs K % 64 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q5/bf16"
+api       = "strix::kernels::linear_q4_experts_combine_grouped, linear_q4_experts_gather_grouped, linear_q4_experts_gather_grouped_swiglu, linear_q5_experts_combine_grouped, linear_q5_experts_gather_grouped, moe_group_routes, moe_route_workspace_bytes (kernels/moe_grouped.hpp)"
+numeric   = "derived from kernel.strixite.moe_grouped (225 changed lines against kernel.strixite.moe_grouped kernels/moe_grouped.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.moe_grouped: K % 128 == 0"
+
+[[provides]]
+interface = "moe.experts-prefill/strixw-q5/f32"
+api       = "strix::kernels::linear_q4_experts_combine_grouped, linear_q4_experts_gather_grouped, linear_q4_experts_gather_grouped_swiglu, linear_q5_experts_combine_grouped, linear_q5_experts_gather_grouped, moe_group_routes, moe_route_workspace_bytes (kernels/moe_grouped.hpp)"
+numeric   = "derived from kernel.strixite.moe_grouped (225 changed lines against kernel.strixite.moe_grouped kernels/moe_grouped.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.moe_grouped: K % 128 == 0"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.wmma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.moe_grouped.json"

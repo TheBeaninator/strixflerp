@@ -1,0 +1,71 @@
+id        = "runtime.enginelab.model_graph"
+kind      = "runtime"
+summary   = "model-graph adapters (src/model_graph): the model graph and plan, stage bridge, and the DeepSeek V4.1, dense and Qwen adapters"
+why       = "binds a model to the stage graph; where it would go: a new strixflerp interface executor.model-graph/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, executor.model-graph/-/-. 6 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/model_graph/deepseek41_adapter.cpp",
+  "src/model_graph/deepseek41_adapter.hpp",
+  "src/model_graph/dense_adapter.cpp",
+  "src/model_graph/dense_adapter.hpp",
+  "src/model_graph/model_graph.cpp",
+  "src/model_graph/model_graph.hpp",
+  "src/model_graph/plan.cpp",
+  "src/model_graph/plan.hpp",
+  "src/model_graph/qwen_adapter.cpp",
+  "src/model_graph/qwen_adapter.hpp",
+  "src/model_graph/stage_bridge.cpp",
+  "src/model_graph/stage_bridge.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/model_graph/deepseek41_adapter.cpp",
+  "src/src/model_graph/dense_adapter.cpp",
+  "src/src/model_graph/model_graph.cpp",
+  "src/src/model_graph/plan.cpp",
+  "src/src/model_graph/qwen_adapter.cpp",
+  "src/src/model_graph/stage_bridge.cpp",
+]
+includes  = ["src/src", "src/src/model_graph"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.model-graph/-/-"
+api       = "src/model_graph/*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "executor.enginelab.qwen_engine"
+
+[[requires]]
+module    = "kernel.enginelab.dense_launch"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.graph"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,59 @@
+id        = "kernel.maya_tp.mm3_gguf"
+kind      = "kernel"
+summary   = "maya-mm3's GGUF weights on the device (mm3_gguf.cu / .cuh / mm3_gguf_host.hpp): activation rounding, the dense and expert paths over MiniMax-M3.1's Maya quants"
+why       = "the GGUF counterpart of mm3_exl3 for the same model: the same MiniMax-M3.1 layers over ggml block types, so the two show what each weight family costs on one engine"
+notes     = "Interface tag: moe.experts-decode/gguf-kquant/f32.maya-tp-mm3. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/mm3/mm3_gguf.cu", "src/mm3/mm3_gguf.cuh", "src/mm3/mm3_gguf_host.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/mm3/mm3_gguf.cu"]
+includes  = ["src/src/mm3"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-kquant/f32.maya-tp-mm3"
+api       = "mm3 GGUF launches (mm3_gguf.cuh)"
+numeric   = "ggml block types"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_iq"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_lt"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_gv"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.mm3_gguf.json"

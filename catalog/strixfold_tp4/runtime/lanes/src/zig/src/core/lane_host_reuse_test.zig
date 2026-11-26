@@ -1,0 +1,397 @@
+//! LaneHost with the prompt cache: a conversation's next turn resumes from its kept prompt state (the fake backend).
+const std = @import("std");
+const lanes = @import("lanes");
+const api = @import("engine_api.zig");
+const pc = @import("prompt_cache.zig");
+const LaneHost = api.LaneHost;
+const Id = api.Id;
+const Event = api.Event;
+const Request = api.Request;
+const Reason = api.Reason;
+
+test "a lane host resumes a conversation from its kept prompt state and reports the cached tokens" {
+    const gpa = std.testing.allocator;
+    var cfg = try lanes.Config.init(gpa, .{ .exact_width = 8, .gpu_tokens = true, .hidden_rows = true }, 8, 7);
+    defer cfg.deinit(gpa);
+    var target: lanes.fake.Fake = .{ .gpa = gpa };
+    defer target.deinit();
+    var clock: lanes.fake.FixedClock = .{};
+    var core = lanes.Engine.init(gpa, &cfg, target.backend(), clock.clock());
+    defer core.deinit();
+    const Snaps = struct {
+        fn bytes(_: *anyopaque, at: u32) u64 {
+            return 64 + 4 * @as(u64, at);
+        }
+        fn save(ptr: *anyopaque, owner: ?*anyopaque, at: u32) anyerror!pc.Saved {
+            const f: *lanes.fake.Fake = @ptrCast(@alignCast(ptr));
+            return f.save(@ptrCast(@alignCast(owner.?)), at);
+        }
+        fn restore(_: *anyopaque, _: ?*anyopaque, _: pc.Saved) anyerror!void {
+            return error.BackendRestores; // lane-core backends restore inside their own prompt pass
+        }
+        fn drop(ptr: *anyopaque, saved: pc.Saved) void {
+            const f: *lanes.fake.Fake = @ptrCast(@alignCast(ptr));
+            f.drop(saved);
+        }
+    };
+    var store = pc.Store.init(gpa, .{ .ptr = &target, .vtable = &.{ .bytes = Snaps.bytes, .save = Snaps.save, .restore = Snaps.restore, .drop = Snaps.drop } }, .{ .min_gap = 4, .min_prompt = 0 }, 1 << 20);
+    defer store.deinit();
+    var host = LaneHost.init(gpa, std.testing.io, &core, .{ .lanes = 2 });
+    host.cache = &store;
+    try host.start();
+    defer host.stop();
+    const Box = struct {
+        mutex: std.Io.Mutex = .init,
+        tokens: std.ArrayList(u32) = .empty,
+        cached: ?u32 = null,
+        done: ?Reason = null,
+        fn event(ctx: *anyopaque, _: Id, e: *const Event) void {
+            const b: *@This() = @ptrCast(@alignCast(ctx));
+            b.mutex.lockUncancelable(std.testing.io);
+            defer b.mutex.unlock(std.testing.io);
+            switch (e.*) {
+                .prefilled => |c| b.cached = c,
+                .tokens => |t| b.tokens.appendSlice(gpa, t) catch {},
+                .finished => |f| b.done = f.reason,
+            }
+        }
+        fn wait(b: *@This()) Reason {
+            while (true) {
+                b.mutex.lockUncancelable(std.testing.io);
+                const d = b.done;
+                b.mutex.unlock(std.testing.io);
+                if (d) |r| return r;
+                std.Io.sleep(std.testing.io, .fromMilliseconds(1), .awake) catch {};
+            }
+        }
+    };
+    const e = host.engine();
+    const t1 = [_]u32{ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3 };
+    var b1: Box = .{};
+    defer b1.tokens.deinit(gpa);
+    const r1: Request = .{ .prompt = &t1, .max_tokens = 6, .history_len = 8 };
+    try e.submit(1, &r1, .{ .ctx = &b1, .event = Box.event });
+    try std.testing.expectEqual(Reason.length, b1.wait());
+    try std.testing.expectEqual(@as(?u32, 0), b1.cached);
+    try std.testing.expectEqual(@as(usize, 1), store.entries.items.len);
+    var t2: std.ArrayList(u32) = .empty; // the next turn: the history, the reply, a tool result, a new generation prompt
+    defer t2.deinit(gpa);
+    try t2.appendSlice(gpa, &t1);
+    try t2.appendSlice(gpa, b1.tokens.items[0..4]);
+    try t2.appendSlice(gpa, &.{ 7, 7, 5, 3 });
+    var b2: Box = .{};
+    defer b2.tokens.deinit(gpa);
+    const r2: Request = .{ .prompt = t2.items, .max_tokens = 12, .history_len = @intCast(t2.items.len - 2) };
+    try e.submit(2, &r2, .{ .ctx = &b2, .event = Box.event });
+    try std.testing.expectEqual(Reason.length, b2.wait());
+    try std.testing.expectEqual(@as(?u32, 8), b2.cached);
+    var history: std.ArrayList(u32) = .empty; // the fake's tokens read the whole history: any slip in it changes them
+    defer history.deinit(gpa);
+    try history.appendSlice(gpa, t2.items);
+    for (b2.tokens.items) |t| {
+        try std.testing.expectEqual(lanes.fake.next(history.items, null, history.items.len), t);
+        try history.append(gpa, t);
+    }
+    try std.testing.expectEqual(@as(u64, 1), store.counts.hits);
+    try std.testing.expectEqual(@as(usize, 2), store.entries.items.len);
+}
+
+test "a turn's mark evicting the state it resumed from: the hit is reported first and the entry freed once" {
+    const gpa = std.testing.allocator;
+    var cfg = try lanes.Config.init(gpa, .{ .exact_width = 8, .gpu_tokens = true, .hidden_rows = true }, 8, 7);
+    defer cfg.deinit(gpa);
+    var target: lanes.fake.Fake = .{ .gpa = gpa };
+    defer target.deinit();
+    var clock: lanes.fake.FixedClock = .{};
+    var core = lanes.Engine.init(gpa, &cfg, target.backend(), clock.clock());
+    defer core.deinit();
+    const Snaps = struct { // a budget of one state: each keep records the hits the store had counted by then
+        f: *lanes.fake.Fake,
+        store: ?*pc.Store = null,
+        hits_at_save: [4]u64 = @splat(0),
+        saves: usize = 0,
+        live: usize = 0,
+        fn of(ptr: *anyopaque) *@This() {
+            return @ptrCast(@alignCast(ptr));
+        }
+        fn bytes(_: *anyopaque, at: u32) u64 {
+            return 64 + 4 * @as(u64, at);
+        }
+        fn save(ptr: *anyopaque, owner: ?*anyopaque, at: u32) anyerror!pc.Saved {
+            const x = of(ptr);
+            x.hits_at_save[x.saves] = x.store.?.counts.hits;
+            x.saves += 1;
+            x.live += 1;
+            return x.f.save(@ptrCast(@alignCast(owner.?)), at);
+        }
+        fn restore(_: *anyopaque, _: ?*anyopaque, _: pc.Saved) anyerror!void {
+            return error.BackendRestores;
+        }
+        fn drop(ptr: *anyopaque, saved: pc.Saved) void {
+            of(ptr).live -= 1;
+            of(ptr).f.drop(saved);
+        }
+    };
+    var snaps: Snaps = .{ .f = &target };
+    var store = pc.Store.init(gpa, .{ .ptr = &snaps, .vtable = &.{ .bytes = Snaps.bytes, .save = Snaps.save, .restore = Snaps.restore, .drop = Snaps.drop } }, .{ .min_gap = 4, .min_prompt = 0 }, 150);
+    defer store.deinit();
+    snaps.store = &store;
+    var host = LaneHost.init(gpa, std.testing.io, &core, .{ .lanes = 2 });
+    host.cache = &store;
+    try host.start();
+    defer host.stop();
+    const Box = struct {
+        mutex: std.Io.Mutex = .init,
+        tokens: std.ArrayList(u32) = .empty,
+        cached: ?u32 = null,
+        done: ?Reason = null,
+        fn event(ctx: *anyopaque, _: Id, e: *const Event) void {
+            const b: *@This() = @ptrCast(@alignCast(ctx));
+            b.mutex.lockUncancelable(std.testing.io);
+            defer b.mutex.unlock(std.testing.io);
+            switch (e.*) {
+                .prefilled => |c| b.cached = c,
+                .tokens => |t| b.tokens.appendSlice(gpa, t) catch {},
+                .finished => |f| b.done = f.reason,
+            }
+        }
+        fn wait(b: *@This()) Reason {
+            while (true) {
+                b.mutex.lockUncancelable(std.testing.io);
+                const d = b.done;
+                b.mutex.unlock(std.testing.io);
+                if (d) |r| return r;
+                std.Io.sleep(std.testing.io, .fromMilliseconds(1), .awake) catch {};
+            }
+        }
+    };
+    const e = host.engine();
+    const t1 = [_]u32{ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3 };
+    var b1: Box = .{};
+    defer b1.tokens.deinit(gpa);
+    const r1: Request = .{ .prompt = &t1, .max_tokens = 6, .history_len = 8 };
+    try e.submit(1, &r1, .{ .ctx = &b1, .event = Box.event });
+    try std.testing.expectEqual(Reason.length, b1.wait());
+    var t2: std.ArrayList(u32) = .empty; // 18 tokens: its history's state (128 bytes) and turn 1's (96) pass the budget together
+    defer t2.deinit(gpa);
+    try t2.appendSlice(gpa, &t1);
+    try t2.appendSlice(gpa, b1.tokens.items[0..4]);
+    try t2.appendSlice(gpa, &.{ 7, 7, 5, 3 });
+    var b2: Box = .{};
+    defer b2.tokens.deinit(gpa);
+    const r2: Request = .{ .prompt = t2.items, .max_tokens = 12, .history_len = @intCast(t2.items.len - 2) };
+    try e.submit(2, &r2, .{ .ctx = &b2, .event = Box.event });
+    try std.testing.expectEqual(Reason.length, b2.wait());
+    try std.testing.expectEqual(@as(?u32, 8), b2.cached);
+    try std.testing.expectEqual(@as(usize, 2), snaps.saves);
+    try std.testing.expectEqual(@as(u64, 1), snaps.hits_at_save[1]); // the resume was reported before the keep evicted it
+    try std.testing.expectEqual(@as(u64, 1), store.counts.evicted);
+    try std.testing.expectEqual(@as(usize, 1), store.entries.items.len);
+    try std.testing.expectEqual(@as(u32, 16), store.entries.items[0].at);
+    try std.testing.expectEqual(@as(usize, 1), snaps.live);
+    var history: std.ArrayList(u32) = .empty;
+    defer history.deinit(gpa);
+    try history.appendSlice(gpa, t2.items);
+    for (b2.tokens.items) |t| {
+        try std.testing.expectEqual(lanes.fake.next(history.items, null, history.items.len), t);
+        try history.append(gpa, t);
+    }
+}
+
+test "a kept state its family no longer restores: the longest that does is handed, the dead one goes, a keep replaces it" {
+    const gpa = std.testing.allocator;
+    const Fam = struct {
+        slots: [8]u8 = undefined, // a kept state is one of these
+        dead: [8]bool = @splat(false), // its rows went to another request
+        at: [8]u32 = @splat(0),
+        n: usize = 0,
+        const replay = 2; // a state restores only this far before a prompt's end
+
+        fn of(ptr: *anyopaque) *@This() {
+            return @ptrCast(@alignCast(ptr));
+        }
+        fn index(f: *const @This(), saved: pc.Saved) usize {
+            return @intFromPtr(saved) - @intFromPtr(&f.slots);
+        }
+        fn bytes(_: *anyopaque, _: u32) u64 {
+            return 16;
+        }
+        fn save(ptr: *anyopaque, _: ?*anyopaque, at: u32) anyerror!pc.Saved {
+            const f = of(ptr);
+            f.at[f.n] = at;
+            f.n += 1;
+            return &f.slots[f.n - 1];
+        }
+        fn restore(_: *anyopaque, _: ?*anyopaque, _: pc.Saved) anyerror!void {}
+        fn drop(_: *anyopaque, _: pc.Saved) void {}
+        fn restores(ptr: *anyopaque, saved: pc.Saved, len: u32) bool {
+            const f = of(ptr);
+            const i = f.index(saved);
+            return !f.dead[i] and f.at[i] <= len -| replay;
+        }
+    };
+    var fam: Fam = .{};
+    var store = pc.Store.init(gpa, .{ .ptr = &fam, .vtable = &.{ .bytes = Fam.bytes, .save = Fam.save, .restore = Fam.restore, .drop = Fam.drop, .restores = Fam.restores } }, .{}, 1 << 10);
+    defer store.deinit();
+    var arena = std.heap.ArenaAllocator.init(gpa);
+    defer arena.deinit();
+    const prompt = [_]u32{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    try std.testing.expect(store.keep(&prompt, 4, null, &.{}));
+    try std.testing.expect(store.keep(&prompt, 8, null, &.{}));
+    try std.testing.expectEqual(@as(u32, 8), store.find(&prompt, &.{}).?.at);
+    // a prompt that ends inside the longer state's replay resumes the shorter one; the longer one stays kept
+    try std.testing.expectEqual(@as(u32, 4), store.find(prompt[0..9], &.{}).?.at);
+    try std.testing.expectEqual(@as(usize, 2), store.entries.items.len);
+    // the longer state loses its rows: the next lookup drops it and hands the shorter one, and nothing failed
+    fam.dead[1] = true;
+    const l = try store.lookup(arena.allocator(), &prompt, &.{}, 0, &.{}, &.{});
+    try std.testing.expectEqual(@as(u32, 4), l.entry.?.at);
+    try std.testing.expectEqual(@as(usize, 1), store.entries.items.len);
+    try std.testing.expectEqual(@as(u64, 1), store.counts.evicted);
+    try std.testing.expectEqual(@as(u64, 0), store.counts.failed);
+    // a pass that stands again where a dead state was keeps its own copy in that state's place
+    fam.dead[0] = true;
+    try std.testing.expect(store.keep(&prompt, 4, null, &.{}));
+    try std.testing.expectEqual(@as(usize, 1), store.entries.items.len);
+    try std.testing.expectEqual(@as(usize, 2), fam.index(store.entries.items[0].saved));
+    try std.testing.expectEqual(@as(u64, 2), store.counts.evicted);
+    try std.testing.expectEqual(@as(u32, 4), store.find(&prompt, &.{}).?.at);
+}
+
+
+/// An off-thread tower with every request's rows at once: it notes where each request's encode was told to start.
+const Hint = struct {
+    froms: [2]u32 = @splat(99),
+    n: usize = 0,
+
+    fn start(ctx: *anyopaque, _: []const api.Image, from: u32, _: lanes.stream.Wake) void {
+        const t: *Hint = @ptrCast(@alignCast(ctx));
+        t.froms[t.n] = from;
+        t.n += 1;
+    }
+
+    fn ready(_: *anyopaque, _: []const api.Image) bool {
+        return true;
+    }
+
+    fn forget(_: *anyopaque, _: []const api.Image) void {}
+
+    fn prepare(_: *anyopaque, _: std.mem.Allocator, _: []const u8, _: *[]const u8) lanes.stream.Vision.PrepareError!lanes.stream.Vision.Prepared {
+        return error.BadImage;
+    }
+
+    fn vision(t: *Hint) lanes.stream.Vision {
+        return .{ .ctx = t, .placeholder = "<image>", .token = 11, .prepare = prepare, .encode = .{ .ctx = t, .start = start, .ready = ready, .forget = forget } };
+    }
+};
+
+/// Turn 1 with picture `first`, then turn 2 (turn 1, its reply, a tool result) with `second`: turn 2's cache counts.
+fn imageTurns(cache_images: bool, first: []const u8, second: []const u8, second_digest: ?pc.Digest) !struct { cached: ?u32, entries: usize, hits: u64, from: u32, reply: [12]u32, n: usize } {
+    const gpa = std.testing.allocator;
+    var cfg = try lanes.Config.init(gpa, .{ .exact_width = 8, .gpu_tokens = true, .hidden_rows = true }, 8, 7);
+    defer cfg.deinit(gpa);
+    var target: lanes.fake.Fake = .{ .gpa = gpa };
+    defer target.deinit();
+    var clock: lanes.fake.FixedClock = .{};
+    var core = lanes.Engine.init(gpa, &cfg, target.backend(), clock.clock());
+    defer core.deinit();
+    const Snaps = struct {
+        fn bytes(_: *anyopaque, at: u32) u64 {
+            return 64 + 4 * @as(u64, at);
+        }
+        fn save(ptr: *anyopaque, owner: ?*anyopaque, at: u32) anyerror!pc.Saved {
+            const f: *lanes.fake.Fake = @ptrCast(@alignCast(ptr));
+            return f.save(@ptrCast(@alignCast(owner.?)), at);
+        }
+        fn restore(_: *anyopaque, _: ?*anyopaque, _: pc.Saved) anyerror!void {
+            return error.BackendRestores;
+        }
+        fn drop(ptr: *anyopaque, saved: pc.Saved) void {
+            const f: *lanes.fake.Fake = @ptrCast(@alignCast(ptr));
+            f.drop(saved);
+        }
+    };
+    var store = pc.Store.init(gpa, .{ .ptr = &target, .vtable = &.{ .bytes = Snaps.bytes, .save = Snaps.save, .restore = Snaps.restore, .drop = Snaps.drop } }, .{ .min_gap = 4, .min_prompt = 0 }, 1 << 20);
+    defer store.deinit();
+    var hint: Hint = .{};
+    var host = LaneHost.init(gpa, std.testing.io, &core, .{ .lanes = 2, .vision = hint.vision() });
+    host.cache = &store;
+    host.cache_images = cache_images;
+    try host.start();
+    defer host.stop();
+    const Box = struct {
+        mutex: std.Io.Mutex = .init,
+        tokens: std.ArrayList(u32) = .empty,
+        cached: ?u32 = null,
+        done: ?Reason = null,
+        fn event(ctx: *anyopaque, _: Id, e: *const Event) void {
+            const b: *@This() = @ptrCast(@alignCast(ctx));
+            b.mutex.lockUncancelable(std.testing.io);
+            defer b.mutex.unlock(std.testing.io);
+            switch (e.*) {
+                .prefilled => |c| b.cached = c,
+                .tokens => |t| b.tokens.appendSlice(gpa, t) catch {},
+                .finished => |f| b.done = f.reason,
+            }
+        }
+        fn wait(b: *@This()) Reason {
+            while (true) {
+                b.mutex.lockUncancelable(std.testing.io);
+                const d = b.done;
+                b.mutex.unlock(std.testing.io);
+                if (d) |r| return r;
+                std.Io.sleep(std.testing.io, .fromMilliseconds(1), .awake) catch {};
+            }
+        }
+    };
+    const e = host.engine();
+    const img: u32 = 11; // the image token: the span's three positions hold it whatever the picture
+    const t1 = [_]u32{ 3, 1, img, img, img, 9, 2, 6, 5, 3 };
+    const im1 = [_]api.Image{.{ .at = 2, .tokens = 3, .bytes = first }};
+    var b1: Box = .{};
+    defer b1.tokens.deinit(gpa);
+    const r1: Request = .{ .prompt = &t1, .images = &im1, .max_tokens = 6, .history_len = 8 };
+    try e.submit(1, &r1, .{ .ctx = &b1, .event = Box.event });
+    try std.testing.expectEqual(Reason.length, b1.wait());
+    try std.testing.expectEqual(@as(?u32, 0), b1.cached);
+    var t2: std.ArrayList(u32) = .empty;
+    defer t2.deinit(gpa);
+    try t2.appendSlice(gpa, &t1);
+    try t2.appendSlice(gpa, b1.tokens.items[0..4]);
+    try t2.appendSlice(gpa, &.{ 7, 7, 5, 3 });
+    const im2 = [_]api.Image{.{ .at = 2, .tokens = 3, .bytes = second, .digest = second_digest orelse pc.imageDigest(second) }}; // as the server sets it
+    var b2: Box = .{};
+    defer b2.tokens.deinit(gpa);
+    const r2: Request = .{ .prompt = t2.items, .images = &im2, .max_tokens = 12, .history_len = @intCast(t2.items.len - 2) };
+    try e.submit(2, &r2, .{ .ctx = &b2, .event = Box.event });
+    try std.testing.expectEqual(Reason.length, b2.wait());
+    try std.testing.expectEqual(@as(u32, 0), hint.froms[0]);
+    var reply: [12]u32 = @splat(0);
+    const n = @min(reply.len, b2.tokens.items.len);
+    @memcpy(reply[0..n], b2.tokens.items[0..n]);
+    return .{ .cached = b2.cached, .entries = store.entries.items.len, .hits = store.counts.hits, .from = hint.froms[1], .reply = reply, .n = n };
+}
+
+test "a conversation with a picture resumes past it when the next turn carries the same picture, and only then" {
+    const same = try imageTurns(true, "picture A", "picture A", null); // turn 1's digest taken by the host, turn 2's by the server
+    try std.testing.expectEqual(@as(?u32, 8), same.cached);
+    try std.testing.expectEqual(@as(u64, 1), same.hits);
+    try std.testing.expectEqual(@as(u32, 8), same.from); // its encode skips the picture the resume covers
+    const other = try imageTurns(true, "picture A", "picture B", null); // the same tokens, another picture
+    try std.testing.expectEqual(@as(?u32, 0), other.cached);
+    try std.testing.expectEqual(@as(u64, 0), other.hits);
+    try std.testing.expectEqual(@as(u32, 0), other.from);
+    var near = pc.imageDigest("picture A");
+    near[31] ^= 1; // a digest alike in its first 8 bytes (and all but its last bit)
+    const close = try imageTurns(true, "picture A", "picture A", near);
+    try std.testing.expectEqual(@as(?u32, 0), close.cached);
+    try std.testing.expectEqual(@as(u64, 0), close.hits);
+    try std.testing.expectEqual(@as(u32, 0), close.from);
+    const off = try imageTurns(false, "picture A", "picture A", null); // a backend that keys no pictures: nothing kept
+    try std.testing.expectEqual(@as(?u32, 0), off.cached);
+    try std.testing.expectEqual(@as(usize, 0), off.entries);
+    // pod card d6a577e1a1: turn 2 resumed past the picture replies as turn 2 read cold does, token for token
+    try std.testing.expectEqual(@as(usize, 12), same.n);
+    try std.testing.expectEqualSlices(u32, off.reply[0..off.n], same.reply[0..same.n]);
+    try std.testing.expectEqualSlices(u32, off.reply[0..off.n], other.reply[0..other.n]);
+}

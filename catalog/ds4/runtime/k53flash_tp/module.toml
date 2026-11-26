@@ -1,0 +1,40 @@
+id        = "runtime.ds4.k53flash_tp"
+kind      = "runtime"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-flash 4bdbcc2: its copy of the tp family against antirez/ds4 b3f5018: ds4_tp.c changed (+288 -1777 lines); ds4_tp.h changed (+7 -113 lines). The family: the tensor-parallel transport and lockstep protocol: two ranks run the same graph, each with one contiguous half of the routed experts; rank 0 mirrors every session call to rank 1 over a TCP control socket, and inside each token the partial block outputs go through a registered slab by two-sided RDMA send / recv (Thunderbolt UC on Metal, RoCE RC on Linux) or a full-duplex TCP socket; versioned wire features (command mailbox, verify flags, DSpark agreement)"
+why       = "kyuz0's gfx1151 GLM-5.3-Flash decode branch: on-the-fly WMMA Q8_0 batch GEMMs and partial HC expand (ds4_rocm_q8.cuh), the GLM dense-compact causal attention and row-wise Q8 projections (ds4_rocm_glm.cuh) and a stand-alone selected multi-head attention kernel (rocm/ds4_rocm_glm_selected_multihead.cu); the tree is a fork from before the base's V4.1 and Qwen work, so its base-diff also shows files the base changed later. The family in the base: two-machine TP over a network link, the shape the pod's own TP4 work lives in"
+notes     = "Overlay kyuz0_glm53_flash: files under overlay/kyuz0_glm53_flash/ are the branch's bytes at 4bdbcc206828; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_flash.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "4bdbcc206828ab4e7cdfc45a1052cb5f35400fdc"
+branch    = "perf/rocm-gfx1151-glm53-flash"
+paths     = ["overlay/kyuz0_glm53_flash/ds4_tp.c", "overlay/kyuz0_glm53_flash/ds4_tp.h"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_flash"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.interface-ds4-tp-k53flash/-/-"
+api       = "ds4_tp_* (ds4_tp.h)"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "runtime.ds4.engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

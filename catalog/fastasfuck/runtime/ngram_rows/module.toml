@@ -1,0 +1,49 @@
+id        = "runtime.fastasfuck.ngram_rows"
+kind      = "runtime"
+summary   = "fastasfuck's PLE row source that gathers n-gram rows straight from the checkpoint's ngram_embedding shards with deduplicated preads and no cache"
+why       = "a reference source for the PLE rows that needs no converted table, used to check the table path against the checkpoint"
+notes     = "Files vs strixite: runtime/ngram_rows.cpp byte-identical to runtime.strixite.ngram_rows at d19945e; runtime/ngram_rows.hpp byte-identical to runtime.strixite.ngram_rows at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/ngram_rows.cpp", "runtime/ngram_rows.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/ngram_rows.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.ngram-rows/safetensors/-"
+api       = "strix::NgramRowsFromShards"
+numeric   = "the same source as runtime.strixite.ngram_rows, so its behaviour: the checkpoint's own bf16 rows"
+regime    = "as runtime.strixite.ngram_rows: one 4 KiB page read per row, no caching"
+
+[[requires]]
+module    = "format.fastasfuck.safetensors"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.ngram_table"
+
+[[requires]]
+module    = "runtime.fastasfuck.ple_hash"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_model) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

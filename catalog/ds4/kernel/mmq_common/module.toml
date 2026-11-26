@@ -1,0 +1,51 @@
+id        = "kernel.ds4.mmq_common"
+kind      = "kernel"
+summary   = "the vendored llama.cpp ggml-cuda headers the MMQ kernels compile against (common.cuh, mma.cuh, vecdotq.cuh, unary.cuh, ggml-common.h, the HIP / MUSA / CUDA vendor maps) and the thin ggml.h / ggml-impl.h / ggml-cuda.h redirects; VENDOR.md records the upstream pin (llama.cpp 5c0e9468, 2026-05-14)"
+why       = "the base every mmq_* module needs; ROCm builds them with -DGGML_USE_HIP"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = [
+  "cuda/mmq/VENDOR.md",
+  "cuda/mmq/common.cuh",
+  "cuda/mmq/ggml-common.h",
+  "cuda/mmq/ggml-cuda.h",
+  "cuda/mmq/ggml-impl.h",
+  "cuda/mmq/ggml.h",
+  "cuda/mmq/mma.cuh",
+  "cuda/mmq/unary.cuh",
+  "cuda/mmq/vecdotq.cuh",
+  "cuda/mmq/vendors/cuda.h",
+  "cuda/mmq/vendors/hip.h",
+]
+authors   = ["The ds4.c authors", "DeepSeek", "The ggml authors (llama.cpp 5c0e9468, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src", "src/cuda/mmq"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.ds4-ggml-mmq-common/-/-"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "kernel.ds4.mmq_ggml_stubs"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.mmq_moe"

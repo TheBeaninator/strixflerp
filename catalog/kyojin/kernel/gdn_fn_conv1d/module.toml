@@ -1,0 +1,36 @@
+id        = "kernel.kyojin.gdn_fn_conv1d"
+kind      = "kernel"
+summary   = "Causal conv1d of the GDN front end (Triton and torch paths) as Kyojin changed it"
+why       = "GDN layers. Where the shape would go: a mixer.gdn-front/-/f32 provider beside kernel.hipfire.gdn, kernel.lucebox.gdn, kernel.strata.gdn, through a port of the python / Triton logic"
+notes     = "Interface tag: mixer.gdn-front/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 1 changed (conv1d.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/gated_delta_net_fn/conv1d.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "mixer.gdn-front/-/f32.kyojin-conv1d"
+api       = "conv1d.py"
+numeric   = "fp32"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

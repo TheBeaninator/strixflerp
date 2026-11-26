@@ -1,0 +1,44 @@
+id        = "kernel.lucebox.indexer"
+kind      = "kernel"
+summary   = "DeepSeek V4 sparse-attention indexer scores as a ggml op, a rocWMMA 2.x path with a scalar fallback for older or header-less ROCm, kept bit-aligned with the official DeepSeek V4 graph"
+why       = "The second DeepSeek V4 indexer in the catalogue written as a WMMA kernel for gfx1151, against kernel.gufo.ds4_indexer and StrixFold indexer_score"
+notes     = "INTERFACES.md section: 5. Sparse-attention indexer and QSA. Interface tags: attn.indexer-score/-/f32.lucebox. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-indexer.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-indexer.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-indexer.cuh",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-indexer.cu"]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-indexer.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "attn.indexer-score/-/f32.lucebox"
+api       = "GGML op in ds4-indexer.cu"
+numeric   = "bit-for-bit aligned with the official DeepSeek V4 graph (file header); rocWMMA only when ROCWMMA_VERSION_MAJOR > 1"
+regime    = "DeepSeek V4 / V4.1 Flash prefill and decode"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.indexer.json"

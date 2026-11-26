@@ -1,0 +1,43 @@
+id        = "runtime.enginelab_usb4.gpu_stream_driver"
+kind      = "runtime"
+summary   = "the DMA-BUF GPU stream driver as captured after 0001: overlay/drivers/thunderbolt/gpu_stream.c, gpu_stream.h and gpu_stream_logic.h"
+why       = "the readable form of the GPU-direct path (the patches are the authority)"
+notes     = "Interface tag: none. Capture only: apply the patches for the current driver. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "overlay/drivers/thunderbolt/gpu_stream.c",
+  "overlay/drivers/thunderbolt/gpu_stream.h",
+  "overlay/drivers/thunderbolt/gpu_stream_logic.h",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "c"
+sources   = ["src/overlay/drivers/thunderbolt/gpu_stream.c"]
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-gpu-stream-driver/-/-"
+api       = "kernel-internal GPU stream (DMA-BUF import, rings, fences)"
+numeric   = "bytes only"
+regime    = "patched kernel"
+
+[[requires]]
+module    = "runtime.enginelab_usb4.gpu_stream_uapi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel source: needs the kernel tree to build"

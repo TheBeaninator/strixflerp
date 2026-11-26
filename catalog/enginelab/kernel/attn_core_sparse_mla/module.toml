@@ -1,0 +1,63 @@
+id        = "kernel.enginelab.attn_core_sparse_mla"
+kind      = "kernel"
+summary   = "selected-token (sparse) attention: the sparse flash MLA, row-group and WMMA forms with key split, the exact selected MLA with its rule and VOPD score body, eager selected attention and the selected block plan and flash prefill"
+why       = "DeepSeek V4.1 and GLM-5.3 attend over a selected token set (DSA / MLA); this is the shared sparse half with an exact rule next to each fast form; where it would go: a new strixflerp interface attn.sparse-mla/-/bf16-f32.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, attn.sparse-mla/-/bf16-f32.enginelab. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/attn_core/eager_selected.hpp",
+  "src/attn_core/eager_selected_rule.hpp",
+  "src/attn_core/selected_block_plan.hpp",
+  "src/attn_core/selected_exact_mla.hpp",
+  "src/attn_core/selected_exact_mla_rule.hpp",
+  "src/attn_core/selected_exact_mla_scores_vopd.inc",
+  "src/attn_core/selected_flash_prefill.hpp",
+  "src/attn_core/sparse_flash_keysplit.hpp",
+  "src/attn_core/sparse_flash_mla.hpp",
+  "src/attn_core/sparse_flash_rowgroup.hpp",
+  "src/attn_core/sparse_flash_wmma.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.sparse-mla/-/bf16-f32.enginelab"
+api       = "src/attn_core sparse / selected headers"
+numeric   = "EXACT profile: bitwise the engine's declared reference (fixed fmaf order, -ffp-contract=off, denormals kept); FAST levers change bits only behind the quality gate (AGENTS.md)"
+regime    = "decode and prefill over selected tokens"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_select"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

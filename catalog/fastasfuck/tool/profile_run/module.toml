@@ -1,0 +1,37 @@
+id        = "tool.fastasfuck.profile_run"
+kind      = "tool"
+summary   = "fastasfuck's rocprofv3 driver: runs a ROCTX build of the server on real weights, sends T = 1..512 queries and summarizes regions and kernels from the trace database"
+why       = "the end-to-end profile of the served engine; it reads the ranges common/trace.hpp emits"
+notes     = "Files vs strixite: tools/profile_run.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/profile_run.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.profile-run/-/-"
+api       = "tools/profile_run.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

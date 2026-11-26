@@ -1,0 +1,44 @@
+id        = "kernel.kyojin.dflash2"
+kind      = "kernel"
+summary   = "DFlash2 drafter kernels ported from exllamav3 1.6.0: the grouped dynamic causal convolution over a draft block (out[b, t, c] = sum_k (base[k, c] + dyn[b, t, k, c / group]) * x[b, t - k, c], taps within the block)"
+why       = "the DFlash2 block drafter of speculative decoding. Where the shape would go: a speculation.draft/dflash/f32 provider beside runtime.gufo.dflash, runtime.hipfire.runtime, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: speculation.draft/dflash/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (dflash2.cu, dflash2.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/dflash2.cu", "exllamav3/exllamav3_ext/dflash2.cuh"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+upstream  = "ported from exllamav3 1.6.0 (MIT, turboderp)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/dflash2.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "speculation.draft/dflash/f32.kyojin-conv"
+api       = "dflash2.cu, dflash2.cuh; kernels: dflash2_dynconv_kernel, dflash2_selector_walk_kernel, dflash2_topk_kernel"
+numeric   = "fp16 / bf16 in, fp32 accumulation"
+regime    = "decode, draft block"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: dflash2.cu"

@@ -45,6 +45,9 @@
     "executor.gufo.qwen",
     "format.flerp.gguf_placed",
     "kernel.flerp.moe_kquant",
+    "kernel.flerp.moe_kgrouped",
+    "kernel.flerp.attn_wmma_gqa",
+    "kernel.flerp.draft_coarse",
     "executor.flerp.qwen35moe",
     "runtime.flerp.stage_relay",
     "executor.flerp.qwen35moe_abi",
@@ -97,6 +100,9 @@
     "executor.gufo.qwen",
     "format.flerp.gguf_placed",
     "kernel.flerp.moe_kquant",
+    "kernel.flerp.moe_kgrouped",
+    "kernel.flerp.attn_wmma_gqa",
+    "kernel.flerp.draft_coarse",
     "executor.flerp.qwen35moe",
     "tool.flerp.gufo_qwen_generate",
     "runtime.flerp.stage_relay",
@@ -148,6 +154,9 @@
     "executor.gufo.qwen",
     "format.flerp.gguf_placed",
     "kernel.flerp.moe_kquant",
+    "kernel.flerp.moe_kgrouped",
+    "kernel.flerp.attn_wmma_gqa",
+    "kernel.flerp.draft_coarse",
     "executor.flerp.qwen35moe",
     "runtime.flerp.stage_relay",
     "executor.flerp.qwen35moe_abi",
@@ -200,6 +209,9 @@
     "executor.gufo.qwen",
     "format.flerp.gguf_placed",
     "kernel.flerp.moe_kquant",
+    "kernel.flerp.moe_kgrouped",
+    "kernel.flerp.attn_wmma_gqa",
+    "kernel.flerp.draft_coarse",
     "executor.flerp.qwen35moe",
     "runtime.flerp.stage_relay",
     "executor.flerp.qwen35moe_abi",
@@ -207,6 +219,7 @@
     "runtime.strixite.json",
     "runtime.flerp.text_gufo",
     "runtime.flerp.sampler_greedy",
+    "runtime.flerp.reply_none",
     "runtime.flerp.decode_loop",
     "serve.strixite.cpp_httplib",
     "serve.flerp.http"
@@ -214,6 +227,7 @@
   }
  },
  "bindings": {
+  "attn.prefill-causal/kv-f16/f32.gqa-wmma": "kernel.flerp.attn_wmma_gqa",
   "attn.qsa-indexer/-/f32.qfn": "kernel.gufo.qfn_kernels",
   "attn.softmax-gqa/kv-f16/f32.gufo": "kernel.gufo.qwen_attention",
   "attn.softmax-gqa/kv-f16/f32.qfn": "kernel.gufo.qfn_kernels",
@@ -224,6 +238,7 @@
   "device.memory/hip/-": "runtime.gufo.hip_host",
   "draft.dflash/gguf-q8_0/f32": "kernel.gufo.qwen_dflash",
   "draft.dspark-sampling/-/f32": "kernel.gufo.ds4_dspark",
+  "draft.head-score/gguf-kquant/f32.coarse-exact": "kernel.flerp.draft_coarse",
   "draft.markov/gguf/f32": "kernel.gufo.ds4_indexer",
   "draft.mtp/gguf-q8_0/f32": "kernel.gufo.qfn_kernels",
   "executor.abi/flerp-v1/-": "executor.flerp.qwen35moe_abi",
@@ -246,6 +261,7 @@
   "moe.combine/-/f32.qfn": "kernel.gufo.qfn_kernels",
   "moe.experts-decode/gguf-kquant/f32.indexed": "kernel.flerp.moe_kquant",
   "moe.experts-decode/gguf-kquant/f32.mmid": "kernel.gufo.qfn_mmq",
+  "moe.experts-prefill/gguf-kquant/f16-f32.grouped": "kernel.flerp.moe_kgrouped",
   "moe.gate-logits/gguf-f32/f32": "kernel.flerp.moe_kquant",
   "moe.router/-/f32.qfn": "kernel.gufo.qfn_kernels",
   "norm.rmsnorm/-/f32.gufo": "kernel.gufo.qwen_norm_rope",
@@ -259,6 +275,7 @@
   "speculation.draft/mtp/f32": "runtime.gufo.mtp",
   "speculation.window-verify-lossless/-/-": "runtime.gufo.speculative",
   "text.model/flerp-v1/-": "runtime.flerp.text_gufo",
+  "text.reply/flerp-v1/-": "runtime.flerp.reply_none",
   "transport.stage-relay/-/f32": "runtime.flerp.stage_relay"
  },
  "configure_options": [
@@ -277,21 +294,37 @@
    "module": "runtime.strixite.check",
    "sha256": "062434f5b8904515e5217b8cc34bec018a1ba8a01ae7a5300ea432bbea50be6a"
   },
+  "flerp/attn_wmma_gqa/attn_wmma_gqa.hip": {
+   "module": "kernel.flerp.attn_wmma_gqa",
+   "sha256": "b6c3b9dda931e2991174d3a26756defb4b9c3fc0a424337cd879ad45f0469820"
+  },
+  "flerp/attn_wmma_gqa/attn_wmma_gqa.hpp": {
+   "module": "kernel.flerp.attn_wmma_gqa",
+   "sha256": "61f39776f68f98837117f5517a264192add743669b239b77ccdc10056b5bda25"
+  },
   "flerp/decode_loop.c": {
    "module": "runtime.flerp.decode_loop",
-   "sha256": "2e905ff4c4da81a10a5eba160679d5460a4ba9447289f24e790a9ab54006817b"
+   "sha256": "1b880fc4aeed906aaf5bf63edaba9b80aa98dfd0e24fa56c5e14cd49c74902f6"
+  },
+  "flerp/draft_coarse/draft_coarse.hip": {
+   "module": "kernel.flerp.draft_coarse",
+   "sha256": "fbe1641666c6ebcfce292b212707a6a388dc0f79a4bfe18402c7732bdc2362b5"
+  },
+  "flerp/draft_coarse/draft_coarse.hpp": {
+   "module": "kernel.flerp.draft_coarse",
+   "sha256": "73388520a9f120e3e00406885812164d12a20ac4453e0d47b1d32da498375477"
   },
   "flerp/executor/conformance.c": {
    "module": "executor.flerp.conformance",
-   "sha256": "8b424b19ea8e57309956132b9835c35ce1342a51d2b507f9023f277c3081bab3"
+   "sha256": "35de8e263f616d1fb1cccaf93ac62c42fcc4006a3a7923d01487b3fa877f1bd5"
   },
   "flerp/gguf_placed/placed_loader.cpp": {
    "module": "format.flerp.gguf_placed",
-   "sha256": "56328f9232553631e290483a95ab014c961ca2f2126c5d2cab900db76b32ba17"
+   "sha256": "72a60053c4e0b30dcbec0692f11b667b971781cf4d727e23c48a79a9f4063d34"
   },
   "flerp/gguf_placed/placed_loader.hpp": {
    "module": "format.flerp.gguf_placed",
-   "sha256": "dc7d5c6b4d72ad631cfb1944213410871beb5071bff652e07f5880854fe63cf3"
+   "sha256": "849ebc56b05f73018386b7bcfbd4bb523615b27a176d522d9c4fdba49d86ff20"
   },
   "flerp/gguf_placed/placement.cpp": {
    "module": "format.flerp.gguf_placed",
@@ -313,25 +346,57 @@
    "module": "tool.flerp.gufo_qwen_generate",
    "sha256": "ede5c578a11ed1fdbf396cc07e5027dee9c8f0c2db0d79a1ac565aa832ee5887"
   },
+  "flerp/moe_kgrouped/moe_kgrouped.hip": {
+   "module": "kernel.flerp.moe_kgrouped",
+   "sha256": "695892281142af757578f9a9ad2dddb2e3392e18d1ef1baaf27fee8802a7caf2"
+  },
+  "flerp/moe_kgrouped/moe_kgrouped.hpp": {
+   "module": "kernel.flerp.moe_kgrouped",
+   "sha256": "9742531c594c1b3bd8af83ebac761f0b6e2ae5c43ec5fc142ff6164bdeb22b3b"
+  },
   "flerp/moe_kquant/moe_kquant.hip": {
    "module": "kernel.flerp.moe_kquant",
-   "sha256": "d6b9dcd25d2171b0b6adf2fefc28b4a8b938c01303d20a3bb7742d66f0519d52"
+   "sha256": "fe9157f4226e2abc38a0ac981e1ae9ce069a2b08a61b366ff0fb212484e28d82"
   },
   "flerp/moe_kquant/moe_kquant.hpp": {
    "module": "kernel.flerp.moe_kquant",
-   "sha256": "41e45d0d58cc1d7eb747054acb1257676ec1aa36708ca1d4e00353c162af075c"
+   "sha256": "5399802c4df3c4ef9f984179a36508c7291a7960235f1b2e489b60b85c5b17ae"
+  },
+  "flerp/qwen35moe/draft_round.cpp": {
+   "module": "executor.flerp.qwen35moe",
+   "sha256": "8f7fec0f2bdf87783cfca642c70823b56af96452772339701f6661bc7a8f69d3"
+  },
+  "flerp/qwen35moe/draft_round.hpp": {
+   "module": "executor.flerp.qwen35moe",
+   "sha256": "a88a88368cd6448b4064d26e4ed8c87a36e3601a272a8523207e5e7b95e22e64"
+  },
+  "flerp/qwen35moe/moe_combine.hip": {
+   "module": "executor.flerp.qwen35moe",
+   "sha256": "aa303a2ccbb6bc72bcf2c2d3992b5afa67153adb54b9614bcf4d846fb2288f4f"
   },
   "flerp/qwen35moe/moe_ffn.cpp": {
    "module": "executor.flerp.qwen35moe",
-   "sha256": "60d7f2958f238697827493fe73a83161eb751165a94c58d127b92bbd327f9e66"
+   "sha256": "071ff502fe489f4b209888bdd0e2df83f1584d7eaa55a02eab9ba2adb93f7a04"
   },
   "flerp/qwen35moe/moe_ffn.hpp": {
    "module": "executor.flerp.qwen35moe",
-   "sha256": "ced86a0488ace577c41ad1f38ccd16fac7b1865f50d35613e29085692f5090fc"
+   "sha256": "2721b3d31cdb2a73e83b2cc064e6380db245b8d16a22b3d950b0db24fa4ee8b5"
+  },
+  "flerp/qwen35moe/mtp_head.cpp": {
+   "module": "executor.flerp.qwen35moe",
+   "sha256": "80db3ff986efe1e47c1fb101ec277fcafece086496b72f69424b5012146aeac9"
+  },
+  "flerp/qwen35moe/mtp_head.hpp": {
+   "module": "executor.flerp.qwen35moe",
+   "sha256": "2143db61c18562e8394ae5fb105e6b399c9aa61b5907cffabc27a4e9194dbfc1"
   },
   "flerp/qwen35moe/src/models/qwen/forward.cpp": {
    "module": "executor.flerp.qwen35moe",
    "sha256": "82cea612574e867be5b06d6dd5f7e3609c5823f5804711420ec47ab58be63e90"
+  },
+  "flerp/qwen35moe/src/models/qwen/hip/arena.cpp": {
+   "module": "executor.flerp.qwen35moe",
+   "sha256": "a9b14060f3b2e6f82e6db3b3c511a67350a8d48de97da6ede8675e67f865ef3e"
   },
   "flerp/qwen35moe/src/models/qwen/hip/batched_decode.cpp": {
    "module": "executor.flerp.qwen35moe",
@@ -339,7 +404,7 @@
   },
   "flerp/qwen35moe/src/models/qwen/hip/decode.cpp": {
    "module": "executor.flerp.qwen35moe",
-   "sha256": "17cd703d593647a16bf33f49e9f83c625f34625d7c937e2affcba91c642b72fc"
+   "sha256": "ca2b2ac0569522dcb02cbafe589face4d291ab88f1d21f68a825a7eb265d147e"
   },
   "flerp/qwen35moe/src/models/qwen/hip/decode_step.cpp": {
    "module": "executor.flerp.qwen35moe",
@@ -351,7 +416,7 @@
   },
   "flerp/qwen35moe/src/models/qwen/hip/prefill_chunk.cpp": {
    "module": "executor.flerp.qwen35moe",
-   "sha256": "ee5164f9a2a20bfc570e32f2e2ca2b87765d4b904d9496092b815a8475e39c6b"
+   "sha256": "cad59bbd71ad5e0361478dc224200b5ecc633d6681693dd736a54e36866d8e13"
   },
   "flerp/qwen35moe/src/models/qwen/state.hpp": {
    "module": "executor.flerp.qwen35moe",
@@ -363,27 +428,27 @@
   },
   "flerp/qwen35moe/stage.cpp": {
    "module": "executor.flerp.qwen35moe",
-   "sha256": "896492662b94acb41a45b388e60399e3a7977d213056e4bcb295b2a4ff85452b"
+   "sha256": "3feb5f4cc431219d8f101decc6e43299837644a9c1b3f5e70bfe5bc2a964a005"
   },
   "flerp/qwen35moe/stage.hpp": {
    "module": "executor.flerp.qwen35moe",
-   "sha256": "5f00c2b80685c904d3d30c255fa887d28165e544a70ff0b983b3d6be26c9be1c"
+   "sha256": "c515a9908204dd9ab5f29e7b37eb08501ea363a8449d8fd33c87d8407deb2a0a"
   },
   "flerp/qwen35moe_abi/abi.cpp": {
    "module": "executor.flerp.qwen35moe_abi",
-   "sha256": "33e5ab73662d991b4c43cf83a77078c436b7424d6ca83f5961f707d2c4f450e9"
+   "sha256": "62c106006d6c0f834890053584750b8721fcf6b5af72d105010f41178b20cd75"
   },
   "flerp/qwen35moe_abi/stages.cpp": {
    "module": "executor.flerp.qwen35moe_abi",
-   "sha256": "29ce4c87c0d9f559882023e308243f0722eee66c86bf0c241ac4a8129ee6de25"
+   "sha256": "170cfc533b5e5a28899c83f740209cba8853da0e9b6e859e8aaa03de86674ee5"
   },
   "flerp/qwen35moe_abi/stages.hpp": {
    "module": "executor.flerp.qwen35moe_abi",
-   "sha256": "4618a0ca37a9033597c1b3025464d68245b36660417eb016ecafa2051303f9df"
+   "sha256": "56a4aa4c068fa3b097d7ccaa0de791423344f2246c0dcfbb41b5cffbf2540582"
   },
   "flerp/qwen35moe_stage/CMakeLists.txt": {
    "module": "tool.flerp.qwen35moe_stage",
-   "sha256": "a5cb4493960e0f59a535cea887747a2100bf9a6389ae10350517a5ff29c72a1d"
+   "sha256": "6dce5a402d66ad541d340b4cb689a810797c49ef7fe06eb24dc0fa71a4c82856"
   },
   "flerp/qwen35moe_stage/main.cpp": {
    "module": "tool.flerp.qwen35moe_stage",
@@ -391,15 +456,27 @@
   },
   "flerp/qwen35moe_tool/CMakeLists.txt": {
    "module": "tool.flerp.qwen35moe_generate",
-   "sha256": "ea6a42b7661fe3d5197c17eb122beafcf358fca4285c9d3e5874bae834835926"
+   "sha256": "825ffcb66ceaef2cf72651e0e95ab156e7188e4b6aa2be39d46c76fe84d93725"
   },
   "flerp/qwen35moe_tool/generate.cpp": {
    "module": "tool.flerp.qwen35moe_generate",
-   "sha256": "473e522ecb883a771aef8c74f897683251cc0bd30072e7d3ff5a78d078ff5ec3"
+   "sha256": "210d8f2b9269d3d8967e40eb368ada16b483e7269e368365e7aa15e58730ee2b"
+  },
+  "flerp/qwen35moe_tool/mtp_probe.cpp": {
+   "module": "tool.flerp.qwen35moe_generate",
+   "sha256": "c96aa051b6ccd0d5abcf410766b5e33479cad5484a15cb1be816d34658bac9f4"
+  },
+  "flerp/qwen35moe_tool/mtp_probe.hpp": {
+   "module": "tool.flerp.qwen35moe_generate",
+   "sha256": "989bb4c35a22265b3252502b946d44047be0192216ce61fe5ffd5f1a90f67a33"
   },
   "flerp/qwen35moe_tool/stage_driver.cpp": {
    "module": "tool.flerp.qwen35moe_generate",
-   "sha256": "f699ce371e4a6dd7a20103896d180fc6a4913d07216d369df9c29767d574f89a"
+   "sha256": "20c75b9cf296f3da57cf1fb959096793686a46b3aa4214853acaed020a737336"
+  },
+  "flerp/reply/reply_none.c": {
+   "module": "runtime.flerp.reply_none",
+   "sha256": "8a9913af0c444b26ee1ed7e42f5b428b6e6da51d88f56232aa85e090cae071e7"
   },
   "flerp/sampler/sampler_greedy.c": {
    "module": "runtime.flerp.sampler_greedy",
@@ -407,23 +484,23 @@
   },
   "flerp/serve/main.cpp": {
    "module": "serve.flerp.http",
-   "sha256": "c7e9237d608f05f66992d16098ee5ef2ad85a00e1cc6cffa28ace15702164412"
+   "sha256": "8277c1b955c1604176474ecba86715deaa0289142115baebb7204fa19e38d088"
   },
   "flerp/serve/request.cpp": {
    "module": "serve.flerp.http",
-   "sha256": "014ba0ab50eb90cbb8b1ca873010ab9acb86fe7d38094b6432674fe8ed15b427"
+   "sha256": "cc0660e1c5c2b98abaab3e48d0206f04492f8094cec881b58bdd9c75d3f6ce19"
   },
   "flerp/serve/request.hpp": {
    "module": "serve.flerp.http",
-   "sha256": "7557cf2cac9d5f3be8e7d2aa1bc126a9b43644093dd440171f0142ac2ac9ddde"
+   "sha256": "b9e8c187883211df745ec32e7bdfac7c2b38d099e14fbb856ee6e0bfc8909bd4"
   },
   "flerp/stage_relay/relay.cpp": {
    "module": "runtime.flerp.stage_relay",
-   "sha256": "3a5f49ac09b15f1643d46e42b712da61d33f3632f149a3ce55ad7af34f4a3918"
+   "sha256": "16b9bd067188e33735d66753c06d4ebc7d19480c540497c1198b49a292a87c51"
   },
   "flerp/stage_relay/relay.hpp": {
    "module": "runtime.flerp.stage_relay",
-   "sha256": "96d8e3477132644a0d08fe64c901818d325bbc10740c47bfd736223a22a15fdd"
+   "sha256": "46f645cbb4524c8732ef7a1ee03e80abe236badba161b619628b2f68470f4693"
   },
   "flerp/text/text_gufo.cpp": {
    "module": "runtime.flerp.text_gufo",
@@ -431,11 +508,15 @@
   },
   "include/flerp/decode_loop.h": {
    "module": "-",
-   "sha256": "5079119cd0d36ff199d00e8e49608a2d7c9739b65915185d07c8e45e2487a852"
+   "sha256": "bf2d6219ee9e4c0dc518ddfa283d8a1e5ec0f9d4904f6ee01c5f6948f3271ecc"
   },
   "include/flerp/executor.h": {
    "module": "-",
-   "sha256": "8a4aac464f6f2620e700b8541369f5ad42c09911432f1790b49b245362849351"
+   "sha256": "f3a989c23abcec0b3f7033374e218ef99ee1f3abe711fc2e023daa678d272107"
+  },
+  "include/flerp/reply.h": {
+   "module": "-",
+   "sha256": "32e9748a8de476a63fe6deb3978515ad4058a6513847ec23033416d18c6fbcc0"
   },
   "include/flerp/sampler.h": {
    "module": "-",
@@ -1431,7 +1512,7 @@
   },
   "src/families/qwen/hip_common/quant_ops.hpp": {
    "module": "kernel.gufo.qwen_ops",
-   "sha256": "741adbf38e7d9a6334c0fa98da16b94a0cf0440917c7f87b1dd56f385aeecceb"
+   "sha256": "e5fd716b269eaeb6d4925a0fa350943088b5054fb246b5d6a4f3cefbb194ba1d"
   },
   "src/families/qwen/hip_common/recurrent_state.hpp": {
    "module": "kernel.gufo.qwen_ops",
@@ -1503,7 +1584,7 @@
   },
   "src/families/qwen/kernels/gemv_quant.hip": {
    "module": "kernel.gufo.qwen_linear_decode",
-   "sha256": "300119fa7f9daa6c8d62ab3f7f0e3d271904c0fa970ae08fdf7e53b91e1369a4"
+   "sha256": "c71517ff85dfc87d70ba02f79bdf68f458cf4c779197201213f883b91a6b7901"
   },
   "src/families/qwen/kernels/hipblas_gemm.hip": {
    "module": "kernel.gufo.qwen_linear_prefill",
@@ -1603,7 +1684,7 @@
   },
   "src/families/qwen/kernels/qkv.hip": {
    "module": "kernel.gufo.qwen_linear_decode",
-   "sha256": "eadf1ba15b0bb914e6d7d9b44f597cb954f6a292f074d7fa6c5a89ceaf6b1423"
+   "sha256": "9a044f6b8bb0d764c55337e57812f5c5fcb3956a06d129abe26d63e89f6d1650"
   },
   "src/families/qwen/kernels/residual.hip": {
    "module": "kernel.gufo.qwen_norm_rope",
@@ -1635,7 +1716,7 @@
   },
   "src/families/qwen/kernels/ssm.hip": {
    "module": "kernel.gufo.qwen_gdn",
-   "sha256": "624ea8177c7598ca75c302e361e6322142cd7473511b7f08a4bf73f2d46761ff"
+   "sha256": "e47dc414cc791b2905f3031d3c52a24565b89f5883a82471155947891fdd5fb7"
   },
   "src/families/qwen/kernels/ssm_decode_recurrence.hip": {
    "module": "kernel.gufo.qwen_gdn",
@@ -2638,7 +2719,7 @@
   },
   "executor.flerp.qwen35moe": {
    "dir": "catalog/flerp/executor/qwen35moe",
-   "files": 12,
+   "files": 18,
    "spdx": "MIT"
   },
   "executor.flerp.qwen35moe_abi": {
@@ -2674,6 +2755,21 @@
   "format.gufo.gguf_kquant": {
    "dir": "catalog/gufo/format/gguf_kquant",
    "files": 7,
+   "spdx": "MIT"
+  },
+  "kernel.flerp.attn_wmma_gqa": {
+   "dir": "catalog/flerp/kernel/attn_wmma_gqa",
+   "files": 2,
+   "spdx": "MIT"
+  },
+  "kernel.flerp.draft_coarse": {
+   "dir": "catalog/flerp/kernel/draft_coarse",
+   "files": 2,
+   "spdx": "MIT"
+  },
+  "kernel.flerp.moe_kgrouped": {
+   "dir": "catalog/flerp/kernel/moe_kgrouped",
+   "files": 2,
    "spdx": "MIT"
   },
   "kernel.flerp.moe_kquant": {
@@ -2791,6 +2887,11 @@
    "files": 1,
    "spdx": "MIT"
   },
+  "runtime.flerp.reply_none": {
+   "dir": "catalog/flerp/runtime/reply_none",
+   "files": 1,
+   "spdx": "MIT"
+  },
   "runtime.flerp.sampler_greedy": {
    "dir": "catalog/flerp/runtime/sampler_greedy",
    "files": 1,
@@ -2893,7 +2994,7 @@
   },
   "tool.flerp.qwen35moe_generate": {
    "dir": "catalog/flerp/tool/qwen35moe_generate",
-   "files": 3,
+   "files": 5,
    "spdx": "MIT"
   },
   "tool.flerp.qwen35moe_stage": {

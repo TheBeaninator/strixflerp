@@ -1,0 +1,57 @@
+id        = "kernel.kestrel.hip_compat"
+kind      = "kernel"
+summary   = "Maya's CUDA-to-HIP layer as Kestrel ships it: include/maya/hip_compat (cuda_runtime.h, cuda_fp16.h, cuda_bf16.h, cublas_v2.h, cuda_profiler_api.h, cuda_runtime_api.h mapped onto HIP / hipBLAS, intrinsics.hpp with the warp shuffles, dot4 and the wave64 logical-32-lane mapping), two platform headers the kernel modules include (env_alias.hpp: every MAYA_* setting also read as KESTREL_*; commit.hpp), cmake/hip_backend.cmake (MAYA_ENABLE_HIP: validated gfx1100 / gfx1201 / gfx1151, community gfx1101 / gfx1200, wave64 CDNA through the compat path), the intrinsics device test, the compat checkers and the AMD setup docs"
+why       = "every Kestrel / Maya .cu file reaches HIP through these headers and this CMake file, so no other kestrel module can be read or built without them; they also record which RDNA / CDNA targets the origin validated"
+notes     = "Interface tag: none. The origin's Strata lineage shows here: the CMake file says Strata's CUDA-shaped kernels target wave32 RDNA2 / 3 / 4 with 64 KiB LDS and a signed dot4. Kestrel's own setup guide for an R9700 plus 8060S helper is docs/KESTREL_LINUX_AMD.md. Nothing was compiled, run or timed on the pod."
+
+[provenance]
+origin    = "kestrel"
+repo      = "https://github.com/itechmedic/kestrel"
+commit    = "717c76975cd20d37b2e4162072d7745d6e1576ff"
+branch    = "kestrel"
+paths     = [
+  "cmake/hip_backend.cmake",
+  "docs/AMD_MAYA.md",
+  "docs/AMD_RDNA4.md",
+  "docs/AMD_UPSTREAM.md",
+  "docs/KESTREL_LINUX_AMD.md",
+  "include/maya/hip_compat/cublas_v2.h",
+  "include/maya/hip_compat/cuda_bf16.h",
+  "include/maya/hip_compat/cuda_fp16.h",
+  "include/maya/hip_compat/cuda_profiler_api.h",
+  "include/maya/hip_compat/cuda_runtime.h",
+  "include/maya/hip_compat/cuda_runtime_api.h",
+  "include/maya/hip_compat/intrinsics.hpp",
+  "include/maya/platform/commit.hpp",
+  "include/maya/platform/env_alias.hpp",
+  "tests/hip/intrinsics.cpp",
+  "tools/check_hip_compat.py",
+  "tools/test_hip_archs.py",
+  "tools/test_hip_compat.py",
+  "tools/test_maya_hip.py",
+]
+authors   = ["itechmedic", "Project Maya contributors (mw00)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/tests/hip/intrinsics.cpp"]
+includes  = ["src/include", "src/include/maya/hip_compat", "src/include/maya/platform", "src/tests/hip"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "kernel-abi.kestrel-hip-compat/-/-"
+api       = "the CUDA runtime, fp16 / bf16 and cuBLAS names over HIP (include/maya/hip_compat/*.h); maya::hip intrinsics (intrinsics.hpp)"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of Maya's CMake build with MAYA_ENABLE_HIP (cmake/hip_backend.cmake): the .cu file is compiled as HIP through include/maya/hip_compat, for gfx1100 / gfx1201 / gfx1151 (validated) with the engine's include roots and ggml from third_party; it needs headers this harvest leaves in the origin, so it is not compiled here"

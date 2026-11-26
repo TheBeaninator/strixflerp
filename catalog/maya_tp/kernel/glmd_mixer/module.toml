@@ -1,0 +1,50 @@
+id        = "kernel.maya_tp.glmd_mixer"
+kind      = "kernel"
+summary   = "the glm-dsa decode mixer's own kernels (glmd_mixer.cu, B4.6 / B14.3 / B14.4)"
+why       = "the per-layer attention mixer glue of the DSA decode, the step whose output is the first of the two TP2 all-reduce points"
+notes     = "Interface tag: attn.dsa-mixer/-/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/glmd_mixer.hpp", "src/kernels/cuda/glmd_mixer.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/glmd_mixer.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.dsa-mixer/-/f32.maya-tp"
+api       = "strata::kernels glmd_mixer launches (glmd_mixer.hpp)"
+numeric   = "FP32"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_decode"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.glmd_mixer.json"

@@ -1,0 +1,55 @@
+id        = "executor.fastasfuck.qwen4exp_backend"
+kind      = "executor"
+summary   = "fastasfuck's LmBackend over one Qwen4ExpSession with snapshot slots, a paged K/V budget and MTP drafts; its saved-state fingerprint gains a cal-<prebuilt_fingerprint> tag in 1.1.0"
+why       = "the 1.1.0 fingerprint tag keeps prompt-cache entries built on GPTQ weights apart from entries built on round-to-nearest weights that share the source fingerprint and layout"
+notes     = "Files vs strixite: serve/qwen4exp_backend.cpp 72 changed lines against executor.strixite.qwen4exp_backend at d19945e; serve/qwen4exp_backend.hpp 73 changed lines against executor.strixite.qwen4exp_backend at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/qwen4exp_backend.cpp", "serve/qwen4exp_backend.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/qwen4exp_backend.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.backend/qwen4exp/-"
+api       = "strix::Qwen4ExpBackend"
+numeric   = "derived from executor.strixite.qwen4exp_backend (serve/qwen4exp_backend.cpp 72 changed lines against executor.strixite.qwen4exp_backend at d19945e; serve/qwen4exp_backend.hpp 73 changed lines against executor.strixite.qwen4exp_backend at d19945e); not compared here"
+regime    = "as executor.strixite.qwen4exp_backend: what the server binds the engine to"
+
+[[requires]]
+module    = "executor.fastasfuck.qwen4exp"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.engine"
+
+[[requires]]
+module    = "runtime.fastasfuck.log"
+
+[[requires]]
+module    = "runtime.fastasfuck.ngram_table"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve_model) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

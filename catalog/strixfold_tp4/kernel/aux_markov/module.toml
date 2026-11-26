@@ -1,0 +1,44 @@
+id        = "kernel.strixfold_tp4.aux_markov"
+kind      = "kernel"
+summary   = "The drafter's Markov step for a sampled stream on gfx1151 in place of the Triton _score and _finish: score = logit + bias, then the best of score / draft temperature + Gumbel noise of the verify row's own key, so a sampled request drafts the token its verify row is likely to draw"
+why       = "A greedy draft lands only with the target's probability of its single best token; drawing the draft with the same noise the verify row uses lifts acceptance for sampled requests (draft_temperature) while the verify rows still decide every token, so replies do not depend on this kernel"
+notes     = "New in the TP4 serving tree (zig/kernels/hip/dsv41/aux_markov.hip, not in f64b5ff); compiled into the serving kit by the origin's build graph (zig/build/hip_dsv41.zig, flags as catalog/strixfold ORIGIN.toml [compile]). Cards: -."
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/aux_markov.hip",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/aux_markov.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = ["--offload-device-only", "--no-gpu-bundle-output", "-O3", "-std=c++20", "-fno-gpu-rdc", "-mno-wavefrontsize64", "-ffp-contract=off", "-fno-fast-math", "-fdenormal-fp-math=ieee", "-D__HIP_PLATFORM_AMD__"]
+
+[[provides]]
+interface = "draft.markov-sampled/f16/bf16.hip"
+api       = "tf_ds_aux_markov_race"
+numeric   = "one fp32 add as _score, fp32 Gumbel g within a few ulps of the host double; a greedy row picks _score's token bit for bit; drafts stay proposals"
+regime    = "one row a block of 1024 threads, draft steps"
+
+[[requires]]
+module    = "kernel.strixfold_tp4.dsv41_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "compiled only inside the recipe dsv41-flash.strixfold-tp4 by the origin's build graph (its object is pinned there and came out as the deployed one); not in gate/compile"

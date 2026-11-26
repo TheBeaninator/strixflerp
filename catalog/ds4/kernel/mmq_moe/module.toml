@@ -1,0 +1,78 @@
+id        = "kernel.ds4.mmq_moe"
+kind      = "kernel"
+summary   = "ds4's quantized-matmul C ABI over llama.cpp's mul_mat_q (mmq.cuh): dense Q8_0 / Q2_K / IQ2_XXS and MoE _id variants, the aligned-artifact MoE vec kernels (IQ2_XXS gate / up / mid with dedup, Q2_K, Q8_0 dense), the MXFP4 staged gate / up and the sum-6 down"
+why       = "llama.cpp's MMQ as a ds4 kernel library; the ROCm build uses it for the expert and dense quantized GEMMs"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["cuda/mmq/ds4_mmq.cu", "cuda/mmq/ds4_mmq.h", "cuda/mmq/mmq.cuh"]
+authors   = ["The ds4.c authors", "DeepSeek", "The ggml authors (llama.cpp 5c0e9468, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/cuda/mmq/ds4_mmq.cu"]
+includes  = ["src", "src/cuda/mmq"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "-x",
+  "hip",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-pthread",
+  "-D__HIP_PLATFORM_AMD__",
+  "-Wno-unused-command-line-argument",
+  "-std=c++17",
+  "-DGGML_USE_HIP",
+  "-DDS4_HIP_MMQ_Y=64",
+  "-c",
+]
+
+[[provides]]
+interface = "moe.experts-decode/iq2_xxs+q2_k+q8_0/q8_1-f32.ds4-mmq"
+api       = "see summary"
+numeric   = "q8_1 activations, integer dots, F32 out"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "kernel.ds4.mmq_common"
+
+[[requires]]
+module    = "kernel.ds4.mmq_ggml_stubs"
+
+[[requires]]
+module    = "kernel.ds4.mmq_quantize"
+
+[[requires]]
+module    = "kernel.ds4.mmq_mmid"
+
+[[requires]]
+module    = "kernel.ds4.mmq_mmvq"
+
+[[requires]]
+module    = "kernel.ds4.mmq_d2r"
+
+[[requires]]
+module    = "kernel.ds4.mmq_repack"
+
+[[requires]]
+module    = "runtime.ds4.linux_memory"
+
+[[requires]]
+module    = "kernel.ds4.k53prefill_mmq_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ds4.mmq_moe.json"

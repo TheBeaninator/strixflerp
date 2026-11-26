@@ -1,0 +1,73 @@
+id        = "kernel.maya_tp.moe_experts"
+kind      = "kernel"
+summary   = "the MoE block's expert kernels: llama.cpp's moe-weighted reduction (native_moe), the shared expert with its sigmoid gate and moe_combine (shared_expert), and the grouped GPU expert tier over S2 blobs (s2_expert_grouped: hit selection, grouped GEMV, scatter-add)"
+why       = "the combine step is where a TP2 rank's half-width expert partial is formed before the all-reduce; the grouped tier is the VRAM-resident expert path beside the streamed CPU lane"
+notes     = "Interface tag: moe.combine/-/f32.maya-tp, moe.experts-decode/strata-s2+bf16/q8_0-f32.maya-tp-grouped. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/native_moe.hpp",
+  "include/strata/kernels/s2_expert_grouped.hpp",
+  "include/strata/kernels/shared_expert.hpp",
+  "src/kernels/cuda/native_moe.cu",
+  "src/kernels/cuda/s2_expert_grouped.cu",
+  "src/kernels/cuda/shared_expert.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/native_moe.cu",
+  "src/src/kernels/cuda/s2_expert_grouped.cu",
+  "src/src/kernels/cuda/shared_expert.cu",
+]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.combine/-/f32.maya-tp"
+api       = "strata::kernels::native_moe_combine(_multi, _hits), moe_combine"
+numeric   = "FP32 parts and weights"
+regime    = "decode and verify windows"
+
+[[provides]]
+interface = "moe.experts-decode/strata-s2+bf16/q8_0-f32.maya-tp-grouped"
+api       = "strata::kernels::shared_expert, moe_hit_grouped_s2"
+numeric   = "Q8_0 / BF16 forms, FP32 out"
+regime    = "decode, resident experts"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.quantize_act"
+
+[[requires]]
+module    = "kernel.maya_tp.s_gemv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.moe_experts.json"

@@ -1,0 +1,49 @@
+id        = "runtime.ciru_link.tbstream_zerocopy"
+kind      = "runtime"
+summary   = "the base of the Linux 7.2.2 USB4STREAM patch series: NHI rings that suppress per-frame completions (0001), the thunderbolt_stream zero-copy slot mode with fixed TX / RX frame pools mapped into the client and its uapi header include/uapi/linux/thunderbolt-stream.h (0002), exclusive zero-copy ownership (0003), flagged RX reposting (0004), an interrupt at RX message boundaries (0005), TX DMA ownership synchronisation (0006) and hardened mode transitions (0007); with the series README, SHA256SUMS and the kernel COPYING / LICENSES"
+why       = "this is the kernel half of a two-sided message transport over a USB4 cable between two Strix Halos: fixed rings, message-boundary completion and explicit reposting are the shape any USB4 tensor exchange needs, the catalogue's other transports being RoCE verbs and TCP"
+notes     = "Interface tag: none (no strixflerp interface is a USB4 stream device; the nearest are transport.verbs/-/- and collective.allgather-tcp/-/f32, which run over RoCE and TCP). Patches 1-15 are jyatesdotdev/strix-rdma 06c1836 rebased on Linux v7.2.2 (README.md). The uapi header carries GPL-2.0 WITH Linux-syscall-note, the rest GPL-2.0. Apply in number order to a fresh v7.2.2 tree; SHA256SUMS covers all 16 patches, which are split over five modules here. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "kernel/linux-7.2.2/0001-thunderbolt-Allow-clients-to-suppress-per-frame-comp.patch",
+  "kernel/linux-7.2.2/0002-thunderbolt-stream-Add-zero-copy-slot-mode.patch",
+  "kernel/linux-7.2.2/0003-thunderbolt-stream-Require-exclusive-zero-copy-use.patch",
+  "kernel/linux-7.2.2/0004-thunderbolt-stream-Add-flagged-RX-reposting.patch",
+  "kernel/linux-7.2.2/0005-thunderbolt-stream-Interrupt-RX-message-boundaries.patch",
+  "kernel/linux-7.2.2/0006-thunderbolt-stream-Synchronize-zero-copy-TX-DMA-owne.patch",
+  "kernel/linux-7.2.2/0007-thunderbolt-stream-Harden-zero-copy-mode-transitions.patch",
+  "kernel/linux-7.2.2/COPYING",
+  "kernel/linux-7.2.2/LICENSES/exceptions/Linux-syscall-note",
+  "kernel/linux-7.2.2/LICENSES/preferred/GPL-2.0",
+  "kernel/linux-7.2.2/README.md",
+  "kernel/linux-7.2.2/SHA256SUMS",
+]
+authors   = ["Jonathan Yates (jyatesdotdev/strix-rdma 06c1836)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only AND GPL-2.0-only WITH Linux-syscall-note"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-stream-zerocopy/-/-"
+api       = "/dev/tbstreamN with the TBSTREAM_ZC_* ioctls of include/uapi/linux/thunderbolt-stream.h (slot pools, submit, completion events, flagged RX repost)"
+numeric   = "bytes only; frames of up to 4 KiB, message boundaries carried by completion flags"
+regime    = "two hosts on one USB4 link; one exclusive owner a device; ring 4095 frames, HopID 9/9 on the qualified profile"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 7.2.2 tree on the island); python3 docs/harvest/harvest_ciru_link.py --patch-gate checks every patch against SHA256SUMS and parses it with git apply --numstat (gate/results/compile/ciru_link.patches.json)"

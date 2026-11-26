@@ -1,0 +1,43 @@
+# FLERP-V10 exp 2 (card f0609bca0f, parent STRIX-META bd830ae1ca): many-stream decode on the 35B, one GPU (K).
+# Committed before any hardware run; never loosened after it. Shape and review trace: docs/EXPERIMENTS-V10.md.
+# Grounding: configs/champions.toml area throughput holds a single-stream placeholder ("many-stream throughput has not
+# been measured"); batched_decode.cpp is "adapted, compiled, not run" (docs/PHASE5-ORNITH-GAPMAP.md).
+#
+# Byte model (owner's review item 1): at S streams a decode step reads the shared bytes B_s once and the routed-expert
+# bytes per expert once per distinct expert. With E experts, k used and S independent prompts the expected distinct
+# experts a layer is U_S = E (1 - (1 - k/E)^S); for the 35B (256, 8) U_4 = 30.4 against 8 at one stream (3.8x).
+# If decode is bandwidth-bound the speedup is S / (1 - r + r U_S / k), r = routed share of one stream's bytes.
+# r is computed from the GGUF tensor sizes at run time (expected ~0.4, giving ~1.9x at 4 streams).
+
+[hypothesis]
+prediction    = "decode is weight-bandwidth-bound, so the 4-stream total tok/s / 1-stream equals the byte model's S / (1 - r + r U_4/k) within 15 %, using the measured U_4 (about 1.9x)"
+v9_guess      = "4 streams >= 3.0x one stream"
+confirmed_at  = "measured 4-stream speedup within +-15 % of the byte-model value from the measured U_4 and the header r"
+refuted_below = "measured speedup < 0.85 x the byte model: something other than bytes (launches, sync, KV) is the limit; the per-kernel trace names it"
+
+[criteria]
+identity          = "free-running: each stream's generated ids equal the same prompt run alone at 1 stream, every prompt, every stream count (the area's fidelity floor)"
+logit_delta       = "teacher-forced: feed each stream the 1-stream reference ids and record per step max_abs_diff and max_ulp of the logits vs the 1-stream logits (so one near-tie flip does not cascade)"
+on_identity_fail  = "record per kernel which outputs differ plus the teacher-forced deltas, then continue the remaining stream counts; no speed verdict for a stream count whose identity failed"
+prompts           = "4 distinct real-text prompts, each 2,048 tokens: the first 2,048 tokens of docs/SPEC.md, docs/FIDELITY.md, docs/PHASE5-ORNITH-GAPMAP.md and catalog/flerp/executor/qwen35moe/module.toml + its DESIGN.md; streams 1, 2, 4, 8 take prompts 1..S cycling (8 = each twice, recorded as such)"
+prompt_tokens     = 2048
+gen_tokens        = 64
+kv                = "prefix caching off; each stream's KV pages asserted disjoint at allocation (the run fails if two streams share a page)"
+streams           = [1, 2, 4, 8]
+experts_logged    = "per decode step per MoE layer: the number of distinct routed experts across the streams (U_S measured)"
+bytes_model       = "r = routed-expert bytes / all bytes read by one decode step, from GGUF tensor sizes; predicted speedup reported next to measured for every S"
+reps              = "n from gate/noise-floor.toml reps_formula with d = 0.15 and the quiet CV; at least 3"
+verdict           = "PASS (bandwidth-bound) if identity holds at S = 4 and the 4-stream speedup is within +-15 % of the byte model"
+
+[resources]
+nodes   = "K via pod-kbench k_run (queue-only, exclusive); no idle holds"
+hold    = "none: one queued kbench job, ~40 min expected, TTL 60 min"
+weights = "21.7 GB Qwen3.6-35B-A3B-Q4_K_M.gguf, PLACE tier ram to K /dev/shm, staged before the hold"
+loads   = "1; every stream count, the teacher-forced pass and every rep inside the same process"
+reps    = "from exp 1's formula at d = 0.15 because the decision is a 15 % band around the byte model; at least 3"
+shares  = "K only; a yielding img-k lease is pre-empted and relaunches afterwards"
+cleanup = "kbench releases K; place evict of the 35B unless exp 5 is next; K idle and img-k back afterwards"
+
+[monitor]
+milestones = "identity at S = 2 by T+10 min; all stream counts by T+40 min; watched every <= 15 min"
+stop_rule  = "stop at the first runtime or HIP fault (crash, hang, HIP error, OOM); an identity mismatch is not a stop: it is recorded per on_identity_fail"

@@ -1,0 +1,44 @@
+id        = "kernel.maya_tp.verify"
+kind      = "kernel"
+summary   = "the speculative verify window kernels: padded verification outputs, acceptance compare and the window's argmax / logit picks (verify_kernels), with Maya-TP's HIP optimisations for padded verify outputs"
+why       = "MTP and DSpark under TP2 verify a window on both ranks; these kernels decide acceptance on rank 0 and are the shape a strixflerp window-verify module takes"
+notes     = "Interface tag: speculation.window-verify/-/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/verify_kernels.hpp", "src/kernels/cuda/verify_kernels.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/verify_kernels.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "speculation.window-verify/-/f32.maya-tp"
+api       = "strata::kernels::verify_*"
+numeric   = "FP32 logits, greedy or keyed compare"
+regime    = "verify windows of 1-16 rows"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.verify.json"

@@ -1,0 +1,49 @@
+{
+ "module": "kernel.lucebox.hc",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-24T22:49:54Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 4,
+ "passed": 4,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 3.5,
+ "results": [
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-hc.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/hc/src/server/src/deepseek4 -I catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I catalog/lucebox/kernel/gemv/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gemv/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-hc.cu -o build/compile-gate/kernel.lucebox.hc/0-ds4-hc.cu.o",
+   "rc": 0,
+   "seconds": 3.49,
+   "object_bytes": 317504,
+   "object_sha256": "f78ad9d3c9c274412ac7513b9a2b23e1f48e903f07e282f0301316a32fa3fe80"
+  },
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/hc-cn.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/hc/src/server/src/deepseek4 -I catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I catalog/lucebox/kernel/gemv/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gemv/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src/ggml-cuda/hc-cn.cu -o build/compile-gate/kernel.lucebox.hc/1-hc-cn.cu.o",
+   "rc": 0,
+   "seconds": 1.51,
+   "object_bytes": 70736,
+   "object_sha256": "6f94b55ae900928576b68e34e1b5e94aef96a7aa5fdfe9e3af30dd41ced94931"
+  },
+  {
+   "unit": "src/server/deps/llama.cpp/ggml/src/ggml-cuda/hc-mix.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DcublasSgemmStridedBatched=hipblasSgemmStridedBatched -DcudaStreamCaptureStatus=hipStreamCaptureStatus -DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone -DcudaStreamIsCapturing=hipStreamIsCapturing -I catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/hc/src/server/src/deepseek4 -I catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I catalog/lucebox/kernel/gemv/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gemv/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src/ggml-cuda/hc-mix.cu -o build/compile-gate/kernel.lucebox.hc/2-hc-mix.cu.o",
+   "rc": 0,
+   "seconds": 1.31,
+   "object_bytes": 36040,
+   "object_sha256": "619bb39061f91d563d79fd5d2a26a20a449be4966c1856368a64e04d71ee2710"
+  },
+  {
+   "unit": "src/server/src/deepseek4/deepseek4_hc_cuda.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -std=c++17 -O3 -DNDEBUG -DGGML_USE_HIP -DGGML_SCHED_MAX_COPIES=4 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -DGGML_BUILD -DGGML_SHARED -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_HIP_DS4V_VISION -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -c -DLUCE_BACKEND_HIP=1 -DLUCE_HAVE_DRAFT_TOPK=1 -DLUCE_HAVE_KVFLASH_FUSED_MASS=1 -I catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/hc/src/server/src/deepseek4 -I catalog/lucebox/kernel/hc/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/src/hip_compat -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/include -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/ggml_headers/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/server_headers/src/server/hip_compat -I catalog/lucebox/kernel/server_headers/src/server/src -I catalog/lucebox/kernel/gemv/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/gemv/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/rocmfp4 -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/rocmfp/src/server/deps/llama.cpp/ggml/src -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src/ggml-cuda -I catalog/lucebox/kernel/kvquant/src/server/deps/llama.cpp/ggml/src -I /data/models/tools/therock-10.2/include catalog/lucebox/kernel/hc/src/server/src/deepseek4/deepseek4_hc_cuda.cu -o build/compile-gate/kernel.lucebox.hc/3-deepseek4_hc_cuda.cu.o",
+   "rc": 0,
+   "seconds": 1.03,
+   "object_bytes": 48000,
+   "object_sha256": "4153ad7d87e8b5487522007e6edf4a85162c0a5916f33fdffce304c9b996d251"
+  }
+ ]
+}

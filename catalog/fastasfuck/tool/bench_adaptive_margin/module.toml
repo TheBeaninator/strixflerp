@@ -1,0 +1,37 @@
+id        = "tool.fastasfuck.bench_adaptive_margin"
+kind      = "tool"
+summary   = "fastasfuck's sweep of the adaptive MTP margin slope against a running server"
+why       = "the steepness with which the engine lengthens MTP drafts as acceptance rises was picked by this sweep"
+notes     = "Files vs strixite: tools/bench_adaptive_margin.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/bench_adaptive_margin.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.bench-adaptive-margin/-/-"
+api       = "tools/bench_adaptive_margin.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

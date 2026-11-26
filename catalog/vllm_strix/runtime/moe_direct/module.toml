@@ -1,0 +1,39 @@
+id        = "runtime.vllm_strix.moe_direct"
+kind      = "runtime"
+summary   = "decode MoE straight to HIP: a hook in CompressedTensorsWNA16MoEMethod.apply that, for <= 64 token-expert pairs, calls vsh_moe_int4.direct_moe (three launches: gate-up, SwiGLU, down + top-k sum) instead of the modular kernel; tests against the stock pipeline and for padding rows (expert id -1 contributes nothing)"
+why       = "the modular kernel spent ~0.4 ms of host Python a layer on prepare / finalize, workspace sizing, moe_align_block_size and five launches (PATCHES 31); at 42 layers that was a large part of a CPU-bound step. Collapsing decode MoE to three launches is the host-side half of a fast decode MoE"
+notes     = "Interface tag: moe.experts-decode (host path). Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-moe-direct.py", "scripts/test_moe_direct.py", "scripts/test_pad_ids.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-decode-direct/awq-int4/bf16"
+api       = "hook on CompressedTensorsWNA16MoEMethod.apply; env VSH_MOE_DIRECT"
+numeric   = "same as the gemv path"
+regime    = "decode, <= 64 pairs"
+
+[[requires]]
+module    = "runtime.vllm_strix.moe_int4_dispatch"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

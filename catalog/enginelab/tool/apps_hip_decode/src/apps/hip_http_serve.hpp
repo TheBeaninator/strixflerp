@@ -1,0 +1,621 @@
+#pragma once
+// --http-serve: the OpenAI/Anthropic-compatible HTTP front end (strix_serve) over the MTP bridge's
+// request runner. The bridge thread executes the generation queue; HTTP connections run on their
+// own threads and only exchange tokens with it through tickets (docs/engine/serving/serving.md).
+#include "hip_decode_options.hpp"
+#include "http_session_completion.hpp"
+#include "qwen_effective_config.hpp"
+#include "hip_mtp_decode_bridge.hpp"
+#include "rtx_state_import_routes.hpp"
+#include "strix/serve/api.hpp"
+#include "strix/serve/session_api.hpp"
+#include "../src/qwen/http_session_owner.hpp"
+#include "qwen/session_service.hpp"
+#include "../src/core/host_lane.hpp"
+#include "qwen_service_health.hpp"
+#include "qwen_rotary_capabilities.hpp"
+#include "qwen_moe_route_bf16.hpp"
+#include "strix/serve/bpe_tokenizer.hpp"
+#include "strix/serve/engine.hpp"
+#include "strix/serve/job_sampling.hpp"
+#include "strix/serve/serial_session_owner.hpp"
+#include "strix/serve/http_server.hpp"
+#include "strix/serve/run.hpp"
+#include "strix/serve/startup_warmup.hpp"
+
+#include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <csignal>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <vector>
+
+namespace strix::decode_cli {
+
+inline void append_mtp_pool_receipt(serve::GenerationStats& stats, const MtpServeResult& result) {
+    if (!result.qsa_mtp_pool_active) return;
+    stats.engine_extra.emplace_back("mtp_paid_drafts",std::to_string(result.paid_drafts));
+    std::string rows="{";
+    for(std::size_t r=1;r<result.chosen_window_rows.size();++r)
+        rows+=(r>1?",":"")+std::string("\"")+std::to_string(r)+"\":"+std::to_string(result.chosen_window_rows[r]);
+    stats.engine_extra.emplace_back("mtp_chosen_window_rows_histogram",rows+"}");
+}
+
+inline void add_prefill_capabilities(serve::Json& out) {
+    const auto fields = serve::parse_json("{" + prefill_identity_fields(prefill_options_active()) + "," + http_exact_prefill_fields() + "}");
+    for (const auto& [key, value] : fields.as_object()) out.set(key, value);
+    out.set("prefill_override_scope", serve::Json("server-level only"));
+}
+
+inline void add_prefill_stats(serve::GenerationStats& stats) {
+    const auto fields = serve::parse_json("{" + prefill_identity_fields(prefill_options_active()) + "," + http_exact_prefill_fields() + "}");
+    for (const auto& [key, value] : fields.as_object()) stats.engine_extra.emplace_back(key, value.dump());
+}
+
+// Used only on the bridge thread. The tokenizer-wide trie is built lazily once
+// per server; mutable selection frontiers are created afresh for each request.
+class HttpConstraintRequests {
+public:
+    HttpConstraintRequests(std::shared_ptr<const serve::BpeTokenizer> tokenizer,bool argmax_first)
+        : tokenizer_(std::move(tokenizer)),argmax_first_(argmax_first) {
+        // Masks one step ahead (exact): on by default, STRIX_CONSTRAINT_MASK_AHEAD=0 builds every mask on the
+        // selecting thread as before. The walks run on the host lane's background threads: one walk can take far
+        // longer than a decode step, which the lane's critical threads (row folds) must never wait for. A lane that
+        // runs jobs inline (STRIX_HOST_LANE=0, no background threads) gives nothing to run ahead on.
+        // Ranked membership (opt-in, with --http-selection-fast): STRIX_CONSTRAINT_RANKED=N checks the N next-best
+        // logits of a refused row before walking a mask (0..4096; default 0 = always walk, the refusals of a full
+        // walk). Both settings are read strictly and recorded by the shared environment registry.
+        const auto policy=serve::constraint_selection_policy_from_environment();
+        const auto& lane=core::shared_host_lane().config();
+        ahead_=policy.mask_ahead && lane.enabled && lane.background_threads>0;
+        ranked_=policy.ranked;
+        std::fprintf(stderr,"constraint mask ahead: %s, ranked membership: %u\n",ahead_?"on":"off",argmax_first_?ranked_:0U);
+    }
+    bool available(std::span<const std::uint32_t> stops) const {return serve::thinking_closure_usable(*tokenizer_,stops);}
+    std::shared_ptr<MtpConstraintRow> make(const std::shared_ptr<const serve::ConstraintSpec>& spec) {
+        if(!spec) return {};
+        if(!trie_) trie_=std::make_shared<serve::TokenByteTrie>(*tokenizer_,spec->eos_ids);
+        auto selection=std::make_shared<serve::ConstraintSelection>(spec,trie_,tokenizer_);
+        selection->set_argmax_first(argmax_first_);
+        selection->set_ranked(ranked_);
+        if(ahead_) selection->set_mask_ahead([](std::function<void()> job) {
+            (void)core::shared_host_lane().submit(core::HostPriority::background,std::move(job));
+        });
+        return std::make_shared<MtpConstraintRow>(std::move(selection));
+    }
+private:
+    std::shared_ptr<const serve::BpeTokenizer> tokenizer_;
+    std::shared_ptr<const serve::TokenByteTrie> trie_;
+    bool argmax_first_;
+    unsigned ranked_=0;
+    bool ahead_=false;
+};
+// Execution failures stop the server; constraint refusals carry request-local receipts.
+class MtpBridgeEngine final : public serve::GenerationEngine {
+public:
+    MtpBridgeEngine(const MtpServeRunner& run, std::uint64_t context_tokens,
+        HttpConstraintRequests& constraints, bool enabled, bool thinking_enabled, bool selection_mtp_available,
+        serve::BackendProbeSlot* probe = nullptr, strix::qwen::profile::Resolution profile = {})
+        : run_(run), context_(context_tokens), constraints_(constraints), constraints_enabled_(enabled),
+          thinking_enabled_(thinking_enabled), selection_mtp_available_(selection_mtp_available), probe_(probe), profile_(std::move(profile)) {}
+    serve::GenerationStats generate(serve::GenerationJob& job) override {
+        if (failed_.load()) throw std::runtime_error("the engine failed during an earlier request; restart the server");
+        if (job.prompt.empty() || job.prompt.size() >= context_) throw std::invalid_argument("prompt is empty or fills the context");
+        MtpServeRequest request;
+        request.backend_probe = probe_;
+        request.constraint = constraints_.make(job.constraint);
+        request.on_admitted = job.on_admitted;
+        request.session_id = job.session_id;
+        request.cache_retention = job.cache_retention;
+        request.prompt = job.prompt;
+        request.stable_prefix = job.stable_prefix;
+        request.max_tokens = job.max_tokens;
+        request.stop_tokens = job.stop_tokens;
+        request.ngram_draft = job.ngram_draft;
+        request.on_tokens = job.on_tokens;
+        request.on_progress = job.on_progress;
+        MtpServeResult result;
+        try {
+            result = run_(request);
+        } catch (const SessionApiError& e) {
+            serve::GenerationStats stats;
+            stats.engine_extra.emplace_back("profile", profile_.json());
+            stats.prompt_tokens=job.prompt.size(); stats.finish="admission_refused";
+            stats.error_status=e.status; stats.error_code=e.code;
+            throw serve::GenerationRequestError(std::move(stats),e.what());
+        } catch (...) {
+            failed_.store(true);
+            if (probe_) probe_->fail();
+            if (!request.constraint) throw;
+            serve::GenerationStats stats;
+            stats.engine_extra.emplace_back("profile", profile_.json());
+            add_prefill_stats(stats);
+            stats.prompt_tokens = job.prompt.size();
+            stats.finish = "execution_failure";
+            stats.constraint = request.constraint->verdict(stats.finish);
+            try { throw; }
+            catch (const std::exception& e) { throw serve::GenerationRequestError(std::move(stats), e.what()); }
+            catch (...) { throw serve::GenerationRequestError(std::move(stats), "engine failure"); }
+        }
+        serve::GenerationStats stats;
+        stats.engine_extra.emplace_back("profile", profile_.json());
+        add_prefill_stats(stats);
+        stats.prompt_tokens = job.prompt.size();
+        stats.cached_tokens = result.restored_tokens;
+        stats.generated_tokens = result.generated_tokens;
+        stats.cycles = result.cycles;
+        stats.proposed = result.proposed;
+        stats.accepted = result.accepted;
+        append_mtp_pool_receipt(stats,result);
+        stats.ngram_rows = result.ngram_rows;
+        stats.ngram_accepted = result.ngram_accepted;
+        stats.prefill_ms = result.prompt_ms;
+        stats.decode_ms = result.decode_ms;
+        stats.constraint = result.constraint;
+        stats.finish = result.finish;
+        stats.sampling = job.constraint && job.constraint->transform.active() ? "greedy-logit-transform-v1" : "greedy";
+        if (!result.final_state_digest.empty()) {
+            stats.engine_extra.push_back({"final_state_digest", "\"" + result.final_state_digest + "\""});
+            if (!result.final_target_state_digest.empty())
+                stats.engine_extra.push_back({"final_target_state_digest", "\"" + result.final_target_state_digest + "\""});
+            stats.engine_extra.push_back({"final_state_position", std::to_string(result.final_state_position)});
+            if (!result.final_state_components.empty()) stats.engine_extra.push_back({"final_state_components", result.final_state_components});
+        }
+        if (!result.prompt_state_digest.empty())
+            stats.engine_extra.push_back({"prompt_state_digest", "\"" + result.prompt_state_digest + "\""});
+        if (!result.cache_refusal.empty()) stats.engine_extra.emplace_back("state_cache_refusal", serve::Json(result.cache_refusal).dump());
+        if (!result.session_json.empty()) stats.engine_extra.emplace_back("session", result.session_json);
+        if (!result.rtx_import_json.empty()) stats.engine_extra.emplace_back("rtx_import", result.rtx_import_json);
+        if(!result.error.empty()) throw serve::GenerationRequestError(std::move(stats),result.error);
+        return stats;
+    }
+    [[nodiscard]] std::uint64_t context_tokens() const override { return context_; }
+    [[nodiscard]] bool supports_thinking_budget() const override {return thinking_enabled_;}
+    [[nodiscard]] bool supports_constraints() const override {return constraints_enabled_;}
+    [[nodiscard]] std::vector<std::string> constraint_execution_routes() const override {return selection_mtp_available_?std::vector<std::string>{"mtp-host","serial-host"}:std::vector<std::string>{"serial-host"};}
+    [[nodiscard]] bool failed() const noexcept { return failed_.load(); }
+private:
+    const MtpServeRunner& run_;
+    std::uint64_t context_;
+    HttpConstraintRequests& constraints_;
+    bool constraints_enabled_;
+    bool thinking_enabled_;
+    bool selection_mtp_available_;
+    std::atomic<bool> failed_{false};
+    serve::BackendProbeSlot* probe_;
+    strix::qwen::profile::Resolution profile_;
+};
+
+inline std::atomic<bool>& http_serve_stop_requested() {
+    static std::atomic<bool> requested{false};
+    return requested;
+}
+extern "C" inline void http_serve_signal(int) { http_serve_stop_requested().store(true); }
+
+inline std::string read_http_api_key(const std::string& path) {
+    if (path.empty()) return {};
+    std::ifstream in(path, std::ios::binary);
+    if (!in) throw std::invalid_argument("cannot read --http-api-key-file");
+    std::string key((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    while (!key.empty() && (key.back() == '\n' || key.back() == '\r' || key.back() == ' ')) key.pop_back();
+    if (key.empty()) throw std::invalid_argument("--http-api-key-file is empty");
+    return key;
+}
+
+inline bool handle_session_route(bool enabled, const MtpServeRunner& run,
+    const serve::HttpRequest& request, serve::HttpResponseWriter& response) {
+    if (enabled && (request.path == "/v1/sessions" || request.path == "/v1/cache/stats" || request.path.starts_with("/v1/sessions/"))) {
+        try {
+            // Route grammar, id rule and durability parsing are the shared strix::serve ones (404 on an unknown route).
+            const auto parsed = serve::session_command(request.method, request.path, request.body);
+            MtpServeRequest command;
+            const auto& op = parsed.find("op")->as_string();
+            command.session_operation = op == "ram_checkpoint" ? std::string("checkpoint") : op;
+            if (const auto* id = parsed.find("id")) command.session_id = id->as_string();
+            if (const auto* durability = parsed.find("durability")) command.session_durability = durability->as_string();
+            response.send(200, "application/json", run(command).session_json);
+        } catch (const SessionApiError& error) {
+            response.send(error.status, "application/json", serve::session_error(error.code, error.what()).dump());
+        } catch (const std::invalid_argument& error) {
+            response.send(400, "application/json", serve::session_error("invalid_request", error.what()).dump());
+        } catch (const std::exception& error) {
+            const bool incompatible = std::string_view(error.what()).find("compatibility mismatch") != std::string_view::npos;
+            const int status = incompatible ? 409 : 422;
+            response.send(status, "application/json",
+                serve::session_error(incompatible ? "session_incompatible" : "session_corrupt", error.what()).dump());
+        }
+        return true;
+    }
+    return false;
+}
+
+
+// Serves until SIGINT/SIGTERM or an engine failure (rethrown after the server stops).
+class QwenHttpService final : public serve::SessionService {
+public:
+    QwenHttpService(const Options& options, serve::ApiService& api, serve::SessionRuntime& runtime,
+        bool state_import, std::size_t slots, std::function<bool()> engine_failed)
+        : options_(options), api_(api), runtime_(runtime), state_import_(state_import), slots_(slots),
+          engine_failed_(std::move(engine_failed)) {}
+
+    serve::SessionRuntime& runtime() override { return runtime_; }
+    void handle(const serve::HttpRequest& request, serve::HttpResponseWriter& writer) override {
+        api_.handle(request, writer);
+    }
+    void configure_listener(serve::HttpServerConfig& config) const override {
+        if (options_.supplied_options.contains("--http-bind")) config.bind_address = options_.http_bind;
+        if (options_.supplied_options.contains("--http-port")) config.port = static_cast<std::uint16_t>(options_.http_port);
+        config.max_connections = options_.http_max_connections;
+        // Import chunks of up to 256 MiB only on the opt-in route.
+        if (state_import_) config.max_body_bytes = std::max<std::uint64_t>(config.max_body_bytes, 256ULL << 20U);
+    }
+    void listening(const serve::HttpServerConfig& config, std::uint16_t port) override {
+        api_.set_state("ready");
+        std::cerr << "strix serve: listening on " << config.bind_address << ':' << port << " model " << options_.http_model_id;
+        if (slots_) std::cerr << " batch " << slots_;
+        std::cerr << std::endl;
+    }
+    bool stop_requested() const noexcept override {
+        if (engine_failed_()) {
+            try { api_.set_state("failed"); } catch (...) {}
+            return true;
+        }
+        return http_serve_stop_requested().load();
+    }
+    void stopped() override {
+        if (engine_failed_()) throw std::runtime_error("strix serve stopped after an engine failure");
+        std::cerr << "strix serve: stopped" << std::endl;
+    }
+private:
+    const Options& options_;
+    serve::ApiService& api_;
+    serve::SessionRuntime& runtime_;
+    bool state_import_;
+    std::size_t slots_;
+    std::function<bool()> engine_failed_;
+};
+
+inline void run_http_service(const Options& options, QwenHttpService& service,
+    const std::function<void()>& before_listen, const serve::ServiceFactory::ServeScoped* scoped) {
+    if (before_listen) before_listen();
+    http_serve_stop_requested().store(false);
+    struct Signals {
+        decltype(&http_serve_signal) interrupt = std::signal(SIGINT, http_serve_signal);
+        decltype(&http_serve_signal) terminate = std::signal(SIGTERM, http_serve_signal);
+        ~Signals() {
+            if (interrupt != SIG_ERR) std::signal(SIGINT, interrupt);
+            if (terminate != SIG_ERR) std::signal(SIGTERM, terminate);
+        }
+    } signals;
+    if (scoped) { (*scoped)(service); return; }
+    serve::HttpServerConfig config;
+    config.bind_address = options.http_bind;
+    config.port = static_cast<std::uint16_t>(options.http_port);
+    service.configure_listener(config);
+    serve::serve_session(config, service, true);
+}
+
+// rtx_import (--rtx-state-import): the /admin/rtx-import/* routes over these imports; null: no route.
+inline MtpDecodeServe make_http_serve(const Options& options, std::string engine_description,
+    std::shared_ptr<RtxStateImportRegistry> rtx_import = {},
+    std::optional<StartupPreflight> startup = {}, serve::Json assets = {}, std::function<void()> before_listen = {},
+    serve::DeploymentCallbacks deployment = {}, const serve::ServiceFactory::ServeScoped* scoped = nullptr) {
+    return [&options, engine_description = std::move(engine_description), rtx_import, startup, assets, before_listen,
+        deployment = std::move(deployment), scoped](const MtpServeRunner& run,bool selection_mtp_available) {
+        if(options.cache_readiness_recheck) options.cache_readiness_recheck();
+        const auto tokenizer = serve::BpeTokenizer::load_gguf(options.model_path);
+        serve::ApiConfig config;
+        config.deployment = deployment;
+        config.model_id = options.http_model_id;
+        config.http_slots = options.http_batch ? options.http_batch : 1U;
+        config.default_max_tokens = options.http_default_max_tokens;
+        config.api_key = read_http_api_key(options.http_api_key_file);
+        config.sampling_policy = options.http_sampling_policy;
+        config.responses = options.http_responses;
+        config.capabilities = options.http_capabilities;
+        config.capabilities_extra = [modes=session_modes_json(options), policy=cache_activation_json(options), &options](serve::Json& out) {
+            out.set("profile", serve::parse_json(options.product_profile.json()));
+            out.set("kv", serve::parse_json(options.kv.json()));
+            qwen_rotary_capabilities(out);
+            out.set("cache_policy",policy);
+            prefix_cache_capabilities(out,options);
+            moe_route_bf16_capabilities(out);
+            add_prefill_capabilities(out);
+            out.set("session_numerical_modes",modes);
+        };
+        config.stream_receipts = options.http_stream_receipts;
+        config.sse_keepalive_seconds = options.http_sse_keepalive;
+        config.sse_progress_seconds = options.http_sse_progress_interval;
+        config.engine_progress = true;
+        config.engine_description = engine_description;
+        qwen::bind_http_session_support(config, options.session_management_requested);
+        if (options.session_management_requested || options.prefix_cache_host_bytes) {
+            if (options.session_management_requested) {
+                MtpServeRequest stats; stats.session_operation="stats"; (void)run(stats);
+            }
+            config.state_cache_stats=[mirror=options.state_cache_stats,policy=cache_activation_json(options)] {
+                auto out=serve::parse_json(mirror->read());out.set("cache_policy",policy);return out.dump();
+            };
+        }
+        config.stop_tokens.push_back(tokenizer->eos_token());
+        if (const auto end = tokenizer->find("<|endoftext|>"); end != UINT32_MAX) config.stop_tokens.push_back(end);
+        if (options.eos_token) config.stop_tokens.push_back(*options.eos_token);
+        std::sort(config.stop_tokens.begin(), config.stop_tokens.end());
+        config.stop_tokens.erase(std::unique(config.stop_tokens.begin(), config.stop_tokens.end()), config.stop_tokens.end());
+        HttpConstraintRequests constraints(tokenizer,options.http_selection_fast);
+        config.engine_logprobs = options.http_logprobs;
+        config.engine_logit_transforms = options.http_logit_transforms;
+        config.engine_constraints = options.http_constraints && constraints.available(config.stop_tokens);
+        config.engine_thinking_budget = options.http_thinking_budget && constraints.available(config.stop_tokens);
+        config.enforce_anthropic_thinking_budget = options.http_anthropic_thinking_budget_enforce;
+        config.constraint_execution_routes=selection_mtp_available?std::vector<std::string>{"mtp-host","serial-host"}:std::vector<std::string>{"serial-host"};
+        config.engine_routes = [rtx_import, &run, enabled = options.session_management_requested](const serve::HttpRequest& request, serve::HttpResponseWriter& response) {
+            if (handle_session_route(enabled, run, request, response)) return true;
+            return rtx_import && handle_rtx_state_import_route(*rtx_import, request, response);
+        };
+
+        if (serve::serve_health_record_enabled())
+            config.health_record = http_health_record(options, 1, startup, assets);
+        serve::GenerationQueue queue(options.http_max_queue);
+        if (!config.deployment.capacity_provider) config.deployment.capacity_provider = [&queue] {
+            const auto q = queue.snapshot();
+            return serve::ServeCapacity{1, q.running, std::nullopt, q.queued};
+        };
+        serve::BackendProbeSlot probe([&] { queue.wake_control(); });
+        const bool probing = config.health_record && config.health_record->backend_probe_enabled;
+        if (probing) {
+            queue.set_idle_control([&] { probe.boundary(serve::BackendProof::control_only); });
+            config.health_provider = [&] { return probe.snapshot(); };
+        }
+        MtpBridgeEngine engine(run, options.context_tokens, constraints, config.engine_constraints, config.engine_thinking_budget,
+            selection_mtp_available, probing ? &probe : nullptr, options.product_profile);
+        // Serial native-control binding begin.
+        serve::SerialSessionOwner owner(queue, engine);
+        // Serial native-control binding end.
+        serve::ApiService api(config, tokenizer, queue, options.context_tokens, engine.supports_sampling());
+        QwenHttpService service(options, api, owner.runtime(), bool(rtx_import), 0, [&] { return engine.failed(); });
+        run_http_service(options, service, before_listen, scoped);
+    };
+}
+
+// --http-serve --http-batch N: the same front end over the batched runner. The bridge thread admits
+// queued requests into free slots between decode cycles (each prompt runs as a single request's would)
+// and decodes every active request together; a request leaves when it ends, without stopping the others.
+// By default a request with temperature > 0 samples (sampling-v1) with its own policy and seed.
+// Shared serve warm-up (strix/serve/startup_warmup.hpp) on the batched runner: one prompt of the slots' tile T and one
+// token through admit/step before the owner and the listener exist, so the first-use prefill scratch of the T row class
+// grows here and not on the first request. Nothing is kept: no prefix store, no drafting, no peers.
+inline void warm_up_batch_runner(MtpBatchRunner& runner, const Options& options) {
+    const auto plan = serve::plan_startup_warmup(serve::startup_warmup_enabled(), runner.tile_rows(), options.context_tokens);
+    // A warm-up request the runner finishes with an error (or never finishes: not admitted) is reported and the server
+    // starts lazily (StartupWarmupFailed, bounded fail-open); an exception out of admit/step still fails the start.
+    const auto warm = serve::run_startup_warmup(plan, runner.vocabulary(), [&](std::vector<std::uint32_t> prompt) {
+        MtpBatchRequest request;
+        request.cache_retention = serve::CacheRetention::no_store;
+        request.prompt = std::move(prompt);
+        request.max_tokens = plan.outputs;
+        request.ngram_draft = false;
+        request.tool_draft = false;
+        request.ngram_peers = false;
+        request.on_tokens = [](std::span<const std::uint32_t>) { return true; };
+        bool finished = false;
+        std::string error;
+        request.on_finish = [&](const MtpServeResult& result) { finished = true; error = result.error; };
+        (void)runner.admit(std::move(request));
+        while (runner.active()) runner.step();
+        if (!finished || !error.empty())
+            throw serve::StartupWarmupFailed(error.empty() ? std::string("no completion") : error);
+    });
+    std::cerr << serve::startup_warmup_line("strix serve", plan, warm) << std::endl;
+}
+
+inline MtpDecodeBatchServe make_http_batch_serve(const Options& options, std::string engine_description,
+    std::optional<StartupPreflight> startup = {}, serve::Json assets = {},
+    std::shared_ptr<const serve::BpeTokenizer> supplied_tokenizer = {}, std::function<void()> before_listen = {},
+    serve::DeploymentCallbacks deployment = {}, const serve::ServiceFactory::ServeScoped* scoped = nullptr) {
+    return [&options, engine_description = std::move(engine_description), startup, assets,
+        supplied_tokenizer = std::move(supplied_tokenizer), before_listen, deployment = std::move(deployment), scoped](MtpBatchRunner& runner) {
+        if(options.cache_readiness_recheck) options.cache_readiness_recheck();
+        const auto tokenizer = supplied_tokenizer ? supplied_tokenizer : serve::BpeTokenizer::load_gguf(options.model_path);
+        warm_up_batch_runner(runner, options);
+        serve::ApiConfig config;
+        config.model_id = options.http_model_id;
+        config.http_slots = options.http_batch ? options.http_batch : 1U;
+        config.default_max_tokens = options.http_default_max_tokens;
+        config.api_key = read_http_api_key(options.http_api_key_file);
+        config.sampling_policy = options.http_sampling_policy;
+        const bool samples = options.http_sampling_policy == "sample";
+        config.responses = options.http_responses;
+        config.capabilities = options.http_capabilities;
+        auto cert=serve::Json::object();
+        prefix_batch_cert_capabilities(cert,options);
+        cert.set("cache_policy",cache_activation_json(options));
+        prefix_cache_capabilities(cert,options);
+        config.capabilities_extra = [modes=session_modes_json(options), cert=std::move(cert), profile=options.product_profile](serve::Json& out) {
+            out.set("profile", serve::parse_json(profile.json()));
+            qwen_rotary_capabilities(out);
+            moe_route_bf16_capabilities(out);
+            add_prefill_capabilities(out);
+            out.set("session_numerical_modes",modes);
+            for(const auto& [key,value]:cert.as_object()) out.set(key,value);
+        };
+        config.stream_receipts = options.http_stream_receipts;
+        config.sse_keepalive_seconds = options.http_sse_keepalive;
+        config.sse_progress_seconds = options.http_sse_progress_interval;
+        config.engine_progress = true;
+        config.engine_description = engine_description;
+        qwen::bind_http_session_support(config, options.session_management_requested);
+        if (options.session_management_requested || options.prefix_cache_host_bytes) {
+            if (options.session_management_requested) {
+                MtpServeRequest stats; stats.session_operation="stats"; (void)runner.session_run(stats);
+            }
+            config.state_cache_stats=[mirror=options.state_cache_stats,policy=cache_activation_json(options)] {
+                auto out=serve::parse_json(mirror->read());out.set("cache_policy",policy);return out.dump();
+            };
+        }
+        config.engine_routes = [&runner, enabled = options.session_management_requested](const serve::HttpRequest& request, serve::HttpResponseWriter& response) {
+            return handle_session_route(enabled, runner.session_run, request, response);
+        };
+        config.stop_tokens.push_back(tokenizer->eos_token());
+        if (const auto end = tokenizer->find("<|endoftext|>"); end != UINT32_MAX) config.stop_tokens.push_back(end);
+        if (options.eos_token) config.stop_tokens.push_back(*options.eos_token);
+        std::sort(config.stop_tokens.begin(), config.stop_tokens.end());
+        config.stop_tokens.erase(std::unique(config.stop_tokens.begin(), config.stop_tokens.end()), config.stop_tokens.end());
+        HttpConstraintRequests constraints(tokenizer,options.http_selection_fast);
+        config.engine_logprobs = options.http_logprobs;
+        config.engine_logit_transforms = options.http_logit_transforms;
+        config.engine_constraints = runner.supports_constraints() && constraints.available(config.stop_tokens);
+        config.engine_thinking_budget = runner.supports_thinking_budget() && constraints.available(config.stop_tokens);
+        config.enforce_anthropic_thinking_budget = options.http_anthropic_thinking_budget_enforce;
+        config.constraint_execution_routes=runner.constraint_execution_routes();
+        if (samples) qwen::bind_http_sampled_fields(config);
+        if (serve::serve_health_record_enabled())
+            config.health_record = http_health_record(options, runner.slots(), startup, assets);
+        // Strict tool-call frame proposals (batch default on, STRIX_BATCH_TOOL_DRAFT=0 off) need the template's frame tokens.
+        if (const auto open = tokenizer->find("<tool_call>"), close = tokenizer->find("</tool_call>");
+            open != UINT32_MAX && close != UINT32_MAX && open != close)
+            runner.frame_tokens = {open, close};
+
+        serve::GenerationQueue queue(options.http_max_queue);
+        serve::BackendProbeSlot probe([&] { queue.wake_control(); });
+        const bool probing = config.health_record && config.health_record->backend_probe_enabled;
+        if (probing) {
+            queue.set_idle_control([&] { probe.boundary(serve::BackendProof::control_only); });
+            config.health_provider = [&] { return probe.snapshot(); };
+        }
+        config.deployment = deployment;
+        if (!config.deployment.capacity_provider) config.deployment.capacity_provider = [&queue, &runner] {
+            const auto q = queue.snapshot();
+            return serve::ServeCapacity{runner.slots(), q.running, std::nullopt, q.queued};
+        };
+        std::atomic<bool> failed{false};
+        // Qwen native-control binding begin.
+        qwen::HttpSessionOwner::Native native;
+        const auto translate = [&](const serve::GenerationJob& job, qwen::HttpSessionOwner::Callbacks callbacks,
+                                   const MtpBatchRunner::AdmissionSink& submit) {
+            MtpBatchRequest request;
+            request.constraint = constraints.make(job.constraint);
+            request.cache_retention = job.cache_retention;
+            request.prompt = job.prompt;
+            request.stable_prefix = job.stable_prefix;
+            request.max_tokens = job.max_tokens;
+            request.stop_tokens = job.stop_tokens;
+            request.on_tokens = callbacks.tokens;
+            request.on_progress = callbacks.progress;
+            request.cancelled = callbacks.cancelled;
+            request.ngram_draft = job.ngram_draft;
+            request.draft_depth_max = job.draft_depth_max;
+            request.tool_draft = job.tool_draft;
+            request.ngram_peers = job.ngram_peers;
+            std::string sampling = job.constraint && job.constraint->transform.active() ? "greedy-logit-transform-v1" : "greedy";
+            if (job.sampling.temperature != 0.0) {
+                std::string error;
+                // Coupled acceptance, the command line's default too: a drafted row draws the same keyed target uniform as
+                // a plain row, so a seed gives the same tokens whatever the cohort's draft schedule (exact in distribution).
+                if (samples) request.sampler = make_http_mtp_sampler(job.sampling, error, options);
+                else error = "temperature must be 0 when Qwen HTTP sampling is disabled";
+                if (!request.sampler) {
+                    serve::GenerationStats stats;
+                    stats.error_status = 400;
+                    callbacks.finish(std::move(stats), std::move(error));
+                    return;
+                }
+                // The native runner excludes wide-copy, context and frame drafts for sampled slots.
+                sampling = "sampling-v1";
+            }
+            const auto prompt_tokens = job.prompt.size();
+            request.on_finish = [finish=callbacks.finish, prompt_tokens, sampling, profile=options.product_profile](const MtpServeResult& result) {
+                serve::GenerationStats stats;
+                stats.engine_extra.emplace_back("profile", profile.json());
+                add_prefill_stats(stats);
+                stats.prompt_tokens = prompt_tokens;
+                stats.cached_tokens = result.restored_tokens;
+                stats.generated_tokens = result.generated_tokens;
+                stats.cycles = result.cycles;
+                stats.proposed = result.proposed;
+                stats.accepted = result.accepted;
+                append_mtp_pool_receipt(stats,result);
+                stats.prefill_ms = result.prompt_ms;
+                stats.decode_ms = result.decode_ms;
+                stats.ngram_rows = result.ngram_rows;
+                stats.ngram_accepted = result.ngram_accepted;
+                stats.tool_rows = result.tool_rows;
+                stats.tool_accepted = result.tool_accepted;
+                stats.source_shadow = result.source_shadow;
+                stats.source_scored = result.source_scored;
+                stats.source_right = result.source_right;
+                stats.frame_cycles = result.frame_cycles;
+                stats.frame_shadow = result.frame_shadow;
+                stats.constraint = result.constraint;
+                if (!result.cache_refusal.empty()) stats.engine_extra.emplace_back("state_cache_refusal", serve::Json(result.cache_refusal).dump());
+                stats.engine_extra.push_back({"batch_service","{"+batch_service_receipt(result.service)+"}"});
+                stats.engine_extra.push_back({"shared_execution",result.shared_execution.json()});
+                if(!result.final_state_digest.empty()) {
+                    stats.engine_extra.push_back({"final_state_digest","\""+result.final_state_digest+"\""});
+                    if(!result.final_target_state_digest.empty())
+                        stats.engine_extra.push_back({"final_target_state_digest","\""+result.final_target_state_digest+"\""});
+                    if(!result.final_state_components.empty()) stats.engine_extra.push_back({"final_state_components",result.final_state_components});
+                    stats.engine_extra.push_back({"final_state_position",std::to_string(result.final_state_position)});
+                }
+                if(!result.prompt_state_digest.empty()) stats.engine_extra.push_back({"prompt_state_digest","\""+result.prompt_state_digest+"\""});
+                stats.finish = result.finish;
+                stats.sampling = sampling;
+                finish(std::move(stats), result.error);
+            };
+            callbacks.before_submit();
+            submit(std::move(request));
+        };
+        native.add_slot = [&](bool queued) { runner.add_slot(queued); };
+        native.active = [&] { return runner.active(); };
+        native.has_free_slot = [&] { return runner.has_free_slot(); };
+        native.submit = [&](const serve::GenerationJob& job, qwen::HttpSessionOwner::Callbacks callbacks) {
+            translate(job, std::move(callbacks), [&](MtpBatchRequest request) { runner.admit(std::move(request)); });
+        };
+        native.service_admission = [&](std::function<std::size_t()> queued, qwen::HttpSessionOwner::Pump pump) {
+            if (!pump) { runner.set_service_admission({}, {}); return; }
+            runner.set_service_admission(std::move(queued), [&, pump=std::move(pump)](
+                const MtpBatchRunner::AdmissionSink& prepare, const std::function<bool()>& can_prepare) {
+                pump([&](const serve::GenerationJob& job, qwen::HttpSessionOwner::Callbacks callbacks) {
+                    translate(job, std::move(callbacks), prepare);
+                }, can_prepare);
+            });
+        };
+        native.step = [&] {
+            const auto generation = probing ? probe.pending_generation() : 0;
+            if (generation) {
+                const bool completed = runner.step<true>();
+                if (completed) probe.complete(generation, serve::BackendProof::work_completion);
+            } else runner.step();
+        };
+        bool named_engine_failed = false;
+        native.named = [&](serve::GenerationJob& job) {
+            if (!runner.session_run) throw std::logic_error("named session requires an idle session runner");
+            MtpBridgeEngine engine(runner.session_run, options.context_tokens, constraints, false, false, false,
+                probing ? &probe : nullptr, options.product_profile);
+            named_engine_failed = false;
+            try { return engine.generate(job); }
+            catch (...) { named_engine_failed = engine.failed(); throw; }
+        };
+        native.named_failed = [&] { return named_engine_failed; };
+        native.fail_requests = [&](const std::string& error) { runner.fail_requests(error); };
+        native.abandon = [&] { runner.abandon(); };
+        native.failed = [&] { failed.store(true); if (probing) probe.fail(); };
+        native.stop_requested = [&] { return http_serve_stop_requested().load(); };
+        native.session_mutex = runner.session_mutex;
+        native.queue_protection = runner.queue_protection_binding();
+        const auto capacity = std::max(runner.slots(), runner.slots_capacity);
+        if (capacity > UINT32_MAX) throw std::invalid_argument("Qwen owner slot capacity overflow");
+        qwen::HttpSessionOwner owner(queue, options.context_tokens, static_cast<std::uint32_t>(capacity), std::move(native));
+        // Qwen native-control binding end.
+        serve::ApiService api(config, tokenizer, queue, options.context_tokens, samples);
+        QwenHttpService service(options, api, owner.runtime(), false, runner.slots(), [&] { return failed.load(); });
+        run_http_service(options, service, before_listen, scoped);
+    };
+}
+
+}  // namespace strix::decode_cli

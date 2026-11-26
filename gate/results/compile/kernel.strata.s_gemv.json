@@ -1,0 +1,65 @@
+{
+ "module": "kernel.strata.s_gemv",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-24T23:07:17Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 6,
+ "passed": 6,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 1.1,
+ "results": [
+  {
+   "unit": "src/src/kernels/cuda/dequant_s2.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/s_gemv/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/s_gemv/src/src/kernels/cuda/dequant_s2.cu -o build/compile-gate/kernel.strata.s_gemv/0-dequant_s2.cu.o",
+   "rc": 0,
+   "seconds": 0.71,
+   "object_bytes": 18456,
+   "object_sha256": "2e7756a53d3818512c07de65a36b201dedea3dfc27bfa81c46189fd834c4136b"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s2_gemv.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/s_gemv/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/s_gemv/src/src/kernels/cuda/s2_gemv.cu -o build/compile-gate/kernel.strata.s_gemv/1-s2_gemv.cu.o",
+   "rc": 0,
+   "seconds": 0.74,
+   "object_bytes": 17792,
+   "object_sha256": "3ab9b720b27126c6b28d2164ef846570783dadb33f16a588b2ffefed3421dfb5"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s2_gemv_fast.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/s_gemv/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/s_gemv/src/src/kernels/cuda/s2_gemv_fast.cu -o build/compile-gate/kernel.strata.s_gemv/2-s2_gemv_fast.cu.o",
+   "rc": 0,
+   "seconds": 0.78,
+   "object_bytes": 25896,
+   "object_sha256": "1b057256a236d326d8dd5126dd2677de944a6916fd52d8c9003e82212d038d57"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s2_gemv_quads.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/s_gemv/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/s_gemv/src/src/kernels/cuda/s2_gemv_quads.cu -o build/compile-gate/kernel.strata.s_gemv/3-s2_gemv_quads.cu.o",
+   "rc": 0,
+   "seconds": 0.75,
+   "object_bytes": 16976,
+   "object_sha256": "3b6d8c9e4ded53fcadf201333e1bca059905577bdb2ffdebf93b0a82d575a84f"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s2_gemv_q8.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/s_gemv/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/s_gemv/src/src/kernels/cuda/s2_gemv_q8.cu -o build/compile-gate/kernel.strata.s_gemv/4-s2_gemv_q8.cu.o",
+   "rc": 0,
+   "seconds": 0.76,
+   "object_bytes": 17280,
+   "object_sha256": "5aae5b43dd2ad8855300636c81d174f1541772225ba19e1ffbf82a08824131ef"
+  },
+  {
+   "unit": "src/src/kernels/cuda/s_gemv.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -I catalog/strata/kernel/s_gemv/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/s_gemv/src/src/kernels/cuda/s_gemv.cu -o build/compile-gate/kernel.strata.s_gemv/5-s_gemv.cu.o",
+   "rc": 0,
+   "seconds": 1.13,
+   "object_bytes": 123016,
+   "object_sha256": "32273e960d08e82c0c958cff40ee1e074fc4908826091e63f693e35d27f25f45"
+  }
+ ]
+}

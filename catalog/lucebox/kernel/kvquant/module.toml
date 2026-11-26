@@ -1,0 +1,45 @@
+id        = "kernel.lucebox.kvquant"
+kind      = "kernel"
+summary   = "Walsh-Hadamard rotation for TurboQuant KV (strided source, scalar on HIP) and the TQ3 code helpers"
+why       = "A rotated 3-bit KV format beside strixite kv8 and StrixFold FP4 KV"
+notes     = "INTERFACES.md section: 9. Quantized KV. Interface tags: kvcache.rotate/tq3/f32.lucebox. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/turbo-wht.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/tq3-quant.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/turbo-wht.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/turbo-wht.cuh",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda/turbo-wht.cu"]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/deps/llama.cpp/ggml/src/ggml-cuda/turbo-wht.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "kvcache.rotate/tq3/f32.lucebox"
+api       = "GGML op in turbo-wht.cu"
+numeric   = "established scalar implementation on HIP (file header)"
+regime    = "KV store and read with TurboQuant TQ3 codes"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.kvquant.json"

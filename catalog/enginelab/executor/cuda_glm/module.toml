@@ -1,0 +1,145 @@
+id        = "executor.enginelab.cuda_glm"
+kind      = "executor"
+summary   = "GLM on CUDA (with its producer and bench): 84 origin files under src/cuda"
+why       = "the RTX GLM route; where it would go: beside the catalogue's executor.model/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.model/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. CUDA (RTX PRO 6000 route). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/cuda/models/glm/README.md",
+  "src/cuda/models/glm/bench/README.md",
+  "src/cuda/models/glm/bench/bench.cu",
+  "src/cuda/models/glm/bench/build.ps1",
+  "src/cuda/models/glm/bench/dsa_bench.cu",
+  "src/cuda/models/glm/bench/dsa_host_tests.cpp",
+  "src/cuda/models/glm/bench/dsa_window.ps1",
+  "src/cuda/models/glm/bench/export_model.py",
+  "src/cuda/models/glm/bench/host_tests.cpp",
+  "src/cuda/models/glm/bench/inspect_dsa_sass.py",
+  "src/cuda/models/glm/bench/inspect_kda_sass.py",
+  "src/cuda/models/glm/bench/inspect_sass.py",
+  "src/cuda/models/glm/bench/kda_bench.cu",
+  "src/cuda/models/glm/bench/kda_host_tests.cpp",
+  "src/cuda/models/glm/bench/kda_window.ps1",
+  "src/cuda/models/glm/bench/reference.hpp",
+  "src/cuda/models/glm/bench/row_mma_test.cu",
+  "src/cuda/models/glm/bench/test_attention_export.py",
+  "src/cuda/models/glm/bench/test_dsa_export.py",
+  "src/cuda/models/glm/bench/test_dsa_window.ps1",
+  "src/cuda/models/glm/bench/test_export.py",
+  "src/cuda/models/glm/bench/window.ps1",
+  "src/cuda/models/glm/c1_layout.cuh",
+  "src/cuda/models/glm/c1_schedule.hpp",
+  "src/cuda/models/glm/cutlass_path.inl",
+  "src/cuda/models/glm/dsa.cu",
+  "src/cuda/models/glm/dsa.cuh",
+  "src/cuda/models/glm/dsa_selection.hpp",
+  "src/cuda/models/glm/dsa_semantics.hpp",
+  "src/cuda/models/glm/head.cu",
+  "src/cuda/models/glm/head.cuh",
+  "src/cuda/models/glm/kda.cu",
+  "src/cuda/models/glm/kda.cuh",
+  "src/cuda/models/glm/mtp.cuh",
+  "src/cuda/models/glm/native.cu",
+  "src/cuda/models/glm/native.cuh",
+  "src/cuda/models/glm/paired_index_model.hpp",
+  "src/cuda/models/glm/producer/CMakeLists.txt",
+  "src/cuda/models/glm/producer/PROVENANCE.md",
+  "src/cuda/models/glm/producer/README.md",
+  "src/cuda/models/glm/producer/admission_model.py",
+  "src/cuda/models/glm/producer/budget_adapter.cpp",
+  "src/cuda/models/glm/producer/build.ps1",
+  "src/cuda/models/glm/producer/cache.py",
+  "src/cuda/models/glm/producer/crash_report.hpp",
+  "src/cuda/models/glm/producer/decode_command.hpp",
+  "src/cuda/models/glm/producer/decode_qualification_window.py",
+  "src/cuda/models/glm/producer/decode_timeline.hpp",
+  "src/cuda/models/glm/producer/dgpu.hpp",
+  "src/cuda/models/glm/producer/disk_queue.hpp",
+  "src/cuda/models/glm/producer/expert_source.hpp",
+  "src/cuda/models/glm/producer/expert_tier.hpp",
+  "src/cuda/models/glm/producer/generate_request.hpp",
+  "src/cuda/models/glm/producer/glm_route_census.py",
+  "src/cuda/models/glm/producer/hash_authority.hpp",
+  "src/cuda/models/glm/producer/head_select.hpp",
+  "src/cuda/models/glm/producer/inspect_build.py",
+  "src/cuda/models/glm/producer/inspect_runtime_sass.py",
+  "src/cuda/models/glm/producer/integrity.cpp",
+  "src/cuda/models/glm/producer/policy.hpp",
+  "src/cuda/models/glm/producer/profile.cpp",
+  "src/cuda/models/glm/producer/profile.hpp",
+  "src/cuda/models/glm/producer/qualification_window.py",
+  "src/cuda/models/glm/producer/runtime.cu",
+  "src/cuda/models/glm/producer/runtime.hpp",
+  "src/cuda/models/glm/producer/schedule.hpp",
+  "src/cuda/models/glm/producer/sender.hpp",
+  "src/cuda/models/glm/producer/service.cpp",
+  "src/cuda/models/glm/producer/session.hpp",
+  "src/cuda/models/glm/producer/shards.hpp",
+  "src/cuda/models/glm/producer/state_slices.hpp",
+  "src/cuda/models/glm/producer/tierstream_binding.cpp",
+  "src/cuda/models/glm/producer/tierstream_binding.hpp",
+  "src/cuda/models/glm/producer/tierstream_stub.cpp",
+  "src/cuda/models/glm/producer/unit_auth.hpp",
+  "src/cuda/models/glm/producer/unit_file.hpp",
+  "src/cuda/models/glm/producer/unit_file_tool.cpp",
+  "src/cuda/models/glm/producer/verified_io.hpp",
+  "src/cuda/models/glm/producer/verified_manifest.hpp",
+  "src/cuda/models/glm/producer/windows_job.py",
+  "src/cuda/models/glm/projection.inl",
+  "src/cuda/models/glm/row_mma.cuh",
+  "src/cuda/models/glm/row_r2.hpp",
+  "src/cuda/models/glm/trellis.cuh",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.model-enginelab-glm-cuda/-/-"
+api       = "src/cuda/models/glm/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.core_integer"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_head"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.glm_rtxpf"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source for the optional RTX PRO route: no CUDA toolkit on the island and no NVIDIA device on the pod, so it is not compiled"

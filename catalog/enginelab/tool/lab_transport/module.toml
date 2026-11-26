@@ -1,0 +1,43 @@
+id        = "tool.enginelab.lab_transport"
+kind      = "tool"
+summary   = "the transport lab (lab/transport): 6 origin files under lab/transport"
+why       = "transport bring-up experiments; where it would go: kept as a reference program or lab (tool.enginelab-lab-transport/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-lab-transport/-/-. 2 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "lab/transport/CMakeLists.txt",
+  "lab/transport/README.md",
+  "lab/transport/dual_tbstream.py",
+  "lab/transport/tbstream_baseline.cpp",
+  "lab/transport/tcp_baseline.cpp",
+  "lab/transport/test_dual_tbstream.py",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/lab/transport/tbstream_baseline.cpp", "src/lab/transport/tcp_baseline.cpp"]
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.enginelab-lab-transport/-/-"
+api       = "lab/transport"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

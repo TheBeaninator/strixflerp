@@ -1,0 +1,145 @@
+id        = "tool.enginelab.apps_mtp"
+kind      = "tool"
+summary   = "MTP application pieces: the MTP cohort bridge and tiled cohort, the decode bridge, wide copy verify (a long confident copy span verified in ONE rows-row forward of the tiled prefill tail owner instead of 8-row windows, state snapshotted first), the prefill-to-MTP handoff, MTP asset verification, manifest audit, prompt phase and window memory reservation"
+why       = "where MTP wide drafting is wired into the decode CLI and server; where it would go: kept as a reference program or lab (speculation.window-verify-wide-apps/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, speculation.window-verify-wide-apps/-/-. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "apps/hip_mtp_cohort_bridge.hpp",
+  "apps/hip_mtp_cohort_tiled.hpp",
+  "apps/hip_mtp_decode_bridge.hpp",
+  "apps/hip_mtp_wide_copy.hpp",
+  "apps/hip_qwen_prefill_mtp_handoff.inc",
+  "apps/mtp_asset_verification.hpp",
+  "apps/mtp_manifest_audit_main.cpp",
+  "apps/mtp_prompt_phase.hpp",
+  "apps/mtp_window_memory_reservation.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/apps/mtp_manifest_audit_main.cpp"]
+includes  = ["src/apps", "src/apps"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "speculation.window-verify-wide-apps/-/-"
+api       = "apps/hip_mtp_wide_copy.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.qwen_prefill"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.hip_weight"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.moe_q4k_a8"
+
+[[requires]]
+module    = "kernel.enginelab.ple"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_drafters"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_forward"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_window"
+
+[[requires]]
+module    = "runtime.enginelab.pair_pipeline"
+
+[[requires]]
+module    = "runtime.enginelab.qpf2k_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_constraint"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_prefix"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[[requires]]
+module    = "serve.enginelab.serving_cohort"
+
+[[requires]]
+module    = "tool.enginelab.apps_hip_decode"
+
+[[requires]]
+module    = "tool.enginelab.apps_qwen"
+
+[[requires]]
+module    = "tool.enginelab.apps_serve_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

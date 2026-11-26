@@ -1,0 +1,67 @@
+id        = "tool.fastasfuck.bench_threshold_gemv_vs_wmma"
+kind      = "tool"
+summary   = "fastasfuck's bench of the GEMV versus WMMA crossover in tokens for the linear, delta-rule, HC and grouped MoE kernels"
+why       = "the engine switches from GEMV to WMMA at a token count; this bench is where those thresholds come from"
+notes     = "Files vs strixite: tools/bench_threshold_gemv_vs_wmma.cpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/bench_threshold_gemv_vs_wmma.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/bench_threshold_gemv_vs_wmma.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.bench-threshold-gemv-vs-wmma/-/-"
+api       = "tools/bench_threshold_gemv_vs_wmma.cpp"
+numeric   = "n/a"
+regime    = "host program"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.gdn"
+
+[[requires]]
+module    = "kernel.fastasfuck.hc"
+
+[[requires]]
+module    = "kernel.fastasfuck.hc_wmma"
+
+[[requires]]
+module    = "kernel.fastasfuck.linear"
+
+[[requires]]
+module    = "kernel.fastasfuck.moe_grouped"
+
+[[requires]]
+module    = "kernel.fastasfuck.moe_router"
+
+[[requires]]
+module    = "kernel.fastasfuck.norm"
+
+[[requires]]
+module    = "kernel.fastasfuck.swiglu"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable bench_threshold_gemv_vs_wmma) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

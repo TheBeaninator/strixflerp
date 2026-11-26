@@ -1,0 +1,50 @@
+id        = "kernel.lucebox.collective"
+kind      = "kernel"
+summary   = "device halves of the cluster transports: f32 / bf16 conversion for the RCCL compressed allreduce, and row pack and add of the lean decode-path reduction behind stream memory waits"
+why       = "A second RDMA decode reduction to read against StrixFold's transports"
+notes     = "INTERFACES.md section: 12. TP collective. Interface tags: collective.allreduce-rccl-bf16/-/f32.lucebox; collective.allreduce-rdma/-/bf16.lucebox. Units: server/src/cluster/cluster_comm_kernels.cu, server/src/cluster/fast_reduce_kernels.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = ["server/src/cluster/cluster_comm_kernels.cu", "server/src/cluster/fast_reduce_kernels.cu"]
+authors   = ["Luce-Org"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/server/src/cluster/cluster_comm_kernels.cu", "src/server/src/cluster/fast_reduce_kernels.cu"]
+includes  = ["src/server/src/cluster"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/src/cluster/cluster_comm_kernels.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1"], "src/server/src/cluster/fast_reduce_kernels.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1"] }
+
+[[provides]]
+interface = "collective.allreduce-rccl-bf16/-/f32.lucebox"
+api       = "server/src/cluster/cluster_comm_kernels.cu"
+numeric   = "f32 to bf16 by hand, summed after the RCCL exchange (file header)"
+regime    = "multi-box expert parallel (LUCE_CLUSTER=ON)"
+
+[[provides]]
+interface = "collective.allreduce-rdma/-/bf16.lucebox"
+api       = "server/src/cluster/fast_reduce_kernels.cu"
+numeric   = "pack, wait (hipStreamWaitValue32 in fast_reduce.cpp), add (file header)"
+regime    = "decode-path reduction over raw RDMA (LUCE_CLUSTER=ON)"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.server_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.collective.json"

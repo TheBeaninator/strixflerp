@@ -1,0 +1,36 @@
+id        = "runtime.vllm_strix.idx_fp8max_fnuz"
+kind      = "runtime"
+summary   = "indexer K quantised to an fp8 max of 224 instead of 448 so the e4m3fn to fnuz cast on the paged-MQA logits path cannot overflow to NaN, behind VSH_IDX_FP8MAX_FNUZ"
+why       = "gfx1151 reports float8_e4m3fn (max 448) while the aiter logits path reads fnuz (max 240): every vector's absmax element became NaN after the cast and decode scored NaN (PATCHES 27). Any fp8 cache crossing the fn / fnuz line on RDNA needs this headroom"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-idx-fp8max-fnuz.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.indexer-quant-fnuz-safe/fp8-e4m3fn/-"
+api       = "patch script over glm5next/amd/ops/kpool_compress.py"
+numeric   = "absmax scaled to 224"
+regime    = "GLM-5.3 kpool writer"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

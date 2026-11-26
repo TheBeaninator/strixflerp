@@ -1,0 +1,46 @@
+id        = "runtime.strixfold_tp4.sampling"
+kind      = "runtime"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for runtime.strixfold.sampling: 2 file(s) of runtime.strixfold.sampling (sampling.zig), laid over the f64b5ff files"
+why       = "runtime.strixfold.sampling is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over runtime.strixfold.sampling without touching it or the TP2 recipes"
+notes     = "Overlay of runtime.strixfold.sampling (overlay.json has every file with both sha256 and its commits). Cards behind the changes: -. Latest commits: ab1a7db4 draft_temperature: single-line comments, no new lean_check findings (review); 0d2fc151 dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/core/lanes/sampling.zig",
+  "zig/src/families/dsv41/sampling.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.sampling (origin strixfold, f64b5ff): 2 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "sample.next-token/-/f64.tp4"
+api       = "core/lanes/sampling.zig Sampling, families/dsv41/sampling.zig"
+numeric   = "float64, libm exp/log, numpy pairwise sum order; bit for bit with the Python exact_sampling.py"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); top_k + margin candidates a row, host side"
+
+[[requires]]
+module    = "runtime.strixfold.sampling"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

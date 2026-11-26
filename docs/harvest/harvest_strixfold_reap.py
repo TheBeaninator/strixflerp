@@ -30,6 +30,11 @@ REPO_URL = 'https://github.com/Shoestring-dev/Strixfold'
 MODULE = 'runtime.strixfold_reap.edge_reap'
 DOC = 'docs/experiments/tp4-reap-stats.md'
 SKIP = ('docs/', 'tools/')
+# Licence texts copied beside ORIGIN.toml from the head commit (ORIGIN.toml [licence] files): the root texts and
+# LICENSES/, which THIRD_PARTY_NOTICES.md cites.
+LICENCE_FILES = ('LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md', 'LICENSES/Apache-2.0.txt', 'LICENSES/CUTLASS-BSD-3-Clause.txt',
+                 'LICENSES/MIT.txt', 'LICENSES/MiaAI-Lab-MIT.txt', 'LICENSES/Pillow-MIT-CMU.txt',
+                 'LICENSES/PyTorch-BSD-3-Clause.txt')
 CARD_TAG = re.compile(r'\s*\((?:pod )?card [0-9a-f]{10}\)')   # internal work-item tags in fork commit subjects
 
 
@@ -73,6 +78,11 @@ def main(argv=None):
         json.dump({'origin': ORIGIN, 'parent': PARENT, 'tp4_commit': tp4, 'base': base, 'head': head,
                    'files': overlay}, f, indent=1, sort_keys=True)
         f.write('\n')
+    for p in LICENCE_FILES:
+        dst = os.path.join(REPO, 'catalog', ORIGIN, p)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        with open(dst, 'wb') as f:
+            f.write(git(a.git, 'show', f'{head}:{p}'))
     doc = git(a.git, 'show', f'{head}:{DOC}').decode()
     with open(os.path.join(mdir, 'DESIGN.md'), 'w', encoding='utf-8') as f:
         f.write(f'<!-- {DOC} at {head[:12]}, copied by docs/harvest/harvest_strixfold_reap.py -->\n' + doc)

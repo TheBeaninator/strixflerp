@@ -1,0 +1,41 @@
+id        = "runtime.kyojin.hy4_prefill"
+kind      = "runtime"
+summary   = "Hy4 prefill kernels in Triton (ROCm gfx11 WMMA through tl.dot): fused dequant + GEMM on stored GGUF bytes, grouped / sorted-token MoE, flash-style absorbed MLA prefill, un-absorbed MLA helpers, CK fmha behind ckmla_fwd"
+why       = "Hy4-flash prefill (928-987 tok/s served, README). Where the shape would go: a moe.experts-prefill/gguf-kquant/f16-f32 provider beside kernel.flerp.moe_kgrouped, through a port of the python / Triton logic"
+notes     = "Interface tag: moe.experts-prefill/gguf-kquant/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (ck_mla.py, prefill_attn.py, prefill_kernels.py, prefill_unabs.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/loader/ck_mla.py",
+  "exllamav3/loader/prefill_attn.py",
+  "exllamav3/loader/prefill_kernels.py",
+  "exllamav3/loader/prefill_unabs.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-kquant/f16-f32.kyojin-triton"
+api       = "ck_mla.py, prefill_attn.py, prefill_kernels.py, prefill_unabs.py"
+numeric   = "fp16 WMMA, fp32 accumulation"
+regime    = "prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

@@ -1,0 +1,48 @@
+id        = "runtime.kyojin.tp_context"
+kind      = "runtime"
+summary   = "TP context, epoch barrier and the sticky timeout (once one collective times out, every later wait aborts)"
+why       = "what the collectives above share. Where the shape would go: a collective.interface/-/- provider beside runtime.strixfold.coll, runtime.strixfold_tp4.coll, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: collective.interface/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 4 changed (barrier_inner.cuh, context.cu, context.cuh, timeout.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/parallel/barrier_inner.cuh",
+  "exllamav3/exllamav3_ext/parallel/context.cu",
+  "exllamav3/exllamav3_ext/parallel/context.cuh",
+  "exllamav3/exllamav3_ext/parallel/timeout.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/parallel/context.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.interface-kyojin/-/-"
+api       = "barrier_inner.cuh, context.cu, context.cuh, timeout.cuh"
+numeric   = "n/a"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: context.cu"

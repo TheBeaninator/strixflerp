@@ -1,0 +1,45 @@
+id        = "kernel.maya_tp.ds4_lt"
+kind      = "kernel"
+summary   = "DeepSeek-V4.1's prompt-path dense GEMMs through hipBLASLt (ds4_lt.cu / ds4_lt.hpp)"
+why       = "measured prompt GEMMs for DeepSeek shapes on AMD; a hipBLASLt provider for linear.prefill"
+notes     = "Interface tag: linear.prefill/bf16/f32.maya-tp-ds4-lt. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/ds4/ds4_lt.cu", "src/ds4/ds4_lt.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/ds4/ds4_lt.cu"]
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/src/ds4/ds4_lt.cu" = ["-DSTRATA_HIPBLASLT_AVAILABLE=1"] }
+
+[[provides]]
+interface = "linear.prefill/bf16/f32.maya-tp-ds4-lt"
+api       = "ds4 lt GEMM (ds4_lt.hpp)"
+numeric   = "BF16, FP32 accumulate"
+regime    = "prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.ds4_lt.json"

@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.expert_store"
+kind      = "runtime"
+summary   = "Expert store (expert tiering between host and device with prefetch and protection) and mixed-K expert stacks"
+why       = "models larger than device memory. Where the shape would go: a runtime.weight-prefetch/-/- provider beside kernel.radiance.halo_model_ops, through a port of the python / Triton logic"
+notes     = "Interface tag: runtime.weight-prefetch/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (expert_store.py, moe_mixedk.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/expert_store.py", "exllamav3/modules/moe_mixedk.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.weight-prefetch-kyojin-experts/-/-"
+api       = "expert_store.py, moe_mixedk.py"
+numeric   = "n/a"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

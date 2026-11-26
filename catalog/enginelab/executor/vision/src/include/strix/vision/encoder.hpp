@@ -1,0 +1,311 @@
+#pragma once
+// Shared vision encoder runtime: one data-driven ViT tower for every family (pre-norm blocks, LayerNorm or RMSNorm,
+// GELU / GELU-tanh / SwiGLU MLP, 2D RoPE and/or interpolated learned positions, optional DeepStack taps).
+//
+// Two backends run the same graph from the same EncoderWeights:
+//   ReferenceEncoder  host FP32, slow, the fixture oracle (src/vision/reference.cpp);
+//   Encoder           HIP, arithmetic identity "vision-f16-attn2-v1" / "vision-f16-v1" (src/vision/encoder.hip): weights -> FP16 panels with a
+//                     power-of-two tensor scale, FP16 operands, FP32 accumulation and residual, FP32
+//                     norm/activation/softmax; optional hi+lo split activations. Class FAST, judged on its gates.
+// A family supplies an adapter (adapter.hpp): tensor names, resize rule, patch order, projector and span layout.
+// Nothing here runs for text-only requests.
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <deque>
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace strix::vision {
+
+struct EncoderConfig {  // filled by the adapter from the checkpoint metadata
+    enum class Norm { layernorm, rmsnorm };
+    enum class Mlp { gelu, gelu_tanh, swiglu };
+    enum class Pos { rope2d, learned_interp, rope2d_plus_learned };
+    enum class RopePairing { half, adjacent };  // rotated pairs (i, i + D/2) or (2 i, 2 i + 1)
+
+    unsigned layers = 0, width = 0, heads = 0, mlp_width = 0;
+    Norm norm = Norm::layernorm;  // layernorm: weight + bias; rmsnorm: weight only
+    float eps = 1e-6F;
+    Mlp mlp = Mlp::gelu;
+    float swiglu_limit = 0.0F;      // 0 = no clamp; else gate <= limit and up in [-limit, limit] before the product
+    bool swiglu_gate_first = true;  // first half of the 2 * mlp_width outputs is the SiLU gate
+    bool qkv_bias = false, out_bias = false, mlp_bias = false, patch_bias = true;
+    // Each head's q and k vector is normed over head_dim (the tower's norm kind and eps, weights of head_dim shared by
+    // every head) before the rotary step. Host reference only: the device backends refuse it.
+    bool qk_norm = false;
+    Pos pos = Pos::rope2d;
+    float rope_theta = 10000.0F;
+    RopePairing rope_pairing = RopePairing::half;
+    unsigned pos_grid = 0;  // learned table is pos_grid x pos_grid rows
+    unsigned patch = 0, temporal = 1, channels = 3;
+    std::vector<unsigned> deepstack_taps;  // 0-based block indices; the hidden state after each is exported
+    bool embed_norm = false;  // a norm of the embedded rows (patch embedding + position addend) before block 0
+    bool final_norm = false;
+
+    unsigned head_dim() const { return heads ? width / heads : 0U; }
+    unsigned patch_dim() const { return channels * temporal * patch * patch; }
+    unsigned mlp_out() const { return mlp == Mlp::swiglu ? 2U * mlp_width : mlp_width; }  // outputs of the first MLP linear
+    bool has_rope() const { return pos != Pos::learned_interp; }
+    bool has_learned() const { return pos != Pos::rope2d; }
+};
+
+// Non-owning row-major matrix [rows][cols] (a vector is rows x 1). BF16/F16 are the IEEE bit patterns.
+struct Tensor {
+    enum class Type { f32, bf16, f16 };
+    const void* data = nullptr;
+    Type type = Type::f32;
+    std::size_t rows = 0, cols = 0;
+
+    explicit operator bool() const { return data != nullptr; }
+    std::size_t size() const { return rows * cols; }
+    float at(std::size_t i) const;  // element i of the flattened matrix as FP32
+};
+
+struct BlockWeights {
+    Tensor norm1_w, norm1_b;
+    Tensor qkv_w, qkv_b;    // [3 width][width]: q, k, v
+    Tensor q_norm_w, q_norm_b, k_norm_w, k_norm_b;  // [head_dim]: EncoderConfig::qk_norm
+    Tensor out_w, out_b;    // [width][width]
+    Tensor norm2_w, norm2_b;
+    Tensor mlp1_w, mlp1_b;  // [mlp_out][width]
+    Tensor mlp2_w, mlp2_b;  // [width][mlp_width]
+};
+struct EncoderWeights {
+    Tensor patch_w, patch_b;  // [width][patch_dim] over the flattened patch
+    Tensor pos_embed;         // [pos_grid^2][width]
+    Tensor embed_norm_w, embed_norm_b;  // EncoderConfig::embed_norm
+    Tensor final_norm_w, final_norm_b;
+    std::vector<BlockWeights> blocks;
+    std::deque<std::vector<float>> owned;  // storage for tensors an adapter had to build (stable addresses)
+};
+
+// One image (or the tiles of one any-res image) as flattened patches in the adapter's row order.
+struct PatchGrid {
+    unsigned rows = 0, patch_dim = 0;
+    unsigned grid_h = 0, grid_w = 0;  // patch grid of the resized image (interpolation of the learned table)
+    std::vector<float> data;          // [rows][patch_dim]
+    std::vector<std::uint16_t> y, x;  // patch coordinates of each row
+    std::vector<unsigned> tile_end;   // exclusive row ends of the attention tiles; empty = one tile
+};
+// Per-row position inputs. Adapters may replace default_positions (upstream arithmetic quirks).
+struct PositionInputs {
+    std::vector<float> addend;  // [rows][width] added after the patch embedding; empty = none
+    std::vector<float> angles;  // [rows][head_dim / 2] rotary angles in pair order; empty = none
+};
+struct EncoderOutput {
+    unsigned rows = 0, width = 0;
+    std::vector<float> hidden;             // [rows][width], after the final norm when the config has one
+    std::vector<std::vector<float>> taps;  // one [rows][width] per deepstack tap, in tap order
+    // Non-zero: the hidden rows stayed on the device of the backend whose encode_for_projection() returned this
+    // output (`hidden` is then empty); only that backend's merge_project() of the same encode reads them.
+    std::uint64_t device_epoch = 0;
+    std::shared_ptr<const void> device_owner{};  // keeps the owner token unique even after backend destruction
+    bool resident_for(const std::shared_ptr<const void>& owner, std::uint64_t epoch) const {
+        return device_owner && device_owner == owner && device_epoch != 0 && device_epoch == epoch;
+    }
+};
+// Projected rows of one image as the cache and the splice store them.
+struct ProjectedRows {
+    unsigned rows = 0, width = 0;
+    std::vector<std::uint16_t> bf16;               // [rows][width]
+    std::vector<std::vector<std::uint16_t>> deep;  // DeepStack rows, same shape, tap order
+    std::size_t bytes() const;
+};
+
+void validate(const EncoderConfig&);                         // throws std::invalid_argument
+void validate(const EncoderConfig&, const EncoderWeights&);  // config + tensor shapes
+void validate(const EncoderConfig&, const PatchGrid&, const PositionInputs&);
+// Learned table: bilinear, align-corners, FP32. Rotary: head_dim / 4 frequencies per axis, [row | column] angles.
+PositionInputs default_positions(const EncoderConfig&, const EncoderWeights&, const PatchGrid&);
+
+std::uint16_t to_bf16(float);  // round to nearest even; NaN stays NaN
+float from_bf16(std::uint16_t);
+std::vector<std::uint16_t> to_bf16_rows(const float* rows, std::size_t count);
+
+// Projector activation: evaluated in FP64 and rounded once to FP32 (the host and the device kernel use this formula).
+enum class Activation : std::uint8_t { gelu, gelu_tanh, silu };
+float activate(Activation, float);
+
+// Pixel-unshuffle + two-linear MLP projector (the DeepSeek aligner; a merger of the same shape in other towers).
+// Merged row (my, mx) of the ratio x ratio cell has feature c * ratio^2 + slot, slot = row_major ? dy * ratio + dx :
+// dx * ratio + dy; cells past the grid edge are zeros. rows[t][w2.rows] = linear2(act(linear1(merged))) for the
+// t = my * ceil(grid_w / ratio) + mx merged rows.
+// Packed cells already store a complete cell in projector input order and skip the unshuffle.
+struct MergeProjector {
+    enum class Layout { raster, packed_cells };
+    unsigned ratio = 1;
+    bool row_major = true;
+    Activation act = Activation::gelu;
+    Tensor w1, b1, w2, b2;
+    Layout layout = Layout::raster;
+    unsigned row_offset = 0;  // number of leading non-image rows
+    unsigned tokens(unsigned grid_h, unsigned grid_w) const;  // throws on empty or unrepresentable geometry
+};
+
+// y[r][o] = sum_k x[r][k] * w[o][k] + bias[o] for row-major x [rows][w.cols], y [rows][w.rows]. Adapters run their
+// projector linears through this so the reference and the device share one graph.
+class DenseOps {
+public:
+    virtual ~DenseOps() = default;
+    virtual void linear(const Tensor& w, const Tensor& bias, const float* x, std::size_t rows, float* y) = 0;
+    // The whole projector. Default (host): unshuffle, linear(), activate(), linear(), reading hidden.hidden; a device
+    // backend chains the four steps on the device. The same FP64 activation formula does not guarantee identical
+    // host/device transcendental rounding. rows: [tokens][w2.rows] host floats.
+    virtual void merge_project(const EncoderOutput& hidden, unsigned grid_h, unsigned grid_w, const MergeProjector&, float* rows);
+    // Start-time hook: build now what the first linear(w, bias) would build (a device panel). Host: nothing to do.
+    virtual void prepare_linear(const Tensor& w, const Tensor& bias) {
+        (void)w;
+        (void)bias;
+    }
+};
+class EncoderBackend : public DenseOps {
+public:
+    virtual EncoderOutput encode(const PatchGrid&, const PositionInputs&) = 0;
+    // encode() for a merge_project() of this backend that follows at once: a device backend may keep the hidden rows
+    // on the device (EncoderOutput::device_epoch). Default: encode(). A resident output feeds only the backend's
+    // row-major merge projector; the packed-cell layout (MergeProjector::Layout::packed_cells) takes host rows from
+    // encode() and refuses a resident output.
+    virtual EncoderOutput encode_for_projection(const PatchGrid& g, const PositionInputs& p) { return encode(g, p); }
+    // Start-time hook: hold the workspace of `rows` rows in `tiles` attention tiles from now on. Host: nothing.
+    virtual void reserve(unsigned rows, unsigned tiles) {
+        (void)rows;
+        (void)tiles;
+    }
+    virtual const char* arithmetic() const = 0;  // part of the adapter identity
+};
+
+// Diagnostic rounding model of a device arithmetic inside the host reference (default: none = the FP32 oracle,
+// bit for bit). It places the FP16 operand roundings of vision-f16-v1 one site at a time to study sensitivity.
+// Accumulation and transcendental evaluation remain FP64 (attn_order: FP32 chains in the core's order, still with
+// std::exp2): this is not a bitwise device oracle or proof of a defect.
+// Never an adapter arithmetic; the shared rounded identity is diagnostic only, not a cache/qualification identity.
+struct ReferenceRounding {
+    bool linear_inputs_f16 = false;  // every linear input rounded to FP16 (the single-operand device policy)
+    // The flash core's operands Q, K, V and the probabilities P (rounded at each 16-key online maximum), as FP16 terms per operand: 0 = FP32 (no rounding),
+    // 1 = one FP16 term (the one-term attention), 2 = hi + lo (the two-term attention: lo = FP16 of the remainder).
+    // This operand model rounds the operands only: it keeps lo x lo (the device drops it) and multiplies and sums in
+    // FP64 (error bounds by format and range: src/attn_core/two_term_model.hpp).
+    unsigned char attn_q = 0, attn_k = 0, attn_v = 0, attn_p = 0;
+    // attn_order: the dense core's real products and order instead (attn_core::model::dense_row: hi.hi + hi.lo +
+    // lo.hi, FP32 chains in the core's step order, online exp2 softmax per 16-key tile), attn_q terms on all four
+    // operands; keys in tile order (the device's cyclic slots and split-K merges are not modelled).
+    bool attn_order = false;
+    void attention(unsigned terms) { attn_q = attn_k = attn_v = attn_p = static_cast<unsigned char>(terms); }
+    void attention_order(unsigned terms) {
+        attention(terms);
+        attn_order = true;
+    }
+    bool any_attention() const { return attn_q || attn_k || attn_v || attn_p; }
+    bool any() const { return linear_inputs_f16 || any_attention(); }
+};
+float round_to_f16(float);  // nearest-even FP16 value as a float (subnormals kept, overflow -> infinity)
+float round_f16_terms(float, unsigned terms);  // 0: the value; 1: round_to_f16; 2: hi + round_to_f16(value - hi)
+
+class ReferenceEncoder final : public EncoderBackend {
+public:
+    ReferenceEncoder(EncoderConfig, const EncoderWeights&, ReferenceRounding = {});  // the weights outlive the encoder
+    EncoderOutput encode(const PatchGrid&, const PositionInputs&) override;
+    void linear(const Tensor& w, const Tensor& bias, const float* x, std::size_t rows, float* y) override;
+    const char* arithmetic() const override { return rounding_.any() ? "vision-ref-f32-rounded" : "vision-ref-f32"; }
+
+private:
+    EncoderConfig cfg_;
+    const EncoderWeights* weights_;
+    ReferenceRounding rounding_;
+};
+EncoderOutput reference_encode(const EncoderConfig&, const EncoderWeights&, const PatchGrid&, const PositionInputs&,
+                               const ReferenceRounding& = {});
+
+// Host copy of rows into an embedding buffer: dst[dst_row[i]][0 .. width) = fp32(src row src_row[i]).
+void splice_rows_host(float* dst, std::size_t dst_stride, const ProjectedRows& src, const std::uint32_t* dst_row,
+                      const std::uint32_t* src_row, std::size_t count);
+
+// ---- HIP runner ------------------------------------------------------------------------------------------------
+
+// FP16 terms of the tower attention operands Q, K, V, P: 1 = one term (default: the "vision-f16-v1" rows, faster),
+// 2 = hi + lo (opt-in: closer to FP32, 3x the attention WMMA, other bits). STRIX_VISION_ATTN_TERMS=1|2, strict; the one
+// resolver of the default (every EncoderOptions starts from it: server, CLI, gate, memory plan).
+unsigned attention_terms_from_env();
+struct EncoderOptions {
+    bool split_activations = false;                   // hi + lo FP16 operands for every linear input (two GEMMs)
+    unsigned attention_terms = attention_terms_from_env();  // 2 = hi + lo attention operands, 1 = one term
+    std::size_t mlp_workspace_bytes = 160U << 20U;    // cap of the chunked MLP buffers (2304 rows split, 4352 single)
+    void* stream = nullptr;                           // hipStream_t; null = default stream
+};
+// Device bytes of one tower, exact for the runner: what a family reports to its memory budget before admission.
+struct EncoderPlan {
+    unsigned head_pad = 0;        // head dim as the attention core sees it (64 or 80)
+    unsigned mlp_chunk_rows = 0;  // rows per MLP chunk
+    std::size_t weight_bytes = 0, fixed_bytes = 0, mlp_bytes = 0;
+    std::size_t workspace_bytes() const { return fixed_bytes + mlp_bytes; }
+};
+bool hip_supported(const EncoderConfig&, std::string* why = nullptr);  // shapes the shared cores take
+EncoderPlan plan(const EncoderConfig&, unsigned rows, unsigned tiles, const EncoderOptions& = {});
+bool resident_from_env();  // STRIX_VISION_RESIDENT, default 1
+
+struct EncodeStats {
+    bool per_layer = false;  // in: synchronise after every block and fill layer_ms
+    double total_ms = 0.0;
+    std::vector<double> layer_ms;
+};
+// Wall time of the last load() by step (approximate receipt; total also includes uninstrumented overhead).
+struct EncoderLoadStats {
+    double scan_ms = 0.0;          // per-row magnitude pass over the source weights
+    double host_alloc_ms = 0.0;    // zeroed host panel buffer
+    double convert_ms = 0.0;       // source -> scaled FP16 panel
+    double device_alloc_ms = 0.0;  // device buffers of panel + bias
+    double upload_ms = 0.0;        // host -> device copies of panel + bias
+    double vectors_ms = 0.0;       // norm vectors (allocation + upload)
+    double total_ms = 0.0;
+};
+
+// Defined in the HIP library only (src/vision/encoder.hip).
+class Encoder final : public EncoderBackend {
+public:
+    static constexpr const char* kArithmetic = "vision-f16-v1";            // one-term attention (attention_terms 1, the default)
+    static constexpr const char* kArithmeticAttn2 = "vision-f16-attn2-v1";  // two-term attention (opt-in)
+    explicit Encoder(EncoderConfig, EncoderOptions = {});
+    ~Encoder() override;
+    Encoder(const Encoder&) = delete;
+    Encoder& operator=(const Encoder&) = delete;
+
+    void load(const EncoderWeights&);  // FP16 panels to the device; lazy callers call it on the first image
+    void unload();                     // drops panels and workspace
+    bool loaded() const;
+    std::size_t device_bytes() const;  // panels + workspace + projector scratch currently held
+    std::size_t pinned_host_bytes() const;  // retained input staging, separate from device_bytes()
+    static bool project_device();  // governed, process-cached, default on (STRIX_VISION_PROJECT_DEVICE=0 = host graph); also available in host-only builds
+    // Identity of the tower attention terms (1 or 2) and the projector placement; also available in host-only builds.
+    static const char* effective_arithmetic(unsigned attention_terms = attention_terms_from_env());
+    const EncoderLoadStats& load_stats() const;
+
+    EncoderOutput encode(const PatchGrid&, const PositionInputs&) override;
+    EncoderOutput encode(const PatchGrid&, const PositionInputs&, EncodeStats&);
+    // Projector linear on the shared GEMM; the panel of w is built by prepare_linear() or on first use and kept
+    // until unload(). Device scratch grows only (no allocation per call once the largest shape has been seen).
+    void linear(const Tensor& w, const Tensor& bias, const float* x, std::size_t rows, float* y) override;
+    void prepare_linear(const Tensor& w, const Tensor& bias) override;
+    // Workspace for `rows` rows in `tiles` tiles allocated now (encode() still grows it for a larger input).
+    void reserve(unsigned rows, unsigned tiles) override;
+    // Hidden rows stay in the workspace when STRIX_VISION_PROJECT_DEVICE (default 1) is on.
+    // This numerical candidate has a separate arithmetic identity; node qualification: rows bitwise equal to the host projector; --projector-gate covers the remaining arms.
+    EncoderOutput encode_for_projection(const PatchGrid&, const PositionInputs&) override;
+    // Device chain: unshuffle kernel, linear1, activation kernel (FP64, the host formula), linear2, one download.
+    // STRIX_VISION_PROJECT_DEVICE=0: the host graph of DenseOps (A/B and bitwise check).
+    void merge_project(const EncoderOutput& hidden, unsigned grid_h, unsigned grid_w, const MergeProjector&, float* rows) override;
+    const char* arithmetic() const override;  // effective_arithmetic(EncoderOptions::attention_terms)
+
+private:
+    struct Impl;
+    EncoderOutput run(const PatchGrid&, const PositionInputs&, EncodeStats&, bool keep_hidden);
+    std::unique_ptr<Impl> impl_;
+};
+
+// Device gather for the embed stage of a family: dst[dst_row[i]][0 .. width) = fp32(src[src_row[i]][0 .. width)).
+// dst FP32 rows of dst_stride floats, src BF16 rows of width; all pointers are device pointers; stream = hipStream_t.
+void splice_rows(float* dst, std::size_t dst_stride, const std::uint16_t* src, unsigned width, const std::uint32_t* dst_row,
+                 const std::uint32_t* src_row, unsigned count, void* stream);
+
+}  // namespace strix::vision

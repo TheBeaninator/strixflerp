@@ -1,0 +1,63 @@
+id        = "kernel.radiance.halo_gdn"
+kind      = "kernel"
+summary   = "Gated delta net (the 36 linear-attention layers of Qwen3.8-Flash-Next): the depthwise causal convolution with the work fused around it per serving phase, the chunk preamble as one kernel (the (I + strict_lower(...))^-1 solve, chunk 64), the chunked scan on WMMA for prefill, the recurrent state update for decode (fp32 state), and the gated RMS norm alone or fused with the block Hadamard and int8 quantiser that feeds out_proj"
+why       = "three of every four Flash-Next layers are gated delta nets, with a recurrence that is a per-token update at decode and a chunked triangular solve at prefill; each phase needs its own kernel to reach the part's limits"
+notes     = "strixite: kernel.strixite.gdn (delta_rule one block per value head), rmsnorm_gated and gdn_front as separate launches (FOLD-2 8c7f1aab87 folds them); the GDN input projections are 3.94 ms of a 32.9 ms decode step (strixite-perf-ranking.md)."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_gdn_args.h",
+  "libhalo/halo_gdn_chunk_scan.hip",
+  "libhalo/halo_gdn_conv_tap.h",
+  "libhalo/halo_gdn_conv_w4_h128_bf16.hip",
+  "libhalo/halo_gdn_gated_norm_had_quant_i8.hip",
+  "libhalo/halo_gdn_gated_rmsnorm_h128_bf16.hip",
+  "libhalo/halo_gdn_kkt_solve.hip",
+  "libhalo/halo_gdn_recurrent_update_k128_v128_bf16_fp32state.hip",
+  "libhalo/halo_gdn_wmma.h",
+]
+authors   = ["Deadcode", "ggz14", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_gdn_conv_w4_h128_bf16.hip",
+  "src/libhalo/halo_gdn_kkt_solve.hip",
+  "src/libhalo/halo_gdn_chunk_scan.hip",
+  "src/libhalo/halo_gdn_recurrent_update_k128_v128_bf16_fp32state.hip",
+  "src/libhalo/halo_gdn_gated_rmsnorm_h128_bf16.hip",
+  "src/libhalo/halo_gdn_gated_norm_had_quant_i8.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "mixer.gdn/-/bf16.radiance"
+api       = "halo_gdn_conv_*, halo_gdn_kkt_solve_k128_c64_bf16, halo_gdn_chunk_scan_k128_v128_c64_bf16, halo_gdn_recurrent_update_k128_v128_bf16_fp32state"
+numeric   = "bf16 in, fp32 state; chunked scan on f16 WMMA with overflow guards"
+regime    = "prefill: chunks of 64; decode: one recurrent update a token"
+
+[[provides]]
+interface = "norm.rmsnorm-gated/-/bf16.radiance"
+api       = "halo_gdn_gated_rmsnorm_h128_bf16, halo_gdn_gated_norm_had_quant_i8"
+numeric   = "fp32 sum of squares; the fused form writes rotated int8 codes"
+regime    = "one launch a GDN layer"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

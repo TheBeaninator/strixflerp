@@ -1,0 +1,82 @@
+id        = "runtime.vllm_strix.aiter_gemm_configs"
+kind      = "runtime"
+summary   = "gfx1151 tile tables for aiter's Triton GEMMs (A8W8, A8W8 blockscale, preshuffled blockscale, batched A8W8 with per-token-group prequant) by N and K, copied into the image's aiter config directory"
+why       = "aiter ships these tables for CDNA only and falls back to untuned tiles elsewhere; they are the gfx1151 shapes of DS4 and GLM linears the origin measured"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-BATCHED_GEMM-A8W8-A_PER_TOKEN_GROUP_PREQUANT_W_PER_BATCHED_TENSOR_QUANT-N=128-K=512.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-BATCHED_GEMM-A8W8-A_PER_TOKEN_GROUP_PREQUANT_W_PER_BATCHED_TENSOR_QUANT-N=512-K=128.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-BATCHED_GEMM-A8W8-A_PER_TOKEN_GROUP_PREQUANT_W_PER_BATCHED_TENSOR_QUANT.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8-N=28672-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8-N=4096-K=14336.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8-N=4096-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8-N=6144-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=1024-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=1024-K=8192.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=1536-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=16384-K=1536.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=2048-K=2048.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=2112-K=7168.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=24576-K=1536.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=2624-K=6144.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=3072-K=1536.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=3072-K=6144.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=32768-K=512.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=32768-K=8192.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=3584-K=512.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=36864-K=7168.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=4096-K=1024.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=4096-K=256.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=4096-K=512.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=4096-K=7168.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=4608-K=7168.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=512-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=512-K=7168.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=6144-K=1536.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=6144-K=2048.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=7168-K=16384.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=7168-K=18432.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=7168-K=2048.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=7168-K=2304.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=7168-K=256.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=8192-K=1024.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=8192-K=32768.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE-N=8192-K=8192.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE_PRESHUFFLED-N=24576-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE_PRESHUFFLED-N=4096-K=12288.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE_PRESHUFFLED-N=4096-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE_PRESHUFFLED-N=6144-K=4096.json",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/aiter/ops/triton/configs/gemm/gfx1151-GEMM-A8W8_BLOCKSCALE_PRESHUFFLED.json",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.tile-config/fp8-a8w8/-"
+api       = "gfx1151-GEMM-A8W8*.json, gfx1151-BATCHED_GEMM-*.json"
+numeric   = "n/a"
+regime    = "per (N, K)"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

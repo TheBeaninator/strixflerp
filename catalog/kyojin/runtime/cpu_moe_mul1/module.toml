@@ -1,0 +1,48 @@
+id        = "runtime.kyojin.cpu_moe_mul1"
+kind      = "runtime"
+summary   = "CPU MoE expert GEMM for mul1 (cb2) EXL3 tensors (2,490 lines, AVX-512 VBMI / AVX2): the mul1 codebook is affine in a byte-sum, so experts offloaded to the CPU decode without a table; CPU feature probes"
+why       = "experts that do not fit GPU memory run on the Zen 5 cores. Where the shape would go: a moe.experts-decode/exl3/f32 provider beside kernel.kestrel.exl3, kernel.maya_tp.cpu_exl3, through the host code behind the flerp ABI"
+notes     = "Interface tag: moe.experts-decode/exl3/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 6 changed (avx2_target.cpp, avx2_target.h, avx512_target.cpp, avx512_target.h, moe_mul1.cpp, moe_mul1.h). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/avx2_target.cpp",
+  "exllamav3/exllamav3_ext/avx2_target.h",
+  "exllamav3/exllamav3_ext/avx512_target.cpp",
+  "exllamav3/exllamav3_ext/avx512_target.h",
+  "exllamav3/exllamav3_ext/cpu/moe_mul1.cpp",
+  "exllamav3/exllamav3_ext/cpu/moe_mul1.h",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/exllamav3/exllamav3_ext/avx2_target.cpp",
+  "src/exllamav3/exllamav3_ext/avx512_target.cpp",
+  "src/exllamav3/exllamav3_ext/cpu/moe_mul1.cpp",
+]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/f32.kyojin-cpu"
+api       = "avx2_target.cpp, avx2_target.h, avx512_target.cpp, avx512_target.h, moe_mul1.cpp, moe_mul1.h"
+numeric   = "byte-sum codebook, fp32 accumulation"
+regime    = "decode, CPU"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: moe_mul1.cpp"

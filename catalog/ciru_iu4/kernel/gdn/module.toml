@@ -1,0 +1,41 @@
+id        = "kernel.ciru_iu4.gdn"
+kind      = "kernel"
+summary   = "CIRU's chunked Gated DeltaNet prefill for RDNA3.5 (S_v = 128, up to eight trailing state slots, one sequence): a prep kernel builds the in-chunk T' = (I + A)^-1 diag(beta) and P, a scan kernel carries the state across chunks and writes the output with its gated RMS norm (and an optional BF16 copy), a third kernel stores the trailing state snapshots MTP rollback needs; the q / k L2 norms and the short conv before the GDN node are folded in"
+why       = "CIRU names the chunked GDN gate as its v5.0 prefill lead (after HaloBox c750386bb); it is the third chunked GDN prefill in the catalogue after kernel.crucible.gdn and libstrix's, and the only one that also folds the norms and keeps MTP snapshots"
+notes     = "Interface tags by file: gated_delta_net.cu mixer.gdn-prefill/-/f32; gated_delta_net.cuh none (catalog/ciru_iu4/KERNELS.md has the table). Against the base pwilkin/llama.cpp f5daaa3c: changed gated_delta_net.cu +813 -9 lines; gated_delta_net.cuh +16 lines. No timing was taken on the pod."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = ["ggml/src/ggml-cuda/gated_delta_net.cu", "ggml/src/ggml-cuda/gated_delta_net.cuh"]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+upstream  = "the chunked GDN gate availability follows HaloBox c750386bb (THIRD_PARTY_NOTICES.md)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/ggml/src/ggml-cuda/gated_delta_net.cu"]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "mixer.gdn-prefill/-/f32.ciru-chunk"
+api       = "gated_delta_net.cu: gdn_chunk_prep_kernel, gdn_chunk_scan_kernel, gdn_chunk_tail_snapshots_kernel"
+numeric   = "F32 state and arithmetic; per chunk A[r][s] = beta_r (k_r . k_s) exp(G_r - G_s), U = T' (V - diag(e^G) K S0), O = scale diag(e^G) Q S0 + P U (file header)"
+regime    = "prefill of one sequence, head_v 128, non-KDA; decode stays on the base recurrent kernel"
+
+[[requires]]
+module    = "kernel.ciru_iu4.cuda_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_iu4.gdn.json"

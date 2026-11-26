@@ -1,0 +1,70 @@
+id        = "kernel.lucebox.moe"
+kind      = "kernel"
+summary   = "MoE expert kernels: fused decode expert dot products on GGUF i-quants, the fused post-MMID route reduction with the shared-expert add, and an F16 WMMA routed-expert GEMM for the ROCmFP2 / ROCmFP3 MIX expert types"
+why       = "The ROCmFP MIX expert GEMM reads a weight format no catalogue module reads; the fused combine is a candidate against strixite moe_grouped"
+notes     = "INTERFACES.md section: 4. MoE: router, experts, combine. Interface tags: moe.experts-decode/gguf-iquant/f32.lucebox; moe.combine/-/f32.lucebox; moe.experts-prefill/rocmfp-mix/f16.lucebox. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused-combine.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/mix-wmma-moe.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mix-wmma-moe.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mix-wmma-moe.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused-combine.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused-combine.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused.cuh",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused-combine.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/mix-wmma-moe.cu",
+]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/moe-fused-combine.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/mix-wmma-moe.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "moe.experts-decode/gguf-iquant/f32.lucebox"
+api       = "GGML op in moe-fused.cu"
+numeric   = "one weight row of 256 values against the input vector per dot (file header)"
+regime    = "decode"
+
+[[provides]]
+interface = "moe.combine/-/f32.lucebox"
+api       = "GGML op in moe-fused-combine.cu"
+numeric   = "dst[t, d] = shared_out[t, d] + sum over used experts of down_e[t, e, d] * weights[t, e] (file header)"
+regime    = "decode and prefill"
+
+[[provides]]
+interface = "moe.experts-prefill/rocmfp-mix/f16.lucebox"
+api       = "GGML MUL_MAT_ID path in mix-wmma-moe.cu"
+numeric   = "F16 WMMA; decodes each weight tile once instead of per 64-route tile (file header)"
+regime    = "large mul_mat_id batches (prefill), qtypes 105, 106, 107"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.rocmfp"
+
+[[requires]]
+module    = "kernel.lucebox.kvquant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.moe.json"

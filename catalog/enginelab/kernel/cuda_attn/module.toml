@@ -1,0 +1,76 @@
+id        = "kernel.enginelab.cuda_attn"
+kind      = "kernel"
+summary   = "CUDA attention: decode, flash (8-bit, split decode), lanes, production, row-group launch and union, selected blocks, tiles"
+why       = "the RTX attention route; where it would go: beside the catalogue's attn.softmax-gqa/-/bf16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: attn.softmax-gqa/-/bf16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. CUDA (RTX PRO 6000 route). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/cuda/core/attention_rowgroup.cuh",
+  "src/cuda/core/attention_tile.cuh",
+  "src/cuda/core/attn_decode.cu",
+  "src/cuda/core/attn_decode.cuh",
+  "src/cuda/core/attn_flash.cu",
+  "src/cuda/core/attn_flash8.cu",
+  "src/cuda/core/attn_flash_decode_split.cu",
+  "src/cuda/core/attn_lanes.cuh",
+  "src/cuda/core/attn_production.cu",
+  "src/cuda/core/attn_rowgroup_launch.cuh",
+  "src/cuda/core/attn_selected_blocks.cuh",
+  "src/cuda/core/rowgroup_union.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.softmax-gqa/-/bf16-f32.enginelab-cuda"
+api       = "src/cuda/core/attn_*.cu"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_sparse_mla"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source for the optional RTX PRO route: no CUDA toolkit on the island and no NVIDIA device on the pod, so it is not compiled"

@@ -1,0 +1,45 @@
+id        = "tool.enginelab_usb4.diag"
+kind      = "tool"
+summary   = "diagnostics and build helpers: usb4_diagnose.py (controller / ring topology and budget), usb4_linkstat.py, validate_native.py and update_validation_manifest.py, check_kconfig.py, check_build_log.py, apply-series.sh and prepare_overlay.py"
+why       = "inspect the link before creating streams (README: usb4_diagnose.py --require-budget)"
+notes     = "Interface tag: none. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "tools/apply-series.sh",
+  "tools/check_build_log.py",
+  "tools/check_kconfig.py",
+  "tools/prepare_overlay.py",
+  "tools/update_validation_manifest.py",
+  "tools/usb4_diagnose.py",
+  "tools/usb4_linkstat.py",
+  "tools/validate_native.py",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.usb4-diagnose/-/-"
+api       = "python3 tools/usb4_diagnose.py [--require-budget]"
+numeric   = "n/a"
+regime    = "a host on the patched kernel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python and shell: not compiled (read, never run here)"

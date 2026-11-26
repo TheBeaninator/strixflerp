@@ -1,0 +1,53 @@
+id        = "runtime.odinlink5.lib"
+kind      = "runtime"
+summary   = "libodl_tb5, the userspace API over /dev/odl_tb5_N: open / close / peer state, the stream API (stream_open by filter id or kernel-assigned id 20-255, stream_send / recv / wait_tx / wait_rx, dmabuf send / recv), the legacy double-buffer API (mmap'd TX / RX buffers, send / recv / swap) and completions, with the ioctl, types and RCCL / NCCL shared-memory stats headers"
+why       = "every consumer above the driver (the RCCL and NCCL plugins, odl_ar2, odl_mq, the CLI and the daemon) speaks this API; streams give ordered, message-framed, multiplexed channels over one cable, the property odl_ar2 relies on for slot reuse"
+notes     = "Interface tag: none (the catalogue's transports are RoCE verbs and TCP stage relays). The CMake target adds driver/uapi as a private include, hence the requires on runtime.odinlink5.driver_core. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "lib/CMakeLists.txt",
+  "lib/include/odl_tb5/odl_tb5.h",
+  "lib/include/odl_tb5/odl_tb5_ioctl.h",
+  "lib/include/odl_tb5/odl_tb5_nccl_stats.h",
+  "lib/include/odl_tb5/odl_tb5_rccl_stats.h",
+  "lib/include/odl_tb5/odl_tb5_types.h",
+  "lib/src/odl_tb5_completion.c",
+  "lib/src/odl_tb5_dev.c",
+  "lib/src/odl_tb5_peer.c",
+  "lib/src/odl_tb5_priv.h",
+  "lib/src/odl_tb5_stream.c",
+  "lib/src/odl_tb5_xfer.c",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/lib/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.odl-stream/-/-"
+api       = "odl_tb5_open, odl_tb5_stream_open / send / recv / wait_tx / wait_rx / send_dmabuf / recv_dmabuf, odl_tb5_get_peer (lib/include/odl_tb5/odl_tb5.h)"
+numeric   = "bytes; messages fragmented into 4024-byte frames, frag-index checked, delivered whole and in order"
+regime    = "one point-to-point link a device; streams 1-255"
+
+[[requires]]
+module    = "runtime.odinlink5.driver_core"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/runtime.odinlink5.lib.json"
+reason    = "c: compiled by the C gate, not gate/compile/run.py (python3 docs/harvest/harvest_odinlink5.py --c-gate on control-node CPU, gcc with the include paths of the origin's CMake)"

@@ -1,0 +1,36 @@
+id        = "kernel.ciru_inkling.common"
+kind      = "kernel"
+summary   = "Header-only: hip_common.cuh, the shared device helpers of the seven Inkling 2 Mini HIP units (BF16 <-> FP32 with RTNE, WMMA fragment vector types, warp reductions) and the ABI version and source hash macros"
+notes     = "Interface tag: none. Every unit includes it by a quoted include; the ABI version (3) and the source hash are compile-time macros the loader (ops/hip_runtime.py, not harvested) reads back through inkling_hip_abi_version / inkling_hip_src_hash."
+
+[provenance]
+origin    = "ciru_inkling"
+repo      = "https://github.com/ciru-ai/Inkling-2-Mini-CIRU-Halo-Agent-gfx1151"
+commit    = "b3870f35926fb322f398e6c373a93098534f8fdb"
+branch    = "main"
+paths     = ["overlay/vllm/models/inkling2/amd/ops/hip_common.cuh"]
+authors   = ["Ciru (CIRU AI)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/vllm/models/inkling2/amd/ops"]
+arch      = "gfx1151"
+toolchain = "therock-10.0"
+
+[[provides]]
+interface = "kernel-abi.ciru-inkling-common/-/-"
+api       = "overlay/vllm/models/inkling2/amd/ops/hip_common.cuh (INKLING_HIP_ABI_VERSION, INKLING_HIP_SRC_HASH, half16 / short16 / float8 vector types, bf16 helpers)"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside every kernel.ciru_inkling.* unit"

@@ -1,0 +1,50 @@
+id        = "runtime.odinlink5.driver_core"
+kind      = "runtime"
+summary   = "the odl_tb5 kernel driver core: module lifecycle (advertises the OdinLink protocol in XDomain property directories, probe on a matching peer, remove on unplug), the XDomain login / logout handshake that agrees DMA HopIDs, enables paths and ping-pongs the link, the /dev/odl_tb5_N character device (stream ioctls, legacy double-buffer ioctls, mmap of DMA buffers, poll, a context per open file), module parameters, debugfs, a loopback mode, the transport-ops interface and the uapi header"
+why       = "this is what lets a stock kernel carry RDMA-like traffic between two hosts over one cable: a tb_protocol_handler on the unmodified thunderbolt core, no patched core and no blacklist; the uapi is the contract every layer above it uses"
+notes     = "Interface tag: none. Not compiled: needs the target kernel's headers (/lib/modules/<release>/build). SPDX: MIT for most files, GPL-2.0 for odl_tb5_debugfs.c and odl_tb5_loopback.c; README says the driver as a whole is GPL v2. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "driver/71-odl-tb5.rules",
+  "driver/Kbuild",
+  "driver/Makefile",
+  "driver/odl_tb5_chardev.c",
+  "driver/odl_tb5_core.h",
+  "driver/odl_tb5_debugfs.c",
+  "driver/odl_tb5_loopback.c",
+  "driver/odl_tb5_params.c",
+  "driver/odl_tb5_proto.c",
+  "driver/odl_tb5_service.c",
+  "driver/odl_tb5_transport.h",
+  "driver/odl_tb5_xd_proto.h",
+  "driver/uapi/odl_tb5_uapi.h",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT AND GPL-2.0-only"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/driver/uapi", "src/driver"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.odl-driver/-/-"
+api       = "/dev/odl_tb5_N ioctls (driver/uapi/odl_tb5_uapi.h); module params ring_size, loopback, protocol, e2e"
+numeric   = "bytes"
+regime    = "Linux, thunderbolt / USB4 core, one peer a link"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c: not compiled by the gate (needs the target kernel's headers (/lib/modules/<release>/build))"

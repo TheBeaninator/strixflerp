@@ -1,0 +1,59 @@
+id        = "kernel.strata.common"
+kind      = "kernel"
+summary   = "Strata's HIP compatibility layer and shared device headers: include/strata/hip_compat (cuda_runtime.h, the shim the HIP build force-includes into every .cu, which maps the CUDA runtime, warp intrinsics and cuBLAS spellings to HIP, plus intrinsics.hpp with the RDNA dot4 and DPP helpers), the older platform/hip_compat copy, the bit-exact bf16 / f16 conversions, dp4a, the gfx-architecture predicates, the q8_1 finiteness check, the emulation switches, the S26 tree sum (s26_tsum.cuh) and llama.cpp's block layouts and codebook grids (third_party/ggml/ggml-common.h, MIT)"
+why       = "every other kernel.strata module compiles against these headers, so they are the first thing an adapter or a recipe needs; hip_compat is also the whole of Strata's CUDA-to-HIP port in six files"
+notes     = "Interface tag: none for a kernel (headers only); the module provides the hip_compat ABI name. include/strata/platform/hip_compat is an older copy of the shim that no harvested source includes; it is kept here because it is HIP compatibility code of the same engine. third_party/ggml carries its own LICENSE (llama.cpp, MIT)."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/core/emulate.hpp",
+  "include/strata/hip_compat/cublas_v2.h",
+  "include/strata/hip_compat/cuda_fp16.h",
+  "include/strata/hip_compat/cuda_runtime.h",
+  "include/strata/hip_compat/cuda_runtime_api.h",
+  "include/strata/hip_compat/intrinsics.hpp",
+  "include/strata/hip_compat/math_constants.h",
+  "include/strata/kernels/bf16_bits.hpp",
+  "include/strata/kernels/dp4a.hpp",
+  "include/strata/kernels/f16_bits.hpp",
+  "include/strata/kernels/gfx_arch.hpp",
+  "include/strata/kernels/q8_1_finite.hpp",
+  "include/strata/platform/hip_compat/cublas_v2.h",
+  "include/strata/platform/hip_compat/cuda_fp16.h",
+  "include/strata/platform/hip_compat/cuda_runtime.h",
+  "include/strata/platform/hip_compat/math_constants.h",
+  "include/strata/platform/hip_compat/strata_hip.h",
+  "src/kernels/cuda/s26_tsum.cuh",
+  "third_party/ggml/LICENSE",
+  "third_party/ggml/VERSION.txt",
+  "third_party/ggml/ggml-common.h",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include/strata/hip_compat", "src/include", "src/third_party/ggml", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.strata-hip-compat/-/-"
+api       = "include/strata/hip_compat/cuda_runtime.h (force-included with -include by the origin HIP build), intrinsics.hpp"
+numeric   = "CUDA runtime, warp shuffle / vote and cuBLAS names mapped to HIP; wave32 assumed (warpSize 32)"
+regime    = "wave32 RDNA: gfx1100 / gfx1201 validated by the origin, gfx1151 listed as unvalidated in cmake/hip_backend.cmake at v0.1.40"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside every other kernel.strata.* module"

@@ -1,0 +1,68 @@
+id        = "runtime.strixfold_tp4.lanes"
+kind      = "runtime"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for runtime.strixfold.lanes: 10 file(s) of runtime.strixfold.lanes and 8 file(s) the TP4 tree adds beside them (acts.zig, backend.zig, cache_wire.zig, cache_wire_test.zig, engine.zig, engine_api.zig ...), laid over the f64b5ff files"
+why       = "runtime.strixfold.lanes is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over runtime.strixfold.lanes without touching it or the TP2 recipes"
+notes     = "Overlay of runtime.strixfold.lanes (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 73bab11681, 4f9ba05838, 28153e18f3, f64f606edd, 023c5d2ad9, 1c020d2ac2, d6a577e1a1, ef450588a1. Latest commits: 2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped; 96367d3d core: cache_wire, a kept prompt state on the wire (SFCX): every length checked against the engine's shape before any read; 4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681); 21003c69 lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/core/cache_wire.zig",
+  "zig/src/core/cache_wire_test.zig",
+  "zig/src/core/engine_api.zig",
+  "zig/src/core/lane_host.zig",
+  "zig/src/core/lane_host_cache.zig",
+  "zig/src/core/lane_host_encode_test.zig",
+  "zig/src/core/lane_host_reuse_test.zig",
+  "zig/src/core/lane_host_test.zig",
+  "zig/src/core/lanes/acts.zig",
+  "zig/src/core/lanes/backend.zig",
+  "zig/src/core/lanes/engine.zig",
+  "zig/src/core/lanes/engine_test.zig",
+  "zig/src/core/lanes/fake.zig",
+  "zig/src/core/lanes/image_key.zig",
+  "zig/src/core/lanes/lanes.zig",
+  "zig/src/core/lanes/logprobs.zig",
+  "zig/src/core/lanes/reap_hook.zig",
+  "zig/src/core/lanes/stream.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.lanes (origin strixfold, f64b5ff): 10 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "executor.lane-backend/-/-.tp4"
+api       = "core/lanes/backend.zig Backend vtable (Feed, Window, ...)"
+numeric   = "n/a"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); N streams a round; drawn tokens stay on the GPU behind handles"
+
+[[provides]]
+interface = "speculation.window-verify-keyed/-/-.tp4"
+api       = "core/lanes/accept.zig, depth.zig, proposer.zig, windows.zig"
+numeric   = "output-invariant: a verify row draws as the serial run at its position (keyed sampler), so drafts never change the emitted tokens"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); draft depth chosen from a cost profile"
+
+[[requires]]
+module    = "runtime.strixfold.lanes"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

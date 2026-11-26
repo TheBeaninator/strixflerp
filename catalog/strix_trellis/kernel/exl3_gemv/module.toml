@@ -1,0 +1,69 @@
+id        = "kernel.strix_trellis.exl3_gemv"
+kind      = "kernel"
+summary   = "EXL3 decode matvec for 1 to 8 rows behind strix_gemv: the input is scaled by suh, rounded to fp16, H128-rotated and rounded to fp16 again; each lane decodes its trellis states from the packed stream and accumulates fp16 dot pairs in fp32 over K16 tiles in ascending order, in a fixed number of K splits; the split partials are summed, H128-rotated, scaled by svh, and bias, alpha and beta applied. Eight units cover the cases: the aligned baseline, an LDS-staged body, K2 single-row and multi-row cores, and fused forms that fold into the core the input transform, the output transform (the direct-output kernel with dual-issue dots and next-row prefetch, and its grouped form) or both"
+why       = "decode on Strix Halo is weight bytes over memory bandwidth, and this is a second, independently written EXL3 decode product for the DeepSeek-V4.1-Flash shapes StrixFold serves: the origin reports 199.7 GB/s on q_b at one row, 80.9 % of its read ceiling (README.md:285), a number StrixFold's exl3 module has no like-for-like counterpart to yet"
+notes     = "Interface tag: linear.decode/exl3. Beside kernel.strixfold.exl3 (glinear) and kernel.crucible.exl3_gemv. Origin numbers, EAQ layer-0 tensors, RC5 / RC6: q_b 5-bit 131.302 us at 1 row = 199.7 GB/s, 142.458 us at 8 rows = 184.0 GB/s (README.md:285-286); output head 6-bit 1 row 215.9 GB/s (README.md:295). Not row-invariant across row counts as a whole: the K split count is chosen per shape and row count (trellis_common gemv_policy.hpp), and the plans of exl3_dense_r1 are what pin every row to its single-row bits. Shipped options: STRIX_TRELLIS_DIRECT_DUAL_ISSUE, STRIX_TRELLIS_DIRECT_PREFETCH (CMakeLists.txt:8-9). No timing was taken on the pod."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "src/fused_both_policy.hpp",
+  "src/fused_output_policy.hpp",
+  "src/fused_output_resources.hpp",
+  "src/gemv.hip",
+  "src/gemv.hpp",
+  "src/gemv_fused.hip",
+  "src/gemv_fused.hpp",
+  "src/gemv_fused_both.hip",
+  "src/gemv_fused_both.hpp",
+  "src/gemv_grouped_direct.hip",
+  "src/gemv_k2.hip",
+  "src/gemv_k2.hpp",
+  "src/gemv_k2_multirow.hip",
+  "src/gemv_k2_multirow.hpp",
+  "src/gemv_lds.hip",
+  "src/gemv_lds.hpp",
+  "src/gemv_output_direct.hip",
+  "src/gemv_output_direct.hpp",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/gemv.hip",
+  "src/src/gemv_lds.hip",
+  "src/src/gemv_k2.hip",
+  "src/src/gemv_k2_multirow.hip",
+  "src/src/gemv_fused.hip",
+  "src/src/gemv_fused_both.hip",
+  "src/src/gemv_output_direct.hip",
+  "src/src/gemv_grouped_direct.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/exl3/f16-f32.strix-trellis"
+api       = "strix_gemv (include/strix_trellis.h) -> launch_linear (backend.hpp) -> the kernels of gemv.hip, gemv_lds.hip, gemv_k2.hip, gemv_k2_multirow.hip, gemv_fused.hip, gemv_fused_both.hip, gemv_output_direct.hip, gemv_grouped_direct.hip"
+numeric   = "Y = alpha * Linear(X) + beta * Y; fp32 X * fp16 suh -> fp16 -> H128 in fp32 -> fp16; exact codebook decode; fp16 dot pairs with fp32 accumulation, K16 ascending, S partial sums added in split order; H128, svh and bias in fp32 (docs/API.md \"Operation and orientation\", docs/NUMERICS.md)"
+regime    = "decode, 1..8 rows a call, memory-bound (the origin measures against a 246.7 GB/s cold read ceiling, README.md:231)"
+
+[[requires]]
+module    = "kernel.strix_trellis.trellis_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libstrix_trellis.a: built by the origin CMake (STRIX_TRELLIS_ENABLE_HIP=ON, -O3 -ffp-contract=off, HIP standard 17, gfx1151), not compiled by this harvest"

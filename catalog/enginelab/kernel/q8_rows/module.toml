@@ -1,0 +1,90 @@
+id        = "kernel.enginelab.q8_rows"
+kind      = "kernel"
+summary   = "Q8 rows: the Q8 rows GEMV, IU4 rows, lane VOPD and VOPD bodies, sites, the Q8 projection manifest and organization, the Q8_0 rule"
+why       = "Q8_0 decode rows with VOPD dual issue; where it would go: beside the catalogue's linear.decode/q8_0/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.decode/q8_0/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/q8_0_rule.hpp",
+  "include/strix/q8_projection_manifest.hpp",
+  "include/strix/q8_projection_organization.hpp",
+  "src/hip_q8_rows_gemv.hpp",
+  "src/hip_q8_rows_iu4.hpp",
+  "src/hip_q8_rows_lane_vopd.inc",
+  "src/hip_q8_rows_sites.hpp",
+  "src/hip_q8_rows_vopd.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.decode/q8_0/f16-f32.enginelab"
+api       = "hip_q8_rows_gemv.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.hip_weight"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[[requires]]
+module    = "kernel.enginelab.dense_launch"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "kernel.enginelab.integer_projection"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

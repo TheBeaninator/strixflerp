@@ -1,0 +1,59 @@
+id        = "kernel.ciru_inkling.quant_decode"
+kind      = "kernel"
+summary   = "Inkling 2 Mini quantized decode linears (hip_quant_decode.hip): single-pass small-M W6 and W4 WMMA linears, their split-K reducer, the M = 1 W6 head GEMV and the W4 Markov fold with greedy argmax"
+why       = "the small-M (16 / 32 / 48 rows) single-pass W6 / W4 WMMA linears are the dense half of the same B = 8 decode step (9.85 -> 6.32 ms by the author, README.md:32), the other multi-slot shape the card asks for"
+notes     = "Interface tags by launch group: launch_hip_w6_wmma: linear.decode/ciru-w6-g64/bf16; launch_hip_w4_wmma: linear.decode/ciru-w4/bf16; launch_hip_reduce_splits: none; launch_hip_w6_head_gemv_m1: logits.head/ciru-w6-g32+g64/bf16-f32; launch_hip_w4_markov_argmax: draft.markov/ciru-w4/bf16 (catalog/ciru_inkling/KERNELS.md has the table). Launch functions take raw device pointers, element strides and a stream (ctypes from ops/hip_runtime.py); none takes a torch tensor. No timing was taken on the pod; figures are the author's (README.md, v1.5.0)."
+
+[provenance]
+origin    = "ciru_inkling"
+repo      = "https://github.com/ciru-ai/Inkling-2-Mini-CIRU-Halo-Agent-gfx1151"
+commit    = "b3870f35926fb322f398e6c373a93098534f8fdb"
+branch    = "main"
+paths     = ["overlay/vllm/models/inkling2/amd/ops/hip_quant_decode.hip"]
+authors   = ["Ciru (CIRU AI)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/vllm/models/inkling2/amd/ops/hip_quant_decode.hip"]
+includes  = ["src/overlay/vllm/models/inkling2/amd/ops"]
+arch      = "gfx1151"
+toolchain = "therock-10.0"
+options   = ["-fPIC", "-O3", "-DINKLING_HIP_ABI_VERSION=3", "-DINKLING_HIP_SRC_HASH_RAW=671b45b80972", "-c"]
+
+[[provides]]
+interface = "linear.decode/ciru-w6-g64/bf16.ciru-inkling"
+api       = "launch_hip_w6_wmma (extern \"C\", hip_quant_decode.hip)"
+numeric   = "BF16 activations, signed 6-bit weights with a BF16 scale a (row, K64 group), FP32 accumulate; BF16 or FP32 out"
+regime    = "decode and verify, M <= 48 a launch (w6_qkv, w6_wo, w6_head); author figure: the B = 8, M = 40 W6/W4 linear step 9.85 ms -> 6.32 ms (README.md:32)"
+
+[[provides]]
+interface = "linear.decode/ciru-w4/bf16.ciru-inkling"
+api       = "launch_hip_w4_wmma (extern \"C\", hip_quant_decode.hip)"
+numeric   = "BF16 activations, FP32 accumulate, BF16 or FP32 out"
+regime    = "decode and verify, M <= 48 a launch"
+
+[[provides]]
+interface = "logits.head/ciru-w6-g32+g64/bf16-f32.ciru-inkling"
+api       = "launch_hip_w6_head_gemv_m1 (extern \"C\", hip_quant_decode.hip)"
+numeric   = "BF16 activations, signed 6-bit weights in 16-weight records (one 64-bit and one 32-bit word), FP32 dot, BF16 or FP32 logits"
+regime    = "single-sequence decode, widths 2304 / 3072"
+
+[[provides]]
+interface = "draft.markov/ciru-w4/bf16.ciru-inkling-argmax"
+api       = "launch_hip_w4_markov_argmax (extern \"C\", hip_quant_decode.hip)"
+numeric   = "BF16 latent and base logits, FP32 dot (v_dot2), softcap then argmax with an exact tie-break"
+regime    = "B = 1 draft step (the fused greedy fast path); author figure 248.0 GB/s (README.md:32)"
+
+[[requires]]
+module    = "kernel.ciru_inkling.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_inkling.quant_decode.json"

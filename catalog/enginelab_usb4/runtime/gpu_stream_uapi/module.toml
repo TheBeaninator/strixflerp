@@ -1,0 +1,36 @@
+id        = "runtime.enginelab_usb4.gpu_stream_uapi"
+kind      = "runtime"
+summary   = "the experimental GPU stream UAPI header overlay/include/uapi/linux/strix_gpu_stream.h (as captured after patch 0001)"
+why       = "the ioctl contract between the kernel GPU stream and userspace transports"
+notes     = "Interface tag: none. overlay/ is an immutable capture of pristine source + 0001, not the current driver on its own (README). Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = ["overlay/include/uapi/linux/strix_gpu_stream.h"]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only WITH Linux-syscall-note"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/overlay/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-gpu-stream-uapi/-/-"
+api       = "struct and ioctl definitions of linux/strix_gpu_stream.h"
+numeric   = "n/a"
+regime    = "userspace on the patched kernel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "kernel UAPI header; the engine lab's include/strix/linux_direct_gpu_stream_uapi.hpp is the userspace binding"

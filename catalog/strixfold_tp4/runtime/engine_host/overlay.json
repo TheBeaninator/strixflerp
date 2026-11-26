@@ -1,0 +1,53 @@
+{
+ "what": "StrixFold 72c0f083's versions of files that a module of origin strixfold also holds; laid over them by a recipe's [build.overlay] \"<id>\" = \".\" (docs/harvest/harvest_strixfold_tp4.py)",
+ "parent_origin": "strixfold",
+ "parent_commit": "f64b5ff",
+ "head_commit": "72c0f083fca18f80fcf73b2358cf8235c3dd5363",
+ "files": [
+  {
+   "path": "zig/src/native/hip.zig",
+   "parent_module": "runtime.strixfold.engine_host",
+   "parent_sha256": "76f6dce0a047277e272f3c9409e52ec0c248f0c01211ee1ebc6c6e38bc0472b1",
+   "tp4_sha256": "dbb24bf313e387c4ffcc67671e7186365813de79b76d7df20c80ffe935c223b4",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "21003c69 lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)",
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest",
+    "251ed089 prompt cache: shared cuts land on the family's chunk ends (dsv41 grain), split from f4ae58bd (pod card 345bacf673, 594536982e)",
+    "353a7b87 lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)",
+    "32be25d6 prompt cache: hand a pass the longest kept state its family still restores, drop the ones it restores for no prompt (pod card ef450588a1)",
+    "6aa4a985 dsv41: a host replay of a factory run's prompt passes through the prompt cache and the pool placement (pod card ef450588a1)",
+    "6c9bc923 server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults",
+    "cd2d157e dsv41: an exported state's copies off the device and back on both ranks (cache_move, frames 18 and 19, protocol 6)",
+    "0a6eb9c2 lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+   ]
+  },
+  {
+   "path": "zig/src/native/dsv41_keep_replay.tsv",
+   "added": true,
+   "tp4_sha256": "9b62fee82ad12fe7f2025ab93859d6e8065915e7efde4434fffb4eda539d4106",
+   "commits": [
+    "6aa4a985 dsv41: a host replay of a factory run's prompt passes through the prompt cache and the pool placement (pod card ef450588a1)"
+   ]
+  },
+  {
+   "path": "zig/src/native/dsv41_keep_replay_test.zig",
+   "added": true,
+   "tp4_sha256": "2faf0aa4ef23ac3ac4d1a92a558829ec944004dcfa492414d841d22a3cc743d8",
+   "commits": [
+    "cd96cd39 dsv41 lanes: a kept state's path is its cache key's, so a same-size picture is another conversation's",
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest",
+    "c790acc3 dsv41 placement: superseded kept states give room first, spared when clear of the placed extent (pod card ee6892da53)",
+    "6aa4a985 dsv41: a host replay of a factory run's prompt passes through the prompt cache and the pool placement (pod card ef450588a1)"
+   ]
+  },
+  {
+   "path": "zig/src/native/dsv41_place_replay.tsv",
+   "added": true,
+   "tp4_sha256": "aefb791abfb5fc909345d11852c069e63498f49054191a1b87d1e18c598322ed",
+   "commits": [
+    "c790acc3 dsv41 placement: superseded kept states give room first, spared when clear of the placed extent (pod card ee6892da53)"
+   ]
+  }
+ ]
+}

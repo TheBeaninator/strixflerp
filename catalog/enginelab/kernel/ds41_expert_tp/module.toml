@@ -1,0 +1,60 @@
+id        = "kernel.enginelab.ds41_expert_tp"
+kind      = "kernel"
+summary   = "DeepSeek V4.1 expert tensor parallelism over two ranks (identity ds41-expert-tp2-i1152-v1): every routed expert split by its intermediate dimension, rank r holding 1152 gate / up rows (IQ2_XXS) and the matching 36 Q2_K groups of each down row, the boundary block stored on both ranks; plus shared-expert TP on the trellis library and engram TP"
+why       = "expert tensor-parallel decode: each rank does half of every expert instead of half of the experts, so load is even whatever the router picks; the shape a TP2 MoE decode would take in strixflerp; where it would go: a new strixflerp interface moe.experts-tp2/iq2_xxs+q2_k/f32.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, moe.experts-tp2/iq2_xxs+q2_k/f32.enginelab. 2 HIP unit(s) compiled standalone by the gate; 1 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/ds41_engram_tp.hpp",
+  "include/strix/ds41_expert_tp.hpp",
+  "include/strix/ds41_shexp_tp.hpp",
+  "include/strix/hip_ds41_expert_tp.hpp",
+  "src/ds41_expert_tp.cpp",
+  "src/hip_ds41_expert_tp.hip",
+  "src/hip_ds41_shexp_tp.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_ds41_expert_tp.hip", "src/src/hip_ds41_shexp_tp.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-tp2/iq2_xxs+q2_k/f32.enginelab"
+api       = "strix ds41_expert_tp.hpp (STRIX_DS41_EXPERT_TP=1), ds41_shexp_tp.hpp"
+numeric   = "existing Q2_K / IQ2_XXS readers over each rank's packed half rows; partials joined exactly"
+regime    = "two ranks, decode"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_routes"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_trellis"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.ds41_expert_tp.json"

@@ -1,0 +1,4139 @@
+#pragma once
+
+//
+// GGML Tensor Library
+//
+// This documentation is still a work in progress.
+// If you wish some specific topics to be covered, feel free to drop a comment:
+//
+//   https://github.com/ggml-org/whisper.cpp/issues/40
+//
+// ## Overview
+//
+// This library implements:
+//
+//  - a set of tensor operations
+//  - automatic differentiation
+//  - basic optimization algorithms
+//
+// The aim of this library is to provide a minimalistic approach for various machine learning tasks. This includes,
+// but is not limited to, the following:
+//
+//  - linear regression
+//  - support vector machines
+//  - neural networks
+//
+// The library allows the user to define a certain function using the available tensor operations. This function
+// definition is represented internally via a computation graph. Each tensor operation in the function definition
+// corresponds to a node in the graph. Having the computation graph defined, the user can choose to compute the
+// function's value and/or its gradient with respect to the input variables. Optionally, the function can be optimized
+// using one of the available optimization algorithms.
+//
+// For example, here we define the function: f(x) = a*x^2 + b
+//
+//   {
+//       struct ggml_init_params params = {
+//           .mem_size   = 16*1024*1024,
+//           .mem_buffer = NULL,
+//       };
+//
+//       // memory allocation happens here
+//       struct ggml_context * ctx = ggml_init(params);
+//
+//       struct ggml_tensor * x = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, 1);
+//
+//       ggml_set_param(ctx, x); // x is an input variable
+//
+//       struct ggml_tensor * a  = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, 1);
+//       struct ggml_tensor * b  = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, 1);
+//       struct ggml_tensor * x2 = ggml_mul(ctx, x, x);
+//       struct ggml_tensor * f  = ggml_add(ctx, ggml_mul(ctx, a, x2), b);
+//
+//       ...
+//   }
+//
+// Notice that the function definition above does not involve any actual computation. The computation is performed only
+// when the user explicitly requests it. For example, to compute the function's value at x = 2.0:
+//
+//   {
+//       ...
+//
+//       struct ggml_cgraph * gf = ggml_new_graph(ctx);
+//       ggml_build_forward_expand(gf, f);
+//
+//       // set the input variable and parameter values
+//       ggml_set_f32(x, 2.0f);
+//       ggml_set_f32(a, 3.0f);
+//       ggml_set_f32(b, 4.0f);
+//
+//       ggml_graph_compute_with_ctx(ctx, &gf, n_threads);
+//
+//       printf("f = %f\n", ggml_get_f32_1d(f, 0));
+//
+//       ...
+//   }
+//
+// The actual computation is performed in the ggml_graph_compute() function.
+//
+// The ggml_new_tensor_...() functions create new tensors. They are allocated in the memory buffer provided to the
+// ggml_init() function. You have to be careful not to exceed the memory buffer size. Therefore, you have to know
+// in advance how much memory you need for your computation. Alternatively, you can allocate a large enough memory
+// and after defining the computation graph, call the ggml_used_mem() function to find out how much memory was
+// actually needed.
+//
+// The ggml_set_param() function marks a tensor as an input variable. This is used by the automatic
+// differentiation and optimization algorithms.
+//
+// The described approach allows to define the function graph once and then compute its forward or backward graphs
+// multiple times. All computations will use the same memory buffer allocated in the ggml_init() function. This way
+// the user can avoid the memory allocation overhead at runtime.
+//
+// The library supports multi-dimensional tensors - up to 4 dimensions. The FP16 and FP32 data types are first class
+// citizens, but in theory the library can be extended to support FP8 and integer data types.
+//
+// Each tensor operation produces a new tensor. Initially the library was envisioned to support only the use of unary
+// and binary operations. Most of the available operations fall into one of these two categories. With time, it became
+// clear that the library needs to support more complex operations. The way to support these operations is not clear
+// yet, but a few examples are demonstrated in the following operations:
+//
+//   - ggml_permute()
+//   - ggml_conv_1d_1s()
+//   - ggml_conv_1d_2s()
+//
+// For each tensor operator, the library implements a forward and backward computation function. The forward function
+// computes the output tensor value given the input tensor values. The backward function computes the adjoint of the
+// input tensors given the adjoint of the output tensor. For a detailed explanation of what this means, take a
+// calculus class, or watch the following video:
+//
+//   What is Automatic Differentiation?
+//   https://www.youtube.com/watch?v=wG_nF1awSSY
+//
+//
+// ## Tensor data (struct ggml_tensor)
+//
+// The tensors are stored in memory via the ggml_tensor struct. The structure provides information about the size of
+// the tensor, the data type, and the memory buffer where the tensor data is stored. Additionally, it contains
+// pointers to the "source" tensors - i.e. the tensors that were used to compute the current tensor. For example:
+//
+//   {
+//       struct ggml_tensor * c = ggml_add(ctx, a, b);
+//
+//       assert(c->src[0] == a);
+//       assert(c->src[1] == b);
+//   }
+//
+// The multi-dimensional tensors are stored in row-major order. The ggml_tensor struct contains fields for the
+// number of elements in each dimension ("ne") as well as the number of bytes ("nb", a.k.a. stride). This allows
+// to store tensors that are not contiguous in memory, which is useful for operations such as transposition and
+// permutation. All tensor operations have to take the stride into account and not assume that the tensor is
+// contiguous in memory.
+//
+// The data of the tensor is accessed via the "data" pointer. For example:
+//
+//   {
+//       const int nx = 2;
+//       const int ny = 3;
+//
+//       struct ggml_tensor * a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, nx, ny);
+//
+//       for (int y = 0; y < ny; y++) {
+//           for (int x = 0; x < nx; x++) {
+//               *(float *) ((char *) a->data + y*a->nb[1] + x*a->nb[0]) = x + y;
+//           }
+//       }
+//
+//       ...
+//   }
+//
+// Alternatively, there are helper functions, such as ggml_get_f32_1d() and ggml_set_f32_1d() that can be used.
+//
+// ## The matrix multiplication operator (ggml_mul_mat)
+//
+// TODO
+//
+//
+// ## Multi-threading
+//
+// TODO
+//
+//
+// ## Overview of ggml.c
+//
+// TODO
+//
+//
+// ## SIMD optimizations
+//
+// TODO
+//
+//
+// ## Debugging ggml
+//
+// TODO
+//
+//
+
+#ifdef GGML_SHARED
+#    if defined(_WIN32) && !defined(__MINGW32__)
+#        ifdef GGML_BUILD
+#            define GGML_API __declspec(dllexport) extern
+#        else
+#            define GGML_API __declspec(dllimport) extern
+#        endif
+#    else
+#        define GGML_API __attribute__ ((visibility ("default"))) extern
+#    endif
+#else
+#    define GGML_API extern
+#endif
+
+// TODO: support for clang
+#ifdef __GNUC__
+#    define GGML_DEPRECATED(func, hint) func __attribute__((deprecated(hint)))
+#elif defined(_MSC_VER)
+#    define GGML_DEPRECATED(func, hint) __declspec(deprecated(hint)) func
+#else
+#    define GGML_DEPRECATED(func, hint) func
+#endif
+
+#ifndef __GNUC__
+#    define GGML_ATTRIBUTE_FORMAT(...)
+#elif defined(__MINGW32__) && !defined(__clang__)
+#    define GGML_ATTRIBUTE_FORMAT(...) __attribute__((format(gnu_printf, __VA_ARGS__)))
+#else
+#    define GGML_ATTRIBUTE_FORMAT(...) __attribute__((format(printf, __VA_ARGS__)))
+#endif
+
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#    define _WIN32_WINNT 0x0A00
+#endif
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+
+#define GGML_FILE_MAGIC   0x67676d6c // "ggml"
+#define GGML_FILE_VERSION 2
+
+#define GGML_QNT_VERSION        2    // bump this on quantization format changes
+#define GGML_QNT_VERSION_FACTOR 1000 // do not change this
+
+#define GGML_MAX_DIMS           4
+#define GGML_MAX_PARAMS         2048
+#define GGML_MAX_SRC            10
+#define GGML_MAX_N_THREADS      512
+#define GGML_MAX_OP_PARAMS      64
+
+#ifndef GGML_MAX_NAME
+#   define GGML_MAX_NAME        64
+#endif
+
+#define GGML_DEFAULT_N_THREADS  4
+#define GGML_DEFAULT_GRAPH_SIZE 2048
+
+#if UINTPTR_MAX == 0xFFFFFFFF
+    #define GGML_MEM_ALIGN 4
+#elif defined(__EMSCRIPTEN__)
+// emscripten uses max_align_t == 8, so we need GGML_MEM_ALIGN == 8 for 64-bit wasm.
+// (for 32-bit wasm, the first conditional is true and GGML_MEM_ALIGN stays 4.)
+// ref: https://github.com/ggml-org/llama.cpp/pull/18628
+    #define GGML_MEM_ALIGN 8
+#else
+    #define GGML_MEM_ALIGN 16
+#endif
+
+#define GGML_EXIT_SUCCESS 0
+#define GGML_EXIT_ABORTED 1
+
+// TODO: convert to enum https://github.com/ggml-org/llama.cpp/pull/16187#discussion_r2388538726
+#define GGML_ROPE_TYPE_NORMAL 0
+#define GGML_ROPE_TYPE_NEOX   2
+#define GGML_ROPE_TYPE_MROPE  8
+#define GGML_ROPE_TYPE_VISION 24
+#define GGML_ROPE_TYPE_IMROPE 40 // binary: 101000
+// Lucebox: rotate the LAST n_dims of each row (NORMAL pairing) and pass the
+// leading ne0 - n_dims through unchanged, so a tail-rotary head (DeepSeek4)
+// is one launch instead of split, rotate, and concat. Combine with NORMAL only.
+#define GGML_ROPE_TYPE_TAIL   64
+
+#define GGML_MROPE_SECTIONS   4
+
+#define GGML_UNUSED(x) (void)(x)
+#ifdef __CUDACC__
+template<typename... Args>
+__host__ __device__ constexpr inline void ggml_unused_vars_impl(Args&&...) noexcept {}
+#define GGML_UNUSED_VARS(...) ggml_unused_vars_impl(__VA_ARGS__)
+#else
+#define GGML_UNUSED_VARS(...) do { (void)sizeof((__VA_ARGS__, 0)); } while(0)
+#endif // __CUDACC__
+
+#define GGML_PAD(x, n) (((x) + (n) - 1) & ~((n) - 1))
+
+#ifndef NDEBUG
+#   define GGML_UNREACHABLE() do { fprintf(stderr, "statement should be unreachable\n"); abort(); } while(0)
+#elif defined(__GNUC__)
+#   define GGML_UNREACHABLE() __builtin_unreachable()
+#elif defined(_MSC_VER)
+#   define GGML_UNREACHABLE() __assume(0)
+#else
+#   define GGML_UNREACHABLE() ((void) 0)
+#endif
+
+#ifdef __cplusplus
+#   define GGML_NORETURN [[noreturn]]
+#elif defined(_MSC_VER)
+#   define GGML_NORETURN __declspec(noreturn)
+#else
+#   define GGML_NORETURN _Noreturn
+#endif
+
+#define GGML_ABORT(...) ggml_abort(__FILE__, __LINE__, __VA_ARGS__)
+#define GGML_ASSERT(x) if (!(x)) GGML_ABORT("GGML_ASSERT(%s) failed", #x)
+
+// used to copy the number of elements and stride in bytes of tensors into local variables.
+// main purpose is to reduce code duplication and improve readability.
+//
+// example:
+//
+//    GGML_TENSOR_LOCALS(int64_t, ne1, src1, ne);
+//    GGML_TENSOR_LOCALS(size_t,  nb1, src1, nb);
+//
+#define GGML_TENSOR_LOCALS_1(type, prefix, pointer, array) \
+    const type prefix##0 = (pointer) ? (pointer)->array[0] : 0; \
+    GGML_UNUSED(prefix##0);
+#define GGML_TENSOR_LOCALS_2(type, prefix, pointer, array) \
+    GGML_TENSOR_LOCALS_1    (type, prefix, pointer, array) \
+    const type prefix##1 = (pointer) ? (pointer)->array[1] : 0; \
+    GGML_UNUSED(prefix##1);
+#define GGML_TENSOR_LOCALS_3(type, prefix, pointer, array) \
+    GGML_TENSOR_LOCALS_2    (type, prefix, pointer, array) \
+    const type prefix##2 = (pointer) ? (pointer)->array[2] : 0; \
+    GGML_UNUSED(prefix##2);
+#define GGML_TENSOR_LOCALS(type, prefix, pointer, array) \
+    GGML_TENSOR_LOCALS_3  (type, prefix, pointer, array) \
+    const type prefix##3 = (pointer) ? (pointer)->array[3] : 0; \
+    GGML_UNUSED(prefix##3);
+
+#define GGML_TENSOR_UNARY_OP_LOCALS \
+    GGML_TENSOR_LOCALS(int64_t, ne0, src0, ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb0, src0, nb) \
+    GGML_TENSOR_LOCALS(int64_t, ne,  dst,  ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb,  dst,  nb)
+
+#define GGML_TENSOR_BINARY_OP_LOCALS \
+    GGML_TENSOR_LOCALS(int64_t, ne0, src0, ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb0, src0, nb) \
+    GGML_TENSOR_LOCALS(int64_t, ne1, src1, ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb1, src1, nb) \
+    GGML_TENSOR_LOCALS(int64_t, ne,  dst,  ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb,  dst,  nb)
+
+#define GGML_TENSOR_TERNARY_OP_LOCALS \
+    GGML_TENSOR_LOCALS(int64_t, ne0, src0, ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb0, src0, nb) \
+    GGML_TENSOR_LOCALS(int64_t, ne1, src1, ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb1, src1, nb) \
+    GGML_TENSOR_LOCALS(int64_t, ne2, src2, ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb2, src2, nb) \
+    GGML_TENSOR_LOCALS(int64_t, ne,  dst,  ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb,  dst,  nb)
+
+#define GGML_TENSOR_BINARY_OP_LOCALS01 \
+    GGML_TENSOR_LOCALS(int64_t, ne0, src0, ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb0, src0, nb) \
+    GGML_TENSOR_LOCALS(int64_t, ne1, src1, ne) \
+    GGML_TENSOR_LOCALS(size_t,  nb1, src1, nb)
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+    // Function type used in fatal error callbacks
+    typedef void (*ggml_abort_callback_t)(const char * error_message);
+
+    // Set the abort callback (passing null will restore original abort functionality: printing a message to stdout)
+    // Returns the old callback for chaining
+    GGML_API ggml_abort_callback_t ggml_set_abort_callback(ggml_abort_callback_t callback);
+
+    GGML_NORETURN GGML_ATTRIBUTE_FORMAT(3, 4)
+    GGML_API void ggml_abort(const char * file, int line, const char * fmt, ...);
+
+    enum ggml_status {
+        GGML_STATUS_ALLOC_FAILED = -2,
+        GGML_STATUS_FAILED = -1,
+        GGML_STATUS_SUCCESS = 0,
+        GGML_STATUS_ABORTED = 1,
+    };
+
+    // get ggml_status name string
+    GGML_API const char * ggml_status_to_string(enum ggml_status status);
+
+    // ieee 754-2008 half-precision float16
+    // todo: make this not an integral type
+    typedef uint16_t ggml_fp16_t;
+    GGML_API float       ggml_fp16_to_fp32(ggml_fp16_t);
+    GGML_API ggml_fp16_t ggml_fp32_to_fp16(float);
+    GGML_API void        ggml_fp16_to_fp32_row(const ggml_fp16_t *, float *, int64_t);
+    GGML_API void        ggml_fp32_to_fp16_row(const float *, ggml_fp16_t *, int64_t);
+
+    // google brain half-precision bfloat16
+    typedef struct { uint16_t bits; } ggml_bf16_t;
+    GGML_API ggml_bf16_t ggml_fp32_to_bf16(float);
+    GGML_API float       ggml_bf16_to_fp32(ggml_bf16_t);  // consider just doing << 16
+    GGML_API void        ggml_bf16_to_fp32_row(const ggml_bf16_t *, float *, int64_t);
+    GGML_API void        ggml_fp32_to_bf16_row_ref(const float *, ggml_bf16_t *, int64_t);
+    GGML_API void        ggml_fp32_to_bf16_row(const float *, ggml_bf16_t *, int64_t);
+
+    struct ggml_object;
+    struct ggml_context;
+    struct ggml_cgraph;
+
+    // NOTE: always add types at the end of the enum to keep backward compatibility
+    enum ggml_type {
+        GGML_TYPE_F32     = 0,
+        GGML_TYPE_F16     = 1,
+        GGML_TYPE_Q4_0    = 2,
+        GGML_TYPE_Q4_1    = 3,
+        // GGML_TYPE_Q4_2 = 4, support has been removed
+        // GGML_TYPE_Q4_3 = 5, support has been removed
+        GGML_TYPE_Q5_0    = 6,
+        GGML_TYPE_Q5_1    = 7,
+        GGML_TYPE_Q8_0    = 8,
+        GGML_TYPE_Q8_1    = 9,
+        GGML_TYPE_Q2_K    = 10,
+        GGML_TYPE_Q3_K    = 11,
+        GGML_TYPE_Q4_K    = 12,
+        GGML_TYPE_Q5_K    = 13,
+        GGML_TYPE_Q6_K    = 14,
+        GGML_TYPE_Q8_K    = 15,
+        GGML_TYPE_IQ2_XXS = 16,
+        GGML_TYPE_IQ2_XS  = 17,
+        GGML_TYPE_IQ3_XXS = 18,
+        GGML_TYPE_IQ1_S   = 19,
+        GGML_TYPE_IQ4_NL  = 20,
+        GGML_TYPE_IQ3_S   = 21,
+        GGML_TYPE_IQ2_S   = 22,
+        GGML_TYPE_IQ4_XS  = 23,
+        GGML_TYPE_I8      = 24,
+        GGML_TYPE_I16     = 25,
+        GGML_TYPE_I32     = 26,
+        GGML_TYPE_I64     = 27,
+        GGML_TYPE_F64     = 28,
+        GGML_TYPE_IQ1_M   = 29,
+        GGML_TYPE_BF16    = 30,
+        // GGML_TYPE_Q4_0_4_4 = 31, support has been removed from gguf files
+        // GGML_TYPE_Q4_0_4_8 = 32,
+        // GGML_TYPE_Q4_0_8_8 = 33,
+        GGML_TYPE_TQ1_0   = 34,
+        GGML_TYPE_TQ2_0   = 35,
+        // GGML_TYPE_IQ4_NL_4_4 = 36,
+        // GGML_TYPE_IQ4_NL_4_8 = 37,
+        // GGML_TYPE_IQ4_NL_8_8 = 38,
+        GGML_TYPE_MXFP4   = 39, // MXFP4 (1 block)
+        GGML_TYPE_NVFP4   = 40, // NVFP4 (4 blocks, E4M3 scale)
+        GGML_TYPE_Q1_0    = 41,
+        GGML_TYPE_Q2_0    = 42,  // 2-bit (QK=64): {d} + 2-bit quads, values {-1,0,1,2}*d
+        GGML_TYPE_TQ3_0   = 43,  // TurboQuant 3.5 bpv (3-bit Lloyd-Max + FWHT rotation)
+        GGML_TYPE_Q4_0_ROCMFP4      = 100,
+        GGML_TYPE_Q4_0_ROCMFP4_FAST = 101,
+        GGML_TYPE_Q6_0_ROCMFPX      = 102,
+        GGML_TYPE_Q8_0_ROCMFPX      = 103,
+        GGML_TYPE_Q3_0_ROCMFPX      = 104,
+        GGML_TYPE_Q3_1_ROCMFP3_MIX  = 105, // per-expert mixed absmax/adaptive ROCmFP3 (P4); codebook in GGUF KV
+        GGML_TYPE_Q2_1_ROCMFP2_MIX  = 106, // per-expert mixed absmax/adaptive ROCmFP2 (gate/up); codebook in sidecar
+        GGML_TYPE_Q2_0_ROCMFP2      = 107,
+        GGML_TYPE_MXFP8   = 117, // E4M3 codes + one E8M0 scale per 32; 264 B per 256 weights (lossless for DS4.1 native FP8)
+        GGML_TYPE_COUNT   = 118,
+    };
+
+    // precision
+    enum ggml_prec {
+        GGML_PREC_DEFAULT =  0, // stored as ggml_tensor.op_params, 0 by default
+        GGML_PREC_F32     = 10,
+    };
+
+    // model file types
+    enum ggml_ftype {
+        GGML_FTYPE_UNKNOWN        = -1,
+        GGML_FTYPE_ALL_F32        = 0,
+        GGML_FTYPE_MOSTLY_F16     = 1,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q4_0    = 2,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q4_1    = 3,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q4_1_SOME_F16 = 4, // tok_embeddings.weight and output.weight are F16
+        GGML_FTYPE_MOSTLY_Q8_0    = 7,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q5_0    = 8,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q5_1    = 9,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q2_K    = 10, // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q3_K    = 11, // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q4_K    = 12, // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q5_K    = 13, // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q6_K    = 14, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ2_XXS = 15, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ2_XS  = 16, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ3_XXS = 17, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ1_S   = 18, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ4_NL  = 19, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ3_S   = 20, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ2_S   = 21, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ4_XS  = 22, // except 1d tensors
+        GGML_FTYPE_MOSTLY_IQ1_M   = 23, // except 1d tensors
+        GGML_FTYPE_MOSTLY_BF16    = 24, // except 1d tensors
+        GGML_FTYPE_MOSTLY_MXFP4   = 25, // except 1d tensors
+        GGML_FTYPE_MOSTLY_NVFP4   = 26, // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q1_0    = 27, // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q2_0    = 28, // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q4_0_ROCMFP4          = 100,
+        GGML_FTYPE_MOSTLY_Q4_0_ROCMFP4_LEAN     = 101,
+        GGML_FTYPE_MOSTLY_Q4_0_ROCMFP4_COHERENT = 102,
+        GGML_FTYPE_MOSTLY_Q4_0_ROCMFP4_FAST     = 103,
+        GGML_FTYPE_MOSTLY_Q4_0_ROCMFP4_FAST_COHERENT = 104,
+        GGML_FTYPE_MOSTLY_Q4_0_ROCMFP4_STRIX    = 105,
+        GGML_FTYPE_MOSTLY_Q4_0_ROCMFP4_STRIX_LEAN = 106,
+        GGML_FTYPE_MOSTLY_Q6_0_ROCMFPX          = 110,
+        GGML_FTYPE_MOSTLY_Q8_0_ROCMFPX          = 111,
+        GGML_FTYPE_MOSTLY_Q3_0_ROCMFPX          = 112,
+        GGML_FTYPE_MOSTLY_Q2_0_ROCMFP2          = 118,
+        GGML_FTYPE_MOSTLY_Q2_0_ROCMFP2_STRIX    = 119,
+    };
+
+    // available tensor operations:
+    enum ggml_op {
+        GGML_OP_NONE = 0,
+
+        GGML_OP_DUP,
+        GGML_OP_ADD,
+        GGML_OP_ADD_ID,
+        GGML_OP_ADD1,
+        GGML_OP_ACC,
+        GGML_OP_SUB,
+        GGML_OP_MUL,
+        GGML_OP_DIV,
+        GGML_OP_SQR,
+        GGML_OP_SQRT,
+        GGML_OP_LOG,
+        GGML_OP_SIN,
+        GGML_OP_COS,
+        GGML_OP_SUM,
+        GGML_OP_SUM_ROWS,
+        GGML_OP_CUMSUM,
+        GGML_OP_MEAN,
+        GGML_OP_ARGMAX,
+        GGML_OP_COUNT_EQUAL,
+        GGML_OP_REPEAT,
+        GGML_OP_REPEAT_BACK,
+        GGML_OP_CONCAT,
+        GGML_OP_SILU_BACK,
+        GGML_OP_NORM, // normalize
+        GGML_OP_RMS_NORM,
+        GGML_OP_RMS_NORM_BACK,
+        GGML_OP_GROUP_NORM,
+        GGML_OP_L2_NORM,
+
+        GGML_OP_MUL_MAT,
+        GGML_OP_MUL_MAT_ID,
+        GGML_OP_OUT_PROD,
+
+        GGML_OP_SCALE,
+        GGML_OP_SET,
+        GGML_OP_CPY,
+        GGML_OP_CONT,
+        GGML_OP_RESHAPE,
+        GGML_OP_VIEW,
+        GGML_OP_PERMUTE,
+        GGML_OP_TRANSPOSE,
+        GGML_OP_GET_ROWS,
+        GGML_OP_GET_ROWS_BACK,
+        GGML_OP_SET_ROWS,
+        GGML_OP_DIAG,
+        GGML_OP_DIAG_MASK_INF,
+        GGML_OP_DIAG_MASK_ZERO,
+        GGML_OP_SOFT_MAX,
+        GGML_OP_SOFT_MAX_BACK,
+        GGML_OP_ROPE,
+        GGML_OP_ROPE_BACK,
+        GGML_OP_CLAMP,
+        GGML_OP_CONV_TRANSPOSE_1D,
+        GGML_OP_IM2COL,
+        GGML_OP_IM2COL_BACK,
+        GGML_OP_IM2COL_3D,
+        GGML_OP_CONV_2D,
+        GGML_OP_CONV_3D,
+        GGML_OP_CONV_2D_DW,
+        GGML_OP_CONV_TRANSPOSE_2D,
+        GGML_OP_POOL_1D,
+        GGML_OP_POOL_2D,
+        GGML_OP_POOL_2D_BACK,
+        GGML_OP_UPSCALE,
+        GGML_OP_PAD,
+        GGML_OP_PAD_REFLECT_1D,
+        GGML_OP_ROLL,
+        GGML_OP_ARANGE,
+        GGML_OP_TIMESTEP_EMBEDDING,
+        GGML_OP_ARGSORT,
+        GGML_OP_TOP_K,
+        GGML_OP_LEAKY_RELU,
+        GGML_OP_TRI,
+        GGML_OP_FILL,
+
+        GGML_OP_FLASH_ATTN_EXT,
+        GGML_OP_FLASH_ATTN_SPARSE,
+        GGML_OP_FLASH_ATTN_BACK,
+        GGML_OP_SSM_CONV,
+        GGML_OP_SSM_SCAN,
+        GGML_OP_WIN_PART,
+        GGML_OP_WIN_UNPART,
+        GGML_OP_GET_REL_POS,
+        GGML_OP_ADD_REL_POS,
+        GGML_OP_RWKV_WKV6,
+        GGML_OP_GATED_LINEAR_ATTN,
+        GGML_OP_RWKV_WKV7,
+        GGML_OP_SOLVE_TRI,
+        GGML_OP_GATED_DELTA_NET,
+
+        GGML_OP_UNARY,
+
+        GGML_OP_MAP_CUSTOM1,
+        GGML_OP_MAP_CUSTOM2,
+        GGML_OP_MAP_CUSTOM3,
+
+        GGML_OP_CUSTOM,
+
+        GGML_OP_CROSS_ENTROPY_LOSS,
+        GGML_OP_CROSS_ENTROPY_LOSS_BACK,
+        GGML_OP_OPT_STEP_ADAMW,
+        GGML_OP_OPT_STEP_SGD,
+
+        GGML_OP_GLU,
+
+        GGML_OP_TURBO_WHT,  // FWHT rotation for TurboQuant KV cache
+
+        GGML_OP_MOE_FUSED,  // Fused MoE FFN: gate+up+swiglu+down+weighted_sum+shared_expert
+
+        GGML_OP_DS4_HC,  // Fused DeepSeek4 hyper-connection pre/post/out mixing
+
+        GGML_OP_DS4_INDEXER_QAT,  // DS4 indexer Hadamard + FP4 activation simulation
+
+        GGML_OP_DS4_INDEXER_SCORE,  // Fused DS4 indexer dot/ReLU/head reduction
+
+        GGML_OP_DS4_INDEXER_MASK,  // Apply per-token DS4 indexer top-k to an attention mask
+
+        // Keep extension operations appended so established GGML op ordinals
+        // remain stable within a protocol generation.
+        GGML_OP_MUL_MAT_GROUPED_SRC,
+
+        GGML_OP_PAGED_ATTN,
+
+        GGML_OP_MUL_MAT_BIAS_BF16, // explicit HIP-only DS4V fused bias
+        GGML_OP_RMS_NORM_VISION_F32, // inference-only HIP source-order DS4V normalization
+        GGML_OP_SOFT_MAX_VISION_F32, // inference-only HIP source-order DS4V softmax
+        GGML_OP_MUL_MAT_VISION_AV_F32, // inference-only HIP source-layout DS4V AV
+        GGML_OP_DS4_MOE_COMBINE,
+
+        GGML_OP_HC_COMBINE_NORM,  // Fused hyper-connection combine + next stream rms-norm
+        GGML_OP_GATED_RMS_NORM_F16, // rms_norm(x) * gamma * sigmoid(z) -> F16 (qwen4exp GDN tail)
+
+        GGML_OP_QSA_DECODE_IDS, // Sort selected blocks and expand visible QSA cells
+
+        GGML_OP_INKLING2_OP, // Fused Inkling2-Loop & DSpark ops (subop in op_params[0])
+
+        GGML_OP_COUNT,
+    };
+
+    enum ggml_unary_op {
+        GGML_UNARY_OP_ABS,
+        GGML_UNARY_OP_SGN,
+        GGML_UNARY_OP_NEG,
+        GGML_UNARY_OP_STEP,
+        GGML_UNARY_OP_TANH,
+        GGML_UNARY_OP_ELU,
+        GGML_UNARY_OP_RELU,
+        GGML_UNARY_OP_SIGMOID,
+        GGML_UNARY_OP_GELU,
+        GGML_UNARY_OP_GELU_QUICK,
+        GGML_UNARY_OP_SILU,
+        GGML_UNARY_OP_HARDSWISH,
+        GGML_UNARY_OP_HARDSIGMOID,
+        GGML_UNARY_OP_EXP,
+        GGML_UNARY_OP_EXPM1,
+        GGML_UNARY_OP_SOFTPLUS,
+        GGML_UNARY_OP_GELU_ERF,
+        GGML_UNARY_OP_XIELU,
+        GGML_UNARY_OP_FLOOR,
+        GGML_UNARY_OP_CEIL,
+        GGML_UNARY_OP_ROUND,
+        GGML_UNARY_OP_TRUNC,
+
+        GGML_UNARY_OP_COUNT,
+    };
+
+    enum ggml_glu_op {
+        GGML_GLU_OP_REGLU,
+        GGML_GLU_OP_GEGLU,
+        GGML_GLU_OP_SWIGLU,
+        GGML_GLU_OP_SWIGLU_OAI,
+        GGML_GLU_OP_SWIGLU_DS4,
+        GGML_GLU_OP_GEGLU_ERF,
+        GGML_GLU_OP_GEGLU_QUICK,
+
+        GGML_GLU_OP_COUNT,
+    };
+
+    enum ggml_object_type {
+        GGML_OBJECT_TYPE_TENSOR,
+        GGML_OBJECT_TYPE_GRAPH,
+        GGML_OBJECT_TYPE_WORK_BUFFER
+    };
+
+    enum ggml_log_level {
+        GGML_LOG_LEVEL_NONE  = 0,
+        GGML_LOG_LEVEL_DEBUG = 1,
+        GGML_LOG_LEVEL_INFO  = 2,
+        GGML_LOG_LEVEL_WARN  = 3,
+        GGML_LOG_LEVEL_ERROR = 4,
+        GGML_LOG_LEVEL_CONT  = 5, // continue previous log
+    };
+
+    // this tensor...
+    enum ggml_tensor_flag {
+        GGML_TENSOR_FLAG_INPUT   =  1, // ...is an input for the GGML compute graph
+        GGML_TENSOR_FLAG_OUTPUT  =  2, // ...is an output for the GGML compute graph
+        GGML_TENSOR_FLAG_PARAM   =  4, // ...contains trainable parameters
+        GGML_TENSOR_FLAG_LOSS    =  8, // ...defines loss for numerical optimization (multiple loss tensors add up)
+        GGML_TENSOR_FLAG_COMPUTE = 16, // ...must be computed
+    };
+
+    enum ggml_tri_type {
+        GGML_TRI_TYPE_UPPER_DIAG = 0,
+        GGML_TRI_TYPE_UPPER      = 1,
+        GGML_TRI_TYPE_LOWER_DIAG = 2,
+        GGML_TRI_TYPE_LOWER      = 3
+    };
+
+    struct ggml_init_params {
+        // memory pool
+        size_t mem_size;   // bytes
+        void * mem_buffer; // if NULL, memory will be allocated internally
+        bool   no_alloc;   // don't allocate memory for the tensor data
+    };
+
+    // n-dimensional tensor
+    struct ggml_tensor {
+        enum ggml_type type;
+
+        struct ggml_backend_buffer * buffer;
+
+        int64_t ne[GGML_MAX_DIMS]; // number of elements
+        size_t  nb[GGML_MAX_DIMS]; // stride in bytes:
+                                   // nb[0] = ggml_type_size(type)
+                                   // nb[1] = nb[0]   * (ne[0] / ggml_blck_size(type)) + padding
+                                   // nb[i] = nb[i-1] * ne[i-1]
+
+        // compute data
+        enum ggml_op op;
+
+        // op params - allocated as int32_t for alignment
+        int32_t op_params[GGML_MAX_OP_PARAMS / sizeof(int32_t)];
+
+        int32_t flags;
+
+        struct ggml_tensor * src[GGML_MAX_SRC];
+
+        // source tensor and offset for views
+        struct ggml_tensor * view_src;
+        size_t               view_offs;
+
+        void * data;
+
+        char name[GGML_MAX_NAME];
+
+        void * extra; // extra things e.g. for ggml-cuda.cu
+
+        char padding[8];
+    };
+
+    static const size_t GGML_TENSOR_SIZE = sizeof(struct ggml_tensor);
+
+    // Abort callback
+    // If not NULL, called before ggml computation
+    // If it returns true, the computation is aborted
+    typedef bool (*ggml_abort_callback)(void * data);
+
+
+    //
+    // GUID
+    //
+
+    // GUID types
+    typedef uint8_t ggml_guid[16];
+    typedef ggml_guid * ggml_guid_t;
+
+    GGML_API bool ggml_guid_matches(ggml_guid_t guid_a, ggml_guid_t guid_b);
+
+    // misc
+
+    GGML_API const char * ggml_version(void);
+    GGML_API const char * ggml_commit(void);
+
+    GGML_API void    ggml_time_init(void); // call this once at the beginning of the program
+    GGML_API int64_t ggml_time_ms(void);
+    GGML_API int64_t ggml_time_us(void);
+    GGML_API int64_t ggml_cycles(void);
+    GGML_API int64_t ggml_cycles_per_ms(void);
+
+    // accepts a UTF-8 path, even on Windows
+    GGML_API FILE *  ggml_fopen(const char * fname, const char * mode);
+
+    GGML_API void    ggml_print_object (const struct ggml_object * obj);
+    GGML_API void    ggml_print_objects(const struct ggml_context * ctx);
+
+    GGML_API int64_t ggml_nelements (const struct ggml_tensor * tensor);
+    GGML_API int64_t ggml_nrows     (const struct ggml_tensor * tensor);
+    GGML_API size_t  ggml_nbytes    (const struct ggml_tensor * tensor);
+    GGML_API size_t  ggml_nbytes_pad(const struct ggml_tensor * tensor); // same as ggml_nbytes() but padded to GGML_MEM_ALIGN
+
+    GGML_API int64_t ggml_blck_size(enum ggml_type type);
+    GGML_API size_t  ggml_type_size(enum ggml_type type);             // size in bytes for all elements in a block
+    GGML_API size_t  ggml_row_size (enum ggml_type type, int64_t ne); // size in bytes for all elements in a row
+
+    GGML_DEPRECATED(
+    GGML_API double ggml_type_sizef(enum ggml_type type), // ggml_type_size()/ggml_blck_size() as float
+    "use ggml_row_size() instead");
+
+    GGML_API const char * ggml_type_name(enum ggml_type type);
+    GGML_API const char * ggml_op_name  (enum ggml_op   op);
+    GGML_API const char * ggml_op_symbol(enum ggml_op   op);
+
+    GGML_API const char * ggml_unary_op_name(enum ggml_unary_op op);
+    GGML_API const char * ggml_glu_op_name(enum ggml_glu_op op);
+    GGML_API const char * ggml_op_desc(const struct ggml_tensor * t); // unary or op name
+
+    GGML_API size_t  ggml_element_size(const struct ggml_tensor * tensor);
+
+    GGML_API bool    ggml_is_quantized(enum ggml_type type);
+
+    // TODO: temporary until model loading of ggml examples is refactored
+    GGML_API enum ggml_type ggml_ftype_to_ggml_type(enum ggml_ftype ftype);
+
+    GGML_API bool ggml_is_transposed(const struct ggml_tensor * tensor);
+    GGML_API bool ggml_is_permuted  (const struct ggml_tensor * tensor);
+    GGML_API bool ggml_is_empty     (const struct ggml_tensor * tensor);
+    GGML_API bool ggml_is_view      (const struct ggml_tensor * tensor);
+    GGML_API bool ggml_is_scalar    (const struct ggml_tensor * tensor);
+    GGML_API bool ggml_is_vector    (const struct ggml_tensor * tensor);
+    GGML_API bool ggml_is_matrix    (const struct ggml_tensor * tensor);
+    GGML_API bool ggml_is_3d        (const struct ggml_tensor * tensor);
+    GGML_API int  ggml_n_dims       (const struct ggml_tensor * tensor); // returns 1 for scalars
+
+    // returns whether the tensor elements can be iterated over with a flattened index (no gaps, no permutation)
+    GGML_API bool ggml_is_contiguous  (const struct ggml_tensor * tensor);
+    GGML_API bool ggml_is_contiguous_0(const struct ggml_tensor * tensor); // same as ggml_is_contiguous()
+    GGML_API bool ggml_is_contiguous_1(const struct ggml_tensor * tensor); // contiguous for dims >= 1
+    GGML_API bool ggml_is_contiguous_2(const struct ggml_tensor * tensor); // contiguous for dims >= 2
+
+    // returns whether the tensor elements are allocated as one contiguous block of memory (no gaps, but permutation ok)
+    GGML_API bool ggml_is_contiguously_allocated(const struct ggml_tensor * tensor);
+
+    // true for tensor that is stored in memory as CxWxHxN and has been permuted to WxHxCxN
+    GGML_API bool ggml_is_contiguous_channels(const struct ggml_tensor * tensor);
+
+    // true if the elements in dimension 0 are contiguous, or there is just 1 block of elements
+    GGML_API bool ggml_is_contiguous_rows(const struct ggml_tensor * tensor);
+
+    GGML_API bool ggml_are_same_shape (const struct ggml_tensor * t0, const struct ggml_tensor * t1);
+    GGML_API bool ggml_are_same_stride(const struct ggml_tensor * t0, const struct ggml_tensor * t1);
+
+    GGML_API bool ggml_can_repeat(const struct ggml_tensor * t0, const struct ggml_tensor * t1);
+
+    // use this to compute the memory overhead of a tensor
+    GGML_API size_t ggml_tensor_overhead(void);
+
+    GGML_API bool ggml_validate_row_data(enum ggml_type type, const void * data, size_t nbytes);
+
+    // main
+
+    GGML_API struct ggml_context * ggml_init (struct ggml_init_params params);
+    GGML_API void                  ggml_reset(struct ggml_context * ctx);
+    GGML_API void                  ggml_free (struct ggml_context * ctx);
+
+    GGML_API size_t  ggml_used_mem(const struct ggml_context * ctx);
+
+    GGML_API bool    ggml_get_no_alloc(struct ggml_context * ctx);
+    GGML_API void    ggml_set_no_alloc(struct ggml_context * ctx, bool no_alloc);
+
+    GGML_API void *  ggml_get_mem_buffer     (const struct ggml_context * ctx);
+    GGML_API size_t  ggml_get_mem_size       (const struct ggml_context * ctx);
+    GGML_API size_t  ggml_get_max_tensor_size(const struct ggml_context * ctx);
+
+    GGML_API struct ggml_tensor * ggml_new_tensor(
+            struct ggml_context * ctx,
+            enum   ggml_type type,
+            int    n_dims,
+            const int64_t *ne);
+
+    GGML_API struct ggml_tensor * ggml_new_tensor_1d(
+            struct ggml_context * ctx,
+            enum   ggml_type type,
+            int64_t ne0);
+
+    GGML_API struct ggml_tensor * ggml_new_tensor_2d(
+            struct ggml_context * ctx,
+            enum   ggml_type type,
+            int64_t ne0,
+            int64_t ne1);
+
+    GGML_API struct ggml_tensor * ggml_new_tensor_3d(
+            struct ggml_context * ctx,
+            enum   ggml_type type,
+            int64_t ne0,
+            int64_t ne1,
+            int64_t ne2);
+
+    GGML_API struct ggml_tensor * ggml_new_tensor_4d(
+            struct ggml_context * ctx,
+            enum   ggml_type type,
+            int64_t ne0,
+            int64_t ne1,
+            int64_t ne2,
+            int64_t ne3);
+
+    GGML_API void * ggml_new_buffer(struct ggml_context * ctx, size_t nbytes);
+
+    GGML_API struct ggml_tensor * ggml_dup_tensor (struct ggml_context * ctx, const struct ggml_tensor * src);
+    GGML_API struct ggml_tensor * ggml_view_tensor(struct ggml_context * ctx, struct ggml_tensor * src);
+
+    // Context tensor enumeration and lookup
+    GGML_API struct ggml_tensor * ggml_get_first_tensor(const struct ggml_context * ctx);
+    GGML_API struct ggml_tensor * ggml_get_next_tensor (const struct ggml_context * ctx, struct ggml_tensor * tensor);
+    GGML_API struct ggml_tensor * ggml_get_tensor(struct ggml_context * ctx, const char * name);
+
+    // Converts a flat index into coordinates
+    GGML_API void ggml_unravel_index(const struct ggml_tensor * tensor, int64_t i, int64_t * i0, int64_t * i1, int64_t * i2, int64_t * i3);
+
+    GGML_API enum ggml_unary_op ggml_get_unary_op(const struct ggml_tensor * tensor);
+    GGML_API enum ggml_glu_op ggml_get_glu_op(const struct ggml_tensor * tensor);
+
+    GGML_API void *  ggml_get_data    (const struct ggml_tensor * tensor);
+    GGML_API float * ggml_get_data_f32(const struct ggml_tensor * tensor);
+
+    GGML_API const char *         ggml_get_name   (const struct ggml_tensor * tensor);
+    GGML_API struct ggml_tensor * ggml_set_name   (      struct ggml_tensor * tensor, const char * name);
+    GGML_ATTRIBUTE_FORMAT(2, 3)
+    GGML_API struct ggml_tensor * ggml_format_name(      struct ggml_tensor * tensor, const char * fmt, ...);
+
+    // Tensor flags
+    GGML_API void ggml_set_input(struct ggml_tensor * tensor);
+    GGML_API void ggml_set_output(struct ggml_tensor * tensor);
+    GGML_API void ggml_set_param(struct ggml_tensor * tensor);
+    GGML_API void ggml_set_loss(struct ggml_tensor * tensor);
+
+    //
+    // operations on tensors with backpropagation
+    //
+
+    GGML_API struct ggml_tensor * ggml_dup(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_dup_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_add(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_add_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_add_cast(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            enum   ggml_type      type);
+
+    // dst[i0, i1, i2] = a[i0, i1, i2] + b[i0, ids[i1, i2]]
+    GGML_API struct ggml_tensor * ggml_add_id(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * ids);
+
+    GGML_DEPRECATED(GGML_API struct ggml_tensor * ggml_add1(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b),
+        "use ggml_add instead");
+
+    GGML_DEPRECATED(GGML_API struct ggml_tensor * ggml_add1_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b),
+        "use ggml_add_inplace instead");
+
+    // dst = a
+    // view(dst, nb1, nb2, nb3, offset) += b
+    // return dst
+    GGML_API struct ggml_tensor * ggml_acc(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            size_t                nb1,
+            size_t                nb2,
+            size_t                nb3,
+            size_t                offset);
+
+    GGML_API struct ggml_tensor * ggml_acc_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            size_t                nb1,
+            size_t                nb2,
+            size_t                nb3,
+            size_t                offset);
+
+    GGML_API struct ggml_tensor * ggml_sub(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_sub_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_mul(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_mul_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_div(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_div_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_sqr(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sqr_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sqrt(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sqrt_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_log(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_log_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_expm1(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_expm1_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_softplus(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_softplus_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sin(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sin_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_cos(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_cos_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // return scalar
+    GGML_API struct ggml_tensor * ggml_sum(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // sums along rows, with input shape [a,b,c,d] return shape [1,b,c,d]
+    GGML_API struct ggml_tensor * ggml_sum_rows(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_cumsum(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a);
+
+    // mean along rows
+    GGML_API struct ggml_tensor * ggml_mean(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // argmax along rows
+    GGML_API struct ggml_tensor * ggml_argmax(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // count number of equal elements in a and b
+    GGML_API struct ggml_tensor * ggml_count_equal(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    // if a is the same shape as b, and a is not parameter, return a
+    // otherwise, return a new tensor: repeat(a) to fit in b
+    GGML_API struct ggml_tensor * ggml_repeat(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    // repeat a to the specified shape
+    GGML_API struct ggml_tensor * ggml_repeat_4d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+                       int64_t    ne0,
+                       int64_t    ne1,
+                       int64_t    ne2,
+                       int64_t    ne3);
+
+    // sums repetitions in a into shape of b
+    GGML_API struct ggml_tensor * ggml_repeat_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b); // sum up values that are adjacent in dims > 0 instead of repeated with same stride
+
+    // concat a and b along dim
+    // used in stable-diffusion
+    GGML_API struct ggml_tensor * ggml_concat(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            int                   dim);
+
+    GGML_API struct ggml_tensor * ggml_abs(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_abs_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sgn(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sgn_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_neg(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_neg_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_step(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_step_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_tanh(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_tanh_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_elu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_elu_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_relu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_leaky_relu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a, float negative_slope, bool inplace);
+
+    GGML_API struct ggml_tensor * ggml_relu_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sigmoid(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_sigmoid_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_gelu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_gelu_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // GELU using erf (error function) when possible
+    // some backends may fallback to approximation based on Abramowitz and Stegun formula
+    GGML_API struct ggml_tensor * ggml_gelu_erf(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_gelu_erf_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_gelu_quick(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_gelu_quick_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_silu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_silu_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // a - x
+    // b - dy
+    GGML_API struct ggml_tensor * ggml_silu_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    // hardswish(x) = x * relu6(x + 3) / 6
+    GGML_API struct ggml_tensor * ggml_hardswish(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // hardsigmoid(x) = relu6(x + 3) / 6
+    GGML_API struct ggml_tensor * ggml_hardsigmoid(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_exp(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_exp_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_floor(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_floor_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_ceil(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_ceil_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_round(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_round_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+     /**
+     * Truncates the fractional part of each element in the tensor (towards zero).
+     * For example: trunc(3.7) = 3.0, trunc(-2.9) = -2.0
+     * Similar to std::trunc in C/C++.
+     */
+
+    GGML_API struct ggml_tensor * ggml_trunc(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_trunc_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+
+
+    // xIELU activation function
+    // x = x * (c_a(alpha_n) + c_b(alpha_p, beta) * sigmoid(beta * x)) + eps * (x > 0)
+    // where c_a = softplus and c_b(a, b) = softplus(a) + b are constraining functions
+    // that constrain the positive and negative source alpha values respectively
+    GGML_API struct ggml_tensor * ggml_xielu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float alpha_n,
+            float alpha_p,
+            float beta,
+            float eps);
+
+    // gated linear unit ops
+    // A: n columns, r rows,
+    // result is n / 2 columns, r rows,
+    // expects gate in second half of row, unless swapped is true
+    GGML_API struct ggml_tensor * ggml_glu(
+            struct ggml_context * ctx,
+             struct ggml_tensor * a,
+             enum ggml_glu_op     op,
+             bool                 swapped);
+
+    GGML_API struct ggml_tensor * ggml_reglu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_reglu_swapped(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_geglu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_geglu_swapped(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_swiglu(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_swiglu_swapped(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_geglu_erf(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_geglu_erf_swapped(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_geglu_quick(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_geglu_quick_swapped(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // A: n columns, r rows,
+    // B: n columns, r rows,
+    GGML_API struct ggml_tensor * ggml_glu_split(
+            struct ggml_context * ctx,
+             struct ggml_tensor * a,
+             struct ggml_tensor * b,
+             enum ggml_glu_op     op);
+
+    GGML_API struct ggml_tensor * ggml_reglu_split(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_geglu_split(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_swiglu_split(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_swiglu_ds4_split(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * gate,
+            struct ggml_tensor  * up,
+            float                 clamp);
+
+    GGML_API struct ggml_tensor * ggml_geglu_erf_split(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_geglu_quick_split(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_swiglu_oai(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            float                 alpha,
+            float                 limit);
+
+    // normalize along rows
+    GGML_API struct ggml_tensor * ggml_norm(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 eps);
+
+    GGML_API struct ggml_tensor * ggml_norm_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 eps);
+
+    GGML_API struct ggml_tensor * ggml_rms_norm(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 eps);
+
+    GGML_API struct ggml_tensor * ggml_rms_norm_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 eps);
+
+    // HIP wave32 only: contiguous F32 [1024, rows], 16 <= rows <= INT_MAX/1024.
+    // Input values must be BF16-representable. Returns normalized F32 before
+    // weight multiplication and BF16 rounding; preserves the DS4V source order.
+    GGML_API struct ggml_tensor * ggml_rms_norm_vision_f32(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 eps);
+
+    // Inference-only HIP wave32 operations; no CPU/RPC/backward implementation.
+    // scores: contiguous F32, width 16..4096, positive rows, total bytes <= INT_MAX.
+    GGML_API struct ggml_tensor * ggml_soft_max_vision_f32(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * scores);
+
+    // v: contiguous F32 [64,16,N,1], probabilities: contiguous F32 [N,N,16,1].
+    // N is 16..4096; result is F32 [64,N,16,1].
+    GGML_API struct ggml_tensor * ggml_mul_mat_vision_av_f32(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * probabilities);
+
+
+    // group normalize along ne0*ne1*n_groups
+    // used in stable-diffusion
+    GGML_API struct ggml_tensor * ggml_group_norm(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   n_groups,
+            float                 eps);
+
+    GGML_API struct ggml_tensor * ggml_group_norm_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   n_groups,
+            float                 eps);
+
+    // l2 normalize along rows
+    // used in rwkv v7
+    GGML_API struct ggml_tensor * ggml_l2_norm(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 eps);
+
+    GGML_API struct ggml_tensor * ggml_l2_norm_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 eps);
+
+    // a - x
+    // b - dy
+    GGML_API struct ggml_tensor * ggml_rms_norm_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            float                 eps);
+
+    // A: k columns, n rows => [ne03, ne02, n, k]
+    // B: k columns, m rows  (i.e. we transpose it internally) => [ne03 * x, ne02 * y, m, k]
+    // result is n columns, m rows => [ne03 * x, ne02 * y, m, n]
+    // Explicit inference-only BF16 W[k,m], X[k,n], optional bias[m] -> BF16 Y[m,n].
+    // Null bias selects the default Lt epilogue without a bias pointer. A present
+    // bias, including an all-zero vector, selects the fused bias epilogue.
+    // Contiguous 2D operands only; HIP Lt capability required, no fallback.
+    GGML_API struct ggml_tensor * ggml_mul_mat_bias_bf16(
+            struct ggml_context * ctx, struct ggml_tensor * weight,
+            struct ggml_tensor * input, struct ggml_tensor * bias);
+
+    GGML_API struct ggml_tensor * ggml_mul_mat(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    // Matrix multiply where b is physically [K/group, N, group] but is
+    // consumed as logical [K, N]. This is a distinct operation so backends
+    // that do not implement the grouped layout reject it instead of silently
+    // treating the physical storage as an ordinary flattened matrix.
+    // CUDA/HIP MMQ fuses the gather into its Q8 activation quantizer; the CPU
+    // implementation materializes each logical activation row in scratch.
+    GGML_API struct ggml_tensor * ggml_mul_mat_grouped_src(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    GGML_API bool ggml_mul_mat_is_grouped_src(
+            const struct ggml_tensor * tensor);
+
+    GGML_API int64_t ggml_mul_mat_grouped_src_groups(
+            const struct ggml_tensor * tensor);
+
+    // change the precision of a matrix multiplication
+    // set to GGML_PREC_F32 for higher precision (useful for phi-2)
+    GGML_API void ggml_mul_mat_set_prec(
+            struct ggml_tensor * a,
+            enum ggml_prec       prec);
+
+    // Per-operation policy for learned mixed-ROCmFP MMQ. DEFAULT preserves
+    // backend/user policy; ENABLED and DISABLED are graph-local overrides.
+    // Other qtypes and non-MMQ backends are unaffected. Stored in op_params
+    // so scheduler copies and graph replay retain the model's decision.
+    enum ggml_mixed_mmq_policy {
+        GGML_MIXED_MMQ_DEFAULT = 0,
+        GGML_MIXED_MMQ_DISABLED = 1,
+        GGML_MIXED_MMQ_ENABLED = 2,
+    };
+
+    GGML_API void ggml_mul_mat_set_mixed_mmq(
+            struct ggml_tensor * op, enum ggml_mixed_mmq_policy policy);
+    GGML_API enum ggml_mixed_mmq_policy ggml_mul_mat_get_mixed_mmq(
+            const struct ggml_tensor * op);
+
+    // indirect matrix multiplication
+    GGML_API struct ggml_tensor * ggml_mul_mat_id(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * as,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * ids);
+
+    // A: m columns, n rows,
+    // B: p columns, n rows,
+    // result is m columns, p rows
+    GGML_API struct ggml_tensor * ggml_out_prod(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    //
+    // operations on tensors without backpropagation
+    //
+
+    GGML_API struct ggml_tensor * ggml_scale(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 s);
+
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_scale_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 s);
+
+    // x = s * a + b
+    GGML_API struct ggml_tensor * ggml_scale_bias(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a,
+        float                 s,
+        float                 b);
+
+    GGML_API struct ggml_tensor * ggml_scale_bias_inplace(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a,
+        float                 s,
+        float                 b);
+
+    // b -> view(a,offset,nb1,nb2,3), return modified a
+    GGML_API struct ggml_tensor * ggml_set(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            size_t                nb1,
+            size_t                nb2,
+            size_t                nb3,
+            size_t                offset); // in bytes
+
+    // b -> view(a,offset,nb1,nb2,3), return view(a)
+    GGML_API struct ggml_tensor * ggml_set_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            size_t                nb1,
+            size_t                nb2,
+            size_t                nb3,
+            size_t                offset); // in bytes
+
+    GGML_API struct ggml_tensor * ggml_set_1d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            size_t                offset); // in bytes
+
+    GGML_API struct ggml_tensor * ggml_set_1d_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            size_t                offset); // in bytes
+
+    // b -> view(a,offset,nb1,nb2,3), return modified a
+    GGML_API struct ggml_tensor * ggml_set_2d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            size_t                nb1,
+            size_t                offset); // in bytes
+
+    // b -> view(a,offset,nb1,nb2,3), return view(a)
+    GGML_API struct ggml_tensor * ggml_set_2d_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            size_t                nb1,
+            size_t                offset); // in bytes
+
+    // a -> b, return view(b)
+    GGML_API struct ggml_tensor * ggml_cpy(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    // note: casting from f32 to i32 will discard the fractional part
+    GGML_API struct ggml_tensor * ggml_cast(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            enum   ggml_type      type);
+
+    // make contiguous
+    GGML_API struct ggml_tensor * ggml_cont(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // make contiguous, with new shape
+    GGML_API struct ggml_tensor * ggml_cont_1d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0);
+
+    GGML_API struct ggml_tensor * ggml_cont_2d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1);
+
+    GGML_API struct ggml_tensor * ggml_cont_3d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2);
+
+    GGML_API struct ggml_tensor * ggml_cont_4d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2,
+            int64_t               ne3);
+
+    // return view(a), b specifies the new shape
+    // TODO: when we start computing gradient, make a copy instead of view
+    GGML_API struct ggml_tensor * ggml_reshape(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    // return view(a)
+    // TODO: when we start computing gradient, make a copy instead of view
+    GGML_API struct ggml_tensor * ggml_reshape_1d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0);
+
+    GGML_API struct ggml_tensor * ggml_reshape_2d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1);
+
+    // return view(a)
+    // TODO: when we start computing gradient, make a copy instead of view
+    GGML_API struct ggml_tensor * ggml_reshape_3d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2);
+
+    GGML_API struct ggml_tensor * ggml_reshape_4d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2,
+            int64_t               ne3);
+
+    // offset in bytes
+    GGML_API struct ggml_tensor * ggml_view_1d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            size_t                offset);
+
+    GGML_API struct ggml_tensor * ggml_view_2d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1,
+            size_t                nb1, // row stride in bytes
+            size_t                offset);
+
+    GGML_API struct ggml_tensor * ggml_view_3d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2,
+            size_t                nb1, // row   stride in bytes
+            size_t                nb2, // slice stride in bytes
+            size_t                offset);
+
+    GGML_API struct ggml_tensor * ggml_view_4d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2,
+            int64_t               ne3,
+            size_t                nb1, // row   stride in bytes
+            size_t                nb2, // slice stride in bytes
+            size_t                nb3,
+            size_t                offset);
+
+    GGML_API struct ggml_tensor * ggml_permute(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   axis0,
+            int                   axis1,
+            int                   axis2,
+            int                   axis3);
+
+    // alias for ggml_permute(ctx, a, 1, 0, 2, 3)
+    GGML_API struct ggml_tensor * ggml_transpose(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // supports 4D a:
+    // a     [n_embd, ne1, ne2, ne3]
+    // b I32 [n_rows, ne2, ne3, 1]
+    //
+    // return [n_embd, n_rows, ne2, ne3]
+    GGML_API struct ggml_tensor * ggml_get_rows(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,  // data
+            struct ggml_tensor  * b); // row indices
+
+    GGML_API struct ggml_tensor * ggml_get_rows_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,  // gradients of ggml_get_rows result
+            struct ggml_tensor  * b,  // row indices
+            struct ggml_tensor  * c); // data for ggml_get_rows, only used for its shape
+
+    // a TD  [n_embd, ne1,    ne2,    ne3]
+    // b TS  [n_embd, n_rows, ne02,   ne03] | ne02 == ne2, ne03 == ne3
+    // c I64 [n_rows, ne11,   ne12,   1]    | c[i] in [0, ne1)
+    //
+    // undefined behavior if destination rows overlap
+    //
+    // broadcast:
+    //   ne2 % ne11 == 0
+    //   ne3 % ne12 == 0
+    //
+    // return view(a)
+    GGML_API struct ggml_tensor * ggml_set_rows(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,  // destination
+            struct ggml_tensor  * b,  // source
+            struct ggml_tensor  * c); // row indices
+
+    // As ggml_set_rows, but negative row ids are ignored. Intended for
+    // fixed-shape graph buckets whose padding rows must not update state.
+    // Backends that do not implement masking must report this op unsupported.
+    GGML_API struct ggml_tensor * ggml_set_rows_masked(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * c);
+
+    GGML_API struct ggml_tensor * ggml_diag(
+        struct ggml_context     * ctx,
+        struct ggml_tensor      * a);
+
+    // set elements above the diagonal to -INF
+    GGML_API struct ggml_tensor * ggml_diag_mask_inf(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   n_past);
+
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_diag_mask_inf_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   n_past);
+
+    // set elements above the diagonal to 0
+    GGML_API struct ggml_tensor * ggml_diag_mask_zero(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   n_past);
+
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_diag_mask_zero_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   n_past);
+
+    GGML_API struct ggml_tensor * ggml_soft_max(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_soft_max_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a);
+
+    // a    [ne0, ne01, ne02, ne03]
+    // mask [ne0, ne11, ne12, ne13] | ne11 >= ne01, F16 or F32, optional
+    //
+    // broadcast:
+    //   ne02 % ne12 == 0
+    //   ne03 % ne13 == 0
+    //
+    // fused soft_max(a*scale + mask*(ALiBi slope))
+    // max_bias = 0.0f for no ALiBi
+    GGML_API struct ggml_tensor * ggml_soft_max_ext(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * mask,
+            float                 scale,
+            float                 max_bias);
+
+    GGML_API struct ggml_tensor * ggml_soft_max_ext_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * mask,
+            float                 scale,
+            float                 max_bias);
+
+    // Lucebox: softmax over [a | sink] per row with the sink as a virtual last
+    // column, scale folded in (a*scale), no mask. sinks holds one value per row
+    // of a (ne[0] == ggml_nrows(a)). Bit-identical to scale -> concat(sink) ->
+    // soft_max -> view, in one launch with a contiguous result of a's shape.
+    GGML_API struct ggml_tensor * ggml_soft_max_ext_sink_col(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * sinks,
+            float                 scale);
+
+    // ggml_soft_max_ext_sink_col with an additive mask (scale, then the mask,
+    // rounded as separate scale and add launches round them); a is
+    // [n_cols, rows, ...] and mask [n_cols, >= rows, ...] broadcast over
+    // dims 2 and 3.
+    GGML_API struct ggml_tensor * ggml_soft_max_ext_sink_col_mask(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * mask,
+            struct ggml_tensor  * sinks,
+            float                 scale);
+
+    GGML_API void ggml_soft_max_add_sinks(
+            struct ggml_tensor * a,
+            struct ggml_tensor * sinks);
+
+    GGML_API struct ggml_tensor * ggml_soft_max_ext_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            float                 scale,
+            float                 max_bias);
+
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_soft_max_ext_back_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            float                 scale,
+            float                 max_bias);
+
+    // rotary position embedding
+    // if (mode & 1) - skip n_past elements (NOT SUPPORTED)
+    // if (mode & GGML_ROPE_TYPE_NEOX) - GPT-NeoX style
+    //
+    // b is an int32 vector with size a->ne[2], it contains the positions
+    GGML_API struct ggml_tensor * ggml_rope(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            int                   n_dims,
+            int                   mode);
+
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_rope_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            int                   n_dims,
+            int                   mode);
+
+    // custom RoPE
+    // c is freq factors (e.g. phi3-128k), (optional)
+    GGML_API struct ggml_tensor * ggml_rope_ext(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * c,
+            int                   n_dims,
+            int                   mode,
+            int                   n_ctx_orig,
+            float                 freq_base,
+            float                 freq_scale,
+            float                 ext_factor,
+            float                 attn_factor,
+            float                 beta_fast,
+            float                 beta_slow);
+
+    GGML_API struct ggml_tensor * ggml_rope_multi(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * c,
+            int                   n_dims,
+            int                   sections[GGML_MROPE_SECTIONS],
+            int                   mode,
+            int                   n_ctx_orig,
+            float                 freq_base,
+            float                 freq_scale,
+            float                 ext_factor,
+            float                 attn_factor,
+            float                 beta_fast,
+            float                 beta_slow);
+
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_rope_ext_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * c,
+            int                   n_dims,
+            int                   mode,
+            int                   n_ctx_orig,
+            float                 freq_base,
+            float                 freq_scale,
+            float                 ext_factor,
+            float                 attn_factor,
+            float                 beta_fast,
+            float                 beta_slow);
+
+    GGML_API struct ggml_tensor * ggml_rope_multi_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * c,
+            int                   n_dims,
+            int                   sections[GGML_MROPE_SECTIONS],
+            int                   mode,
+            int                   n_ctx_orig,
+            float                 freq_base,
+            float                 freq_scale,
+            float                 ext_factor,
+            float                 attn_factor,
+            float                 beta_fast,
+            float                 beta_slow);
+
+    GGML_DEPRECATED(GGML_API struct ggml_tensor * ggml_rope_custom(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            int                   n_dims,
+            int                   mode,
+            int                   n_ctx_orig,
+            float                 freq_base,
+            float                 freq_scale,
+            float                 ext_factor,
+            float                 attn_factor,
+            float                 beta_fast,
+            float                 beta_slow),
+        "use ggml_rope_ext instead");
+
+    GGML_DEPRECATED(GGML_API struct ggml_tensor * ggml_rope_custom_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            int                   n_dims,
+            int                   mode,
+            int                   n_ctx_orig,
+            float                 freq_base,
+            float                 freq_scale,
+            float                 ext_factor,
+            float                 attn_factor,
+            float                 beta_fast,
+            float                 beta_slow),
+        "use ggml_rope_ext_inplace instead");
+
+    // compute correction dims for YaRN RoPE scaling
+    GGML_API void ggml_rope_yarn_corr_dims(
+        int n_dims, int n_ctx_orig, float freq_base, float beta_fast, float beta_slow, float dims[2]);
+
+    // rotary position embedding backward, i.e compute dx from dy
+    // a - dy
+    GGML_API struct ggml_tensor * ggml_rope_ext_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a, // gradients of ggml_rope result
+            struct ggml_tensor  * b, // positions
+            struct ggml_tensor  * c, // freq factors
+            int                   n_dims,
+            int                   mode,
+            int                   n_ctx_orig,
+            float                 freq_base,
+            float                 freq_scale,
+            float                 ext_factor,
+            float                 attn_factor,
+            float                 beta_fast,
+            float                 beta_slow);
+
+    GGML_API struct ggml_tensor * ggml_rope_multi_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * c,
+            int                   n_dims,
+            int                   sections[4],
+            int                   mode,
+            int                   n_ctx_orig,
+            float                 freq_base,
+            float                 freq_scale,
+            float                 ext_factor,
+            float                 attn_factor,
+            float                 beta_fast,
+            float                 beta_slow);
+
+
+    // clamp
+    // in-place, returns view(a)
+    GGML_API struct ggml_tensor * ggml_clamp(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 min,
+            float                 max);
+
+    // im2col
+    // converts data into a format that effectively results in a convolution when combined with matrix multiplication
+    GGML_API struct ggml_tensor * ggml_im2col(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,  // convolution kernel
+            struct ggml_tensor  * b,  // data
+            int                   s0, // stride dimension 0
+            int                   s1, // stride dimension 1
+            int                   p0, // padding dimension 0
+            int                   p1, // padding dimension 1
+            int                   d0, // dilation dimension 0
+            int                   d1, // dilation dimension 1
+            bool                  is_2D,
+            enum ggml_type        dst_type);
+
+    GGML_API struct ggml_tensor * ggml_im2col_back(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a,  // convolution kernel
+        struct ggml_tensor  * b,  // gradient of im2col output
+        int64_t             * ne, // shape of im2col input
+        int                   s0, // stride dimension 0
+        int                   s1, // stride dimension 1
+        int                   p0, // padding dimension 0
+        int                   p1, // padding dimension 1
+        int                   d0, // dilation dimension 0
+        int                   d1, // dilation dimension 1
+        bool                  is_2D);
+
+    GGML_API struct ggml_tensor * ggml_conv_1d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,   // convolution kernel
+            struct ggml_tensor  * b,   // data
+            int                   s0,  // stride
+            int                   p0,  // padding
+            int                   d0); // dilation
+
+    // conv_1d with padding = half
+    // alias for ggml_conv_1d(a, b, s, a->ne[0]/2, d)
+    GGML_API struct ggml_tensor* ggml_conv_1d_ph(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,  // convolution kernel
+            struct ggml_tensor  * b,  // data
+            int                   s,  // stride
+            int                   d); // dilation
+
+    // depthwise
+    // TODO: this is very likely wrong for some cases! - needs more testing
+    GGML_API struct ggml_tensor * ggml_conv_1d_dw(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,   // convolution kernel
+            struct ggml_tensor  * b,   // data
+            int                   s0,  // stride
+            int                   p0,  // padding
+            int                   d0); // dilation
+
+    GGML_API struct ggml_tensor * ggml_conv_1d_dw_ph(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,   // convolution kernel
+            struct ggml_tensor  * b,   // data
+            int                   s0,  // stride
+            int                   d0); // dilation
+
+    GGML_API struct ggml_tensor * ggml_conv_transpose_1d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,   // convolution kernel
+            struct ggml_tensor  * b,   // data
+            int                   s0,  // stride
+            int                   p0,  // padding
+            int                   d0); // dilation
+
+    GGML_API struct ggml_tensor * ggml_conv_2d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,   // convolution kernel
+            struct ggml_tensor  * b,   // data
+            int                   s0,  // stride dimension 0
+            int                   s1,  // stride dimension 1
+            int                   p0,  // padding dimension 0
+            int                   p1,  // padding dimension 1
+            int                   d0,  // dilation dimension 0
+            int                   d1); // dilation dimension 1
+
+    GGML_API struct ggml_tensor * ggml_im2col_3d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            int64_t               IC,
+            int                   s0, // stride width
+            int                   s1, // stride height
+            int                   s2, // stride depth
+            int                   p0, // padding width
+            int                   p1, // padding height
+            int                   p2, // padding depth
+            int                   d0, // dilation width
+            int                   d1, // dilation height
+            int                   d2, // dilation depth
+            enum ggml_type        dst_type);
+
+    // a: [OC*IC, KD, KH, KW]
+    // b: [N*IC, ID, IH, IW]
+    // result: [N*OC, OD, OH, OW]
+    GGML_API struct ggml_tensor * ggml_conv_3d(
+                struct ggml_context * ctx,
+                struct ggml_tensor  * a,
+                struct ggml_tensor  * b,
+                int64_t               IC,
+                int                   s0, // stride width
+                int                   s1, // stride height
+                int                   s2, // stride depth
+                int                   p0, // padding width
+                int                   p1, // padding height
+                int                   p2, // padding depth
+                int                   d0, // dilation width
+                int                   d1, // dilation height
+                int                   d2  // dilation depth
+        );
+
+    // kernel size is a->ne[0] x a->ne[1]
+    // stride is equal to kernel size
+    // padding is zero
+    // example:
+    // a:     16   16    3  768
+    // b:   1024 1024    3    1
+    // res:   64   64  768    1
+    // used in sam
+    GGML_API struct ggml_tensor * ggml_conv_2d_sk_p0(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    // kernel size is a->ne[0] x a->ne[1]
+    // stride is 1
+    // padding is half
+    // example:
+    // a:      3    3    256  256
+    // b:     64   64    256    1
+    // res:   64   64    256    1
+    // used in sam
+    GGML_API struct ggml_tensor * ggml_conv_2d_s1_ph(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b);
+
+    // depthwise (via im2col and mul_mat)
+    GGML_API struct ggml_tensor * ggml_conv_2d_dw(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,  // convolution kernel
+            struct ggml_tensor  * b,  // data
+            int                  s0,  // stride dimension 0
+            int                  s1,  // stride dimension 1
+            int                  p0,  // padding dimension 0
+            int                  p1,  // padding dimension 1
+            int                  d0,  // dilation dimension 0
+            int                  d1); // dilation dimension 1
+
+    // Depthwise 2D convolution
+    // may be faster than ggml_conv_2d_dw, but not available in all backends
+    // a:   KW    KH    1    C    convolution kernel
+    // b:   W     H     C    N    input data
+    // res: W_out H_out C    N
+    GGML_API struct ggml_tensor * ggml_conv_2d_dw_direct(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            int                   stride0,
+            int                   stride1,
+            int                   pad0,
+            int                   pad1,
+            int                   dilation0,
+            int                   dilation1);
+
+    GGML_API struct ggml_tensor * ggml_conv_transpose_2d_p0(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            int                   stride);
+
+    GGML_API struct ggml_tensor * ggml_conv_2d_direct(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,   // convolution kernel [KW, KH, IC, OC]
+            struct ggml_tensor  * b,   // input data [W, H, C, N]
+            int                   s0,  // stride dimension 0
+            int                   s1,  // stride dimension 1
+            int                   p0,  // padding dimension 0
+            int                   p1,  // padding dimension 1
+            int                   d0,  // dilation dimension 0
+            int                   d1); // dilation dimension 1
+
+    GGML_API struct ggml_tensor * ggml_conv_3d_direct(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,   // kernel [KW, KH, KD, IC * OC]
+            struct ggml_tensor  * b,   // input  [W, H, D, C * N]
+            int                   s0,  // stride
+            int                   s1,
+            int                   s2,
+            int                   p0,  // padding
+            int                   p1,
+            int                   p2,
+            int                   d0,  // dilation
+            int                   d1,
+            int                   d2,
+            int                   n_channels,
+            int                   n_batch,
+            int                   n_channels_out);
+
+    enum ggml_op_pool {
+        GGML_OP_POOL_MAX,
+        GGML_OP_POOL_AVG,
+        GGML_OP_POOL_COUNT,
+    };
+
+    GGML_API struct ggml_tensor * ggml_pool_1d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            enum ggml_op_pool     op,
+            int                   k0, // kernel size
+            int                   s0, // stride
+            int                   p0); // padding
+
+    // the result will have 2*p0 padding for the first dimension
+    // and 2*p1 padding for the second dimension
+    GGML_API struct ggml_tensor * ggml_pool_2d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            enum ggml_op_pool     op,
+            int                   k0,
+            int                   k1,
+            int                   s0,
+            int                   s1,
+            float                 p0,
+            float                 p1);
+
+    GGML_API struct ggml_tensor * ggml_pool_2d_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * af, // "a"/input used in forward pass
+            enum ggml_op_pool     op,
+            int                   k0,
+            int                   k1,
+            int                   s0,
+            int                   s1,
+            float                 p0,
+            float                 p1);
+
+    enum ggml_scale_mode {
+        GGML_SCALE_MODE_NEAREST  = 0,
+        GGML_SCALE_MODE_BILINEAR = 1,
+        GGML_SCALE_MODE_BICUBIC  = 2,
+
+        GGML_SCALE_MODE_COUNT
+    };
+
+    enum ggml_scale_flag {
+        GGML_SCALE_FLAG_ALIGN_CORNERS = (1 << 8),
+        GGML_SCALE_FLAG_ANTIALIAS     = (1 << 9),
+    };
+
+    // interpolate
+    // multiplies ne0 and ne1 by scale factor
+    GGML_API struct ggml_tensor * ggml_upscale(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   scale_factor,
+            enum ggml_scale_mode  mode);
+
+    // interpolate
+    // interpolate scale to specified dimensions
+    GGML_DEPRECATED(GGML_API struct ggml_tensor * ggml_upscale_ext(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   ne0,
+            int                   ne1,
+            int                   ne2,
+            int                   ne3,
+            enum ggml_scale_mode  mode),
+        "use ggml_interpolate instead");
+
+    // Up- or downsamples the input to the specified size.
+    // 2D scale modes (eg. bilinear) are applied to the first two dimensions.
+    GGML_API struct ggml_tensor * ggml_interpolate(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2,
+            int64_t               ne3,
+            uint32_t              mode); // ggml_scale_mode [ | ggml_scale_flag...]
+
+    // pad each dimension with zeros: [x, ..., x] -> [x, ..., x, 0, ..., 0]
+    GGML_API struct ggml_tensor * ggml_pad(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                  p0,
+            int                  p1,
+            int                  p2,
+            int                  p3);
+
+    // pad each dimension with values on the other side of the torus (looping around)
+    GGML_API struct ggml_tensor * ggml_pad_circular(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   p0,
+            int                   p1,
+            int                   p2,
+            int                   p3);
+
+    GGML_API struct ggml_tensor * ggml_pad_ext(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                  lp0,
+            int                  rp0,
+            int                  lp1,
+            int                  rp1,
+            int                  lp2,
+            int                  rp2,
+            int                  lp3,
+            int                  rp3
+            );
+
+    // pad each dimension with values on the other side of the torus (looping around)
+    GGML_API struct ggml_tensor * ggml_pad_ext_circular(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   lp0,
+            int                   rp0,
+            int                   lp1,
+            int                   rp1,
+            int                   lp2,
+            int                   rp2,
+            int                   lp3,
+            int                   rp3);
+
+    // pad each dimension with reflection: [a, b, c, d] -> [b, a, b, c, d, c]
+    GGML_API struct ggml_tensor * ggml_pad_reflect_1d(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   p0,
+            int                   p1);
+
+    // Move tensor elements by an offset given for each dimension. Elements that
+    // are shifted beyond the last position are wrapped around to the beginning.
+    GGML_API struct ggml_tensor * ggml_roll(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   shift0,
+            int                   shift1,
+            int                   shift2,
+            int                   shift3);
+
+    // Convert matrix into a triangular one (upper, strict upper, lower or strict lower) by writing
+    // zeroes everywhere outside the masked area
+    GGML_API struct ggml_tensor * ggml_tri(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            enum ggml_tri_type    type);
+
+    // Fill tensor a with constant c
+    GGML_API struct ggml_tensor * ggml_fill(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 c);
+
+    GGML_API struct ggml_tensor * ggml_fill_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 c);
+
+    // Ref: https://github.com/CompVis/stable-diffusion/blob/main/ldm/modules/diffusionmodules/util.py#L151
+    // timesteps: [N,]
+    // return: [N, dim]
+    GGML_API struct ggml_tensor * ggml_timestep_embedding(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * timesteps,
+            int                   dim,
+            int                   max_period);
+
+    // sort rows
+    enum ggml_sort_order {
+        GGML_SORT_ORDER_ASC,
+        GGML_SORT_ORDER_DESC,
+    };
+
+    GGML_API struct ggml_tensor * ggml_argsort(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            enum ggml_sort_order  order);
+
+    // similar to ggml_top_k but implemented as `argsort` + `view`
+    GGML_API struct ggml_tensor * ggml_argsort_top_k(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   k);
+
+    // top k elements per row
+    // note: the resulting top k indices are in no particular order
+    GGML_API struct ggml_tensor * ggml_top_k(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   k);
+
+    // Exact-width QSA top-512 on padded score rows. valid is I32 with one
+    // count per row (any strides), 513 <= min_valid <= valid[r] <= a->ne[0].
+    // Visible scores are nonnegative (zero must be +0); the suffix is -1e30.
+    // Each row preserves this backend's one-row top_k membership AND order,
+    // including ties. Query backend support first.
+    GGML_API struct ggml_tensor * ggml_top_k_qsa(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * valid,
+            int                   min_valid);
+
+    GGML_API struct ggml_tensor * ggml_arange(
+            struct ggml_context * ctx,
+            float                 start,
+            float                 stop,
+            float                 step);
+
+    // q:    [n_embd_k, n_batch, n_head,    ne3 ]
+    // k:    [n_embd_k, n_kv,    n_head_kv, ne3 ]
+    // v:    [n_embd_v, n_kv,    n_head_kv, ne3 ] !! not transposed !!
+    // mask: [n_kv,     n_batch, ne32,      ne33]
+    // res:  [n_embd_v, n_head,  n_batch,   ne3 ] !! permuted !!
+    //
+    // broadcast:
+    //   n_head % n_head_kv == 0
+    //   n_head % ne32      == 0
+    //   ne3    % ne33      == 0
+    //
+    GGML_API struct ggml_tensor * ggml_flash_attn_ext(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * mask,
+            float                 scale,
+            float                 max_bias,
+            float                 logit_softcap);
+
+    GGML_API void ggml_flash_attn_ext_set_prec(
+            struct ggml_tensor * a,
+            enum ggml_prec       prec);
+
+    // DS4 layout and block-sparse policy for flash_attn_ext. raw_window is the
+    // maximum visible span inside the raw-row region. Compressed rows are
+    // selected in fixed-size blocks, capped to keep_rows. Zero leaves the
+    // operation dense. A negative value means the mask already contains an
+    // exact row selection and abs(keep_rows) is its maximum compressed width.
+    GGML_API void ggml_flash_attn_ext_set_ds4_sparse(
+            struct ggml_tensor * a,
+            int                  raw_rows,
+            int                  raw_window,
+            int                  keep_rows,
+            int                  block_size);
+
+    // Attach the exact DS4 compressed-row selection directly to flash
+    // attention. selected is I32 [keep_rows,n_batch] and indexes the
+    // compressed span (that is, rows after raw_rows). The DS4 HIP kernel sorts
+    // these score-ordered indices into physical-row order before reduction so
+    // the numerical topology stays identical to the mask-derived path.
+    GGML_API void ggml_flash_attn_ext_set_ds4_indexer_topk(
+            struct ggml_tensor * a,
+            struct ggml_tensor * selected);
+
+    // Present a logical DS4 KV sequence as three contiguous row segments
+    // without materializing their concatenation. Requires K and V to be the
+    // same tensor (MLA latent KV); only the split-KV decode kernel consumes it. `a` keeps the raw segment in
+    // src[1]/src[2]; `compressed` and `preserved_tail` (K's type and D,
+    // contiguous [D, rows]) are appended in that order and stored in
+    // src[7]/src[8]. Row indices, the mask width and the raw-row count in
+    // op_params address the concatenated sequence. Only the native D=512
+    // CUDA/HIP split-KV decode kernel (indexed mask, n_tokens <= 8) consumes
+    // the segments; no other backend or shape implements them.
+    GGML_API void ggml_flash_attn_ext_set_ds4_kv_segments(
+            struct ggml_tensor * a,
+            struct ggml_tensor * compressed,
+            struct ggml_tensor * preserved_tail);
+
+    // Mark a maskless DS4 layer-major attention op whose raw and compressed
+    // rows have monotonic causal frontiers. A value of 1 denotes raw-only
+    // sliding-window attention; values greater than 1 are the compression
+    // ratio of the contiguous compressed interval.
+    GGML_API void ggml_flash_attn_ext_set_ds4_causal_ratio(
+            struct ggml_tensor * a,
+            int                  ratio);
+
+    // Fuse DS4's inverse 64-d tail RoPE into the D=512 flash-attention
+    // writeback. q_unrotated additionally asks the kernel to apply the forward
+    // tail RoPE to Q from shared F32. This is exact-only plumbing: both paths
+    // retain the explicit F32 rounding boundary and YaRN arithmetic used by
+    // GGML_OP_ROPE.
+    GGML_API void ggml_flash_attn_ext_set_ds4_inverse_rope(
+            struct ggml_tensor * a,
+            int                  kv_start,
+            float                freq_base,
+            float                freq_scale,
+            float                ext_factor,
+            float                attn_factor,
+            float                beta_fast,
+            float                beta_slow,
+            int                  n_ctx_orig,
+            bool                 q_unrotated);
+
+    // Optional runtime positions for both fused RoPE directions. I32 [n_query]
+    // replaces kv_start + query_index, allowing a cached graph to advance
+    // without rebuilding its topology or retaining stale position constants.
+    GGML_API void ggml_flash_attn_ext_set_ds4_rope_positions(
+            struct ggml_tensor * a,
+            struct ggml_tensor * positions);
+
+    // Run several single-token query lanes of one raw ring in one op, as if
+    // each lane wrote its own ring row and then attended before the next lane
+    // wrote: query token t reads lane_kv row j in place of ring row
+    // ring_rows[j] for every j <= t, and the ring's own contents elsewhere.
+    // ring_rows is I32 [n_query] (row indices into the raw segment), lane_kv
+    // has K's type and is contiguous [D, n_query]. Every other row, the mask
+    // and the selection keep their per-token meaning, so each token's result
+    // equals the single-token op over its own ring state bit for bit. Only the
+    // D=512 split-KV decode kernel consumes it (segmented K/V, indexed mask,
+    // n_query <= 8, no fused RoPE: ring_rows takes the RoPE positions slot).
+    GGML_API void ggml_flash_attn_ext_set_ds4_lane_rows(
+            struct ggml_tensor * a,
+            struct ggml_tensor * ring_rows,
+            struct ggml_tensor * lane_kv);
+
+    // True when flash_attn_ext carries the DS4 sparse-layout or fused-RoPE
+    // contract. Backends must implement that complete contract or reject it.
+    GGML_API bool ggml_flash_attn_ext_is_ds4(
+            const struct ggml_tensor * a);
+
+    GGML_API enum ggml_prec ggml_flash_attn_ext_get_prec(
+            const struct ggml_tensor * a);
+
+    GGML_API void ggml_flash_attn_ext_add_sinks(
+            struct ggml_tensor * a,
+            struct ggml_tensor * sinks);
+
+    // Marks a flash attention whose mask leaves whole spans of the KV cache at
+    // -inf for every query (a ring cache with an unfilled middle, say). A
+    // backend may then skip the KV tiles that every query row masks out: such
+    // a tile adds exact zeros to the softmax sums and does not move their
+    // maximum, so the result is bit-identical. Backends that ignore the hint
+    // stay correct. Op param GGML_FLASH_ATTN_EXT_SPARSE_MASK_PARAM: every slot
+    // is taken, so it shares slot 12 with the DS4 inverse RoPE's attn_factor.
+    // The mark is refused on, and never read from, a DS4 flash attention.
+    #define GGML_FLASH_ATTN_EXT_SPARSE_MASK_PARAM 12
+    GGML_API void ggml_flash_attn_ext_set_sparse_mask(
+            struct ggml_tensor * a,
+            bool                 sparse);
+
+    GGML_API bool ggml_flash_attn_ext_get_sparse_mask(
+            const struct ggml_tensor * a);
+
+    // Block-sparse flash attention (pFlash).
+    // Selects top-scoring K-blocks dynamically based on alpha threshold.
+    // alpha=1.0 selects all blocks (equivalent to dense attention).
+    // Q: [D, S, H, B], K: [D, S, Hk, B], V: [D, S, Hk, B] (ggml layout)
+    // Returns: [D, H, S, B] F32 (same shape as ggml_flash_attn_ext output)
+    GGML_API struct ggml_tensor * ggml_flash_attn_sparse(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            float                 scale,
+            float                 alpha);
+
+    // Decode-only attention over independently allocated physical KV blocks.
+    // q:            [D, n_seq, n_head] F32 (one query per sequence)
+    // k/v:          [D, pool_tokens, n_head_kv]
+    // block_table:  [max_blocks, n_seq] I32
+    // kv_seq_lens: [n_seq] I32 (valid cached K/V tokens per sequence)
+    // max_kv_seq_len: host-known maximum of kv_seq_lens, used to size the
+    //                 CUDA/HIP launch without reading block-table capacity
+    // res:          [D, n_seq, n_head] F32
+    //
+    // A logical token t is read from physical row
+    // block_table[t/block_size, seq]*block_size + t%block_size.
+    // The initial CUDA/HIP implementation supports D=256 and independently
+    // typed F16, Q4_0, or Q8_0 K/V pools.
+    // active_slot_ids optionally maps compact query rows to physical block-
+    // table columns / length entries. A negative id is a padding row and
+    // produces a zero attention output. NULL selects row identity.
+    // query_positions optionally carries per-row inclusive causal positions
+    // (I32 [n_query], requires active_slot_ids): row i attends the first
+    // min(kv_seq_len, positions[i]+1) cached tokens of its sequence, so
+    // prefill chunks can attend the paged pool causally. A negative position
+    // marks a padding row. NULL keeps the decode semantics (full cached
+    // length per row).
+    //
+    GGML_API struct ggml_tensor * ggml_paged_attn_ext(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * block_table,
+            struct ggml_tensor  * kv_seq_lens,
+            struct ggml_tensor  * active_slot_ids,
+            struct ggml_tensor  * query_positions,
+            float                 scale,
+            int                   block_size,
+            int                   max_kv_seq_len);
+
+    // Packed tree verification over the same paged K/V pool.
+    // In a pure-tree batch, queries are flattened sequence-major and tree
+    // sequence s occupies rows [s*tree_width, (s+1)*tree_width). In a mixed
+    // AR/tree batch, the compact AR rows come first. Tree sequence s starts at
+    // ar_rows + s*tree_width, where
+    // ar_rows = q_rows - n_tree_seq*tree_width. parent_ids is tree-local,
+    // contiguous I32 [tree_width, n_tree_seq] (root parent -1), and tree_sizes
+    // is contiguous I32 [n_tree_seq]. active_slot_ids is required per query row;
+    // it selects the physical block-table column and scratch slab. Each live
+    // query attends its complete committed prefix from the block table plus
+    // its own candidate node and ancestors from physical K/V rows
+    // tree_scratch_base + slot*tree_scratch_stride + node. Siblings and rows
+    // at or beyond tree_sizes[s] are excluded. query_positions may describe
+    // compact autoregressive rows in a mixed AR/tree batch; tree rows ignore
+    // it and read the full committed prefix. Pure tree batches pass NULL.
+    // tree_width is derived from parent_ids.
+    GGML_API struct ggml_tensor * ggml_paged_attn_ext_tree(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * block_table,
+            struct ggml_tensor  * kv_seq_lens,
+            struct ggml_tensor  * active_slot_ids,
+            struct ggml_tensor  * query_positions,
+            float                 scale,
+            int                   block_size,
+            int                   max_kv_seq_len,
+            struct ggml_tensor  * parent_ids,
+            struct ggml_tensor  * tree_sizes,
+            int                   tree_scratch_base,
+            int                   tree_scratch_stride);
+
+    // TurboQuant FWHT rotation. direction: 0 = forward, 1 = inverse.
+    // Applies signs1 -> FWHT -> signs2 (forward) or signs2 -> FWHT -> signs1 (inverse).
+    // Used for KV cache rotation in TurboQuant quantization types (TQ3_0).
+    GGML_API struct ggml_tensor * ggml_turbo_wht(
+            struct ggml_context * ctx,
+             struct ggml_tensor * a,
+                              int direction);
+
+    // GGML_OP_MOE_FUSED multiplexes a small family of GPU-only MoE helpers.
+    // Parameter zero normally contains n_embd; negative values identify the
+    // specialized sub-operation. Keep the values named so graph schedulers
+    // and backends do not depend on unexplained integer literals.
+    enum ggml_moe_fused_subop {
+        GGML_MOE_FUSED_COMBINE            = -1,
+        GGML_MOE_FUSED_OWNER              = -2,
+        GGML_MOE_FUSED_DEFERRED_PEER_COPY = -3,
+        GGML_MOE_FUSED_OWNER_SPLIT        = -4,
+        GGML_MOE_FUSED_ALIGN_IDS          = -5,
+        GGML_MOE_FUSED_BALANCED_OWNER_IDS = -6,
+        GGML_MOE_FUSED_CLUSTER_ALLREDUCE  = -7,
+        GGML_MOE_FUSED_HOST_POST          = -8,
+        GGML_MOE_FUSED_HOST_WAIT          = -9,
+        GGML_MOE_FUSED_PROTECTED_ROUTES   = -10,
+        GGML_MOE_FUSED_COMBINE_MASKED     = -11,
+        GGML_MOE_FUSED_PREFETCH           = -12,
+        GGML_MOE_FUSED_PREFETCH_ROWS      = -13,
+        GGML_MOE_FUSED_WAKE_HOLD          = -14,
+        GGML_MOE_FUSED_HOT_ROUTES         = -15,
+        GGML_MOE_FUSED_COMBINE_LANES      = -16,
+    };
+
+    // Word offsets in ggml_tensor::op_params for the host mailbox pair. All
+    // three pointers start at naturally aligned 64-bit boundaries.
+    enum ggml_moe_fused_host_mailbox_param {
+        GGML_MOE_FUSED_HOST_STEP_WORD    = 2,
+        GGML_MOE_FUSED_HOST_FLAG_WORD    = 4,
+        GGML_MOE_FUSED_HOST_PAYLOAD_WORD = 6,
+    };
+
+    // Word offsets in ggml_tensor::op_params for the in-graph collective.
+    // Both pointers start at naturally aligned 64-bit boundaries.
+    enum ggml_moe_fused_cluster_allreduce_param {
+        GGML_MOE_FUSED_CLUSTER_ALLREDUCE_FN_WORD   = 2,
+        GGML_MOE_FUSED_CLUSTER_ALLREDUCE_USER_WORD = 4,
+    };
+
+    // Sums `n` float elements at `data` element-wise across the caller's
+    // process group, in place, enqueued on `stream` (cudaStream_t /
+    // hipStream_t as an opaque pointer). ggml deliberately does not know how
+    // the sum is produced: the caller registers this callback, so no
+    // collective library becomes a ggml dependency.
+    typedef void (*ggml_cluster_allreduce_fn)(void * user, void * data,
+                                              size_t n, void * stream);
+
+    // Word offsets in ggml_tensor::op_params for the deferred peer-copy op.
+    // Both pointers start at naturally aligned 64-bit boundaries.
+    enum ggml_moe_fused_deferred_peer_param {
+        GGML_MOE_FUSED_DEFERRED_EVENT_WORD         = 2,
+        GGML_MOE_FUSED_DEFERRED_SOURCE_WORD        = 4,
+        GGML_MOE_FUSED_DEFERRED_EXTERNAL_WAIT_WORD = 7,
+    };
+
+    GGML_API struct ggml_tensor * ggml_moe_fused(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * input,
+            struct ggml_tensor  * gate_w,
+            struct ggml_tensor  * up_w,
+            struct ggml_tensor  * down_w,
+            struct ggml_tensor  * expert_ids,
+            struct ggml_tensor  * expert_weights,
+            struct ggml_tensor  * sh_gate_w,
+            struct ggml_tensor  * sh_up_w,
+            struct ggml_tensor  * sh_down_w,
+            struct ggml_tensor  * sh_gate_inp_w,
+            int64_t               n_embd,
+            int64_t               ff_dim,
+            int64_t               n_expert_used);
+
+    // In-graph collective: `a` is summed element-wise across the process
+    // group and the sum becomes this node's value. The collective is enqueued
+    // on the executing backend's own stream, so it is ordered after the
+    // kernels that produced `a` and before the kernels that consume the
+    // result, without a host synchronization. GPU backends only; `a` must be
+    // contiguous F32.
+    GGML_API struct ggml_tensor * ggml_cluster_allreduce(
+            struct ggml_context     * ctx,
+            struct ggml_tensor      * a,
+            ggml_cluster_allreduce_fn fn,
+            void                    * user);
+
+    // The same collective in place: the result is a view of `a`, so the sum
+    // overwrites `a` and no device copy runs ahead of the collective. Only
+    // for an `a` that no other node reads.
+    GGML_API struct ggml_tensor * ggml_cluster_allreduce_inplace(
+            struct ggml_context     * ctx,
+            struct ggml_tensor      * a,
+            ggml_cluster_allreduce_fn fn,
+            void                    * user);
+
+    GGML_API struct ggml_tensor * ggml_laguna_moe_combine(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * experts,
+            struct ggml_tensor  * expert_weights);
+
+    // One owner's routed-expert sum: out[:, t] = sum_e experts[:, e, t] *
+    // (weights[e, t] * valid[0, ids[e, t], t]), the masked weight, product and
+    // sum rounded as mul(weights, get_rows(valid, ids)), mul and repeat_back
+    // round them (routes with a zero masked weight add nothing).
+    // experts [n_embd, n_used, T], weights [n_used, T] F32, valid [1, n_expert, T]
+    // F32, ids [n_used, T] I32 (global expert ids; a route masked to -1 adds
+    // nothing).
+    GGML_API struct ggml_tensor * ggml_moe_combine_masked(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * experts,
+            struct ggml_tensor  * weights,
+            struct ggml_tensor  * valid,
+            struct ggml_tensor  * ids);
+
+    // Coarse DeepSeek-V4 routed-owner op. gate_up contains concatenated gate
+    // and up output rows; the backend performs fused gate/up MMVQ + clamped
+    // SwiGLU, down MMVQ, route weighting, and local reduction.
+    GGML_API struct ggml_tensor * ggml_ds4_moe_owner(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * input,
+            struct ggml_tensor  * gate_up_w,
+            struct ggml_tensor  * down_w,
+            struct ggml_tensor  * expert_ids,
+            struct ggml_tensor  * expert_weights,
+            int64_t               ff_dim,
+            float                 swiglu_clamp,
+            float                 down_scale);
+
+    // Coarse owner variant for checkpoints that store gate and up tensors
+    // separately. The backend fuses their MMVQ traversal and SwiGLU while
+    // preserving the checkpoint's three external value scales.
+    GGML_API struct ggml_tensor * ggml_ds4_moe_owner_split(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * input,
+            struct ggml_tensor  * gate_w,
+            struct ggml_tensor  * up_w,
+            struct ggml_tensor  * down_w,
+            struct ggml_tensor  * expert_ids,
+            struct ggml_tensor  * expert_weights,
+            int64_t               ff_dim,
+            float                 swiglu_clamp,
+            float                 gate_scale,
+            float                 up_scale,
+            float                 down_scale);
+
+    // Reorder a small [route, token] owner-local ID matrix so occurrences of
+    // the same expert across verification tokens share a kernel block. Each
+    // encoded ID retains its original route slot for exact output scatter.
+    // Exchange a small tensor with a host thread in the middle of a device
+    // graph, without returning control to the host. `step`, `flag` and
+    // `payload` must be host-mapped, coherent memory the device can reach.
+    // POST copies `src` into `payload`, then stores *step into *flag. WAIT
+    // holds its stream until *flag == *step, then copies `payload` into a new
+    // [ne0, ne1, ne2] tensor of `type`; `after` only orders it. The host bumps
+    // *step before each launch. On HIP the wait is a stream wait on the value
+    // read at launch (graphs holding it run eagerly); elsewhere a small kernel
+    // polls the flag.
+    // Per token column of two [k, n_tokens] route selections: `native` when
+    // it routes to an expert marked in `protected_mask` (I32 [n_expert]),
+    // else `biased`. A router bias that moves routes toward resident experts
+    // then never displaces a protected expert.
+    GGML_API struct ggml_tensor * ggml_ds4_moe_protected_routes(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * biased,
+            struct ggml_tensor  * native,
+            struct ggml_tensor  * protected_mask);
+
+    GGML_API struct ggml_tensor * ggml_host_mailbox_post(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * src,
+            const uint32_t      * step,
+            uint32_t            * flag,
+            void                * payload);
+
+    GGML_API struct ggml_tensor * ggml_host_mailbox_wait(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * after,
+            enum ggml_type        type,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2,
+            const uint32_t      * step,
+            const uint32_t      * flag,
+            const void          * payload);
+
+    GGML_API struct ggml_tensor * ggml_ds4_moe_align_ids(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * expert_ids);
+
+    // Map global route IDs directly to one owner's compact expert stack while
+    // assigning a batch-wide main-resident quota encoded as four times the
+    // desired routes per token. The peer owner receives the exact complement.
+    // This fuses the former repeated-LUT lookup and route masking chain into
+    // one small device-local operation.
+    GGML_API struct ggml_tensor * ggml_ds4_moe_balanced_owner_ids(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * global_ids,
+            struct ggml_tensor  * router_weights,
+            struct ggml_tensor  * local_id_lut,
+            struct ggml_tensor  * main_candidate_lut,
+            int                   main_slots_x4,
+            bool                  main_owner);
+
+    // Copy an F32 peer-GPU tensor only after a scheduler-provided device event
+    // has completed. The scheduler writes the native event handle into the op
+    // parameters and deliberately leaves src on its owner backend.
+    GGML_API struct ggml_tensor * ggml_ds4_deferred_peer_copy(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * src);
+
+    // Read up to max_bytes of the n_srcs tensors srcs (in that order) after `after`, so the device's last-level cache
+    // holds them for the nodes that follow; a device that waits for another one can run it in that wait. Nothing the
+    // graph reads changes: the result is one F32 element that no node needs to read.
+    GGML_API struct ggml_tensor * ggml_moe_fused_prefetch(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * after,
+            struct ggml_tensor ** srcs,
+            int                   n_srcs,
+            size_t                max_bytes);
+
+    // Reads the expert slices (ne[2] index) of the n_stacks stacks that `picks` names, so the device's last-level
+    // cache holds them for the expert kernels that follow. picks: I32 [k, rows...], each row a token's picks, best
+    // first; map (may be NULL): I32 [n], pick -> expert; a pick or expert out of range reads nothing. Rank order (every
+    // row's first pick, then every row's second, ...), each expert once, at most max_experts of them (CUDA: up to
+    // 64). Nothing the graph reads changes: the result is one F32 element that no node needs to read.
+    GGML_API struct ggml_tensor * ggml_moe_fused_prefetch_rows(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * picks,
+            struct ggml_tensor  * map,
+            struct ggml_tensor ** stacks,
+            int                   n_stacks,
+            int                   max_experts);
+
+    // The wake-hold slots: a hold and the router post that ends it name one in 1..GGML_MOE_FUSED_WAKE_SLOTS.
+    #define GGML_MOE_FUSED_WAKE_SLOTS 64
+
+    // After `after`, one wave of the device sleeps between polls of a word in pinned host memory until another
+    // device's router posts layer `slot`, or max_us pass, so the device is awake when that layer's inputs arrive (an
+    // idle integrated GPU wakes slowly). The router posts when its weights node (a DIV, the fused router's last
+    // output) is marked with the slot (ggml_backend_cuda_div_wake_post). Nothing the graph reads changes: the result
+    // is one F32 element that no node needs to read.
+    GGML_API struct ggml_tensor * ggml_moe_fused_wake_hold(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * after,
+            int                   slot,
+            int                   max_us);
+
+    // Split MoE with hot experts and one arithmetic wherever a pick runs. sel: I32 [n_used, T], each token's picks in
+    // route order; hot_lut: I32 [1, n_expert], the target's hot slot of each expert (-1: none). A token's first n_lanes
+    // picks with a hot slot, in route order, each get a lane that the target computes. hot_slots = false: the expert
+    // device's ids, I32 [n_used, T]: the expert for a pick it computes, -2 - lane for a pick a lane computes (MUL_MAT_ID
+    // masks negative ids). hot_slots = true: the target's ids, I32 [n_lanes, T]: each lane's hot slot, -1 past the
+    // token's last lane. hist (may be NULL; hot_slots = false only): I32 [n_expert], each pick of an expert adds one
+    // (the node writes it in place; nothing in the graph may read it). n_lanes = 0 (hot_slots = false, with hist): sel
+    // unchanged, only the counts.
+    GGML_API struct ggml_tensor * ggml_moe_hot_routes(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * sel,
+            struct ggml_tensor  * hot_lut,
+            struct ggml_tensor  * hist,
+            int                   n_lanes,
+            bool                  hot_slots);
+
+    // The routed sum of ggml_ds4_moe_fused_combine_shared (no shared expert), F32 [n_embd, T], with each pick's
+    // output from the lane that computed it: down F32 [n_embd, n_used, T] (the expert device's MUL_MAT_ID on the
+    // routes), lanes F32 [n_embd, n_lanes, T] (the target's on the hot slots), weights F32 [n_used, T], routes from
+    // ggml_moe_hot_routes(hot_slots = false). Same products, same route order: when a lane gives the expert device's
+    // bits for its pick, the sum does not depend on which picks were hot.
+    GGML_API struct ggml_tensor * ggml_moe_combine_lanes(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * down,
+            struct ggml_tensor  * lanes,
+            struct ggml_tensor  * weights,
+            struct ggml_tensor  * routes);
+
+    // Fused DeepSeek4 hyper-connection helpers. The first dimension is the
+    // per-token payload; an optional second dimension batches independent
+    // tokens without changing their arithmetic.
+    // ggml_ds4_hc_pre: mix[mix_dim,n_tokens] + base[mix_dim] +
+    //   hc_state[n_embd*n_hc,n_tokens] ->
+    //   dst[n_embd+mix_dim,n_tokens] = { working, split(pre,post,comb) }
+    GGML_API struct ggml_tensor * ggml_ds4_hc_pre(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * mix,
+            struct ggml_tensor  * base,
+            struct ggml_tensor  * hc_state,
+            int                   n_hc,
+            int                   sinkhorn_iters,
+            float                 pre_scale,
+            float                 post_scale,
+            float                 comb_scale);
+
+    // ggml_ds4_hc_post: residual hc_state + block_out + split -> new hc_state;
+    // all non-base tensors may carry the same n_tokens second dimension.
+    GGML_API struct ggml_tensor * ggml_ds4_hc_post(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * residual_hc,
+            struct ggml_tensor  * block_out,
+            struct ggml_tensor  * split,
+            int                   n_hc);
+
+    // Exact mode-1 variant for heterogeneous MoE verification. It computes
+    // block_out[d] = peer_block[d] + main_block[d] inside the HC-post kernel,
+    // eliminating the standalone reduction and tokenwise CONT copies. All
+    // non-base tensors may carry the same n_tokens second dimension.
+    GGML_API struct ggml_tensor * ggml_ds4_hc_post_split(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * residual_hc,
+            struct ggml_tensor  * main_block,
+            struct ggml_tensor  * peer_block,
+            struct ggml_tensor  * split,
+            int                   n_hc);
+
+    // ggml_ds4_hc_out: output-stage merge of hc streams into one embedding per
+    // token. mix and hc_state may carry the same n_tokens second dimension.
+    GGML_API struct ggml_tensor * ggml_ds4_hc_out(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * mix,
+            struct ggml_tensor  * base,
+            struct ggml_tensor  * hc_state,
+            int                   n_hc,
+            float                 pre_scale);
+
+    // ggml_ds4_router_select: DS4 top-k routing from router logits [n_expert, T]:
+    // sqrt(softplus(logit)) + bias, top-k descending; with native_bias and
+    // protected_mask, a token whose native top-k holds a protected expert keeps
+    // the native selection. -> I32 [k, T]
+    GGML_API struct ggml_tensor * ggml_ds4_router_select(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * logits,
+            struct ggml_tensor  * bias,
+            struct ggml_tensor  * native_bias,
+            struct ggml_tensor  * protected_mask,
+            int                   k);
+    // ggml_ds4_router_weights: probs of the selected experts normalised by their
+    // clamped sum, times scale. -> F32 [k, T]
+    GGML_API struct ggml_tensor * ggml_ds4_router_weights(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * logits,
+            struct ggml_tensor  * selected,
+            float                 clamp_min,
+            float                 scale);
+    // ggml_ds4_hc_collapse: dst[d, t] = sum_h hc[d + h*n_embd, t] * pre[h, t],
+    // rounded as mul, permute and sum_rows round it.
+    // hc: F32 [n_embd*n_hc, T] (nb0 = 4), pre: F32 [n_hc, T] (nb0 = 4) -> F32 [n_embd, T].
+    // ggml_ds4_argmax_pair: the argmax of each column of logits [n_rows, T]
+    // (rows row_offset.. of a vocabulary split across n_slots ranks) as one
+    // slot of an F32 [8 * n_slots, T] exchange row: the value's 32 bits and the
+    // global index as eight byte-valued floats (exact through a bf16 sum),
+    // zeros in the other slots. ggml_ds4_argmax_pick reads the summed rows
+    // back: the largest value, ties to the lowest index (I32 [T]).
+    GGML_API struct ggml_tensor * ggml_ds4_argmax_pair(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * logits,
+            int                   row_offset,
+            int                   slot,
+            int                   n_slots);
+    GGML_API struct ggml_tensor * ggml_ds4_argmax_pick(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * pairs,
+            int                   n_slots);
+
+    GGML_API struct ggml_tensor * ggml_ds4_hc_collapse(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * hc,
+            struct ggml_tensor  * pre,
+            int                   n_hc);
+
+    // Official DS4 ratio-4 indexer transform. Each contiguous 128-wide F32
+    // row is Hadamard-rotated and passed through the model's blockwise FP4
+    // activation-simulation round trip. The operation is out-of-place so the
+    // pre-QAT query remains available to the main attention path.
+    GGML_API struct ggml_tensor * ggml_ds4_indexer_qat(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * input);
+
+    // The same blockwise FP4 round trip without the Hadamard rotation
+    // (DeepSeek V4.1 indexer queries and keys).
+    GGML_API struct ggml_tensor * ggml_ds4_indexer_qat_plain(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * input);
+
+    // Compute the official ratio-4 indexer score matrix without materializing
+    // [n_comp,n_head,n_tokens] per-head dots. q is F32
+    // [128,n_head,n_tokens], head_weights is F32 [n_head,n_tokens], and
+    // index_comp is F16 [128,n_comp]. head_weights already includes the
+    // model's 1/sqrt(128*n_head) scale.
+    GGML_API struct ggml_tensor * ggml_ds4_indexer_score(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * head_weights,
+            struct ggml_tensor  * index_comp,
+            int                   kv_start,
+            int                   ratio);
+
+    // Masked variant for stable-shape decode graphs. visibility_mask is F32
+    // [n_comp,n_tokens], with values <= -1e20 marking rows as invisible.
+    GGML_API struct ggml_tensor * ggml_ds4_indexer_score_masked(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * head_weights,
+            struct ggml_tensor  * index_comp,
+            struct ggml_tensor  * visibility_mask,
+            int                   kv_start,
+            int                   ratio);
+
+    // ggml_ds4_indexer_score_masked in which every token gets the one-token
+    // call's arithmetic, so a graph can score several decode rows at once and
+    // match per-row calls bit for bit.
+    GGML_API struct ggml_tensor * ggml_ds4_indexer_score_tokenwise(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * head_weights,
+            struct ggml_tensor  * index_comp,
+            struct ggml_tensor  * visibility_mask,
+            int                   ratio);
+
+    // Sort each row of already-selected block ids ascending (does not select or change top-k ties).
+    // blocks: I32 [budget,T], 1 <= budget <= 1024, contiguous dim 0; positions: contiguous I32 [T].
+    // Block ids and positions must be nonnegative. ratio >= 2. Returns I32 [budget*ratio+ratio-1,T].
+    // A block b emits ratio*b+i iff ratio*b+ratio-1 <= position, otherwise -1.
+    // The last ratio-1 slots emit br+i iff <= position, where br = ((position+1)/ratio)*ratio.
+    GGML_API struct ggml_tensor * ggml_qsa_decode_ids(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * blocks,
+            struct ggml_tensor  * positions,
+            int                   ratio);
+
+    // ggml_qsa_decode_ids for K/V rows kept in a paged pool: each emitted id p >= 0 becomes
+    // chunk_rows[p / chunk_tokens] + p % chunk_tokens, or -1 when that entry is negative (not resident) or past
+    // the table. chunk_rows: contiguous I32 [n_chunks]; chunk_tokens a positive multiple of ratio. The ids keep
+    // the position order of ggml_qsa_decode_ids.
+    GGML_API struct ggml_tensor * ggml_qsa_decode_ids_paged(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * blocks,
+            struct ggml_tensor  * positions,
+            int                   ratio,
+            struct ggml_tensor  * chunk_rows,
+            int                   chunk_tokens);
+
+    // Preserve the raw rows of base_mask and retain only selected compressed
+    // rows. selected is I32 [top_k,n_tokens], indexing the compressed span;
+    // base_mask is F32 [raw_rows+n_comp,n_tokens].
+    GGML_API struct ggml_tensor * ggml_ds4_indexer_mask(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * base_mask,
+            struct ggml_tensor  * selected,
+            int                   raw_rows);
+
+    // Direct AST Fused MoE Combine Epilogue: down_e[n_embd, n_used, n_tokens] +
+    // weights[n_used, n_tokens] + shared_out[n_embd, n_tokens] -> dst[n_embd, n_tokens]
+    GGML_API struct ggml_tensor * ggml_ds4_moe_fused_combine_shared(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * down_e,
+            struct ggml_tensor  * weights,
+            struct ggml_tensor  * shared_out);
+
+    // Fused hyper-connection combine (residual + repeat(block)*w) and the
+    // following stream rms-norm with gamma. Packed result [n_embd, hc, tokens, 2]:
+    // channel 0 is the new residual, channel 1 the normalized stream.
+    GGML_API struct ggml_tensor * ggml_hc_combine_norm(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * inject,
+            struct ggml_tensor  * residual,
+            struct ggml_tensor  * block_out,
+            struct ggml_tensor  * gamma,
+            float                 s1, float b1, float s2, float b2, float eps);
+
+    // HC_COMBINE_NORM whose block output is the MoE combine, computed in the same kernel:
+    // block_out = sum_e down[:,e]*weights[e] + shared*sigmoid(shared_logit). down [n_embd, n_used, T],
+    // weights [n_used, T], shared [n_embd, T], shared_logit [1, T]. Same packed result as ggml_hc_combine_norm.
+    GGML_API struct ggml_tensor * ggml_hc_combine_norm_moe(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * inject,
+            struct ggml_tensor  * residual,
+            struct ggml_tensor  * down,
+            struct ggml_tensor  * weights,
+            struct ggml_tensor  * shared,
+            struct ggml_tensor  * shared_logit,
+            struct ggml_tensor  * gamma,
+            float                 s1, float b1, float s2, float b2, float eps);
+
+    // rms_norm(x) * gamma * sigmoid(z) per row of x->ne[0], written as F16 [x->ne[0]*x->ne[1], x->ne[2]].
+    // x is [ncols, heads, tokens]; gamma has ncols or ncols*heads elements; z is [ncols*heads, tokens].
+    GGML_API struct ggml_tensor * ggml_gated_rms_norm_f16(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * gamma,
+            struct ggml_tensor  * z,
+            float                 eps);
+
+    // sigmoid(z) * x -> F16 (gamma == NULL form of ggml_gated_rms_norm_f16); z may be a strided [ncols, heads, tokens] view.
+    GGML_API struct ggml_tensor * ggml_gated_f16(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * z);
+
+    // ─── Inkling2-Loop & DSpark fused ops (GGML_OP_INKLING2_OP) ───────────
+    enum ggml_inkling2_subop {
+        GGML_INKLING2_ATTN_RES_MIX       = 0,
+        GGML_INKLING2_LOOP_CTRL_PRE      = 1,
+        GGML_INKLING2_LOOP_CTRL_POST     = 2,
+        GGML_INKLING2_SCONV              = 3,
+        GGML_INKLING2_CLIP_NORM          = 4,
+        GGML_INKLING2_KV_WRITE           = 5,
+        GGML_INKLING2_REL_TABLE          = 6,
+        GGML_INKLING2_ATTN_REL           = 7,
+        GGML_INKLING2_ATTN_SPLIT_COMBINE = 8,
+        GGML_INKLING2_SITU               = 9,
+        GGML_INKLING2_SIGMOID_TOPK_IDS   = 10,
+        GGML_INKLING2_SIGMOID_TOPK_WTS   = 11,
+        GGML_INKLING2_SOFTCAP_SLICE      = 12,
+        GGML_INKLING2_DSPARK_MIX_NORM    = 13,
+        GGML_INKLING2_DSPARK_MARKOV_GATE = 14,
+        GGML_INKLING2_DSPARK_ADD_SOFTCAP = 15,
+        GGML_INKLING2_STATE_RESTORE      = 16,
+        GGML_INKLING2_DYNAMIC_SPLIT_LUT  = 17,
+        GGML_INKLING2_DSPARK_TOPK_CANDS  = 18,
+        GGML_INKLING2_DSPARK_TOPK_SCORE  = 19,
+        GGML_INKLING2_MOE_MASKED_SUM     = 20,
+        GGML_INKLING2_DSPARK_MARKOV_ARGMAX = 21,
+        GGML_INKLING2_SCONV_KV_WRITE     = 22,
+        GGML_INKLING2_CLIP_R_REL_TABLE   = 23,
+    };
+
+    GGML_API struct ggml_tensor * ggml_inkling2_attn_res_mix(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * cur,
+            struct ggml_tensor  * query,
+            struct ggml_tensor  * norm_w,
+            struct ggml_tensor * const * blocks,
+            int                   n_blocks,
+            float                 eps);
+
+    GGML_API struct ggml_tensor * ggml_inkling2_loop_ctrl_pre(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * cur,
+            struct ggml_tensor  * msg,
+            float                 eps);
+
+    GGML_API struct ggml_tensor * ggml_inkling2_loop_ctrl_post(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * cur,
+            struct ggml_tensor  * msg,
+            struct ggml_tensor  * gf_out,
+            struct ggml_tensor  * norm_w,
+            float                 eps);
+
+    // Causal 4-tap short conv (+ optional dynamic taps) + state update + residual + 1/sqrt scale.
+    // write_mode: 0 = no write, 1 = update state_out in-place [3, S], 2 = write per-token verify ring [3, S, max_verify]
+    GGML_API struct ggml_tensor * ggml_inkling2_sconv(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * w_static,
+            struct ggml_tensor  * state_in,
+            struct ggml_tensor  * state_out,
+            struct ggml_tensor  * dyn_taps,
+            int                   state_chan_offset,
+            int                   head_dim_for_dyn,
+            int                   write_mode);
+
+    // Same as ggml_inkling2_sconv, fusing `+ addend` into the output register write (zero extra kernel!).
+    GGML_API struct ggml_tensor * ggml_inkling2_sconv_add(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * w_static,
+            struct ggml_tensor  * state_in,
+            struct ggml_tensor  * state_out,
+            struct ggml_tensor  * dyn_taps,
+            struct ggml_tensor  * addend,
+            int                   state_chan_offset,
+            int                   head_dim_for_dyn,
+            int                   write_mode);
+
+    // mode 0: L2 clip (+ optional scale_w, optional pos_buf for log-tau); mode 1: per-head rms_norm (no gamma)
+    GGML_API struct ggml_tensor * ggml_inkling2_clip_norm(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * scale_w,
+            struct ggml_tensor  * pos_buf,
+            int                   head_dim,
+            int                   n_head,
+            int                   mode,
+            float                 threshold,
+            float                 eps,
+            int                   log_floor,
+            float                 log_alpha);
+
+    // Fused K-clip (is_v=0) or V-rmsnorm (is_v=1) + write into kv_cache (F16 or Q8_0) at pos_buf[t] (with SWA wrap).
+    // Returns a dummy 1-element F32 dependency token pinned to kv_cache's device.
+    GGML_API struct ggml_tensor * ggml_inkling2_kv_write(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * kv_cache,
+            struct ggml_tensor  * pos_buf,
+            int                   head_dim,
+            int                   n_head_kv,
+            int                   is_v,
+            int                   swa_window,
+            float                 threshold,
+            float                 eps);
+
+    // Compute rel_table [rel_extent+1, n_head, T] = (rel_bias @ Rcur) - sink.
+    GGML_API struct ggml_tensor * ggml_inkling2_rel_table(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * rel_bias,
+            struct ggml_tensor  * r_cur,
+            struct ggml_tensor  * sink);
+
+    // Inline relative-bias + zero-sink attention over K/V cache (F16 or Q8_0).
+    // kv_meta: I32 [4] on device = { pos0, kv_len, kv_start, kv_end } (kv_end <= 0 means full [0, kv_len)).
+    // k_dep/v_dep: optional dependency tokens from kv_write to order cache writes before reads.
+    // gate_proj: optional [D*Hq, T] F32; when non-null and partial==0, applies out *= sigmoid(gate_proj).
+    // partial == 0: returns [D*Hq, T] F32.
+    // partial == 1: returns [(D+2)*Hq, T] F32 packed (O[D] | m | l per head) for dual-GPU Split-KV combine.
+    GGML_API struct ggml_tensor * ggml_inkling2_attn_rel(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k_cache,
+            struct ggml_tensor  * v_cache,
+            struct ggml_tensor  * rel_table,
+            struct ggml_tensor  * kv_meta,
+            struct ggml_tensor  * k_dep,
+            struct ggml_tensor  * v_dep,
+            struct ggml_tensor  * gate_proj,
+            int                   swa_window,
+            int                   rel_extent,
+            int                   partial,
+            int                   include_sink);
+
+    // Combine two Split-KV partial outputs [(D+2)*Hq, T] -> [D*Hq, T] (+ optional sigmoid(gate_proj)).
+    GGML_API struct ggml_tensor * ggml_inkling2_attn_split_combine(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * part_a,
+            struct ggml_tensor  * part_b,
+            struct ggml_tensor  * gate_proj,
+            int                   head_dim,
+            int                   n_head);
+
+    // Fused SITU MoE activation: [2*n_ff, k, T] -> [n_ff, k, T].
+    GGML_API struct ggml_tensor * ggml_inkling2_situ(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * gate_up,
+            float                 beta,
+            float                 linear_beta);
+
+    // Fused sigmoid MoE router: top-k IDs I32 [k, T] and normalized scaled weights F32 [k, T].
+    GGML_API struct ggml_tensor * ggml_inkling2_sigmoid_topk_ids(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * logits,
+            struct ggml_tensor  * bias,
+            int                   top_k);
+
+    GGML_API struct ggml_tensor * ggml_inkling2_sigmoid_topk_wts(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * logits,
+            struct ggml_tensor  * ids,
+            float                 route_scale,
+            float                 eps);
+
+    // Fused final logit softcap (cap*tanh(x/cap)) + unpadded vocab slice [n_vocab_unpadded, T].
+    GGML_API struct ggml_tensor * ggml_inkling2_softcap_slice(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * logits,
+            int                   n_vocab_unpadded,
+            float                 softcap);
+
+    // DSpark: weighted tap mix + RMSNorm: taps [n_embd, n_taps, T], alpha [n_taps], weight [n_embd] -> [n_embd, T].
+    GGML_API struct ggml_tensor * ggml_inkling2_dspark_mix_norm(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * taps,
+            struct ggml_tensor  * alpha,
+            struct ggml_tensor  * weight,
+            float                 eps);
+
+    // DSpark: RNN Markov gate: raw [3*R, B], state [R, B] -> [2*R, B] (new_state | latent).
+    GGML_API struct ggml_tensor * ggml_inkling2_dspark_markov_gate(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * raw,
+            struct ggml_tensor  * state);
+
+    // DSpark: bf16-rounded add + softcap + unpadded slice [n_vocab_unpadded, B].
+    GGML_API struct ggml_tensor * ggml_inkling2_dspark_add_softcap(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * base_logits,
+            struct ggml_tensor  * bias,
+            int                   n_vocab_unpadded,
+            float                 softcap);
+
+    // Restore live conv state [3, S] from verify ring [3, S, max_verify] at runtime slot index (I32 [1]).
+    GGML_API struct ggml_tensor * ggml_inkling2_state_restore(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * state_ring,
+            struct ggml_tensor  * state_live,
+            struct ggml_tensor  * slot_idx);
+
+    // Dynamic exact-unique-expert work-stealing LUT [n_expert] I32 for dual-GPU MoE verify:
+    // assigns ceil(n_unique * target_pct / 100) highest-frequency unique experts to target (e -> e), rest -> -1.
+    GGML_API struct ggml_tensor * ggml_inkling2_dynamic_split_lut(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * sel,
+            int                   n_expert,
+            int                   target_pct);
+
+    // DSpark fast Markov step 1: select 1024 candidate token IDs per row from base_logits [V, B] -> I32 [1024, B].
+    GGML_API struct ggml_tensor * ggml_inkling2_dspark_topk_cands(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * base_logits,
+            int                   n_vocab_unpadded);
+
+    // DSpark fast Markov step 2: score only the 1024 candidate rows with fold_weight @ latent + fold_bias + base_row
+    // (bf16 softcap) and return the winning token ID (I32 [1]).
+    GGML_API struct ggml_tensor * ggml_inkling2_dspark_topk_score(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * cand_ids,
+            struct ggml_tensor  * base_row,
+            struct ggml_tensor  * latent,
+            struct ggml_tensor  * fold_weight,
+            struct ggml_tensor  * fold_bias,
+            float                 softcap);
+
+    // Dual-GPU masked MoE weighted sum: sums wsel[k,t]*down[:,k,t] over k where mask_sel[k,t]>=0,
+    // optionally adding peer_sum (F16 or F32 [H,T]). out_f16!=0 outputs F16 [H,T] (36 KB for T=8!).
+    GGML_API struct ggml_tensor * ggml_inkling2_moe_masked_sum(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * down,
+            struct ggml_tensor  * wsel,
+            struct ggml_tensor  * mask_sel,
+            struct ggml_tensor  * peer_sum,
+            int                   out_f16);
+
+    // DSpark fused full-vocab Markov argmax: argmax_{v<n_vocab} (base_row[v] + fold_w[v]@latent + fold_b[v]) -> I32 [1].
+    GGML_API struct ggml_tensor * ggml_inkling2_dspark_markov_argmax(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * base_row,
+            struct ggml_tensor  * latent,
+            struct ggml_tensor  * fold_weight,
+            struct ggml_tensor  * fold_bias,
+            int                   n_vocab_unpadded);
+
+    // Fused causal short conv (+ optional dynamic taps) + K-clip/V-RMSNorm + direct KV cache write (F16/Q8_0).
+    GGML_API struct ggml_tensor * ggml_inkling2_sconv_kv_write(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * w_static,
+            struct ggml_tensor  * state_in,
+            struct ggml_tensor  * state_out,
+            struct ggml_tensor  * dyn_taps,
+            struct ggml_tensor  * kv_cache,
+            struct ggml_tensor  * pos_buf,
+            int                   state_chan_offset,
+            int                   head_dim,
+            int                   n_head_kv,
+            int                   is_v,
+            int                   swa_window,
+            float                 threshold,
+            float                 eps,
+            int                   write_mode);
+
+    // Fused R L2-clip (+ scale + optional log-tau) + relative-position table [rel_extent+1, Hq, T].
+    GGML_API struct ggml_tensor * ggml_inkling2_clip_r_rel_table(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * r_raw,
+            struct ggml_tensor  * r_clip_w,
+            struct ggml_tensor  * pos_buf,
+            struct ggml_tensor  * rel_bias,
+            struct ggml_tensor  * sink,
+            int                   d_rel,
+            int                   n_head,
+            float                 threshold,
+            float                 eps,
+            int                   log_floor,
+            float                 log_alpha);
+
+    // TODO: needs to be adapted to ggml_flash_attn_ext
+    GGML_API struct ggml_tensor * ggml_flash_attn_back(
+           struct ggml_context * ctx,
+           struct ggml_tensor  * q,
+           struct ggml_tensor  * k,
+           struct ggml_tensor  * v,
+           struct ggml_tensor  * d,
+           bool                  masked);
+
+    GGML_API struct ggml_tensor * ggml_ssm_conv(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * sx,
+            struct ggml_tensor  * c);
+
+    // dflash extension: tree-mode ssm_conv for DDTree-style spec
+    // decoding. parent_ids is an int32 tensor of shape [n_tokens, n_seqs]
+    // where entry [t, s] is the new-token index of t's tree parent, or -1 if
+    // t's parent is "before the block" (walks into the old conv state region).
+    // The CUDA kernel walks the parent chain K-1 times per token to build the
+    // correct conv window, so siblings get their own parent lineage instead
+    // of sharing the DFS-neighbour window. Mirrors SGLang's
+    // causal_conv1d_triton HAS_EAGLE_TREE_CUSTOM_ATTN_MASK path.
+    GGML_API struct ggml_tensor * ggml_ssm_conv_tree(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * sx,
+            struct ggml_tensor  * c,
+            struct ggml_tensor  * parent_ids);
+
+    // dflash extension: fused causal-conv step for recurrent decode/verify.
+    // Replaces transpose + concat(state, x) + ssm_conv + silu + state
+    // write-back with one kernel.
+    //   x:              [C, T, S] f32, rows contiguous (token stride may be
+    //                   larger than C, e.g. a row-slice of a stacked GEMV)
+    //   c:              [K, C]    f32 depthwise conv weights
+    //   conv_state:     [K-1, C, S] f32 history; READ, then OVERWRITTEN in
+    //                   place with the last K-1 conv inputs
+    //   conv_input_out: optional [>= K-1+T, C, S] f32; receives the full
+    //                   conv window (history rows then x rows) per channel,
+    //                   for speculative-decode rollback. May be a view.
+    // Returns silu(conv(x)) as [C, T, S]. CUDA/HIP only.
+    GGML_API struct ggml_tensor * ggml_ssm_conv_step(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * c,
+            struct ggml_tensor  * conv_state,
+            struct ggml_tensor  * conv_input_out);
+
+    // dflash extension: tree-window conv step for concurrent speculative
+    // verify. Replaces gather(conv_state) + transpose + concat + tree conv
+    // with one kernel that leaves the persistent history untouched.
+    //   x:              [C, T, S] f32, rows contiguous (strided token axis ok)
+    //   c:              [K, C]    f32 depthwise conv weights
+    //   conv_state:     [K-1, C, n_slots] f32 persistent history, READ ONLY
+    //   state_slot_ids: [S] i32, the slab each sequence starts from
+    //                   (negative ids read a zero history)
+    //   parent_ids:     [T, S] i32 tree parents, as ggml_ssm_conv_tree
+    // The packed f32 result holds silu(conv) as [C, T, S] at offset 0 and
+    // the assembled window [K-1+T, C, S] (history rows then x rows, the
+    // layout the replay-log commit reads) at element offset C*T*S; view both
+    // out of it. Bit-identical to the op-by-op form. CUDA/HIP only.
+    GGML_API struct ggml_tensor * ggml_ssm_conv_tree_step(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * c,
+            struct ggml_tensor  * conv_state,
+            struct ggml_tensor  * state_slot_ids,
+            struct ggml_tensor  * parent_ids);
+
+    // dflash2 grouped dynamic block conv (draft graph), one fused node for
+    //   out[c,l] = sum_k (dyn[(site*K+k)*G + c/gs, l] + base[c, site*K+k]) * x[c, l-k]
+    // x [C, T] f32 contiguous, base [C, >= (site+1)*K] f32, dyn [>= 2K*G, T]
+    // f32 contiguous; x is zero-padded below l < k. CUDA/HIP only.
+    GGML_API struct ggml_tensor * ggml_dflash_dyn_conv(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * base,
+            struct ggml_tensor  * dyn,
+            int                   site,
+            int                   kernel,
+            int                   group_size);
+    // SpecLA heavy-light convolution. Applies compact accepted inputs to the
+    // durable conv state, then verifies the current tree without committing
+    // speculative inputs. Current input factors are written directly to the
+    // persistent double-buffer selected by factor_ptrs/layer/bank; the result
+    // packs [conv output | boundary windows] and already includes SiLU.
+    GGML_API struct ggml_tensor * ggml_ssm_conv_specla(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * c,
+            struct ggml_tensor  * state,
+            struct ggml_tensor  * hld,
+            struct ggml_tensor  * factor_ptrs,
+            int                   n_layers,
+            int                   layer,
+            int                   pending_bank,
+            int                   n_boundaries,
+            int                   n_chains,
+            int                   n_waves,
+            int                   max_parallel_chains);
+
+    GGML_API struct ggml_tensor * ggml_ssm_scan(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * s,
+            struct ggml_tensor  * x,
+            struct ggml_tensor  * dt,
+            struct ggml_tensor  * A,
+            struct ggml_tensor  * B,
+            struct ggml_tensor  * C,
+            struct ggml_tensor  * ids);
+
+    // partition into non-overlapping windows with padding if needed
+    // example:
+    // a:   768   64   64    1
+    // w:    14
+    // res: 768   14   14    25
+    // used in sam
+    GGML_API struct ggml_tensor * ggml_win_part(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   w);
+
+    // reverse of ggml_win_part
+    // used in sam
+    GGML_API struct ggml_tensor * ggml_win_unpart(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   w0,
+            int                   h0,
+            int                   w);
+
+    GGML_API struct ggml_tensor * ggml_unary(
+            struct ggml_context * ctx,
+             struct ggml_tensor * a,
+             enum ggml_unary_op op);
+
+    GGML_API struct ggml_tensor * ggml_unary_inplace(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a,
+        enum ggml_unary_op op);
+
+    // used in sam
+    GGML_API struct ggml_tensor * ggml_get_rel_pos(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   qh,
+            int                   kh);
+
+    // used in sam
+    GGML_API struct ggml_tensor * ggml_add_rel_pos(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * pw,
+            struct ggml_tensor  * ph);
+
+    GGML_API struct ggml_tensor * ggml_add_rel_pos_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * pw,
+            struct ggml_tensor  * ph);
+
+    GGML_API struct ggml_tensor * ggml_rwkv_wkv6(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * r,
+            struct ggml_tensor  * tf,
+            struct ggml_tensor  * td,
+            struct ggml_tensor  * state);
+
+    GGML_API struct ggml_tensor * ggml_gated_linear_attn(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * state,
+            float scale);
+
+    GGML_API struct ggml_tensor * ggml_rwkv_wkv7(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * r,
+            struct ggml_tensor  * w,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * state);
+
+    /* Solves a specific equation of the form Ax=B, where A is a triangular matrix
+    *  without zeroes on the diagonal (i.e. invertible).
+    *  B can have any number of columns, but must have the same number of rows as A
+    *  If A is [n, n] and B is [n, m], then the result will be [n, m] as well
+    *  Has O(n^3) complexity (unlike most matrix ops out there), so use on cases
+    *  where n > 100 sparingly, pre-chunk if necessary.
+    *
+    *  If left = false, solves xA=B instead
+    *  If lower = false, assumes upper triangular instead
+    *  If uni = true, assumes diagonal of A to be all ones (will override actual values)
+    *
+    *  TODO: currently only lower, right, non-unitriangular variant is implemented
+    */
+    GGML_API struct ggml_tensor * ggml_solve_tri(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a,
+        struct ggml_tensor  * b,
+        bool                  left,
+        bool                  lower,
+        bool                  uni);
+
+    // TODO: add ggml_gated_delta_net_set_bcast() to be able to configure Q, K broadcast type: tiled vs interleaved [TAG_GGML_GDN_BCAST]
+    // ref: https://github.com/ggml-org/llama.cpp/pull/19468#discussion_r2786394306
+    GGML_API struct ggml_tensor * ggml_gated_delta_net(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * beta,
+            struct ggml_tensor  * state);
+
+    GGML_API struct ggml_tensor * ggml_gated_delta_net_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * beta,
+            struct ggml_tensor  * state);
+
+    // Compact-batch in-place recurrence. active_slot_ids maps the compact
+    // sequence axis to physical state slabs; negative or out-of-range ids
+    // use zero state and do not write back.
+    GGML_API struct ggml_tensor * ggml_gated_delta_net_active_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * beta,
+            struct ggml_tensor  * state,
+            struct ggml_tensor  * active_slot_ids);
+
+    // dflash extension: ggml_gated_delta_net (inplace = false) or
+    // ggml_gated_delta_net_inplace (inplace = true) whose scalar gates g and
+    // beta may be strided [1, H, T, S] views sharing one layout (the two
+    // halves of a stacked beta|alpha projection) instead of contiguous
+    // copies. op_params[12] = 1. The CUDA/HIP kernels index g and beta
+    // through beta's strides, so they read the same values a contiguous copy
+    // would hold. Non-KDA; raw gates (ggml_gated_delta_net_set_raw_gates)
+    // allowed. CUDA/HIP only.
+    GGML_API struct ggml_tensor * ggml_gated_delta_net_shared_gates(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * beta,
+            struct ggml_tensor  * state,
+            bool                  inplace);
+
+    // dflash extension: speculative verify against mapped base states.
+    // `state` is the full persistent [S_v, S_v, H, n_slots] tensor and
+    // `state_slot_ids` [n_seqs] names the slab each compact sequence starts
+    // from (negative ids start from zero). The kernel reads the base state in
+    // place and writes neither a final state nor per-token intermediates: the
+    // result holds only the attention output (plus the replay log once
+    // captured), and accepted prefixes are committed later from that log.
+    // g and beta may be strided [1, H, T, S] views sharing one layout, so raw
+    // gates (ggml_gated_delta_net_set_raw_gates) can read the stacked
+    // projection directly. Non-KDA, non-tree. CUDA/HIP only.
+    GGML_API struct ggml_tensor * ggml_gated_delta_net_mapped_verify(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * beta,
+            struct ggml_tensor  * state,
+            struct ggml_tensor  * state_slot_ids);
+
+    GGML_API void ggml_gated_delta_net_set_skip_intermediate(
+            struct ggml_tensor * tensor,
+            bool                 skip_intermediate);
+
+    // CUDA/HIP fixed-chain replay log in compact F32 [J,H,T,B] layout:
+    // scalar gate J=2*S_v+1 stores [g | k | delta], while KDA J=3*S_v
+    // stores [g[S_v] | k | delta]. Delta is captured after the
+    // state-dependent reduction. The returned tensor owns a compact copy so
+    // graph allocation can release the much larger GDN result after capture.
+    GGML_API struct ggml_tensor * ggml_gated_delta_net_capture_replay_log(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * tensor);
+
+    // dflash extension: let the kernel derive the gates from the raw
+    // projections instead of graph-side sigmoid/softplus ops:
+    //   beta_val = sigmoid(beta_raw)
+    //   g_val    = exp(softplus(alpha_raw + dt_bias[h]) * A[h])
+    // `g` then carries alpha_raw and `beta` carries beta_raw (both [1,H,T,S]);
+    // gate_ba is a contiguous f32 [2*H] tensor holding [dt_bias | A]
+    // (src[9], op_params[10] = 1). Only for the non-tree, non-KDA,
+    // non-SpecLA CUDA/HIP path; the compact-batch in-place and mapped-verify
+    // variants are allowed.
+    GGML_API void ggml_gated_delta_net_set_raw_gates(
+            struct ggml_tensor * tensor,
+            struct ggml_tensor * gate_ba);
+
+    // dflash extension: tree-mode gated delta net for DDTree-style
+    // speculative decoding verify. `parent_ids` is an int32 tensor of shape
+    // [n_tokens, n_seqs] where entry [t, s] is the index within sequence s of
+    // the parent token in the DFS-flattened tree (or -1 for a root-level
+    // node). At each token step t > 0 in the recurrence, if parent_ids[t] is
+    // not (t - 1), the kernel reloads the recurrent state from the
+    // intermediate-states region at parent_ids[t] instead of continuing
+    // sequentially. This lets one verify forward pass correctly process
+    // multiple tree branches (siblings) without cross-contamination.
+    GGML_API struct ggml_tensor * ggml_gated_delta_net_tree(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * beta,
+            struct ggml_tensor  * state,
+            struct ggml_tensor  * parent_ids);
+
+    // dflash extension: tree-mode with direct intermediate-state writes to a
+    // persistent external buffer. Identical to ggml_gated_delta_net_tree but
+    // the per-token intermediate states are written to `persist_inter->data`
+    // (f32 or f16, [S_v, S_v, H, n_tokens, n_seqs], contiguous) instead of
+    // the default internal region of the result tensor. Eliminates a
+    // downstream ggml_cpy into the persistent cache buffer, saving ~5-10 ms
+    // per verify step on a 27B hybrid target.
+    GGML_API struct ggml_tensor * ggml_gated_delta_net_tree_persist(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * beta,
+            struct ggml_tensor  * state,
+            struct ggml_tensor  * parent_ids,
+            struct ggml_tensor  * persist_inter);
+
+    // SpecLA state-resident heavy-light verify. The kernel applies the compact
+    // factors accepted in the preceding step, writes only that committed base
+    // state, then verifies the current HLD chains while writing raw
+    // (k, delta, log-gate) factors directly to the opposite persistent bank.
+    GGML_API struct ggml_tensor * ggml_gated_delta_net_specla(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * g,
+            struct ggml_tensor  * beta,
+            struct ggml_tensor  * state,
+            struct ggml_tensor  * hld,
+            struct ggml_tensor  * factor_ptrs,
+            int                   n_layers,
+            int                   layer,
+            int                   pending_bank,
+            int                   n_boundaries,
+            int                   n_chains,
+            int                   n_waves,
+            int                   max_parallel_chains);
+
+    // custom operators
+
+    typedef void (*ggml_custom1_op_t)(struct ggml_tensor * dst , const struct ggml_tensor * a, int ith, int nth, void * userdata);
+    typedef void (*ggml_custom2_op_t)(struct ggml_tensor * dst , const struct ggml_tensor * a, const struct ggml_tensor * b, int ith, int nth, void * userdata);
+    typedef void (*ggml_custom3_op_t)(struct ggml_tensor * dst , const struct ggml_tensor * a, const struct ggml_tensor * b, const struct ggml_tensor * c, int ith, int nth, void * userdata);
+
+#define GGML_N_TASKS_MAX (-1)
+    // n_tasks == GGML_N_TASKS_MAX means to use max number of tasks
+
+    GGML_API struct ggml_tensor * ggml_map_custom1(
+            struct ggml_context   * ctx,
+            struct ggml_tensor    * a,
+            ggml_custom1_op_t       fun,
+            int                     n_tasks,
+            void                  * userdata);
+
+    GGML_API struct ggml_tensor * ggml_map_custom1_inplace(
+            struct ggml_context   * ctx,
+            struct ggml_tensor    * a,
+            ggml_custom1_op_t       fun,
+            int                     n_tasks,
+            void                  * userdata);
+
+    GGML_API struct ggml_tensor * ggml_map_custom2(
+            struct ggml_context   * ctx,
+            struct ggml_tensor    * a,
+            struct ggml_tensor    * b,
+            ggml_custom2_op_t       fun,
+            int                     n_tasks,
+            void                  * userdata);
+
+    GGML_API struct ggml_tensor * ggml_map_custom2_inplace(
+            struct ggml_context   * ctx,
+            struct ggml_tensor    * a,
+            struct ggml_tensor    * b,
+            ggml_custom2_op_t       fun,
+            int                     n_tasks,
+            void                  * userdata);
+
+    GGML_API struct ggml_tensor * ggml_map_custom3(
+            struct ggml_context   * ctx,
+            struct ggml_tensor    * a,
+            struct ggml_tensor    * b,
+            struct ggml_tensor    * c,
+            ggml_custom3_op_t       fun,
+            int                     n_tasks,
+            void                  * userdata);
+
+    GGML_API struct ggml_tensor * ggml_map_custom3_inplace(
+            struct ggml_context   * ctx,
+            struct ggml_tensor    * a,
+            struct ggml_tensor    * b,
+            struct ggml_tensor    * c,
+            ggml_custom3_op_t       fun,
+            int                     n_tasks,
+            void                  * userdata);
+
+    typedef void (*ggml_custom_op_t)(struct ggml_tensor * dst , int ith, int nth, void * userdata);
+
+    GGML_API struct ggml_tensor * ggml_custom_4d(
+            struct ggml_context * ctx,
+            enum ggml_type        type,
+            int64_t               ne0,
+            int64_t               ne1,
+            int64_t               ne2,
+            int64_t               ne3,
+            struct ggml_tensor ** args,
+            int                   n_args,
+            ggml_custom_op_t      fun,
+            int                   n_tasks,
+            void                * userdata);
+
+    GGML_API struct ggml_tensor * ggml_custom_inplace(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor ** args,
+            int                   n_args,
+            ggml_custom_op_t      fun,
+            int                   n_tasks,
+            void                * userdata);
+
+    // loss function
+
+    GGML_API struct ggml_tensor * ggml_cross_entropy_loss(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,  // logits
+            struct ggml_tensor  * b); // labels
+
+    GGML_API struct ggml_tensor * ggml_cross_entropy_loss_back(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,  // logits
+            struct ggml_tensor  * b,  // labels
+            struct ggml_tensor  * c); // gradients of cross_entropy_loss result
+
+    // AdamW optimizer step
+    // Paper: https://arxiv.org/pdf/1711.05101v3.pdf
+    // PyTorch: https://pytorch.org/docs/stable/generated/torch.optim.AdamW.html
+    GGML_API struct ggml_tensor * ggml_opt_step_adamw(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * grad,
+            struct ggml_tensor  * m,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * adamw_params); // parameters such as the learning rate
+
+    // stochastic gradient descent step (with weight decay)
+    GGML_API struct ggml_tensor * ggml_opt_step_sgd(
+        struct ggml_context * ctx,
+        struct ggml_tensor *  a,
+        struct ggml_tensor *  grad,
+        struct ggml_tensor *  sgd_params); // alpha, weight decay
+
+    // build forward multiple tensors and select one of them for computing
+    // this is useful for creating graphs that have constant topology but compute different things based on the input
+    // ref: https://github.com/ggml-org/llama.cpp/pull/18550
+    //
+    // nodes:
+    //   | - build forward into the graph but do not compute
+    //   c - build forward into the graph and compute
+    //
+    //    |  |  ...  c  ...  |
+    //    |  |  ...  c  ...  |
+    //    |  |  ...  c  ...  |
+    //   [0  1  ... idx ...  n-1]        <-- ggml_build_forward_select(..., n, idx)
+    //               c
+    //               c
+    //
+    // example:
+    //   struct ggml_tensor * curs[3];
+    //
+    //   curs[0]  = compute0(...);
+    //   curs[1]  = compute1(...);
+    //   curs[2]  = compute2(...);
+    //
+    //   int idx = select_branch(some_input);
+    //
+    //   struct ggml_tensor * out = ggml_build_forward_select(cgraph, curs, 3, idx);
+    //
+    GGML_API struct ggml_tensor * ggml_build_forward_select(
+            struct ggml_cgraph  * cgraph,
+            struct ggml_tensor ** tensors,
+            int                   n_tensors,
+            int                   idx);
+
+    GGML_API void ggml_build_forward_expand(
+            struct ggml_cgraph * cgraph,
+            struct ggml_tensor * tensor);
+
+    GGML_API void ggml_build_backward_expand(
+        struct ggml_context *  ctx,        // context for gradient computation
+        struct ggml_cgraph  *  cgraph,
+        struct ggml_tensor  ** grad_accs);
+
+    // graph allocation in a context
+    GGML_API struct ggml_cgraph * ggml_new_graph       (struct ggml_context * ctx); // size = GGML_DEFAULT_GRAPH_SIZE, grads = false
+    GGML_API struct ggml_cgraph * ggml_new_graph_custom(struct ggml_context * ctx, size_t size, bool grads);
+    GGML_API struct ggml_cgraph * ggml_graph_dup       (struct ggml_context * ctx, struct ggml_cgraph * cgraph, bool force_grads);
+    GGML_API void                 ggml_graph_cpy       (struct ggml_cgraph * src, struct ggml_cgraph * dst);
+    GGML_API void                 ggml_graph_reset     (struct ggml_cgraph * cgraph); // set regular grads + optimizer momenta to 0, set loss grad to 1
+    GGML_API void                 ggml_graph_clear     (struct ggml_cgraph * cgraph);
+
+    GGML_API int                   ggml_graph_size   (struct ggml_cgraph * cgraph);
+    GGML_API struct ggml_tensor *  ggml_graph_node   (struct ggml_cgraph * cgraph, int i); // if i < 0, returns nodes[n_nodes + i]
+    GGML_API struct ggml_tensor ** ggml_graph_nodes  (struct ggml_cgraph * cgraph);
+    GGML_API int                   ggml_graph_n_nodes(struct ggml_cgraph * cgraph);
+
+    GGML_API void   ggml_graph_add_node(struct ggml_cgraph * cgraph, struct ggml_tensor * tensor);
+
+    GGML_API size_t ggml_graph_overhead(void);
+    GGML_API size_t ggml_graph_overhead_custom(size_t size, bool grads);
+
+    GGML_API struct ggml_tensor * ggml_graph_get_tensor  (const struct ggml_cgraph * cgraph, const char * name);
+    GGML_API struct ggml_tensor * ggml_graph_get_grad    (const struct ggml_cgraph * cgraph, const struct ggml_tensor * node);
+    GGML_API struct ggml_tensor * ggml_graph_get_grad_acc(const struct ggml_cgraph * cgraph, const struct ggml_tensor * node);
+
+    // print info and performance information for the graph
+    GGML_API void ggml_graph_print(const struct ggml_cgraph * cgraph);
+
+    // dump the graph into a file using the dot format
+    GGML_API void ggml_graph_dump_dot(const struct ggml_cgraph * gb, const struct ggml_cgraph * cgraph, const char * filename);
+
+    // TODO these functions were sandwiched in the old optimization interface, is there a better place for them?
+    typedef void (*ggml_log_callback)(enum ggml_log_level level, const char * text, void * user_data);
+
+    // Set callback for all future logging events.
+    // If this is not called, or NULL is supplied, everything is output on stderr.
+    GGML_API void ggml_log_get(ggml_log_callback * log_callback, void ** user_data);
+    GGML_API void ggml_log_set(ggml_log_callback   log_callback, void *  user_data);
+
+    GGML_API struct ggml_tensor * ggml_set_zero(struct ggml_tensor * tensor);
+
+    //
+    // quantization
+    //
+
+    // - ggml_quantize_init can be called multiple times with the same type
+    //   it will only initialize the quantization tables for the first call or after ggml_quantize_free
+    //   automatically called by ggml_quantize_chunk for convenience
+    //
+    // - ggml_quantize_free will free any memory allocated by ggml_quantize_init
+    //   call this at the end of the program to avoid memory leaks
+    //
+    // note: these are thread-safe
+    //
+    GGML_API void ggml_quantize_init(enum ggml_type type);
+    GGML_API void ggml_quantize_free(void);
+
+    // some quantization type cannot be used without an importance matrix
+    GGML_API bool ggml_quantize_requires_imatrix(enum ggml_type type);
+
+    // calls ggml_quantize_init internally (i.e. can allocate memory)
+    GGML_API size_t ggml_quantize_chunk(
+            enum ggml_type   type,
+               const float * src,
+                      void * dst,
+                   int64_t   start,
+                   int64_t   nrows,
+                   int64_t   n_per_row,
+               const float * imatrix);
+
+#ifdef __cplusplus
+    // restrict not standard in C++
+#    if defined(__GNUC__)
+#        define GGML_RESTRICT __restrict__
+#    elif defined(__clang__)
+#        define GGML_RESTRICT __restrict
+#    elif defined(_MSC_VER)
+#        define GGML_RESTRICT __restrict
+#    else
+#        define GGML_RESTRICT
+#    endif
+#else
+#    if defined (_MSC_VER) && (__STDC_VERSION__ < 201112L)
+#        define GGML_RESTRICT __restrict
+#    else
+#        define GGML_RESTRICT restrict
+#    endif
+#endif
+    typedef void (*ggml_to_float_t)  (const void  * GGML_RESTRICT x, float * GGML_RESTRICT y, int64_t k);
+    typedef void (*ggml_from_float_t)(const float * GGML_RESTRICT x, void  * GGML_RESTRICT y, int64_t k);
+
+    struct ggml_type_traits {
+        const char             * type_name;
+        int64_t                  blck_size;
+        int64_t                  blck_size_interleave; // interleave elements in blocks
+        size_t                   type_size;
+        bool                     is_quantized;
+        ggml_to_float_t          to_float;
+        ggml_from_float_t        from_float_ref;
+    };
+
+    GGML_API const struct ggml_type_traits * ggml_get_type_traits(enum ggml_type type);
+
+    // ggml threadpool
+    // TODO: currently, only a few functions are in the base ggml API, while the rest are in the CPU backend
+    // the goal should be to create an API that other backends can use move everything to the ggml base
+
+    // scheduling priorities
+    enum ggml_sched_priority {
+        GGML_SCHED_PRIO_LOW = -1,
+        GGML_SCHED_PRIO_NORMAL,
+        GGML_SCHED_PRIO_MEDIUM,
+        GGML_SCHED_PRIO_HIGH,
+        GGML_SCHED_PRIO_REALTIME
+    };
+
+    // threadpool params
+    // Use ggml_threadpool_params_default() or ggml_threadpool_params_init() to populate the defaults
+    struct ggml_threadpool_params {
+        bool                cpumask[GGML_MAX_N_THREADS]; // mask of cpu cores (all-zeros means use default affinity settings)
+        int                 n_threads;                   // number of threads
+        enum ggml_sched_priority prio;                   // thread priority
+        uint32_t            poll;                        // polling level (0 - no polling, 100 - aggressive polling)
+        bool                strict_cpu;                  // strict cpu placement
+        bool                paused;                      // start in paused state
+    };
+
+    struct ggml_threadpool;     // forward declaration, see ggml.c
+
+    typedef struct ggml_threadpool * ggml_threadpool_t;
+
+    GGML_API struct ggml_threadpool_params ggml_threadpool_params_default(int n_threads);
+    GGML_API void                          ggml_threadpool_params_init   (struct ggml_threadpool_params * p, int n_threads);
+    GGML_API bool                          ggml_threadpool_params_match  (const struct ggml_threadpool_params * p0, const struct ggml_threadpool_params * p1);
+
+#ifdef  __cplusplus
+}
+#endif

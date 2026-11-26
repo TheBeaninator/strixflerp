@@ -1,0 +1,82 @@
+id        = "kernel.maya_tp.qsa"
+kind      = "kernel"
+summary   = "the QSA sparse-attention family: the cache, indexer and attention (qsa), the decode and prompt attention kernels, the page selector (qsa_select) and llama.cpp's QSA attention, indexer and score kernels (native_qsa*)"
+why       = "Maya's sparse attention for the Qwen-Next family; a full set of QSA decode / prompt / select kernels in one place, beside kernel.strata.qsa and kernel.kestrel.qsa_score"
+notes     = "Interface tag: attn.qsa-indexer/-/f32.maya-tp, attn.softmax-gqa/kv-f16+i8+q4_0/f32.maya-tp-qsa. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/native_qsa.hpp",
+  "include/strata/kernels/native_qsa_indexer.hpp",
+  "include/strata/kernels/native_qsa_score.hpp",
+  "include/strata/kernels/qsa.hpp",
+  "include/strata/kernels/qsa_decode_attn.hpp",
+  "include/strata/kernels/qsa_prompt_attn.hpp",
+  "include/strata/kernels/qsa_select.hpp",
+  "src/kernels/cuda/native_qsa.cu",
+  "src/kernels/cuda/native_qsa_indexer.cu",
+  "src/kernels/cuda/native_qsa_score.cu",
+  "src/kernels/cuda/qsa.cu",
+  "src/kernels/cuda/qsa_decode_attn.cu",
+  "src/kernels/cuda/qsa_prompt_attn.cu",
+  "src/kernels/cuda/qsa_select.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/native_qsa.cu",
+  "src/src/kernels/cuda/native_qsa_indexer.cu",
+  "src/src/kernels/cuda/native_qsa_score.cu",
+  "src/src/kernels/cuda/qsa.cu",
+  "src/src/kernels/cuda/qsa_decode_attn.cu",
+  "src/src/kernels/cuda/qsa_prompt_attn.cu",
+  "src/src/kernels/cuda/qsa_select.cu",
+]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32.maya-tp"
+api       = "strata::kernels::qsa_*, native_qsa_indexer, native_qsa_score"
+numeric   = "FP32 scores, FP16 / INT8 / Q4_0 keys"
+regime    = "decode and prompt"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+i8+q4_0/f32.maya-tp-qsa"
+api       = "strata::kernels::qsa_decode_attn, qsa_prompt_attn"
+numeric   = "FP32 softmax"
+regime    = "selected pages"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.kvcache"
+
+[[requires]]
+module    = "kernel.maya_tp.rope"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.qsa.json"

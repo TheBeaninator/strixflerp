@@ -1,0 +1,43 @@
+id        = "format.fastasfuck.q4"
+kind      = "format"
+summary   = "fastasfuck's Q4 reference quantizer and dequantizer behind formats/q4.hpp: 4-bit codes with BF16 scale and min per group, row append and a chunk-major relayout"
+why       = "the 1.1.0 GPTQ tools promise codes bit-identical to this file (tools/quantize_qwen_gptq.py docstring), so it is the reference a calibrated Q4 tensor is checked against"
+notes     = "Files vs strixite: formats/q4.cpp byte-identical to format.strixite.q4 at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["formats/q4.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/q4.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.host/strixw-q4/-"
+api       = "strix::Q4Weight, quantize_q4, dequantize_q4, append_rows_q4"
+numeric   = "the same source as format.strixite.q4, so its behaviour: w = q * scale + min per group; quantization bit-identical to the reference quantizer"
+regime    = "as format.strixite.q4: G in 32/64/128, K % G == 0"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_formats) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

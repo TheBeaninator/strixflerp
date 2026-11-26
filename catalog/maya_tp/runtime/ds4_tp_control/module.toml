@@ -1,0 +1,58 @@
+id        = "runtime.maya_tp.ds4_tp_control"
+kind      = "runtime"
+summary   = "TP2 delta: DeepSeek TP2's control plane (src/ds4/ds4_tp_control, ds4_tp_channel, ds4_tp_ack, ds4_tp_chunk, ds4_tp_identity, ds4_tp_preflight, ds4_tp_controller): a bounded, versioned, endian-independent command codec (Feed / Step / Verify / Verdict / Reset / Shutdown / Bind / Rows / BatchVerify / BatchCommit), identity exchange and preflight checks, accepted / completed acknowledgements, the shared row bound under the collective window and rank 0's controller that poisons the pair on a failure after a message may have reached the worker"
+why       = "a two-rank control protocol whose failure rule (never retry a command or restart one rank) is the hard-won part; it is the shape of a strixflerp TP2 rank-0 controller"
+notes     = "Interface tag: sched.tp2-control-ds4/-/-. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "src/ds4/ds4_tp_ack.hpp",
+  "src/ds4/ds4_tp_channel.hpp",
+  "src/ds4/ds4_tp_chunk.hpp",
+  "src/ds4/ds4_tp_control.hpp",
+  "src/ds4/ds4_tp_controller.hpp",
+  "src/ds4/ds4_tp_identity.hpp",
+  "src/ds4/ds4_tp_preflight.hpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "sched.tp2-control-ds4/-/-"
+api       = "strata::ds4::tp2::Controller, encode / decode of Control, exchange_identity, chunk_rows"
+numeric   = "integer frames"
+regime    = "two ranks"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_batch"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_worker"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_comm_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the modules that include it"

@@ -1,0 +1,70 @@
+id        = "executor.fastasfuck.qwen3_5"
+kind      = "executor"
+summary   = "fastasfuck's Qwen3.5 text forward on unquantized BF16 linears: 24 GDN or full-attention layers with SwiGLU MLP and a tied LM head"
+why       = "a small BF16 model path kept beside the Flash-Next engine, useful as an unquantized reference for the shared kernels"
+notes     = "Files vs strixite: runtime/qwen3_5.cpp 2 changed lines against executor.strixite.qwen3_5 at d19945e; runtime/qwen3_5.hpp byte-identical to executor.strixite.qwen3_5 at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/qwen3_5.cpp", "runtime/qwen3_5.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/qwen3_5.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.forward/qwen3.5/bf16"
+api       = "strix::Qwen35Model, strix::Qwen35Session"
+numeric   = "derived from executor.strixite.qwen3_5 (runtime/qwen3_5.cpp 2 changed lines against executor.strixite.qwen3_5 at d19945e; runtime/qwen3_5.hpp byte-identical to executor.strixite.qwen3_5 at d19945e); not compared here"
+regime    = "as executor.strixite.qwen3_5: not served; kept as the baseline forward"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "format.fastasfuck.safetensors"
+
+[[requires]]
+module    = "kernel.fastasfuck.attention_gqa"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.embedding"
+
+[[requires]]
+module    = "kernel.fastasfuck.gdn"
+
+[[requires]]
+module    = "kernel.fastasfuck.linear"
+
+[[requires]]
+module    = "kernel.fastasfuck.norm"
+
+[[requires]]
+module    = "kernel.fastasfuck.residual"
+
+[[requires]]
+module    = "kernel.fastasfuck.rope"
+
+[[requires]]
+module    = "kernel.fastasfuck.swiglu"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_model) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,46 @@
+id        = "kernel.kyojin.dsa_topk"
+kind      = "kernel"
+summary   = "DSA / QSA top-k selection: a descending radix bucket search per row (one block per row) giving ascending indices then -1 padding"
+why       = "the selection step of DeepSeek sparse attention and Qwen QSA; GLM-5.3-Flash's DSA layers select through it. Where the shape would go: an attn.indexer-topk/-/i32 provider beside kernel.ciru_iu4.attn, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: attn.indexer-topk/-/i32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (dsa_topk.cu, dsa_topk.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/dsa_topk.cu", "exllamav3/exllamav3_ext/dsa_topk.cuh"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/dsa_topk.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.indexer-topk/-/i32.kyojin-radix"
+api       = "dsa_topk.cu, dsa_topk.cuh; kernels: dsa_topk_kernel, dsa_topk_split_kernel, dsa_topk_merge_kernel, dsa_seq_state_kernel"
+numeric   = "fp16 scores, int32 indices"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.graph"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: dsa_topk.cu"

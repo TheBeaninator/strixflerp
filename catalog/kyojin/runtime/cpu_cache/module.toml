@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.cpu_cache"
+kind      = "runtime"
+summary   = "Host-memory tier of the paged cache (pages swapped to CPU memory)"
+why       = "more cached prefixes than device memory holds. Where the shape would go: a kvcache.tiering/exl3-pages/- provider beside kernel.radiance.halo_kv, kernel.strata.kvcache, runtime.crucible.state_disk and 1 more, through a port of the python / Triton logic"
+notes     = "Interface tag: kvcache.tiering/exl3-pages/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 1 changed (cpu_cache.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/generator/cpu_cache.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.tiering-kyojin-cpu/exl3-pages/-"
+api       = "cpu_cache.py"
+numeric   = "n/a"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

@@ -1,0 +1,59 @@
+id        = "runtime.maya_tp.mm3_tp"
+kind      = "runtime"
+summary   = "TP2 delta: maya-mm3's tensor-parallel path (mm3_tp.cu / .hpp, 2,884 lines): GPUs in groups of tp, each group a run of layers, every layer cut over its members (query heads and their KV heads, index heads, o_proj columns, 1/tp of every FFN width); the residual stays on the host, members' partials come back through pinned memory with a counter each and are summed in member order, routed experts outside VRAM run on the CPU lane as tp sub-experts"
+why       = "a single-host multi-GPU TP with a host-side reduction, the contrast case to the two-host RDMA TP; the member-order host sum is a deterministic all-reduce without peer access"
+notes     = "Interface tag: collective.host-sum-tp/-/f32.maya-tp-mm3. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/mm3/mm3_tp.cu", "src/mm3/mm3_tp.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/mm3"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.host-sum-tp/-/f32.maya-tp-mm3"
+api       = "mm3::TpEngine (mm3_tp.hpp)"
+numeric   = "FP32 partials summed on the host in member order"
+regime    = "several GPUs, one host"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_kernels"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_vision"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_dspark"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

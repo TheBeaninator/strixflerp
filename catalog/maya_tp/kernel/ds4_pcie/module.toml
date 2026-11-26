@@ -1,0 +1,44 @@
+id        = "kernel.maya_tp.ds4_pcie"
+kind      = "kernel"
+summary   = "the decode path's PCIe lane on the device (ds4_pcie.cuh / ds4_pcie.hpp): the GPU pulls the experts the CPU lane does not hold over the bus"
+why       = "an expert-streaming lane for dGPU hosts; on Strix Halo's unified memory it is the shape to avoid, recorded for completeness"
+notes     = "Interface tag: moe.expert-stream-pcie/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/ds4/ds4_pcie.cuh", "src/ds4/ds4_pcie.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.expert-stream-pcie/-/-"
+api       = "ds4 pcie lane (ds4_pcie.hpp)"
+numeric   = "bytes moved, no arithmetic"
+regime    = "decode on a dGPU"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the modules that include it"

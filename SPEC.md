@@ -88,6 +88,11 @@ does not harvest (`sglang`, `halogen`) has an `ORIGIN.toml` and no modules. A tr
 that is harvested beside it (an open pull request) is a sub-origin with its own directory and `ORIGIN.toml`, named
 `<origin>_<what>` (`strixfold_pr6`, `parent = "strixfold"`): an origin has one commit, and `flerp diff-origin` proves
 each origin against one checkout. It holds only what that tree adds or changes (`docs/SPEC-PROPOSALS.md` section 12).
+An origin may instead carry branches of itself as overlays in its own directory (`ds4`): ORIGIN.toml lists each as an
+`[[overlay]]` table (slug, repo, branch, commit, base-diff), the overlay's added or changed files sit under the
+origin-relative prefix `overlay/<slug>/` in modules whose `[provenance] commit` is the overlay's, and the one checkout
+`flerp diff-origin` reads is the composed tree the harvest script writes (the base at its paths, each overlay's files
+under its prefix).
 
 How fine a module can be cut depends on the language. C and C++ files and HIP sources are cut by file. A Rust
 module is a crate: a crate does not build with files removed. A Zig module is a cut of an import closure, and
@@ -148,7 +153,7 @@ modified  = false
 spdx      = "AGPL-3.0-only"      # SPDX id; "LicenseRef-proprietary" when closed
 
 [build]
-lang      = "hip-c++"            # hip-c++ | c++ | c | zig | hsaco | triton-aot | rust | python | cuda (CUDA sources kept to read their recipe; never built here)
+lang      = "hip-c++"            # hip-c++ | c++ | c | zig | hsaco | triton-aot | rust | python | cuda (CUDA sources kept to read their recipe; never built here) | go | patch (a kernel patch series, kept to read and apply; never built here) | shell (host scripts and service units, kept to read and run; never compiled)
 sources   = ["src/kernels/linear_q4.hip"]
 includes  = ["src"]              # include roots this module exports to itself and to the modules that require it
 arch      = "gfx1151"

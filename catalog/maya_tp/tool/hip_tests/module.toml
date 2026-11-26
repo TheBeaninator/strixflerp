@@ -1,0 +1,94 @@
+id        = "tool.maya_tp.hip_tests"
+kind      = "tool"
+summary   = "the HIP-specific tests and benches (tests/hip): expert-cache staging, expert kernel bench, GLM attention / mv / prefill benches, handoff, intrinsics, native QSA score, PLE IQ4, prefill fused / MMQ / hipBLASLt / native batch parity"
+why       = "the AMD-only checks of the kernels on gfx1151, including the WMMA intrinsics test; the bench programs are the timing harness for a later experiment card"
+notes     = "Interface tag: verify.hip-kernel-tests-maya-tp/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "tests/hip/expert_cache_staging.cpp",
+  "tests/hip/expert_kernel_bench.cpp",
+  "tests/hip/glm_attn_bench.cu",
+  "tests/hip/glm_expert_helper.cpp",
+  "tests/hip/glm_handoff.cpp",
+  "tests/hip/glm_mv_bench.cu",
+  "tests/hip/glm_prefill_attention.cpp",
+  "tests/hip/handoff.cpp",
+  "tests/hip/intrinsics.cpp",
+  "tests/hip/native_qsa_score.cpp",
+  "tests/hip/ple_iq4.cpp",
+  "tests/hip/prefill_fused_bench.cpp",
+  "tests/hip/prefill_fused_parity.cpp",
+  "tests/hip/prefill_hipblaslt_gemm.cpp",
+  "tests/hip/prefill_mmq_parity.cpp",
+  "tests/hip/prefill_native_batch.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.hip-kernel-tests-maya-tp/-/-"
+api       = "tests/hip/*.cpp / .cu main()"
+numeric   = "per-test tolerances"
+regime    = "one AMD GPU"
+
+[[requires]]
+module    = "format.maya_tp.gguf_reader"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.elementwise"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_batch"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.prefill"
+
+[[requires]]
+module    = "kernel.maya_tp.prefill_moe_mmq"
+
+[[requires]]
+module    = "kernel.maya_tp.prefill_moe_rdna4"
+
+[[requires]]
+module    = "kernel.maya_tp.qsa"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.expert_store"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

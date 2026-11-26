@@ -1,0 +1,40 @@
+id        = "runtime.fastasfuck.sampler"
+kind      = "runtime"
+summary   = "fastasfuck's host next-token sampler in transformers' warper order over a full logits row or the GPU's top-20 candidates"
+why       = "temperature 0.6 throughput figures and T = 0 bit-identity checks in the benches both go through this sampler"
+notes     = "Files vs strixite: serve/sampler.cpp byte-identical to runtime.strixite.sampler at d19945e; serve/sampler.hpp byte-identical to runtime.strixite.sampler at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/sampler.cpp", "serve/sampler.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/sampler.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "sample.next-token/-/-"
+api       = "strix::Sampler, strix::SamplingParams, strix::LogitRows, strix::LogitMasks"
+numeric   = "the same source as runtime.strixite.sampler, so its behaviour: transformers' warper order; temperature 0 is argmax with the lowest id on a tie; candidates path bit-identical to the full row"
+regime    = "as runtime.strixite.sampler: host; only ids below n_valid can come out"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

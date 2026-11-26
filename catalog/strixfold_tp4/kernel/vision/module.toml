@@ -1,0 +1,44 @@
+id        = "kernel.strixfold_tp4.vision"
+kind      = "kernel"
+summary   = "The DeepSeek-V4.1 vision tower and aligner on gfx1151: patch unfold, RMSNorm, linear, 2D RoPE, attention, GELU / SiLU-mul and the image-span copy, every fp32 operation one IEEE operation in a declared order"
+why       = "Image prompts at TP4 encode on rank 0 on the GPU (vit_hip.zig) instead of a CPU torch child; rows are then sent hidden-wide to every rank (pod card b9fafca926); compiled into the serving kit whether or not a request carries an image"
+notes     = "erff (vision.hip:42) is fdlibm's as musl carries it (FreeBSD s_erff.c), Copyright (C) 1993 Sun Microsystems, under the SunPro notice kept in the file. New in the TP4 serving tree (zig/kernels/hip/dsv41/vision.hip, not in f64b5ff); compiled into the serving kit by the origin's build graph (zig/build/hip_dsv41.zig, flags as catalog/strixfold ORIGIN.toml [compile]). Cards: -."
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/vision.hip",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND SunPro"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/vision.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = ["--offload-device-only", "--no-gpu-bundle-output", "-O3", "-std=c++20", "-fno-gpu-rdc", "-mno-wavefrontsize64", "-ffp-contract=off", "-fno-fast-math", "-fdenormal-fp-math=ieee", "-D__HIP_PLATFORM_AMD__"]
+
+[[provides]]
+interface = "vision.tower/deepseek-v4.1/bf16.hip"
+api       = "tf_ds_vision_unfold, _rms_norm, _linear, _rope, _attention, _gelu, _silu_mul, _add, _span"
+numeric   = "no contraction, no fast math; bf16 rounding RNE with NaN quieting"
+regime    = "rank 0, one picture at a time"
+
+[[requires]]
+module    = "kernel.strixfold_tp4.dsv41_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "compiled only inside the recipe dsv41-flash.strixfold-tp4 by the origin's build graph (its object is pinned there and came out as the deployed one); not in gate/compile"

@@ -1,0 +1,44 @@
+id        = "kernel.lucebox.kvflash"
+kind      = "kernel"
+summary   = "the exact chunk attention-mass scorer of the KVFlash GPU scorer (KV selection)"
+why       = "No catalogue module scores KV chunks for eviction or selection"
+notes     = "INTERFACES.md section: none (KV selection; nearest 9). Interface tags: kvcache.score-mass/-/f32.lucebox. Units: server/src/common/kvflash_fused_mass_cuda.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = ["server/src/common/kvflash_fused_mass_cuda.cu", "server/src/common/kvflash_fused_mass_cuda.h"]
+authors   = ["Luce-Org"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/server/src/common/kvflash_fused_mass_cuda.cu"]
+includes  = ["src/server/src/common"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/src/common/kvflash_fused_mass_cuda.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1"] }
+
+[[provides]]
+interface = "kvcache.score-mass/-/f32.lucebox"
+api       = "server/src/common/kvflash_fused_mass_cuda.h"
+numeric   = "exact chunk mass (header)"
+regime    = "KVFlash long-context KV selection"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.server_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.kvflash.json"

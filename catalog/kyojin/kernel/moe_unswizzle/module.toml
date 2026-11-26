@@ -1,0 +1,43 @@
+id        = "kernel.kyojin.moe_unswizzle"
+kind      = "kernel"
+summary   = "Unswizzle of CPU-offloaded expert weights streamed back to the GPU for prefill (the band-swizzled VBMI tile order to the GPU order)"
+why       = "pairs with the CPU expert offload (runtime.kyojin.cpu_moe_mul1). Where the shape would go: no catalogue interface matches; it stays a reference for an adapter from its launcher to the flerp module ABI, kept beside the module it serves"
+notes     = "Interface tag: none. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (moe_unswizzle.cu, moe_unswizzle.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/moe_unswizzle.cu", "exllamav3/exllamav3_ext/moe_unswizzle.cuh"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/moe_unswizzle.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.kyojin-moe-unswizzle/-/-"
+api       = "moe_unswizzle.cu, moe_unswizzle.cuh; kernels: moe_unswizzle_kernel"
+numeric   = "byte permutation"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: moe_unswizzle.cu"

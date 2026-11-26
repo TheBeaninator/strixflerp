@@ -1,0 +1,67 @@
+id        = "kernel.rocmfpx.common"
+kind      = "kernel"
+summary   = "Header-only layer the ROCmFPX kernel units include: the ROCmFPX type ids (ggml.h) and block layouts (ggml-common.h, ggml/rocmfpx/rocmfpx.h, ggml/rocmfp4/rocmfp4.h), the device codebooks and UE4M3 scale decoders, ggml-cuda's common.cuh, dequantize.cuh and vecdotq.cuh with the per-block ROCmFPX dot products (vec_dot_rocmfp*_q8_1) that MMVQ, MMQ and flash attention share, and the 17 llama.cpp headers with no ROCmFPX marker that those files reach through #include"
+why       = "SPEC.md gives headers that several modules include a module of their own; the vec_dot functions here are the arithmetic core of every ROCmFPX family, and the base headers (llama.cpp 15586e2d) are taken only so that the families compile standalone; the rest of the base is not harvested"
+notes     = "Interface tag: none. ROCmFPX files (carry ROCmFPX code): ggml/include/ggml.h, ggml/src/ggml-common.h, ggml/src/ggml-cuda/common.cuh, ggml/src/ggml-cuda/vecdotq.cuh, ggml/src/ggml-cuda/dequantize.cuh, ggml/rocmfpx/rocmfpx.h, ggml/rocmfpx/q7-q8-view.h, ggml/rocmfpx/rocmfpx_hip_codebook.cuh, ggml/rocmfp4/rocmfp4.h, ggml/rocmfp4/rocmfp4_hip_codebook.cuh, ggml/rocmfp4/rocmfp4_hip_scale.cuh. Base files (no ROCmFPX marker) listed by the include closure that docs/harvest/harvest_rocmfpx.py computes from the family files: ggml/include/ggml-alloc.h, ggml/include/ggml-backend.h, ggml/include/ggml-cuda.h, ggml/include/gguf.h, ggml/src/ggml-cuda/convert.cuh, ggml/src/ggml-cuda/cpy.cuh, ggml/src/ggml-cuda/getrows.cuh, ggml/src/ggml-cuda/mma.cuh, ggml/src/ggml-cuda/mmid.cuh, ggml/src/ggml-cuda/mmvq.cuh, ggml/src/ggml-cuda/set-rows.cuh, ggml/src/ggml-cuda/unary.cuh, ggml/src/ggml-cuda/vendors/cuda.h, ggml/src/ggml-cuda/vendors/hip.h, ggml/src/ggml-cuda/vendors/musa.h, ggml/src/ggml-impl.h, ggml/src/ggml-musa/mudnn.cuh."
+
+[provenance]
+origin    = "rocmfpx"
+repo      = "https://github.com/ciru-ai/ROCmFPX"
+commit    = "efd1ef5a17db576168d849831e1ef3346582881e"
+branch    = "main"
+paths     = [
+  "ggml/include/ggml-alloc.h",
+  "ggml/include/ggml-backend.h",
+  "ggml/include/ggml-cuda.h",
+  "ggml/include/ggml.h",
+  "ggml/include/gguf.h",
+  "ggml/rocmfp4/rocmfp4.h",
+  "ggml/rocmfp4/rocmfp4_hip_codebook.cuh",
+  "ggml/rocmfp4/rocmfp4_hip_scale.cuh",
+  "ggml/rocmfpx/q7-q8-view.h",
+  "ggml/rocmfpx/rocmfpx.h",
+  "ggml/rocmfpx/rocmfpx_hip_codebook.cuh",
+  "ggml/src/ggml-common.h",
+  "ggml/src/ggml-cuda/common.cuh",
+  "ggml/src/ggml-cuda/convert.cuh",
+  "ggml/src/ggml-cuda/cpy.cuh",
+  "ggml/src/ggml-cuda/dequantize.cuh",
+  "ggml/src/ggml-cuda/getrows.cuh",
+  "ggml/src/ggml-cuda/mma.cuh",
+  "ggml/src/ggml-cuda/mmid.cuh",
+  "ggml/src/ggml-cuda/mmvq.cuh",
+  "ggml/src/ggml-cuda/set-rows.cuh",
+  "ggml/src/ggml-cuda/unary.cuh",
+  "ggml/src/ggml-cuda/vecdotq.cuh",
+  "ggml/src/ggml-cuda/vendors/cuda.h",
+  "ggml/src/ggml-cuda/vendors/hip.h",
+  "ggml/src/ggml-cuda/vendors/musa.h",
+  "ggml/src/ggml-impl.h",
+  "ggml/src/ggml-musa/mudnn.cuh",
+]
+authors   = ["Ciru (ciru-ai)", "the ggml authors"]
+modified  = false
+upstream  = "ggml-org/llama.cpp 15586e2d7165570fb3aa7c26e0d442e289ef69de (tag b10297 plus one commit): ggml.h, ggml-common.h, common.cuh, dequantize.cuh and vecdotq.cuh are llama.cpp files with ROCmFPX code added; the base headers carry no ROCmFPX marker"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src", "src/ggml/include", "src/ggml/rocmfpx", "src/ggml/rocmfp4"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.rocmfpx-ggml-cuda/-/-"
+api       = "ggml-cuda/common.cuh (ggml_backend_cuda_context, the CUDA-to-HIP vendor mapping), vecdotq.cuh (vec_dot_rocmfp4_q8_1, vec_dot_rocmfp4_fast_q8_1, vec_dot_rocmfpx_fp2 / fp3 / fp6 / fp8_q8_1, vec_dot_rocmfpx_q7_q8_1)"
+numeric   = "n/a here"
+regime    = "compiled inside every kernel.rocmfpx.* unit"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside every other kernel.rocmfpx.* unit"

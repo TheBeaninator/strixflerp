@@ -1,0 +1,19 @@
+# recipe dsv41-flash.strixfold-tp4 built on control-node, card fe4d694019, strixflerp card/fe4d694019 @ 5b1b8455adac (catalogue, recipe and path pins; later commits add the stage tool, gate, docs and the [build] options rename only)
+# build/dsv41-flash.strixfold-tp4/build.sh -j8 --summary all under taskset -c 8-15,24-31 (zig_build.sh's CPU set), systemd user unit flerp-build-fe4d694019-2 (MemoryMax 16G, CPUQuota 800%, nice 19); Zig in the bwrap view of [build.path_pins]
+# log /data/pod/plans/fe4d694019/build-2.log (build-1.log: the same without taskset, also rc 0, the same kit)
+verify-tree: 622 files match assembly.json
+verify-prebuilt: 204 objects of /data/pod/plans/4d4c5173d2/kit/gfx1151-v6f2c38-tp4 match catalog/strixfold_tp4/kernel/triton_kit/prebuilt/SHA256SUMS
+triton /data/pod/plans/4d4c5173d2/kit/gfx1151-v6f2c38-tp4: 254 variants, 0 refused, 36 spill registers to scratch
+kit dsv41: 220 objects, 402 kernels, manifest sha256 446c43ebb75f0386b6c5ba9ef8de14540c0fbb7f8f814c1faa6ac3888908a0a8
+Build Summary: 36/36 steps succeeded
+record: 225 installed files -> ../built.json
+BUILD-RC=0
+
+recipe kit manifest 446c43ebb75f0386b6c5ba9ef8de14540c0fbb7f8f814c1faa6ac3888908a0a8
+served kit manifest 446c43ebb75f0386b6c5ba9ef8de14540c0fbb7f8f814c1faa6ac3888908a0a8 (/data/pod/plans/strixfold/deploy-stage/72c0f083fca1, = /data/pod/plans/serve-next-20261123c/wt/zig-out)
+kit directory: all 221 files byte-identical (220 objects + manifest)
+
+stage: tools/flerp-stage.py -> /data/pod/plans/strixfold/deploy-stage/flerp-72c0f083fca1, compared with 72c0f083fca1 in stage-compare-72c0f083fca1.txt:
+654 SHA256SUMS names = the served 654, same order; 650 byte-equal; the 4 binaries differ only in .strtab __anon_<n> names
+(Zig compiler thread id bits): sizes equal, objcopy --strip-all equal (tensorfold-native a9746708b947, tf-dsv41-lanes 0d91038c1b12,
+tf-dsv41-layer 19482d60f3af, tf-hip-kit af84c80127ac), and build-1 and build-2 of the same tree differ from each other in the same symbols.

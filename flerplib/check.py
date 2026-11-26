@@ -544,9 +544,10 @@ def check_origin(cat, origin, rep):
         rep.error(where, "[licence] spdx is missing")
     else:
         check_spdx(rep, where, lic["spdx"])
-        for f in lic.get("files", []):
-            if not os.path.isfile(os.path.join(cat.root, "catalog", origin, f)):
-                rep.error(where, f"[licence] file '{f}' does not exist next to ORIGIN.toml")
+        for key in ("files", "canonical_files"):
+            for f in lic.get(key, []):
+                if not os.path.isfile(os.path.join(cat.root, "catalog", origin, f)):
+                    rep.error(where, f"[licence] {key} entry '{f}' does not exist next to ORIGIN.toml")
     tc = data.get("toolchain")
     if not isinstance(tc, dict) or not tc:
         rep.error(where, "[toolchain] is missing: say what the origin was built with")
@@ -567,10 +568,13 @@ def check_origin(cat, origin, rep):
         if not isinstance(comp, dict) or not isinstance(comp.get("driver"), str) or not comp.get("arch_flag"):
             rep.error(where, "[compile] needs driver and arch_flag (SPEC.md section 5, origin compile recipes)")
     commit = data.get("commit")
+    # an origin that carries branches of itself as overlays ([[overlay]], SPEC.md section 2) names their commits too
+    overlays = data.get("overlay") if isinstance(data.get("overlay"), list) else []
+    commits = [commit] + [o["commit"] for o in overlays if isinstance(o, dict) and isinstance(o.get("commit"), str)]
     for m in cat.modules:
         if m.dir_origin == origin and isinstance(commit, str):
             mc = m.data.get("provenance", {}).get("commit") if isinstance(m.data.get("provenance"), dict) else None
-            if isinstance(mc, str) and not (commit.startswith(mc) or mc.startswith(commit)):
+            if isinstance(mc, str) and not any(c.startswith(mc) or mc.startswith(c) for c in commits):
                 rep.warn(cat.rel(m.path), f"[provenance] commit {mc} differs from ORIGIN.toml's {commit}")
 
 

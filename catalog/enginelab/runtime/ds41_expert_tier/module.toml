@@ -1,0 +1,80 @@
+id        = "runtime.enginelab.ds41_expert_tier"
+kind      = "runtime"
+summary   = "DS41 expert tiering: the expert RPC and server, the HIP expert backend, hot placement, host pinning (plan, admission) and promotion, tier statistics, touch batches, replica census and the memory budget"
+why       = "keeps hot experts in fast memory and serves cold ones from a peer or host: the residency side of a 2-node DS41; where it would go: a new strixflerp interface runtime.expert-tiering/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, runtime.expert-tiering/-/-. 1 HIP unit(s) compiled standalone by the gate; 3 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/ds41_expert_rpc.hpp",
+  "include/strix/ds41_expert_server.hpp",
+  "include/strix/ds41_host_pin_admission.hpp",
+  "include/strix/ds41_host_pin_plan.hpp",
+  "include/strix/ds41_host_promote.hpp",
+  "include/strix/ds41_hot_placement.hpp",
+  "include/strix/ds41_memory_budget.hpp",
+  "include/strix/ds41_replica_census.hpp",
+  "include/strix/ds41_tier_stats.hpp",
+  "include/strix/ds41_touch_batch.hpp",
+  "include/strix/hip_ds41_expert_backend.hpp",
+  "src/ds41_expert_rpc.cpp",
+  "src/ds41_expert_server.cpp",
+  "src/ds41_hot_placement.cpp",
+  "src/hip_ds41_expert_backend.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_ds41_expert_backend.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "runtime.expert-tiering/-/-"
+api       = "src/ds41_expert_server.cpp, ds41_hot_placement.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_routes"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.ds41_expert_tier.json"

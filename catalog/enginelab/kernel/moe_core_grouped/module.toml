@@ -1,0 +1,88 @@
+id        = "kernel.enginelab.moe_core_grouped"
+kind      = "kernel"
+summary   = "the grouped expert GEMM family: grouped core, dispatch, policy and rows, grouped F16 / A8-F16 / integer decode / IU4 x A4 (contract, plan) / W4A4 / microscaled forms, grouped tall plan, device grouped plan, expert-major plan, class tree and pair gather"
+why       = "one MoE grouped GEMM family per AGENTS.md: every engine's routed experts in decode and verify windows run through it; where it would go: beside the catalogue's moe.experts-decode/iu4+w4a4+f16/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.experts-decode/iu4+w4a4+f16/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/moe_core/class_tree.hpp",
+  "src/moe_core/device_grouped_plan.hpp",
+  "src/moe_core/expert_major_plan.hpp",
+  "src/moe_core/grouped_a8_f16.hpp",
+  "src/moe_core/grouped_core.hpp",
+  "src/moe_core/grouped_dispatch.hpp",
+  "src/moe_core/grouped_f16.hpp",
+  "src/moe_core/grouped_integer_decode.hpp",
+  "src/moe_core/grouped_iu4a4.hpp",
+  "src/moe_core/grouped_iu4a4_contract.hpp",
+  "src/moe_core/grouped_iu4a4_plan.hpp",
+  "src/moe_core/grouped_microscaled.hpp",
+  "src/moe_core/grouped_microscaled_rows.hpp",
+  "src/moe_core/grouped_policy.hpp",
+  "src/moe_core/grouped_rows.hpp",
+  "src/moe_core/grouped_tall_plan.hpp",
+  "src/moe_core/grouped_w4a4.hpp",
+  "src/moe_core/pair_gather.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/moe_core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-decode/iu4+w4a4+f16/f16-f32.enginelab-grouped"
+api       = "src/moe_core/grouped_*.hpp"
+numeric   = "FP32 accumulation in a declared order per expert"
+regime    = "decode and small verify windows"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_dense"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_moe"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_microscaled"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

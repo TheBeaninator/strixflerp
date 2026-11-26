@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.guard"
+kind      = "runtime"
+summary   = "Memory guards: GTT / host-memory admission and the live free-memory floor of a server"
+why       = "a 128 GB APU shared with the OS. Where the shape would go: a host.memory-governor/-/- provider beside runtime.strixite.memory_governor, through a port of the python / Triton logic"
+notes     = "Interface tag: host.memory-governor/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 3 added (guard.py, guard_common.py, memory_guard.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/guard.py", "exllamav3/guard_common.py", "exllamav3/memory_guard.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "host.memory-governor-kyojin/-/-"
+api       = "guard.py, guard_common.py, memory_guard.py"
+numeric   = "n/a"
+regime    = "host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

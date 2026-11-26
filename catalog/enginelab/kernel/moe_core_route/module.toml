@@ -1,0 +1,84 @@
+id        = "kernel.enginelab.moe_core_route"
+kind      = "kernel"
+summary   = "MoE routing and decode: route, route plan R1, route prune, route project and wave kernels, the HIP route tap, R1 route and tail, decode and decode schedule, device plan and index, expert activation and the host reference"
+why       = "the router half of the shared MoE core (softmax / sigmoid top-k and the projections that feed it); where it would go: beside the catalogue's moe.router/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.router/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/moe_core/decode.hpp",
+  "src/moe_core/decode_schedule.hpp",
+  "src/moe_core/device_plan.hpp",
+  "src/moe_core/device_plan_index.hpp",
+  "src/moe_core/expert_activation.hpp",
+  "src/moe_core/r1_route.hpp",
+  "src/moe_core/r1_tail.hpp",
+  "src/moe_core/reference.hpp",
+  "src/moe_core/route.hpp",
+  "src/moe_core/route_plan_r1.hpp",
+  "src/moe_core/route_project_kernel.hpp",
+  "src/moe_core/route_prune.hpp",
+  "src/moe_core/route_tap_hip.hpp",
+  "src/moe_core/route_wave_kernel.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.router/-/f32.enginelab"
+api       = "src/moe_core/route*.hpp, decode*.hpp"
+numeric   = "exact top-k, declared ties"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_short_conv"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_microscaled"
+
+[[requires]]
+module    = "kernel.enginelab.moe_launch"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

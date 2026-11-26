@@ -1,0 +1,52 @@
+id        = "tool.maya_tp.tp2_validation"
+kind      = "tool"
+summary   = "TP2 delta: validating and benchmarking a TP2 pair: acceptance suite (acceptance.sh), split audit, greedy parity, MTP acceptance and bench, prefill bench and cancel, continuation boundaries, long-loop reuse, collective regressions and batch validation (tools/tp2/*.py)"
+why       = "the regression harness that proved TP2 / MTP on Maya-S, M and L; parity and collective-regression checks are what a strixflerp TP2 gate needs before any timing"
+notes     = "Interface tag: verify.tp2-parity-suite/-/-. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "tools/tp2/acceptance.sh",
+  "tools/tp2/audit_split.py",
+  "tools/tp2/bench_mtp.py",
+  "tools/tp2/bench_prefill.py",
+  "tools/tp2/continuation_boundaries.py",
+  "tools/tp2/greedy_parity.py",
+  "tools/tp2/long_loop_reuse.py",
+  "tools/tp2/mtp_acceptance.py",
+  "tools/tp2/prefill_cancel.py",
+  "tools/tp2/regression_collectives.py",
+  "tools/tp2/validate_batch.py",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.tp2-parity-suite/-/-"
+api       = "tools/tp2/*.py"
+numeric   = "greedy text parity, acceptance rates, tok/s"
+regime    = "two hosts"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

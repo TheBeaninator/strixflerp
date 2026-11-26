@@ -1,0 +1,36 @@
+id        = "kernel.ds4.kmultinode_rocm_attention"
+kind      = "kernel"
+summary   = "kyuz0/ds4 rocm-multi-node 89c1ea9 (head commit by antirez, \"Fix ROCm MTP startup residency\"): its copy of the rocm_attention family against antirez/ds4 b3f5018: rocm/ds4_rocm_attention.cuh changed (+93 -563 lines). Kernels not in the base: attention_indexed_mixed_scalar_kernel. The family: DeepSeek V4 attention kernels for raw and mixed (FP8-compressed) KV: prefill raw / mixed with softmax tiles, decode mixed and indexed (8-head online, one-fast), the 16-head WMMA mixed kernel, the 64x64 WMMA output-B projection, head pack / unpack and the non-causal raw batch attention of the DSpark draft block; a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "an early ROCm multi-node line of ds4, five months older than the base: the ROCm backend before it grew V4.1, GLM-5.3 and Qwen kernels, with the pipeline-parallel distributed runtime; kept as the record of where the ROCm multi-node work started. The family in the base: the attention core of the DSV4 / V4.1 graph on gfx1151, with WMMA paths; the catalogue's attn.softmax-gqa providers are the comparison set"
+notes     = "Overlay kyuz0_rocm_multi_node: files under overlay/kyuz0_rocm_multi_node/ are the branch's bytes at 89c1ea982df2; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_rocm_multi_node.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "89c1ea982df20b7578f95bb10d894f5447146fc3"
+branch    = "rocm-multi-node"
+paths     = ["overlay/kyuz0_rocm_multi_node/rocm/ds4_rocm_attention.cuh"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/kyuz0_rocm_multi_node", "src/overlay/kyuz0_rocm_multi_node/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+fp8/f32.ds4-kmultinode"
+api       = "see summary"
+numeric   = "F32 accumulation; F16 / FP8 KV; rocWMMA where the head count allows"
+regime    = "prefill and decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.kmultinode_rocm_backend"

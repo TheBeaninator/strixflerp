@@ -1,0 +1,52 @@
+id        = "runtime.fastasfuck.output_parser"
+kind      = "runtime"
+summary   = "fastasfuck's incremental parser from generated tokens to reasoning, content and schema-typed tool-call arguments"
+why       = "streamed tool calls in the OpenAI and Responses APIs are cut from the model's XML call form here"
+notes     = "Files vs strixite: serve/output_parser.cpp byte-identical to runtime.strixite.output_parser at d19945e; serve/output_parser.hpp byte-identical to runtime.strixite.output_parser at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/output_parser.cpp", "serve/output_parser.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/output_parser.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "text.output-parser/-/-"
+api       = "strix::OutputParser, strix::OutputEvent, strix::ToolCallOut"
+numeric   = "the same source as runtime.strixite.output_parser, so its behaviour: n/a"
+regime    = "as runtime.strixite.output_parser: host; streaming and buffered give the same events"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.serve_log"
+
+[[requires]]
+module    = "runtime.fastasfuck.tokenizer"
+
+[[requires]]
+module    = "runtime.fastasfuck.unicode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

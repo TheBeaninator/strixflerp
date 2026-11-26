@@ -1,0 +1,41 @@
+id        = "runtime.maya_tp.tp_comm_abi"
+kind      = "runtime"
+summary   = "TP2 delta: the ordered communication boundary and its wire identity (include/strata/net/communicator.hpp, tp_wire.hpp): ExchangePartial / QueuePartial / SendControl / RecvControl with an exclusive operation scope per control request and an operation ordinal on every exchange; the GUFT handshake, GUCH collective header and GURD readiness word, byte-compatible with gufo"
+why       = "the interface any two-rank transport implements so engines sum against it without knowing the wire; the operation ordinal is the guard that stops a collective binding to the wrong request, a rule strixflerp's collective.interface can adopt"
+notes     = "Interface tag: collective.interface-maya-tp/-/-. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/net/communicator.hpp", "include/strata/net/tp_wire.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.interface-maya-tp/-/-"
+api       = "strata::net::Communicator, Wire / CollectiveHeader structs"
+numeric   = "no arithmetic; ordering and identity"
+regime    = "world 1 or 2"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the modules that include it"

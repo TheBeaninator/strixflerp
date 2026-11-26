@@ -1,0 +1,46 @@
+id        = "serve.maya_tp.responses"
+kind      = "serve"
+summary   = "the Responses API layer (serve/responses.py, response_config, response_jobs, response_schema, response_store): background jobs, stored responses and schema-constrained output"
+why       = "an OpenAI Responses-compatible layer with stored jobs, reusable over any engine behind strixflerp's serve front"
+notes     = "Interface tag: serve.responses-api/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "serve/response_config.py",
+  "serve/response_jobs.py",
+  "serve/response_schema.py",
+  "serve/response_store.py",
+  "serve/responses.py",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.responses-api/-/-"
+api       = "serve/responses.py"
+numeric   = "no arithmetic"
+regime    = "HTTP"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

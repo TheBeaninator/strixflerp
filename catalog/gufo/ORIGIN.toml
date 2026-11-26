@@ -9,7 +9,53 @@ reference_checkout = "~/Code/strixflerp-upstream/gufo-neuhaus"
 
 [licence]
 spdx      = "MIT"
-files     = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]        # copied verbatim next to this file; licenses/ and src/models/deepseek_v4_flash/LICENSE.ds4 in the origin
+# copied verbatim next to this file at their origin paths: the root texts, licenses/ (the upstream texts the notices
+# retain) and every origin file THIRD_PARTY_NOTICES.md links (LICENCE_FILES in docs/harvest/harvest_gufo.py)
+files     = [
+  "LICENSE",
+  "NOTICE",
+  "THIRD_PARTY_NOTICES.md",
+  "licenses/DS4-GB10.txt",
+  "licenses/ccv.txt",
+  "licenses/composable_kernel.txt",
+  "licenses/curl.txt",
+  "licenses/ffmpeg-GPL-3.0.txt",
+  "licenses/ffmpeg-LGPL-3.0.txt",
+  "licenses/ffmpeg.txt",
+  "licenses/h3.c.txt",
+  "licenses/hip.txt",
+  "licenses/hipblas.txt",
+  "licenses/hipblaslt.txt",
+  "licenses/hipcub.txt",
+  "licenses/icu.txt",
+  "licenses/libjpeg-turbo-IJG.txt",
+  "licenses/libjpeg-turbo.txt",
+  "licenses/libpng.txt",
+  "licenses/libsndfile.txt",
+  "licenses/libsoxr.txt",
+  "licenses/llama.cpp.txt",
+  "licenses/llvm-openmp.txt",
+  "licenses/openssl.txt",
+  "licenses/qwen.txt",
+  "licenses/rdma-core/COPYING.BSD_MIT",
+  "licenses/rdma-core/COPYING.GPL2",
+  "licenses/rdma-core/COPYING.md",
+  "licenses/rdma-core/libibverbs-NOTICE.txt",
+  "licenses/rocblas.txt",
+  "licenses/rocprim.txt",
+  "licenses/rocwmma.txt",
+  "licenses/strix-halo-llamacpp.txt",
+  "src/models/deepseek_v4_flash/LICENSE.ds4",
+  "src/models/deepseek_v4_flash/UPSTREAM.md",
+  "src/models/deepseek_v4_flash/kernels/rocm/mmq/VENDOR.md",
+  "src/models/qwen38_flash_next/kernels/rocm/mmq/VENDOR.md",
+  "src/models/qwen_image_21/UPSTREAM.md",
+  "docs/models/minimax-h3/QUALITY.md",
+  "docs/models/minimax-h3/README.md",
+  ".devops/nix/ds4-reference.nix",
+  ".devops/nix/llama-cpp-reference.nix",
+]
+source    = "the reference checkout above, byte-identical to f070a17 in control-node:/data/projects/gufo-rdma (git show f070a17:<path>, checked 2026-11-26)"
 third_party = "DeepSeek V4 Flash engine adapted from DS4 84cc8823 (MIT); quantized matrix kernels from llama.cpp 5c0e9468 ggml-cuda (MIT) with xangel82/DS4-GB10-GX10-DSpark-CUDA 910501e changes"
 
 [toolchain]
@@ -50,10 +96,7 @@ unharvested = [
   "CLAUDE.md",
   "CMakeLists.txt",
   "CMakePresets.json",
-  "LICENSE",
-  "NOTICE",
   "README.md",
-  "THIRD_PARTY_NOTICES.md",
   "assets/**",
   "cmake/**",
   "docs/**",
@@ -61,7 +104,6 @@ unharvested = [
   "flake.lock",
   "flake.nix",
   "include/gufo/ext/embeddings.hpp",
-  "licenses/**",
   "release-please-config.json",
   "schemas/**",
   "src/cli/README.md",

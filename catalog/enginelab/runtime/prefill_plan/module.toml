@@ -1,0 +1,66 @@
+id        = "runtime.enginelab.prefill_plan"
+kind      = "runtime"
+summary   = "prefill planning: dense plan, headless prefill, identity, MoE policy, piece plan, pool, row liveness, stage reservation; the attention split plan, row share and row-group union"
+why       = "how a long prompt is cut and scheduled; where it would go: a new strixflerp interface prefill.plan/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, prefill.plan/-/-. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/attention_split_plan.hpp",
+  "include/strix/attn_row_share.hpp",
+  "include/strix/attn_rowgroup_union.hpp",
+  "include/strix/prefill_dense_plan.hpp",
+  "include/strix/prefill_headless.hpp",
+  "include/strix/prefill_identity.hpp",
+  "include/strix/prefill_moe_policy.hpp",
+  "include/strix/prefill_piece_plan.hpp",
+  "include/strix/prefill_row_liveness.hpp",
+  "include/strix/prefill_stage_reservation.hpp",
+  "src/hip_prefill_pool.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "prefill.plan/-/-"
+api       = "include/strix/prefill_piece_plan.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.moe_launch"
+
+[[requires]]
+module    = "kernel.enginelab.moe_q4k_a8"
+
+[[requires]]
+module    = "kernel.enginelab.qsa_prefill"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

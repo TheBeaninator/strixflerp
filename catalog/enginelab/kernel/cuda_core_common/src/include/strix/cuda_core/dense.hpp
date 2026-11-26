@@ -1,0 +1,71 @@
+#pragma once
+#include "strix/cuda_core/types.hpp"
+#include "strix/head_argmax.hpp"
+
+namespace strix::core::rows { class Plan; }
+
+namespace strix::cuda_core {
+
+// Dense arithmetic identity. fp32: the CUDA-core FP32 reference below (documented fixed order, rows 1..16 fast path).
+// mma3 (default, "qwen35-cuda-exact-mma3-v1"): BF16 tensor-core mma.sync m16n8k16, FP32 accumulate, the FP32 activation split exactly
+// into hi/mid/lo bf16 terms; FAST policies: mma2 (hi+mid), mma1 (hi only). One fixed K order for every row count 1..32 (see
+// src/cuda/core/dense/dense_mma.cu); falls back to fp32 for shapes it does not cover (in % 32, out % 16, f32 weights).
+enum class DenseArith : std::uint8_t { fp32, mma3, mma2, mma1 };
+void set_dense_arith(DenseArith a);  // takes effect for launches / graph captures made afterwards
+DenseArith dense_arith();
+
+// y[r][o] = sum_k W[o][k] * x[r][k] (+ residual[r][o]) for r < rows (1..16). x is FP32 [rows][in], y FP32 [rows][out].
+// FIXED ORDER (identical for every row count and launch shape): one warp per output o. bf16/f32: lane l owns chunks
+// c = l + 32 i of 8 consecutive elements (i ascending) and adds the rounded products in ascending element order into one
+// FP32 accumulator; q8_0: lane l owns blocks b = l + 32 i; per block s = sequential sum_j (float(q_j) * x_j), then
+// acc = acc + fl(d * s). The 32 lane accumulators are combined by the xor butterfly (offsets 16,8,4,2,1).
+// The optional residual is added after the dot is complete, so y = residual + W x is bitwise (W x) then add. y may alias
+// residual. Requires in % 8 == 0 (bf16/f32) or in % 32 == 0 (q8_0).
+cudaError_t dense_rows(const DenseWeight& w, const float* x, float* y, std::uint32_t rows, const float* residual,
+                       cudaStream_t stream, DenseArith arithmetic = dense_arith());
+
+// BF16 or FP32 weights with the same FP32 dot order as dense_rows. For long
+// windows, assign an independent row window to each grid Y coordinate.
+cudaError_t dense_fp32_rows_grid(const DenseWeight& w, const float* x, float* y, std::uint32_t rows,
+                                cudaStream_t stream);
+
+// MMA3 BF16 tile shapes only. Round each completed FP32 sum to BF16, stored as FP32.
+cudaError_t dense_bf16_mma3_rows_round(const DenseWeight* ws, float* const* ys, int n, const float* x,
+                                      std::uint32_t rows, cudaStream_t stream);
+
+// Grouped MMA3 row tiles (1..32 rows). Empty epilogue (0) stores FP32.
+// The residual chain adds aux[0] as FP32 [rows][out], and the round chain is
+// available for BF16 weights. Supports plain.bf16@1 and gguf.q8_0@1 weights,
+// contiguous, 16-byte-aligned FP32 [rows][in] inputs and empty prologues.
+inline constexpr std::uint16_t kRowsAddResidual = 1;
+inline constexpr std::uint16_t kRowsRoundBf16 = 2;
+cudaError_t dense_mma3_rows_grouped(const core::rows::Plan& plan, cudaStream_t stream);
+
+// Up to 4 weights with the same x, format and in grouped by arithmetic route (ys[j] gets weights[j]'s output); bitwise equal to separate
+// dense_rows calls (the per-output-row order does not depend on the launch composition). No residual.
+cudaError_t dense_rows_multi(const DenseWeight* ws, float* const* ys, int n, const float* x, std::uint32_t rows,
+                             const float* residual, cudaStream_t stream, DenseArith arithmetic = dense_arith());
+
+// y[r][o] = silu(gate_dot) * up_dot with silu(g) = g / (1 + expf(-g)); bitwise equal to two dense_rows calls followed by the
+// same epilogue. gate and up must share format/in/out.
+cudaError_t dense_gate_up_silu_rows(const DenseWeight& gate, const DenseWeight& up, const float* x, float* y,
+                                    std::uint32_t rows, cudaStream_t stream, DenseArith arithmetic = dense_arith());
+
+// out[r][i] = dequant(row ids[r]) of a [vocab][in] table (embedding gather), FP32.
+cudaError_t embedding_rows(const DenseWeight& table, const std::uint32_t* ids, float* out, std::uint32_t rows,
+                           cudaStream_t stream);
+
+// out[r] = first maximum of the finite logits of row r (lowest index wins ties; 0xffffffff when the row has no finite
+// logit): the shared head pick (strix/head_argmax.hpp). workspace: kArgmaxWorkspaceBytes of device memory, sized for the
+// runner-up trait (argmax2_rows, Pick2 partials) so one workspace serves both.
+constexpr std::size_t kArgmaxWorkspaceBytes = strix::head_argmax::workspace2_bytes(kMaxRows);
+cudaError_t argmax_rows(const float* logits, std::uint32_t vocab, std::uint32_t rows, std::uint32_t* out, void* workspace,
+                        cudaStream_t stream);
+// Runner-up trait of the same shared head pick (Pick2): out[r] = the argmax_rows id (same comparisons in the same order),
+// out2[r] = the second finite logit in that order (value desc, index asc; 0xFFFFFFFF if none). Token-tree siblings
+// (strix/spec/block_drafter.hpp). gap (optional): gap[r] = value(out[r]) - value(out2[r]) (for logits: log p1 / p2, the
+// sibling selector's margin), NaN when there is no runner-up.
+cudaError_t argmax2_rows(const float* logits, std::uint32_t vocab, std::uint32_t rows, std::uint32_t* out, std::uint32_t* out2,
+                         void* workspace, cudaStream_t stream, float* gap = nullptr);
+
+}  // namespace strix::cuda_core

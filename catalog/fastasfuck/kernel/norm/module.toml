@@ -1,0 +1,58 @@
+id        = "kernel.fastasfuck.norm"
+kind      = "kernel"
+summary   = "fastasfuck's RMSNorm kernels: zero-centred, grouped and gated"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its norm kernel file so a timing card can set it against kernel.strixite.norm, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/norm.hip norm.rmsnorm-gated/-, norm.rmsnorm-zc/- (8 changed lines against kernel.strixite.norm kernels/norm.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/norm.hip", "kernels/norm.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/norm.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "norm.rmsnorm-zc/-/bf16"
+api       = "strix::kernels::group_rmsnorm_zc, rmsnorm_gated, rmsnorm_zc (kernels/norm.hpp)"
+numeric   = "derived from kernel.strixite.norm (8 changed lines against kernel.strixite.norm kernels/norm.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.norm: rows x d contiguous, in place allowed"
+
+[[provides]]
+interface = "norm.rmsnorm-zc/-/f32"
+api       = "strix::kernels::group_rmsnorm_zc, rmsnorm_gated, rmsnorm_zc (kernels/norm.hpp)"
+numeric   = "derived from kernel.strixite.norm (8 changed lines against kernel.strixite.norm kernels/norm.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.norm: rows x d contiguous, in place allowed"
+
+[[provides]]
+interface = "norm.rmsnorm-gated/-/bf16"
+api       = "strix::kernels::group_rmsnorm_zc, rmsnorm_gated, rmsnorm_zc (kernels/norm.hpp)"
+numeric   = "derived from kernel.strixite.norm (8 changed lines against kernel.strixite.norm kernels/norm.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.norm: GDN output norm: rows = tokens x value heads, d = 128; gate SiLU or Sigmoid chosen per call"
+
+[[provides]]
+interface = "norm.rmsnorm-gated/-/f32"
+api       = "strix::kernels::group_rmsnorm_zc, rmsnorm_gated, rmsnorm_zc (kernels/norm.hpp)"
+numeric   = "derived from kernel.strixite.norm (8 changed lines against kernel.strixite.norm kernels/norm.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.norm: GDN output norm: rows = tokens x value heads, d = 128; gate SiLU or Sigmoid chosen per call"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.norm.json"

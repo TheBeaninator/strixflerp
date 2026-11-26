@@ -1,0 +1,166 @@
+id        = "runtime.enginelab.cuda_exec"
+kind      = "runtime"
+summary   = "the CUDA exec layer: catalog decode, step rows and WR1 / WR2, bound transfers, decode epilogue, lowering and transition, program recipe, the CUDA executor and profiler; include/strix/cuda (common)"
+why       = "compiled CUDA programs for the RTX route; where it would go: beside the catalogue's executor.device-graph/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.device-graph/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. CUDA (RTX PRO 6000 route). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/cuda/amd_math.cuh",
+  "include/strix/cuda/amd_math_tables.hpp",
+  "include/strix/cuda/core/decode_rows.hpp",
+  "include/strix/cuda/core/dense.hpp",
+  "include/strix/cuda/core/moe_route_tap.hpp",
+  "include/strix/cuda/core/nvfp4.hpp",
+  "include/strix/cuda/core/nvfp4_a8.cuh",
+  "include/strix/cuda/core/nvfp4_a8.hpp",
+  "include/strix/cuda/core/nvfp4_a8_cuda.hpp",
+  "include/strix/cuda/core/nvfp4_cuda.hpp",
+  "include/strix/cuda/core/nvfp4_tile.hpp",
+  "include/strix/cuda/core/nvfp4_tile_cuda.hpp",
+  "include/strix/cuda/core/plan.hpp",
+  "include/strix/cuda/core/types.hpp",
+  "include/strix/cuda/dense_kernel_ids.hpp",
+  "include/strix/cuda/tiered_experts.hpp",
+  "include/strix/cuda/token_sampling_device.hpp",
+  "include/strix/cuda/trellis.hpp",
+  "include/strix/cuda/vram_guard.hpp",
+  "src/exec/catalog_cuda_decode.cu",
+  "src/exec/catalog_cuda_decode.hpp",
+  "src/exec/catalog_cuda_step_rows.cpp",
+  "src/exec/catalog_cuda_step_rows.cu",
+  "src/exec/catalog_cuda_step_rows.hpp",
+  "src/exec/catalog_cuda_wr1.cpp",
+  "src/exec/catalog_cuda_wr1.cu",
+  "src/exec/catalog_cuda_wr1.hpp",
+  "src/exec/cuda_bound_transfers.hpp",
+  "src/exec/cuda_decode_epilogue.hpp",
+  "src/exec/cuda_decode_lowering.hpp",
+  "src/exec/cuda_decode_transition.hpp",
+  "src/exec/cuda_decode_wr2.hpp",
+  "src/exec/cuda_decode_wr2_packed.cpp",
+  "src/exec/cuda_program_recipe.hpp",
+  "src/exec/executor_cuda.cu",
+  "src/exec/executor_cuda.hpp",
+  "src/exec/executor_cuda_binding.hpp",
+  "src/exec/native_launch_contract.hpp",
+  "src/exec/profiler_cuda.cu",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = ["src/src", "src/include", "src/src/exec"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.device-graph-enginelab-cuda/-/-"
+api       = "src/exec/*cuda*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.cuda_ds41"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.core_bf16"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_hc"
+
+[[requires]]
+module    = "kernel.enginelab.core_head"
+
+[[requires]]
+module    = "kernel.enginelab.core_lookup"
+
+[[requires]]
+module    = "kernel.enginelab.core_short_conv"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_dense"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_head"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_mix"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_moe"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_microscaled"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.backend_cpu"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[[requires]]
+module    = "runtime.enginelab.numeric"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "runtime.enginelab.receipts"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source for the optional RTX PRO route: no CUDA toolkit on the island and no NVIDIA device on the pod, so it is not compiled"

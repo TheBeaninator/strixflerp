@@ -1,0 +1,41 @@
+id        = "runtime.kyojin.ck_pagedkv"
+kind      = "runtime"
+summary   = "Optional Composable Kernel paged prefill backend (MiMo qk192, gfx1151, batch one) and its sparse form: page selection and compaction, an 8-bit cache adapter and the install hook (EXL3_CK_PAGEDKV)"
+why       = "CK FMHA as a prefill backend. Where the shape would go: an attn.prefill-causal/kv-f16/f32 provider beside kernel.ds4.k53perf_rocm_halo_attention, kernel.ds4.k53perf_rocm_halo_direct_qk, kernel.ds4.k53perf_rocm_qwen4_attention_wmma and 1 more, through a port of the python / Triton logic"
+notes     = "Interface tag: attn.prefill-causal/kv-f16/f32. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (ck_pagedkv.py, ck_pagedkv_sparse.py, ck_pagedkv_sparse_engine.py, ck_pagedkv_sparse_qc.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/modules/attention_fn/ck_pagedkv.py",
+  "exllamav3/modules/attention_fn/ck_pagedkv_sparse.py",
+  "exllamav3/modules/attention_fn/ck_pagedkv_sparse_engine.py",
+  "exllamav3/modules/attention_fn/ck_pagedkv_sparse_qc.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.prefill-causal/kv-f16/f32.kyojin-ck"
+api       = "ck_pagedkv.py, ck_pagedkv_sparse.py, ck_pagedkv_sparse_engine.py, ck_pagedkv_sparse_qc.py"
+numeric   = "fp16"
+regime    = "prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

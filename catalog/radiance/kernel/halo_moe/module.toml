@@ -1,0 +1,77 @@
+id        = "kernel.radiance.halo_moe"
+kind      = "kernel"
+summary   = "Routed experts: the stable counting sort from per-token expert ids to an expert-sorted slot list and its inverse, the weighted gather back, and the grouped expert GEMM at every routed height in three weight forms: bf16, quantised (E4M3 or int codes decoded to f16 for the f16 WMMA, since gfx1151 has no fp8 matrix instruction) and OCP-MXFP4; plus the per-expert and shared-expert row scales"
+why       = "routed experts are most of the weight bytes a token reads; sorting the routed rows by expert lets one launch read each expert once for every row and stream that picked it"
+notes     = "The expert-sorted slot list is the batching shape MULTI-DECODE defc70210f needs: S streams' routed rows share one grouped launch and each expert's weights are read once for all rows that picked it."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_expert_scale_bf16.hip",
+  "libhalo/halo_moe.hip",
+  "libhalo/halo_moe_gather.h",
+  "libhalo/halo_moe_gemm_bf16.hip",
+  "libhalo/halo_moe_gemm_q.hip",
+  "libhalo/halo_moe_mxfp4.hip",
+  "libhalo/halo_moe_sort.h",
+  "libhalo/halo_scale_rows_bf16.hip",
+]
+authors   = ["Deadcode", "ggz14", "slydlake", "keptn42", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_moe.hip",
+  "src/libhalo/halo_moe_gemm_bf16.hip",
+  "src/libhalo/halo_moe_gemm_q.hip",
+  "src/libhalo/halo_moe_mxfp4.hip",
+  "src/libhalo/halo_expert_scale_bf16.hip",
+  "src/libhalo/halo_scale_rows_bf16.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "moe.experts-decode/radiance-q+mxfp4/bf16"
+api       = "halo_moe_gemm_q, halo_moe_gemm_mxfp4a8 at decode heights; halo_moe_scatter, halo_moe_gather"
+numeric   = "fp32 accumulate; a row's bits do not depend on the height it is batched at"
+regime    = "decode and verify heights (1..64 rows), a weight stream bound by ~256 GB/s LPDDR5X; rows of several streams sorted by expert into one launch"
+
+[[provides]]
+interface = "moe.experts-prefill/radiance-q+mxfp4/bf16"
+api       = "halo_moe_gemm_q, halo_moe_gemm_bf16, halo_moe_gemm_mxfp4a8"
+numeric   = "as decode"
+regime    = "prefill row counts (tiled), compute-bound on the wave32 WMMA cores"
+
+[[provides]]
+interface = "moe.combine/-/bf16.radiance"
+api       = "halo_moe_gather (weighted gather of slot rows back to tokens)"
+numeric   = "fp32 sum in slot order"
+regime    = "one launch a layer"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[[requires]]
+module    = "kernel.radiance.halo_hc"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

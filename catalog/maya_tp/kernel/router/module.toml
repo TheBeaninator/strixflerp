@@ -1,0 +1,61 @@
+id        = "kernel.maya_tp.router"
+kind      = "kernel"
+summary   = "the MoE routers: softmax / stable top-k / renormalise (router_top10), llama.cpp's topk-moe for 512 experts top 10 (native_router) and GLM-5's sigmoid router with selection bias and group limits (router_sigmoid)"
+why       = "GLM-5.3-Flash routes with a sigmoid router; under TP2 both ranks run the router on the same summed residual so routing stays identical and no expert ids cross the link"
+notes     = "Interface tag: moe.router/-/f32.maya-tp-sigmoid, moe.router/-/f32.maya-tp-top10. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/native_router.hpp",
+  "include/strata/kernels/router_sigmoid.hpp",
+  "include/strata/kernels/router_top10.hpp",
+  "src/kernels/cuda/native_router.cu",
+  "src/kernels/cuda/router_sigmoid.cu",
+  "src/kernels/cuda/router_top10.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/native_router.cu",
+  "src/src/kernels/cuda/router_sigmoid.cu",
+  "src/src/kernels/cuda/router_top10.cu",
+]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.router/-/f32.maya-tp-sigmoid"
+api       = "strata::kernels::router_sigmoid"
+numeric   = "FP32 logits, sigmoid scores with bias, top-k by index ties"
+regime    = "GLM-5 routing"
+
+[[provides]]
+interface = "moe.router/-/f32.maya-tp-top10"
+api       = "strata::kernels::router_top10, native_router_top10"
+numeric   = "FP32 softmax top-k"
+regime    = "Qwen-family routing"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.router.json"

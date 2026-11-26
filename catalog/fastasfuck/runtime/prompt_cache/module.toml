@@ -1,0 +1,55 @@
+id        = "runtime.fastasfuck.prompt_cache"
+kind      = "runtime"
+summary   = "fastasfuck's saved session states keyed by token ids: a RAM tier that shrinks with MemAvailable and checksummed files written under a write budget"
+why       = "multi-turn agents resume from a saved state instead of prefilling again; the 1.1.0 calibration tag in the state fingerprint guards these entries"
+notes     = "Files vs strixite: serve/prompt_cache.cpp 209 changed lines against runtime.strixite.prompt_cache at d19945e; serve/prompt_cache.hpp 77 changed lines against runtime.strixite.prompt_cache at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/prompt_cache.cpp", "serve/prompt_cache.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/prompt_cache.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "cache.prompt/-/-"
+api       = "strix::PromptCache, strix::PromptCacheStats"
+numeric   = "derived from runtime.strixite.prompt_cache (serve/prompt_cache.cpp 209 changed lines against runtime.strixite.prompt_cache at d19945e; serve/prompt_cache.hpp 77 changed lines against runtime.strixite.prompt_cache at d19945e); not compared here"
+regime    = "as runtime.strixite.prompt_cache: host only (no HIP on its compile line); disk tier gated by a free-space margin"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.host_buffer"
+
+[[requires]]
+module    = "runtime.fastasfuck.memory_governor"
+
+[[requires]]
+module    = "runtime.fastasfuck.paged_state"
+
+[[requires]]
+module    = "runtime.fastasfuck.serve_log"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

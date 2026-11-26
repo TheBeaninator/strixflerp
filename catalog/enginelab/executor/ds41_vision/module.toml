@@ -1,0 +1,52 @@
+id        = "executor.enginelab.ds41_vision"
+kind      = "executor"
+summary   = "DS41 vision: the vision adapter and splice: 3 origin files under src/deepseek41"
+why       = "image rows spliced into the DS41 prompt; where it would go: a new strixflerp interface vision.splice/-/bf16.enginelab-ds41, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, vision.splice/-/bf16.enginelab-ds41. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/deepseek41/vision_adapter.cpp",
+  "src/deepseek41/vision_adapter.hpp",
+  "src/deepseek41/vision_splice.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/deepseek41/vision_adapter.cpp"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "vision.splice/-/bf16.enginelab-ds41"
+api       = "src/deepseek41/vision_*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "executor.enginelab.vision"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

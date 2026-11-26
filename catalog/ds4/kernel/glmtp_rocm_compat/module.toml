@@ -1,0 +1,61 @@
+id        = "kernel.ds4.glmtp_rocm_compat"
+kind      = "kernel"
+summary   = "davidcanar/ds4 glm-tp-rocm 8ebf672 (antirez/ds4 PR #1024, stacked on #813, #835 and #1018): its copy of the rocm_compat family against antirez/ds4 b3f5018: ds4_rocm_compat.cu changed (+5 -4 lines). The family: the ROCm host shims compiled as their own object (ds4_rocm_compat.cu): device allocation through the ds4_rocm_memory.h arena (in kernel.ds4.mmq_ggml_stubs), the multi-GPU entry points of ds4_gpu_mgpu.h, and the decode-graph hooks that are CUDA-only (ROCm decodes eagerly)"
+why       = "GLM-5.3-Flash tensor parallel across two ROCm machines: the KDA heads split between the ranks, the routed experts split 50/50, and the TP slab in host-mapped pinned memory that GPU kernels and the CPU transport thread share on Strix Halo (rocm/ds4_rocm_tp.cuh); the branch head is \"GLM TP: keep the transport slab unified on ROCm builds\". The family in the base: how ds4 sizes and places device memory on a unified-memory APU, the part of a ROCm backend that is not kernels"
+notes     = "Overlay glm_tp_rocm: files under overlay/glm_tp_rocm/ are the branch's bytes at 8ebf67295a4f; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/glm_tp_rocm.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/davidcanar/ds4"
+commit    = "8ebf67295a4f4663c326aa415145a35175e02b84"
+branch    = "glm-tp-rocm"
+paths     = ["overlay/glm_tp_rocm/ds4_rocm_compat.cu"]
+authors   = ["davidcanar", "The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/glm_tp_rocm/ds4_rocm_compat.cu"]
+includes  = ["src/overlay/glm_tp_rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "device.ds4-rocm-memory-ds4-glmtp/hip/-"
+api       = "ds4_gpu_* memory and device hooks"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_gpu_tp"
+
+[[requires]]
+module    = "kernel.ds4.mmq_ggml_stubs"
+
+[[requires]]
+module    = "runtime.ds4.gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.gpu_tp"
+
+[[requires]]
+module    = "runtime.ds4.gpu_args"
+
+[[requires]]
+module    = "runtime.ds4.linux_memory"
+
+[[requires]]
+module    = "kernel.ds4.rocm_compat"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ds4.glmtp_rocm_compat.json"

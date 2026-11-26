@@ -1,0 +1,46 @@
+id        = "tool.fastasfuck.measure_verify_curve"
+kind      = "tool"
+summary   = "fastasfuck's bench of the verify forward latency for M = 1..16 drafted tokens solo and batched over 4 slots on real weights"
+why       = "the MTP calibration fallback figures and the draft-length policy come from this curve"
+notes     = "Files vs strixite: tools/measure_verify_curve.cpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/measure_verify_curve.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/measure_verify_curve.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.measure-verify-curve/-/-"
+api       = "tools/measure_verify_curve.cpp"
+numeric   = "n/a"
+regime    = "host program"
+
+[[requires]]
+module    = "executor.fastasfuck.qwen4exp"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.tokenizer"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable measure_verify_curve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

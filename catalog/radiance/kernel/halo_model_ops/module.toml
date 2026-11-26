@@ -1,0 +1,65 @@
+id        = "kernel.radiance.halo_model_ops"
+kind      = "kernel"
+summary   = "The small ops between the GEMMs: embedding gathers, norms, elementwise ops, RoPE and KV stores (halo_model_bf16), the encoder ops, Gemma 4's sandwich-norm joins each as one kernel instead of a chain (~250 norms and ~90 adds a step otherwise), and a prefetch kernel that reads a weight's leading bytes into the on-die cache ahead of its GEMM"
+why       = "every op in a step needs a device launch because buffers never visit the host, so the many tiny ops are collected and, where a model issues hundreds of them, joined into single kernels"
+notes     = "halo_prefetch is the shape of PF-9 06f047e361 (MALL prefetch of the next weights from a second stream)."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_encoder_bf16.hip",
+  "libhalo/halo_model_bf16.hip",
+  "libhalo/halo_norm_join_bf16.hip",
+  "libhalo/halo_prefetch.hip",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_model_bf16.hip",
+  "src/libhalo/halo_encoder_bf16.hip",
+  "src/libhalo/halo_norm_join_bf16.hip",
+  "src/libhalo/halo_prefetch.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "norm.rmsnorm/-/bf16.radiance"
+api       = "halo_rmsnorm_*, halo_norm_join_* (halo_model_bf16.hip, halo_norm_join_bf16.hip)"
+numeric   = "fp32 sum of squares, one rounding to bf16"
+regime    = "one launch a junction"
+
+[[provides]]
+interface = "runtime.weight-prefetch/-/-"
+api       = "halo_rad_prefetch"
+numeric   = "reads only"
+regime    = "issued on a second stream while a collective or another kernel holds the main one"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_chain"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

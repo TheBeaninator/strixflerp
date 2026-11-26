@@ -1,0 +1,122 @@
+id        = "runtime.enginelab.mtp_window"
+kind      = "runtime"
+summary   = "MTP verify windows: window controller and verifier (HIP), target checkpoint (plan), target hidden, target window (payload, policy), batch and depth window controllers, cohort partition and selection transaction"
+why       = "verification bit-identical to greedy: every committed row is a verified target row, so MTP never changes the tokens, only the speed (README: GLM pair 25.7 -> 40.4-66.5 tok/s with MTP + wide); where it would go: beside the catalogue's speculation.window-verify-lossless/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: speculation.window-verify-lossless/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 4 HIP unit(s) compiled standalone by the gate; 5 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_mtp_target_checkpoint.hpp",
+  "include/strix/hip_mtp_target_hidden.hpp",
+  "include/strix/hip_mtp_target_window.hpp",
+  "include/strix/hip_mtp_window_verifier.hpp",
+  "include/strix/mtp_batch_window_controller.hpp",
+  "include/strix/mtp_cohort_partition.hpp",
+  "include/strix/mtp_depth_host.hpp",
+  "include/strix/mtp_depth_window_controller.hpp",
+  "include/strix/mtp_selection_transaction.hpp",
+  "include/strix/mtp_target_checkpoint_plan.hpp",
+  "include/strix/mtp_target_window_payload.hpp",
+  "include/strix/mtp_target_window_policy.hpp",
+  "include/strix/mtp_window_controller.hpp",
+  "src/hip_mtp_target_checkpoint.hip",
+  "src/hip_mtp_target_hidden.hip",
+  "src/hip_mtp_target_window.hip",
+  "src/hip_mtp_window_verifier.hip",
+  "src/mtp_depth_window_controller.cpp",
+  "src/mtp_selection_transaction.cpp",
+  "src/mtp_target_checkpoint_plan.cpp",
+  "src/mtp_target_window_policy.cpp",
+  "src/mtp_window_controller.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/hip_mtp_target_checkpoint.hip",
+  "src/src/hip_mtp_target_hidden.hip",
+  "src/src/hip_mtp_target_window.hip",
+  "src/src/hip_mtp_window_verifier.hip",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "speculation.window-verify-lossless-enginelab-mtp/-/-"
+api       = "hip_mtp_window_verifier.hip, src/mtp_window_controller.cpp"
+numeric   = "EXACT profile: bitwise the engine's declared reference (fixed fmaf order, -ffp-contract=off, denormals kept); FAST levers change bits only behind the quality gate (AGENTS.md)"
+regime    = "decode, 8-row windows"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "kernel.enginelab.qwen_rotary"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_forward"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[[requires]]
+module    = "runtime.enginelab.speculative_verify"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.mtp_window.json"

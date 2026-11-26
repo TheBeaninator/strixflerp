@@ -1,0 +1,73 @@
+id        = "runtime.maya_tp.glm_tiers"
+kind      = "runtime"
+summary   = "GLM expert memory tiers: the run-time tiers over NUMA / VRAM / host (glm_tier_numa), their host-side rules (glm_tier_plan), the node-split CPU lane arithmetic (glm_tier_lane), heat-decay promotion / eviction (glm_heat_evict), the slow-path pool size classes (glm_pool_classes) and the file-order warm-up (glm_warm_seq, glm_warm_seq_model)"
+why       = "where each expert lives and when it moves is the scheduler that decides decode speed for models bigger than VRAM; heat-decay eviction is a policy strixflerp has no module for"
+notes     = "Interface tag: sched.expert-tiers/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/glm_heat_evict.hpp",
+  "include/strata/core/glm_pool_classes.hpp",
+  "include/strata/core/glm_warm_seq.hpp",
+  "src/core/glm_heat_evict.cpp",
+  "src/core/glm_pool_classes.cpp",
+  "src/core/glm_tier_lane.cpp",
+  "src/core/glm_tier_lane.hpp",
+  "src/core/glm_tier_numa.cu",
+  "src/core/glm_tier_numa.hpp",
+  "src/core/glm_tier_plan.cpp",
+  "src/core/glm_tier_plan.hpp",
+  "src/core/glm_warm_seq.cpp",
+  "src/core/glm_warm_seq_model.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "sched.expert-tiers/-/-"
+api       = "glm_tier_numa.hpp, glm_tier_plan.hpp, glm_heat_evict.hpp, glm_warm_seq.hpp"
+numeric   = "no arithmetic of its own"
+regime    = "models larger than VRAM"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_dsa_decode"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_model"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

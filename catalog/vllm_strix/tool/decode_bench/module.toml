@@ -1,0 +1,45 @@
+id        = "tool.vllm_strix.decode_bench"
+kind      = "tool"
+summary   = "the rig's decode benches: vsh_bench (decode / TTFT with speculative-decoding receipts), vsh_ab (matched-length A/B for drafters, MTP vs DFlash2), stepbench (unprofiled step time from SSE chunk timing), TTFT with unique prompts, decode deep in a long context, the DFlash2 acceptance curve, the GLM regression battery and a CPU-frequency recorder"
+why       = "tok/s moves with draft acceptance, so the rig measures at matched lengths and per workload (JSON / tools / prose); these are the receipts behind the README tables (PATCHES 24, 25, 44)"
+notes     = "Interface tag: tool.prefill-bench (the catalogue's nearest bench class). Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "scripts/decode_at_ctx.py",
+  "scripts/dflash_bench.sh",
+  "scripts/glm_regress.sh",
+  "scripts/steady.py",
+  "scripts/stepbench.py",
+  "scripts/ttft.py",
+  "scripts/vsh_ab.py",
+  "scripts/vsh_bench.py",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.decode-bench-spec-receipts/-/-"
+api       = "python and shell against the OpenAI endpoint"
+numeric   = "timing"
+regime    = "GLM-5.3 and DS4 serve"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

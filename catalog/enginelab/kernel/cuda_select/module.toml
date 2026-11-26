@@ -1,0 +1,57 @@
+id        = "kernel.enginelab.cuda_select"
+kind      = "kernel"
+summary   = "CUDA selection: catalog, pick body, ReLU schedules, rows, score and segments: 8 origin files under src/cuda"
+why       = "sparse attention selection on CUDA; where it would go: beside the catalogue's attn.indexer-topk/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: attn.indexer-topk/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. CUDA (RTX PRO 6000 route). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/cuda/core/select_catalog.toml",
+  "src/cuda/core/select_cuda.cuh",
+  "src/cuda/core/select_pick_body.inc",
+  "src/cuda/core/select_relu_schedules.cuh",
+  "src/cuda/core/select_rows.cuh",
+  "src/cuda/core/select_rows.hpp",
+  "src/cuda/core/select_score.cuh",
+  "src/cuda/core/select_segments.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.indexer-topk/-/f32.enginelab-cuda"
+api       = "src/cuda/core/select_*.cu"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_select"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source for the optional RTX PRO route: no CUDA toolkit on the island and no NVIDIA device on the pod, so it is not compiled"

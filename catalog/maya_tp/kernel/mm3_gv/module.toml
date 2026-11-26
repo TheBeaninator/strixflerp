@@ -1,0 +1,47 @@
+id        = "kernel.maya_tp.mm3_gv"
+kind      = "kernel"
+summary   = "maya-mm3's dense GEMVs over a GGUF's K-quant and Q8_0 matrices (mm3_gv.cu / .cuh): attention, shared and dense FFN weights"
+why       = "a compact K-quant / Q8_0 GEMV family with ggml block layouts, independent of the MMVQ adaptation"
+notes     = "Interface tag: linear.decode/gguf-kquant+q8_0/f32.maya-tp-mm3-gv. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/mm3/mm3_gv.cu", "src/mm3/mm3_gv.cuh"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/mm3/mm3_gv.cu"]
+includes  = ["src/src/mm3"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/gguf-kquant+q8_0/f32.maya-tp-mm3-gv"
+api       = "mm3 GEMV launches (mm3_gv.cuh)"
+numeric   = "FP32 out"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.mm3_gv.json"

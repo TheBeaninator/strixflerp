@@ -1,0 +1,41 @@
+id        = "kernel.libstrix.norm"
+kind      = "kernel"
+summary   = "libstrix' gated RMSNorm for the GDN output, out = rms_norm(x) * w * act(z) on 128-channel bf16 rows with a SiLU or sigmoid gate, 16 lanes a row and 8 channels (one 16-byte load) a lane"
+why       = "the GDN output norm runs on every token and value head of each GDN layer, and this is a second gated RMSNorm on 128-channel bf16 rows beside kernel.strixite.norm; at 140 lines it is one of the smallest libstrix kernels, so it is a cheap one to carry through an adapter first"
+notes     = "Interface tags by file: gdn_gated_rmsnorm_h128_bf16.hip norm.rmsnorm-gated/-/bf16 (catalog/libstrix/KERNELS.md has the table). The entry returns a new tensor; activation 0 is SiLU and 1 is sigmoid. No timing was taken on the pod."
+
+[provenance]
+origin    = "libstrix"
+repo      = "https://github.com/asf0/libstrix"
+commit    = "4f1c06f55d520c734a66101e8c31fc5dd9dedeb3"
+branch    = "main"
+paths     = ["csrc/norm/gdn_gated_rmsnorm_h128_bf16.hip"]
+authors   = ["asf0"]
+modified  = false
+upstream  = "the operator is RMSNormGated as vLLM's Qwen GDN layers call it (docs/kernels.md:67)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/csrc/norm/gdn_gated_rmsnorm_h128_bf16.hip"]
+includes  = ["src/csrc/norm"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "norm.rmsnorm-gated/-/bf16.libstrix-h128"
+api       = "torch.ops.strix.gdn_gated_rmsnorm_h128_bf16 (csrc/norm/gdn_gated_rmsnorm_h128_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 rows; the gate is SiLU (activation 0) or sigmoid (1), named at every call"
+regime    = "rows of 128 channels (docs/kernels.md:67)"
+
+[[requires]]
+module    = "kernel.libstrix.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of python/strix/_C.so: built by the origin CMake (CMakeLists.txt globs every csrc/**/*.hip beside csrc/torch_ops.cpp; HIP standard 20, -O3 -ffp-contract=fast -munsafe-fp-atomics, gfx1151, linked against libtorch). The host half of each file takes torch::Tensor arguments, so no unit compiles without the PyTorch headers; not compiled by this harvest"

@@ -1,0 +1,44 @@
+id        = "runtime.enginelab.backend_metal"
+kind      = "runtime"
+summary   = "the Metal backend core (src/metal/core): 4 origin files under src/metal"
+why       = "an Apple GPU route; where it would go: beside the catalogue's executor.lane-backend/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.lane-backend/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/metal/core/backend.cpp",
+  "src/metal/core/backend.hpp",
+  "src/metal/core/backend_metal.mm",
+  "src/metal/core/rms_norm.metal",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/metal/core/backend.cpp"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.lane-backend-enginelab-metal/-/-"
+api       = "src/metal/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,42 @@
+id        = "runtime.kyojin.engram_io"
+kind      = "runtime"
+summary   = "Engram n-gram table I/O: a threaded O_DIRECT row gather (plain C ABI, ctypes, no torch), device staging and prefetch of the next rows"
+why       = "n-gram tables too large for memory, read from NVMe per step. Where the shape would go: a ple.ngram-rows/ngram-table/- provider beside runtime.strixite.ngram_table, through the host code behind the flerp ABI"
+notes     = "Interface tag: ple.ngram-rows/ngram-table/-. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (engram_dev.py, engram_gather.cpp, engram_io.py, engram_prefetch.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/modules/dsv41_fn/engram_dev.py",
+  "exllamav3/modules/dsv41_fn/engram_gather.cpp",
+  "exllamav3/modules/dsv41_fn/engram_io.py",
+  "exllamav3/modules/dsv41_fn/engram_prefetch.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/exllamav3/modules/dsv41_fn/engram_gather.cpp"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "ple.ngram-rows-kyojin-engram/ngram-table/-"
+api       = "engram_dev.py, engram_gather.cpp, engram_io.py, engram_prefetch.py"
+numeric   = "rows copied verbatim"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host c++, outside the HIP compile gate"

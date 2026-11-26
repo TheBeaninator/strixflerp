@@ -4,7 +4,7 @@ Needs ~/Code/strixflerp-upstream/strixfold, the supplement (zig/build, missing f
 docs/harvest/data/strixfold/ (kit manifests fetched from control-node, see docs/HARVEST.md)."""
 import json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from harvestlib import Origin, M, P, run, REPO
+from harvestlib import Origin, M, P, run, REPO, tlist
 
 O = Origin('strixfold', 'strixfold', 'https://github.com/Shoestring-dev/Strixfold', 'f64b5ff', 'main', 'Apache-2.0',
            ['StrixFold contributors', 'TensorFold contributors'], 'therock-10.2', supplement='strixfold')
@@ -267,6 +267,8 @@ modules = [
       reason='zig: assembled in phase 3'),
 ]
 
+LICENCE_FILES = ['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md'] + [f for f in O.files() if f.startswith('LICENSES/')]
+
 ORIGIN_TOML = f'''
 # StrixFold: the pod's fork of StrixFold / TensorFold with the AMD HIP backend for DeepSeek-V4.1-Flash (TP2).
 name      = "strixfold"
@@ -279,7 +281,9 @@ reference_checkout = "~/Code/strixflerp-upstream/strixfold (+ ~/Code/strixflerp-
 
 [licence]
 spdx      = "Apache-2.0"
-files     = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]        # copied verbatim next to this file; more texts under LICENSES/ in the origin
+# copied verbatim next to this file at their origin paths: the root texts and LICENSES/, which THIRD_PARTY_NOTICES.md cites
+files     = {tlist(LICENCE_FILES)}
+source    = "the reference checkout above, byte-identical to f64b5ff in control-node:/data/pod/plans/strixfold/fork (git show f64b5ff:<path>, checked 2026-11-26)"
 third_party = "EXL3 tile format after ExLlamaV3 (MIT, Turboderp); DeepSeek reference code (MIT); see THIRD_PARTY_NOTICES.md"
 
 [toolchain]
@@ -345,5 +349,5 @@ def recipe_status():
 
 
 if __name__ == '__main__':
-    run(O, modules, ORIGIN_TOML, LEFT_OUT, ['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md'])
+    run(O, modules, ORIGIN_TOML, LEFT_OUT, LICENCE_FILES)
     print(f'strixfold: {recipe_status()} zig modules at status builds from the recipe gate')

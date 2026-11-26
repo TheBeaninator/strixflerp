@@ -1,0 +1,49 @@
+id        = "serve.kyojin.hy4_server"
+kind      = "serve"
+summary   = "Hy4-flash server (GGUF Q3_K, 64K context): engine and multi-session engine, speculative depth gate, draft policy, n-gram drafts, spec2 driver"
+why       = "GGUF serving on one Strix Halo (23-29 tok/s spec decode, README). Where the shape would go: a serve.http/openai/- provider beside serve.flerp.http, serve.gufo.http, serve.strixite.http, through a port of the python / Triton logic"
+notes     = "Interface tag: serve.http/openai/-. Against the base turboderp-org/exllamav3 8c593e4e: 12 added (depth_gate.py, draft_policy.py, engine.py, mu_engine.py, ngram.py, serve.py) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "tools/hy4/depth_gate.py",
+  "tools/hy4/draft_policy.py",
+  "tools/hy4/engine.py",
+  "tools/hy4/mu_engine.py",
+  "tools/hy4/ngram.py",
+  "tools/hy4/serve.py",
+  "tools/hy4/serve_core.py",
+  "tools/hy4/spec2/ab2.py",
+  "tools/hy4/spec2/host_prof.py",
+  "tools/hy4/spec2/read_bench.py",
+  "tools/hy4/spec2/read_bench2.py",
+  "tools/hy4/spec2/test_stage.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.http-kyojin-hy4/openai/-"
+api       = "depth_gate.py, draft_policy.py, engine.py, mu_engine.py, ngram.py, serve.py, serve_core.py, ab2.py ..."
+numeric   = "n/a"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

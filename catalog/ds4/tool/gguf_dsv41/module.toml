@@ -1,0 +1,43 @@
+id        = "tool.ds4.gguf_dsv41"
+kind      = "tool"
+summary   = "DeepSeek V4.1 scripts: quantizer, metadata, validation, DSpark support GGUF and shard merge"
+why       = "how the V4.1 GGUFs and the DSpark support file are made"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = [
+  "gguf-tools/deepseek41_dspark.py",
+  "gguf-tools/deepseek41_metadata.py",
+  "gguf-tools/deepseek41_quantize.py",
+  "gguf-tools/deepseek41_validate_gguf.py",
+  "gguf-tools/merge_deepseek41_shards.py",
+]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "format.convert-ds4-dsv41/gguf/-"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Python tool; nothing to compile"

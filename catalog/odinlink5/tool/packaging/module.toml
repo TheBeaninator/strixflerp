@@ -1,0 +1,48 @@
+id        = "tool.odinlink5.packaging"
+kind      = "tool"
+summary   = "build and packaging: the top-level CMake (driver via Kbuild, library, plugins, verbs, daemon and tray with dependency probes), DKMS config and install hooks, meta-package script, and the hardware check, smoke-test and Mac RDMA capture / analysis scripts"
+why       = "the top-level CMake is the authoritative build graph the C gate follows (include paths and targets); DKMS is how the driver tracks kernel updates on a host"
+notes     = "Interface tag: none. Read, not run. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "CMakeLists.txt",
+  "packaging/build-meta-debs.sh.in",
+  "packaging/daemon-postinst.sh",
+  "packaging/dkms-install.sh",
+  "packaging/dkms-postinst.sh",
+  "packaging/dkms-prerm.sh",
+  "packaging/dkms.conf",
+  "scripts/mac_rdma_analyze.py",
+  "scripts/mac_rdma_capture.sh",
+  "scripts/smoke-test.sh",
+  "scripts/tb-hw-check.sh",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "shell"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.transport-install-odl-dkms/-/-"
+api       = "cmake, dkms.conf, shell"
+numeric   = "n/a"
+regime    = "Debian / Fedora hosts"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "shell: not compiled"

@@ -1,0 +1,55 @@
+id        = "kernel.lucebox.sampling"
+kind      = "kernel"
+summary   = "small-k top-k with softmax probabilities over device-resident vocabulary rows for draft candidates, and the server DDTree draft top-K with log-probs"
+why       = "Draft-candidate top-k for speculative decoding, against kernel.strixite.logits_topk"
+notes     = "INTERFACES.md section: 10. Sampling and top-k. Interface tags: logits.topk/-/f32.lucebox. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/topk-rows.cu, server/src/common/geometric_draft_topk_cuda.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/topk-rows.cu",
+  "server/src/common/geometric_draft_topk_cuda.cu",
+  "server/src/common/geometric_draft_topk_cuda.h",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/topk-rows.cu",
+  "src/server/src/common/geometric_draft_topk_cuda.cu",
+]
+includes  = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda",
+  "src/server/src/common",
+  "src/server/deps/llama.cpp/ggml/src",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/src/common/geometric_draft_topk_cuda.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/topk-rows.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "logits.topk/-/f32.lucebox"
+api       = "GGML op in topk-rows.cu; server geometric_draft_topk_cuda.h"
+numeric   = "k <= 8 candidates out of a ~100k vocab with softmax probabilities (file header)"
+regime    = "draft-head candidates, verify width, draft trees"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.server_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.sampling.json"

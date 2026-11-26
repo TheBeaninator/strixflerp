@@ -1,0 +1,114 @@
+id        = "kernel.enginelab.ple"
+kind      = "kernel"
+summary   = "per-layer embeddings (PLE): direct, discard safety, gap witness, the PLE launcher (HIP), lookup, projection tile, reclaim, rolling, rows site, serve policy, staged gather, workspace and the graph PLE"
+why       = "Qwen3.8-Flash-Next's PLE rows, gathered and injected per layer with reclaimable memory; where it would go: beside the catalogue's ple.inject/-/bf16 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: ple.inject/-/bf16 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 5 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/graph_ple.hpp",
+  "include/strix/hip_ple_launcher.hpp",
+  "include/strix/ple_direct.hpp",
+  "include/strix/ple_discard_safety.hpp",
+  "include/strix/ple_gap_witness.hpp",
+  "include/strix/ple_lookup.hpp",
+  "include/strix/ple_projection_tile.hpp",
+  "include/strix/ple_reclaim.hpp",
+  "include/strix/ple_rolling.hpp",
+  "include/strix/ple_serve_policy.hpp",
+  "include/strix/ple_staged_gather.hpp",
+  "include/strix/ple_workspace.hpp",
+  "src/graph_ple.cpp",
+  "src/hip_ple_launcher.hip",
+  "src/hip_ple_rows_site.inc",
+  "src/ple_lookup.cpp",
+  "src/ple_reclaim.cpp",
+  "src/ple_rolling.cpp",
+  "src/ple_workspace.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_ple_launcher.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "ple.inject/-/bf16.enginelab"
+api       = "hip_ple_launcher.hip, src/ple_*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.dense_launch"
+
+[[requires]]
+module    = "kernel.enginelab.q8_rows"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.graph"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "runtime.enginelab.prepared_views"
+
+[[requires]]
+module    = "runtime.enginelab.prompt_lookup"
+
+[[requires]]
+module    = "runtime.enginelab.qpf2k_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.residency"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.ple.json"

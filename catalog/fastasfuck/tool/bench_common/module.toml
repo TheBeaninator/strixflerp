@@ -1,0 +1,37 @@
+id        = "tool.fastasfuck.bench_common"
+kind      = "tool"
+summary   = "fastasfuck's shared bench prompts, statistics and streaming OpenAI client for the tools/bench suite"
+why       = "every bench script imports it, so the suite's prompts and statistics are defined once here"
+notes     = "Files vs strixite: tools/bench/common.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/bench/common.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.bench-common/-/-"
+api       = "tools/bench/common.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

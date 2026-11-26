@@ -1,0 +1,39 @@
+id        = "runtime.vllm_strix.router_packed_topk"
+kind      = "runtime"
+summary   = "the same deterministic expert order without the slow sort: the router packs (biased score, expert index) into one sortable key and takes torch.topk of the packed keys, replacing the stable descending sort; test against the sort version"
+why       = "inside grouped_topk's torch.compile region inductor lowered the stable sort into a persistent Triton kernel launched with 2 x 32 threads, 242 us a call, 45 calls a step, ~10.9 ms (PATCHES 28.3)"
+notes     = "Interface tag: moe.router. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-router-packed-topk.py", "scripts/test_router.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.router/-/f32.packed-key-topk"
+api       = "patch script over grouped_topk_router"
+numeric   = "identical order to router_det_topk"
+regime    = "decode"
+
+[[requires]]
+module    = "runtime.vllm_strix.router_det_topk"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

@@ -1,0 +1,52 @@
+id        = "serve.fastasfuck.openai"
+kind      = "serve"
+summary   = "fastasfuck's field-by-field validation of OpenAI chat-completions and completions bodies into engine requests, and the response, SSE and error bodies"
+why       = "OpenAI clients reach the engine through it; it decides which request fields are honoured"
+notes     = "Files vs strixite: serve/openai.cpp 146 changed lines against serve.strixite.openai at d19945e; serve/openai.hpp 25 changed lines against serve.strixite.openai at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/openai.cpp", "serve/openai.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/openai.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.api/openai/-"
+api       = "strix::parse_chat_request, strix::parse_completion_request, strix::completion_body"
+numeric   = "derived from serve.strixite.openai (serve/openai.cpp 146 changed lines against serve.strixite.openai at d19945e; serve/openai.hpp 25 changed lines against serve.strixite.openai at d19945e); not compared here"
+regime    = "as serve.strixite.openai: host"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.chat_template"
+
+[[requires]]
+module    = "runtime.fastasfuck.engine"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.vision_request"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

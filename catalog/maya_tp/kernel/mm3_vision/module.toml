@@ -1,0 +1,50 @@
+id        = "kernel.maya_tp.mm3_vision"
+kind      = "kernel"
+summary   = "MiniMax-M3.1-Flash's vision tower (mm3_vision.cu / .hpp)"
+why       = "the second vision encoder in the tree, for the MiniMax engine"
+notes     = "Interface tag: vision.encoder/-/f32.maya-tp-mm3. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/mm3/mm3_vision.cu", "src/mm3/mm3_vision.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/mm3/mm3_vision.cu"]
+includes  = ["src/src/mm3"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "vision.encoder/-/f32.maya-tp-mm3"
+api       = "mm3 vision tower (mm3_vision.hpp)"
+numeric   = "BF16 / FP32"
+regime    = "one image at a time"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_kernels"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.mm3_vision.json"

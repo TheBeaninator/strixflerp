@@ -1,0 +1,82 @@
+id        = "format.enginelab.weight_files"
+kind      = "format"
+summary   = "model files: weight archive and pack, mapped model file, file map and snapshot, unbuffered file reads, asset manifest, BP codec, compact and rounded stage images, FNV and arithmetic lineage"
+why       = "reading weights from NVMe into UMA without page-cache double copies; where it would go: beside the catalogue's format.container/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: format.container/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/arithmetic_lineage.hpp",
+  "include/strix/asset_manifest.hpp",
+  "include/strix/bp_codec.hpp",
+  "include/strix/compact_stage_images.hpp",
+  "include/strix/file_map.hpp",
+  "include/strix/file_snapshot.hpp",
+  "include/strix/fnv.hpp",
+  "include/strix/mapped_model_file.hpp",
+  "include/strix/unbuffered_file.hpp",
+  "include/strix/weight_archive.hpp",
+  "include/strix/weight_pack.hpp",
+  "src/arithmetic_lineage.cpp",
+  "src/asset_manifest.cpp",
+  "src/bp_codec.cpp",
+  "src/hip_rounded_stage_image.hpp",
+  "src/mapped_model_file.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/arithmetic_lineage.cpp",
+  "src/src/asset_manifest.cpp",
+  "src/src/bp_codec.cpp",
+  "src/src/mapped_model_file.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.container-enginelab/-/-"
+api       = "src/mapped_model_file.cpp, unbuffered_file.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.ple"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_drafters"
+
+[[requires]]
+module    = "runtime.enginelab.qpf2k_schedule"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

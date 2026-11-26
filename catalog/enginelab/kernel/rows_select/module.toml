@@ -1,0 +1,55 @@
+id        = "kernel.enginelab.rows_select"
+kind      = "kernel"
+summary   = "row-kernel selection: rows fit and launch registry, R1 row tiles, wave fit, wave32 DPP and the Qwen DPP reduce, FMA rows policy, split-K policy and A8 row pitch"
+why       = "picks the rows kernel and split per shape; where it would go: beside the catalogue's kernel-select.rows/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: kernel-select.rows/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/a8_row_pitch.hpp",
+  "include/strix/fma_rows_policy.hpp",
+  "include/strix/hip_qwen_dpp_reduce.hpp",
+  "include/strix/hip_wave32_dpp.hpp",
+  "include/strix/r1_rows_tiles.hpp",
+  "include/strix/rows_fit.hpp",
+  "include/strix/rows_launch_registry.hpp",
+  "include/strix/split_k_policy.hpp",
+  "include/strix/wave_fit.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include", "src/include/strix"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kernel-select.rows-enginelab/-/-"
+api       = "include/strix/rows_launch_registry.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

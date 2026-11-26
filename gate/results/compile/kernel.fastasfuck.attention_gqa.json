@@ -1,0 +1,25 @@
+{
+ "module": "kernel.fastasfuck.attention_gqa",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-26T00:09:20Z",
+ "toolchain": "therock-10.1",
+ "toolchain_root": "/data/models/tools/therock-10.1",
+ "compiler": "AMD clang version 23.0.0git (https://github.com/ROCm/llvm-project.git 0bace1908348b840e6aa1b4b6e12151dae208158) | Target: x86_64-unknown-linux-gnu",
+ "units": 1,
+ "passed": 1,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 20.0,
+ "results": [
+  {
+   "unit": "src/kernels/attention_gqa.hip",
+   "cmd": "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=c++20 -O3 -march=znver5 -DNDEBUG -D__HIP_PLATFORM_AMD__ -Wall -Wextra -Wno-unused-parameter -c -I catalog/fastasfuck/kernel/attention_gqa/src -I catalog/fastasfuck/kernel/common/src -I catalog/fastasfuck/kernel/kv8/src -I catalog/fastasfuck/kernel/rope/src -I catalog/fastasfuck/kernel/wmma/src -I /data/models/tools/therock-10.1/include catalog/fastasfuck/kernel/attention_gqa/src/kernels/attention_gqa.hip -o build/compile-gate/kernel.fastasfuck.attention_gqa/0-attention_gqa.hip.o",
+   "rc": 0,
+   "seconds": 19.99,
+   "object_bytes": 1247584,
+   "object_sha256": "8f8e4492a4078d6d9e819981785a7429c9182bf5d1458a746c192680d3f09176"
+  }
+ ]
+}

@@ -1,0 +1,68 @@
+id        = "kernel.enginelab.glm_attn"
+kind      = "kernel"
+summary   = "GLM attention: fast attention, tier B and the DSA policy: 5 origin files under src/glm"
+why       = "GLM's sparse attention decode; where it would go: a new strixflerp interface attn.dsa/-/bf16-f32.enginelab-glm-attn, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, attn.dsa/-/bf16-f32.enginelab-glm-attn. 2 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/glm/attn/glm_attn_fast.hip",
+  "src/glm/attn/glm_attn_fast.hpp",
+  "src/glm/attn/glm_attn_tierb.hip",
+  "src/glm/attn/glm_attn_tierb.hpp",
+  "src/glm/attn/glm_dsa_policy.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/glm/attn/glm_attn_fast.hip", "src/src/glm/attn/glm_attn_tierb.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.dsa/-/bf16-f32.enginelab-glm-attn"
+api       = "src/glm/attn/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.glm_engine"
+
+[[requires]]
+module    = "executor.enginelab.glm_kvshard"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_select"
+
+[[requires]]
+module    = "kernel.enginelab.glm_kernels"
+
+[[requires]]
+module    = "kernel.enginelab.glm_moe"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.glm_attn.json"
+reason    = "compile gate: fail: 1 of 2 units failed; first: src/src/glm/attn/glm_attn_tierb.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/kernel/glm_moe/src/src/glm/moe/glm_trellis_device.hpp:4:10: error: '../../moe_core/exl3_trellis.hpp' file not found, did you mean 'moe_core/exl3_trellis.hpp'?"

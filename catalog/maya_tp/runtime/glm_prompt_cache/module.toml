@@ -1,0 +1,55 @@
+id        = "runtime.maya_tp.glm_prompt_cache"
+kind      = "runtime"
+summary   = "the content-addressed NVMe prompt cache for GLM (glm_prompt_cache store, its engine glue and model side)"
+why       = "cached follow-ups are what make a coding agent fast; a content-addressed prompt cache beside cache.prompt-gufo and cache.prompt-strixfold"
+notes     = "Interface tag: cache.prompt-maya-tp/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/glm_prompt_cache.hpp",
+  "src/core/glm_prompt_cache.cpp",
+  "src/core/glm_prompt_cache_engine.cpp",
+  "src/core/glm_prompt_cache_model.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "cache.prompt-maya-tp/-/-"
+api       = "glm_prompt_cache.hpp"
+numeric   = "state bytes, no arithmetic"
+regime    = "follow-up turns"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_model"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

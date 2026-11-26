@@ -1,0 +1,57 @@
+id        = "kernel.kyojin.exl3_moe_fused7"
+kind      = "kernel"
+summary   = "core7 of the fused MoE half-layer: front end rewritten for memory-level parallelism (every global load of a work item issued before its first use), same arithmetic order and byte-identical results as core5; compile-time ablation variants"
+why       = "a memory-latency rewrite of the fused half-layer. Where the shape would go: a moe.experts-decode/exl3/f32 provider beside kernel.kestrel.exl3, kernel.maya_tp.cpu_exl3, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-decode/exl3/f32. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (exl3_moe_fused7.cu, exl3_moe_fused7.cuh, exl3_moe_fused7_idx.h, exl3_moe_fused7_mv.cuh), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/quant/exl3_moe_fused7.cu",
+  "exllamav3/exllamav3_ext/quant/exl3_moe_fused7.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_moe_fused7_idx.h",
+  "exllamav3/exllamav3_ext/quant/exl3_moe_fused7_mv.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/quant/exl3_moe_fused7.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/f32.kyojin-fused7"
+api       = "exl3_moe_fused7.cu, exl3_moe_fused7.cuh, exl3_moe_fused7_idx.h, exl3_moe_fused7_mv.cuh; kernels: moe_fused7_kernel"
+numeric   = "fp16 activations, fp32 accumulation"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemv"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe_fused"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe_valu"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: exl3_moe_fused7.cu"

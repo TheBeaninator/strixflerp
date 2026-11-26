@@ -1,0 +1,79 @@
+id        = "kernel.libstrix.attn"
+kind      = "kernel"
+summary   = "libstrix' six attention kernels on vLLM's paged KV cache: decode and causal prefill attention on bf16 or int8 K/V (head 64 to 512, GQA, sinks, sliding window), a 32-column head-512 prefill kernel, and for Qwen3.8-Flash-Next the QSA indexer scores, the compact fp16 K/V copy and sparse attention over 16-row unions of the selected tokens"
+why       = "the survey gave libstrix a harvest verdict for this family first: qsa_union and qsa_indexer are a permissively licensed second implementation of Flash-Next's QSA prefill beside strixite's, and the origin reports the union kernel at 1.5x and the indexer at 1.7-1.9x the gfx1151 Triton kernels (docs/kernels.md:85-86), a comparison kernel.strixite.qsa and attention have not been put through"
+notes     = "Interface tags by file: attn_decode_bf16.hip attn.softmax-gqa/kv-bf16+i8/bf16; attn_prefill_bf16.hip attn.prefill-causal/kv-bf16+i8/bf16; attn_prefill32_bf16.hip attn.prefill-causal/kv-bf16/bf16; qsa_indexer_bf16.hip attn.qsa-indexer/-/bf16; qsa_kv_to_f16.hip none; qsa_union_bf16.hip attn.softmax-gqa/kv-bf16+i8/bf16 (catalog/libstrix/KERNELS.md has the table). Operands are vLLM's: key_cache / value_cache are views of the packed paged cache addressed through block_table, int8 caches carry k_scale / v_scale. Origin numbers (docs/kernels.md:85-86): qsa_union 1.5x the gfx1151 Triton kernel, more as the context grows; qsa_indexer 1.7-1.9x the tl.dot kernel. No timing was taken on the pod."
+
+[provenance]
+origin    = "libstrix"
+repo      = "https://github.com/asf0/libstrix"
+commit    = "4f1c06f55d520c734a66101e8c31fc5dd9dedeb3"
+branch    = "main"
+paths     = [
+  "csrc/attn/attn_decode_bf16.hip",
+  "csrc/attn/attn_prefill32_bf16.hip",
+  "csrc/attn/attn_prefill_bf16.hip",
+  "csrc/attn/qsa_indexer_bf16.hip",
+  "csrc/attn/qsa_kv_to_f16.hip",
+  "csrc/attn/qsa_union_bf16.hip",
+]
+authors   = ["asf0"]
+modified  = false
+upstream  = "operand layouts and the kernels replaced are those of vLLM (Apache-2.0, vllm-project/vllm) and the asf0/strix-vllm fork (branch gfx1151); the file headers name no vLLM code in these files"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/csrc/attn/attn_decode_bf16.hip",
+  "src/csrc/attn/attn_prefill_bf16.hip",
+  "src/csrc/attn/attn_prefill32_bf16.hip",
+  "src/csrc/attn/qsa_indexer_bf16.hip",
+  "src/csrc/attn/qsa_kv_to_f16.hip",
+  "src/csrc/attn/qsa_union_bf16.hip",
+]
+includes  = ["src/csrc/attn"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-bf16+i8/bf16.libstrix-decode"
+api       = "torch.ops.strix.attn_decode_bf16 (csrc/attn/attn_decode_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 Q and K/V, or an int8 K/V cache with a scale per token and head (k_scale, v_scale); the segments are combined first and the sink logit is folded in once after that (file header)"
+regime    = "decode; head 128 GQA 8, head 256 GQA 2 or 8, head 512 GQA 8 (docs/kernels.md:77)"
+
+[[provides]]
+interface = "attn.prefill-causal/kv-bf16+i8/bf16.libstrix"
+api       = "torch.ops.strix.attn_prefill_bf16 (csrc/attn/attn_prefill_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 Q and K/V or an int8 K/V cache; WMMA scores and P V with per-lane softmax statistics; per-shape scheduling flags (mask_skip, hoist) change the schedule only and every shape stays bit-compatible with the tests (file header)"
+regime    = "prefill; head 64 GQA 4, head 128 GQA 8, head 256 GQA 2 / 6 / 8, head 512 GQA 8, any KV block size, optional sliding window; sinks on unsplit launches only (docs/kernels.md:76)"
+
+[[provides]]
+interface = "attn.prefill-causal/kv-bf16/bf16.libstrix-d512x32"
+api       = "torch.ops.strix.attn_prefill32_bf16 (csrc/attn/attn_prefill32_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 K/V; partial scores are kept as bf16 in LDS, about 3e-3 relative error on P by the file header"
+regime    = "prefill; head 512, no window, one KV segment"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/bf16.libstrix-scores"
+api       = "torch.ops.strix.qsa_indexer_bf16 (csrc/attn/qsa_indexer_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "bf16 q and compressed keys; scores only: the top-k over the logits stays with the caller (vLLM)"
+regime    = "single-request prefill of 128 rows or more; 4 indexer heads, head_dim 128, one KV head (docs/kernels.md:86)"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-bf16+i8/bf16.libstrix-qsa-union"
+api       = "torch.ops.strix.qsa_union_attn_bf16 (csrc/attn/qsa_union_bf16.hip; schemas in csrc/torch_ops.cpp)"
+numeric   = "per (row, head) the softmax over that row's own selection, the masked-out scores being the extra cost; a bf16 cache is read in place or through the compact fp16 copy, an int8 cache always through the fp16 copy (docs/kernels.md:85)"
+regime    = "single-request prefill of 1,024 rows or more; head_dim 256, GQA 12, at most 131,072 positions (docs/kernels.md:85)"
+
+[[requires]]
+module    = "kernel.libstrix.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of python/strix/_C.so: built by the origin CMake (CMakeLists.txt globs every csrc/**/*.hip beside csrc/torch_ops.cpp; HIP standard 20, -O3 -ffp-contract=fast -munsafe-fp-atomics, gfx1151, linked against libtorch). The host half of each file takes torch::Tensor arguments, so no unit compiles without the PyTorch headers; not compiled by this harvest"

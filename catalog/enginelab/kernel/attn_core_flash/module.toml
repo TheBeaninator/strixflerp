@@ -1,0 +1,69 @@
+id        = "kernel.enginelab.attn_core_flash"
+kind      = "kernel"
+summary   = "the shared dense flash attention: dense decode and its flash form with key split and budget, dense and banded flash prefill, the flash core, tile, prefill policy and tile stage, WMMA fragments and types, online softmax, masks, relative bias, position split and the two-term cost model"
+why       = "one attention family for every engine's dense GQA layers, decode and prefill, WMMA on gfx1151; where it would go: beside the catalogue's attn.softmax-gqa/-/bf16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: attn.softmax-gqa/-/bf16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/attn_core/banded_flash_prefill.hpp",
+  "src/attn_core/dense_decode.hpp",
+  "src/attn_core/dense_decode_flash.hpp",
+  "src/attn_core/dense_flash_budget.hpp",
+  "src/attn_core/dense_flash_keysplit.hpp",
+  "src/attn_core/dense_flash_prefill.hpp",
+  "src/attn_core/flash_core.hpp",
+  "src/attn_core/flash_pf_policy.hpp",
+  "src/attn_core/flash_tile.hpp",
+  "src/attn_core/masks.hpp",
+  "src/attn_core/online_softmax.hpp",
+  "src/attn_core/position_split.hpp",
+  "src/attn_core/relative_bias.hpp",
+  "src/attn_core/tile_stage.hpp",
+  "src/attn_core/two_term_model.hpp",
+  "src/attn_core/wmma_frag.hpp",
+  "src/attn_core/wmma_types.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/attn_core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.softmax-gqa/-/bf16-f32.enginelab"
+api       = "src/attn_core flash headers"
+numeric   = "FP16 WMMA scores, FP32 online softmax"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

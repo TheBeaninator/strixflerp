@@ -1,0 +1,51 @@
+id        = "kernel.strix_trellis.trellis_common"
+kind      = "kernel"
+summary   = "Header-only device layer of every strix-trellis kernel: the DeviceWeights view and the launch_linear entry (backend.hpp), trellis state decode for the 3inst, mcg and mul1 codebooks (mul1 as state * 0x83DCD12D summed by one udot4), per-lane windows over the packed u32 tile stream (WaveTile, DirectLane, AlignedLane, SaddrLane), the wave-local normalised Hadamard H128 with the input and output transform kernels, the split-count and launch policies, and two host models (the codebook, and gfx11's fp16 dot2 accumulate bit for bit, dot2acc_reference.hpp)"
+why       = "every strix-trellis kernel decodes trellis states and applies H128 through these headers, so no unit can be read or compiled without them; the mul1 decode by one udot4 and the three-word lane window are the parts to compare with StrixFold's once-a-wave tile decode"
+notes     = "Interface tag: none. gemv_policy.hpp holds the measured choice of kernel and K split count per shape, bit width and row count (exact_gemv_mode, measured_vector_splits): the split count fixes the order of the partial sums, so it is part of the numerics."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "src/backend.hpp",
+  "src/dot2acc_reference.hpp",
+  "src/gemv_policy.hpp",
+  "src/hadamard.hpp",
+  "src/host_reference.hpp",
+  "src/launch_policy.hpp",
+  "src/packed_decoder.hpp",
+  "src/tp_fused_layout.hpp",
+  "src/transforms.hpp",
+  "src/trellis_device.hpp",
+  "src/trellis_optimized.hpp",
+  "src/v14_core_policy.hpp",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.strix-trellis-device/-/-"
+api       = "strix_trellis::DeviceWeights, launch_linear, linear_split_count (backend.hpp); codebook_value, mul1_half2, hadamard128, input_transform, output_transform"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "headers only; compiled inside every strix_trellis kernel unit"

@@ -1,0 +1,36 @@
+id        = "kernel.kyojin.kda_fused"
+kind      = "kernel"
+summary   = "Fused KDA forget gate and gated RMS norm (Triton), replacing torch chains (norm.cu is not built on ROCm)"
+why       = "Kimi-Linear on ROCm. Where the shape would go: a norm.rmsnorm-gated/-/f32 provider beside kernel.fastasfuck.norm, kernel.strixite.norm, through a port of the python / Triton logic"
+notes     = "Interface tag: norm.rmsnorm-gated/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (kda_gate.py, kda_norm.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/gated_delta_net_fn/kda_gate.py", "exllamav3/modules/gated_delta_net_fn/kda_norm.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "norm.rmsnorm-gated/-/f32.kyojin-kda"
+api       = "kda_gate.py, kda_norm.py"
+numeric   = "fp32"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

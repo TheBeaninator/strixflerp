@@ -1,0 +1,66 @@
+# Site configuration for the vllm-strix-halo cluster (deployed by host/deploy.sh).
+# Flat key: value — every key is exported as VSH_<KEY> by host/vsh-config.
+
+# Which model the launcher drives by default: glm53 | ds4
+model: glm53
+
+# ---------------- GLM-5.3-Flash profile (vllm-strix-halo image) ---------------
+glm53_container: vllm-glm            # toolbox/podman container name (both boxes)
+glm53_image: vllm-strix-halo:local   # image the container is created from
+glm53_model_dir: /home/davidcanar/models/GLM-5.3-Flash-AWQ-W4A16
+glm53_api_port: 1234  # single testing port: whichever model is up serves :1234 (stacks are either/or)
+glm53_max_ctx: 524288                # 512K context (native limit is 1M; TTFT is the real cap: ~49 min cold at 512K, PATCHES 45)
+glm53_kv_bytes: 17179869184          # 16 GiB pinned GPU KV. The box ceiling is ~124 GiB GTT
+                                     # with 82.4 GiB weights per rank; >20 GiB KV risks host OOM.
+                                     # fp8 KV (below) fits ~2.05M tokens in this pin (7.8x at 256K).
+glm53_kv_dtype: auto                  # bf16. fp8 KV ALLOCATES fine (2.05M tokens, +50%) but the
+                                     # ROCM_AITER_MLA_SPARSE fp8 decode path asserts on the first request
+                                     # (aiter static_per_tensor_quant: e4m3fn not in _torch_to_aiter_dtype).
+                                     # Half-wired upstream on this backend; leave auto. Tested 2026-09-28.
+glm53_max_batched: 8192              # prefill chunk; 512 -> 4096 is +30% prefill (PATCHES.md §8), 8192 parity (§15.5)
+glm53_max_seqs: 32                   # single-user profile (2026-09-28): 32 is plenty, frees Mamba blocks
+glm53_warmup_ctx: 32768              # boot warm-up prompt (JIT-warms the indexer buckets; holds the engine ~2.5 min, PATCHES 44)
+glm53_mtp_tokens: 3                  # draft tokens (DFlash2 k=3 measured best, PATCHES 28.7)
+glm53_spec_method: dflash    # DFlash2 k=3 beats MTP k=3 after 27-28 (PATCHES 28.7); glm5_next_mtp to revert
+glm53_draft_model: /home/davidcanar/models/GLM-5.3-Flash-DFlash2
+                                     # structured output on the Sep-3 pin; upstream #58454 (kpool
+                                     # corruption with spec decode) may have fixed it — re-enable and
+                                     # validate before relying on it.
+glm53_tool_parsing: 1                # 1 = --enable-auto-tool-choice + glm47 tool/reasoning parsers
+# glm53_profiler_dir: /home/davidcanar/glmprof   # torch profiler (inert until POST /start_profile)
+# glm53_profiler_active: 40               # profiler active steps per capture
+glm53_gpu_sclk_max: 2100              # iGPU max SCLK MHz (power sharing with CPU; PATCHES 28). empty = stock 2900
+glm53_enforce_eager: 0               # 0 = CUDA graphs (breakable PIECEWISE, collectives eager; PATCHES 33); 1 = eager
+glm53_cg_mode: PIECEWISE            # FULL_DECODE_ONLY / FULL_AND_PIECEWISE hang on first replay (PATCHES 29)
+glm53_gpu_util: 0.83
+glm53_aiter: 1                       # 1 = aiter ON (required by the sparse MLA indexer)
+glm53_odl_ar2: 1                     # 1 = odl_ar2 decode all-reduce over OdinLink (odl transport only)
+
+# ---------------- DeepSeek-V4-Flash profile --------------------------------
+# Delegates to the deployed ds4-vllm stack (AlexKGwyn/ds4-vllm image + units).
+ds4_unit: ds4-vllm
+ds4_api_port: 1234
+ds4_engine: native                   # native = the 0.31 port in this image (vllm-glm container; PATCHES 35-41); delegate = the June ds4-vllm stack
+ds4_model_dir: /home/davidcanar/models/DeepSeek-V4-Flash-Vision-Exp
+ds4_container: vllm-glm              # shared with glm53 (same image, one Ray cluster at a time)
+ds4_delegate_unit: ds4-vllm          # used when ds4_engine: delegate
+ds4_mtp_tokens: 5                    # DSpark MTP draft tokens (production; 0 = spec decode off)
+ds4_async_sched: 0                   # padded drafter + async: OFF until validated on the upstream dspark path
+ds4_enforce_eager: 1                 # 0 = PIECEWISE CUDA graphs: slower with DSpark, ~8 % faster without (PATCHES 41)
+ds4_kv_dtype: auto                   # leave auto: DS4 always uses DeepSeek's fp8_ds_mla KV format on this build
+ds4_kv_bytes: 6442450944             # 6 GiB pin = 1,353,463 tokens of fp8_ds_mla KV (2.58 sessions at 512K)
+ds4_gpu_util: 0.83                   # inert while kv_bytes is pinned
+ds4_max_ctx: 524288                  # 512K, as the June stack (needle-tested, PATCHES 41)
+ds4_max_batched: 2048                # prefill chunk; 512 -> 2048 = 1.2-1.3x prefill (PATCHES 42); needs ds4_max_seqs
+ds4_max_seqs: 16                     # caps the gfx1151 decode-logits workspace at 16 x (1+k) rows (12 GiB at 512K)
+ds4_temperature: 1.0                 # default sampling (model card: temperature 1.0, top_p 0.95, max effort)
+ds4_top_p: 0.95
+ds4_reasoning_effort: max            # none | high | max (clients can override per request)
+ds4_draft_sample: probabilistic       # DSpark drafting under sampling (vLLM recipe); adaptive verification needs FULL graphs -> off
+ds4_warmup_ctx: 32768
+
+# ---------------- site ------------------------------------------------------
+head_ip: 10.0.2.1                    # thunderbolt IP of this box (ray head)
+worker_ip: 10.0.2.2                  # thunderbolt IP of box2 (ray worker, odl rank 1)
+transport: odl                       # odl | tcp — odl = RCCL over the OdinLink net plugin
+                                     # + odl_ar2 decode all-reduce + odl_mq control plane

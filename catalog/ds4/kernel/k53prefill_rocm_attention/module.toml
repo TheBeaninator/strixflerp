@@ -1,0 +1,36 @@
+id        = "kernel.ds4.k53prefill_rocm_attention"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-flash-prefill-restoration 4fef372: its copy of the rocm_attention family against antirez/ds4 b3f5018: rocm/ds4_rocm_attention.cuh changed (+86 -0 lines). Kernels not in the base: attention_indexed_mixed_scalar_kernel. The family: DeepSeek V4 attention kernels for raw and mixed (FP8-compressed) KV: prefill raw / mixed with softmax tiles, decode mixed and indexed (8-head online, one-fast), the 16-head WMMA mixed kernel, the 64x64 WMMA output-B projection, head pack / unpack and the non-causal raw batch attention of the DSpark draft block; a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "the glm53-flash branch with the GLM-5.3-Flash prefill path restored and accelerated (head commit \"rocm: accelerate GLM 5.3 Flash prefill\"); same fork point as kyuz0_glm53_flash. The family in the base: the attention core of the DSV4 / V4.1 graph on gfx1151, with WMMA paths; the catalogue's attn.softmax-gqa providers are the comparison set"
+notes     = "Overlay kyuz0_glm53_prefill: files under overlay/kyuz0_glm53_prefill/ are the branch's bytes at 4fef372a4631; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_prefill.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "4fef372a46315bd6b34b0e58b7fc91a7e5f4f21f"
+branch    = "perf/rocm-gfx1151-glm53-flash-prefill-restoration"
+paths     = ["overlay/kyuz0_glm53_prefill/rocm/ds4_rocm_attention.cuh"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_prefill", "src/overlay/kyuz0_glm53_prefill/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+fp8/f32.ds4-k53prefill"
+api       = "see summary"
+numeric   = "F32 accumulation; F16 / FP8 KV; rocWMMA where the head count allows"
+regime    = "prefill and decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.k53prefill_rocm_backend"

@@ -1,0 +1,45 @@
+id        = "runtime.enginelab.session_embed"
+kind      = "runtime"
+summary   = "embed rows and splices: embed rows (file), embed splice (host, device, HIP): 7 origin files under include/strix, src/session"
+why       = "image / audio rows spliced into the token embedding stream; where it would go: beside the catalogue's vision.image-rows/-/bf16 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: vision.image-rows/-/bf16 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 1 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/session/embed_rows.hpp",
+  "include/strix/session/embed_rows_file.hpp",
+  "include/strix/session/embed_splice.hpp",
+  "include/strix/session/embed_splice_device.hpp",
+  "include/strix/session/embed_splice_hip.hpp",
+  "src/session/embed_rows.cpp",
+  "src/session/embed_splice.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/session/embed_splice.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "vision.image-rows/-/bf16.enginelab"
+api       = "strix::session embed_splice.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.session_embed.json"

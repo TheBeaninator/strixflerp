@@ -1,0 +1,44 @@
+id        = "kernel.kyojin.fq_mmq_few"
+kind      = "kernel"
+summary   = "Few-row MMQ (2..24 activation rows) for dense GGUF Q8_0 / Q4_K / Q5_K / Q6_K / Q3_K / IQ4_XS: int8 MMA on raw GGUF rows streamed through a per-warp cp.async ring, activations quantized to q8_1 in the fragment layout"
+why       = "the verify shape of speculative decoding (a few rows) on GGUF weights. Where the shape would go: a linear.verify/gguf-kquant/f32 provider beside kernel.gufo.qwen_linear_decode, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: linear.verify/gguf-kquant/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (fq_mmq_few.cu), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/foreign_quant/fq_mmq_few.cu"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+upstream  = "mul_mat_q_few of llama.cpp PR #31533 (merge 0fb8f15770, MIT); the Q3_K and IQ4_XS decoders are Kyojin's"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/foreign_quant/fq_mmq_few.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.verify/gguf-kquant/f32.kyojin-mmq-few"
+api       = "fq_mmq_few.cu; kernels: mul_mat_q_few, quantize_mmq_few_q8_1"
+numeric   = "q8_1 activations, int8 MMA, fp32 accumulation"
+regime    = "verify, 2..24 rows"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.fq_mmvq"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: fq_mmq_few.cu"

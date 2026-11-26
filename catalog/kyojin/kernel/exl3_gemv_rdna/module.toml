@@ -1,0 +1,51 @@
+id        = "kernel.kyojin.exl3_gemv_rdna"
+kind      = "kernel"
+summary   = "RDNA tiles of the EXL3 GEMV (rocm/quant: the wave32 kernel, its tile loaders and launch front end)"
+why       = "the ROCm GEMV path before exl3_dec. Where the shape would go: a linear.decode/exl3/f16-f32 provider beside kernel.crucible.exl3_gemv, kernel.strix_trellis.exl3_dense_r1, kernel.strix_trellis.exl3_gemv and 4 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: linear.decode/exl3/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (exl3_gemv_rdna.cuh), 3 changed (exl3_gemv_kernel_rdna.cuh, exl3_gemv_rdna.cu, exl3_gemv_tiles_rdna.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/rocm/quant/exl3_gemv_kernel_rdna.cuh",
+  "exllamav3/exllamav3_ext/rocm/quant/exl3_gemv_rdna.cu",
+  "exllamav3/exllamav3_ext/rocm/quant/exl3_gemv_rdna.cuh",
+  "exllamav3/exllamav3_ext/rocm/quant/exl3_gemv_tiles_rdna.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/rocm/quant/exl3_gemv_rdna.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/exl3/f16-f32.kyojin-rdna"
+api       = "exl3_gemv_kernel_rdna.cuh, exl3_gemv_rdna.cu, exl3_gemv_rdna.cuh, exl3_gemv_tiles_rdna.cuh"
+numeric   = "fp16 activations, fp32 accumulation"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: exl3_gemv_rdna.cu"

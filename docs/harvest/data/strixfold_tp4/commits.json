@@ -1,0 +1,4346 @@
+{
+ "docs/experiments/serve-acts.md": [
+  [
+   "eab54795",
+   "dsv41: the drafter's tap copy takes at most absorb_max rows too: a replay-0 dump chunk copied all its rows into dr.at (144 rows), overrunning the arena on every rank (pod cards d1332cef3d, 4f9ba05838)"
+  ],
+  [
+   "5aa7729e",
+   "dsv41 acts: ACTS_DUMP_ROWS (TF_DS_ACTS_DUMP_ROWS, rank 0): dump units of at most N rows (multiple of 128, 128..1024), the DUMP-NONDET test knob for whether a replay-0 dump's run-to-run difference depends on the unit's rows; unset: unchanged (pod cards 4f9ba05838, d1332cef3d)"
+  ],
+  [
+   "bdde4822",
+   "dsv41 acts: the drafter absorb takes a chunk's last 128 rows on every rank and at every fill path (review F1); a chunk not tappable whole is dropped and counted, never a rank-0-only error mid-chunk; tap buffers sized by dumpRows (pod card 4f9ba05838)"
+  ],
+  [
+   "60a0e267",
+   "docs: per-request hidden-state dumps and row injection (serve-acts), the request fields, the key, the bounds and the cache rule (pod card 4f9ba05838)"
+  ]
+ ],
+ "zig/src/families/dsv41/model.zig": [
+  [
+   "eab54795",
+   "dsv41: the drafter's tap copy takes at most absorb_max rows too: a replay-0 dump chunk copied all its rows into dr.at (144 rows), overrunning the arena on every rank (pod cards d1332cef3d, 4f9ba05838)"
+  ],
+  [
+   "5aa7729e",
+   "dsv41 acts: ACTS_DUMP_ROWS (TF_DS_ACTS_DUMP_ROWS, rank 0): dump units of at most N rows (multiple of 128, 128..1024), the DUMP-NONDET test knob for whether a replay-0 dump's run-to-run difference depends on the unit's rows; unset: unchanged (pod cards 4f9ba05838, d1332cef3d)"
+  ],
+  [
+   "bdde4822",
+   "dsv41 acts: the drafter absorb takes a chunk's last 128 rows on every rank and at every fill path (review F1); a chunk not tappable whole is dropped and counted, never a rank-0-only error mid-chunk; tap buffers sized by dumpRows (pod card 4f9ba05838)"
+  ],
+  [
+   "0608ccb7",
+   "dsv41: MASK_EXPERTS, routed experts masked at load as a pruned checkpoint routes (pod card 5bb471d3b9)"
+  ],
+  [
+   "12a18a0d",
+   "dsv41 acts: the acts build's hidden dump, text dump, absorbTail and logits dump as a request's switches on rank 0, written by the Writer's thread; unused, the base's code paths (pod card 4f9ba05838)"
+  ],
+  [
+   "c45214eb",
+   "dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "ad606bc9",
+   "dsv41 2D: zip a split prompt on world 4, the gather ends before catRank (pod card 19121aad1c)"
+  ],
+  [
+   "33999a4f",
+   "dsv41 TP4-COLL-TIMER: TF_DS_COLL_TIME per-kind collective wall time on every transport (pod card 6f42c090eb)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ],
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "75ef1826",
+   "dsv41: TF_DS_PREFILL_ZIP2, a prompt in units of two zipped 2,048-row chunks (pod card 18b8d5d277)"
+  ],
+  [
+   "cd2d157e",
+   "dsv41: an exported state's copies off the device and back on both ranks (cache_move, frames 18 and 19, protocol 6)"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "db0a3694",
+   "dsv41 HIP: the vision path's comments are single lines (lean_check) (review)"
+  ],
+  [
+   "5051d5f9",
+   "dsv41 HIP: a text kit does not load vision.hsaco (review)"
+  ],
+  [
+   "9d00049a",
+   "dsv41 HIP: a request's image rows are capped at the rows both ranks reserve (review)"
+  ],
+  [
+   "dd35554e",
+   "dsv41 HIP: image requests cannot leave the ranks apart; sticky device faults end the pair"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ],
+  [
+   "90605b38",
+   "dsv41 pool split: comments at most 120 columns, a trailing one on its own line (review)"
+  ],
+  [
+   "c340c0c0",
+   "dsv41 pool split: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ],
+  [
+   "04118872",
+   "dsv41 model: the plan-text test takes frames= from frame_protocol, so a protocol bump on main doesn't break it (after the rebase onto #23's protocol 3)"
+  ],
+  [
+   "6a08448a",
+   "dsv41 sf-disk: single-line comments in lanes.zig, native.zig and the tests, no history in source (review)"
+  ],
+  [
+   "7098197a",
+   "dsv41: sf-disk, kept prompt states on disk on both TP ranks"
+  ],
+  [
+   "ab1a7db4",
+   "draft_temperature: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "docs/api.md": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "60a0e267",
+   "docs: per-request hidden-state dumps and row injection (serve-acts), the request fields, the key, the bounds and the cache rule (pod card 4f9ba05838)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "639d1217",
+   "docs, serve.conf: the /cache routes (off by default, the transfer key file, what an export signs); CACHE_TRANSFER_KEY passes --cache-transfer-key"
+  ],
+  [
+   "f9010a98",
+   "docs/api.md: shared_messages in the request fields and in Keeping the prompt cache; what k counts, what is ignored (review)"
+  ],
+  [
+   "db516da8",
+   "serve.conf: the thinking loop guard on by default (LOOP_GUARD=1; unset is on too, 0 turns it off)"
+  ],
+  [
+   "aea1fc86",
+   "docs: M5 fans through the driver's duty override (cmetz/ec-su_axb35-linux#40) and a user-space curve, tools/m5-fans; the re-read figures as measured; the afternoon run after the cache rules"
+  ],
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "2b4d331a",
+   "draft_temperature: the request field in api.md and AGENTS.md; serve.conf DRAFT_TEMPERATURE refused above 100 at start"
+  ],
+  [
+   "56440061",
+   "docs/api: the loop guard closes cycles of up to 64 tokens, and identical repeated lines can trip it"
+  ]
+ ],
+ "zig/src/core/engine_api.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "21003c69",
+   "lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)"
+  ],
+  [
+   "c45214eb",
+   "dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "353a7b87",
+   "lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)"
+  ],
+  [
+   "6c9bc923",
+   "server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "2185cdb3",
+   "core: prompt_cache moves a kept state off the engine and back (probe, exportState, importState); LaneHost runs the transfers between rounds"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ]
+ ],
+ "zig/src/core/lane_host.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "21003c69",
+   "lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)"
+  ],
+  [
+   "c45214eb",
+   "dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "76252c4f",
+   "dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "1fbbbd21",
+   "prompt cache: a submit's resume guess asks the family nothing (guessSealed), cache transfers under cache_lock, an import never dedupes onto a sealed state (pod card d6a577e1a1)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "353a7b87",
+   "lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)"
+  ],
+  [
+   "2185cdb3",
+   "core: prompt_cache moves a kept state off the engine and back (probe, exportState, importState); LaneHost runs the transfers between rounds"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ]
+ ],
+ "zig/src/core/lane_host_test.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "353a7b87",
+   "lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ]
+ ],
+ "zig/src/core/lanes/lanes.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "21003c69",
+   "lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ]
+ ],
+ "zig/src/core/lanes/logprobs.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ]
+ ],
+ "zig/src/core/lanes/stream.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "21003c69",
+   "lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)"
+  ],
+  [
+   "c45214eb",
+   "dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)"
+  ],
+  [
+   "06a8ec1b",
+   "lanes: loop policy close with an empty think_close ends with reason stop again (review fix, pod card f64f606edd)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "c16dc5bf",
+   "server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)"
+  ],
+  [
+   "f925e82a",
+   "server: a request whose images take more tokens than the engine holds is refused with 400 before it queues (review)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ],
+  [
+   "bd6ac7b1",
+   "lanes: loop_max_period's comment on one line (review)"
+  ],
+  [
+   "05df54cd",
+   "lanes: the thinking loop guard sees cycles of up to 64 tokens (upstream 8)"
+  ]
+ ],
+ "zig/src/families/dsv41/lanes.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "bdde4822",
+   "dsv41 acts: the drafter absorb takes a chunk's last 128 rows on every rank and at every fill path (review F1); a chunk not tappable whole is dropped and counted, never a rank-0-only error mid-chunk; tap buffers sized by dumpRows (pod card 4f9ba05838)"
+  ],
+  [
+   "12a18a0d",
+   "dsv41 acts: the acts build's hidden dump, text dump, absorbTail and logits dump as a request's switches on rank 0, written by the Writer's thread; unused, the base's code paths (pod card 4f9ba05838)"
+  ],
+  [
+   "c45214eb",
+   "dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "3d24dbf0",
+   "dsv41 lanes: image rows to every follower through sendImages/ImageTaker, a world-4 host test (three followers, the cap) (pod card b9fafca926)"
+  ],
+  [
+   "33999a4f",
+   "dsv41 TP4-COLL-TIMER: TF_DS_COLL_TIME per-kind collective wall time on every transport (pod card 6f42c090eb)"
+  ],
+  [
+   "6461204c",
+   "dsv41: host tests for a prompt pass that resumes inside a picture's span"
+  ],
+  [
+   "cd96cd39",
+   "dsv41 lanes: a kept state's path is its cache key's, so a same-size picture is another conversation's"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "7f2a4e75",
+   "dsv41 HIP: four-box orchestration for the TP4 split on F D B A (pod card a1baab5e2d)"
+  ],
+  [
+   "e33be4f4",
+   "dsv41 sf-disk at world 4: the disk prompt cache and imported (parked) states on the four-node split (pod card 602dfeb13b)"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "4b7396c5",
+   "dsv41 lanes: a shared cut another conversation resumes is not superseded under place_victim (pod card 345bacf673)"
+  ],
+  [
+   "47c5ee5a",
+   "dsv41 sf-disk: a pass resumed from memory touches its state's disk twin, so eviction follows use on either tier (pod card d9ef7a305e)"
+  ],
+  [
+   "c790acc3",
+   "dsv41 placement: superseded kept states give room first, spared when clear of the placed extent (pod card ee6892da53)"
+  ],
+  [
+   "0def23ec",
+   "dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)"
+  ],
+  [
+   "32be25d6",
+   "prompt cache: hand a pass the longest kept state its family still restores, drop the ones it restores for no prompt (pod card ef450588a1)"
+  ],
+  [
+   "6aa4a985",
+   "dsv41: a host replay of a factory run's prompt passes through the prompt cache and the pool placement (pod card ef450588a1)"
+  ],
+  [
+   "75ef1826",
+   "dsv41: TF_DS_PREFILL_ZIP2, a prompt in units of two zipped 2,048-row chunks (pod card 18b8d5d277)"
+  ],
+  [
+   "f7c5d83a",
+   "SPEED-FUSE-2 31e3ab5061: cherry-pick SFF-COUNTS (sff-counts-291bf8cdad c0a95612) so the fused launches are countable"
+  ],
+  [
+   "cd2d157e",
+   "dsv41: an exported state's copies off the device and back on both ranks (cache_move, frames 18 and 19, protocol 6)"
+  ],
+  [
+   "70b442f7",
+   "dsv41 lanes: a resume from a shared cut copies when another conversation's state lies past the cut in that extent"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ],
+  [
+   "db0a3694",
+   "dsv41 HIP: the vision path's comments are single lines (lean_check) (review)"
+  ],
+  [
+   "9d00049a",
+   "dsv41 HIP: a request's image rows are capped at the rows both ranks reserve (review)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ],
+  [
+   "dd35554e",
+   "dsv41 HIP: image requests cannot leave the ranks apart; sticky device faults end the pair"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ],
+  [
+   "90605b38",
+   "dsv41 pool split: comments at most 120 columns, a trailing one on its own line (review)"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ],
+  [
+   "6a08448a",
+   "dsv41 sf-disk: single-line comments in lanes.zig, native.zig and the tests, no history in source (review)"
+  ],
+  [
+   "7098197a",
+   "dsv41: sf-disk, kept prompt states on disk on both TP ranks"
+  ],
+  [
+   "ff773174",
+   "dsv41 lanes: PassFrame, the pass frame's write and read on both ranks; a host test of its race byte and keys (review)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/families/dsv41/native.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "5aa7729e",
+   "dsv41 acts: ACTS_DUMP_ROWS (TF_DS_ACTS_DUMP_ROWS, rank 0): dump units of at most N rows (multiple of 128, 128..1024), the DUMP-NONDET test knob for whether a replay-0 dump's run-to-run difference depends on the unit's rows; unset: unchanged (pod cards 4f9ba05838, d1332cef3d)"
+  ],
+  [
+   "bdde4822",
+   "dsv41 acts: the drafter absorb takes a chunk's last 128 rows on every rank and at every fill path (review F1); a chunk not tappable whole is dropped and counted, never a rank-0-only error mid-chunk; tap buffers sized by dumpRows (pod card 4f9ba05838)"
+  ],
+  [
+   "12a18a0d",
+   "dsv41 acts: the acts build's hidden dump, text dump, absorbTail and logits dump as a request's switches on rank 0, written by the Writer's thread; unused, the base's code paths (pod card 4f9ba05838)"
+  ],
+  [
+   "e4710d73",
+   "dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995)"
+  ],
+  [
+   "0a02651d",
+   "dsv41 plan: glinear_mlp prefetch depth is a template, TF_DS_MLP_SCAN for the spill table (pod card e5cb84a995)"
+  ],
+  [
+   "5fb89c0d",
+   "dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995)"
+  ],
+  [
+   "cfb1105e",
+   "dsv41 plan: TF_DS_TP4_FILL raises K splits on a 2D node's halved attention linears (pod card e5cb84a995)"
+  ],
+  [
+   "da090917",
+   "dsv41 encoder: a picture cache, rows kept by the picture's BLAKE3-256 digest (ENCODE_CACHE_MIB, rank 0, unset 512 MiB, 0 off) (pod card d6a577e1a1)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "251ed089",
+   "prompt cache: shared cuts land on the family's chunk ends (dsv41 grain), split from f4ae58bd (pod card 345bacf673, 594536982e)"
+  ],
+  [
+   "32be25d6",
+   "prompt cache: hand a pass the longest kept state its family still restores, drop the ones it restores for no prompt (pod card ef450588a1)"
+  ],
+  [
+   "59a9a218",
+   "b7269694f8 SPEED-FUSE-1: cap the _hc_chain launch to windows of 6 rows or fewer (tri_hc.chain_rows)"
+  ],
+  [
+   "c670f7be",
+   "SPEED-FUSE-2 31e3ab5061: the router's two decode launches as one, _rowmm_route (TF_FUSE2, default off, same bits)"
+  ],
+  [
+   "cd2d157e",
+   "dsv41: an exported state's copies off the device and back on both ranks (cache_move, frames 18 and 19, protocol 6)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ],
+  [
+   "f925e82a",
+   "server: a request whose images take more tokens than the engine holds is refused with 400 before it queues (review)"
+  ],
+  [
+   "db0a3694",
+   "dsv41 HIP: the vision path's comments are single lines (lean_check) (review)"
+  ],
+  [
+   "9d00049a",
+   "dsv41 HIP: a request's image rows are capped at the rows both ranks reserve (review)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ],
+  [
+   "6a08448a",
+   "dsv41 sf-disk: single-line comments in lanes.zig, native.zig and the tests, no history in source (review)"
+  ],
+  [
+   "7098197a",
+   "dsv41: sf-disk, kept prompt states on disk on both TP ranks"
+  ],
+  [
+   "6da1bcb0",
+   "SPEED-FUSE-1 b7269694f8: _hc_chain, hc_pre2's whole decode chain as one HIP launch a site (TF_HC_CHAIN, same bits): hc_chain.py (posted mixes + inline-post finish, Sinkhorn by the last of 3*NB+1), test_hc_chain.py bits bench, aot_chain.py kit builder, tri_hc launcher/switch/test, native.zig header, round.zig env"
+  ]
+ ],
+ "zig/src/native/hip.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "21003c69",
+   "lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "251ed089",
+   "prompt cache: shared cuts land on the family's chunk ends (dsv41 grain), split from f4ae58bd (pod card 345bacf673, 594536982e)"
+  ],
+  [
+   "353a7b87",
+   "lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)"
+  ],
+  [
+   "32be25d6",
+   "prompt cache: hand a pass the longest kept state its family still restores, drop the ones it restores for no prompt (pod card ef450588a1)"
+  ],
+  [
+   "6aa4a985",
+   "dsv41: a host replay of a factory run's prompt passes through the prompt cache and the pool placement (pod card ef450588a1)"
+  ],
+  [
+   "6c9bc923",
+   "server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults"
+  ],
+  [
+   "cd2d157e",
+   "dsv41: an exported state's copies off the device and back on both ranks (cache_move, frames 18 and 19, protocol 6)"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ]
+ ],
+ "zig/src/server/chat.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ],
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ],
+  [
+   "9c7bf49a",
+   "server: shared_messages, a chat request's own shared prefix as a shared cut of the prompt cache"
+  ]
+ ],
+ "zig/src/server/fields.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/server/logprobs_test.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ]
+ ],
+ "zig/src/server/openai.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ],
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "9c7bf49a",
+   "server: shared_messages, a chat request's own shared prefix as a shared cut of the prompt cache"
+  ],
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/server/responses_translate.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/server/root.zig": [
+  [
+   "4209827b",
+   "dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+  ],
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ],
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "8c30702f",
+   "server: request body limit 32 -> 256 MiB (64 full-size base64 pictures) + host test (pod card 9757a35411)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "60b3a16d",
+   "server: shared_messages host tests: k = 0, k at or past the end, a cut under 512, tools, the cut in shared_prefixes (review)"
+  ],
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ]
+ ],
+ "tools/dsv41-hip/linger_guard_test.sh": [
+  [
+   "1f9e5bcd",
+   "dsv41 serve: serve_unit_start refuses to start a unit when the user has no Linger (pod card 7aa8487768)"
+  ]
+ ],
+ "tools/dsv41-hip/serve_lib.sh": [
+  [
+   "1f9e5bcd",
+   "dsv41 serve: serve_unit_start refuses to start a unit when the user has no Linger (pod card 7aa8487768)"
+  ],
+  [
+   "5aa7729e",
+   "dsv41 acts: ACTS_DUMP_ROWS (TF_DS_ACTS_DUMP_ROWS, rank 0): dump units of at most N rows (multiple of 128, 128..1024), the DUMP-NONDET test knob for whether a replay-0 dump's run-to-run difference depends on the unit's rows; unset: unchanged (pod cards 4f9ba05838, d1332cef3d)"
+  ],
+  [
+   "0608ccb7",
+   "dsv41: MASK_EXPERTS, routed experts masked at load as a pruned checkpoint routes (pod card 5bb471d3b9)"
+  ],
+  [
+   "c818cb13",
+   "dsv41 serve: ACTS_DIR, ACTS_ROWS_DIR, ACTS_REQUEST_MB, ACTS_TOTAL_MB, ACTS_QUEUE_MB to rank 0 only, off while ACTS_DIR is empty (pod card 4f9ba05838)"
+  ],
+  [
+   "12cb4f8b",
+   "dsv41 serve: ROUTE_RECORDS, ROUTE_RECORDS_DIR, ROUTE_RECORDS_TOPK, ROUTE_RECORDS_MAX_MB to rank 0 (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "5dddc17c",
+   "dsv41 serve: plumb REAP_STATS to every rank (pod card 023c5d2ad9)"
+  ],
+  [
+   "03d67fc1",
+   "server: Pillow for the picture child by TF_PIL_PATH (deploy pylib/), so JPEG and other non-PNG pictures decode on boxes without Pillow (pod card 9757a35411)"
+  ],
+  [
+   "2513d98c",
+   "dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ],
+  [
+   "cd557327",
+   "dsv41-hip serve: TP4_FILL conf key -> TF_DS_TP4_FILL on every rank, default 0 (pod card e5cb84a995)"
+  ],
+  [
+   "c96f0318",
+   "dsv41-hip serve_lib: the disk tier runs at WORLD 4 (TP4-DISK-STATES e33be4f4 is in the build); learned states stay TP2-only (pod card db9e4a4b4d)"
+  ],
+  [
+   "9452a8d0",
+   "dsv41-hip serve_lib: CLOCK_MARKS passes TF_DS_CLOCK_MARKS to every rank (pod card 034bf2c6cd)"
+  ],
+  [
+   "4467d9c4",
+   "dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)"
+  ],
+  [
+   "585e3e71",
+   "dsv41-hip serve_lib: at world 4 TF_RDMA_DEVICES is the rank's own device, one name (pod card 716f35d40a)"
+  ],
+  [
+   "d2c69b40",
+   "dsv41 serve_lib: AUX empty leaves TF_DS_AUX unset (an empty value is BadSetting at load) (pod card 716f35d40a)"
+  ],
+  [
+   "33999a4f",
+   "dsv41 TP4-COLL-TIMER: TF_DS_COLL_TIME per-kind collective wall time on every transport (pod card 6f42c090eb)"
+  ],
+  [
+   "da090917",
+   "dsv41 encoder: a picture cache, rows kept by the picture's BLAKE3-256 digest (ENCODE_CACHE_MIB, rank 0, unset 512 MiB, 0 off) (pod card d6a577e1a1)"
+  ],
+  [
+   "b70e7e39",
+   "dsv41 serve_lib: TRANSPORT=rdma at WORLD=4 (rdma_proxy at four ranks) beside RCCL (pod card 716f35d40a)"
+  ],
+  [
+   "7f2a4e75",
+   "dsv41 HIP: four-box orchestration for the TP4 split on F D B A (pod card a1baab5e2d)"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "9a51720f",
+   "dsv41 serve: TRANSPORT=rdma takes TP_STRIPE and COLL_WIRE_THREADS (pod card 3e7b8b7a47)"
+  ],
+  [
+   "c790acc3",
+   "dsv41 placement: superseded kept states give room first, spared when clear of the placed extent (pod card ee6892da53)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ],
+  [
+   "0def23ec",
+   "dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)"
+  ],
+  [
+   "353a7b87",
+   "lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)"
+  ],
+  [
+   "75ef1826",
+   "dsv41: TF_DS_PREFILL_ZIP2, a prompt in units of two zipped 2,048-row chunks (pod card 18b8d5d277)"
+  ],
+  [
+   "c670f7be",
+   "SPEED-FUSE-2 31e3ab5061: the router's two decode launches as one, _rowmm_route (TF_FUSE2, default off, same bits)"
+  ],
+  [
+   "f7c5d83a",
+   "SPEED-FUSE-2 31e3ab5061: cherry-pick SFF-COUNTS (sff-counts-291bf8cdad c0a95612) so the fused launches are countable"
+  ],
+  [
+   "68957f87",
+   "b7269694f8 SPEED-FUSE-1: HC_CHAIN conf knob \u2014 the ranks start under env -i from SERVE_ENV, which had no way to carry TF_HC_CHAIN, so a served A/B could not switch arms. serve.conf gains HC_CHAIN= (documented, like GRAPHS_EAGER) and serve_env passes it to BOTH ranks (Round.init reads it in each). Conf-only: no engine change, no bit change."
+  ],
+  [
+   "639d1217",
+   "docs, serve.conf: the /cache routes (off by default, the transfer key file, what an export signs); CACHE_TRANSFER_KEY passes --cache-transfer-key"
+  ],
+  [
+   "93d28458",
+   "first_light: a rank that dies without a down lets its box's GPU lock go, and up clears what that run left"
+  ],
+  [
+   "74b715d8",
+   "dsv41: rank 1 leaves through _exit on a stop, so libomp's fini no longer faults"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "db516da8",
+   "serve.conf: the thinking loop guard on by default (LOOP_GUARD=1; unset is on too, 0 turns it off)"
+  ],
+  [
+   "02a8a714",
+   "tools: the vision tools' comments and docstrings are single lines (CONTRIBUTING)"
+  ],
+  [
+   "f53dd4da",
+   "dsv41-hip serve: MAX_IMAGES passes --vision-max-images (the server's 32 unless set)"
+  ],
+  [
+   "4065853d",
+   "dsv41-hip serve: MODALITIES=text_image checks and passes the vision assets"
+  ],
+  [
+   "90605b38",
+   "dsv41 pool split: comments at most 120 columns, a trailing one on its own line (review)"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ],
+  [
+   "fa347948",
+   "serve: PROMPT_DISK_* keys to both ranks (off unless PROMPT_DISK_GIB > 0)"
+  ],
+  [
+   "2b4d331a",
+   "draft_temperature: the request field in api.md and AGENTS.md; serve.conf DRAFT_TEMPERATURE refused above 100 at start"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ],
+  [
+   "eb2ea7e0",
+   "dsv41-hip serve: LOOP_GUARD=1 passes --loop-guard (off unless set)"
+  ],
+  [
+   "34b3e87e",
+   "serve.conf: SPAWN_UNIT, a rank and its lock holder as transient user units"
+  ],
+  [
+   "e35dc450",
+   "serve.conf: MEMORY_RESERVE_GIB, the engine's TENSORFOLD_MEMORY_RESERVE_GIB from the one configuration file"
+  ]
+ ],
+ "tools/dsv41-hip/serve.conf": [
+  [
+   "5aa7729e",
+   "dsv41 acts: ACTS_DUMP_ROWS (TF_DS_ACTS_DUMP_ROWS, rank 0): dump units of at most N rows (multiple of 128, 128..1024), the DUMP-NONDET test knob for whether a replay-0 dump's run-to-run difference depends on the unit's rows; unset: unchanged (pod cards 4f9ba05838, d1332cef3d)"
+  ],
+  [
+   "0608ccb7",
+   "dsv41: MASK_EXPERTS, routed experts masked at load as a pruned checkpoint routes (pod card 5bb471d3b9)"
+  ],
+  [
+   "c818cb13",
+   "dsv41 serve: ACTS_DIR, ACTS_ROWS_DIR, ACTS_REQUEST_MB, ACTS_TOTAL_MB, ACTS_QUEUE_MB to rank 0 only, off while ACTS_DIR is empty (pod card 4f9ba05838)"
+  ],
+  [
+   "12cb4f8b",
+   "dsv41 serve: ROUTE_RECORDS, ROUTE_RECORDS_DIR, ROUTE_RECORDS_TOPK, ROUTE_RECORDS_MAX_MB to rank 0 (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "5dddc17c",
+   "dsv41 serve: plumb REAP_STATS to every rank (pod card 023c5d2ad9)"
+  ],
+  [
+   "2513d98c",
+   "dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ],
+  [
+   "e4710d73",
+   "dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995)"
+  ],
+  [
+   "124ca5bf",
+   "dsv41-hip serve: TP4_FILL=exact documented in serve.conf (pod card e5cb84a995)"
+  ],
+  [
+   "cd557327",
+   "dsv41-hip serve: TP4_FILL conf key -> TF_DS_TP4_FILL on every rank, default 0 (pod card e5cb84a995)"
+  ],
+  [
+   "da090917",
+   "dsv41 encoder: a picture cache, rows kept by the picture's BLAKE3-256 digest (ENCODE_CACHE_MIB, rank 0, unset 512 MiB, 0 off) (pod card d6a577e1a1)"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "9a51720f",
+   "dsv41 serve: TRANSPORT=rdma takes TP_STRIPE and COLL_WIRE_THREADS (pod card 3e7b8b7a47)"
+  ],
+  [
+   "c790acc3",
+   "dsv41 placement: superseded kept states give room first, spared when clear of the placed extent (pod card ee6892da53)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ],
+  [
+   "0def23ec",
+   "dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)"
+  ],
+  [
+   "353a7b87",
+   "lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)"
+  ],
+  [
+   "75ef1826",
+   "dsv41: TF_DS_PREFILL_ZIP2, a prompt in units of two zipped 2,048-row chunks (pod card 18b8d5d277)"
+  ],
+  [
+   "838dc2ab",
+   "b7269694f8 SPEED-FUSE-2 31e3ab5061: pin the router fusion's 6-row cap (tri_norm.fuse2_rows) in the host test"
+  ],
+  [
+   "59a9a218",
+   "b7269694f8 SPEED-FUSE-1: cap the _hc_chain launch to windows of 6 rows or fewer (tri_hc.chain_rows)"
+  ],
+  [
+   "c670f7be",
+   "SPEED-FUSE-2 31e3ab5061: the router's two decode launches as one, _rowmm_route (TF_FUSE2, default off, same bits)"
+  ],
+  [
+   "f7c5d83a",
+   "SPEED-FUSE-2 31e3ab5061: cherry-pick SFF-COUNTS (sff-counts-291bf8cdad c0a95612) so the fused launches are countable"
+  ],
+  [
+   "68957f87",
+   "b7269694f8 SPEED-FUSE-1: HC_CHAIN conf knob \u2014 the ranks start under env -i from SERVE_ENV, which had no way to carry TF_HC_CHAIN, so a served A/B could not switch arms. serve.conf gains HC_CHAIN= (documented, like GRAPHS_EAGER) and serve_env passes it to BOTH ranks (Round.init reads it in each). Conf-only: no engine change, no bit change."
+  ],
+  [
+   "639d1217",
+   "docs, serve.conf: the /cache routes (off by default, the transfer key file, what an export signs); CACHE_TRANSFER_KEY passes --cache-transfer-key"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "db516da8",
+   "serve.conf: the thinking loop guard on by default (LOOP_GUARD=1; unset is on too, 0 turns it off)"
+  ],
+  [
+   "02a8a714",
+   "tools: the vision tools' comments and docstrings are single lines (CONTRIBUTING)"
+  ],
+  [
+   "f53dd4da",
+   "dsv41-hip serve: MAX_IMAGES passes --vision-max-images (the server's 32 unless set)"
+  ],
+  [
+   "4065853d",
+   "dsv41-hip serve: MODALITIES=text_image checks and passes the vision assets"
+  ],
+  [
+   "90605b38",
+   "dsv41 pool split: comments at most 120 columns, a trailing one on its own line (review)"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ],
+  [
+   "fa347948",
+   "serve: PROMPT_DISK_* keys to both ranks (off unless PROMPT_DISK_GIB > 0)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ],
+  [
+   "eb2ea7e0",
+   "dsv41-hip serve: LOOP_GUARD=1 passes --loop-guard (off unless set)"
+  ],
+  [
+   "34b3e87e",
+   "serve.conf: SPAWN_UNIT, a rank and its lock holder as transient user units"
+  ],
+  [
+   "e35dc450",
+   "serve.conf: MEMORY_RESERVE_GIB, the engine's TENSORFOLD_MEMORY_RESERVE_GIB from the one configuration file"
+  ],
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ]
+ ],
+ "tools/dsv41-hip/test_serve_transport.py": [
+  [
+   "5aa7729e",
+   "dsv41 acts: ACTS_DUMP_ROWS (TF_DS_ACTS_DUMP_ROWS, rank 0): dump units of at most N rows (multiple of 128, 128..1024), the DUMP-NONDET test knob for whether a replay-0 dump's run-to-run difference depends on the unit's rows; unset: unchanged (pod cards 4f9ba05838, d1332cef3d)"
+  ],
+  [
+   "0608ccb7",
+   "dsv41: MASK_EXPERTS, routed experts masked at load as a pruned checkpoint routes (pod card 5bb471d3b9)"
+  ],
+  [
+   "c818cb13",
+   "dsv41 serve: ACTS_DIR, ACTS_ROWS_DIR, ACTS_REQUEST_MB, ACTS_TOTAL_MB, ACTS_QUEUE_MB to rank 0 only, off while ACTS_DIR is empty (pod card 4f9ba05838)"
+  ],
+  [
+   "12cb4f8b",
+   "dsv41 serve: ROUTE_RECORDS, ROUTE_RECORDS_DIR, ROUTE_RECORDS_TOPK, ROUTE_RECORDS_MAX_MB to rank 0 (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "03d67fc1",
+   "server: Pillow for the picture child by TF_PIL_PATH (deploy pylib/), so JPEG and other non-PNG pictures decode on boxes without Pillow (pod card 9757a35411)"
+  ],
+  [
+   "585e3e71",
+   "dsv41-hip serve_lib: at world 4 TF_RDMA_DEVICES is the rank's own device, one name (pod card 716f35d40a)"
+  ],
+  [
+   "da090917",
+   "dsv41 encoder: a picture cache, rows kept by the picture's BLAKE3-256 digest (ENCODE_CACHE_MIB, rank 0, unset 512 MiB, 0 off) (pod card d6a577e1a1)"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "9a51720f",
+   "dsv41 serve: TRANSPORT=rdma takes TP_STRIPE and COLL_WIRE_THREADS (pod card 3e7b8b7a47)"
+  ]
+ ],
+ "tools/dsv41-hip/tp4.conf": [
+  [
+   "5aa7729e",
+   "dsv41 acts: ACTS_DUMP_ROWS (TF_DS_ACTS_DUMP_ROWS, rank 0): dump units of at most N rows (multiple of 128, 128..1024), the DUMP-NONDET test knob for whether a replay-0 dump's run-to-run difference depends on the unit's rows; unset: unchanged (pod cards 4f9ba05838, d1332cef3d)"
+  ],
+  [
+   "0608ccb7",
+   "dsv41: MASK_EXPERTS, routed experts masked at load as a pruned checkpoint routes (pod card 5bb471d3b9)"
+  ],
+  [
+   "c818cb13",
+   "dsv41 serve: ACTS_DIR, ACTS_ROWS_DIR, ACTS_REQUEST_MB, ACTS_TOTAL_MB, ACTS_QUEUE_MB to rank 0 only, off while ACTS_DIR is empty (pod card 4f9ba05838)"
+  ],
+  [
+   "12cb4f8b",
+   "dsv41 serve: ROUTE_RECORDS, ROUTE_RECORDS_DIR, ROUTE_RECORDS_TOPK, ROUTE_RECORDS_MAX_MB to rank 0 (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "5dddc17c",
+   "dsv41 serve: plumb REAP_STATS to every rank (pod card 023c5d2ad9)"
+  ],
+  [
+   "ad606bc9",
+   "dsv41 2D: zip a split prompt on world 4, the gather ends before catRank (pod card 19121aad1c)"
+  ],
+  [
+   "584b4546",
+   "dsv41 TP4 first light kit: rank-file placements as TP4-RANKFILES makes them, frozen gate prompts, judge (pod card 716f35d40a)"
+  ],
+  [
+   "7f2a4e75",
+   "dsv41 HIP: four-box orchestration for the TP4 split on F D B A (pod card a1baab5e2d)"
+  ]
+ ],
+ "zig/src/core/lanes/acts.zig": [
+  [
+   "bdde4822",
+   "dsv41 acts: the drafter absorb takes a chunk's last 128 rows on every rank and at every fill path (review F1); a chunk not tappable whole is dropped and counted, never a rank-0-only error mid-chunk; tap buffers sized by dumpRows (pod card 4f9ba05838)"
+  ],
+  [
+   "21003c69",
+   "lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)"
+  ]
+ ],
+ "zig/src/families/dsv41/mask.zig": [
+  [
+   "73122189",
+   "dsv41 mask: the canonical id test pins sha256 of the canonical list, the id strixflerp tools/ablate.py computes (pod card 5bb471d3b9)"
+  ],
+  [
+   "0608ccb7",
+   "dsv41: MASK_EXPERTS, routed experts masked at load as a pruned checkpoint routes (pod card 5bb471d3b9)"
+  ]
+ ],
+ "zig/src/families/dsv41/dsv41.zig": [
+  [
+   "0608ccb7",
+   "dsv41: MASK_EXPERTS, routed experts masked at load as a pruned checkpoint routes (pod card 5bb471d3b9)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "ad606bc9",
+   "dsv41 2D: zip a split prompt on world 4, the gather ends before catRank (pod card 19121aad1c)"
+  ],
+  [
+   "8ff01127",
+   "dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+  ],
+  [
+   "74b715d8",
+   "dsv41: rank 1 leaves through _exit on a stop, so libomp's fini no longer faults"
+  ],
+  [
+   "34eaaae3",
+   "dsv41 HIP: tf-dsv41-vision-check, the tower against engineLab's host reference"
+  ],
+  [
+   "7098197a",
+   "dsv41: sf-disk, kept prompt states on disk on both TP ranks"
+  ],
+  [
+   "7aae65c0",
+   "dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side"
+  ],
+  [
+   "6d2765a2",
+   "dsv41 picture: a PNG's inflated data is bounded by the size its header gives; longer data is not inflated past it"
+  ]
+ ],
+ "zig/src/server/acts_fields.zig": [
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ]
+ ],
+ "zig/src/server/acts_test.zig": [
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ]
+ ],
+ "zig/src/server/anthropic.zig": [
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ],
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ],
+  [
+   "fbae6f74",
+   "server: restore the trailing newline of anthropic.zig and responses.zig (pod card f34d18ab39)"
+  ],
+  [
+   "06819404",
+   "server: loop-stopped replies are visible on /v1/messages and /v1/responses (pod card f34d18ab39)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ],
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ],
+  [
+   "4bd8e663",
+   "server: count_tokens takes image blocks; HTTP regression of the image routes"
+  ]
+ ],
+ "zig/src/server/errors.zig": [
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ]
+ ],
+ "zig/src/server/http_conn.zig": [
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ]
+ ],
+ "zig/src/server/responses.zig": [
+  [
+   "e4fce45a",
+   "server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838)"
+  ],
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ],
+  [
+   "fbae6f74",
+   "server: restore the trailing newline of anthropic.zig and responses.zig (pod card f34d18ab39)"
+  ],
+  [
+   "06819404",
+   "server: loop-stopped replies are visible on /v1/messages and /v1/responses (pod card f34d18ab39)"
+  ]
+ ],
+ "zig/src/server/route_records_test.zig": [
+  [
+   "fbdaf8b4",
+   "server: route records test builds under zig_test.sh (no ** on strings, one Reply) and matches the reply's \": \" spacing (pod card 28153e18f3)"
+  ],
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ]
+ ],
+ "zig/src/families/dsv41/route_rec.zig": [
+  [
+   "716963e9",
+   "dsv41 rrec: the writer creates a missing ROUTE_RECORDS_DIR (one level), so a RAM home emptied by a reboot still starts (pod card 28153e18f3)"
+  ],
+  [
+   "5ee2e2c6",
+   "dsv41 rrec: host records module: config, kernel reference, top-K record lines, rotating files and the writer thread (pod card 28153e18f3)"
+  ]
+ ],
+ "docs/experiments/route-records.md": [
+  [
+   "993cb95c",
+   "docs: per-request routing records (pod card 28153e18f3)"
+  ]
+ ],
+ "zig/src/server/route_tag.zig": [
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ]
+ ],
+ "zig/src/server/serve.zig": [
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ]
+ ],
+ "zig/src/server/server.zig": [
+  [
+   "c900812d",
+   "server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/families/dsv41/hip_test.zig": [
+  [
+   "c45214eb",
+   "dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)"
+  ],
+  [
+   "cfb1105e",
+   "dsv41 plan: TF_DS_TP4_FILL raises K splits on a 2D node's halved attention linears (pod card e5cb84a995)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ],
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ],
+  [
+   "cd2d157e",
+   "dsv41: an exported state's copies off the device and back on both ranks (cache_move, frames 18 and 19, protocol 6)"
+  ],
+  [
+   "74b715d8",
+   "dsv41: rank 1 leaves through _exit on a stop, so libomp's fini no longer faults"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "9d00049a",
+   "dsv41 HIP: a request's image rows are capped at the rows both ranks reserve (review)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ],
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ],
+  [
+   "7098197a",
+   "dsv41: sf-disk, kept prompt states on disk on both TP ranks"
+  ]
+ ],
+ "zig/src/families/dsv41/route_rec_dev.zig": [
+  [
+   "c45214eb",
+   "dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)"
+  ]
+ ],
+ "zig/build/hip_dsv41.zig": [
+  [
+   "f706a6d0",
+   "dsv41 rrec: tf_ds_route_rec, one thread per (layer, expert) adding a request's gate mass into its stream slot (pod card 28153e18f3)"
+  ],
+  [
+   "542162d9",
+   "dsv41 reap: pack, ssq, route and norm kernels and the down-y redirect (pod card 023c5d2ad9)"
+  ],
+  [
+   "5fb89c0d",
+   "dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995)"
+  ],
+  [
+   "8ff01127",
+   "dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+  ],
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ],
+  [
+   "6c9bc923",
+   "server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ],
+  [
+   "bb7ead05",
+   "dsv41 HIP: tf-dsv41-vision-check's docs point at tools/dsv41-hip/vision-reference"
+  ],
+  [
+   "34eaaae3",
+   "dsv41 HIP: tf-dsv41-vision-check, the tower against engineLab's host reference"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/registry.json": [
+  [
+   "f706a6d0",
+   "dsv41 rrec: tf_ds_route_rec, one thread per (layer, expert) adding a request's gate mass into its stream slot (pod card 28153e18f3)"
+  ],
+  [
+   "542162d9",
+   "dsv41 reap: pack, ssq, route and norm kernels and the down-y redirect (pod card 023c5d2ad9)"
+  ],
+  [
+   "e4710d73",
+   "dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995)"
+  ],
+  [
+   "84222220",
+   "dsv41 registry: exl3.glinear_mlp may spill to scratch (20-92 B), declared so the kit builds (pod card e5cb84a995)"
+  ],
+  [
+   "5fb89c0d",
+   "dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995)"
+  ],
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ],
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "b1a67e47",
+   "dsv41 HIP: vision.hip credits its third-party helpers; THIRD_PARTY_NOTICES entry (review)"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/route_rec.hip": [
+  [
+   "f706a6d0",
+   "dsv41 rrec: tf_ds_route_rec, one thread per (layer, expert) adding a request's gate mass into its stream slot (pod card 28153e18f3)"
+  ]
+ ],
+ "zig/src/families/dsv41/hip_load.zig": [
+  [
+   "f706a6d0",
+   "dsv41 rrec: tf_ds_route_rec, one thread per (layer, expert) adding a request's gate mass into its stream slot (pod card 28153e18f3)"
+  ],
+  [
+   "542162d9",
+   "dsv41 reap: pack, ssq, route and norm kernels and the down-y redirect (pod card 023c5d2ad9)"
+  ],
+  [
+   "2513d98c",
+   "dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ],
+  [
+   "e4710d73",
+   "dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995)"
+  ],
+  [
+   "5fb89c0d",
+   "dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995)"
+  ],
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ],
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "db0a3694",
+   "dsv41 HIP: the vision path's comments are single lines (lean_check) (review)"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/server/telemetry_reply_test.zig": [
+  [
+   "06819404",
+   "server: loop-stopped replies are visible on /v1/messages and /v1/responses (pod card f34d18ab39)"
+  ],
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ]
+ ],
+ "docs/AGENTS.md": [
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "db516da8",
+   "serve.conf: the thinking loop guard on by default (LOOP_GUARD=1; unset is on too, 0 turns it off)"
+  ],
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "2b4d331a",
+   "draft_temperature: the request field in api.md and AGENTS.md; serve.conf DRAFT_TEMPERATURE refused above 100 at start"
+  ],
+  [
+   "04426900",
+   "docs: the loop guard as it is on main (LOOP_GUARD=1, cycles up to 64 tokens); the keyring package's trusted.gpg.d link"
+  ],
+  [
+   "544415f9",
+   "docs: Bosgame M5, agents and image docs corrected; look_at_image counts looks per call and fails cleanly"
+  ],
+  [
+   "00e06ba1",
+   "docs: running agents on StrixFold, and the sampling and repeat checks that keep them out of loops"
+  ]
+ ],
+ "zig/src/core/lanes/engine_test.zig": [
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ]
+ ],
+ "zig/src/server/cli.zig": [
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/server/main.zig": [
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ],
+  [
+   "6c9bc923",
+   "server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults"
+  ],
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/server/metrics.zig": [
+  [
+   "298bce67",
+   "lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+  ]
+ ],
+ "docs/experiments/tp4-reap-stats.md": [
+  [
+   "feb5614b",
+   "docs: REAP device bytes, off-thread snapshots, world-2 RDMA exchange (pod card 023c5d2ad9)"
+  ],
+  [
+   "3f94d72b",
+   "docs: TP4 Edge-REAP routing statistics (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/server/reap_routes.zig": [
+  [
+   "62878ca5",
+   "server: x-reap-domain on messages and completions, 503 Retry-After (pod card 023c5d2ad9)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/server/reap_routes_test.zig": [
+  [
+   "62878ca5",
+   "server: x-reap-domain on messages and completions, 503 Retry-After (pod card 023c5d2ad9)"
+  ],
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/core/lanes/reap_hook.zig": [
+  [
+   "76252c4f",
+   "dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/families/dsv41/fixtures/reap_export_small.json": [
+  [
+   "76252c4f",
+   "dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/families/dsv41/fixtures/reap_export_small_all.json": [
+  [
+   "76252c4f",
+   "dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/families/dsv41/prompt.zig": [
+  [
+   "76252c4f",
+   "dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "ad606bc9",
+   "dsv41 2D: zip a split prompt on world 4, the gather ends before catRank (pod card 19121aad1c)"
+  ],
+  [
+   "6461204c",
+   "dsv41: host tests for a prompt pass that resumes inside a picture's span"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ]
+ ],
+ "zig/src/families/dsv41/prompt2d.zig": [
+  [
+   "76252c4f",
+   "dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "a2a4ccd3",
+   "TP4-CHUNK-PARITY c7b0f22dde: refuse at Two.init when world-4 exchange pairs would take different chunk counts"
+  ],
+  [
+   "2513d98c",
+   "dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ],
+  [
+   "ad606bc9",
+   "dsv41 2D: zip a split prompt on world 4, the gather ends before catRank (pod card 19121aad1c)"
+  ],
+  [
+   "4467d9c4",
+   "dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)"
+  ],
+  [
+   "c6fa0b6f",
+   "dsv41 prompt2d catRank: one pair exchange with g ^ 2, not a four-rank all-gather (pod card 96431609cf)"
+  ],
+  [
+   "2531e8fd",
+   "dsv41 2D: a node's prompt experts take the AMD kit's w-pf launches where TP2's rank does; the judge reads the JSON objects (pod card 716f35d40a)"
+  ],
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ]
+ ],
+ "zig/src/families/dsv41/reap.zig": [
+  [
+   "76252c4f",
+   "dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)"
+  ],
+  [
+   "a336aa5b",
+   "dsv41 reap: host Edge-REAP accumulators, export and the CPU reference (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/families/dsv41/reap_dev.zig": [
+  [
+   "76252c4f",
+   "dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/families/dsv41/comm.zig": [
+  [
+   "09a812eb",
+   "dsv41 reap: world-2 RDMA exchange delegates to the host link (pod card 023c5d2ad9)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ],
+  [
+   "14202a0e",
+   "dsv41 comm: TF_DS_COLL=tcp at world 3-4 when TF_COLL_KIND=rdma (rdma_proxy's star), so the TP4 RDMA arm loads (pod card 716f35d40a)"
+  ],
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ]
+ ],
+ "zig/src/families/dsv41/rdma_proxy.zig": [
+  [
+   "09a812eb",
+   "dsv41 reap: world-2 RDMA exchange delegates to the host link (pod card 023c5d2ad9)"
+  ],
+  [
+   "2513d98c",
+   "dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ],
+  [
+   "4467d9c4",
+   "dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)"
+  ],
+  [
+   "96d9d9ed",
+   "dsv41 rdma_proxy world 4: lanes, so a prompt-size call keeps up to 4 slot chunks on the wire (TF_COLL_LANES, pod card 96431609cf)"
+  ],
+  [
+   "bfebed5c",
+   "dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)"
+  ],
+  [
+   "0def23ec",
+   "dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)"
+  ],
+  [
+   "fc1399ca",
+   "rdma_proxy: a gather's end on a different stream from its begin is refused; why RX slot reuse is safe (review)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "zig/src/families/dsv41/tcp_coll.zig": [
+  [
+   "09a812eb",
+   "dsv41 reap: world-2 RDMA exchange delegates to the host link (pod card 023c5d2ad9)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "bfebed5c",
+   "dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)"
+  ],
+  [
+   "0def23ec",
+   "dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "zig/src/families/dsv41/tcp_proxy.zig": [
+  [
+   "09a812eb",
+   "dsv41 reap: world-2 RDMA exchange delegates to the host link (pod card 023c5d2ad9)"
+  ],
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "0def23ec",
+   "dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)"
+  ],
+  [
+   "74bdec30",
+   "rdma_proxy: the idle wait sleeps as tcp_proxy's does (idleWait), not only yields past 20 ms (review)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ],
+  [
+   "de6a979c",
+   "tcp_proxy: the idle constants' doc comment on one line, no measurements in the test (review)"
+  ],
+  [
+   "147b4e45",
+   "tcp_proxy: past 1 s idle, the proxy threads sleep 2 ms per check instead of 50 us"
+  ],
+  [
+   "c1fccfd3",
+   "tcp_proxy: sleep in the idle wait instead of only yielding"
+  ]
+ ],
+ "zig/src/server/auth.zig": [
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ]
+ ],
+ "zig/src/server/routes.zig": [
+  [
+   "d8c366de",
+   "server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)"
+  ],
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ]
+ ],
+ "zig/src/families/dsv41/coll.zig": [
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "2513d98c",
+   "dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ],
+  [
+   "4467d9c4",
+   "dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)"
+  ],
+  [
+   "33999a4f",
+   "dsv41 TP4-COLL-TIMER: TF_DS_COLL_TIME per-kind collective wall time on every transport (pod card 6f42c090eb)"
+  ],
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ],
+  [
+   "0def23ec",
+   "dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)"
+  ]
+ ],
+ "zig/src/families/dsv41/round.zig": [
+  [
+   "7bc5cbf4",
+   "dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+  ],
+  [
+   "c670f7be",
+   "SPEED-FUSE-2 31e3ab5061: the router's two decode launches as one, _rowmm_route (TF_FUSE2, default off, same bits)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ],
+  [
+   "6da1bcb0",
+   "SPEED-FUSE-1 b7269694f8: _hc_chain, hc_pre2's whole decode chain as one HIP launch a site (TF_HC_CHAIN, same bits): hc_chain.py (posted mixes + inline-post finish, Sinkhorn by the last of 3*NB+1), test_hc_chain.py bits bench, aot_chain.py kit builder, tri_hc launcher/switch/test, native.zig header, round.zig env"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/reap.hip": [
+  [
+   "542162d9",
+   "dsv41 reap: pack, ssq, route and norm kernels and the down-y redirect (pod card 023c5d2ad9)"
+  ]
+ ],
+ "zig/src/families/dsv41/exl3_experts.zig": [
+  [
+   "542162d9",
+   "dsv41 reap: pack, ssq, route and norm kernels and the down-y redirect (pod card 023c5d2ad9)"
+  ],
+  [
+   "2531e8fd",
+   "dsv41 2D: a node's prompt experts take the AMD kit's w-pf launches where TP2's rank does; the judge reads the JSON objects (pod card 716f35d40a)"
+  ],
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ]
+ ],
+ "zig/src/families/dsv41/exl3_experts2d.zig": [
+  [
+   "542162d9",
+   "dsv41 reap: pack, ssq, route and norm kernels and the down-y redirect (pod card 023c5d2ad9)"
+  ],
+  [
+   "2531e8fd",
+   "dsv41 2D: a node's prompt experts take the AMD kit's w-pf launches where TP2's rank does; the judge reads the JSON objects (pod card 716f35d40a)"
+  ],
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ]
+ ],
+ "zig/src/families/dsv41/prompt2d_test.zig": [
+  [
+   "a2a4ccd3",
+   "TP4-CHUNK-PARITY c7b0f22dde: refuse at Two.init when world-4 exchange pairs would take different chunk counts"
+  ],
+  [
+   "2513d98c",
+   "dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ],
+  [
+   "c6fa0b6f",
+   "dsv41 prompt2d catRank: one pair exchange with g ^ 2, not a four-rank all-gather (pod card 96431609cf)"
+  ],
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ]
+ ],
+ "zig/src/families/dsv41/pil.zig": [
+  [
+   "03d67fc1",
+   "server: Pillow for the picture child by TF_PIL_PATH (deploy pylib/), so JPEG and other non-PNG pictures decode on boxes without Pillow (pod card 9757a35411)"
+  ],
+  [
+   "7aae65c0",
+   "dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side"
+  ]
+ ],
+ "zig/src/server/http_body.zig": [
+  [
+   "8c30702f",
+   "server: request body limit 32 -> 256 MiB (64 full-size base64 pictures) + host test (pod card 9757a35411)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ]
+ ],
+ "zig/src/server/http_body_test.zig": [
+  [
+   "8c30702f",
+   "server: request body limit 32 -> 256 MiB (64 full-size base64 pictures) + host test (pod card 9757a35411)"
+  ]
+ ],
+ "docs/experiments/tp4-gather-budget.md": [
+  [
+   "003f679c",
+   "dsv41 plan: vgather copies are copy_rows16, not the byte kernel (pod card e96f0f5fa0)"
+  ],
+  [
+   "96e4445c",
+   "dsv41 plan: vgather hardware check on the gather budget (pod card e96f0f5fa0)"
+  ],
+  [
+   "d2b16e72",
+   "dsv41 plan: tp4 multi-row gather budget (pod card e96f0f5fa0)"
+  ]
+ ],
+ "zig/src/families/dsv41/ops.zig": [
+  [
+   "2513d98c",
+   "dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)"
+  ],
+  [
+   "5cb6ff9e",
+   "dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)"
+  ]
+ ],
+ "docs/experiments/tp4-attn-budget.md": [
+  [
+   "e4710d73",
+   "dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995)"
+  ],
+  [
+   "0a02651d",
+   "dsv41 plan: glinear_mlp prefetch depth is a template, TF_DS_MLP_SCAN for the spill table (pod card e5cb84a995)"
+  ],
+  [
+   "5fb89c0d",
+   "dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995)"
+  ],
+  [
+   "0627fba4",
+   "dsv41 plan: TP4 decode attention budget, and the fill check (pod card e5cb84a995)"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/exl3_mlp.hip": [
+  [
+   "e4710d73",
+   "dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995)"
+  ],
+  [
+   "0a02651d",
+   "dsv41 plan: glinear_mlp prefetch depth is a template, TF_DS_MLP_SCAN for the spill table (pod card e5cb84a995)"
+  ],
+  [
+   "5fb89c0d",
+   "dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995)"
+  ]
+ ],
+ "zig/src/families/dsv41/exl3_linear.zig": [
+  [
+   "e4710d73",
+   "dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995)"
+  ],
+  [
+   "5fb89c0d",
+   "dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995)"
+  ],
+  [
+   "cfb1105e",
+   "dsv41 plan: TF_DS_TP4_FILL raises K splits on a 2D node's halved attention linears (pod card e5cb84a995)"
+  ]
+ ],
+ "zig/src/families/dsv41/weights.zig": [
+  [
+   "e4710d73",
+   "dsv41 plan: glinear_mlp picks a no-spill schedule, exact_lds parks tiles in LDS (pod card e5cb84a995)"
+  ],
+  [
+   "5fb89c0d",
+   "dsv41 plan: TF_DS_TP4_FILL=exact keeps TP2's fp32 order on glinear_mlp (pod card e5cb84a995)"
+  ],
+  [
+   "cfb1105e",
+   "dsv41 plan: TF_DS_TP4_FILL raises K splits on a 2D node's halved attention linears (pod card e5cb84a995)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ]
+ ],
+ "docs/experiments/tp4-prefill-budget.md": [
+  [
+   "ad606bc9",
+   "dsv41 2D: zip a split prompt on world 4, the gather ends before catRank (pod card 19121aad1c)"
+  ]
+ ],
+ "zig/src/families/dsv41/zip2d.zig": [
+  [
+   "ad606bc9",
+   "dsv41 2D: zip a split prompt on world 4, the gather ends before catRank (pod card 19121aad1c)"
+  ]
+ ],
+ "tools/dsv41-hip/bench_stream.py": [
+  [
+   "250f91b9",
+   "dsv41-hip bench_stream: BENCH_DRAFT=0 sends draft false (pod card 034bf2c6cd)"
+  ]
+ ],
+ "zig/src/families/dsv41/rdma_core.zig": [
+  [
+   "4467d9c4",
+   "dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)"
+  ],
+  [
+   "96d9d9ed",
+   "dsv41 rdma_proxy world 4: lanes, so a prompt-size call keeps up to 4 slot chunks on the wire (TF_COLL_LANES, pod card 96431609cf)"
+  ],
+  [
+   "bfebed5c",
+   "dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)"
+  ],
+  [
+   "74bdec30",
+   "rdma_proxy: the idle wait sleeps as tcp_proxy's does (idleWait), not only yields past 20 ms (review)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "zig/src/families/dsv41/rdma_proxy4_test.zig": [
+  [
+   "4467d9c4",
+   "dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)"
+  ],
+  [
+   "96d9d9ed",
+   "dsv41 rdma_proxy world 4: lanes, so a prompt-size call keeps up to 4 slot chunks on the wire (TF_COLL_LANES, pod card 96431609cf)"
+  ],
+  [
+   "bfebed5c",
+   "dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)"
+  ]
+ ],
+ "tools/dsv41-hip/first_light.sh": [
+  [
+   "f30049ee",
+   "dsv41-hip first_light: at world 4 ranks may name different RDMA devices and rail interfaces (A rocep194s0, others rocep195s0) (pod card 716f35d40a)"
+  ],
+  [
+   "7f2a4e75",
+   "dsv41 HIP: four-box orchestration for the TP4 split on F D B A (pod card a1baab5e2d)"
+  ],
+  [
+   "846317fd",
+   "first_light: reach node0 through tfp-node0 verbs only (pod card d74915b5d6)"
+  ],
+  [
+   "93d28458",
+   "first_light: a rank that dies without a down lets its box's GPU lock go, and up clears what that run left"
+  ],
+  [
+   "74b715d8",
+   "dsv41: rank 1 leaves through _exit on a stop, so libomp's fini no longer faults"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "tools/dsv41-hip/tp4fl/gate_judge.py": [
+  [
+   "2531e8fd",
+   "dsv41 2D: a node's prompt experts take the AMD kit's w-pf launches where TP2's rank does; the judge reads the JSON objects (pod card 716f35d40a)"
+  ],
+  [
+   "584b4546",
+   "dsv41 TP4 first light kit: rank-file placements as TP4-RANKFILES makes them, frozen gate prompts, judge (pod card 716f35d40a)"
+  ]
+ ],
+ "zig/src/families/dsv41/encoder.zig": [
+  [
+   "ea255f2c",
+   "dsv41 encoder: the job's line also when a resume skipped every picture, with the skipped count (pod card d6a577e1a1)"
+  ],
+  [
+   "da090917",
+   "dsv41 encoder: a picture cache, rows kept by the picture's BLAKE3-256 digest (ENCODE_CACHE_MIB, rank 0, unset 512 MiB, 0 off) (pod card d6a577e1a1)"
+  ],
+  [
+   "6461204c",
+   "dsv41: host tests for a prompt pass that resumes inside a picture's span"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "508aff3b",
+   "dsv41 HIP encoder test: the trailing comment on its own line; ADAPTER.md 8.1: an image prompt skips sf-disk too (review)"
+  ],
+  [
+   "3d03a954",
+   "dsv41 HIP: the encoder stops between pictures when its request goes or the encoder stops; per-thread launch counts (review)"
+  ],
+  [
+   "9d00049a",
+   "dsv41 HIP: a request's image rows are capped at the rows both ranks reserve (review)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ]
+ ],
+ "zig/src/families/dsv41/link_fake.zig": [
+  [
+   "33999a4f",
+   "dsv41 TP4-COLL-TIMER: TF_DS_COLL_TIME per-kind collective wall time on every transport (pod card 6f42c090eb)"
+  ],
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ]
+ ],
+ "zig/src/core/lane_host_reuse_test.zig": [
+  [
+   "da090917",
+   "dsv41 encoder: a picture cache, rows kept by the picture's BLAKE3-256 digest (ENCODE_CACHE_MIB, rank 0, unset 512 MiB, 0 off) (pod card d6a577e1a1)"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "79800a6e",
+   "prompt cache: a Store test for a family that says which kept states still restore (pod card ef450588a1)"
+  ]
+ ],
+ "zig/src/core/lane_host_cache.zig": [
+  [
+   "1fbbbd21",
+   "prompt cache: a submit's resume guess asks the family nothing (guessSealed), cache transfers under cache_lock, an import never dedupes onto a sealed state (pod card d6a577e1a1)"
+  ],
+  [
+   "2185cdb3",
+   "core: prompt_cache moves a kept state off the engine and back (probe, exportState, importState); LaneHost runs the transfers between rounds"
+  ]
+ ],
+ "zig/src/core/prompt_cache.zig": [
+  [
+   "1fbbbd21",
+   "prompt cache: a submit's resume guess asks the family nothing (guessSealed), cache transfers under cache_lock, an import never dedupes onto a sealed state (pod card d6a577e1a1)"
+  ],
+  [
+   "cd96cd39",
+   "dsv41 lanes: a kept state's path is its cache key's, so a same-size picture is another conversation's"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "251ed089",
+   "prompt cache: shared cuts land on the family's chunk ends (dsv41 grain), split from f4ae58bd (pod card 345bacf673, 594536982e)"
+  ],
+  [
+   "32be25d6",
+   "prompt cache: hand a pass the longest kept state its family still restores, drop the ones it restores for no prompt (pod card ef450588a1)"
+  ],
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "2185cdb3",
+   "core: prompt_cache moves a kept state off the engine and back (probe, exportState, importState); LaneHost runs the transfers between rounds"
+  ]
+ ],
+ "zig/src/families/dsv41/fill_spans.zig": [
+  [
+   "6461204c",
+   "dsv41: host tests for a prompt pass that resumes inside a picture's span"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ]
+ ],
+ "zig/src/core/prompt_cache_test.zig": [
+  [
+   "cd96cd39",
+   "dsv41 lanes: a kept state's path is its cache key's, so a same-size picture is another conversation's"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "251ed089",
+   "prompt cache: shared cuts land on the family's chunk ends (dsv41 grain), split from f4ae58bd (pod card 345bacf673, 594536982e)"
+  ]
+ ],
+ "zig/src/native/dsv41_keep_replay_test.zig": [
+  [
+   "cd96cd39",
+   "dsv41 lanes: a kept state's path is its cache key's, so a same-size picture is another conversation's"
+  ],
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "c790acc3",
+   "dsv41 placement: superseded kept states give room first, spared when clear of the placed extent (pod card ee6892da53)"
+  ],
+  [
+   "6aa4a985",
+   "dsv41: a host replay of a factory run's prompt passes through the prompt cache and the pool placement (pod card ef450588a1)"
+  ]
+ ],
+ "tools/dsv41-hip/ADAPTER.md": [
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "f7c5d83a",
+   "SPEED-FUSE-2 31e3ab5061: cherry-pick SFF-COUNTS (sff-counts-291bf8cdad c0a95612) so the fused launches are countable"
+  ],
+  [
+   "508aff3b",
+   "dsv41 HIP encoder test: the trailing comment on its own line; ADAPTER.md 8.1: an image prompt skips sf-disk too (review)"
+  ],
+  [
+   "7fe2fb82",
+   "docs: image input on HIP in README and BUILD_AND_RUN; a request's image limits in ADAPTER.md 8.1"
+  ],
+  [
+   "bb7ead05",
+   "dsv41 HIP: tf-dsv41-vision-check's docs point at tools/dsv41-hip/vision-reference"
+  ],
+  [
+   "b1a67e47",
+   "dsv41 HIP: vision.hip credits its third-party helpers; THIRD_PARTY_NOTICES entry (review)"
+  ],
+  [
+   "5051d5f9",
+   "dsv41 HIP: a text kit does not load vision.hsaco (review)"
+  ],
+  [
+   "9d00049a",
+   "dsv41 HIP: a request's image rows are capped at the rows both ranks reserve (review)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ],
+  [
+   "16a22676",
+   "dsv41-hip ADAPTER.md 8.1: the measured fidelity against the release's torch tower"
+  ],
+  [
+   "9f62eca9",
+   "dsv41-hip ADAPTER.md: image input on HIP (8.1): tower, numerical identity, assets, memory, pair, behaviour"
+  ]
+ ],
+ "zig/src/core/lane_host_encode_test.zig": [
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ]
+ ],
+ "zig/src/core/lanes/image_key.zig": [
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ]
+ ],
+ "zig/src/families/dsv41/disk.zig": [
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "7f2a4e75",
+   "dsv41 HIP: four-box orchestration for the TP4 split on F D B A (pod card a1baab5e2d)"
+  ],
+  [
+   "e33be4f4",
+   "dsv41 sf-disk at world 4: the disk prompt cache and imported (parked) states on the four-node split (pod card 602dfeb13b)"
+  ],
+  [
+   "7f95403c",
+   "dsv41 sf-disk: a tier that cannot write above its free-space floor says so at open and at its first skipped save; a factory-size save and resume test (pod card 848ca944f7)"
+  ],
+  [
+   "47c5ee5a",
+   "dsv41 sf-disk: a pass resumed from memory touches its state's disk twin, so eviction follows use on either tier (pod card d9ef7a305e)"
+  ],
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ],
+  [
+   "febbd43f",
+   "dsv41 sf-disk: copy the device arch name into the arena (Parts kept a slice of a stack buffer: a new namespace every start)"
+  ],
+  [
+   "17bba3c6",
+   "dsv41 sf-disk: one chain seed for both ranks; a failed run submit releases its reservation"
+  ],
+  [
+   "96fc0410",
+   "sf-disk: a corrupt or missing block found at a resume drops every state that lists it"
+  ],
+  [
+   "7098197a",
+   "dsv41: sf-disk, kept prompt states on disk on both TP ranks"
+  ]
+ ],
+ "zig/src/families/dsv41/disk_test.zig": [
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "e33be4f4",
+   "dsv41 sf-disk at world 4: the disk prompt cache and imported (parked) states on the four-node split (pod card 602dfeb13b)"
+  ],
+  [
+   "82199d2e",
+   "dsv41 sf-disk: rank 0 evicts its own least recently used states to keep the free-space floor, as for the budget, with a counter and a line per eviction; a pair-size fill, evict and resume test (pod card 49bdf842f2)"
+  ],
+  [
+   "7f95403c",
+   "dsv41 sf-disk: a tier that cannot write above its free-space floor says so at open and at its first skipped save; a factory-size save and resume test (pod card 848ca944f7)"
+  ],
+  [
+   "47c5ee5a",
+   "dsv41 sf-disk: a pass resumed from memory touches its state's disk twin, so eviction follows use on either tier (pod card d9ef7a305e)"
+  ],
+  [
+   "6a08448a",
+   "dsv41 sf-disk: single-line comments in lanes.zig, native.zig and the tests, no history in source (review)"
+  ],
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ]
+ ],
+ "zig/src/server/prompt.zig": [
+  [
+   "cae56ddd",
+   "dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+  ],
+  [
+   "9c7bf49a",
+   "server: shared_messages, a chat request's own shared prefix as a shared cut of the prompt cache"
+  ],
+  [
+   "c16dc5bf",
+   "server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)"
+  ],
+  [
+   "f925e82a",
+   "server: a request whose images take more tokens than the engine holds is refused with 400 before it queues (review)"
+  ],
+  [
+   "0ae5d118",
+   "server: bind each image to its placeholder by index (from PR #6)"
+  ],
+  [
+   "76805a12",
+   "server: render image requests once, after normalizeImages (from PR #6)"
+  ]
+ ],
+ "tools/dsv41-hip/coll_fault_matrix.sh": [
+  [
+   "bfebed5c",
+   "dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "zig/src/families/dsv41/rdma_nic.zig": [
+  [
+   "bfebed5c",
+   "dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "tools/dsv41-hip/tp4_orch_test.sh": [
+  [
+   "584b4546",
+   "dsv41 TP4 first light kit: rank-file placements as TP4-RANKFILES makes them, frozen gate prompts, judge (pod card 716f35d40a)"
+  ],
+  [
+   "7f2a4e75",
+   "dsv41 HIP: four-box orchestration for the TP4 split on F D B A (pod card a1baab5e2d)"
+  ]
+ ],
+ "tools/dsv41-hip/tp4fl/gate_prompts.py": [
+  [
+   "584b4546",
+   "dsv41 TP4 first light kit: rank-file placements as TP4-RANKFILES makes them, frozen gate prompts, judge (pod card 716f35d40a)"
+  ]
+ ],
+ "tools/dsv41-hip/tp4fl/mk_tp4_bundle.py": [
+  [
+   "584b4546",
+   "dsv41 TP4 first light kit: rank-file placements as TP4-RANKFILES makes them, frozen gate prompts, judge (pod card 716f35d40a)"
+  ]
+ ],
+ "tools/dsv41-hip/tp4fl/prompts8.json": [
+  [
+   "584b4546",
+   "dsv41 TP4 first light kit: rank-file placements as TP4-RANKFILES makes them, frozen gate prompts, judge (pod card 716f35d40a)"
+  ]
+ ],
+ "tools/dsv41-hip/tri/t_hipattn16.py": [
+  [
+   "6c4f80dc",
+   "dsv41 HIP: t_hipattn16 also compares the decode merges at 16 and 32 heads (pod card 58862dad76)"
+  ],
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ]
+ ],
+ "tools/dsv41-hip/tri/x_hipattn16_perf.py": [
+  [
+   "6c4f80dc",
+   "dsv41 HIP: t_hipattn16 also compares the decode merges at 16 and 32 heads (pod card 58862dad76)"
+  ],
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ]
+ ],
+ "tools/dsv41-hip/tri/README.md": [
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ],
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ],
+  [
+   "5415f366",
+   "dsv41 tri: derive the indexer's context launches up to a 1,048,527-position pool"
+  ]
+ ],
+ "tools/dsv41-hip/tri/run_tests.sh": [
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/aux_attn.hip": [
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ]
+ ],
+ "zig/src/families/dsv41/tri_attn.zig": [
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ]
+ ],
+ "zig/src/families/dsv41/tri_aux.zig": [
+  [
+   "b3ce8682",
+   "dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+  ],
+  [
+   "ab1a7db4",
+   "draft_temperature: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "tools/dsv41-hip/tri/kit_add.py": [
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ]
+ ],
+ "tools/dsv41-hip/tri/kit_strict.py": [
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ]
+ ],
+ "tools/dsv41-hip/tri/variants.py": [
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ],
+  [
+   "5415f366",
+   "dsv41 tri: derive the indexer's context launches up to a 1,048,527-position pool"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/exl3.hip": [
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ]
+ ],
+ "zig/src/families/dsv41/fixtures/derived_launches.json": [
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ],
+  [
+   "5415f366",
+   "dsv41 tri: derive the indexer's context launches up to a 1,048,527-position pool"
+  ]
+ ],
+ "zig/src/families/dsv41/tri_markov.zig": [
+  [
+   "c6473460",
+   "dsv41 HIP: kit entries for the four-node 2D split and the 4.0 bpw K2 8-12 experts (pod card 4d4c5173d2)"
+  ],
+  [
+   "ab1a7db4",
+   "draft_temperature: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "tools/dsv41-hip/reslice_tp4.sh": [
+  [
+   "8ff01127",
+   "dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+  ]
+ ],
+ "tools/dsv41-hip/test_reslice4.py": [
+  [
+   "8ff01127",
+   "dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+  ]
+ ],
+ "zig/build/cuda.zig": [
+  [
+   "8ff01127",
+   "dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "zig/src/families/dsv41/cpu.zig": [
+  [
+   "8ff01127",
+   "dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+  ]
+ ],
+ "zig/src/families/dsv41/rank_reslice_main.zig": [
+  [
+   "8ff01127",
+   "dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+  ]
+ ],
+ "zig/src/families/dsv41/reslice.zig": [
+  [
+   "8ff01127",
+   "dsv41 TP4 rank files cut from the TP2 rank files: tf-dsv41-rank-reslice (pod card b7eb57e048)"
+  ]
+ ],
+ "tools/dsv41-hip/serve-rank1.sh": [
+  [
+   "7f2a4e75",
+   "dsv41 HIP: four-box orchestration for the TP4 split on F D B A (pod card a1baab5e2d)"
+  ],
+  [
+   "93d28458",
+   "first_light: a rank that dies without a down lets its box's GPU lock go, and up clears what that run left"
+  ],
+  [
+   "05578d89",
+   "serve-rank1.sh start: a stop marker left in a reused run dir (RUN_ID's default, latest) is cleared, so a lost peer stays exit 1 (review)"
+  ]
+ ],
+ "tools/dsv41-hip/tfp-node0": [
+  [
+   "7f2a4e75",
+   "dsv41 HIP: four-box orchestration for the TP4 split on F D B A (pod card a1baab5e2d)"
+  ],
+  [
+   "846317fd",
+   "first_light: reach node0 through tfp-node0 verbs only (pod card d74915b5d6)"
+  ]
+ ],
+ "tools/dsv41-hip/inventory_checkpoint.py": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ],
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/prepare_inputs.py": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ],
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/prepare_inputs.sh": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ]
+ ],
+ "tools/dsv41-hip/rank_fixture.py": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ]
+ ],
+ "tools/dsv41-hip/test_rank4.py": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ]
+ ],
+ "zig/src/families/dsv41/check_main.zig": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ]
+ ],
+ "zig/src/families/dsv41/fan.zig": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ]
+ ],
+ "zig/src/families/dsv41/plan.zig": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ]
+ ],
+ "zig/src/families/dsv41/rank_cache_main.zig": [
+  [
+   "71986030",
+   "dsv41 rank caches at world 4: rank{g}of4 files built and checked on CPU (pod card b7eb57e048)"
+  ]
+ ],
+ "zig/src/core/prompt_disk.zig": [
+  [
+   "e33be4f4",
+   "dsv41 sf-disk at world 4: the disk prompt cache and imported (parked) states on the four-node split (pod card 602dfeb13b)"
+  ],
+  [
+   "82199d2e",
+   "dsv41 sf-disk: rank 0 evicts its own least recently used states to keep the free-space floor, as for the budget, with a counter and a line per eviction; a pair-size fill, evict and resume test (pod card 49bdf842f2)"
+  ],
+  [
+   "7f95403c",
+   "dsv41 sf-disk: a tier that cannot write above its free-space floor says so at open and at its first skipped save; a factory-size save and resume test (pod card 848ca944f7)"
+  ],
+  [
+   "7f9aa866",
+   "prompt_disk: a sweep never follows a link and takes only an unlocked sf-disk namespace (review)"
+  ],
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ],
+  [
+   "9afe9e08",
+   "prompt_disk: a refused plan reclaims the blocks its evictions orphaned; a compacting writer queue"
+  ],
+  [
+   "96fc0410",
+   "sf-disk: a corrupt or missing block found at a resume drops every state that lists it"
+  ],
+  [
+   "9eb921c2",
+   "core: prompt_disk, a persistent store of kept prompt states (blocks, state files, writer)"
+  ]
+ ],
+ "zig/src/families/dsv41/cache_move.zig": [
+  [
+   "e33be4f4",
+   "dsv41 sf-disk at world 4: the disk prompt cache and imported (parked) states on the four-node split (pod card 602dfeb13b)"
+  ],
+  [
+   "cd2d157e",
+   "dsv41: an exported state's copies off the device and back on both ranks (cache_move, frames 18 and 19, protocol 6)"
+  ]
+ ],
+ "zig/src/families/dsv41/exl3_experts2d_rec.zig": [
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ]
+ ],
+ "zig/src/gpu/hip_facade.zig": [
+  [
+   "ce8ca4e0",
+   "dsv41 HIP: build the four-node 2D split (world4) into native-hip (pod card 12c50c5d8d)"
+  ],
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ],
+  [
+   "db0a3694",
+   "dsv41 HIP: the vision path's comments are single lines (lean_check) (review)"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ]
+ ],
+ "tools/dsv41-hip/COLLECTIVES-DESIGN.md": [
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ],
+  [
+   "9a51720f",
+   "dsv41 serve: TRANSPORT=rdma takes TP_STRIPE and COLL_WIRE_THREADS (pod card 3e7b8b7a47)"
+  ],
+  [
+   "86af6cff",
+   "dsv41 collectives design: section 3.2 names the thread a link and its loopback rate (pod card 3760ed527a)"
+  ],
+  [
+   "fc1399ca",
+   "rdma_proxy: a gather's end on a different stream from its begin is refused; why RX slot reuse is safe (review)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "zig/src/families/dsv41/comm_test.zig": [
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ]
+ ],
+ "zig/src/families/dsv41/lanes_main.zig": [
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ],
+  [
+   "88e2fe3e",
+   "dsv41 serve: IMAGE_TOKENS sets the image rows both ranks reserve (default 4096) (pod card 1375468e92)"
+  ],
+  [
+   "74b715d8",
+   "dsv41: rank 1 leaves through _exit on a stop, so libomp's fini no longer faults"
+  ],
+  [
+   "c340c0c0",
+   "dsv41 pool split: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ],
+  [
+   "7098197a",
+   "dsv41: sf-disk, kept prompt states on disk on both TP ranks"
+  ]
+ ],
+ "zig/src/gpu/hip/rccl.zig": [
+  [
+   "2e29fcd5",
+   "dsv41 HIP: four-rank collectives over RCCL (gpu.nccl on HIP, Comm.coll all_gather and exchange) (pod card 01574d76b3)"
+  ]
+ ],
+ "zig/src/core/prompt_disk_writer.zig": [
+  [
+   "82199d2e",
+   "dsv41 sf-disk: rank 0 evicts its own least recently used states to keep the free-space floor, as for the budget, with a counter and a line per eviction; a pair-size fill, evict and resume test (pod card 49bdf842f2)"
+  ],
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ]
+ ],
+ "zig/src/core/prompt_disk_test.zig": [
+  [
+   "7f95403c",
+   "dsv41 sf-disk: a tier that cannot write above its free-space floor says so at open and at its first skipped save; a factory-size save and resume test (pod card 848ca944f7)"
+  ],
+  [
+   "6a08448a",
+   "dsv41 sf-disk: single-line comments in lanes.zig, native.zig and the tests, no history in source (review)"
+  ],
+  [
+   "9afe9e08",
+   "prompt_disk: a refused plan reclaims the blocks its evictions orphaned; a compacting writer queue"
+  ],
+  [
+   "96fc0410",
+   "sf-disk: a corrupt or missing block found at a resume drops every state that lists it"
+  ],
+  [
+   "9eb921c2",
+   "core: prompt_disk, a persistent store of kept prompt states (blocks, state files, writer)"
+  ]
+ ],
+ "zig/src/native/cuda.zig": [
+  [
+   "251ed089",
+   "prompt cache: shared cuts land on the family's chunk ends (dsv41 grain), split from f4ae58bd (pod card 345bacf673, 594536982e)"
+  ],
+  [
+   "32be25d6",
+   "prompt cache: hand a pass the longest kept state its family still restores, drop the ones it restores for no prompt (pod card ef450588a1)"
+  ]
+ ],
+ "zig/src/native/dsv41_place_replay.tsv": [
+  [
+   "c790acc3",
+   "dsv41 placement: superseded kept states give room first, spared when clear of the placed extent (pod card ee6892da53)"
+  ]
+ ],
+ "zig/src/server/queue_cap.zig": [
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ]
+ ],
+ "zig/src/server/queue_cap_test.zig": [
+  [
+   "37b2db2a",
+   "server: cap the requests waiting for a lane and the bytes they hold, refuse past it with 429 and Retry-After (pod card 51591f7ba8)"
+  ]
+ ],
+ "zig/src/families/dsv41/tcp_wire.zig": [
+  [
+   "0def23ec",
+   "dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)"
+  ]
+ ],
+ "docs/TUNING.md": [
+  [
+   "353a7b87",
+   "lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)"
+  ],
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ],
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "ef27550e",
+   "docs: a pair of Bosgame M5s measured: speed, power, and what USB4 link speed does (barely anything) and doesn't"
+  ]
+ ],
+ "zig/src/native/dsv41_keep_replay.tsv": [
+  [
+   "6aa4a985",
+   "dsv41: a host replay of a factory run's prompt passes through the prompt cache and the pool placement (pod card ef450588a1)"
+  ]
+ ],
+ "zig/src/families/dsv41/link.zig": [
+  [
+   "42ae9458",
+   "dsv41 link: keepalive probes on the control link, a lost peer ends the idle wait within 60 s (pod card b1f8fd4cf0)"
+  ]
+ ],
+ "tools/dsv41-hip/exl3/kdec/fuse2/aot_fuse2.py": [
+  [
+   "22506df3",
+   "b7269694f8 SPEED-FUSE-2 31e3ab5061: aot_fuse2 refuses a triton release that is not the kit manifest's"
+  ],
+  [
+   "c670f7be",
+   "SPEED-FUSE-2 31e3ab5061: the router's two decode launches as one, _rowmm_route (TF_FUSE2, default off, same bits)"
+  ]
+ ],
+ "zig/src/families/dsv41/tri_norm.zig": [
+  [
+   "838dc2ab",
+   "b7269694f8 SPEED-FUSE-2 31e3ab5061: pin the router fusion's 6-row cap (tri_norm.fuse2_rows) in the host test"
+  ],
+  [
+   "c670f7be",
+   "SPEED-FUSE-2 31e3ab5061: the router's two decode launches as one, _rowmm_route (TF_FUSE2, default off, same bits)"
+  ]
+ ],
+ "zig/src/families/dsv41/tri_hc.zig": [
+  [
+   "59a9a218",
+   "b7269694f8 SPEED-FUSE-1: cap the _hc_chain launch to windows of 6 rows or fewer (tri_hc.chain_rows)"
+  ],
+  [
+   "6da1bcb0",
+   "SPEED-FUSE-1 b7269694f8: _hc_chain, hc_pre2's whole decode chain as one HIP launch a site (TF_HC_CHAIN, same bits): hc_chain.py (posted mixes + inline-post finish, Sinkhorn by the last of 3*NB+1), test_hc_chain.py bits bench, aot_chain.py kit builder, tri_hc launcher/switch/test, native.zig header, round.zig env"
+  ]
+ ],
+ "zig/src/server/leave.zig": [
+  [
+   "6c9bc923",
+   "server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults"
+  ]
+ ],
+ "zig/tests/dsv41_hip/exit_check.zig": [
+  [
+   "6c9bc923",
+   "server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults"
+  ]
+ ],
+ "tools/dsv41-hip/exl3/kdec/hc/aot_chain.py": [
+  [
+   "6d9f669e",
+   "b7269694f8 SPEED-FUSE-1: aot_chain refuses a toolchain that is not the kit's, and an AOT-vs-AOT device bit test"
+  ],
+  [
+   "10647cd7",
+   "b7269694f8 aot_chain: record the triton and python versions that built the _hc_chain entries in kdec2_chain_added (kit provenance, round 2's open question)"
+  ],
+  [
+   "6da1bcb0",
+   "SPEED-FUSE-1 b7269694f8: _hc_chain, hc_pre2's whole decode chain as one HIP launch a site (TF_HC_CHAIN, same bits): hc_chain.py (posted mixes + inline-post finish, Sinkhorn by the last of 3*NB+1), test_hc_chain.py bits bench, aot_chain.py kit builder, tri_hc launcher/switch/test, native.zig header, round.zig env"
+  ]
+ ],
+ "tools/dsv41-hip/exl3/kdec/hc/test_chain_aot.py": [
+  [
+   "6d9f669e",
+   "b7269694f8 SPEED-FUSE-1: aot_chain refuses a toolchain that is not the kit's, and an AOT-vs-AOT device bit test"
+  ]
+ ],
+ "tools/dsv41-hip/qual/lane_rank.sh": [
+  [
+   "0e3e2aa8",
+   "qual/lane_rank.sh: apply the rank's WRAP as serve_spawn does (pod cards 5d2db3fdd4, 756acdb8d9)"
+  ]
+ ],
+ "tools/dsv41-hip/exl3/kdec/fuse2/route_fuse.py": [
+  [
+   "c670f7be",
+   "SPEED-FUSE-2 31e3ab5061: the router's two decode launches as one, _rowmm_route (TF_FUSE2, default off, same bits)"
+  ]
+ ],
+ "tools/dsv41-hip/exl3/kdec/fuse2/test_route_fuse.py": [
+  [
+   "c670f7be",
+   "SPEED-FUSE-2 31e3ab5061: the router's two decode launches as one, _rowmm_route (TF_FUSE2, default off, same bits)"
+  ]
+ ],
+ "zig/src/gpu/hip/kit.zig": [
+  [
+   "f7c5d83a",
+   "SPEED-FUSE-2 31e3ab5061: cherry-pick SFF-COUNTS (sff-counts-291bf8cdad c0a95612) so the fused launches are countable"
+  ],
+  [
+   "5051d5f9",
+   "dsv41 HIP: a text kit does not load vision.hsaco (review)"
+  ]
+ ],
+ "zig/src/core/cache_wire.zig": [
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "96367d3d",
+   "core: cache_wire, a kept prompt state on the wire (SFCX): every length checked against the engine's shape before any read"
+  ]
+ ],
+ "zig/src/core/prompt_cache_transfer_test.zig": [
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ],
+  [
+   "2185cdb3",
+   "core: prompt_cache moves a kept state off the engine and back (probe, exportState, importState); LaneHost runs the transfers between rounds"
+  ]
+ ],
+ "zig/src/server/cache_key.zig": [
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ]
+ ],
+ "zig/src/server/cache_routes.zig": [
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ]
+ ],
+ "zig/src/server/cache_routes_test.zig": [
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ]
+ ],
+ "zig/src/server/late_system_test.zig": [
+  [
+   "2143f0dc",
+   "server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped"
+  ]
+ ],
+ "zig/src/core/cache_wire_test.zig": [
+  [
+   "96367d3d",
+   "core: cache_wire, a kept prompt state on the wire (SFCX): every length checked against the engine's shape before any read"
+  ]
+ ],
+ "docs/GETTING-STARTED.md": [
+  [
+   "93d28458",
+   "first_light: a rank that dies without a down lets its box's GPU lock go, and up clears what that run left"
+  ],
+  [
+   "a5efb186",
+   "README: the uncensored pack's line moves to GETTING-STARTED's model files (docs/UNCENSORED.md unchanged)"
+  ],
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ],
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "4bd633c3",
+   "docs: getting started checked against our boxes: the Halo's link on NetworkManager, IPv6 off on the link, held packages show hi, ldconfig from /sbin, exact Zig and Triton downloads"
+  ],
+  [
+   "942e94e9",
+   "docs: getting started, step by step from two new Ryzen AI Halo or Bosgame M5 boxes to a first answer and a benchmark"
+  ]
+ ],
+ "tools/dsv41-hip/lock_watch.sh": [
+  [
+   "93d28458",
+   "first_light: a rank that dies without a down lets its box's GPU lock go, and up clears what that run left"
+  ]
+ ],
+ "tools/dsv41-hip/serve-rank0.sh": [
+  [
+   "93d28458",
+   "first_light: a rank that dies without a down lets its box's GPU lock go, and up clears what that run left"
+  ]
+ ],
+ "README.md": [
+  [
+   "a5efb186",
+   "README: the uncensored pack's line moves to GETTING-STARTED's model files (docs/UNCENSORED.md unchanged)"
+  ],
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "7fe2fb82",
+   "docs: image input on HIP in README and BUILD_AND_RUN; a request's image limits in ADAPTER.md 8.1"
+  ],
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "942e94e9",
+   "docs: getting started, step by step from two new Ryzen AI Halo or Bosgame M5 boxes to a first answer and a benchmark"
+  ],
+  [
+   "544415f9",
+   "docs: Bosgame M5, agents and image docs corrected; look_at_image counts looks per call and fails cleanly"
+  ],
+  [
+   "468c6072",
+   "docs: images for the text-only DeepSeek, described by a small local vision model with look_at_image for follow-up questions"
+  ],
+  [
+   "00e06ba1",
+   "docs: running agents on StrixFold, and the sampling and repeat checks that keep them out of loops"
+  ],
+  [
+   "036f7e89",
+   "docs: setting up a Bosgame M5 (BIOS, Debian 13, the 7.2.7 kernel under Secure Boot, ROCm 10.0)"
+  ],
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ]
+ ],
+ "tools/dsv41-hip/BUILD_AND_RUN.md": [
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ],
+  [
+   "74b715d8",
+   "dsv41: rank 1 leaves through _exit on a stop, so libomp's fini no longer faults"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ],
+  [
+   "7fe2fb82",
+   "docs: image input on HIP in README and BUILD_AND_RUN; a request's image limits in ADAPTER.md 8.1"
+  ],
+  [
+   "3ebf618f",
+   "BUILD_AND_RUN: verify_inputs takes your own bundle's hash; the manifest records local paths, so it differs from the pinned one"
+  ],
+  [
+   "942e94e9",
+   "docs: getting started, step by step from two new Ryzen AI Halo or Bosgame M5 boxes to a first answer and a benchmark"
+  ],
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ]
+ ],
+ "tools/dsv41-hip/assets/rope_reference_1048576.json": [
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ]
+ ],
+ "tools/dsv41-hip/assets/rope_reference_1114112.json": [
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ]
+ ],
+ "tools/dsv41-hip/assets/rope_reference_131072.json": [
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ]
+ ],
+ "tools/dsv41-hip/assets/rope_reference_262144.json": [
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ]
+ ],
+ "tools/dsv41-hip/assets/rope_reference_524288.json": [
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ]
+ ],
+ "tools/dsv41-hip/test_verify_inputs.py": [
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ]
+ ],
+ "tools/dsv41-hip/verify_inputs.py": [
+  [
+   "871c8fac",
+   "inputs: a longer context checks without --rope-reference; the steps for it in GETTING-STARTED; a USB4 port note"
+  ],
+  [
+   "90605b38",
+   "dsv41 pool split: comments at most 120 columns, a trailing one on its own line (review)"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ]
+ ],
+ "zig/src/families/dsv41/stop_marker.zig": [
+  [
+   "74b715d8",
+   "dsv41: rank 1 leaves through _exit on a stop, so libomp's fini no longer faults"
+  ]
+ ],
+ "zig/src/server/shared_messages_test.zig": [
+  [
+   "60b3a16d",
+   "server: shared_messages host tests: k = 0, k at or past the end, a cut under 512, tools, the cut in shared_prefixes (review)"
+  ]
+ ],
+ "zig/src/families/dsv41/rdma_proxy_test.zig": [
+  [
+   "74bdec30",
+   "rdma_proxy: the idle wait sleeps as tcp_proxy's does (idleWait), not only yields past 20 ms (review)"
+  ],
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "tools/dsv41-hip/preflight.sh": [
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "tools/dsv41-hip/rdma_check.py": [
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "zig/src/fabric/verbs.zig": [
+  [
+   "27ea85ea",
+   "dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+  ]
+ ],
+ "zig/src/core/lanes/backend.zig": [
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ]
+ ],
+ "zig/src/core/lanes/engine.zig": [
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ]
+ ],
+ "zig/src/core/lanes/fake.zig": [
+  [
+   "0a6eb9c2",
+   "lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+  ]
+ ],
+ "docs/UNCENSORED.md": [
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ]
+ ],
+ "tools/dsv41-hip/make_edit.py": [
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/dense.hip": [
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ]
+ ],
+ "zig/src/families/dsv41/dense.zig": [
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ]
+ ],
+ "zig/src/families/dsv41/edit.zig": [
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ]
+ ],
+ "zig/src/families/dsv41/layer_main.zig": [
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/families/dsv41/load_main.zig": [
+  [
+   "4f2979d6",
+   "dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+  ]
+ ],
+ "tools/dsv41-zig/kit/README.md": [
+  [
+   "02a8a714",
+   "tools: the vision tools' comments and docstrings are single lines (CONTRIBUTING)"
+  ],
+  [
+   "18e8ad0c",
+   "dsv41 kit: the vision tower sidecar, Hub-checked sources, the image biases in deployments"
+  ]
+ ],
+ "tools/dsv41-zig/kit/make_bias_vl.py": [
+  [
+   "02a8a714",
+   "tools: the vision tools' comments and docstrings are single lines (CONTRIBUTING)"
+  ],
+  [
+   "18e8ad0c",
+   "dsv41 kit: the vision tower sidecar, Hub-checked sources, the image biases in deployments"
+  ]
+ ],
+ "tools/dsv41-zig/kit/make_vision_sidecar.py": [
+  [
+   "02a8a714",
+   "tools: the vision tools' comments and docstrings are single lines (CONTRIBUTING)"
+  ],
+  [
+   "18e8ad0c",
+   "dsv41 kit: the vision tower sidecar, Hub-checked sources, the image biases in deployments"
+  ]
+ ],
+ "tools/dsv41-zig/kit/test_kit_vision.py": [
+  [
+   "02a8a714",
+   "tools: the vision tools' comments and docstrings are single lines (CONTRIBUTING)"
+  ],
+  [
+   "e26e3owner",
+   "dsv41 kit: verify_hf_cache.py checks a git-kept file's blob sha1 etag too (review)"
+  ],
+  [
+   "18e8ad0c",
+   "dsv41 kit: the vision tower sidecar, Hub-checked sources, the image biases in deployments"
+  ]
+ ],
+ "tools/dsv41-zig/kit/verify_hf_cache.py": [
+  [
+   "02a8a714",
+   "tools: the vision tools' comments and docstrings are single lines (CONTRIBUTING)"
+  ],
+  [
+   "e26e3owner",
+   "dsv41 kit: verify_hf_cache.py checks a git-kept file's blob sha1 etag too (review)"
+  ],
+  [
+   "18e8ad0c",
+   "dsv41 kit: the vision tower sidecar, Hub-checked sources, the image biases in deployments"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/vision.hip": [
+  [
+   "02a8a714",
+   "tools: the vision tools' comments and docstrings are single lines (CONTRIBUTING)"
+  ],
+  [
+   "b1a67e47",
+   "dsv41 HIP: vision.hip credits its third-party helpers; THIRD_PARTY_NOTICES entry (review)"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ]
+ ],
+ "docs/vision.md": [
+  [
+   "7fe2fb82",
+   "docs: image input on HIP in README and BUILD_AND_RUN; a request's image limits in ADAPTER.md 8.1"
+  ]
+ ],
+ "tools/dsv41-hip/test_vision_http.py": [
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ],
+  [
+   "c16dc5bf",
+   "server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)"
+  ],
+  [
+   "f925e82a",
+   "server: a request whose images take more tokens than the engine holds is refused with 400 before it queues (review)"
+  ],
+  [
+   "e17b517e",
+   "test_vision_http: a user image and a tool_result image keep their order, and so do reordered tool results"
+  ],
+  [
+   "4bd8e663",
+   "server: count_tokens takes image blocks; HTTP regression of the image routes"
+  ]
+ ],
+ "zig/src/server/image_limits_test.zig": [
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ]
+ ],
+ "zig/src/server/messages.zig": [
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ]
+ ],
+ "zig/src/server/tokens.zig": [
+  [
+   "e9ede312",
+   "server: --vision-max-images, a request's images counted before any is decoded (32 unless set)"
+  ],
+  [
+   "76805a12",
+   "server: render image requests once, after normalizeImages (from PR #6)"
+  ]
+ ],
+ "zig/src/families/dsv41/vision.zig": [
+  [
+   "c16dc5bf",
+   "server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)"
+  ],
+  [
+   "4725433f",
+   "dsv41 vision: a picture's decode buffers go back once it is prepared; the request keeps only its payload"
+  ],
+  [
+   "db0a3694",
+   "dsv41 HIP: the vision path's comments are single lines (lean_check) (review)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ],
+  [
+   "7aae65c0",
+   "dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side"
+  ]
+ ],
+ "zig/tests/server/fake_serve.zig": [
+  [
+   "c16dc5bf",
+   "server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)"
+  ],
+  [
+   "f925e82a",
+   "server: a request whose images take more tokens than the engine holds is refused with 400 before it queues (review)"
+  ],
+  [
+   "0ae5d118",
+   "server: bind each image to its placeholder by index (from PR #6)"
+  ],
+  [
+   "76805a12",
+   "server: render image requests once, after normalizeImages (from PR #6)"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/ds41_vision.cpp": [
+  [
+   "4f665f1b",
+   "vision-reference: the sidecar reader checks offsets without overflow, refuses oversized integers and reads \\u escapes (review)"
+  ],
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ],
+  [
+   "01b7c2a1",
+   "dsv41 HIP: the vision host reference's sources, verbatim"
+  ]
+ ],
+ "zig/tests/dsv41_hip/vision_check.zig": [
+  [
+   "bb7ead05",
+   "dsv41 HIP: tf-dsv41-vision-check's docs point at tools/dsv41-hip/vision-reference"
+  ],
+  [
+   "db0a3694",
+   "dsv41 HIP: the vision path's comments are single lines (lean_check) (review)"
+  ],
+  [
+   "d972d823",
+   "dsv41 HIP: vision check copies a case's patches to 2-byte aligned memory"
+  ],
+  [
+   "34eaaae3",
+   "dsv41 HIP: tf-dsv41-vision-check, the tower against engineLab's host reference"
+  ]
+ ],
+ "THIRD_PARTY_NOTICES.md": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ],
+  [
+   "b1a67e47",
+   "dsv41 HIP: vision.hip credits its third-party helpers; THIRD_PARTY_NOTICES entry (review)"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/.gitignore": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/README.md": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/SHA256SUMS": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/build.sh": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/declared.hpp": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/ds41_vision.hpp": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ],
+  [
+   "01b7c2a1",
+   "dsv41 HIP: the vision host reference's sources, verbatim"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/ds41_vision_math.hpp": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ],
+  [
+   "01b7c2a1",
+   "dsv41 HIP: the vision host reference's sources, verbatim"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/ds41_vision_prep.cpp": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ],
+  [
+   "01b7c2a1",
+   "dsv41 HIP: the vision host reference's sources, verbatim"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/ds41_vision_reference.cpp": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ],
+  [
+   "01b7c2a1",
+   "dsv41 HIP: the vision host reference's sources, verbatim"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/fetch_golden.sh": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/golden.py": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/main.cpp": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/make_golden.sh": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "tools/dsv41-hip/vision-reference/package_golden.sh": [
+  [
+   "0212043a",
+   "dsv41 HIP: the vision host reference builds here and regenerates the golden"
+  ]
+ ],
+ "zig/src/gpu/hip/launch.zig": [
+  [
+   "3d03a954",
+   "dsv41 HIP: the encoder stops between pictures when its request goes or the encoder stops; per-thread launch counts (review)"
+  ],
+  [
+   "adf536fb",
+   "dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+  ]
+ ],
+ "zig/src/families/dsv41/vit_hip.zig": [
+  [
+   "db0a3694",
+   "dsv41 HIP: the vision path's comments are single lines (lean_check) (review)"
+  ],
+  [
+   "4a65ec73",
+   "dsv41 HIP: the vision tower on gfx1151 (vit_hip.zig, vision.hip)"
+  ]
+ ],
+ "tools/dsv41-hip/deploy_rank0.sh": [
+  [
+   "18e8ad0c",
+   "dsv41 kit: the vision tower sidecar, Hub-checked sources, the image biases in deployments"
+  ]
+ ],
+ "tools/dsv41-hip/qual/served_faults.sh": [
+  [
+   "90605b38",
+   "dsv41 pool split: comments at most 120 columns, a trailing one on its own line (review)"
+  ],
+  [
+   "76f7e999",
+   "dsv41: a shared pool larger than one request's context (TF_DS_POOL / --pool, --context)"
+  ]
+ ],
+ "tools/dsv41-hip/qual/mkconf.py": [
+  [
+   "bb478334",
+   "qual mkconf.py: a variant may set a key the base conf ships commented out (POOL), so mm_pool runs (review)"
+  ]
+ ],
+ "zig/src/core/prompt_disk_namespace.zig": [
+  [
+   "5bbd43b2",
+   "prompt_disk: IDENTITY is never replaced, and a lock counts only on the file the namespace holds (review)"
+  ],
+  [
+   "7f9aa866",
+   "prompt_disk: a sweep never follows a link and takes only an unlocked sf-disk namespace (review)"
+  ],
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ]
+ ],
+ "zig/src/core/prompt_disk_namespace_test.zig": [
+  [
+   "5bbd43b2",
+   "prompt_disk: IDENTITY is never replaced, and a lock counts only on the file the namespace holds (review)"
+  ],
+  [
+   "7f9aa866",
+   "prompt_disk: a sweep never follows a link and takes only an unlocked sf-disk namespace (review)"
+  ]
+ ],
+ "zig/src/families/dsv41/disk_identity.zig": [
+  [
+   "6a08448a",
+   "dsv41 sf-disk: single-line comments in lanes.zig, native.zig and the tests, no history in source (review)"
+  ],
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ]
+ ],
+ "zig/src/core/prompt_disk_fs.zig": [
+  [
+   "7f9aa866",
+   "prompt_disk: a sweep never follows a link and takes only an unlocked sf-disk namespace (review)"
+  ],
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ]
+ ],
+ "zig/src/core/prompt_disk_format.zig": [
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ]
+ ],
+ "zig/src/core/prompt_disk_index.zig": [
+  [
+   "99d159da",
+   "prompt_disk, dsv41 sf-disk: split under 600 lines, single-line comments (review)"
+  ]
+ ],
+ "zig/src/core/root.zig": [
+  [
+   "9eb921c2",
+   "core: prompt_disk, a persistent store of kept prompt states (blocks, state files, writer)"
+  ]
+ ],
+ "docs/BOSGAME-M5.md": [
+  [
+   "aea1fc86",
+   "docs: M5 fans through the driver's duty override (cmetz/ec-su_axb35-linux#40) and a user-space curve, tools/m5-fans; the re-read figures as measured; the afternoon run after the cache rules"
+  ],
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "ef27550e",
+   "docs: a pair of Bosgame M5s measured: speed, power, and what USB4 link speed does (barely anything) and doesn't"
+  ],
+  [
+   "4bd633c3",
+   "docs: getting started checked against our boxes: the Halo's link on NetworkManager, IPv6 off on the link, held packages show hi, ldconfig from /sbin, exact Zig and Triton downloads"
+  ],
+  [
+   "04426900",
+   "docs: the loop guard as it is on main (LOOP_GUARD=1, cycles up to 64 tokens); the keyring package's trusted.gpg.d link"
+  ],
+  [
+   "942e94e9",
+   "docs: getting started, step by step from two new Ryzen AI Halo or Bosgame M5 boxes to a first answer and a benchmark"
+  ],
+  [
+   "544415f9",
+   "docs: Bosgame M5, agents and image docs corrected; look_at_image counts looks per call and fails cleanly"
+  ],
+  [
+   "773e68c8",
+   "docs: Bosgame M5 needs therock-gfx1151 for ROCm's library path; GPU test results and the 100 MHz timer"
+  ],
+  [
+   "036f7e89",
+   "docs: setting up a Bosgame M5 (BIOS, Debian 13, the 7.2.7 kernel under Secure Boot, ROCm 10.0)"
+  ]
+ ],
+ "docs/RESULTS.md": [
+  [
+   "aea1fc86",
+   "docs: M5 fans through the driver's duty override (cmetz/ec-su_axb35-linux#40) and a user-space curve, tools/m5-fans; the re-read figures as measured; the afternoon run after the cache rules"
+  ],
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ]
+ ],
+ "tools/m5-fans/m5-fan-boost": [
+  [
+   "aea1fc86",
+   "docs: M5 fans through the driver's duty override (cmetz/ec-su_axb35-linux#40) and a user-space curve, tools/m5-fans; the re-read figures as measured; the afternoon run after the cache rules"
+  ]
+ ],
+ "tools/m5-fans/m5-fans.service": [
+  [
+   "aea1fc86",
+   "docs: M5 fans through the driver's duty override (cmetz/ec-su_axb35-linux#40) and a user-space curve, tools/m5-fans; the re-read figures as measured; the afternoon run after the cache rules"
+  ]
+ ],
+ "CHANGES.md": [
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ],
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "NOTICE": [
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ],
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/m5-usb4/COPYING": [
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ]
+ ],
+ "tools/m5-usb4/Makefile": [
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ]
+ ],
+ "tools/m5-usb4/README.md": [
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ]
+ ],
+ "tools/m5-usb4/bos_usb4h2h.c": [
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ]
+ ],
+ "tools/m5-usb4/m5-usb4": [
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ]
+ ],
+ "tools/m5-usb4/m5-usb4.service": [
+  [
+   "f1ba1902",
+   "docs: Bosgame M5 cooling and USB4 host-to-host setting, keeping the prompt cache, real agent work"
+  ]
+ ],
+ "zig/src/families/dsv41/picture.zig": [
+  [
+   "7aae65c0",
+   "dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side"
+  ],
+  [
+   "6d2765a2",
+   "dsv41 picture: a PNG's inflated data is bounded by the size its header gives; longer data is not inflated past it"
+  ]
+ ],
+ "zig/src/families/dsv41/picture_main.zig": [
+  [
+   "7aae65c0",
+   "dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side"
+  ]
+ ],
+ "zig/src/families/dsv41/picture_test.zig": [
+  [
+   "7aae65c0",
+   "dsv41 picture: a picture too thin to keep one row or column is refused, as PIL's resize refuses a zero side"
+  ]
+ ],
+ "zig/src/families/dsv41/png_test.zig": [
+  [
+   "6d2765a2",
+   "dsv41 picture: a PNG's inflated data is bounded by the size its header gives; longer data is not inflated past it"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/abi.h": [
+  [
+   "ab1a7db4",
+   "draft_temperature: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/core/lanes/sampling.zig": [
+  [
+   "ab1a7db4",
+   "draft_temperature: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/families/dsv41/draft.zig": [
+  [
+   "ab1a7db4",
+   "draft_temperature: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/tests/dsv41_hip/glue_test.zig": [
+  [
+   "ab1a7db4",
+   "draft_temperature: single-line comments, no new lean_check findings (review)"
+  ],
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/kernels/hip/dsv41/aux_markov.hip": [
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/families/dsv41/sampling.zig": [
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "zig/src/server/top_k_test.zig": [
+  [
+   "0d2fc151",
+   "dsv41 HIP: draft_temperature, a sampled stream's drafts drawn with its own sampling noise"
+  ]
+ ],
+ "docs/LOOK-AT-IMAGE.md": [
+  [
+   "544415f9",
+   "docs: Bosgame M5, agents and image docs corrected; look_at_image counts looks per call and fails cleanly"
+  ],
+  [
+   "468c6072",
+   "docs: images for the text-only DeepSeek, described by a small local vision model with look_at_image for follow-up questions"
+  ]
+ ],
+ "tools/look/look_at_image.py": [
+  [
+   "544415f9",
+   "docs: Bosgame M5, agents and image docs corrected; look_at_image counts looks per call and fails cleanly"
+  ],
+  [
+   "468c6072",
+   "docs: images for the text-only DeepSeek, described by a small local vision model with look_at_image for follow-up questions"
+  ]
+ ],
+ "zig/tests/server/build.sh": [
+  [
+   "42f23ca8",
+   "tests/server/build.sh: tensorfold-native gets its checkpoint_cli module, as build.zig gives it"
+  ]
+ ],
+ "tools/dsv41-hip/pidexec.sh": [
+  [
+   "34b3e87e",
+   "serve.conf: SPAWN_UNIT, a rank and its lock holder as transient user units"
+  ]
+ ],
+ "zig/src/server/status_routes.zig": [
+  [
+   "dcca2434",
+   "server: /health reports context_length, the window one request may use"
+  ]
+ ],
+ ".github/ISSUE_TEMPLATE/config.yml": [
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ]
+ ],
+ ".github/ISSUE_TEMPLATE/results.yml": [
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ]
+ ],
+ "docs/COMMUNITY-RESULTS.md": [
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ]
+ ],
+ "tools/dsv41-hip/ctx_sweep.py": [
+  [
+   "70cfb8c6",
+   "Drafting on by default; speed at long context; results from other hardware"
+  ]
+ ],
+ "tools/dsv41-hip/exl3/kdec/hc/gen_manifest.py": [
+  [
+   "6da1bcb0",
+   "SPEED-FUSE-1 b7269694f8: _hc_chain, hc_pre2's whole decode chain as one HIP launch a site (TF_HC_CHAIN, same bits): hc_chain.py (posted mixes + inline-post finish, Sinkhorn by the last of 3*NB+1), test_hc_chain.py bits bench, aot_chain.py kit builder, tri_hc launcher/switch/test, native.zig header, round.zig env"
+  ]
+ ],
+ "tools/dsv41-hip/exl3/kdec/hc/hc_chain.py": [
+  [
+   "6da1bcb0",
+   "SPEED-FUSE-1 b7269694f8: _hc_chain, hc_pre2's whole decode chain as one HIP launch a site (TF_HC_CHAIN, same bits): hc_chain.py (posted mixes + inline-post finish, Sinkhorn by the last of 3*NB+1), test_hc_chain.py bits bench, aot_chain.py kit builder, tri_hc launcher/switch/test, native.zig header, round.zig env"
+  ]
+ ],
+ "tools/dsv41-hip/exl3/kdec/hc/test_hc_chain.py": [
+  [
+   "6da1bcb0",
+   "SPEED-FUSE-1 b7269694f8: _hc_chain, hc_pre2's whole decode chain as one HIP launch a site (TF_HC_CHAIN, same bits): hc_chain.py (posted mixes + inline-post finish, Sinkhorn by the last of 3*NB+1), test_hc_chain.py bits bench, aot_chain.py kit builder, tri_hc launcher/switch/test, native.zig header, round.zig env"
+  ]
+ ],
+ "tools/dsv41-hip/preflight_drift.py": [
+  [
+   "2f832d67",
+   "preflight: add preflight_drift.py, which preflight.sh --diff and --baseline import"
+  ]
+ ],
+ "tools/dsv41-hip/assets/CREATOR_LICENSE": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/assets/chat_template.jinja": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/assets/checkpoint_files.json": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/assets/original_files.json": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/input_common.py": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/kit_pin.sh": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/requirements-inputs.txt": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/snapshot_files.py": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/source_lock.json": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ],
+ "tools/dsv41-hip/verify_inputs.sh": [
+  [
+   "aca4774b",
+   "Input tools: vendor the CPU input preparation prepare_inputs.sh and verify_inputs.sh run"
+  ]
+ ]
+}

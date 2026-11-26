@@ -1,0 +1,3525 @@
+// GLM-5.3-Flash chunked prefill, Tier A kernels (see glm_prefill.hpp). Each kernel repeats the per-row expressions,
+// chains and trees of the decode kernels in glm_tier_a.hip / glm_dsa.hip; only the work placement differs. Gate:
+// tests/hip_glm_prefill_tests.hip (prefill == decode row by row, bitwise). Build with -ffp-contract=off -fno-fast-math
+// -fno-gpu-flush-denormals-to-zero.
+#include "strix/hip/legacy_intrinsics.hpp"
+#include "strix/hip/legacy_launch.hpp"
+#include "glm/common/glm_hc.hpp"
+#include "glm/prefill/glm_prefill.hpp"
+#include "attn_core/select.hpp"
+#include "strix/attn/group_pool.hpp"
+#include "glm/prefill/glm_pf_variants.hpp"
+#include "glm/prefill/glm_pf_workspace.hpp"
+#include "glm/prefill/glm_pf_aux.hpp"
+#include "glm/prefill/glm_pf_attn_wmma.hpp"
+#include "glm/prefill/glm_pf_mla_wmma.hpp"
+#include "glm/prefill/glm_pf_wmma.hpp"
+#include "attn_core/sparse_flash_wmma.hpp"
+#include "attn_core/index_score_band.hpp"
+#include "attn_core/index_score_wmma.hpp"
+#include "attn_core/selected_exact_mla.hpp"
+#include "core/fma_rows.hpp"
+#include "core/hc_expand_rows.hpp"
+#include "strix/route_receipt.hpp"
+
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
+#include <mutex>
+#include <stdexcept>
+#include <unordered_map>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+namespace strix::glm::pf {
+
+namespace {
+namespace aidx = strix::attn_core::idx;
+
+using dev::DsaSlot;
+using dev::IndexerDev;
+using dev::KdaDev;
+
+// Constant-address-space views for wave-uniform operands read through scalar loads (s_load) into SGPRs.
+using ConstF = const __attribute__((address_space(4))) float;
+typedef float SVec16 __attribute__((ext_vector_type(16)));
+using ConstV16 = const __attribute__((address_space(4))) SVec16;
+
+void ok(hipError_t e, const char* what) {
+    if (e != hipSuccess) throw std::runtime_error(std::string(what) + ": " + hipGetErrorString(e));
+}
+
+template <unsigned L> __device__ __forceinline__ float lds_tree(float* s, float part) {
+    const unsigned l = threadIdx.x;
+    s[l] = part;
+    __syncthreads();
+    for (unsigned h = L / 2; h > 0; h >>= 1U) {
+        if (l < h) s[l] = s[l] + s[l + h];
+        __syncthreads();
+    }
+    const float r = s[0];
+    __syncthreads();
+    return r;
+}
+// lds_tree<256>'s sum for lane 0 only, one barrier: wave 0 forms levels 128 / 64 / 32 from LDS in the same pairing, then
+// levels 16 .. 1 by __shfl_down (lane l < h receives lane l + h). Other lanes return an unspecified value.
+__device__ __forceinline__ float lds_tree256_lane0(float* s, float part) {
+    const unsigned l = threadIdx.x;
+    s[l] = part;
+    __syncthreads();
+    float w = 0.0F;
+    if (l < 32) {
+        const float t0 = s[l] + s[l + 128], t1 = s[l + 64] + s[l + 192], t2 = s[l + 32] + s[l + 160], t3 = s[l + 96] + s[l + 224];
+        w = (t0 + t1) + (t2 + t3);
+#pragma unroll
+        for (unsigned h = 16; h > 0; h >>= 1U) w = w + __shfl_down(w, h, 32);
+    }
+    return w;
+}
+
+// ---------------------------------------------------------------- KDA
+// 4a for C rows of one slot: grid (head, row). The conv of row r reads the pre-conv inputs of positions t - 3 .. t - 1
+// from the chunk (row r - j >= 0) or from the slot's conv state (oldest first); the state itself is written afterwards
+// by kda_conv_commit_kernel. Expressions = kda_prep_kernel.
+__global__ __launch_bounds__(128) void kda_prep_rows_kernel(KdaDev k, const float* qkv, const float* f, const float* b,
+                                                            const float* conv_state, float* scratch, float* beta) {
+    __shared__ float s[128];
+    const unsigned h = blockIdx.x, r = blockIdx.y, i = threadIdx.x, H = k.heads, C = H * kKdaDim;
+    float out[3];
+    for (unsigned part = 0; part < 3; ++part) {
+        const unsigned ch = part * C + h * kKdaDim + i;
+        const float* st = conv_state + static_cast<std::size_t>(ch) * 3;
+        const std::uint16_t* cw = k.conv_w + static_cast<std::size_t>(ch) * kConvK;
+        float x[3];
+        for (unsigned j = 0; j < 3; ++j) {  // x[j] = input of position t - 3 + j
+            const int m = static_cast<int>(r) - 3 + static_cast<int>(j);
+            x[j] = m >= 0 ? qkv[static_cast<std::size_t>(m) * 3 * C + ch] : st[3 + m];
+        }
+        const float nw = qkv[static_cast<std::size_t>(r) * 3 * C + ch];
+        float acc = __builtin_fmaf(bf16_to_float(cw[0]), x[0], 0.0F);
+        acc = __builtin_fmaf(bf16_to_float(cw[1]), x[1], acc);
+        acc = __builtin_fmaf(bf16_to_float(cw[2]), x[2], acc);
+        acc = __builtin_fmaf(bf16_to_float(cw[3]), nw, acc);
+        out[part] = silu(acc);
+    }
+    const float sq = lds_tree<128>(s, __builtin_fmaf(out[0], out[0], 0.0F));
+    const float sk = lds_tree<128>(s, __builtin_fmaf(out[1], out[1], 0.0F));
+    const float nq = declared_sqrt(sq + kL2Eps), nk = declared_sqrt(sk + kL2Eps);
+    float* sc = scratch + (static_cast<std::size_t>(r) * H + h) * 4 * kKdaDim;
+    sc[i] = (out[0] / nq) * kInvSqrt128;
+    sc[kKdaDim + i] = out[1] / nk;
+    sc[2 * kKdaDim + i] = out[2];
+    const float expA = declared_exp(k.A_log[h]);
+    sc[3 * kKdaDim + i] = kGateLow * sigmoid(expA * (f[static_cast<std::size_t>(r) * C + h * kKdaDim + i] + k.dt_bias[h * kKdaDim + i]));
+    if (i == 0) beta[static_cast<std::size_t>(r) * H + h] = sigmoid(b[static_cast<std::size_t>(r) * H + h]);
+}
+
+// Conv state after row C - 1: the inputs of the last three positions, oldest first.
+__global__ void kda_conv_commit_kernel(const float* qkv, float* conv_state, unsigned channels, unsigned C) {
+    const unsigned ch = blockIdx.x * 256 + threadIdx.x;
+    if (ch >= channels) return;
+    float* st = conv_state + static_cast<std::size_t>(ch) * 3;
+    const float o0 = st[0], o1 = st[1], o2 = st[2];
+#pragma unroll
+    for (unsigned j = 0; j < 3; ++j) {
+        const int m = static_cast<int>(C) - 3 + static_cast<int>(j);
+        st[j] = m >= 0 ? qkv[static_cast<std::size_t>(m) * channels + ch] : (m == -3 ? o0 : (m == -2 ? o1 : o2));
+    }
+}
+
+// 4b over C tokens, token-sequential: grid (head, value tile of kScanV columns); a quad of lanes owns column v and
+// holds S[:, v] (128 fp32) in registers for the whole chunk: lane q of the quad owns keys g * 32 + q * 8 + j
+// (g = 0..3, j = 0..7). Per token, the decode kda_update_kernel expressions for column v:
+//   sp_k = S_kv * dec_k; u = lds_tree<128> pairing of (+0 + sp_k * k_k); d = (v - u) * beta; S_kv = fmaf(k_k, d, sp_k);
+//   o_v = the same tree of (+0 + S_kv * q_k).
+// Tree pairing as lds_tree<128>: levels 64 and 32 pair keys inside a lane; level 16 pairs lanes q and q ^ 2, level 8
+// lanes q and q ^ 1 (shuffles; IEEE addition is commutative, so both lanes of a pair get the same bits); levels 4 .. 1
+// inside each lane.
+constexpr unsigned kScanV = 64, kScanTB = 16, kScanLanes = 4, kOwn = kKdaDim / kScanLanes;  // 32 keys per lane
+__device__ __forceinline__ unsigned scan_key(unsigned q, unsigned i) {  // own key i in [0, 32)
+    return (i / 8) * 32 + q * 8 + (i % 8);
+}
+__device__ __forceinline__ float scan_tree(const float* st, const float* w, unsigned q) {
+    float tr[16];
+#pragma unroll
+    for (unsigned i = 0; i < 16; ++i)  // level 64: (l, l + 64) for l = g * 32 + q * 8 + j, g = 0, 1
+        tr[i] = (0.0F + st[i] * w[scan_key(q, i)]) + (0.0F + st[i + 16] * w[scan_key(q, i + 16)]);
+#pragma unroll
+    for (unsigned j = 0; j < 8; ++j) tr[j] = tr[j] + tr[j + 8];  // level 32: (l, l + 32), l = q * 8 + j
+#pragma unroll
+    for (unsigned j = 0; j < 8; ++j) tr[j] = tr[j] + __shfl_xor(tr[j], 2);  // level 16
+#pragma unroll
+    for (unsigned j = 0; j < 8; ++j) tr[j] = tr[j] + __shfl_xor(tr[j], 1);  // level 8
+#pragma unroll
+    for (unsigned hh = 4; hh > 0; hh >>= 1U)
+#pragma unroll
+        for (unsigned l = 0; l < hh; ++l) tr[l] = tr[l] + tr[l + hh];
+    return tr[0];
+}
+__global__ __launch_bounds__(kScanLanes * kScanV) void kda_scan_kernel(unsigned H, float* S, const float* scratch,
+                                                                       const float* beta, float* o, unsigned* flag,
+                                                                       unsigned C) {
+    __shared__ float sq[kScanTB][kKdaDim], sk[kScanTB][kKdaDim], sd[kScanTB][kKdaDim];
+    const unsigned h = blockIdx.x, tid = threadIdx.x, q = tid % kScanLanes, v = blockIdx.y * kScanV + tid / kScanLanes;
+    float* Sh = S + static_cast<std::size_t>(h) * kKdaDim * kKdaDim;
+    float st[kOwn];
+#pragma unroll
+    for (unsigned i = 0; i < kOwn; ++i) st[i] = Sh[scan_key(q, i) * kKdaDim + v];
+    bool bad = false;
+    for (unsigned b0 = 0; b0 < C; b0 += kScanTB) {
+        const unsigned nb = C - b0 < kScanTB ? C - b0 : kScanTB;
+        __syncthreads();
+        for (unsigned idx = tid; idx < nb * kKdaDim; idx += kScanLanes * kScanV) {
+            const unsigned j = idx / kKdaDim, kk = idx % kKdaDim;
+            const float* sc = scratch + (static_cast<std::size_t>(b0 + j) * H + h) * 4 * kKdaDim;
+            sq[j][kk] = sc[kk];
+            sk[j][kk] = sc[kKdaDim + kk];
+            sd[j][kk] = declared_exp(sc[3 * kKdaDim + kk]);
+        }
+        __syncthreads();
+        for (unsigned j = 0; j < nb; ++j) {
+            const std::size_t rh = static_cast<std::size_t>(b0 + j) * H + h;
+            const float vv = scratch[rh * 4 * kKdaDim + 2 * kKdaDim + v];
+            const float bt = beta[rh];
+#pragma unroll
+            for (unsigned i = 0; i < kOwn; ++i) st[i] = st[i] * sd[j][scan_key(q, i)];
+            const float dlt = (vv - scan_tree(st, sk[j], q)) * bt;
+#pragma unroll
+            for (unsigned i = 0; i < kOwn; ++i) {
+                st[i] = __builtin_fmaf(sk[j][scan_key(q, i)], dlt, st[i]);
+                bad = bad || !is_finite(st[i]);
+            }
+            const float ov = scan_tree(st, sq[j], q);
+            if (q == 0) o[rh * kKdaDim + v] = ov;
+        }
+    }
+#pragma unroll
+    for (unsigned i = 0; i < kOwn; ++i) Sh[scan_key(q, i) * kKdaDim + v] = st[i];
+    if (bad && flag) atomicOr(flag, 1U);
+}
+
+// Scan v3: v1's grid, per-lane chains and tree with the two cross-lane levels (q ^ 2, q ^ 1) read through quad DPP
+// moves instead of ds_bpermute shuffles (same operand, same order: own value + partner's), which takes four LDS round
+// trips off every token's serial path. Measured 1.86-1.93 -> 1.24-1.28 us/row per KDA layer at t0 0 / 4096 / 28672
+// (32 columns per CTA, twice the CTAs, was slower: 2.02-2.07).
+template <int Ctrl> __device__ __forceinline__ float quad_dpp(float x) {  // quad_perm: 0xB1 = lane ^ 1, 0x4E = lane ^ 2
+    return __builtin_bit_cast(float, __builtin_amdgcn_mov_dpp(__builtin_bit_cast(int, x), Ctrl, 0xF, 0xF, true));
+}
+__device__ __forceinline__ float scan_tree_dpp(const float* st, const float* w, unsigned q) {
+    float tr[16];
+#pragma unroll
+    for (unsigned i = 0; i < 16; ++i)
+        tr[i] = (0.0F + st[i] * w[scan_key(q, i)]) + (0.0F + st[i + 16] * w[scan_key(q, i + 16)]);
+#pragma unroll
+    for (unsigned j = 0; j < 8; ++j) tr[j] = tr[j] + tr[j + 8];
+#pragma unroll
+    for (unsigned j = 0; j < 8; ++j) tr[j] = tr[j] + quad_dpp<0x4E>(tr[j]);  // level 16
+#pragma unroll
+    for (unsigned j = 0; j < 8; ++j) tr[j] = tr[j] + quad_dpp<0xB1>(tr[j]);  // level 8
+#pragma unroll
+    for (unsigned hh = 4; hh > 0; hh >>= 1U)
+#pragma unroll
+        for (unsigned l = 0; l < hh; ++l) tr[l] = tr[l] + tr[l + hh];
+    return tr[0];
+}
+__global__ __launch_bounds__(kScanLanes * kScanV) void kda_scan_v3_kernel(unsigned H, float* S, const float* scratch,
+                                                                          const float* beta, float* o, unsigned* flag, unsigned C) {
+    __shared__ float sq[kScanTB][kKdaDim], sk[kScanTB][kKdaDim], sd[kScanTB][kKdaDim];
+    const unsigned h = blockIdx.x, tid = threadIdx.x, q = tid % kScanLanes, v = blockIdx.y * kScanV + tid / kScanLanes;
+    float* Sh = S + static_cast<std::size_t>(h) * kKdaDim * kKdaDim;
+    float st[kOwn];
+#pragma unroll
+    for (unsigned i = 0; i < kOwn; ++i) st[i] = Sh[scan_key(q, i) * kKdaDim + v];
+    bool bad = false;
+    for (unsigned b0 = 0; b0 < C; b0 += kScanTB) {
+        const unsigned nb = C - b0 < kScanTB ? C - b0 : kScanTB;
+        __syncthreads();
+        for (unsigned idx = tid; idx < nb * kKdaDim; idx += kScanLanes * kScanV) {
+            const unsigned j = idx / kKdaDim, kk = idx % kKdaDim;
+            const float* sc = scratch + (static_cast<std::size_t>(b0 + j) * H + h) * 4 * kKdaDim;
+            sq[j][kk] = sc[kk];
+            sk[j][kk] = sc[kKdaDim + kk];
+            sd[j][kk] = declared_exp(sc[3 * kKdaDim + kk]);
+        }
+        __syncthreads();
+        for (unsigned j = 0; j < nb; ++j) {
+            const std::size_t rh = static_cast<std::size_t>(b0 + j) * H + h;
+            const float vv = scratch[rh * 4 * kKdaDim + 2 * kKdaDim + v];
+            const float bt = beta[rh];
+#pragma unroll
+            for (unsigned i = 0; i < kOwn; ++i) st[i] = st[i] * sd[j][scan_key(q, i)];
+            const float dlt = (vv - scan_tree_dpp(st, sk[j], q)) * bt;
+#pragma unroll
+            for (unsigned i = 0; i < kOwn; ++i) {
+                st[i] = __builtin_fmaf(sk[j][scan_key(q, i)], dlt, st[i]);
+                bad = bad || !is_finite(st[i]);
+            }
+            const float ov = scan_tree_dpp(st, sq[j], q);
+            if (q == 0) o[rh * kKdaDim + v] = ov;
+        }
+    }
+#pragma unroll
+    for (unsigned i = 0; i < kOwn; ++i) Sh[scan_key(q, i) * kKdaDim + v] = st[i];
+    if (bad && flag) atomicOr(flag, 1U);
+}
+
+// Scan v5: v3's per-token work with the batch fill off the serial path: the next batch's q / k / g are loaded into
+// registers before the current batch's tokens run and stored (decay widened) into the other half of a double LDS
+// buffer after them, so one barrier per batch remains and the global latency hides behind the token loop. 8 tokens per
+// buffer keep LDS at v3's 24 KB. Same values and expressions as v3. Measured 1.23-1.25 -> 1.18-1.20 us/row per KDA layer
+// at t0 0 / 4096 / 28672 (-3.7 %). (Staging v and beta in LDS instead was slower: 1.41-2.24.)
+constexpr unsigned kScan5TB = 8, kScan5Per = kScan5TB * kKdaDim / (kScanLanes * kScanV);  // 4 elements per thread
+__global__ __launch_bounds__(kScanLanes * kScanV) void kda_scan_v5_kernel(unsigned H, float* S, const float* scratch,
+                                                                          const float* beta, float* o, unsigned* flag, unsigned C) {
+    __shared__ float sq[2][kScan5TB][kKdaDim], sk[2][kScan5TB][kKdaDim], sd[2][kScan5TB][kKdaDim];
+    const unsigned h = blockIdx.x, tid = threadIdx.x, q = tid % kScanLanes, v = blockIdx.y * kScanV + tid / kScanLanes;
+    float* Sh = S + static_cast<std::size_t>(h) * kKdaDim * kKdaDim;
+    float st[kOwn];
+#pragma unroll
+    for (unsigned i = 0; i < kOwn; ++i) st[i] = Sh[scan_key(q, i) * kKdaDim + v];
+    float rq[kScan5Per] = {}, rk[kScan5Per] = {}, rg[kScan5Per] = {};
+    auto load = [&](unsigned b0) {
+#pragma unroll
+        for (unsigned m = 0; m < kScan5Per; ++m) {
+            const unsigned idx = tid + kScanLanes * kScanV * m, j = idx / kKdaDim, kk = idx % kKdaDim;
+            if (b0 + j < C) {
+                const float* sc = scratch + (static_cast<std::size_t>(b0 + j) * H + h) * 4 * kKdaDim;
+                rq[m] = sc[kk];
+                rk[m] = sc[kKdaDim + kk];
+                rg[m] = sc[3 * kKdaDim + kk];
+            }
+        }
+    };
+    auto store = [&](unsigned buf) {  // entries past C hold stale values and are never read
+#pragma unroll
+        for (unsigned m = 0; m < kScan5Per; ++m) {
+            const unsigned idx = tid + kScanLanes * kScanV * m, j = idx / kKdaDim, kk = idx % kKdaDim;
+            sq[buf][j][kk] = rq[m];
+            sk[buf][j][kk] = rk[m];
+            sd[buf][j][kk] = declared_exp(rg[m]);
+        }
+    };
+    load(0);
+    store(0);
+    __syncthreads();
+    bool bad = false;
+    unsigned cur = 0;
+    for (unsigned b0 = 0; b0 < C; b0 += kScan5TB, cur ^= 1U) {
+        const unsigned nb = C - b0 < kScan5TB ? C - b0 : kScan5TB;
+        const bool next = b0 + kScan5TB < C;
+        if (next) load(b0 + kScan5TB);
+        for (unsigned j = 0; j < nb; ++j) {
+            const std::size_t rh = static_cast<std::size_t>(b0 + j) * H + h;
+            const float vv = scratch[rh * 4 * kKdaDim + 2 * kKdaDim + v];
+            const float bt = beta[rh];
+#pragma unroll
+            for (unsigned i = 0; i < kOwn; ++i) st[i] = st[i] * sd[cur][j][scan_key(q, i)];
+            const float dlt = (vv - scan_tree_dpp(st, sk[cur][j], q)) * bt;
+#pragma unroll
+            for (unsigned i = 0; i < kOwn; ++i) {
+                st[i] = __builtin_fmaf(sk[cur][j][scan_key(q, i)], dlt, st[i]);
+                bad = bad || !is_finite(st[i]);
+            }
+            const float ov = scan_tree_dpp(st, sq[cur][j], q);
+            if (q == 0) o[rh * kKdaDim + v] = ov;
+        }
+        if (next) store(cur ^ 1U);
+        __syncthreads();
+    }
+#pragma unroll
+    for (unsigned i = 0; i < kOwn; ++i) Sh[scan_key(q, i) * kKdaDim + v] = st[i];
+    if (bad && flag) atomicOr(flag, 1U);
+}
+
+// Scan v6: v5 with kda_prep_rows_kernel folded into the batch fill, so the prep launch and its scratch / beta round trip
+// through memory are gone (the scan reads qkv / f / b / the conv state directly, each raw row once per WG). Raw inputs go
+// through LDS, in place, never through registers held across the token loop (gfx11 has no global -> LDS load, so a value
+// staged into LDS costs a VGPR for as long as it is in flight): during token j of a batch, raw row b1 + j of the next
+// batch (b1 = b0 + 8) is loaded at the top of the token and stored at its end into the other buffer half (threads 0-127 raw
+// q, 128-255 raw k -> sq / sk; waves 0-3 f -> sd; waves 4-5 the own v columns -> sv; wave 6 lane 0 b -> sb): 2 VGPRs inside
+// one token (v5 carries 12 across the loop). hist holds the raw rows b1 - 3 .. b1 - 1 of the conv window (q 128, k 128,
+// own v 64): the conv state at the start, then rows 5 .. 7 of each batch, written by waves 5-7. finish(): barrier A (the
+// stage is complete), wave w reads the window of token b1 + w (rows w - 3 .. w of the stage, or hist) and its f / b,
+// barrier B, then writes the prepared values in place. Lane l owns channels l + 32 m (m = 0..3) of q, k and g and the own
+// value columns l and l + 32. The conv taps, dt_bias and A are re-read per batch (L2-resident; the barriers keep them from
+// being hoisted out of the loop) instead of being held in registers. Expressions = kda_prep_rows_kernel (conv, silu,
+// norms, gate, beta); the two L2 norms take lds_tree<128>'s pairing as an in-wave butterfly: levels 64 and 32 inside the
+// lane, levels 16 .. 1 by xor shuffles; IEEE addition is commutative, so both lanes of each pair hold the same bits and
+// every lane ends with the tree's sum. The per-token work is v5's except the non-finite test, taken once on the final
+// state: non-finite is absorbing for every state element (NaN stays NaN, inf * 0 = NaN, inf times a finite non-zero or
+// plus a finite value stays inf, an fma with a non-finite product or addend stays non-finite), so "some token left a
+// non-finite element" == "the final state has one". LDS 32,576 B (2 WGs per CU, as v5).
+// The conv state is read as the oldest inputs: kda_conv_commit_kernel must run after this kernel.
+static_assert(kScan5TB * 32U == kScanLanes * kScanV, "scan v6 prepares one batch token per wave");
+__device__ __forceinline__ float norm_tree128(const float* e) {  // e[m] = element l + 32 m of lane l
+    float t = (e[0] + e[2]) + (e[1] + e[3]);                         // level 64: (l, l + 64), (l + 32, l + 96); level 32
+#pragma unroll
+    for (int hh = 16; hh > 0; hh >>= 1) t = t + __shfl_xor(t, hh, 32);
+    return t;
+}
+constexpr unsigned kScan6Ch = 10;                       // per lane: q 4, k 4, own v 2
+constexpr unsigned kScan6Raw = 2U * kKdaDim + kScanV;  // hist columns: raw q 128, raw k 128, own v 64
+static_assert(kScanLanes * kScanV == 2U * kKdaDim && kScanV == 2U * 32U, "scan v6 stage element map");
+__global__ __launch_bounds__(kScanLanes * kScanV) void kda_scan_v6_kernel(KdaDev k, const float* qkv, const float* f,
+                                                                          const float* b, const float* conv_state, float* S,
+                                                                          float* o, unsigned* flag, unsigned C) {
+    __shared__ float sq[2][kScan5TB][kKdaDim], sk[2][kScan5TB][kKdaDim], sd[2][kScan5TB][kKdaDim];
+    __shared__ float sv[2][kScan5TB][kScanV], sb[2][kScan5TB], hist[3][kScan6Raw];
+    const unsigned H = k.heads, CH = H * kKdaDim;
+    const unsigned h = blockIdx.x, tid = threadIdx.x, q = tid % kScanLanes, vl = tid / kScanLanes, v = blockIdx.y * kScanV + vl;
+    const unsigned w = static_cast<unsigned>(__builtin_amdgcn_readfirstlane(static_cast<int>(tid / 32U))), l = tid % 32U;
+    const unsigned vch = 2U * CH + h * kKdaDim + blockIdx.y * kScanV;  // qkv channel of own value column 0
+    auto channel = [&](unsigned c, unsigned ln) -> unsigned {          // qkv channel of register slot c of lane ln
+        return c < 8 ? (c / 4) * CH + h * kKdaDim + ln + 32U * (c % 4) : vch + ln + 32U * (c - 8);
+    };
+    auto hcol = [&](unsigned c, unsigned ln) -> unsigned {  // hist column of register slot c of lane ln
+        return c < 8 ? (c / 4) * kKdaDim + ln + 32U * (c % 4) : 2U * kKdaDim + ln + 32U * (c - 8);
+    };
+    float* Sh = S + static_cast<std::size_t>(h) * kKdaDim * kKdaDim;
+    float st[kOwn];
+#pragma unroll
+    for (unsigned i = 0; i < kOwn; ++i) st[i] = Sh[scan_key(q, i) * kKdaDim + v];
+    // Raw row r -> slot j of buffer buf. Element A: q (waves 0-3) / k (waves 4-7) channel tid % 128; element B: f (waves 0-3),
+    // own v column tid - 128 (waves 4-5), b (wave 6 lane 0). 449 values per row.
+    auto stage_load = [&](unsigned r, float& ea, float& eb) {
+        const std::size_t row = static_cast<std::size_t>(r) * 3 * CH;
+        ea = qkv[row + (tid / kKdaDim) * CH + h * kKdaDim + tid % kKdaDim];
+        if (w < 4) eb = f[static_cast<std::size_t>(r) * CH + h * kKdaDim + tid];
+        else if (w < 6) eb = qkv[row + vch + (tid - kKdaDim)];
+        else if (w == 6 && l == 0) eb = b[static_cast<std::size_t>(r) * H + h];
+    };
+    auto stage_store = [&](unsigned buf, unsigned j, float ea, float eb) {
+        if (w < 4) {
+            sq[buf][j][tid] = ea;
+            sd[buf][j][tid] = eb;
+        } else {
+            sk[buf][j][tid - kKdaDim] = ea;
+            if (w < 6) sv[buf][j][tid - kKdaDim] = eb;
+            else if (w == 6 && l == 0) sb[buf][j] = eb;
+        }
+    };
+    auto raw = [&](unsigned buf, int row, unsigned c, unsigned ln) -> float {  // raw input of slot c at batch row `row` (< 0: hist)
+        if (row < 0) return hist[3 + row][hcol(c, ln)];
+        if (c < 4) return sq[buf][row][ln + 32U * c];
+        if (c < 8) return sk[buf][row][ln + 32U * (c - 4)];
+        return sv[buf][row][ln + 32U * (c - 8)];
+    };
+    // = kda_prep_rows_kernel for token b1 + w into buffer buf, in place; entries past C stay stale and are never read.
+    // Before barrier B every wave only reads the stage / hist and computes; after it, wave w writes row w only, so waves
+    // 5-7 can still copy their own raw row (= conv history of the next batch) out of the stage before overwriting it.
+    auto finish = [&](unsigned buf, unsigned b1) {
+        const bool act = b1 + w < C;  // wave-uniform; every wave reaches both barriers
+        // The lane index is made opaque per call, so the per-lane address math below is redone per batch (a few VALU)
+        // instead of being hoisted out of the batch loop and held in VGPRs across the token loop.
+        unsigned ln = l;
+        asm volatile("" : "+v"(ln));
+        // Per-lane constants, issued before barrier A so their latency overlaps it: conv taps as BF16 pairs (tap 2j in the
+        // low half, 2j + 1 in the high half; unpacked to exactly bf16_to_float's value), dt_bias, A.
+        std::uint32_t cwp[kScan6Ch][2];
+#pragma unroll
+        for (unsigned c = 0; c < kScan6Ch; ++c) {
+            const std::uint16_t* cw = k.conv_w + static_cast<std::size_t>(channel(c, ln)) * kConvK;
+            cwp[c][0] = static_cast<std::uint32_t>(cw[0]) | (static_cast<std::uint32_t>(cw[1]) << 16U);
+            cwp[c][1] = static_cast<std::uint32_t>(cw[2]) | (static_cast<std::uint32_t>(cw[3]) << 16U);
+        }
+        float dtb[4];
+#pragma unroll
+        for (unsigned m = 0; m < 4; ++m) dtb[m] = k.dt_bias[h * kKdaDim + ln + 32U * m];
+        const float alog = k.A_log[h];
+        __syncthreads();  // A: the stage of buffer buf (and, for the first batch, hist) is complete
+        float pq[4] = {}, pk[4] = {}, pg[4] = {}, pv[2] = {}, pb = 0.0F;  // prepared values of token b1 + w
+        if (act) {
+            float out[kScan6Ch];
+#pragma unroll
+            for (unsigned c = 0; c < kScan6Ch; ++c) {  // inputs of positions t - 3 .. t: stage rows w - 3 .. w or hist
+                float acc = __builtin_fmaf(__builtin_bit_cast(float, cwp[c][0] << 16U), raw(buf, static_cast<int>(w) - 3, c, ln), 0.0F);
+                acc = __builtin_fmaf(__builtin_bit_cast(float, cwp[c][0] & 0xffff0000U), raw(buf, static_cast<int>(w) - 2, c, ln), acc);
+                acc = __builtin_fmaf(__builtin_bit_cast(float, cwp[c][1] << 16U), raw(buf, static_cast<int>(w) - 1, c, ln), acc);
+                acc = __builtin_fmaf(__builtin_bit_cast(float, cwp[c][1] & 0xffff0000U), raw(buf, static_cast<int>(w), c, ln), acc);
+                out[c] = silu(acc);
+            }
+            float eq[4], ek[4];
+#pragma unroll
+            for (unsigned m = 0; m < 4; ++m) {
+                eq[m] = __builtin_fmaf(out[m], out[m], 0.0F);
+                ek[m] = __builtin_fmaf(out[4 + m], out[4 + m], 0.0F);
+            }
+            const float nq = declared_sqrt(norm_tree128(eq) + kL2Eps), nk = declared_sqrt(norm_tree128(ek) + kL2Eps);
+            const float expA = declared_exp(alog);
+#pragma unroll
+            for (unsigned m = 0; m < 4; ++m) {
+                pq[m] = (out[m] / nq) * kInvSqrt128;
+                pk[m] = out[4 + m] / nk;
+                pg[m] = declared_exp(kGateLow * sigmoid(expA * (sd[buf][w][ln + 32U * m] + dtb[m])));
+            }
+            pv[0] = out[8];
+            pv[1] = out[9];
+            pb = sigmoid(sb[buf][w]);
+        }
+        __syncthreads();  // B: every window is read; row w of the stage now belongs to wave w alone
+        if (!act) return;
+        if (w >= kScan5TB - 3) {  // raw row b1 + w (w = 5..7) -> conv history of the next batch
+#pragma unroll
+            for (unsigned c = 0; c < kScan6Ch; ++c) hist[w - (kScan5TB - 3)][hcol(c, ln)] = raw(buf, static_cast<int>(w), c, ln);
+        }
+#pragma unroll
+        for (unsigned m = 0; m < 4; ++m) {
+            const unsigned i = ln + 32U * m;
+            sq[buf][w][i] = pq[m];
+            sk[buf][w][i] = pk[m];
+            sd[buf][w][i] = pg[m];
+        }
+        sv[buf][w][ln] = pv[0];
+        sv[buf][w][ln + 32U] = pv[1];
+        if (l == 0) sb[buf][w] = pb;
+    };
+    // First batch: hist = the conv state (inputs of positions -3 .. -1), rows 0 .. 7 staged directly (once per kernel).
+    for (unsigned e = tid; e < 3 * kScan6Raw; e += kScanLanes * kScanV) {
+        const unsigned i = e / kScan6Raw, c = e % kScan6Raw;
+        const unsigned ch = c < 2 * kKdaDim ? (c / kKdaDim) * CH + h * kKdaDim + c % kKdaDim : vch + (c - 2 * kKdaDim);
+        hist[i][c] = conv_state[static_cast<std::size_t>(ch) * 3 + i];
+    }
+#pragma unroll
+    for (unsigned j = 0; j < kScan5TB; ++j) {
+        if (j >= C) break;
+        float ea = 0.0F, eb = 0.0F;
+        stage_load(j, ea, eb);
+        stage_store(0, j, ea, eb);
+    }
+    unsigned cur = 0;
+    for (unsigned b0 = 0; b0 < C; b0 += kScan5TB, cur ^= 1U) {
+        finish(cur, b0);  // batch b0 was staged into buffer cur by the previous batch's tokens (or above)
+        __syncthreads();
+        const unsigned nb = C - b0 < kScan5TB ? C - b0 : kScan5TB, b1 = b0 + kScan5TB;
+        const bool next = b1 < C;  // then nb = 8: tokens 0 .. 7 stage rows b1 .. b1 + 7 (those < C) into the other half
+        for (unsigned j = 0; j < nb; ++j) {
+            const bool stage = next && b1 + j < C;
+            float ea = 0.0F, eb = 0.0F;
+            if (stage) stage_load(b1 + j, ea, eb);
+            const float vv = sv[cur][j][vl];
+            const float bt = sb[cur][j];
+#pragma unroll
+            for (unsigned i = 0; i < kOwn; ++i) st[i] = st[i] * sd[cur][j][scan_key(q, i)];
+            const float dlt = (vv - scan_tree_dpp(st, sk[cur][j], q)) * bt;
+#pragma unroll
+            for (unsigned i = 0; i < kOwn; ++i) st[i] = __builtin_fmaf(sk[cur][j][scan_key(q, i)], dlt, st[i]);
+            const float ov = scan_tree_dpp(st, sq[cur][j], q);
+            if (q == 0) o[(static_cast<std::size_t>(b0 + j) * H + h) * kKdaDim + v] = ov;
+            if (stage) stage_store(cur ^ 1U, j, ea, eb);
+        }
+    }
+    bool bad = false;
+#pragma unroll
+    for (unsigned i = 0; i < kOwn; ++i) {
+        Sh[scan_key(q, i) * kKdaDim + v] = st[i];
+        bad = bad || !is_finite(st[i]);
+    }
+    if (bad && flag) atomicOr(flag, 1U);
+}
+
+// 4c: = kda_out_kernel (row-parallel already).
+__global__ __launch_bounds__(128) void kda_out_rows_kernel(KdaDev k, const float* o, const float* gate, float* y) {
+    __shared__ float s[128];
+    const unsigned h = blockIdx.x, r = blockIdx.y, i = threadIdx.x, H = k.heads;
+    const std::size_t at = (static_cast<std::size_t>(r) * H + h) * kKdaDim + i;
+    const float v = o[at];
+    const float ms = lds_tree<128>(s, __builtin_fmaf(v, v, 0.0F)) / static_cast<float>(kKdaDim);
+    const float rr = inv_sqrt(ms + kEps);
+    y[at] = ((v * rr) * bf16_to_float(k.o_norm[i])) * sigmoid(gate[at]);
+}
+
+// ---------------------------------------------------------------- DSA append
+// dsa_store_kernel without the pooling (row-parallel: the pool reads other rows), position t0 + r.
+template<bool Norm = false>
+__global__ __launch_bounds__(128) void dsa_store_rows_kernel(DsaSlot sl, unsigned t0, const float* latent, IndexerDev w,
+                                                             const float* key, const float* gs, unsigned* flag,
+                                                             bool kv_shard, unsigned rank, const std::uint16_t* latent_norm = nullptr) {
+    __shared__ float s[128];
+    const unsigned r = blockIdx.x, i = threadIdx.x, global = t0 + r;
+    if (kv_shard && (global / kKpool) % 2 != rank) return;
+    const unsigned t = kv_shard ? (global / (2 * kKpool)) * kKpool + global % kKpool : global;
+    float latent_rr = 1.0F;
+    if constexpr (Norm) {
+        const float* xr = latent + static_cast<std::size_t>(r) * kKvLora;
+        const float part = aux::norm_pair(xr, kKvLora, i,
+            [] __host__ __device__ (float a, float b, float c) { return __builtin_fmaf(a, b, c); });
+        latent_rr = inv_sqrt(lds_tree<128>(s, part) / static_cast<float>(kKvLora) + kEps);
+    }
+    const float k = key[static_cast<std::size_t>(r) * kIdxDim + i];
+    const float mu = lds_tree<128>(s, 0.0F + k) / static_cast<float>(kIdxDim);
+    const float d = k - mu;
+    const float var = lds_tree<128>(s, __builtin_fmaf(d, d, 0.0F)) / static_cast<float>(kIdxDim);
+    const float rr = inv_sqrt(var + kLnEps);
+    const std::uint16_t kb = float_to_bf16((d * rr) * f16_to_float(w.k_norm_w[i]) + f16_to_float(w.k_norm_b[i]));
+    const std::uint16_t gb = float_to_bf16(gs[static_cast<std::size_t>(r) * kIdxDim + i]);
+    if (!bf16_is_finite(kb) || !bf16_is_finite(gb)) atomicOr(flag, 1U);
+    sl.ikey[static_cast<std::size_t>(t) * kIdxDim + i] = kb;
+    sl.igate[static_cast<std::size_t>(t) * kIdxDim + i] = gb;
+    for (unsigned l = i; l < kKvLora; l += 128) {
+        float lv = latent[static_cast<std::size_t>(r) * kKvLora + l];
+        if constexpr (Norm) lv = (lv * latent_rr) * bf16_to_float(latent_norm[l]);
+        const std::uint16_t lb = float_to_bf16(lv);
+        if (!bf16_is_finite(lb)) atomicOr(flag, 1U);
+        sl.latent[static_cast<std::size_t>(t) * kKvLora + l] = lb;
+    }
+}
+// R12 for pools p0 + blockIdx.x (channel = lane), = the pooling branch of dsa_store_kernel.
+__global__ __launch_bounds__(128) void dsa_pool_kernel(DsaSlot sl, unsigned p0, IndexerDev w, unsigned* flag,
+                                                    bool kv_shard, unsigned rank) {
+    const unsigned global = p0 + blockIdx.x;
+    if (kv_shard && global % 2 != rank) return;
+    const unsigned p = kv_shard ? global / 2 : global, i = threadIdx.x, t0 = p * kKpool;
+    float l4[kKpool], kv[kKpool];
+    for (unsigned j = 0; j < kKpool; ++j) {
+        l4[j] = bf16_to_float(sl.igate[static_cast<std::size_t>(t0 + j) * kIdxDim + i]) + w.ape[j * kIdxDim + i];
+        kv[j] = bf16_to_float(sl.ikey[static_cast<std::size_t>(t0 + j) * kIdxDim + i]);
+    }
+    const float K = strix::attn::group_indexer::gated_pool_channel<kKpool>(l4, kv, strix::attn::group_pool::Fn<declared_exp>{});
+    if (!is_finite(K)) atomicOr(flag, 1U);
+    sl.pooled[static_cast<std::size_t>(p) * kIdxDim + i] = K;
+}
+
+// ---------------------------------------------------------------- indexer (R11, R5)
+__global__ void scale_kernel(float* v, unsigned n, float c) {
+    const unsigned i = blockIdx.x * 256 + threadIdx.x;
+    if (i < n) v[i] = v[i] * c;
+}
+// Scores of a tile of kScoreRows rows x 128 pools: thread = pool p, its pooled key in registers; the row's qI is staged
+// in LDS. Per (row, pool) = idx_score_kernel's chain. Rows with P_t <= 512 select every pool and need no scores.
+constexpr unsigned kScoreRows = 16;
+__global__ __launch_bounds__(128) void idx_score_rows_kernel(const float* pooled, unsigned t0, unsigned C, const float* qI,
+                                                             const float* wh, std::uint32_t* keys, unsigned cap, unsigned pool_begin, unsigned pool_base = 0) {
+    __shared__ float q[kIdxHeads * kIdxDim];
+    __shared__ float w[kIdxHeads];
+    const unsigned p = pool_begin + blockIdx.x * 128 + threadIdx.x, r0 = blockIdx.y * kScoreRows;
+    const unsigned Pmax = (t0 + (r0 + kScoreRows < C ? r0 + kScoreRows : C)) / kKpool;  // pools of the tile's last row
+    if (pool_begin + blockIdx.x * 128 >= Pmax) return;  // uniform per block
+    float K[kIdxDim];
+    const bool have = p < Pmax;
+#pragma unroll
+    for (unsigned i = 0; i < kIdxDim; ++i) K[i] = have ? pooled[static_cast<std::size_t>(p - pool_base) * kIdxDim + i] : 0.0F;
+    for (unsigned r = r0; r < r0 + kScoreRows && r < C; ++r) {
+        const unsigned P = (t0 + r + 1) / kKpool;
+        if (P <= kIdxPools) continue;  // uniform per block
+        __syncthreads();
+        for (unsigned i = threadIdx.x; i < kIdxHeads * kIdxDim; i += 128) q[i] = qI[static_cast<std::size_t>(r) * kIdxHeads * kIdxDim + i];
+        if (threadIdx.x < kIdxHeads) w[threadIdx.x] = wh[static_cast<std::size_t>(r) * kIdxHeads + threadIdx.x];
+        __syncthreads();
+        if (p >= P) continue;
+        float acc = 0.0F;
+        for (unsigned h = 0; h < kIdxHeads; ++h) {
+            float dot = 0.0F;
+#pragma unroll
+            for (unsigned i = 0; i < kIdxDim; ++i) dot = __builtin_fmaf(q[h * kIdxDim + i], K[i], dot);
+            const float sc = dot * kInvSqrt128;
+            acc = __builtin_fmaf(w[h], sc > 0.0F ? sc : 0.0F, acc);
+        }
+        keys[static_cast<std::size_t>(r) * cap + (p - pool_begin)] = ordered_key(acc);
+    }
+}
+
+// Scores v2: CTA = 64 pools x 4 rows, all 32 heads. Phase 1: the per-(row, head, pool) dot chains (i = 0..127
+// ascending from +0: idx_score_rows_kernel's fmaf(q, K, dot)) as a register-blocked tile, thread = 4 pools x 8 (row,
+// head) pairs, the pooled keys [i][pool] and qI [i][(row, head)] staged in LDS per 32-dim slice. Phase 2: per (row,
+// pool) the head chain acc = fmaf(w[h], relu(dot * kInvSqrt128), acc) for h = 0..31 ascending from +0, from the dots
+// staged in LDS. Same bits as the v1 kernel; rows with P_t <= 512 and pools p >= P_t are skipped as there.
+constexpr unsigned kIs2Pools = 64, kIs2Rows = 4, kIs2K = 32, kIs2RH = kIs2Rows * kIdxHeads;  // 128 (row, head) pairs
+__global__ __launch_bounds__(256) void idx_score_rows_v2_kernel(const float* pooled, unsigned t0, unsigned C, const float* qI,
+                                                                const float* wh, std::uint32_t* keys, unsigned cap, unsigned pool_begin, unsigned pool_base = 0) {
+    __shared__ alignas(16) float ks[kIs2K][kIs2Pools];  // 8 KB
+    __shared__ alignas(16) float qs[kIs2K][kIs2RH];     // 16 KB
+    __shared__ float dots[kIs2RH][kIs2Pools + 1];        // 33 KB (+1 column against bank conflicts)
+    __shared__ float ws[kIs2RH];
+    const unsigned p0 = pool_begin + blockIdx.x * kIs2Pools, r0 = blockIdx.y * kIs2Rows;
+    const unsigned rlast = (r0 + kIs2Rows < C ? r0 + kIs2Rows : C) - 1;
+    const unsigned Pmax = (t0 + rlast + 1) / kKpool;  // pools of the tile's last row (earlier rows have fewer)
+    if (p0 >= Pmax || Pmax <= kIdxPools) return;    // uniform per block
+    const unsigned tid = threadIdx.x, pg = tid % 16, rg = tid / 16;  // pools 4 pg .. + 3, (row, head) pairs 8 rg .. + 7
+    float acc[4][8];
+#pragma unroll
+    for (unsigned a = 0; a < 4; ++a)
+#pragma unroll
+        for (unsigned b = 0; b < 8; ++b) acc[a][b] = 0.0F;
+    for (unsigned k0 = 0; k0 < kIdxDim; k0 += kIs2K) {
+        __syncthreads();  // previous slice consumed
+        for (unsigned x = tid; x < (kIs2K / 4) * kIs2Pools; x += 256) {  // lanes walk pools: conflict-free stores
+            const unsigned pp = x % kIs2Pools, i4 = x / kIs2Pools;
+            float4 v{0.0F, 0.0F, 0.0F, 0.0F};
+            if (p0 + pp < Pmax) v = *reinterpret_cast<const float4*>(pooled + static_cast<std::size_t>(p0 + pp - pool_base) * kIdxDim + k0 + 4 * i4);
+            ks[4 * i4 + 0][pp] = v.x;
+            ks[4 * i4 + 1][pp] = v.y;
+            ks[4 * i4 + 2][pp] = v.z;
+            ks[4 * i4 + 3][pp] = v.w;
+        }
+        for (unsigned x = tid; x < (kIs2K / 4) * kIs2RH; x += 256) {  // lanes walk (row, head): conflict-free stores
+            const unsigned rh = x % kIs2RH, i4 = x / kIs2RH, r = r0 + rh / kIdxHeads, h = rh % kIdxHeads;
+            float4 v{0.0F, 0.0F, 0.0F, 0.0F};
+            if (r < C) v = *reinterpret_cast<const float4*>(qI + (static_cast<std::size_t>(r) * kIdxHeads + h) * kIdxDim + k0 + 4 * i4);
+            qs[4 * i4 + 0][rh] = v.x;
+            qs[4 * i4 + 1][rh] = v.y;
+            qs[4 * i4 + 2][rh] = v.z;
+            qs[4 * i4 + 3][rh] = v.w;
+        }
+        __syncthreads();
+#pragma unroll 4
+        for (unsigned i = 0; i < kIs2K; ++i) {
+            const float4 kv = *reinterpret_cast<const float4*>(&ks[i][4 * pg]);
+            const float4 qa = *reinterpret_cast<const float4*>(&qs[i][8 * rg]), qb = *reinterpret_cast<const float4*>(&qs[i][8 * rg + 4]);
+            const float kk[4] = {kv.x, kv.y, kv.z, kv.w}, qq[8] = {qa.x, qa.y, qa.z, qa.w, qb.x, qb.y, qb.z, qb.w};
+#pragma unroll
+            for (unsigned a = 0; a < 4; ++a)
+#pragma unroll
+                for (unsigned b = 0; b < 8; ++b) acc[a][b] = __builtin_fmaf(qq[b], kk[a], acc[a][b]);
+        }
+    }
+    __syncthreads();
+#pragma unroll
+    for (unsigned a = 0; a < 4; ++a)
+#pragma unroll
+        for (unsigned b = 0; b < 8; ++b) dots[8 * rg + b][4 * pg + a] = acc[a][b];
+    if (tid < kIs2RH) {
+        const unsigned r = r0 + tid / kIdxHeads;
+        ws[tid] = r < C ? wh[static_cast<std::size_t>(r) * kIdxHeads + tid % kIdxHeads] : 0.0F;
+    }
+    __syncthreads();
+    const unsigned rr = tid / kIs2Pools, pp = tid % kIs2Pools, r = r0 + rr, p = p0 + pp;  // phase 2: thread = (row, pool)
+    if (r >= C) return;
+    const unsigned P = (t0 + r + 1) / kKpool;
+    if (P <= kIdxPools || p >= P) return;
+    float a2 = 0.0F;
+    for (unsigned h = 0; h < kIdxHeads; ++h) {
+        const float sc = dots[rr * kIdxHeads + h][pp] * kInvSqrt128;
+        a2 = __builtin_fmaf(ws[rr * kIdxHeads + h], sc > 0.0F ? sc : 0.0F, a2);
+    }
+    keys[static_cast<std::size_t>(r) * cap + (p - pool_begin)] = ordered_key(a2);
+}
+
+// Scores v3: CTA = 64 pools x 8 rows; the pools' keys are staged once in LDS ([pool][dim], padded) and shared by the 8
+// rows; wave w = row r0 + w, lane = pools p0 + lane and p0 + 32 + lane, all 32 heads' dots in registers. qI and wh of
+// the row are wave-uniform and come through scalar loads, so the inner loop is FMAs with an SGPR operand. Per (row,
+// head, pool) the dot chain over i ascending from +0 and per (row, pool) the head chain are v2's: same keys.
+constexpr unsigned kIs3Rows = 8, kIs3Pools = 64, kIs3Pad = kIdxDim + 4, kIs3L = 16;
+__global__ __launch_bounds__(32 * kIs3Rows) void idx_score_rows_v3_kernel(const float* pooled, unsigned t0, unsigned C, const float* qI,
+                                                                         const float* wh, std::uint32_t* keys, unsigned cap, unsigned pool_begin, unsigned pool_base = 0) {
+    __shared__ alignas(16) float ks[kIs3Pools][kIs3Pad];  // 33 KB
+    const unsigned p0 = pool_begin + blockIdx.x * kIs3Pools, r0 = blockIdx.y * kIs3Rows, tid = threadIdx.x, lane = tid % 32;
+    const unsigned rlast = (r0 + kIs3Rows < C ? r0 + kIs3Rows : C) - 1;
+    const unsigned Pmax = (t0 + rlast + 1) / kKpool;  // pools of the tile's last row
+    if (p0 >= Pmax || Pmax <= kIdxPools) return;    // uniform per block
+    for (unsigned x = tid; x < kIs3Pools * (kIdxDim / 4); x += 32 * kIs3Rows) {
+        const unsigned pp = x / (kIdxDim / 4), i4 = x % (kIdxDim / 4);
+        float4 v{0.0F, 0.0F, 0.0F, 0.0F};
+        if (p0 + pp < Pmax) v = *reinterpret_cast<const float4*>(pooled + static_cast<std::size_t>(p0 + pp - pool_base) * kIdxDim + 4 * i4);
+        *reinterpret_cast<float4*>(&ks[pp][4 * i4]) = v;
+    }
+    __syncthreads();
+    const unsigned w = static_cast<unsigned>(__builtin_amdgcn_readfirstlane(static_cast<int>(tid / 32))), r = r0 + w;
+    if (r >= C) return;  // uniform per wave (no barrier follows)
+    const unsigned P = (t0 + r + 1) / kKpool;
+    if (P <= kIdxPools || p0 >= P) return;
+    const auto* qr = (ConstF*)(qI + static_cast<std::size_t>(r) * kIdxHeads * kIdxDim);  // NOLINT: address-space cast
+    float acc[2][kIdxHeads];
+#pragma unroll
+    for (unsigned e = 0; e < 2; ++e)
+#pragma unroll
+        for (unsigned h = 0; h < kIdxHeads; ++h) acc[e][h] = 0.0F;
+    for (unsigned i0 = 0; i0 < kIdxDim; i0 += kIs3L) {
+        float kv[2][kIs3L];
+#pragma unroll
+        for (unsigned e = 0; e < 2; ++e)
+#pragma unroll
+            for (unsigned i = 0; i < kIs3L; i += 4) {
+                const float4 v = *reinterpret_cast<const float4*>(&ks[lane + 32 * e][i0 + i]);
+                kv[e][i] = v.x;
+                kv[e][i + 1] = v.y;
+                kv[e][i + 2] = v.z;
+                kv[e][i + 3] = v.w;
+            }
+#pragma unroll
+        for (unsigned h = 0; h < kIdxHeads; ++h) {
+            const SVec16 q = *reinterpret_cast<ConstV16*>(qr + static_cast<std::size_t>(h) * kIdxDim + i0);
+#pragma unroll
+            for (unsigned i = 0; i < kIs3L; ++i)
+#pragma unroll
+                for (unsigned e = 0; e < 2; ++e) acc[e][h] = __builtin_fmaf(q[i], kv[e][i], acc[e][h]);
+        }
+    }
+    const auto* wr = (ConstF*)(wh + static_cast<std::size_t>(r) * kIdxHeads);  // NOLINT: address-space cast
+#pragma unroll
+    for (unsigned e = 0; e < 2; ++e) {
+        float a2 = 0.0F;
+#pragma unroll
+        for (unsigned h = 0; h < kIdxHeads; ++h) {
+            const float sc = acc[e][h] * kInvSqrt128;
+            a2 = __builtin_fmaf(wr[h], sc > 0.0F ? sc : 0.0F, a2);
+        }
+        const unsigned p = p0 + lane + 32 * e;
+        if (p < P) keys[static_cast<std::size_t>(r) * cap + (p - pool_begin)] = ordered_key(a2);
+    }
+}
+
+// FAST index scores (STRIX_IDX_WMMA=1 bf16 / =f16): adapter of the shared core (src/attn_core/index_score_wmma.hpp).
+// Work-group = 4 rows x 32 index heads (query vector q = row * 32 + head; wave = one row, its two fragments = heads
+// 0..15 / 16..31), key tile = 128 pools. Both FP32 operands are rounded to the operand type; per (row, pool) the
+// epilogue is v3's head chain acc = fmaf(w[h], relu(dot * kInvSqrt128), acc) in the fragment order, then the two
+// 16-lane halves are added. Rows with P_t <= 512 and pools p >= P_t are skipped as in v3; the select is unchanged.
+struct IdxWmmaArgs {
+    const float* pooled;
+    const float* qI;
+    const float* wh;
+    std::uint32_t* keys;
+    unsigned t0, C, cap, pool_begin, pool_end, pool_base;
+};
+template <aidx::Operand O> struct IdxWmmaPolicy {
+    using Args = IdxWmmaArgs;
+    static constexpr aidx::Operand kOp = O;
+    static constexpr unsigned kRows = aidx::kQueries / kIdxHeads;
+    struct Ctx {
+        unsigned r0, pend;  // first row, end of the pools the tile's last row sees in this window
+    };
+    struct State {
+        float w[aidx::kFrags][8];
+        unsigned row, pend;  // this wave's row and its pool end (0 when the row needs no scores)
+    };
+    __device__ static bool begin(const Args& a, Ctx& c) {
+        c.r0 = blockIdx.y * kRows;
+        if (c.r0 >= a.C) return false;
+        const unsigned rlast = (c.r0 + kRows < a.C ? c.r0 + kRows : a.C) - 1;
+        const unsigned pmax = (a.t0 + rlast + 1) / kKpool;
+        c.pend = pmax < a.pool_end ? pmax : a.pool_end;
+        return pmax > kIdxPools && a.pool_begin < c.pend;
+    }
+    __device__ static void stage_queries(const Args& a, const Ctx& c, std::uint16_t* tile) {
+        auto* t4 = reinterpret_cast<uint4*>(tile);
+        for (unsigned e = threadIdx.x; e < aidx::kQueries * aidx::kPieces; e += aidx::kThreads) {
+            const unsigned q = e / aidx::kPieces, piece = e % aidx::kPieces, r = c.r0 + q / kIdxHeads;
+            uint4 v = make_uint4(0U, 0U, 0U, 0U);
+            if (r < a.C) {
+                const float* src = a.qI + (static_cast<std::size_t>(r) * kIdxHeads + q % kIdxHeads) * kIdxDim + piece * 8U;
+                v = aidx::pack8<O>(*reinterpret_cast<const float4*>(src), *reinterpret_cast<const float4*>(src + 4));
+            }
+            t4[aidx::piece_slot(q, piece)] = v;
+        }
+    }
+    __device__ static void init(const Args& a, const Ctx& c, State& st) {
+        const unsigned lane = threadIdx.x % 32U, wave = threadIdx.x / 32U;
+        st.row = c.r0 + wave;
+        const unsigned P = (a.t0 + st.row + 1) / kKpool;
+        st.pend = st.row < a.C && P > kIdxPools ? (P < a.pool_end ? P : a.pool_end) : 0U;
+#pragma unroll
+        for (unsigned f = 0; f < aidx::kFrags; ++f)
+#pragma unroll
+            for (unsigned e = 0; e < 8; ++e)
+                st.w[f][e] = st.row < a.C ? a.wh[static_cast<std::size_t>(st.row) * kIdxHeads + f * 16U + 2U * e + lane / 16U] : 0.0F;
+    }
+    __device__ static unsigned tiles(const Args& a, const Ctx&) { return (a.pool_end - a.pool_begin + aidx::kKeys - 1) / aidx::kKeys; }
+    __device__ static bool live(const Args& a, const Ctx& c, unsigned kt) { return a.pool_begin + kt * aidx::kKeys < c.pend; }
+    __device__ static uint4 key_piece(const Args& a, const Ctx& c, unsigned kt, unsigned key, unsigned piece) {
+        const unsigned p = a.pool_begin + kt * aidx::kKeys + key;
+        if (p >= c.pend) return make_uint4(0U, 0U, 0U, 0U);
+        const float* src = a.pooled + static_cast<std::size_t>(p - a.pool_base) * kIdxDim + piece * 8U;
+        return aidx::pack8<O>(*reinterpret_cast<const float4*>(src), *reinterpret_cast<const float4*>(src + 4));
+    }
+    __device__ static void tile_begin(const Args&, const Ctx&, State&, unsigned) {}
+    __device__ static void fragment(const Args& a, const Ctx&, State& st, unsigned kt, unsigned kf, const aidx::Acc (&acc)[aidx::kFrags]) {
+        float sum = 0.0F;
+#pragma unroll
+        for (unsigned f = 0; f < aidx::kFrags; ++f)
+#pragma unroll
+            for (unsigned e = 0; e < 8; ++e) {
+                const float sc = acc[f][e] * kInvSqrt128;
+                sum = __builtin_fmaf(st.w[f][e], sc > 0.0F ? sc : 0.0F, sum);
+            }
+        sum = sum + __shfl_xor(sum, 16, 32);
+        const unsigned lane = threadIdx.x % 32U, p = a.pool_begin + kt * aidx::kKeys + kf * 16U + lane;
+        if (lane < 16U && p < st.pend) a.keys[static_cast<std::size_t>(st.row) * a.cap + (p - a.pool_begin)] = ordered_key(sum);
+    }
+    __device__ static void tile_end(const Args&, const Ctx&, State&, unsigned) {}
+};
+static_assert(aidx::kQueries % kIdxHeads == 0);
+
+// ---- STRIX_IDX_WMMA=exact: FP16 WMMA scores, then the pools at the selection cut-off are rescored with v3's
+// arithmetic, so the selected pools are the ones of the exact kernels (attn_core/index_score_band.hpp).
+//
+// idx_key_bound_kernel: max over the launch's pools of |k|_2^2, as a bit pattern in bound[0] (non-negative floats
+// order like their bits; a NaN sorts above +inf, so a non-finite key makes the refine kernel rescore everything).
+__global__ __launch_bounds__(256) void idx_key_bound_kernel(const float* pooled, unsigned pools, std::uint32_t* bound) {
+    const unsigned p = blockIdx.x * 256U + threadIdx.x;
+    float s2 = 0.0F;
+    if (p < pools) {
+        const auto* k = reinterpret_cast<const float4*>(pooled + static_cast<std::size_t>(p) * kIdxDim);
+#pragma unroll 8
+        for (unsigned i = 0; i < kIdxDim / 4; ++i) {
+            const float4 v = k[i];
+            s2 = __builtin_fmaf(v.x, v.x, s2);
+            s2 = __builtin_fmaf(v.y, v.y, s2);
+            s2 = __builtin_fmaf(v.z, v.z, s2);
+            s2 = __builtin_fmaf(v.w, v.w, s2);
+        }
+    }
+    unsigned u = __builtin_bit_cast(unsigned, s2);
+#pragma unroll
+    for (unsigned d = 16; d >= 1; d >>= 1U) {
+        const unsigned o = static_cast<unsigned>(__shfl_xor(static_cast<int>(u), static_cast<int>(d), 32));
+        u = o > u ? o : u;
+    }
+    if (threadIdx.x % 32U == 0) atomicMax(bound, u);
+}
+
+// idx_refine_rows_kernel, one work-group per row (blockIdx.x = row). Candidates are the retained keys of the earlier
+// pool windows (`old` of them, stored in front of the window keys, their pool ids in `ids`) and the WMMA keys of the
+// window. Three histogram passes over key bits 31..8 bracket the kIdxPools-th largest candidate key t in
+// [t_lo, t_hi]; the WMMA score error of the row is bounded by
+//   delta = kInvSqrt128 * sum_h |w_h| * f16_dot_error(|q_h|_2, max_p |k_p|_2)
+// and every candidate in [t_lo - 2 delta, t_hi + 2 delta] is rewritten with the dot and head chains of v3 (same keys
+// as idx_score_rows_v3_kernel): a superset of the band of index_score_band.hpp, so the selection that follows is the
+// exact one, in every window (a retained candidate keeps a value within delta of its exact score).
+// ids == nullptr: the pools of the earlier windows are not addressable any more (pool windows staged per call). Then
+// a row that sees a later window rescores every window pool at or above t_lo - 2 delta, so the keys it retains are
+// exact values, and retained candidates are left alone.
+// A row whose bound is not finite (operand outside the FP16 range, non-finite input) rescores all of its pools.
+// stats (diagnostic, may be null): [0] += rescored candidates, [1] += scored pools.
+constexpr unsigned kIrThreads = 256, kIrPer = (kIndexerKeyStride + kIrThreads - 1) / kIrThreads, kIrHeadLanes = kIrThreads / kIdxHeads;
+static_assert(kIrHeadLanes == 8 && kIdxDim % kIrHeadLanes == 0 && kIndexerKeyStride <= 65536U);
+__device__ __forceinline__ float idx_key_value(std::uint32_t key) {  // inverse of ordered_key
+    return __builtin_bit_cast(float, (key & 0x80000000U) != 0 ? (key & 0x7fffffffU) : ~key);
+}
+__global__ __launch_bounds__(kIrThreads) void idx_refine_rows_kernel(const float* pooled, unsigned t0, const float* qI, const float* wh,
+                                                                    std::uint32_t* keys_all, unsigned cap, unsigned old,
+                                                                    const std::uint32_t* ids_all, unsigned pool_begin, unsigned pool_end,
+                                                                    unsigned pool_base, const std::uint32_t* bound, std::uint32_t* stats) {
+    __shared__ unsigned hist[256];
+    __shared__ float slots_f[kIrThreads / 32];
+    __shared__ std::uint16_t list[kIndexerKeyStride];
+    __shared__ unsigned sh_n, sh_prefix, sh_rem;
+    const unsigned l = threadIdx.x, row = blockIdx.x;
+    const unsigned P = (t0 + row + 1) / kKpool;
+    if (P <= kIdxPools || P <= pool_begin) return;  // uniform: nothing scored for this row in this window
+    const unsigned added = (P < pool_end ? P : pool_end) - pool_begin, count = old + added;
+    if (count <= kIdxPools) return;                 // uniform: every candidate is selected
+    std::uint32_t* win = keys_all + static_cast<std::size_t>(row) * cap;
+    unsigned kv[kIrPer];
+#pragma unroll
+    for (unsigned j = 0; j < kIrPer; ++j) {
+        const unsigned c = l + j * kIrThreads;
+        kv[j] = c < count ? (c < old ? *(win - old + c) : win[c - old]) : 0U;
+    }
+    if (l == 0) {
+        sh_n = 0;
+        sh_prefix = 0;
+        sh_rem = kIdxPools;
+    }
+    // [t_lo, t_hi]: the 24 leading bits of the kIdxPools-th largest key, one byte per pass.
+#pragma unroll 1
+    for (unsigned shift = 24; shift >= 8; shift -= 8) {
+        hist[l] = 0;
+        __syncthreads();
+        const unsigned prefix = sh_prefix;
+#pragma unroll
+        for (unsigned j = 0; j < kIrPer; ++j)
+            if (l + j * kIrThreads < count && (shift == 24 || (kv[j] >> (shift + 8U)) == prefix))
+                atomicAdd(&hist[(kv[j] >> shift) & 255U], 1U);
+        __syncthreads();
+        if (l == 0) {
+            unsigned rem = sh_rem, d = 255;
+            for (; d > 0 && hist[d] < rem; --d) rem -= hist[d];
+            sh_rem = rem;
+            sh_prefix = (prefix << 8U) | d;
+        }
+        __syncthreads();
+    }
+    const unsigned top24 = sh_prefix;
+    // delta: kIrHeadLanes lanes per index head share its 128 query elements.
+    const unsigned head = l / kIrHeadLanes;
+    float q2 = 0.0F;
+#pragma unroll
+    for (unsigned j = 0; j < kIdxDim / kIrHeadLanes; ++j) {
+        const float x = qI[(static_cast<std::size_t>(row) * kIdxHeads + head) * kIdxDim + l % kIrHeadLanes + kIrHeadLanes * j];
+        q2 = __builtin_fmaf(x, x, q2);
+    }
+#pragma unroll
+    for (unsigned d = kIrHeadLanes / 2; d >= 1; d >>= 1U) q2 += __shfl_xor(q2, static_cast<int>(d), 32);
+    const float k2 = __builtin_bit_cast(float, bound[0]);
+    constexpr float kSafe2 = aidx::kF16Safe * aidx::kF16Safe;
+    float term = __builtin_fabsf(wh[static_cast<std::size_t>(row) * kIdxHeads + head]) *
+                 aidx::f16_dot_error(__builtin_sqrtf(q2), __builtin_sqrtf(k2));
+    if (!(q2 < kSafe2) || !(k2 < kSafe2)) term = __builtin_inff();
+    const float delta = aidx::group_reduce(l % kIrHeadLanes == 0 ? term : 0.0F, slots_f, [](float x, float y) { return x + y; }) *
+                        (kInvSqrt128 * 1.01F);
+    const bool all = !(delta < __builtin_inff()), band = P <= pool_end || ids_all != nullptr;
+    const float lo = idx_key_value(top24 << 8U) - 2.0F * delta, hi = idx_key_value((top24 << 8U) | 255U) + 2.0F * delta;
+    const std::uint32_t* ids = ids_all + static_cast<std::size_t>(row) * kMaxTokens;
+#pragma unroll
+    for (unsigned j = 0; j < kIrPer; ++j) {
+        const unsigned c = l + j * kIrThreads;
+        const float a = idx_key_value(kv[j]);
+        // negated comparisons: a bound that is not a number rescores the candidate
+        if (c < count && (c >= old || ids_all != nullptr) && (all || (!(a < lo) && !(band && a > hi))))
+            list[atomicAdd(&sh_n, 1U)] = static_cast<std::uint16_t>(c);
+    }
+    __syncthreads();
+    const unsigned n = sh_n;
+    if (stats != nullptr && l == 0) {
+        atomicAdd(&stats[0], n);
+        atomicAdd(&stats[1], added);
+    }
+    const auto* qr = (ConstF*)(qI + static_cast<std::size_t>(row) * kIdxHeads * kIdxDim);  // NOLINT: address-space cast
+    const auto* wr = (ConstF*)(wh + static_cast<std::size_t>(row) * kIdxHeads);            // NOLINT: address-space cast
+    for (unsigned i = l; i < n; i += kIrThreads) {
+        const unsigned c = list[i], pool = c < old ? ids[c] : pool_begin + c - old;
+        const float* kp = pooled + static_cast<std::size_t>(pool - pool_base) * kIdxDim;
+        float acc[kIdxHeads];
+#pragma unroll
+        for (unsigned h = 0; h < kIdxHeads; ++h) acc[h] = 0.0F;
+        for (unsigned i0 = 0; i0 < kIdxDim; i0 += kIs3L) {
+            float kk[kIs3L];
+#pragma unroll
+            for (unsigned x = 0; x < kIs3L; x += 4) {
+                const float4 t4 = *reinterpret_cast<const float4*>(kp + i0 + x);
+                kk[x] = t4.x;
+                kk[x + 1] = t4.y;
+                kk[x + 2] = t4.z;
+                kk[x + 3] = t4.w;
+            }
+#pragma unroll
+            for (unsigned h = 0; h < kIdxHeads; ++h) {
+                const SVec16 q = *reinterpret_cast<ConstV16*>(qr + static_cast<std::size_t>(h) * kIdxDim + i0);
+#pragma unroll
+                for (unsigned x = 0; x < kIs3L; ++x) acc[h] = __builtin_fmaf(q[x], kk[x], acc[h]);
+            }
+        }
+        float a2 = 0.0F;
+#pragma unroll
+        for (unsigned h = 0; h < kIdxHeads; ++h) {
+            const float sc = acc[h] * kInvSqrt128;
+            a2 = __builtin_fmaf(wr[h], sc > 0.0F ? sc : 0.0F, a2);
+        }
+        *(win - old + c) = ordered_key(a2);
+    }
+}
+
+// idx_select_kernel per row (blockIdx.x = row, t = t0 + row). P <= 512: every pool is selected, the list is 0 .. t.
+__global__ __launch_bounds__(1024) void idx_select_rows_kernel(const std::uint32_t* keys_all, unsigned cap, unsigned t0,
+                                                               std::uint32_t* tokens_all, std::uint32_t* n_all) {
+    __shared__ unsigned hist[256];
+    __shared__ unsigned sh_prefix, sh_mask, sh_remaining, sh_carry_eq, sh_carry_out;
+    __shared__ unsigned scan_eq[1024], scan_sel[1024];
+    const unsigned l = threadIdx.x, row = blockIdx.x, t = t0 + row;
+    const unsigned P = (t + 1) / kKpool;
+    std::uint32_t* tokens = tokens_all + static_cast<std::size_t>(row) * kMaxTokens;
+    if (P <= kIdxPools) {
+        strix::attn_core::select::all_tokens<1024>(l, t, tokens, n_all + row);
+        return;
+    }
+    const std::uint32_t* keys = keys_all + static_cast<std::size_t>(row) * cap;
+    const unsigned k = kIdxPools;
+    strix::attn_core::select::select_row<strix::attn_core::select::ChunkPolicy<kKpool, false>>(
+        keys, P, t, k, l, tokens, n_all + row,
+        strix::attn_core::select::ChunkStorage{hist, sh_prefix, sh_mask, sh_remaining, sh_carry_eq, sh_carry_out, scan_eq, scan_sel});
+}
+
+// Stable top-k of the retained prefix and the next score window.
+__global__ __launch_bounds__(1024) void idx_merge_window_kernel(std::uint32_t* keys_all, unsigned cap, unsigned t0, unsigned pool_begin, bool last,
+                                                               std::uint32_t* tokens_all, std::uint32_t* n_all) {
+    __shared__ unsigned hist[256];
+    __shared__ unsigned retained_keys[kIdxPools], retained_ids[kIdxPools];
+    __shared__ unsigned sh_prefix, sh_mask, sh_remaining, sh_carry_eq, sh_carry_out;
+    __shared__ unsigned scan_eq[1024], scan_sel[1024];
+    const unsigned l = threadIdx.x, row = blockIdx.x, t = t0 + row;
+    const unsigned P = (t + 1) / kKpool;
+    std::uint32_t* tokens = tokens_all + static_cast<std::size_t>(row) * kMaxTokens;
+    if (P <= kIdxPools) {
+        for (unsigned pos = l; pos <= t; pos += 1024) tokens[pos] = pos;
+        if (l == 0) n_all[row] = t + 1;
+        return;
+    }
+    std::uint32_t* keys = keys_all + static_cast<std::size_t>(row) * cap;
+    const unsigned old = pool_begin < kIdxPools ? pool_begin : kIdxPools;
+    const unsigned remaining = P > pool_begin ? P - pool_begin : 0U;
+    const unsigned added = remaining < kIndexerPoolWindow ? remaining : kIndexerPoolWindow;
+    const unsigned count = old + added, k = count < kIdxPools ? count : kIdxPools;
+    if (l < old) {
+        retained_keys[l] = keys[l];
+        retained_ids[l] = tokens[l];
+    }
+    __syncthreads();
+    if (l == 0) {
+        sh_prefix = 0;
+        sh_mask = 0;
+        sh_remaining = k;
+        sh_carry_eq = 0;
+        sh_carry_out = 0;
+    }
+    __syncthreads();
+    for (int shift = 24; count > kIdxPools && shift >= 0; shift -= 8) {
+        for (unsigned d = l; d < 256; d += 1024) hist[d] = 0;
+        __syncthreads();
+        const unsigned prefix = sh_prefix, mask = sh_mask;
+        for (unsigned p = l; p < count; p += 1024) {
+            const unsigned key = p < old ? retained_keys[p] : keys[kIdxPools + p - old];
+            if ((key & mask) == prefix) atomicAdd(&hist[(key >> shift) & 255U], 1U);
+        }
+        __syncthreads();
+        if (l == 0) {
+            unsigned rem = sh_remaining;
+            for (int d = 255; d >= 0; --d) {
+                if (hist[d] >= rem) {
+                    sh_prefix = prefix | (static_cast<unsigned>(d) << shift);
+                    break;
+                }
+                rem -= hist[d];
+            }
+            sh_remaining = rem;
+            sh_mask = mask | (255U << shift);
+        }
+        __syncthreads();
+    }
+    const unsigned kstar = sh_prefix, take_eq = sh_remaining;
+    for (unsigned base = 0; base < count; base += 1024) {
+        const unsigned p = base + l;
+        const unsigned key = p < count ? (p < old ? retained_keys[p] : keys[kIdxPools + p - old]) : 0U;
+        const unsigned eq = (p < count && key == kstar) ? 1U : 0U;
+        scan_eq[l] = eq;
+        __syncthreads();
+        for (unsigned off = 1; off < 1024; off <<= 1U) {
+            const unsigned v = l >= off ? scan_eq[l - off] : 0U;
+            __syncthreads();
+            scan_eq[l] += v;
+            __syncthreads();
+        }
+        const unsigned eq_rank = sh_carry_eq + scan_eq[l] - eq;
+        const unsigned sel = (p < count && (count <= kIdxPools || key > kstar || (eq && eq_rank < take_eq))) ? 1U : 0U;
+        scan_sel[l] = sel;
+        __syncthreads();
+        for (unsigned off = 1; off < 1024; off <<= 1U) {
+            const unsigned v = l >= off ? scan_sel[l - off] : 0U;
+            __syncthreads();
+            scan_sel[l] += v;
+            __syncthreads();
+        }
+        if (sel) {
+            const unsigned at = sh_carry_out + scan_sel[l] - 1;
+            keys[at] = key;
+            tokens[at] = p < old ? retained_ids[p] : pool_begin + p - old;
+        }
+        __syncthreads();
+        if (l == 1023) {
+            sh_carry_eq += scan_eq[1023];
+            sh_carry_out += scan_sel[1023];
+        }
+        __syncthreads();
+    }
+    // Read every retained ID before expansion overwrites the compact list.
+    const unsigned pool = l < sh_carry_out ? tokens[l] : 0U;
+    __syncthreads();
+    if (!last) return;
+    if (l < sh_carry_out)
+        for (unsigned j = 0; j < kKpool; ++j) tokens[l * kKpool + j] = pool * kKpool + j;
+    if (l == 0) {
+        unsigned n = sh_carry_out * kKpool;
+        for (unsigned pos = P * kKpool; pos <= t; ++pos) tokens[n++] = pos;
+        n_all[row] = n;
+    }
+}
+
+// Select v2: the same list as idx_select_rows_kernel (an integer set/order property: the same top-512 keys, ties broken
+// by ascending pool, pools in ascending order, then the tail), with 256 threads per row. Radix digit search: the 256
+// counts are scanned in parallel (descending digit) instead of by one thread; compaction: 1024 keys per round, 4
+// consecutive pools per thread, exclusive counts from a wave scan plus the per-wave totals (4 barriers per round
+// instead of 40).
+constexpr unsigned kSel2Threads = 256, kSel2Waves = kSel2Threads / 32;
+__global__ __launch_bounds__(kSel2Threads) void idx_select_rows_v2_kernel(const std::uint32_t* keys_all, unsigned cap, unsigned t0,
+                                                                         std::uint32_t* tokens_all, std::uint32_t* n_all) {
+    __shared__ unsigned hist[256];
+    __shared__ unsigned ws[kSel2Waves];
+    __shared__ unsigned sh_digit, sh_rem;
+    const unsigned l = threadIdx.x, row = blockIdx.x, t = t0 + row;
+    const unsigned P = (t + 1) / kKpool;
+    std::uint32_t* tokens = tokens_all + static_cast<std::size_t>(row) * kMaxTokens;
+    if (P <= kIdxPools) {
+        strix::attn_core::select::all_tokens<kSel2Threads>(l, t, tokens, n_all + row);
+        return;
+    }
+    const std::uint32_t* keys = keys_all + static_cast<std::size_t>(row) * cap;
+    strix::attn_core::select::select_row<strix::attn_core::select::QuadPolicy<kKpool, kSel2Threads, kSel2Waves>>(
+        keys, P, t, kIdxPools, l, tokens, n_all + row,
+        strix::attn_core::select::QuadStorage{hist, ws, sh_digit, sh_rem});
+}
+
+// ---------------------------------------------------------------- MLA (R13), split in four row-parallel stages
+// (a) q-tilde = mla_absorb_kernel per row.
+__global__ void mla_absorb_rows_kernel(const float* q, const std::uint16_t* kv_b, unsigned heads, float* qt) {
+    const unsigned l = blockIdx.x * 256 + threadIdx.x, h = blockIdx.y, r = blockIdx.z;
+    if (l >= kKvLora) return;
+    const float* qr = q + (static_cast<std::size_t>(r) * heads + h) * kMlaDim;
+    float acc = 0.0F;
+    for (unsigned d = 0; d < kMlaDim; ++d)
+        acc = __builtin_fmaf(qr[d], f16_to_float(kv_b[static_cast<std::size_t>(h * 2 * kMlaDim + d) * kKvLora + l]), acc);
+    qt[(static_cast<std::size_t>(r) * heads + h) * kKvLora + l] = acc;
+}
+// (b) scores: grid (token block of 256, row); thread = list index j, all heads at once (one latent read per token);
+// per (head, token) the chain over l ascending = mla_attn_kernel's, times the scale.
+constexpr unsigned kLatBlk = 64;
+template <unsigned H>
+__global__ __launch_bounds__(256) void mla_scores_rows_kernel(DsaSlot sl, const std::uint32_t* tokens_all, const std::uint32_t* n_all,
+                                                              const float* qt, float* e_all) {
+    __shared__ float qs[H][kLatBlk];
+    const unsigned r = blockIdx.y, j = blockIdx.x * 256 + threadIdx.x, n = n_all[r];
+    if (blockIdx.x * 256 >= n) return;  // uniform per block
+    const bool act = j < n;
+    const std::uint16_t* lat = sl.latent + static_cast<std::size_t>(act ? tokens_all[static_cast<std::size_t>(r) * kMaxTokens + j] : 0) * kKvLora;
+    const float* qr = qt + static_cast<std::size_t>(r) * H * kKvLora;
+    float acc[H];
+#pragma unroll
+    for (unsigned h = 0; h < H; ++h) acc[h] = 0.0F;
+    for (unsigned i0 = 0; i0 < kKvLora; i0 += kLatBlk) {
+        __syncthreads();
+        for (unsigned x = threadIdx.x; x < H * kLatBlk; x += 256) qs[x / kLatBlk][x % kLatBlk] = qr[(x / kLatBlk) * kKvLora + i0 + x % kLatBlk];
+        __syncthreads();
+        if (act)
+            for (unsigned i = 0; i < kLatBlk; ++i) {
+                const float c = bf16_to_float(lat[i0 + i]);
+#pragma unroll
+                for (unsigned h = 0; h < H; ++h) acc[h] = __builtin_fmaf(qs[h][i], c, acc[h]);
+            }
+    }
+    if (act) {
+        float* e = e_all + static_cast<std::size_t>(r) * H * kEStride;
+#pragma unroll
+        for (unsigned h = 0; h < H; ++h) e[h * kEStride + j] = acc[h] * kMlaScale;
+    }
+}
+// (c) softmax per (head, row), and the default EXACT scores / o-bar forms: the shared materialised rows-selected
+// latent attention (attn_core/selected_exact_mla.hpp) bound with this model's data. Scores: scores_kernel<H> (v5),
+// scores_paired_kernel<G> (v6 G = 0, v7 G = kS7Group); softmax_kernel<kLane> (kLane: p lane-major, slot
+// 9 * bitrev8(t % 256) + t / 256, for the lanes o-bar and o-bar v5); o-bar obar_lanes_kernel<Steps> (v7 Steps = kOb7Steps,
+// v10 Steps = 2), obar_tree_kernel (v2). The remaining versions below are the same chains and trees.
+struct MlaExactSpec {
+    static constexpr unsigned kLat = kKvLora, kListCap = kMaxTokens;
+    static constexpr float kScale = kMlaScale;
+    using Cache = DsaSlot;
+    __device__ static const std::uint16_t* latent(const DsaSlot& sl) { return sl.latent; }
+    __device__ static float exp(float x) { return declared_exp(x); }
+};
+namespace sx = strix::attn_core::selected_exact;
+static_assert(sx::kRounds<MlaExactSpec> == kObRounds && sx::kEStride<MlaExactSpec> == kEStride);
+constexpr unsigned kS7Group = 256;  // scores v7: rows per group of the 1-D grid
+constexpr unsigned kOb7Steps = 4;   // o-bar v7: k per staging batch (v10: 2)
+__device__ __forceinline__ unsigned bitrev8(unsigned x) { return __brev(x) >> 24; }
+// (d) o-bar: grid (latent block of kObLat dims, row); lane j accumulates p_t * c_t[l] over t = j, j + 256, ... (fmaf,
+// ascending t) for two heads x kObLat dims at a time, then 2 * kObLat lds_tree<256> pairings evaluated together.
+constexpr unsigned kObLat = 16, kObTrees = 2 * kObLat;
+__global__ __launch_bounds__(256) void mla_obar_rows_kernel(DsaSlot sl, const std::uint32_t* tokens_all, const std::uint32_t* n_all,
+                                                            unsigned heads, const float* e_all, float* ob) {
+    __shared__ float s[kObTrees][256];
+    const unsigned lb = blockIdx.x * kObLat, r = blockIdx.y, j = threadIdx.x, n = n_all[r];
+    const std::uint32_t* tok = tokens_all + static_cast<std::size_t>(r) * kMaxTokens;
+    for (unsigned h0 = 0; h0 < heads; h0 += 2) {
+        const float* e0 = e_all + (static_cast<std::size_t>(r) * heads + h0) * kEStride;
+        const float* e1 = e0 + kEStride;
+        float acc[2][kObLat];
+#pragma unroll
+        for (unsigned c = 0; c < kObLat; ++c) acc[0][c] = acc[1][c] = 0.0F;
+        for (unsigned t = j; t < n; t += 256) {
+            const std::uint16_t* lat = sl.latent + static_cast<std::size_t>(tok[t]) * kKvLora + lb;
+            const float p0 = e0[t], p1 = e1[t];
+#pragma unroll
+            for (unsigned c = 0; c < kObLat; ++c) {
+                const float cv = bf16_to_float(lat[c]);
+                acc[0][c] = __builtin_fmaf(p0, cv, acc[0][c]);
+                acc[1][c] = __builtin_fmaf(p1, cv, acc[1][c]);
+            }
+        }
+        __syncthreads();
+#pragma unroll
+        for (unsigned c = 0; c < kObLat; ++c) {
+            s[c][j] = acc[0][c];
+            s[kObLat + c][j] = acc[1][c];
+        }
+        __syncthreads();
+        for (unsigned hh = 128; hh > 0; hh >>= 1U) {
+            for (unsigned x = j; x < kObTrees * hh; x += 256) {
+                const unsigned q = x / hh, l = x % hh;
+                s[q][l] = s[q][l] + s[q][l + hh];
+            }
+            __syncthreads();
+        }
+        if (j < kObTrees) ob[(static_cast<std::size_t>(r) * heads + h0 + j / kObLat) * kKvLora + lb + j % kObLat] = s[j][0];
+    }
+}
+// (e) output chain per (head, row), = the tail of mla_attn_kernel.
+__global__ __launch_bounds__(256) void mla_out_rows_kernel(const float* ob, const std::uint16_t* kv_b, unsigned heads, float* o) {
+    const unsigned h = blockIdx.x, r = blockIdx.y, d = threadIdx.x;
+    const float* obr = ob + (static_cast<std::size_t>(r) * heads + h) * kKvLora;
+    float acc = 0.0F;
+    for (unsigned i = 0; i < kKvLora; ++i)
+        acc = __builtin_fmaf(obr[i], f16_to_float(kv_b[static_cast<std::size_t>(h * 2 * kMlaDim + kMlaDim + d) * kKvLora + i]), acc);
+    o[(static_cast<std::size_t>(r) * heads + h) * kMlaDim + d] = acc;
+}
+
+// ---------------------------------------------------------------- MLA v2: same per-output expressions, other
+// placement. The absorb and output chains become tiled VALU GEMMs over rows (kv_b read once per 64 rows instead of per
+// row); scores read q-tilde transposed with vector LDS loads; o-bar stages the row's latent tile once in LDS and runs the
+// lds_tree<256> pairing as 3 LDS levels (128, 64, 32) + 5 shuffle levels (16 .. 1) inside wave 0.
+constexpr unsigned kGT = 64, kGK = 32;  // GEMM tile: 64 rows x 64 cols, K step 32; thread = 4 x 4 outputs
+// Y[r][h][c] = chain over k ascending of fmaf(A[r][h][k], float(W(h, k, c)), acc), k < K.
+//   absorb: A = q [C][H][256], W(h, d, l) = kv_b[(h*512 + d)*512 + l], c = l < 512, K = 256
+//   out:    A = ob [C][H][512], W(h, l, d) = kv_b[(h*512 + 256 + d)*512 + l], c = d < 256, K = 512
+template <bool kOut>
+__global__ __launch_bounds__(256) void mla_gemm_rows_kernel(const float* A, const std::uint16_t* kv_b, unsigned heads, unsigned C, float* Y) {
+    constexpr unsigned K = kOut ? kKvLora : kMlaDim, NC = kOut ? kMlaDim : kKvLora;
+    __shared__ float as[kGT][kGK + 1];
+    __shared__ float ws[kGK][kGT + 1];
+    const unsigned r0 = blockIdx.x * kGT, c0 = blockIdx.y * kGT, h = blockIdx.z, tid = threadIdx.x, tr = tid / 16, tc = tid % 16;
+    float acc[4][4];
+#pragma unroll
+    for (unsigned i = 0; i < 4; ++i)
+#pragma unroll
+        for (unsigned j = 0; j < 4; ++j) acc[i][j] = 0.0F;
+    for (unsigned k0 = 0; k0 < K; k0 += kGK) {
+        __syncthreads();
+        for (unsigned x = tid; x < kGT * kGK; x += 256) {  // A tile [64 rows][32 k]
+            const unsigned rr = x / kGK, kk = x % kGK, r = r0 + rr;
+            as[rr][kk] = r < C ? A[(static_cast<std::size_t>(r) * heads + h) * K + k0 + kk] : 0.0F;
+        }
+        for (unsigned x = tid; x < kGK * kGT; x += 256) {  // W tile [32 k][64 c]
+            std::size_t at;
+            unsigned kk, cc;
+            if (kOut) {  // kv_b row (h*512 + 256 + d), column l: consecutive x -> consecutive l (coalesced)
+                cc = x / kGK;
+                kk = x % kGK;
+                at = static_cast<std::size_t>(h * 2 * kMlaDim + kMlaDim + c0 + cc) * kKvLora + k0 + kk;
+            } else {     // kv_b row (h*512 + d), column l
+                kk = x / kGT;
+                cc = x % kGT;
+                at = static_cast<std::size_t>(h * 2 * kMlaDim + k0 + kk) * kKvLora + c0 + cc;
+            }
+            ws[kk][cc] = f16_to_float(kv_b[at]);
+        }
+        __syncthreads();
+#pragma unroll 4
+        for (unsigned kk = 0; kk < kGK; ++kk) {
+            float a[4], w[4];
+#pragma unroll
+            for (unsigned i = 0; i < 4; ++i) a[i] = as[tr * 4 + i][kk];
+#pragma unroll
+            for (unsigned j = 0; j < 4; ++j) w[j] = ws[kk][tc * 4 + j];
+#pragma unroll
+            for (unsigned i = 0; i < 4; ++i)
+#pragma unroll
+                for (unsigned j = 0; j < 4; ++j) acc[i][j] = __builtin_fmaf(a[i], w[j], acc[i][j]);
+        }
+    }
+#pragma unroll
+    for (unsigned i = 0; i < 4; ++i) {
+        const unsigned r = r0 + tr * 4 + i;
+        if (r >= C) continue;
+#pragma unroll
+        for (unsigned j = 0; j < 4; ++j) Y[(static_cast<std::size_t>(r) * heads + h) * NC + c0 + tc * 4 + j] = acc[i][j];
+    }
+}
+// GEMM v2: mla_gemm_rows_kernel's outputs and per-output chain (k ascending from +0, fmaf(A, W, acc)) with a 128-row x
+// 64-column tile and 8 x 4 outputs per thread. A is staged transposed ([k][row], padded) and W as f32 ([k][col], padded),
+// so one k step is 3 ds_load_b128 + 32 FMAs; the next K stage is loaded into registers while the current one is used.
+constexpr unsigned kG2R = 128, kG2C = 64, kG2K = 32, kG2PadR = kG2R + 4, kG2PadC = kG2C + 4;
+template <bool kOut>
+__global__ __launch_bounds__(256) void mla_gemm_rows_v2_kernel(const float* A, const std::uint16_t* kv_b, unsigned heads, unsigned C, float* Y) {
+    constexpr unsigned K = kOut ? kKvLora : kMlaDim, NC = kOut ? kMlaDim : kKvLora;
+    __shared__ alignas(16) float as[kG2K][kG2PadR];  // 16.5 KB
+    __shared__ alignas(16) float ws[kG2K][kG2PadC];  // 8.5 KB
+    const unsigned r0 = blockIdx.x * kG2R, c0 = blockIdx.y * kG2C, h = blockIdx.z, tid = threadIdx.x, tr = tid / 16, tc = tid % 16;
+    float4 ar[4];
+    uint4 wr;
+    auto load = [&](unsigned k0) {
+#pragma unroll
+        for (unsigned i = 0; i < 4; ++i) {  // A tile [128 rows][32 k]: x -> row x / 8, k quad x % 8 (128 B per row)
+            const unsigned x = tid + 256 * i, rr = x / 8, q = x % 8, r = r0 + rr;
+            ar[i] = r < C ? *reinterpret_cast<const float4*>(A + (static_cast<std::size_t>(r) * heads + h) * K + k0 + 4 * q)
+                          : float4{0.0F, 0.0F, 0.0F, 0.0F};
+        }
+        std::size_t at;
+        if (kOut) {  // column c (kv_b row h*512 + 256 + c), 8 consecutive k
+            const unsigned cc = tid / 4, k8 = tid % 4;
+            at = static_cast<std::size_t>(h * 2 * kMlaDim + kMlaDim + c0 + cc) * kKvLora + k0 + 8 * k8;
+        } else {     // k row (kv_b row h*512 + k), 8 consecutive c
+            const unsigned kk = tid / 8, c8 = tid % 8;
+            at = static_cast<std::size_t>(h * 2 * kMlaDim + k0 + kk) * kKvLora + c0 + 8 * c8;
+        }
+        wr = *reinterpret_cast<const uint4*>(kv_b + at);
+    };
+    auto store = [&]() {
+#pragma unroll
+        for (unsigned i = 0; i < 4; ++i) {
+            const unsigned x = tid + 256 * i, rr = x / 8, q = x % 8;
+            as[4 * q + 0][rr] = ar[i].x;
+            as[4 * q + 1][rr] = ar[i].y;
+            as[4 * q + 2][rr] = ar[i].z;
+            as[4 * q + 3][rr] = ar[i].w;
+        }
+        const std::uint32_t wv[4] = {wr.x, wr.y, wr.z, wr.w};
+        float f[8];
+#pragma unroll
+        for (unsigned ii = 0; ii < 8; ++ii) f[ii] = f16_to_float(static_cast<std::uint16_t>(wv[ii / 2] >> (16 * (ii % 2))));
+        if (kOut) {
+            const unsigned cc = tid / 4, k8 = tid % 4;
+#pragma unroll
+            for (unsigned ii = 0; ii < 8; ++ii) ws[8 * k8 + ii][cc] = f[ii];
+        } else {
+            const unsigned kk = tid / 8, c8 = tid % 8;
+            *reinterpret_cast<float4*>(&ws[kk][8 * c8]) = float4{f[0], f[1], f[2], f[3]};
+            *reinterpret_cast<float4*>(&ws[kk][8 * c8 + 4]) = float4{f[4], f[5], f[6], f[7]};
+        }
+    };
+    float acc[8][4];
+#pragma unroll
+    for (unsigned i = 0; i < 8; ++i)
+#pragma unroll
+        for (unsigned j = 0; j < 4; ++j) acc[i][j] = 0.0F;
+    load(0);
+    for (unsigned k0 = 0; k0 < K; k0 += kG2K) {
+        __syncthreads();  // previous stage consumed; this stage's loads complete
+        store();
+        __syncthreads();
+        if (k0 + kG2K < K) load(k0 + kG2K);
+#pragma unroll 4
+        for (unsigned kk = 0; kk < kG2K; ++kk) {
+            const float4 a0 = *reinterpret_cast<const float4*>(&as[kk][tr * 8]), a1 = *reinterpret_cast<const float4*>(&as[kk][tr * 8 + 4]);
+            const float4 w4 = *reinterpret_cast<const float4*>(&ws[kk][tc * 4]);
+            const float a[8] = {a0.x, a0.y, a0.z, a0.w, a1.x, a1.y, a1.z, a1.w}, w[4] = {w4.x, w4.y, w4.z, w4.w};
+#pragma unroll
+            for (unsigned i = 0; i < 8; ++i)
+#pragma unroll
+                for (unsigned j = 0; j < 4; ++j) acc[i][j] = __builtin_fmaf(a[i], w[j], acc[i][j]);
+        }
+    }
+#pragma unroll
+    for (unsigned i = 0; i < 8; ++i) {
+        const unsigned r = r0 + tr * 8 + i;
+        if (r < C)
+            *reinterpret_cast<float4*>(Y + (static_cast<std::size_t>(r) * heads + h) * NC + c0 + tc * 4) =
+                float4{acc[i][0], acc[i][1], acc[i][2], acc[i][3]};
+    }
+}
+
+// GEMM v3: 128 rows x 128 columns, thread = 8 x 8 outputs, K step 16. The v2 chain is unchanged: each output starts
+// at +0 and consumes fmaf(A, W, acc) for every k ascending (no partial sums). Four ds_load_b128 feed 64 FMAs instead
+// of v2's three for 32; diagonal row/column pairs permit explicit VOPD without same-bank sources. Columns are two
+// contiguous quads 64 apart, avoiding the LDS bank conflicts of eight-contiguous-column thread tiles; stores remain
+// coalesced float4. A is read NC/128 times instead of NC/64. W is still converted once per 128-row tile: keeping a
+// whole head x 64-column W in f32 LDS would alone cost 64 / 128 KiB (absorb / out), leaving too little occupancy.
+// A single 16.5 KiB LDS stage plus next-stage register prefetch targets <=128 VGPRs (64 accumulators, 16 operands,
+// 12 prefetched words, address/conversion temporaries), to admit at least two 256-thread CTAs per SIMD pair. Full
+// LDS double buffering would use 33 KiB and prevent two CTAs in a 64 KiB budget. Measured on the pair: bitwise equal
+// to v2 (prefill logits and state at 8K and 32K), MLA GEMM time per rank -41 % at 8K and -43 % at 32K.
+// Grid: x = column tile (fastest), y = row tile, z = head, so the NC / 128 CTAs that share one A tile run back to back
+// and read it from L2 (with rows fastest, a head's whole A slice, C x 1 KiB at a 32 KiB row stride, was streamed once
+// per column tile: absorb per row went 2.3 -> 4.1 us from C 2048 to 4096). Placement only: same per-output chains.
+// Heads-mid order (STRIX_GLM_PF_MLA_GEMM_HEADS, default 1; 0 = the order above): grid x = column tile, y = head,
+// z = row tile. With one head in flight every resident CTA reads rows of the same 1 KiB head slice at the 32 / 64 KiB
+// row stride of [C][H][K], so the requests camp on a few memory channels; with the heads of a row tile in flight the
+// slices spread over the whole row. Measured on the shared WMMA tile core (same layout, C 4096): absorb 6.8 -> 3.4 ms,
+// out 6.4 -> 4.5 ms; group sizes 4..16 equal the plain heads-mid order. Placement only: the same bits.
+constexpr unsigned kG3R = 128, kG3C = 128, kG3K = 16, kG3Pad = 132;
+inline dim3 g3_grid(unsigned nc, unsigned C, unsigned heads, bool heads_mid) {
+    const unsigned rows = (C + kG3R - 1) / kG3R;
+    return heads_mid ? dim3(nc / kG3C, heads, rows) : dim3(nc / kG3C, rows, heads);
+}
+#include "glm/prefill/glm_pf_mla_gemm_vopd.inc"
+// kQ16 (absorb only): the epilogue stores the bf16 image tile::to_bf16(acc) of the unchanged FP32 chains, [C][H][512]
+// u16 in Y's memory, i.e. exactly the operand bits the FAST flash core makes of FP32 q-tilde (frag_from_f32<bf16>):
+// half the q-tilde bytes written here and read there.
+template <bool kOut, bool kQ16 = false>
+__global__ __launch_bounds__(256) void mla_gemm_rows_v3_kernel(const float* A, const std::uint16_t* kv_b, unsigned heads, unsigned C, float* Y,
+                                                               bool heads_mid) {
+    static_assert(!(kOut && kQ16), "the out GEMM keeps its FP32 output");
+    constexpr unsigned K = kOut ? kKvLora : kMlaDim, NC = kOut ? kMlaDim : kKvLora;
+    __shared__ alignas(16) float as[kG3K][kG3Pad];
+    __shared__ alignas(16) float ws[kG3K][kG3Pad];
+    const unsigned r0 = (heads_mid ? blockIdx.z : blockIdx.y) * kG3R, c0 = blockIdx.x * kG3C, h = heads_mid ? blockIdx.y : blockIdx.z;
+    const unsigned tid = threadIdx.x, tr = tid / 16, tc = tid % 16;
+    float4 ar[2];
+    uint4 wr;
+    auto load = [&](unsigned k0) {
+#pragma unroll
+        for (unsigned i = 0; i < 2; ++i) {  // A tile [128 rows][16 k], coalesced quads
+            const unsigned x = tid + 256 * i, rr = x / 4, q = x % 4, r = r0 + rr;
+            ar[i] = r < C ? *reinterpret_cast<const float4*>(A + (static_cast<std::size_t>(r) * heads + h) * K + k0 + 4 * q)
+                          : float4{0.0F, 0.0F, 0.0F, 0.0F};
+        }
+        std::size_t at;
+        if (kOut) {
+            const unsigned cc = tid / 2, k8 = tid % 2;
+            at = static_cast<std::size_t>(h * 2 * kMlaDim + kMlaDim + c0 + cc) * kKvLora + k0 + 8 * k8;
+        } else {
+            const unsigned kk = tid / 16, c8 = tid % 16;
+            at = static_cast<std::size_t>(h * 2 * kMlaDim + k0 + kk) * kKvLora + c0 + 8 * c8;
+        }
+        wr = *reinterpret_cast<const uint4*>(kv_b + at);
+    };
+    auto store = [&]() {
+#pragma unroll
+        for (unsigned i = 0; i < 2; ++i) {
+            const unsigned x = tid + 256 * i, rr = x / 4, q = x % 4;
+            as[4 * q + 0][rr] = ar[i].x;
+            as[4 * q + 1][rr] = ar[i].y;
+            as[4 * q + 2][rr] = ar[i].z;
+            as[4 * q + 3][rr] = ar[i].w;
+        }
+        const std::uint32_t wv[4] = {wr.x, wr.y, wr.z, wr.w};
+        float f[8];
+#pragma unroll
+        for (unsigned ii = 0; ii < 8; ++ii) f[ii] = f16_to_float(static_cast<std::uint16_t>(wv[ii / 2] >> (16 * (ii % 2))));
+        if (kOut) {
+            const unsigned cc = tid / 2, k8 = tid % 2;
+#pragma unroll
+            for (unsigned ii = 0; ii < 8; ++ii) ws[8 * k8 + ii][cc] = f[ii];
+        } else {
+            const unsigned kk = tid / 16, c8 = tid % 16;
+            *reinterpret_cast<float4*>(&ws[kk][8 * c8]) = float4{f[0], f[1], f[2], f[3]};
+            *reinterpret_cast<float4*>(&ws[kk][8 * c8 + 4]) = float4{f[4], f[5], f[6], f[7]};
+        }
+    };
+    float acc[64];
+#pragma unroll
+    for (unsigned i = 0; i < 64; ++i) acc[i] = 0.0F;
+    load(0);
+    for (unsigned k0 = 0; k0 < K; k0 += kG3K) {
+        __syncthreads();  // every lane consumed the previous stage before it can be overwritten
+        store();
+        __syncthreads();
+        if (k0 + kG3K < K) load(k0 + kG3K);
+#pragma unroll 2
+        for (unsigned kk = 0; kk < kG3K; ++kk) {
+            const float4 a0 = *reinterpret_cast<const float4*>(&as[kk][tr * 8]), a1 = *reinterpret_cast<const float4*>(&as[kk][tr * 8 + 4]);
+            const float4 w0 = *reinterpret_cast<const float4*>(&ws[kk][tc * 4]), w1 = *reinterpret_cast<const float4*>(&ws[kk][64 + tc * 4]);
+            const float av[8] = {a0.x, a0.y, a0.z, a0.w, a1.x, a1.y, a1.z, a1.w};
+            const float wv[8] = {w0.x, w0.y, w0.z, w0.w, w1.x, w1.y, w1.z, w1.w};
+            mla_gemm_vopd_rows<0>(acc, av, wv);
+            mla_gemm_vopd_rows<1>(acc, av, wv);
+            mla_gemm_vopd_rows<2>(acc, av, wv);
+            mla_gemm_vopd_rows<3>(acc, av, wv);
+        }
+    }
+#pragma unroll
+    for (unsigned i = 0; i < 8; ++i) {
+        const unsigned r = r0 + tr * 8 + i;
+        if (r < C && kQ16) {
+            namespace T = strix::attn_core::tile;
+            std::uint16_t* dst = reinterpret_cast<std::uint16_t*>(Y) + (static_cast<std::size_t>(r) * heads + h) * NC + c0 + tc * 4;
+            *reinterpret_cast<uint2*>(dst) = uint2{T::pack2<T::Operand::bf16>(acc[8 * i], acc[8 * i + 1]),
+                                                   T::pack2<T::Operand::bf16>(acc[8 * i + 2], acc[8 * i + 3])};
+            *reinterpret_cast<uint2*>(dst + 64) = uint2{T::pack2<T::Operand::bf16>(acc[8 * i + 4], acc[8 * i + 5]),
+                                                        T::pack2<T::Operand::bf16>(acc[8 * i + 6], acc[8 * i + 7])};
+        } else if (r < C) {
+            float* dst = Y + (static_cast<std::size_t>(r) * heads + h) * NC + c0 + tc * 4;
+            *reinterpret_cast<float4*>(dst) = float4{acc[8 * i], acc[8 * i + 1], acc[8 * i + 2], acc[8 * i + 3]};
+            *reinterpret_cast<float4*>(dst + 64) = float4{acc[8 * i + 4], acc[8 * i + 5], acc[8 * i + 6], acc[8 * i + 7]};
+        }
+    }
+}
+
+// Scores v2: thread = list index j; q-tilde of the row staged transposed [i][H] so 4 heads come in one LDS load; the
+// token's latent read 8 dims at a time. Per (head, token) the chain over l ascending is unchanged.
+template <unsigned H>
+__global__ __launch_bounds__(256) void mla_scores_v2_kernel(DsaSlot sl, const std::uint32_t* tokens_all, const std::uint32_t* n_all,
+                                                            const float* qt, float* e_all) {
+    __shared__ float4 qs[kLatBlk][H / 4];
+    const unsigned r = blockIdx.y, j = blockIdx.x * 256 + threadIdx.x, n = n_all[r];
+    if (blockIdx.x * 256 >= n) return;  // uniform per block
+    const bool act = j < n;
+    const uint4* lat = reinterpret_cast<const uint4*>(sl.latent + static_cast<std::size_t>(act ? tokens_all[static_cast<std::size_t>(r) * kMaxTokens + j] : 0) * kKvLora);
+    const float* qr = qt + static_cast<std::size_t>(r) * H * kKvLora;
+    float acc[H];
+#pragma unroll
+    for (unsigned h = 0; h < H; ++h) acc[h] = 0.0F;
+    for (unsigned i0 = 0; i0 < kKvLora; i0 += kLatBlk) {
+        __syncthreads();
+        for (unsigned x = threadIdx.x; x < kLatBlk * H; x += 256) {  // qs[i][h] = qt[h][i0 + i]
+            const unsigned i = x % kLatBlk, h = x / kLatBlk;
+            reinterpret_cast<float*>(qs[i])[h] = qr[h * kKvLora + i0 + i];
+        }
+        __syncthreads();
+        if (act)
+            for (unsigned i = 0; i < kLatBlk; i += 8) {
+                const uint4 v = lat[(i0 + i) / 8];
+                const std::uint32_t wv[4] = {v.x, v.y, v.z, v.w};
+#pragma unroll
+                for (unsigned ii = 0; ii < 8; ++ii) {
+                    const float c = bf16_to_float(static_cast<std::uint16_t>(wv[ii / 2] >> (16 * (ii % 2))));
+#pragma unroll
+                    for (unsigned hq = 0; hq < H / 4; ++hq) {
+                        const float4 q4 = qs[i + ii][hq];
+                        acc[4 * hq + 0] = __builtin_fmaf(q4.x, c, acc[4 * hq + 0]);
+                        acc[4 * hq + 1] = __builtin_fmaf(q4.y, c, acc[4 * hq + 1]);
+                        acc[4 * hq + 2] = __builtin_fmaf(q4.z, c, acc[4 * hq + 2]);
+                        acc[4 * hq + 3] = __builtin_fmaf(q4.w, c, acc[4 * hq + 3]);
+                    }
+                }
+            }
+    }
+    if (act) {
+        float* e = e_all + static_cast<std::size_t>(r) * H * kEStride;
+#pragma unroll
+        for (unsigned h = 0; h < H; ++h) e[h * kEStride + j] = acc[h] * kMlaScale;
+    }
+}
+// Scores v3: CTA = 64 list entries x all heads of one row; thread = 2 entries (tp, tp + 32) x H / 8 heads (one wave
+// shares its heads, so q-tilde comes as LDS broadcasts). Per 64-dim block the latent tile [dim][entry] (f32, the exact
+// widening of the bf16 cache) and q-tilde [dim][head] are staged in LDS. Per (head, entry) the chain over l ascending
+// from +0 is v2's (fmaf(q, c, acc)), times the scale: same bits.
+constexpr unsigned kS3Tok = 64, kS3K = 64;
+template <unsigned H>
+__global__ __launch_bounds__(256) void mla_scores_v3_kernel(DsaSlot sl, const std::uint32_t* tokens_all, const std::uint32_t* n_all,
+                                                            const float* qt, float* e_all) {
+    constexpr unsigned HPT = H / 8;  // heads per thread: 4 (TP2) or 8
+    __shared__ float lt[kS3K][kS3Tok];
+    __shared__ alignas(16) float qs[kS3K][H];
+    const unsigned r = blockIdx.y, t0 = blockIdx.x * kS3Tok, n = n_all[r];
+    if (t0 >= n) return;  // uniform per block
+    const unsigned tid = threadIdx.x, tp = tid % 32, hg = tid / 32;
+    const std::uint32_t* tok = tokens_all + static_cast<std::size_t>(r) * kMaxTokens;
+    const float* qr = qt + static_cast<std::size_t>(r) * H * kKvLora;
+    float acc[2][HPT];
+#pragma unroll
+    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+        for (unsigned b = 0; b < HPT; ++b) acc[a][b] = 0.0F;
+    for (unsigned k0 = 0; k0 < kKvLora; k0 += kS3K) {
+        __syncthreads();  // previous block's tiles consumed
+        for (unsigned x = tid; x < kS3Tok * (kS3K / 8); x += 256) {  // lanes walk entries: conflict-free LDS stores
+            const unsigned tt = x % kS3Tok, c8 = x / kS3Tok, j = t0 + tt;
+            uint4 v{0U, 0U, 0U, 0U};
+            if (j < n) v = *reinterpret_cast<const uint4*>(sl.latent + static_cast<std::size_t>(tok[j]) * kKvLora + k0 + c8 * 8);
+            const std::uint32_t wv[4] = {v.x, v.y, v.z, v.w};
+#pragma unroll
+            for (unsigned ii = 0; ii < 8; ++ii) lt[c8 * 8 + ii][tt] = bf16_to_float(static_cast<std::uint16_t>(wv[ii / 2] >> (16 * (ii % 2))));
+        }
+        for (unsigned x = tid; x < (kS3K / 4) * H; x += 256) {  // qs[i][h] = qt[h][k0 + i]; lanes walk heads: conflict-free stores
+            const unsigned h = x % H, i4 = x / H;
+            const float4 v = *reinterpret_cast<const float4*>(qr + static_cast<std::size_t>(h) * kKvLora + k0 + 4 * i4);
+            qs[4 * i4 + 0][h] = v.x;
+            qs[4 * i4 + 1][h] = v.y;
+            qs[4 * i4 + 2][h] = v.z;
+            qs[4 * i4 + 3][h] = v.w;
+        }
+        __syncthreads();
+#pragma unroll 4
+        for (unsigned i = 0; i < kS3K; ++i) {
+            const float c0 = lt[i][tp], c1 = lt[i][tp + 32];
+#pragma unroll
+            for (unsigned a = 0; a < HPT; a += 4) {
+                const float4 q4 = *reinterpret_cast<const float4*>(&qs[i][hg * HPT + a]);
+                acc[0][a + 0] = __builtin_fmaf(q4.x, c0, acc[0][a + 0]);
+                acc[0][a + 1] = __builtin_fmaf(q4.y, c0, acc[0][a + 1]);
+                acc[0][a + 2] = __builtin_fmaf(q4.z, c0, acc[0][a + 2]);
+                acc[0][a + 3] = __builtin_fmaf(q4.w, c0, acc[0][a + 3]);
+                acc[1][a + 0] = __builtin_fmaf(q4.x, c1, acc[1][a + 0]);
+                acc[1][a + 1] = __builtin_fmaf(q4.y, c1, acc[1][a + 1]);
+                acc[1][a + 2] = __builtin_fmaf(q4.z, c1, acc[1][a + 2]);
+                acc[1][a + 3] = __builtin_fmaf(q4.w, c1, acc[1][a + 3]);
+            }
+        }
+    }
+    float* e = e_all + static_cast<std::size_t>(r) * H * kEStride;
+#pragma unroll
+    for (unsigned sidx = 0; sidx < 2; ++sidx) {
+        const unsigned j = t0 + tp + 32 * sidx;
+        if (j < n)
+#pragma unroll
+            for (unsigned a = 0; a < HPT; ++a) e[static_cast<std::size_t>(hg * HPT + a) * kEStride + j] = acc[sidx][a] * kMlaScale;
+    }
+}
+
+// Scores v4: v3 output ownership and ascending FMAs, with 32-dim double-buffered tiles.
+// Prefetch the next latent/q tile into registers while consuming the current LDS tile.
+// LDS = 2 * 32 * (64 + H) * 4: 24 / 32 KiB for H = 32 / 64.
+constexpr unsigned kS4K = 32;
+template <unsigned H>
+__global__ __launch_bounds__(256) void mla_scores_v4_kernel(DsaSlot sl, const std::uint32_t* tokens_all, const std::uint32_t* n_all,
+                                                            const float* qt, float* e_all) {
+    constexpr unsigned HPT = H / 8;  // heads per thread: 4 (TP2) or 8
+    __shared__ float lt[2][kS4K][kS3Tok];
+    __shared__ alignas(16) float qs[2][kS4K][H];
+    const unsigned r = blockIdx.y, t0 = blockIdx.x * kS3Tok, n = n_all[r];
+    if (t0 >= n) return;  // uniform per block
+    const unsigned tid = threadIdx.x, tp = tid % 32, hg = tid / 32;
+    const std::uint32_t* tok = tokens_all + static_cast<std::size_t>(r) * kMaxTokens;
+    const float* qr = qt + static_cast<std::size_t>(r) * H * kKvLora;
+    float acc[2][HPT];
+#pragma unroll
+    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+        for (unsigned b = 0; b < HPT; ++b) acc[a][b] = 0.0F;
+    uint4 lr;
+    float4 qr4[H / 32];
+    auto load = [&](unsigned k0) {
+        const unsigned tt = tid % kS3Tok, c8 = tid / kS3Tok, j = t0 + tt;
+        lr = j < n ? *reinterpret_cast<const uint4*>(sl.latent + static_cast<std::size_t>(tok[j]) * kKvLora + k0 + c8 * 8)
+                   : uint4{0, 0, 0, 0};
+#pragma unroll
+        for (unsigned i = 0; i < H / 32; ++i) {
+            const unsigned x = tid + 256 * i, h = x % H, i4 = x / H;
+            qr4[i] = *reinterpret_cast<const float4*>(qr + static_cast<std::size_t>(h) * kKvLora + k0 + 4 * i4);
+        }
+    };
+    auto store = [&](unsigned buf) {
+        const unsigned tt = tid % kS3Tok, c8 = tid / kS3Tok;
+        const std::uint32_t wv[4] = {lr.x, lr.y, lr.z, lr.w};
+#pragma unroll
+        for (unsigned ii = 0; ii < 8; ++ii)
+            lt[buf][c8 * 8 + ii][tt] = bf16_to_float(static_cast<std::uint16_t>(wv[ii / 2] >> (16 * (ii % 2))));
+#pragma unroll
+        for (unsigned i = 0; i < H / 32; ++i) {
+            const unsigned x = tid + 256 * i, h = x % H, i4 = x / H;
+            qs[buf][4 * i4 + 0][h] = qr4[i].x;
+            qs[buf][4 * i4 + 1][h] = qr4[i].y;
+            qs[buf][4 * i4 + 2][h] = qr4[i].z;
+            qs[buf][4 * i4 + 3][h] = qr4[i].w;
+        }
+    };
+    load(0);
+    store(0);
+    __syncthreads();
+    for (unsigned k0 = 0; k0 < kKvLora; k0 += kS4K) {
+        const unsigned cur = (k0 / kS4K) & 1U;
+        if (k0 + kS4K < kKvLora) load(k0 + kS4K);
+#pragma unroll 4
+        for (unsigned i = 0; i < kS4K; ++i) {
+            const float c0 = lt[cur][i][tp], c1 = lt[cur][i][tp + 32];
+#pragma unroll
+            for (unsigned a = 0; a < HPT; a += 4) {
+                const float4 q4 = *reinterpret_cast<const float4*>(&qs[cur][i][hg * HPT + a]);
+                acc[0][a + 0] = __builtin_fmaf(q4.x, c0, acc[0][a + 0]);
+                acc[0][a + 1] = __builtin_fmaf(q4.y, c0, acc[0][a + 1]);
+                acc[0][a + 2] = __builtin_fmaf(q4.z, c0, acc[0][a + 2]);
+                acc[0][a + 3] = __builtin_fmaf(q4.w, c0, acc[0][a + 3]);
+                acc[1][a + 0] = __builtin_fmaf(q4.x, c1, acc[1][a + 0]);
+                acc[1][a + 1] = __builtin_fmaf(q4.y, c1, acc[1][a + 1]);
+                acc[1][a + 2] = __builtin_fmaf(q4.z, c1, acc[1][a + 2]);
+                acc[1][a + 3] = __builtin_fmaf(q4.w, c1, acc[1][a + 3]);
+            }
+        }
+        if (k0 + kS4K < kKvLora) store(cur ^ 1U);
+        __syncthreads();
+    }
+    float* e = e_all + static_cast<std::size_t>(r) * H * kEStride;
+#pragma unroll
+    for (unsigned sidx = 0; sidx < 2; ++sidx) {
+        const unsigned j = t0 + tp + 32 * sidx;
+        if (j < n)
+#pragma unroll
+            for (unsigned a = 0; a < HPT; ++a) e[static_cast<std::size_t>(hg * HPT + a) * kEStride + j] = acc[sidx][a] * kMlaScale;
+    }
+}
+
+// o-bar v4: no cross-thread reduction tree. tree_fma<256>'s fold s[l] += s[l + h] (h = 128 .. 1) is the adjacent-pair
+// balanced tree over k = bitrev8(l) (operand order included; design notes section 2, checked symbolically), so one
+// thread evaluates it exactly by walking lanes in k order and merging their chains in a binary counter (left = the
+// older, lower-k value). CTA = 8 heads x 64 latent dims of one row; thread = 2 heads x 4 dims (8 outputs) of one
+// quarter of k: sub-group s owns k in [64 s, 64 s + 64), i.e. lanes l = bitrev8(k) (l mod 4 fixed), and builds that
+// subtree (6 levels); the 4 roots then combine as (R0 + R1) + (R2 + R3), the tree's top 2 levels. Per lane the chain is
+// the contract's: fmaf(p_t, c_t, a) over t = l, l + 256, ... ascending from +0 (lanes without tokens stay +0).
+// Staging per batch of 8 k-steps: the 32 lanes' tokens (9 slots per lane: t = l + 256 m, m < 9 since n <= 2051), their
+// 64 latent dims (bf16) and the 8 heads' p, in LDS.
+constexpr unsigned kOb4Heads = 8, kOb4Dims = 64, kOb4Steps = 8, kOb4M = 9, kOb4Slots = 4 * kOb4Steps * kOb4M;  // 288
+static_assert((kMaxTokens + 255) / 256 <= kOb4M, "o-bar v4: 9 rounds of 256 cover the list");
+__global__ __launch_bounds__(256) void mla_obar_v4_kernel(DsaSlot sl, const std::uint32_t* tokens_all, const std::uint32_t* n_all, unsigned heads,
+                                                          const float* e_all, float* ob) {
+    __shared__ alignas(16) std::uint16_t lt[kOb4Slots][kOb4Dims];  // 36 KB
+    __shared__ float ps[kOb4Heads][kOb4Slots];                      // 9 KB
+    __shared__ float roots[4][kOb4Heads][kOb4Dims];                 // 8 KB: subtree roots of sub-groups 0..3
+    const unsigned hb = blockIdx.x * kOb4Heads, d0 = blockIdx.y * kOb4Dims, r = blockIdx.z, n = n_all[r];
+    const unsigned tid = threadIdx.x, dq = tid % 16, hp = (tid / 16) % 4, sg = tid / 64;
+    const std::uint32_t* tok = tokens_all + static_cast<std::size_t>(r) * kMaxTokens;
+    float stk[2][4][7];  // per output: binary-counter stack of the sub-group's 64-lane subtree
+    unsigned cnt = 0;
+    for (unsigned b = 0; b < 64 / kOb4Steps; ++b) {
+        __syncthreads();  // previous batch consumed
+        // stage: slot = (s * 8 + j) * 9 + m  <->  token t = bitrev8(64 s + 8 b + j) + 256 m
+        for (unsigned x = tid; x < kOb4Slots * (kOb4Dims / 8); x += 256) {
+            const unsigned slot = x / (kOb4Dims / 8), c8 = x % (kOb4Dims / 8);
+            const unsigned lane = slot / kOb4M, m = slot % kOb4M;
+            const unsigned t = bitrev8(64 * (lane / kOb4Steps) + kOb4Steps * b + lane % kOb4Steps) + 256 * m;
+            if (t < n)
+                *reinterpret_cast<uint4*>(&lt[slot][c8 * 8]) =
+                    *reinterpret_cast<const uint4*>(sl.latent + static_cast<std::size_t>(tok[t]) * kKvLora + d0 + c8 * 8);
+        }
+        for (unsigned x = tid; x < kOb4Heads * kOb4Slots; x += 256) {
+            const unsigned h = x / kOb4Slots, slot = x % kOb4Slots;
+            const unsigned lane = slot / kOb4M, m = slot % kOb4M;
+            const unsigned t = bitrev8(64 * (lane / kOb4Steps) + kOb4Steps * b + lane % kOb4Steps) + 256 * m;
+            if (t < n) ps[h][slot] = e_all[(static_cast<std::size_t>(r) * heads + hb + h) * kEStride + t];
+        }
+        __syncthreads();
+        for (unsigned j = 0; j < kOb4Steps; ++j) {
+            const unsigned l = bitrev8(64 * sg + kOb4Steps * b + j), slot0 = (sg * kOb4Steps + j) * kOb4M;
+            float c[2][4];
+#pragma unroll
+            for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                for (unsigned q = 0; q < 4; ++q) c[a][q] = 0.0F;
+            for (unsigned m = 0; m < kOb4M && l + 256 * m < n; ++m) {
+                const uint2 v = *reinterpret_cast<const uint2*>(&lt[slot0 + m][dq * 4]);
+                const float cv[4] = {bf16_to_float(static_cast<std::uint16_t>(v.x)), bf16_to_float(static_cast<std::uint16_t>(v.x >> 16)),
+                                     bf16_to_float(static_cast<std::uint16_t>(v.y)), bf16_to_float(static_cast<std::uint16_t>(v.y >> 16))};
+                const float p0 = ps[2 * hp][slot0 + m], p1 = ps[2 * hp + 1][slot0 + m];
+#pragma unroll
+                for (unsigned q = 0; q < 4; ++q) {
+                    c[0][q] = __builtin_fmaf(p0, cv[q], c[0][q]);
+                    c[1][q] = __builtin_fmaf(p1, cv[q], c[1][q]);
+                }
+            }
+            // binary-counter merge of this lane's chains: carry through the counter's set low bits, place at the first
+            // clear one. Levels are compile-time indices (registers, no scratch); cnt is uniform, so no divergence.
+            bool placed = false;
+#pragma unroll
+            for (unsigned L = 0; L < 7; ++L) {
+                if (placed) continue;
+                if ((cnt >> L) & 1U) {
+#pragma unroll
+                    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                        for (unsigned q = 0; q < 4; ++q) c[a][q] = stk[a][q][L] + c[a][q];
+                } else {
+#pragma unroll
+                    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                        for (unsigned q = 0; q < 4; ++q) stk[a][q][L] = c[a][q];
+                    placed = true;
+                }
+            }
+            ++cnt;
+        }
+    }
+    // 64 lanes merged: the sub-group's subtree root sits at level 6
+#pragma unroll
+    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+        for (unsigned q = 0; q < 4; ++q) roots[sg][2 * hp + a][dq * 4 + q] = stk[a][q][6];
+    __syncthreads();
+    for (unsigned x = tid; x < kOb4Heads * kOb4Dims; x += 256) {
+        const unsigned h = x / kOb4Dims, d = x % kOb4Dims;
+        const float v = (roots[0][h][d] + roots[1][h][d]) + (roots[2][h][d] + roots[3][h][d]);
+        ob[(static_cast<std::size_t>(r) * heads + hb + h) * kKvLora + d0 + d] = v;
+    }
+}
+
+// o-bar v5 (heads 32): CTA = all 32 heads x 64 latent dims of one row (latent gathered once per row); thread = 2 heads
+// x 4 dims over the full 256-lane tree. Lanes in k order (l = bitrev8(k)): lane l's chain fmaf(p_t, c_t, a) over
+// t = l + 256 m ascending from +0, only for t < n (no padding FMAs), then the binary-counter merge (older / lower-k
+// subtree + newer one) of design notes section 2: the 256-lane adjacent-pair tree = tree_fma<256>'s fold.
+// p comes lane-major from sx::softmax_kernel<MlaExactSpec, true> (a batch of 8 k is 72 contiguous slots per head). Staging is
+// double-buffered: batch b + 1's p / latent are loaded into registers before batch b is computed and stored to the
+// other buffer after it; one barrier per batch.
+constexpr unsigned kOb5Dims = 64, kOb5Steps = 8, kOb5Slots = kOb5Steps * kObRounds;  // 72
+constexpr unsigned kOb5PVec = 32 * kOb5Slots / 4, kOb5LVec = kOb5Slots * kOb5Dims / 8;  // 576 float4, 576 uint4
+__global__ __launch_bounds__(256) void mla_obar_v5_kernel(DsaSlot sl, const std::uint32_t* tokens_all, const std::uint32_t* n_all,
+                                                          const float* e_all, float* ob) {
+    __shared__ alignas(16) std::uint16_t lt[2][kOb5Slots][kOb5Dims];  // 18 KB
+    __shared__ alignas(16) float ps[2][kOb5Slots][32];                 // 18 KB
+    const unsigned d0 = blockIdx.x * kOb5Dims, r = blockIdx.y, n = n_all[r];
+    const unsigned tid = threadIdx.x, dq = tid % 16, hp = tid / 16;  // dims d0 + 4 dq .. + 3, heads 2 hp, 2 hp + 1
+    const std::uint32_t* tok = tokens_all + static_cast<std::size_t>(r) * kMaxTokens;
+    const float* ep = e_all + static_cast<std::size_t>(r) * 32 * kEStride;
+    float4 pr[3];
+    uint4 lr[3];
+    auto load = [&](unsigned b) {  // batch b (k = 8 b .. 8 b + 7) into registers
+#pragma unroll
+        for (unsigned i = 0; i < 3; ++i) {
+            const unsigned x = tid + 256 * i;
+            if (x < kOb5PVec) {
+                const unsigned h = x / (kOb5Slots / 4), q = x % (kOb5Slots / 4);
+                pr[i] = *reinterpret_cast<const float4*>(ep + static_cast<std::size_t>(h) * kEStride + kOb5Slots * b + 4 * q);
+            }
+            if (x < kOb5LVec) {
+                const unsigned slot = x / (kOb5Dims / 8), c8 = x % (kOb5Dims / 8);
+                const unsigned t = bitrev8(kOb5Steps * b + slot / kObRounds) + 256 * (slot % kObRounds);
+                lr[i] = t < n ? *reinterpret_cast<const uint4*>(sl.latent + static_cast<std::size_t>(tok[t]) * kKvLora + d0 + 8 * c8)
+                              : uint4{0, 0, 0, 0};
+            }
+        }
+    };
+    auto store = [&](unsigned buf) {
+#pragma unroll
+        for (unsigned i = 0; i < 3; ++i) {
+            const unsigned x = tid + 256 * i;
+            if (x < kOb5PVec) {
+                const unsigned h = x / (kOb5Slots / 4), q = x % (kOb5Slots / 4);
+                ps[buf][4 * q + 0][h] = pr[i].x;
+                ps[buf][4 * q + 1][h] = pr[i].y;
+                ps[buf][4 * q + 2][h] = pr[i].z;
+                ps[buf][4 * q + 3][h] = pr[i].w;
+            }
+            if (x < kOb5LVec) {
+                const unsigned slot = x / (kOb5Dims / 8), c8 = x % (kOb5Dims / 8);
+                *reinterpret_cast<uint4*>(&lt[buf][slot][8 * c8]) = lr[i];
+            }
+        }
+    };
+    float stk[2][4][8];  // binary-counter levels 0..7; the root (level 8) is formed by the last merge (k = 255)
+    float root[2][4];
+    load(0);
+    store(0);
+    __syncthreads();
+    for (unsigned b = 0; b < 256 / kOb5Steps; ++b) {
+        const unsigned cur = b & 1U;
+        if (b + 1 < 256 / kOb5Steps) load(b + 1);
+        for (unsigned j = 0; j < kOb5Steps; ++j) {
+            const unsigned k = kOb5Steps * b + j, l = bitrev8(k);
+            float c[2][4];
+#pragma unroll
+            for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                for (unsigned q = 0; q < 4; ++q) c[a][q] = 0.0F;
+            for (unsigned m = 0; m < kObRounds && l + 256 * m < n; ++m) {
+                const unsigned slot = kObRounds * j + m;
+                const uint2 v = *reinterpret_cast<const uint2*>(&lt[cur][slot][4 * dq]);
+                const float cv[4] = {bf16_to_float(static_cast<std::uint16_t>(v.x)), bf16_to_float(static_cast<std::uint16_t>(v.x >> 16)),
+                                     bf16_to_float(static_cast<std::uint16_t>(v.y)), bf16_to_float(static_cast<std::uint16_t>(v.y >> 16))};
+                const float2 pp = *reinterpret_cast<const float2*>(&ps[cur][slot][2 * hp]);
+#pragma unroll
+                for (unsigned q = 0; q < 4; ++q) {
+                    c[0][q] = __builtin_fmaf(pp.x, cv[q], c[0][q]);
+                    c[1][q] = __builtin_fmaf(pp.y, cv[q], c[1][q]);
+                }
+            }
+            // merge: carry through the set low bits of k (left operand = the stored, lower-k subtree), place at the
+            // first clear bit; k = 255 carries through all 8 levels into the root. Levels are compile-time indices.
+            bool placed = false;
+#pragma unroll
+            for (unsigned L = 0; L < 8; ++L) {
+                if (placed) continue;
+                if ((k >> L) & 1U) {
+#pragma unroll
+                    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                        for (unsigned q = 0; q < 4; ++q) c[a][q] = stk[a][q][L] + c[a][q];
+                } else {
+#pragma unroll
+                    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                        for (unsigned q = 0; q < 4; ++q) stk[a][q][L] = c[a][q];
+                    placed = true;
+                }
+            }
+            if (!placed)
+#pragma unroll
+                for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                    for (unsigned q = 0; q < 4; ++q) root[a][q] = c[a][q];
+        }
+        if (b + 1 < 256 / kOb5Steps) store(cur ^ 1U);
+        __syncthreads();
+    }
+#pragma unroll
+    for (unsigned a = 0; a < 2; ++a)
+        *reinterpret_cast<float4*>(ob + (static_cast<std::size_t>(r) * 32 + 2 * hp + a) * kKvLora + d0 + 4 * dq) =
+            float4{root[a][0], root[a][1], root[a][2], root[a][3]};
+}
+
+// o-bar v6: four independent 64-lane subtrees, each with the v5 lane chains and ordered
+// binary-counter merges. Only the final two levels cross sub-groups through LDS.
+// CTA = 16 heads x 16 dims; thread = 2 heads x 2 dims of one subtree (28 stack floats).
+// Double-buffer 4 k-steps per subtree, prefetching the next gather before computation.
+// Token-order probabilities support both 32 and 64 heads. LDS: 9 + 18 + 4 = 31 KiB.
+constexpr unsigned kOb6Heads = 16, kOb6Dims = 16, kOb6Steps = 4, kOb6M = kObRounds;
+constexpr unsigned kOb6Slots = 4 * kOb6Steps * kOb6M;  // 144
+__global__ __launch_bounds__(256) void mla_obar_v6_kernel(DsaSlot sl, const std::uint32_t* tokens_all, const std::uint32_t* n_all, unsigned heads,
+                                                          const float* e_all, float* ob) {
+    __shared__ alignas(16) std::uint16_t lt[2][kOb6Slots][kOb6Dims];
+    __shared__ float ps[2][kOb6Heads][kOb6Slots];
+    __shared__ float roots[4][kOb6Heads][kOb6Dims];
+    const unsigned hb = blockIdx.x * kOb6Heads, d0 = blockIdx.y * kOb6Dims, r = blockIdx.z, n = n_all[r];
+    const unsigned tid = threadIdx.x, dq = tid % 8, hp = (tid / 8) % 8, sg = tid / 64;
+    const std::uint32_t* tok = tokens_all + static_cast<std::size_t>(r) * kMaxTokens;
+    float stk[2][2][7];  // per output: binary-counter stack of the sub-group's 64-lane subtree
+    float pr[kOb6Heads * kOb6Slots / 256];
+    uint4 lr[2];
+    auto load = [&](unsigned b) {
+#pragma unroll
+        for (unsigned i = 0; i < 2; ++i) {
+            const unsigned x = tid + 256 * i;
+            if (x < kOb6Slots * (kOb6Dims / 8)) {
+                const unsigned slot = x / (kOb6Dims / 8), c8 = x % (kOb6Dims / 8);
+                const unsigned lane = slot / kOb6M, m = slot % kOb6M;
+                const unsigned t = bitrev8(64 * (lane / kOb6Steps) + kOb6Steps * b + lane % kOb6Steps) + 256 * m;
+                lr[i] = t < n ? *reinterpret_cast<const uint4*>(sl.latent + static_cast<std::size_t>(tok[t]) * kKvLora + d0 + c8 * 8)
+                              : uint4{0, 0, 0, 0};
+            }
+        }
+#pragma unroll
+        for (unsigned i = 0; i < kOb6Heads * kOb6Slots / 256; ++i) {
+            const unsigned x = tid + 256 * i, h = x / kOb6Slots, slot = x % kOb6Slots;
+            const unsigned lane = slot / kOb6M, m = slot % kOb6M;
+            const unsigned t = bitrev8(64 * (lane / kOb6Steps) + kOb6Steps * b + lane % kOb6Steps) + 256 * m;
+            pr[i] = t < n ? e_all[(static_cast<std::size_t>(r) * heads + hb + h) * kEStride + t] : 0.0F;
+        }
+    };
+    auto store = [&](unsigned buf) {
+#pragma unroll
+        for (unsigned i = 0; i < 2; ++i) {
+            const unsigned x = tid + 256 * i;
+            if (x < kOb6Slots * (kOb6Dims / 8)) {
+                const unsigned slot = x / (kOb6Dims / 8), c8 = x % (kOb6Dims / 8);
+                *reinterpret_cast<uint4*>(&lt[buf][slot][c8 * 8]) = lr[i];
+            }
+        }
+#pragma unroll
+        for (unsigned i = 0; i < kOb6Heads * kOb6Slots / 256; ++i) {
+            const unsigned x = tid + 256 * i;
+            ps[buf][x / kOb6Slots][x % kOb6Slots] = pr[i];
+        }
+    };
+    unsigned cnt = 0;
+    load(0);
+    store(0);
+    __syncthreads();
+    for (unsigned b = 0; b < 64 / kOb6Steps; ++b) {
+        const unsigned cur = b & 1U;
+        if (b + 1 < 64 / kOb6Steps) load(b + 1);
+        for (unsigned j = 0; j < kOb6Steps; ++j) {
+            const unsigned l = bitrev8(64 * sg + kOb6Steps * b + j), slot0 = (sg * kOb6Steps + j) * kOb6M;
+            float c[2][2];
+#pragma unroll
+            for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                for (unsigned q = 0; q < 2; ++q) c[a][q] = 0.0F;
+            for (unsigned m = 0; m < kOb6M && l + 256 * m < n; ++m) {
+                const std::uint32_t v = *reinterpret_cast<const std::uint32_t*>(&lt[cur][slot0 + m][dq * 2]);
+                const float cv[2] = {bf16_to_float(static_cast<std::uint16_t>(v)), bf16_to_float(static_cast<std::uint16_t>(v >> 16))};
+                const float p0 = ps[cur][2 * hp][slot0 + m], p1 = ps[cur][2 * hp + 1][slot0 + m];
+#pragma unroll
+                for (unsigned q = 0; q < 2; ++q) {
+                    c[0][q] = __builtin_fmaf(p0, cv[q], c[0][q]);
+                    c[1][q] = __builtin_fmaf(p1, cv[q], c[1][q]);
+                }
+            }
+            // binary-counter merge of this lane's chains: carry through the counter's set low bits, place at the first
+            // clear one. Levels are compile-time indices for scalar registers; cnt is uniform, so no divergence.
+            bool placed = false;
+#pragma unroll
+            for (unsigned L = 0; L < 7; ++L) {
+                if (placed) continue;
+                if ((cnt >> L) & 1U) {
+#pragma unroll
+                    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                        for (unsigned q = 0; q < 2; ++q) c[a][q] = stk[a][q][L] + c[a][q];
+                } else {
+#pragma unroll
+                    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+                        for (unsigned q = 0; q < 2; ++q) stk[a][q][L] = c[a][q];
+                    placed = true;
+                }
+            }
+            ++cnt;
+        }
+        if (b + 1 < 64 / kOb6Steps) store(cur ^ 1U);
+        __syncthreads();
+    }
+    // 64 lanes merged: the sub-group's subtree root sits at level 6
+#pragma unroll
+    for (unsigned a = 0; a < 2; ++a)
+#pragma unroll
+        for (unsigned q = 0; q < 2; ++q) roots[sg][2 * hp + a][dq * 2 + q] = stk[a][q][6];
+    __syncthreads();
+    for (unsigned x = tid; x < kOb6Heads * kOb6Dims; x += 256) {
+        const unsigned h = x / kOb6Dims, d = x % kOb6Dims;
+        const float v = (roots[0][h][d] + roots[1][h][d]) + (roots[2][h][d] + roots[3][h][d]);
+        ob[(static_cast<std::size_t>(r) * heads + hb + h) * kKvLora + d0 + d] = v;
+    }
+}
+
+// R1 chains over rows: tiled VALU GEMM, 64 rows x 64 outputs per CTA, K step 32, thread = 4 x 4 outputs; per output
+// the chain of dense_kernel (fmaf(x[i], w[o][i], acc), i ascending, from +0).
+__device__ __forceinline__ float wload_pf(const void* w, dev::WType t, std::size_t k) {
+    switch (t) {
+        case dev::WType::F16: return f16_to_float(static_cast<const std::uint16_t*>(w)[k]);
+        case dev::WType::BF16: return bf16_to_float(static_cast<const std::uint16_t*>(w)[k]);
+        default: return static_cast<const float*>(w)[k];
+    }
+}
+__global__ __launch_bounds__(256) void dense_rows_kernel(const float* x, const void* w, dev::WType wt, unsigned in, unsigned o0, unsigned n,
+                                                         float* y, unsigned rows) {
+    __shared__ float as[kGT][kGK + 1];
+    __shared__ float ws[kGK][kGT + 1];
+    const unsigned r0 = blockIdx.x * kGT, c0 = blockIdx.y * kGT, tid = threadIdx.x, tr = tid / 16, tc = tid % 16;
+    float acc[4][4];
+#pragma unroll
+    for (unsigned i = 0; i < 4; ++i)
+#pragma unroll
+        for (unsigned j = 0; j < 4; ++j) acc[i][j] = 0.0F;
+    for (unsigned k0 = 0; k0 < in; k0 += kGK) {
+        __syncthreads();
+        for (unsigned v = tid; v < kGT * kGK; v += 256) {
+            const unsigned rr = v / kGK, kk = v % kGK, r = r0 + rr;
+            as[rr][kk] = r < rows ? x[static_cast<std::size_t>(r) * in + k0 + kk] : 0.0F;
+            const unsigned o = c0 + rr;  // the same index pair for the weight tile: row o, column k0 + kk
+            ws[kk][rr] = o < n ? wload_pf(w, wt, static_cast<std::size_t>(o0 + o) * in + k0 + kk) : 0.0F;
+        }
+        __syncthreads();
+#pragma unroll 4
+        for (unsigned kk = 0; kk < kGK; ++kk) {
+            float a[4], b[4];
+#pragma unroll
+            for (unsigned i = 0; i < 4; ++i) a[i] = as[tr * 4 + i][kk];
+#pragma unroll
+            for (unsigned j = 0; j < 4; ++j) b[j] = ws[kk][tc * 4 + j];
+#pragma unroll
+            for (unsigned i = 0; i < 4; ++i)
+#pragma unroll
+                for (unsigned j = 0; j < 4; ++j) acc[i][j] = __builtin_fmaf(a[i], b[j], acc[i][j]);
+        }
+    }
+#pragma unroll
+    for (unsigned i = 0; i < 4; ++i) {
+        const unsigned r = r0 + tr * 4 + i;
+        if (r >= rows) continue;
+#pragma unroll
+        for (unsigned j = 0; j < 4; ++j) {
+            const unsigned o = c0 + tc * 4 + j;
+            if (o < n) y[static_cast<std::size_t>(r) * n + o] = acc[i][j];
+        }
+    }
+}
+
+// Dense v2: 8 x 4 independent ascending chains per thread, transposed/padded LDS for three b128 reads per k.
+// C=64: 256 threads, 25 KiB LDS; C=32: 128 threads, 21 KiB LDS (24/32-column projections).
+template <unsigned C, dev::WType WT>
+__global__ __launch_bounds__(C * 4) void dense_rows_v2_kernel(const float* x, const void* w, unsigned in, unsigned o0,
+                                                           unsigned n, float* y, unsigned rows) {
+    constexpr unsigned R = 128, K = 32, NT = C * 4;
+    __shared__ alignas(16) float as[K][R + 4];
+    __shared__ alignas(16) float ws[K][C + 4];
+    const unsigned tid = threadIdx.x, tr = tid / (C / 4), tc = tid % (C / 4);
+    const unsigned r0 = blockIdx.x * R, c0 = blockIdx.y * C;
+    float acc[8][4];
+#pragma unroll
+    for (unsigned i = 0; i < 8; ++i)
+#pragma unroll
+        for (unsigned j = 0; j < 4; ++j) acc[i][j] = 0.0F;
+    for (unsigned k0 = 0; k0 < in; k0 += K) {
+        __syncthreads();
+        for (unsigned v = tid; v < R * K / 4; v += NT) {
+            const unsigned rr = v / (K / 4), kk = 4 * (v % (K / 4)), r = r0 + rr;
+            float4 a{0.0F, 0.0F, 0.0F, 0.0F};
+            if (r < rows) {
+                const float* p = x + static_cast<std::size_t>(r) * in + k0 + kk;
+                if ((reinterpret_cast<std::uintptr_t>(x) & 15U) == 0)
+                    a = *reinterpret_cast<const float4*>(p);
+                else
+                    a = float4{p[0], p[1], p[2], p[3]};
+            }
+            as[kk][rr] = a.x;
+            as[kk + 1][rr] = a.y;
+            as[kk + 2][rr] = a.z;
+            as[kk + 3][rr] = a.w;
+        }
+        for (unsigned v = tid; v < C * K / 2; v += NT) {
+            const unsigned cc = v / (K / 2), kk = 2 * (v % (K / 2)), o = c0 + cc;
+            float a = 0.0F, b = 0.0F;
+            if (o < n) {
+                const std::size_t at = static_cast<std::size_t>(o0 + o) * in + k0 + kk;
+                if constexpr (WT == dev::WType::F32) {
+                    // F32 needs only its original scalar alignment; no new public pointer-alignment contract.
+                    a = static_cast<const float*>(w)[at];
+                    b = static_cast<const float*>(w)[at + 1];
+                } else {
+                    const auto* wp = static_cast<const std::uint16_t*>(w) + at;
+                    const std::uint32_t p = (reinterpret_cast<std::uintptr_t>(w) & 3U) == 0
+                        ? *reinterpret_cast<const std::uint32_t*>(wp)
+                        : static_cast<std::uint32_t>(wp[0]) | (static_cast<std::uint32_t>(wp[1]) << 16);
+                    const auto lo = static_cast<std::uint16_t>(p), hi = static_cast<std::uint16_t>(p >> 16);
+                    if constexpr (WT == dev::WType::F16) {
+                        a = f16_to_float(lo);
+                        b = f16_to_float(hi);
+                    } else {
+                        a = bf16_to_float(lo);
+                        b = bf16_to_float(hi);
+                    }
+                }
+            }
+            ws[kk][cc] = a;
+            ws[kk + 1][cc] = b;
+        }
+        __syncthreads();
+#pragma unroll 4
+        for (unsigned kk = 0; kk < K; ++kk) {
+            const float4 a0 = *reinterpret_cast<const float4*>(&as[kk][tr * 8]);
+            const float4 a1 = *reinterpret_cast<const float4*>(&as[kk][tr * 8 + 4]);
+            const float4 b4 = *reinterpret_cast<const float4*>(&ws[kk][tc * 4]);
+            const float a[8] = {a0.x, a0.y, a0.z, a0.w, a1.x, a1.y, a1.z, a1.w};
+            const float b[4] = {b4.x, b4.y, b4.z, b4.w};
+#pragma unroll
+            for (unsigned i = 0; i < 8; ++i)
+#pragma unroll
+                for (unsigned j = 0; j < 4; ++j) acc[i][j] = __builtin_fmaf(a[i], b[j], acc[i][j]);
+        }
+    }
+#pragma unroll
+    for (unsigned i = 0; i < 8; ++i) {
+        const unsigned r = r0 + tr * 8 + i;
+        if (r >= rows) continue;
+#pragma unroll
+        for (unsigned j = 0; j < 4; ++j) {
+            const unsigned o = c0 + tc * 4 + j;
+            if (o < n) y[static_cast<std::size_t>(r) * n + o] = acc[i][j];
+        }
+    }
+}
+
+template <unsigned C>
+void dense_rows_v2_launch(const float* x, const void* w, dev::WType wt, unsigned in, unsigned o0, unsigned n, float* y,
+                          unsigned rows, hipStream_t s) {
+    const dim3 grid((rows + 127) / 128, (n + C - 1) / C);
+    if (wt == dev::WType::F16)
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v2_kernel<C, dev::WType::F16><<<grid, C * 4, 0, s>>>(x, w, in, o0, n, y, rows));
+    else if (wt == dev::WType::BF16)
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v2_kernel<C, dev::WType::BF16><<<grid, C * 4, 0, s>>>(x, w, in, o0, n, y, rows));
+    else
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v2_kernel<C, dev::WType::F32><<<grid, C * 4, 0, s>>>(x, w, in, o0, n, y, rows));
+}
+
+// Dense v3: v2's per-thread chains (ascending k from +0, one fmaf per step, same expressions) with a row tile RT of
+// 128 / 64 / 32 rows (RT / 16 rows per thread) and a column tile C of 64 / 32, so small-N calls fill the GPU, and up to
+// kDenseGroupMax projections that share x in one launch (blockIdx.y walks their column blocks in order). Same bits as v2.
+struct DenseGroupArgs {
+    const void* w[kDenseGroupMax];
+    float* y[kDenseGroupMax];
+    unsigned o0[kDenseGroupMax], n[kDenseGroupMax], first[kDenseGroupMax + 1];  // first[p] = first column block of p
+    unsigned count;
+};
+template <unsigned RT, unsigned C, dev::WType WT, unsigned NP = 1>
+__global__ __launch_bounds__(C * 4) void dense_rows_v3_kernel(const float* x, unsigned in, unsigned rows, DenseGroupArgs g) {
+    constexpr unsigned K = 32, NT = C * 4, RI = RT / 16;
+    static_assert(RI == 2 || RI == 4 || RI == 8, "dense v3 row tile");
+    __shared__ alignas(16) float as[K][RT + 4];
+    __shared__ alignas(16) float ws[K][C + 4];
+    unsigned first_p = 0;
+    if constexpr (NP == 1)
+        while (first_p + 1 < g.count && blockIdx.y >= g.first[first_p + 1]) ++first_p;
+    const unsigned tid = threadIdx.x, tr = tid / (C / 4), tc = tid % (C / 4);
+    const unsigned r0 = blockIdx.x * RT, c0 = (NP == 1 ? blockIdx.y - g.first[first_p] : blockIdx.y) * C;
+    float acc[NP][RI][4];
+    const unsigned projections = NP == 1 ? 1U : g.count;
+    for (unsigned pp = 0; pp < projections; ++pp)
+#pragma unroll
+    for (unsigned i = 0; i < RI; ++i)
+#pragma unroll
+        for (unsigned j = 0; j < 4; ++j) acc[pp][i][j] = 0.0F;
+    for (unsigned k0 = 0; k0 < in; k0 += K) {
+        __syncthreads();
+        for (unsigned v = tid; v < RT * K / 4; v += NT) {
+            const unsigned rr = v / (K / 4), kk = 4 * (v % (K / 4)), r = r0 + rr;
+            float4 a{0.0F, 0.0F, 0.0F, 0.0F};
+            if (r < rows) {
+                const float* q = x + static_cast<std::size_t>(r) * in + k0 + kk;
+                if ((reinterpret_cast<std::uintptr_t>(x) & 15U) == 0)
+                    a = *reinterpret_cast<const float4*>(q);
+                else
+                    a = float4{q[0], q[1], q[2], q[3]};
+            }
+            as[kk][rr] = a.x;
+            as[kk + 1][rr] = a.y;
+            as[kk + 2][rr] = a.z;
+            as[kk + 3][rr] = a.w;
+        }
+        for (unsigned pp = 0; pp < projections; ++pp) {
+            const unsigned p = first_p + pp;
+            const void* w = g.w[p];
+            const unsigned o0 = g.o0[p], n = g.n[p];
+            for (unsigned v = tid; v < C * K / 2; v += NT) {
+                const unsigned cc = v / (K / 2), kk = 2 * (v % (K / 2)), o = c0 + cc;
+                float a = 0.0F, b = 0.0F;
+                if (o < n) {
+                    const std::size_t at = static_cast<std::size_t>(o0 + o) * in + k0 + kk;
+                    if constexpr (WT == dev::WType::F32) {
+                        a = static_cast<const float*>(w)[at];
+                        b = static_cast<const float*>(w)[at + 1];
+                    } else {
+                        const auto* wp = static_cast<const std::uint16_t*>(w) + at;
+                        const std::uint32_t q = (reinterpret_cast<std::uintptr_t>(w) & 3U) == 0
+                            ? *reinterpret_cast<const std::uint32_t*>(wp)
+                            : static_cast<std::uint32_t>(wp[0]) | (static_cast<std::uint32_t>(wp[1]) << 16);
+                        const auto lo = static_cast<std::uint16_t>(q), hi = static_cast<std::uint16_t>(q >> 16);
+                        if constexpr (WT == dev::WType::F16) {
+                            a = f16_to_float(lo);
+                            b = f16_to_float(hi);
+                        } else {
+                            a = bf16_to_float(lo);
+                            b = bf16_to_float(hi);
+                        }
+                    }
+                }
+                ws[kk][cc] = a;
+                ws[kk + 1][cc] = b;
+            }
+            __syncthreads();
+    #pragma unroll 4
+            for (unsigned kk = 0; kk < K; ++kk) {
+                float a[RI];
+                if constexpr (RI == 2) {
+                    const float2 a0 = *reinterpret_cast<const float2*>(&as[kk][tr * RI]);
+                    a[0] = a0.x;
+                    a[1] = a0.y;
+                } else {
+    #pragma unroll
+                    for (unsigned h = 0; h < RI / 4; ++h) {
+                        const float4 a4 = *reinterpret_cast<const float4*>(&as[kk][tr * RI + 4 * h]);
+                        a[4 * h] = a4.x;
+                        a[4 * h + 1] = a4.y;
+                        a[4 * h + 2] = a4.z;
+                        a[4 * h + 3] = a4.w;
+                    }
+                }
+                const float4 b4 = *reinterpret_cast<const float4*>(&ws[kk][tc * 4]);
+                const float b[4] = {b4.x, b4.y, b4.z, b4.w};
+    #pragma unroll
+                for (unsigned i = 0; i < RI; ++i)
+    #pragma unroll
+                    for (unsigned j = 0; j < 4; ++j) acc[pp][i][j] = __builtin_fmaf(a[i], b[j], acc[pp][i][j]);
+            }
+            if constexpr (NP > 1) __syncthreads();  // retire before the next projection reuses ws
+        }
+    }
+    for (unsigned pp = 0; pp < projections; ++pp) {
+        const unsigned p = first_p + pp, n = g.n[p];
+        float* y = g.y[p];
+    #pragma unroll
+        for (unsigned i = 0; i < RI; ++i) {
+            const unsigned r = r0 + tr * RI + i;
+            if (r >= rows) continue;
+    #pragma unroll
+            for (unsigned j = 0; j < 4; ++j) {
+                const unsigned o = c0 + tc * 4 + j;
+                if (o < n) y[static_cast<std::size_t>(r) * n + o] = acc[pp][i][j];
+            }
+        }
+    }
+}
+
+template <unsigned RT, unsigned C>
+void dense_rows_v3_launch(const float* x, dev::WType wt, unsigned in, unsigned rows, DenseGroupArgs g, hipStream_t s) {
+    g.first[0] = 0;
+    for (unsigned p = 0; p < g.count; ++p) g.first[p + 1] = g.first[p] + (g.n[p] + C - 1) / C;
+    const dim3 grid((rows + RT - 1) / RT, g.first[g.count]);
+    if (wt == dev::WType::F16)
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v3_kernel<RT, C, dev::WType::F16><<<grid, C * 4, 0, s>>>(x, in, rows, g));
+    else if (wt == dev::WType::BF16)
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v3_kernel<RT, C, dev::WType::BF16><<<grid, C * 4, 0, s>>>(x, in, rows, g));
+    else
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v3_kernel<RT, C, dev::WType::F32><<<grid, C * 4, 0, s>>>(x, in, rows, g));
+}
+
+void dense_rows_v3_dispatch(const float* x, dev::WType wt, unsigned in, unsigned rows, const DenseGroupArgs& g, unsigned rt,
+                            unsigned c, hipStream_t s) {
+    if (c == 64) {
+        if (rt == 128) dense_rows_v3_launch<128, 64>(x, wt, in, rows, g, s);
+        else if (rt == 64) dense_rows_v3_launch<64, 64>(x, wt, in, rows, g, s);
+        else dense_rows_v3_launch<32, 64>(x, wt, in, rows, g, s);
+    } else {
+        if (rt == 128) dense_rows_v3_launch<128, 32>(x, wt, in, rows, g, s);
+        else if (rt == 64) dense_rows_v3_launch<64, 32>(x, wt, in, rows, g, s);
+        else dense_rows_v3_launch<32, 32>(x, wt, in, rows, g, s);
+    }
+}
+
+// Automatic v3 tile: 128 rows x 64 columns for every grouped shape. Measured on the grouped production shapes (KDA,
+// DSA, o0 groups, R 4096 / 8192) it is the fastest tile, padded column tails included; smaller tiles chosen for CTA
+// count were slower (more weight re-reads per row).
+void dense_rows_v3_auto(unsigned, const unsigned*, unsigned, unsigned& rt, unsigned& c) {
+    rt = 128;
+    c = 64;
+}
+
+unsigned dense_rows_version() {
+    static const unsigned v = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_DENSE_ROWS"));
+    }();
+    return v;
+}
+
+// hc_pre split in three launches (expressions of hc_pre_kernel): (1) per-row unweighted norm -> F; (2) the 24 chains
+// z = F . fn as dense_rows; (3) per-row R6 on lane 0 + R7 collapse.
+__global__ __launch_bounds__(256) void hc_norm_rows_kernel(const float* X, float* F) {
+    constexpr unsigned n = kHc * kHidden;
+    __shared__ float s[256];
+    const unsigned r = blockIdx.x, l = threadIdx.x;
+    const float* Xr = X + static_cast<std::size_t>(r) * n;
+    float* Fr = F + static_cast<std::size_t>(r) * n;
+    float a = 0.0F;
+    for (unsigned i = l; i < n; i += 256) a = __builtin_fmaf(Xr[i], Xr[i], a);
+    const float ss = lds_tree<256>(s, a);
+    const float rr = inv_sqrt(ss / static_cast<float>(n) + kEps);
+    for (unsigned i = l; i < n; i += 256) Fr[i] = Xr[i] * rr;
+}
+// hc_norm_rows_kernel's factor only (same chain and tree), for the split form STRIX_GLM_PF_HC_FUSE=2: F is not written.
+__global__ __launch_bounds__(256) void hc_norm_factor_rows_kernel(const float* X, float* rr_out) {
+    constexpr unsigned n = kHc * kHidden;
+    __shared__ float s[256];
+    const unsigned r = blockIdx.x, l = threadIdx.x;
+    const float* Xr = X + static_cast<std::size_t>(r) * n;
+    float a = 0.0F;
+    for (unsigned i = l; i < n; i += 256) a = __builtin_fmaf(Xr[i], Xr[i], a);
+    const float ss = lds_tree256_lane0(s, a);
+    if (l == 0) rr_out[r] = inv_sqrt(ss / static_cast<float>(n) + kEps);
+}
+// hc_expand (dev::hc_expand_kernel expressions) fused with the next site's hc_norm_rows_kernel: lane l keeps the 64
+// outputs it owns in the norm (element l + 256 j, j = stream * 16 + block) and runs the same fmaf chain in ascending j
+// and the same lds_tree; it stores rr per row and F is never materialised: the chain kernel forms F = X * rr on load
+// (one product, as hc_norm_rows writes it). The file is built with -ffp-contract=off, as is the expand kernel.
+// kPair (STRIX_GLM_PF_SUMEXP): y is the TP2 sum y0 + y1 in rank order (the exchange's sum2 expression), formed on load;
+// the summed rows are never stored.
+// kHoist (STRIX_GLM_PF_HC_HOIST, load placement only; every expression and its order are unchanged):
+//   0: y (or y0 + y1) is loaded inside each of the B steps, behind the previous step's stores (the stores may alias).
+//   1: all B y values are loaded (and summed) into registers before the first step.
+//   2: as 1, and the row pointers are restrict-qualified so the X loads of later steps may also be issued early.
+template <bool kPair, unsigned kHoist = 0>
+__global__ __launch_bounds__(256) void hc_expand_norm_rows_kernel(const float* X, const float* mix, const float* y, const float* y1,
+                                                                  float* Xo, float* rr_out, unsigned* flag) {
+    constexpr unsigned n = kHc * kHidden, B = kHidden / 256;
+    __shared__ float s[256];
+    const unsigned r = blockIdx.x, l = threadIdx.x;
+    const float* m = mix + static_cast<std::size_t>(r) * kHcMix;
+    const float* c = m + 2 * kHc;
+    using CP = std::conditional_t<kHoist == 2, const float* __restrict__, const float*>;
+    using OP = std::conditional_t<kHoist == 2, float* __restrict__, float*>;
+    const CP Xr = X + static_cast<std::size_t>(r) * n;
+    const OP Xor = Xo + static_cast<std::size_t>(r) * n;
+    float v[kHc - 1][B];  // streams 1 .. 3; stream 0 enters the chain as produced (its terms come first in ascending j)
+    float yv[kHoist != 0 ? B : 1];
+    if constexpr (kHoist != 0) {
+        const float* __restrict__ yr = y + static_cast<std::size_t>(r) * kHidden;
+        const float* __restrict__ y1r = kPair ? y1 + static_cast<std::size_t>(r) * kHidden : nullptr;
+#pragma unroll
+        for (unsigned b = 0; b < B; ++b) yv[b] = kPair ? yr[b * 256 + l] + y1r[b * 256 + l] : yr[b * 256 + l];
+    }
+    float a = 0.0F;
+    bool bad = false;
+#pragma unroll
+    for (unsigned b = 0; b < B; ++b) {
+        const unsigned d = b * 256 + l;
+        const std::size_t yi = static_cast<std::size_t>(r) * kHidden + d;
+        const float yd = kHoist != 0 ? yv[b] : kPair ? y[yi] + y1[yi] : y[yi];
+#pragma unroll
+        for (unsigned i = 0; i < kHc; ++i) {
+            const float mx = ((c[0 * kHc + i] * Xr[d] + c[1 * kHc + i] * Xr[kHidden + d]) + c[2 * kHc + i] * Xr[2 * kHidden + d]) +
+                             c[3 * kHc + i] * Xr[3 * kHidden + d];
+            const float o = m[kHc + i] * yd + mx;
+            bad = bad || !is_finite(o);
+            Xor[i * kHidden + d] = o;
+            if (i == 0) a = __builtin_fmaf(o, o, a);
+            else v[i - 1][b] = o;
+        }
+    }
+    if (flag && bad) atomicOr(flag, 1U);
+#pragma unroll
+    for (unsigned i = 0; i < kHc - 1; ++i)
+#pragma unroll
+        for (unsigned b = 0; b < B; ++b) a = __builtin_fmaf(v[i][b], v[i][b], a);
+    const float ss = lds_tree256_lane0(s, a);
+    if (l == 0) rr_out[r] = inv_sqrt(ss / static_cast<float>(n) + kEps);
+}
+#include "glm_hc_expand_bw.inc"
+
+__global__ __launch_bounds__(256) void hc_mix_rows_kernel(const float* X, const float* zg, const float* base, const float* scale, float* mix,
+                                                          float* xc) {
+    __shared__ float m[kHcMix];
+    const unsigned r = blockIdx.x, l = threadIdx.x;
+    const float* Xr = X + static_cast<std::size_t>(r) * kHc * kHidden;
+    if (l == 0) {  // R6 on lane 0 (host hc_mix order) = hc_pre_kernel
+        const float* z = zg + static_cast<std::size_t>(r) * kHcMix;
+        core::hc::mix_final_packed<HcR6>(z, scale, base, kHcEps, m);
+        for (unsigned k = 0; k < kHcMix; ++k) mix[static_cast<std::size_t>(r) * kHcMix + k] = m[k];
+    }
+    __syncthreads();
+    float* xr = xc + static_cast<std::size_t>(r) * kHidden;
+    for (unsigned d = l; d < kHidden; d += 256)
+        xr[d] = core::hc::packed_dot(m, Xr, d, kHidden);
+}
+
+// V2 R1: 64 rows x 24 outputs, K=32, 128 threads, 4 x 3 live chains per thread.
+// Each stage is loaded once per CTA. Prefetch the next tile to registers before consuming
+// the current LDS stage, then publish to the other stage. The tile-end barrier protects
+// both reuse of the old stage and reads of the newly filled stage.
+constexpr unsigned kHcK = 32, kHcMixRows = 16;
+static_assert(kHc * kHidden == 16384 && kHcMix == 24);
+// Rows-row tiles (64 / 32 / 16), 2 * Rows threads, 4 x 3 chains per thread: smaller tiles give more CTAs (the K chain
+// cannot be split), e.g. 2048 rows -> 32 / 64 / 128 CTAs. Every tile size gives the same bits (one fmaf chain per
+// (row, output), k ascending from +0). Cols = 24 (all outputs per CTA) or 8 (grid.y = 3 output groups, 4 x 1 chains per
+// thread: three times the CTAs for short calls, activations loaded once per group; same bits).
+template <unsigned Rows, bool FromX = false, unsigned Cols = kHcMix>
+__device__ __forceinline__ void hc_chain_prefetch(const float* F, const float* fn, float* next_a, float* next_w,
+                                                 unsigned r0, unsigned rows, unsigned k0) {
+    constexpr unsigned n = kHc * kHidden, T = 2 * Rows;
+    const unsigned tid = threadIdx.x;
+#pragma unroll
+    for (unsigned q = 0; q < Rows * kHcK / T; ++q) {
+        const unsigned v = tid + q * T, r = v / kHcK, k = v % kHcK;
+        // FromX: raw X here; the stage forms F = X * rr when it publishes to LDS, so the loads stay in flight
+        // behind the current tile's FMAs
+        next_a[q] = r0 + r < rows ? F[static_cast<std::size_t>(r0 + r) * n + k0 + k] : 0.0F;
+    }
+#pragma unroll
+    for (unsigned q = 0; q < Cols * kHcK / T; ++q) {
+        const unsigned v = tid + q * T, o = (Cols == kHcMix ? 0U : blockIdx.y * Cols) + v / kHcK, k = v % kHcK;
+        next_w[q] = fn[static_cast<std::size_t>(o) * n + k0 + k];
+    }
+}
+template <unsigned Rows, unsigned Cols = kHcMix, bool FromX = false>
+__device__ __forceinline__ void hc_chain_stage(const float* next_a, const float* next_w,
+                                              float as[][kHcK + 1], float ws[][Cols + 1], const float* rrq = nullptr) {
+    constexpr unsigned T = 2 * Rows;
+    const unsigned tid = threadIdx.x;
+#pragma unroll
+    for (unsigned q = 0; q < Rows * kHcK / T; ++q) {
+        const unsigned v = tid + q * T;
+        // F = X * rr exactly as hc_norm_rows_kernel stores it (rrq[q]: this element's row factor; padding rows 0 * 0 = +0)
+        if constexpr (FromX) as[v / kHcK][v % kHcK] = next_a[q] * rrq[q];
+        else as[v / kHcK][v % kHcK] = next_a[q];
+    }
+#pragma unroll
+    for (unsigned q = 0; q < Cols * kHcK / T; ++q) {
+        const unsigned v = tid + q * T;
+        ws[v % kHcK][v / kHcK] = next_w[q];
+    }
+}
+template <unsigned Rows, bool FromX = false, unsigned Cols = kHcMix>
+__global__ __launch_bounds__(2 * Rows) void hc_chain_rows_v2_kernel(const float* F, const float* fn, float* z, unsigned rows,
+                                                                    const float* rr = nullptr) {
+    constexpr unsigned n = kHc * kHidden, T = 2 * Rows, J = Cols / 8;
+    static_assert(Cols * kHcK % T == 0 && Rows * kHcK % T == 0 && Cols % 8 == 0);
+    __shared__ float as[2][Rows][kHcK + 1];
+    __shared__ float ws[2][kHcK][Cols + 1];
+    const unsigned r0 = blockIdx.x * Rows, tid = threadIdx.x, tr = tid / 8, tc = tid % 8, c0 = Cols == kHcMix ? 0U : blockIdx.y * Cols;
+    float acc[4][J];
+#pragma unroll
+    for (unsigned i = 0; i < 4; ++i)
+#pragma unroll
+        for (unsigned j = 0; j < J; ++j) acc[i][j] = 0.0F;
+    float next_a[Rows * kHcK / T], next_w[Cols * kHcK / T];
+    float rrq[Rows * kHcK / T] = {};  // a thread's rows are the same at every k0: load their factors once
+    if constexpr (FromX) {
+#pragma unroll
+        for (unsigned q = 0; q < Rows * kHcK / T; ++q) {
+            const unsigned r = (tid + q * T) / kHcK;
+            rrq[q] = r0 + r < rows ? rr[r0 + r] : 0.0F;
+        }
+    }
+    hc_chain_prefetch<Rows, FromX, Cols>(F, fn, next_a, next_w, r0, rows, 0);
+    hc_chain_stage<Rows, Cols, FromX>(next_a, next_w, as[0], ws[0], rrq);
+    __syncthreads();
+    for (unsigned k0 = 0; k0 < n; k0 += kHcK) {
+        const unsigned stage = (k0 / kHcK) % 2;
+        if (k0 + kHcK < n)
+            hc_chain_prefetch<Rows, FromX, Cols>(F, fn, next_a, next_w, r0, rows, k0 + kHcK);
+#pragma unroll 4
+        for (unsigned k = 0; k < kHcK; ++k) {
+            float a[4], b[J];
+#pragma unroll
+            for (unsigned i = 0; i < 4; ++i) a[i] = as[stage][tr * 4 + i][k];
+#pragma unroll
+            for (unsigned j = 0; j < J; ++j) b[j] = ws[stage][k][tc * J + j];
+#pragma unroll
+            for (unsigned i = 0; i < 4; ++i)
+#pragma unroll
+                for (unsigned j = 0; j < J; ++j) acc[i][j] = __builtin_fmaf(a[i], b[j], acc[i][j]);
+        }
+        if (k0 + kHcK < n) hc_chain_stage<Rows, Cols, FromX>(next_a, next_w, as[1 - stage], ws[1 - stage], rrq);
+        __syncthreads();
+    }
+#pragma unroll
+    for (unsigned i = 0; i < 4; ++i) {
+        const unsigned r = r0 + tr * 4 + i;
+        if (r < rows)
+#pragma unroll
+            for (unsigned j = 0; j < J; ++j) z[static_cast<std::size_t>(r) * kHcMix + c0 + tc * J + j] = acc[i][j];
+    }
+}
+bool hc_cols8() {  // STRIX_GLM_PF_HC_COLS = 8 (opt-in, same bits): three output groups per row tile; default 24
+    static const bool on = [] {
+        const char* e = std::getenv("STRIX_GLM_PF_HC_COLS");
+        if (e == nullptr || *e == '\0' || std::string(e) == "24") return false;
+        if (std::string(e) != "8") throw std::invalid_argument("STRIX_GLM_PF_HC_COLS must be 24 or 8");
+        return true;
+    }();
+    return on;
+}
+// One launch of the v2 chain for a tile size and column split (the launch shape follows the template arguments).
+template <unsigned Rows, bool FromX>
+void hc_chain_launch(const float* F, const float* fn, float* z, unsigned rows, const float* rr, bool cols8, hipStream_t s) {
+    if (cols8) STRIX_HIP_LAUNCH(Rdna3Layout, hc_chain_rows_v2_kernel<Rows, FromX, 8><<<dim3((rows + Rows - 1) / Rows, kHcMix / 8), 2 * Rows, 0, s>>>(F, fn, z, rows, rr));
+    else STRIX_HIP_LAUNCH(Rdna3Layout, hc_chain_rows_v2_kernel<Rows, FromX><<<(rows + Rows - 1) / Rows, 2 * Rows, 0, s>>>(F, fn, z, rows, rr));
+}
+unsigned hc_rows_tile() {  // STRIX_GLM_PF_HC_TILE = 64 | 32 | 16 (same bits), default 32
+    static const unsigned t = [] {
+        const char* e = std::getenv("STRIX_GLM_PF_HC_TILE");
+        if (e && std::string(e) == "64") return 64U;
+        if (e && std::string(e) == "16") return 16U;
+        return 32U;
+    }();
+    return t;
+}
+
+// One lane per row executes the shared serial R6; all lanes then share the collapse.
+__global__ __launch_bounds__(256) void hc_mix_rows_v2_kernel(const float* X, const float* zg, const float* base,
+                                                            const float* scale, float* mix, float* xc, unsigned rows) {
+    __shared__ float m[kHcMixRows][kHcMix];
+    const unsigned r0 = blockIdx.x * kHcMixRows, tid = threadIdx.x;
+    if (tid < kHcMixRows && r0 + tid < rows) {
+        const unsigned r = r0 + tid;
+        core::hc::mix_final_packed<HcR6>(zg + static_cast<std::size_t>(r) * kHcMix, scale, base, kHcEps, m[tid]);
+    }
+    __syncthreads();
+    for (unsigned v = tid; v < kHcMixRows * kHcMix; v += 256) {
+        const unsigned rr = v / kHcMix, k = v % kHcMix;
+        if (r0 + rr < rows) mix[static_cast<std::size_t>(r0 + rr) * kHcMix + k] = m[rr][k];
+    }
+    for (unsigned v = tid; v < kHcMixRows * kHidden; v += 256) {
+        const unsigned rr = v / kHidden, d = v % kHidden, r = r0 + rr;
+        if (r < rows) {
+            const float* Xr = X + static_cast<std::size_t>(r) * kHc * kHidden;
+            xc[static_cast<std::size_t>(r) * kHidden + d] =
+                core::hc::packed_dot(m[rr], Xr, d, kHidden);
+        }
+    }
+}
+
+// One row per CTA: the collapse is rounded exactly as the materialized xc, then retained for RMS's second pass.
+// Keep the 256-lane mapping, ascending fmaf chain and LDS tree of dev::rmsnorm(kHidden), including special values.
+__global__ __launch_bounds__(256) void hc_mix_norm_rows_kernel(const float* X, const float* zg, const float* base,
+                                                              const float* scale, float* mix, const std::uint16_t* norm,
+                                                              float* xn, unsigned rows) {
+    static_assert(kHidden == 4096 && norm_lanes(kHidden) == 256);
+    __shared__ float m[kHcMix], s[256];
+    const unsigned r = blockIdx.x, l = threadIdx.x;
+    if (r >= rows) return;  // uniform: no partial CTA participates in a tree
+    if (l == 0) core::hc::mix_final_packed<HcR6>(zg + static_cast<std::size_t>(r) * kHcMix, scale, base, kHcEps, m);
+    __syncthreads();
+    if (l < kHcMix) mix[static_cast<std::size_t>(r) * kHcMix + l] = m[l];
+    const float* Xr = X + static_cast<std::size_t>(r) * kHc * kHidden;
+    float x[kHidden / 256];
+    float a = 0.0F;
+#pragma unroll
+    for (unsigned j = 0; j < kHidden / 256; ++j) {
+        const unsigned d = l + j * 256;
+        x[j] = core::hc::packed_dot(m, Xr, d, kHidden);
+        a = __builtin_fmaf(x[j], x[j], a);
+    }
+    const float ss = lds_tree<256>(s, a);
+    const float rr = inv_sqrt(ss / static_cast<float>(kHidden) + kEps);
+    float* yr = xn + static_cast<std::size_t>(r) * kHidden;
+#pragma unroll
+    for (unsigned j = 0; j < kHidden / 256; ++j) {
+        const unsigned d = l + j * 256;
+        yr[d] = norm ? (x[j] * rr) * bf16_to_float(norm[d]) : x[j] * rr;
+    }
+}
+
+unsigned hc_version() {  // default v2 (measurement: PF-K 30/0 + synthetic 6-layer engine gate PASS, 2.72 -> 1.75 us/row/site); STRIX_GLM_PF_HC=1: v1
+    static const unsigned v = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_HC"));
+    }();
+    return v;
+}
+
+bool mla_v1() {
+    static const bool v1 = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_MLA")) == 1U;
+    }();
+    return v1;
+}
+unsigned idx_version() {  // default v3 (bitwise == v2, -35..-44 % at t0 4096..28672); STRIX_GLM_PF_IDX=2 / 1: v2 / v1 (same keys)
+    static const unsigned v = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_IDX"));
+    }();
+    return v;
+}
+unsigned select_version() {  // default v2 (same lists as v1, -60..-85 % at t0 4096..28672); STRIX_GLM_PF_SELECT=1: v1
+    static const unsigned v = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_SELECT"));
+    }();
+    return v;
+}
+unsigned obar_version() {  // default 10 (heads 32; heads 64 runs v2); STRIX_GLM_PF_OBAR=7 / 5 / 2 / 4 / 6: v7 / v5 / v2 / v4 / v6 (all same bits)
+    // measurement: v10 7.1 / 8.5 / 8.5 / 9.5 vs v7 7.9 / 9.3 / 9.3 / 10.3 us/row per DSA layer at t0 0 / 4096 / 12288 / 28672
+    // (-8..-10 %); v7 9.0-10.2 vs v5 16.6-17.3 us/row at t0 4096..28672 (6.6 vs 11.3 at t0 0); v5 18.1 vs v2
+    // 53.9 at the 32K chunk; v4 5 % slower than v2; v6 2.4x slower than v5
+    static const unsigned v = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_OBAR"));
+    }();
+    return v;
+}
+unsigned mla_gemm_version() {  // default v3 absorb / out GEMM; STRIX_GLM_PF_MLA_GEMM=2: v2, =1: v1
+    static const unsigned v = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_MLA_GEMM"));
+    }();
+    return v;
+}
+unsigned scores_version() {  // default v7 (v6 in 256-row groups, bitwise == v6 / v5, -1..-28 % vs v6); STRIX_GLM_PF_SCORES=6 / 5 / 4 / 3 / 2
+    static const unsigned v = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_SCORES"));
+    }();
+    return v;
+}
+
+}  // namespace
+
+namespace {
+hipEvent_t* g_kda_prof = nullptr;  // 5 events: before prep, conv commit, scan, out, after
+void kda_mark(unsigned i, hipStream_t s) {
+    if (g_kda_prof) ok(hipEventRecord(g_kda_prof[i], s), "glm pf kda profile event");
+}
+}  // namespace
+void set_kda_profile(hipEvent_t* ev5) { g_kda_prof = ev5; }
+namespace {
+unsigned g_kda_scan_v = 0;  // explicit selector (gates / bench); 0 = kda_scan_version()
+// default v6: v5 with the prep fused into the scan and the non-finite test on the final state (same bits; prep + conv +
+// scan 2.02 -> 1.82 us/row at C=4096); STRIX_GLM_PF_KDA_SCAN=5 / 3 / 1: v5 (v3 + fill off the serial path) / v3 / v1;
+unsigned kda_scan_version() {
+    static const unsigned v = [] {
+        return pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_KDA_SCAN"));
+    }();
+    return v;
+}
+}  // namespace
+void set_kda_scan_version(unsigned v) { g_kda_scan_v = v; }
+
+void kda_prefill(const KdaDev& k, const float* qkv, const float* f, const float* gate, const float* b, float* S,
+                 float* conv_state, float* scratch, float* beta, float* o, float* y, unsigned* flag, unsigned C,
+                 hipStream_t s) {
+    if (C == 0) return;
+    const unsigned channels = 3 * k.heads * kKdaDim;
+    const unsigned sv = g_kda_scan_v ? g_kda_scan_v : kda_scan_version();
+    kda_mark(0, s);
+    if (sv == 6) {  // prep fused into the scan (scratch / beta unused); the conv state is committed after the scan read it
+        kda_mark(1, s);
+        kda_mark(2, s);
+        STRIX_HIP_LAUNCH(Rdna3Layout, kda_scan_v6_kernel<<<dim3(k.heads, kKdaDim / kScanV), kScanLanes * kScanV, 0, s>>>(k, qkv, f, b, conv_state, S, o, flag, C));
+        ok(hipGetLastError(), "glm pf kda_scan v6");
+        STRIX_HIP_LAUNCH(Rdna3Layout, kda_conv_commit_kernel<<<(channels + 255) / 256, 256, 0, s>>>(qkv, conv_state, channels, C));
+        ok(hipGetLastError(), "glm pf kda_conv_commit");
+        kda_mark(3, s);
+        STRIX_HIP_LAUNCH(Rdna3Layout, kda_out_rows_kernel<<<dim3(k.heads, C), 128, 0, s>>>(k, o, gate, y));
+        ok(hipGetLastError(), "glm pf kda_out_rows");
+        kda_mark(4, s);
+        return;
+    }
+    STRIX_HIP_LAUNCH(Rdna3Layout, kda_prep_rows_kernel<<<dim3(k.heads, C), 128, 0, s>>>(k, qkv, f, b, conv_state, scratch, beta));
+    ok(hipGetLastError(), "glm pf kda_prep_rows");
+    kda_mark(1, s);
+    STRIX_HIP_LAUNCH(Rdna3Layout, kda_conv_commit_kernel<<<(channels + 255) / 256, 256, 0, s>>>(qkv, conv_state, channels, C));
+    ok(hipGetLastError(), "glm pf kda_conv_commit");
+    kda_mark(2, s);
+    if (sv == 1) STRIX_HIP_LAUNCH(Rdna3Layout, kda_scan_kernel<<<dim3(k.heads, kKdaDim / kScanV), kScanLanes * kScanV, 0, s>>>(k.heads, S, scratch, beta, o, flag, C));
+    else if (sv == 3) STRIX_HIP_LAUNCH(Rdna3Layout, kda_scan_v3_kernel<<<dim3(k.heads, kKdaDim / kScanV), kScanLanes * kScanV, 0, s>>>(k.heads, S, scratch, beta, o, flag, C));
+    else STRIX_HIP_LAUNCH(Rdna3Layout, kda_scan_v5_kernel<<<dim3(k.heads, kKdaDim / kScanV), kScanLanes * kScanV, 0, s>>>(k.heads, S, scratch, beta, o, flag, C));
+    ok(hipGetLastError(), "glm pf kda_scan");
+    kda_mark(3, s);
+    STRIX_HIP_LAUNCH(Rdna3Layout, kda_out_rows_kernel<<<dim3(k.heads, C), 128, 0, s>>>(k, o, gate, y));
+    ok(hipGetLastError(), "glm pf kda_out_rows");
+    kda_mark(4, s);
+}
+
+void dsa_append_rows(const DsaSlot& slot, unsigned t0, const float* latent, const float* key, const float* gate,
+                     const IndexerDev& w, unsigned* flag, unsigned C, hipStream_t s, bool kv_shard, unsigned rank,
+                     const std::uint16_t* latent_norm) {
+    if (C == 0) return;
+    if (latent_norm)
+        STRIX_HIP_LAUNCH(Rdna3Layout, dsa_store_rows_kernel<true><<<C, 128, 0, s>>>(slot, t0, latent, w, key, gate, flag, kv_shard, rank, latent_norm));
+    else
+        STRIX_HIP_LAUNCH(Rdna3Layout, dsa_store_rows_kernel<false><<<C, 128, 0, s>>>(slot, t0, latent, w, key, gate, flag, kv_shard, rank));
+    ok(hipGetLastError(), "glm pf dsa_store_rows");
+    const unsigned p_lo = t0 / kKpool, p_hi = (t0 + C) / kKpool;
+    if (p_hi > p_lo) {
+        STRIX_HIP_LAUNCH(Rdna3Layout, dsa_pool_kernel<<<p_hi - p_lo, 128, 0, s>>>(slot, p_lo, w, flag, kv_shard, rank));
+        ok(hipGetLastError(), "glm pf dsa_pool");
+    }
+}
+
+namespace {
+hipEvent_t* g_idx_prof = nullptr;  // 3 events: before scores, before select, after
+void idx_mark(unsigned i, hipStream_t s) {
+    if (g_idx_prof) ok(hipEventRecord(g_idx_prof[i], s), "glm pf indexer profile event");
+}
+}  // namespace
+void set_idx_profile(hipEvent_t* ev3) { g_idx_prof = ev3; }
+
+void indexer_select_rows(const DsaSlot& slot, unsigned t0, const float* qI, float* wh, std::uint32_t* keys,
+                         unsigned kpool_cap, std::uint32_t* tokens, std::uint32_t* n, unsigned C, hipStream_t s) {
+    indexer_select_rows_versions(slot, t0, qI, wh, keys, kpool_cap, tokens, n, C, s, idx_version(), select_version());
+}
+
+
+namespace {
+// STRIX_IDX_WMMA for GLM: unset -> exact (WMMA scores + exact rescoring of the cut-off: the lists of the v3 path).
+static_assert(kIndexerWmmaUnsetMode == aidx::kModeExact);
+unsigned idx_wmma_mode() { return aidx::wmma_mode(kIndexerWmmaUnsetMode); }
+
+// Four words of device scratch per stream for the exact mode (key bound, statistics). Work on one stream is ordered,
+// so a launch's bound is read by its own refine kernel. Allocated once per stream and kept for the process.
+std::uint32_t* idx_bound_scratch(hipStream_t s) {
+    static std::mutex m;
+    static std::unordered_map<hipStream_t, std::uint32_t*> map;
+    const std::lock_guard<std::mutex> lock(m);
+    std::uint32_t*& b = map[s];
+    if (b == nullptr) ok(hipMalloc(&b, 4 * sizeof(std::uint32_t)), "glm idx bound scratch");
+    return b;
+}
+
+// WMMA index scores for pools [pool_begin, pool_end) (keys at p - pool_begin; `old` retained keys of the earlier
+// windows sit in front of each row's window keys, their pool ids in `ids`, null when those pools are not in `pooled`).
+// Mode exact: FP16 scores, then idx_refine_rows_kernel.
+// STRIX_IDX_WMMA_AUDIT=1 also rescores with v3 into scratch and compares each row's top-512 pool set (diagnostic,
+// synchronous; in mode exact only for launches that hold every pool of their rows) and prints the rescored share.
+void idx_score_wmma(unsigned mode, const float* pooled, unsigned t0, unsigned C, const float* qI, const float* wh,
+                    std::uint32_t* keys, unsigned cap, unsigned old, const std::uint32_t* ids, unsigned pool_begin, unsigned pool_end,
+                    unsigned pool_base, hipStream_t s) {
+    using P16 = IdxWmmaPolicy<aidx::Operand::f16>;
+    using PB = IdxWmmaPolicy<aidx::Operand::bf16>;
+    const IdxWmmaArgs a{pooled, qI, wh, keys, t0, C, cap, pool_begin, pool_end, pool_base};
+    const unsigned tiles = (pool_end - pool_begin + aidx::kKeys - 1) / aidx::kKeys, groups = (C + PB::kRows - 1) / PB::kRows;
+    if (groups > 65535U) throw std::invalid_argument("glm pf idx wmma: too many rows");
+    if (mode == aidx::kModeBf16x2) throw std::invalid_argument("STRIX_IDX_WMMA: GLM takes bf16, f16 or exact (bf16x2 needs BF16 keys)");
+    const bool rescore = mode == aidx::kModeExact, audit_on = aidx::audit_enabled();
+    const unsigned pools = pool_end - pool_begin;
+    if (mode == static_cast<unsigned>(aidx::Operand::f16) || rescore) aidx::launch<P16>(a, aidx::wmma_split(tiles), groups, s);
+    else aidx::launch<PB>(a, aidx::wmma_split(tiles), groups, s);
+    ok(hipGetLastError(), "glm pf idx wmma");
+    if (rescore) {
+        std::uint32_t* b = idx_bound_scratch(s);
+        ok(hipMemsetAsync(b, 0, 4 * sizeof(std::uint32_t), s), "glm idx bound clear");
+        STRIX_HIP_LAUNCH(Rdna3Layout, idx_key_bound_kernel<<<(pools + 255) / 256, 256, 0, s>>>(pooled + static_cast<std::size_t>(pool_begin - pool_base) * kIdxDim, pools, b));
+        STRIX_HIP_LAUNCH(Rdna3Layout, idx_refine_rows_kernel<<<C, kIrThreads, 0, s>>>(pooled, t0, qI, wh, keys, cap, old, ids, pool_begin, pool_end, pool_base, b,
+                                                        audit_on ? b + 2 : nullptr));
+        ok(hipGetLastError(), "glm pf idx refine");
+    }
+    if (!audit_on) return;
+    static aidx::Audit audit;
+    static unsigned calls = 0;
+    if (rescore) {
+        static double rescored = 0, scored = 0;
+        std::uint32_t st[4]{};
+        ok(hipStreamSynchronize(s), "glm idx refine sync");
+        ok(hipMemcpy(st, idx_bound_scratch(s), sizeof st, hipMemcpyDeviceToHost), "glm idx refine stats");
+        rescored += st[2];
+        scored += st[3];
+        std::fprintf(stderr, "glm idx-wmma exact: rescored %.0f of %.0f scores (%.3f %%), this launch %u of %u, key norm bound %.4g\n",
+                     rescored, scored, scored > 0 ? 100.0 * rescored / scored : 0.0, st[2], st[3],
+                     static_cast<double>(std::sqrt(__builtin_bit_cast(float, st[0]))));
+        if (pool_begin != 0 || pool_end < (t0 + C) / kKpool) return;  // a window: its own top-512 is not the selection
+    }
+    const std::size_t n = std::size_t{C - 1} * cap + pools;  // the keys of the last row end at its pool count
+    std::uint32_t* exact = nullptr;
+    ok(hipMalloc(&exact, n * sizeof(std::uint32_t)), "glm idx audit alloc");
+    STRIX_HIP_LAUNCH(Rdna3Layout, idx_score_rows_v3_kernel<<<dim3((pools + kIs3Pools - 1) / kIs3Pools, (C + kIs3Rows - 1) / kIs3Rows), 32 * kIs3Rows, 0, s>>>(
+        pooled, t0, C, qI, wh, exact, cap, pool_begin, pool_base));
+    ok(hipGetLastError(), "glm idx audit exact");
+    std::vector<std::uint32_t> ea(n), fb(n);
+    ok(hipStreamSynchronize(s), "glm idx audit sync");
+    ok(hipMemcpy(ea.data(), exact, n * sizeof(std::uint32_t), hipMemcpyDeviceToHost), "glm idx audit copy exact");
+    ok(hipMemcpy(fb.data(), keys, n * sizeof(std::uint32_t), hipMemcpyDeviceToHost), "glm idx audit copy fast");
+    ok(hipFree(exact), "glm idx audit free");
+    for (unsigned r = 0; r < C; ++r) {
+        const unsigned P = (t0 + r + 1) / kKpool;
+        if (P <= kIdxPools) continue;
+        const unsigned end = (P < pool_end ? P : pool_end) - pool_begin;
+        audit.add(ea.data() + std::size_t{r} * cap, fb.data() + std::size_t{r} * cap, end, kIdxPools,
+                  [](std::size_t) { return true; });
+    }
+    std::fprintf(stderr, "%s (call %u)\n", audit.line("glm").c_str(), ++calls);
+}
+}  // namespace
+
+void indexer_select_rows_bounded(const DsaSlot& slot, unsigned t0, const float* qI, float* wh, std::uint32_t* keys,
+                                 std::uint32_t* tokens, std::uint32_t* n, unsigned C, hipStream_t s, unsigned score_v,
+                                 const std::function<const float*(unsigned, unsigned)>& pool_window) {
+    static_assert(kIdxPools == kIndexerRetainedPools);
+    if (C == 0) return;
+    const unsigned Pmax = (t0 + C) / kKpool;
+    if (score_v == 0) score_v = idx_version();
+    if (score_v < 1 || score_v > 3) throw std::invalid_argument("glm pf bounded scores: unsupported version");
+    if (Pmax <= kIndexerPoolWindow) {
+        // Keep the existing single-window kernels and selector controls; the
+        // fixed arena is already large enough for every score of these rows.
+        DsaSlot window = slot;
+        if (pool_window && Pmax > kIdxPools) window.pooled = const_cast<float*>(pool_window(0, Pmax));
+        indexer_select_rows_versions(window, t0, qI, wh, keys, kIndexerKeyStride, tokens, n, C, s, score_v, select_version());
+        return;
+    }
+    idx_mark(0, s);
+    if (Pmax > kIdxPools) {
+        STRIX_HIP_LAUNCH(Rdna3Layout, scale_kernel<<<(C * kIdxHeads + 255) / 256, 256, 0, s>>>(wh, C * kIdxHeads, kInvSqrt32));
+        ok(hipGetLastError(), "glm pf bounded scale");
+    }
+    // Run once even when no scores are needed, to emit all tokens and the tail.
+    const unsigned windows = std::max(1U, (Pmax + kIndexerPoolWindow - 1) / kIndexerPoolWindow);
+    for (unsigned w = 0; w < windows; ++w) {
+        const unsigned begin = w * kIndexerPoolWindow;
+        const unsigned pools = std::min(kIndexerPoolWindow, Pmax - begin);
+        if (Pmax > kIdxPools) {
+            const float* pooled = pool_window ? pool_window(begin, pools) : slot.pooled;
+            const unsigned base = pool_window ? begin : 0U;
+            auto* out = keys + kIdxPools;
+            if (const unsigned wm = idx_wmma_mode(); wm != 0)
+                idx_score_wmma(wm, pooled, t0, C, qI, wh, out, kIndexerKeyStride, std::min(begin, kIdxPools), pool_window ? nullptr : tokens, begin, begin + pools,
+                               base, s);
+            else if (score_v == 1)
+                STRIX_HIP_LAUNCH(Rdna3Layout, idx_score_rows_kernel<<<dim3((pools + 127) / 128, (C + kScoreRows - 1) / kScoreRows), 128, 0, s>>>(
+                    pooled, t0, C, qI, wh, out, kIndexerKeyStride, begin, base));
+            else if (score_v == 3)
+                STRIX_HIP_LAUNCH(Rdna3Layout, idx_score_rows_v3_kernel<<<dim3((pools + kIs3Pools - 1) / kIs3Pools, (C + kIs3Rows - 1) / kIs3Rows), 32 * kIs3Rows, 0, s>>>(
+                    pooled, t0, C, qI, wh, out, kIndexerKeyStride, begin, base));
+            else
+                STRIX_HIP_LAUNCH(Rdna3Layout, idx_score_rows_v2_kernel<<<dim3((pools + kIs2Pools - 1) / kIs2Pools, (C + kIs2Rows - 1) / kIs2Rows), 256, 0, s>>>(
+                    pooled, t0, C, qI, wh, out, kIndexerKeyStride, begin, base));
+            ok(hipGetLastError(), "glm pf bounded scores");
+        }
+        STRIX_HIP_LAUNCH(Rdna3Layout, idx_merge_window_kernel<<<C, 1024, 0, s>>>(keys, kIndexerKeyStride, t0, begin, w + 1 == windows, tokens, n));
+        ok(hipGetLastError(), "glm pf bounded merge");
+    }
+    idx_mark(1, s);
+    idx_mark(2, s);
+}
+
+void indexer_select_rows_versions(const DsaSlot& slot, unsigned t0, const float* qI, float* wh, std::uint32_t* keys,
+                                  unsigned kpool_cap, std::uint32_t* tokens, std::uint32_t* n, unsigned C, hipStream_t s,
+                                  unsigned score_v, unsigned select_v) {
+    if ((score_v != 1 && score_v != 2 && score_v != 3) || (select_v != 1 && select_v != 2))
+        throw std::runtime_error("glm pf indexer_select_rows_versions: unsupported versions");
+    if (C == 0) return;
+    idx_mark(0, s);
+    const unsigned Pmax = (t0 + C) / kKpool;
+    if (Pmax > kpool_cap) throw std::runtime_error("glm pf indexer_select_rows: key workspace too small");
+    if (Pmax > kIdxPools) {
+        STRIX_HIP_LAUNCH(Rdna3Layout, scale_kernel<<<(C * kIdxHeads + 255) / 256, 256, 0, s>>>(wh, C * kIdxHeads, kInvSqrt32));
+        ok(hipGetLastError(), "glm pf scale");
+        if (const unsigned wm = idx_wmma_mode(); wm != 0)
+            idx_score_wmma(wm, slot.pooled, t0, C, qI, wh, keys, kpool_cap, 0, tokens, 0, Pmax, 0, s);
+        else if (score_v == 1)
+            STRIX_HIP_LAUNCH(Rdna3Layout, idx_score_rows_kernel<<<dim3((Pmax + 127) / 128, (C + kScoreRows - 1) / kScoreRows), 128, 0, s>>>(
+                slot.pooled, t0, C, qI, wh, keys, kpool_cap, 0));
+        else if (score_v == 3)
+            STRIX_HIP_LAUNCH(Rdna3Layout, idx_score_rows_v3_kernel<<<dim3((Pmax + kIs3Pools - 1) / kIs3Pools, (C + kIs3Rows - 1) / kIs3Rows), 32 * kIs3Rows, 0, s>>>(
+                slot.pooled, t0, C, qI, wh, keys, kpool_cap, 0));
+        else
+            STRIX_HIP_LAUNCH(Rdna3Layout, idx_score_rows_v2_kernel<<<dim3((Pmax + kIs2Pools - 1) / kIs2Pools, (C + kIs2Rows - 1) / kIs2Rows), 256, 0, s>>>(
+                slot.pooled, t0, C, qI, wh, keys, kpool_cap, 0));
+        ok(hipGetLastError(), "glm pf idx_score_rows");
+    }
+    idx_mark(1, s);
+    if (select_v == 2) STRIX_HIP_LAUNCH(Rdna3Layout, idx_select_rows_v2_kernel<<<C, kSel2Threads, 0, s>>>(keys, kpool_cap, t0, tokens, n));
+    else STRIX_HIP_LAUNCH(Rdna3Layout, idx_select_rows_kernel<<<C, 1024, 0, s>>>(keys, kpool_cap, t0, tokens, n));
+    ok(hipGetLastError(), "glm pf idx_select_rows");
+    idx_mark(2, s);
+}
+
+void dense_rows(const float* x, const void* w, dev::WType wt, unsigned in, unsigned o0, unsigned n, float* y, unsigned rows,
+                hipStream_t s) {
+    dense_rows_versioned(x, w, wt, in, o0, n, y, rows, s, dense_rows_version());
+}
+
+// Version 4: the same chains on the shared load-pipelined core (src/core/fma_rows.hpp); the core picks the physical form
+// per shape (rows, chain length, group size). STRIX_GLM_PF_DENSE_FORM=1..7 forces one form where the shape admits it
+// (0 / unset = automatic). Shapes outside the v2 / v3 range (in > 4096) keep the version 3 route.
+static ::strix::core::fma_rows::Form dense_form() {
+    // The governed selector table (glm_pf_variants.hpp): the same parser the rank resolver validates at startup.
+    static const auto f = static_cast<::strix::core::fma_rows::Form>(pf_variant_from_env(*pf_variant_find("STRIX_GLM_PF_DENSE_FORM")));
+    return f;
+}
+static ::strix::core::fma_rows::Weight fma_weight(dev::WType wt) {
+    return wt == dev::WType::F16 ? ::strix::core::fma_rows::Weight::F16
+         : wt == dev::WType::BF16 ? ::strix::core::fma_rows::Weight::BF16 : ::strix::core::fma_rows::Weight::F32;
+}
+
+void dense_rows_versioned(const float* x, const void* w, dev::WType wt, unsigned in, unsigned o0, unsigned n, float* y,
+                          unsigned rows, hipStream_t s, unsigned version) {
+    if (version < 1 || version > 4) throw std::invalid_argument("glm pf dense_rows version must be 1, 2, 3 or 4");
+    if (rows == 0 || n == 0) return;
+    if (in == 0 || in % kGK) throw std::runtime_error("glm pf dense_rows: in must be a positive multiple of 32");
+    if (version == 4) {
+        if (in <= 4096) {
+            ::strix::core::fma_rows::Group g{};
+            g.count = 1; g.w[0] = w; g.y[0] = y; g.o0[0] = o0; g.n[0] = n;
+            ::strix::core::fma_rows::launch_auto(x, fma_weight(wt), in, rows, g, s, dense_form());
+            ok(hipGetLastError(), "glm pf dense_rows v4");
+            ::strix::route::launched(::strix::route::Product::dense, ::strix::route::Family::fma_rows, rows);
+            return;
+        }
+        ::strix::route::bypass(::strix::route::Product::dense, ::strix::route::Family::fma_rows, ::strix::route::Reason::shape, rows);  // in > 4096: older tiles
+        version = 3;
+    }
+    ::strix::route::launched(::strix::route::Product::dense, ::strix::route::Family::exact, rows);
+    // Version 3 only changes grouped calls (dense_rows_group): a single projection measured at parity with v2 (router,
+    // KDA f_b), so single calls keep the v2 tile under version 3.
+    if (version == 3) version = 2;
+    // v2 for in <= 4096 (KDA / indexer / router shapes); the 16384-long F32 chains of the legacy mHC path keep the v1 tile.
+    if (version == 1 || in > 4096)
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_kernel<<<dim3((rows + kGT - 1) / kGT, (n + kGT - 1) / kGT), 256, 0, s>>>(x, w, wt, in, o0, n, y, rows));
+    else if (n >= 128)
+        dense_rows_v2_launch<64>(x, w, wt, in, o0, n, y, rows, s);
+    else
+        dense_rows_v2_launch<32>(x, w, wt, in, o0, n, y, rows, s);
+    ok(hipGetLastError(), "glm pf dense_rows");
+}
+
+void dense_rows_group(const float* x, dev::WType wt, unsigned in, const DenseProj* p, unsigned count, unsigned rows, hipStream_t s) {
+    if (!aux::enabled("STRIX_GLM_PF_AUX_DENSE") || dense_rows_version() != 3 ||
+        count < 2 || count > 3 || in == 0 || in > 4096 || in % 32U || rows == 0) {
+        dense_rows_group_versioned(x, wt, in, p, count, rows, s, dense_rows_version());
+        return;
+    }
+    DenseGroupArgs g{};
+    unsigned widths[3]{};
+    for (unsigned i = 0; i < count; ++i) {
+        if (!p[i].n) continue;
+        widths[g.count] = g.n[g.count] = p[i].n;
+        g.w[g.count] = p[i].w; g.y[g.count] = p[i].y; g.o0[g.count] = p[i].o0;
+        ++g.count;
+    }
+    if (!g.count) return;
+    // Fixed 64x128 geometry limits the live accumulators to 48 FP32 values.
+    // All projections reuse the same A tile. Ragged columns never read W or write Y.
+    const dim3 grid((rows + 63U) / 64U, (aux::dense_columns(widths, g.count) + 127U) / 128U);
+    if (wt == dev::WType::F16)
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v3_kernel<64, 128, dev::WType::F16, 3><<<grid, 512, 0, s>>>(x, in, rows, g));
+    else if (wt == dev::WType::BF16)
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v3_kernel<64, 128, dev::WType::BF16, 3><<<grid, 512, 0, s>>>(x, in, rows, g));
+    else
+        STRIX_HIP_LAUNCH(Rdna3Layout, dense_rows_v3_kernel<64, 128, dev::WType::F32, 3><<<grid, 512, 0, s>>>(x, in, rows, g));
+    ok(hipGetLastError(), "glm pf dense shared input");
+}
+
+void dense_rows_group_versioned(const float* x, dev::WType wt, unsigned in, const DenseProj* p, unsigned count, unsigned rows,
+                                hipStream_t s, unsigned version, unsigned rt, unsigned c) {
+    if (version < 1 || version > 4) throw std::invalid_argument("glm pf dense_rows version must be 1, 2, 3 or 4");
+    if (count == 0 || count > kDenseGroupMax) throw std::invalid_argument("glm pf dense_rows_group: 1..kDenseGroupMax projections");
+    if ((rt != 0 && rt != 32 && rt != 64 && rt != 128) || (c != 0 && c != 32 && c != 64) || ((rt == 0) != (c == 0)))
+        throw std::invalid_argument("glm pf dense_rows_group: tile rt 32/64/128 with c 32/64, or both 0 (auto)");
+    if (version == 4) {
+        if (in != 0 && in <= 4096 && in % kGK == 0 && rows != 0) {
+            ::strix::core::fma_rows::Group g{};
+            for (unsigned i = 0; i < count; ++i) {
+                if (p[i].n == 0) continue;
+                g.w[g.count] = p[i].w; g.y[g.count] = p[i].y; g.o0[g.count] = p[i].o0; g.n[g.count] = p[i].n;
+                ++g.count;
+            }
+            if (g.count == 0) return;
+            ::strix::core::fma_rows::launch_auto(x, fma_weight(wt), in, rows, g, s, dense_form());
+            ok(hipGetLastError(), "glm pf dense_rows v4");
+            ::strix::route::launched(::strix::route::Product::dense, ::strix::route::Family::fma_rows, rows);  // one fused launch for the group
+            return;
+        }
+        version = 3;
+    }
+    if (version != 3 || in > 4096) {
+        for (unsigned i = 0; i < count; ++i) dense_rows_versioned(x, p[i].w, wt, in, p[i].o0, p[i].n, p[i].y, rows, s, version);
+        return;
+    }
+    if (rows == 0) return;
+    ::strix::route::launched(::strix::route::Product::dense, ::strix::route::Family::exact, rows);  // grouped v3 tile
+    if (in == 0 || in % kGK) throw std::runtime_error("glm pf dense_rows: in must be a positive multiple of 32");
+    DenseGroupArgs g{};
+    unsigned ns[kDenseGroupMax];
+    for (unsigned i = 0; i < count; ++i) {
+        if (p[i].n == 0) continue;  // an empty projection writes nothing
+        g.w[g.count] = p[i].w;
+        g.y[g.count] = p[i].y;
+        g.o0[g.count] = p[i].o0;
+        g.n[g.count] = ns[g.count] = p[i].n;
+        ++g.count;
+    }
+    if (g.count == 0) return;
+    if (rt == 0) dense_rows_v3_auto(rows, ns, g.count, rt, c);
+    dense_rows_v3_dispatch(x, wt, in, rows, g, rt, c, s);
+    ok(hipGetLastError(), "glm pf dense_rows v3");
+}
+
+void hc_pre_rows_v1(const float* X, const float* fn, const float* base, const float* scale, float* F, float* z, float* mix, float* xc,
+                 unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_norm_rows_kernel<<<rows, 256, 0, s>>>(X, F));
+    ok(hipGetLastError(), "glm pf hc_norm_rows");
+    dense_rows(F, fn, dev::WType::F32, kHc * kHidden, 0, kHcMix, z, rows, s);
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_mix_rows_kernel<<<rows, 256, 0, s>>>(X, z, base, scale, mix, xc));
+    ok(hipGetLastError(), "glm pf hc_mix_rows");
+}
+
+void hc_pre_rows_v2(const float* X, const float* fn, const float* base, const float* scale, float* F, float* z, float* mix, float* xc,
+                    unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_norm_rows_kernel<<<rows, 256, 0, s>>>(X, F));
+    ok(hipGetLastError(), "glm pf hc_norm_rows v2");
+    const unsigned t = hc_rows_tile();
+    if (t == 64) hc_chain_launch<64, false>(F, fn, z, rows, nullptr, hc_cols8(), s);
+    else if (t == 16) hc_chain_launch<16, false>(F, fn, z, rows, nullptr, hc_cols8(), s);
+    else hc_chain_launch<32, false>(F, fn, z, rows, nullptr, hc_cols8(), s);
+    ok(hipGetLastError(), "glm pf hc_chain_rows v2");
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_mix_rows_v2_kernel<<<(rows + kHcMixRows - 1) / kHcMixRows, 256, 0, s>>>(X, z, base, scale, mix, xc, rows));
+    ok(hipGetLastError(), "glm pf hc_mix_rows v2");
+}
+
+void hc_pre_rows(const float* X, const float* fn, const float* base, const float* scale, float* F, float* z, float* mix, float* xc,
+                 unsigned rows, hipStream_t s) {
+    if (hc_version() == 2) hc_pre_rows_v2(X, fn, base, scale, F, z, mix, xc, rows, s);
+    else hc_pre_rows_v1(X, fn, base, scale, F, z, mix, xc, rows, s);
+}
+
+bool hc_mix_norm_enabled() {
+    static const bool on = [] {
+        const char* e = std::getenv("STRIX_GLM_PF_MIXNORM");
+        if (e == nullptr || *e == '\0') return true;
+        const std::string v(e);
+        if (v != "0" && v != "1") throw std::invalid_argument("STRIX_GLM_PF_MIXNORM must be 0 or 1");
+        return v == "1";
+    }();
+    return on && hc_version() == 2;
+}
+
+void hc_mix_rows_v2(const float* X, const float* z, const float* base, const float* scale, float* mix, float* xc,
+                    unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_mix_rows_v2_kernel<<<(rows + kHcMixRows - 1) / kHcMixRows, 256, 0, s>>>(X, z, base, scale, mix, xc, rows));
+    ok(hipGetLastError(), "glm pf hc_mix_rows v2 tail");
+}
+
+void hc_mix_norm_rows(const float* X, const float* z, const float* base, const float* scale, float* mix,
+                      const std::uint16_t* norm, float* xn, unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_mix_norm_rows_kernel<<<rows, 256, 0, s>>>(X, z, base, scale, mix, norm, xn, rows));
+    ok(hipGetLastError(), "glm pf hc_mix_norm_rows");
+}
+
+void hc_pre_rows_v2(const float* X, const float* fn, const float* base, const float* scale, float* F, float* z, float* mix,
+                    const std::uint16_t* norm, float* xn, unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_norm_rows_kernel<<<rows, 256, 0, s>>>(X, F));
+    ok(hipGetLastError(), "glm pf hc_norm_rows v2 mixnorm");
+    const unsigned t = hc_rows_tile();
+    if (t == 64) hc_chain_launch<64, false>(F, fn, z, rows, nullptr, hc_cols8(), s);
+    else if (t == 16) hc_chain_launch<16, false>(F, fn, z, rows, nullptr, hc_cols8(), s);
+    else hc_chain_launch<32, false>(F, fn, z, rows, nullptr, hc_cols8(), s);
+    ok(hipGetLastError(), "glm pf hc_chain_rows v2 mixnorm");
+    hc_mix_norm_rows(X, z, base, scale, mix, norm, xn, rows, s);
+}
+
+namespace {
+unsigned hc_fuse_mode() {
+    static const unsigned m = [] {
+        const char* e = std::getenv("STRIX_GLM_PF_HC_FUSE");
+        if (e == nullptr || *e == '\0') return 1U;  // default on: exact, pair ABBA -1.0 % 1K / -1.4 % 8K; 0 restores the unfused sites
+        const std::string v(e);
+        if (v != "0" && v != "1" && v != "2") throw std::invalid_argument("STRIX_GLM_PF_HC_FUSE must be 0, 1 or 2");
+        return static_cast<unsigned>(v[0] - '0');
+    }();
+    return m;
+}
+}  // namespace
+
+bool hc_expand_norm_enabled() { return hc_fuse_mode() != 0 && hc_version() == 2; }
+bool hc_expand_norm_split() { return hc_fuse_mode() == 2; }
+
+void hc_norm_factor_rows(const float* X, float* rr, unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_norm_factor_rows_kernel<<<rows, 256, 0, s>>>(X, rr));
+    ok(hipGetLastError(), "glm pf hc_norm_factor_rows");
+}
+
+namespace {
+template <bool kPair>
+void launch_expand_norm(unsigned hoist, const float* X, const float* mix, const float* y0, const float* y1, float* Xo, float* rr,
+                        unsigned* flag, unsigned rows, hipStream_t s) {
+    if (hoist == 0) STRIX_HIP_LAUNCH(Rdna3Layout, hc_expand_norm_rows_kernel<kPair, 0><<<rows, 256, 0, s>>>(X, mix, y0, y1, Xo, rr, flag));
+    else if (hoist == 1) STRIX_HIP_LAUNCH(Rdna3Layout, hc_expand_norm_rows_kernel<kPair, 1><<<rows, 256, 0, s>>>(X, mix, y0, y1, Xo, rr, flag));
+    else if (hoist == 2) STRIX_HIP_LAUNCH(Rdna3Layout, hc_expand_norm_rows_kernel<kPair, 2><<<rows, 256, 0, s>>>(X, mix, y0, y1, Xo, rr, flag));
+    else throw std::invalid_argument("hc expand hoist must be 0, 1 or 2");
+}
+}  // namespace
+
+unsigned hc_expand_hoist() {
+    static const unsigned h = [] {
+        const char* e = std::getenv("STRIX_GLM_PF_HC_HOIST");
+        if (e == nullptr || *e == '\0') return 1U;  // default 1; load placement only (exact by construction); 0 = loads inside each step
+        const std::string v(e);
+        if (v != "0" && v != "1" && v != "2") throw std::invalid_argument("STRIX_GLM_PF_HC_HOIST must be 0, 1 or 2");
+        return static_cast<unsigned>(v[0] - '0');
+    }();
+    return h;
+}
+
+void hc_expand_norm_rows_h(unsigned hoist, const float* X, const float* mix, const float* y, float* Xo, float* rr, unsigned* flag,
+                           unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    launch_expand_norm<false>(hoist, X, mix, y, nullptr, Xo, rr, flag, rows, s);
+    ok(hipGetLastError(), "glm pf hc_expand_norm_rows");
+}
+
+void hc_sum_expand_norm_rows_h(unsigned hoist, const float* X, const float* mix, const float* y0, const float* y1, float* Xo, float* rr,
+                               unsigned* flag, unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    launch_expand_norm<true>(hoist, X, mix, y0, y1, Xo, rr, flag, rows, s);
+    ok(hipGetLastError(), "glm pf hc_sum_expand_norm_rows");
+}
+
+bool hc_expand_bw_enabled() {
+    // default on: same bits; 0 restores the one-row HOIST kernels; anything else is rejected (std::invalid_argument)
+    static const bool on = strix::envcfg::number<int>("STRIX_GLM_PF_HC_EXPAND_BW", 1, 0, 1) == 1;
+    return on;
+}
+bool hc_expand_bw_rows(const float* X, const float* mix, const float* y, const float* y1, float* Xo, float* rr, unsigned* flag,
+                       unsigned rows, hipStream_t s) {
+    namespace hr = ::strix::core::hc::rows;
+    if (!hr::expand_rows_admissible<GlmHcExpandPolicy>(kHcExpandBwLanes, X, mix, y, y1, Xo, rr, rows)) return false;
+    if (y1) hr::launch_expand_rows<GlmHcExpandPolicy, true, kHcExpandBwLanes, kHcExpandBwNT>(X, mix, y, y1, Xo, rr, flag, rows, s);
+    else hr::launch_expand_rows<GlmHcExpandPolicy, false, kHcExpandBwLanes, kHcExpandBwNT>(X, mix, y, nullptr, Xo, rr, flag, rows, s);
+    ok(hipGetLastError(), "glm pf hc_expand_bw_rows");
+    return true;
+}
+
+void hc_expand_norm_rows(const float* X, const float* mix, const float* y, float* Xo, float* rr, unsigned* flag, unsigned rows,
+                         hipStream_t s) {
+    if (rows == 0) return;
+    // STRIX_GLM_PF_HC_EXPAND_BW (default): the shared bandwidth-organised row expansion; ranges that break its restrict
+    // contract (aliasing or misaligned rows) keep the one-row kernel.
+    if (hc_expand_bw_enabled() && hc_expand_bw_rows(X, mix, y, nullptr, Xo, rr, flag, rows, s)) return;
+    hc_expand_norm_rows_h(hc_expand_hoist(), X, mix, y, Xo, rr, flag, rows, s);
+}
+
+void hc_sum_expand_norm_rows(const float* X, const float* mix, const float* y0, const float* y1, float* Xo, float* rr, unsigned* flag,
+                             unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    if (hc_expand_bw_enabled() && hc_expand_bw_rows(X, mix, y0, y1, Xo, rr, flag, rows, s)) return;
+    hc_sum_expand_norm_rows_h(hc_expand_hoist(), X, mix, y0, y1, Xo, rr, flag, rows, s);
+}
+
+bool hc_sum_expand_enabled() {
+    static const bool on = [] {
+        const char* e = std::getenv("STRIX_GLM_PF_SUMEXP");
+        if (e == nullptr || *e == '\0') return true;  // default on: exact (same sum, same expand); 0 restores sum2 + expand
+        const std::string v(e);
+        if (v != "0" && v != "1") throw std::invalid_argument("STRIX_GLM_PF_SUMEXP must be 0 or 1");
+        return v == "1";
+    }();
+    return on && hc_expand_norm_enabled() && !hc_expand_norm_split();
+}
+
+
+void hc_pre_rows_normed(const float* X, const float* fn, const float* base, const float* scale, const float* rr, float* z, float* mix,
+                        float* xc, unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    if (hc_version() != 2) throw std::logic_error("glm pf hc_pre_rows_normed: v2 sites only");
+    const unsigned t = hc_rows_tile();
+    if (t == 64) hc_chain_launch<64, true>(X, fn, z, rows, rr, hc_cols8(), s);
+    else if (t == 16) hc_chain_launch<16, true>(X, fn, z, rows, rr, hc_cols8(), s);
+    else hc_chain_launch<32, true>(X, fn, z, rows, rr, hc_cols8(), s);
+    ok(hipGetLastError(), "glm pf hc_chain_rows normed");
+    STRIX_HIP_LAUNCH(Rdna3Layout, hc_mix_rows_v2_kernel<<<(rows + kHcMixRows - 1) / kHcMixRows, 256, 0, s>>>(X, z, base, scale, mix, xc, rows));
+    ok(hipGetLastError(), "glm pf hc_mix_rows normed");
+}
+
+void hc_pre_rows_normed(const float* X, const float* fn, const float* base, const float* scale, const float* rr, float* z, float* mix,
+                        const std::uint16_t* norm, float* xn, unsigned rows, hipStream_t s) {
+    if (rows == 0) return;
+    if (hc_version() != 2) throw std::logic_error("glm pf hc_pre_rows_normed: v2 sites only");
+    const unsigned t = hc_rows_tile();
+    if (t == 64) hc_chain_launch<64, true>(X, fn, z, rows, rr, hc_cols8(), s);
+    else if (t == 16) hc_chain_launch<16, true>(X, fn, z, rows, rr, hc_cols8(), s);
+    else hc_chain_launch<32, true>(X, fn, z, rows, rr, hc_cols8(), s);
+    ok(hipGetLastError(), "glm pf hc_chain_rows normed mixnorm");
+    hc_mix_norm_rows(X, z, base, scale, mix, norm, xn, rows, s);
+}
+
+// ---------------------------------------------------------------- FAST glm-pf-attn-wmma (default in FAST):
+// scores + softmax + o-bar as one bf16 WMMA flash kernel on the shared core (src/attn_core/sparse_flash_wmma.hpp).
+// Same inputs (q-tilde from the absorb GEMM, the row's DSA list, the bf16 latent cache) and the same o-bar output
+// layout [C][32][512] FP32 for the out GEMM; e is not used. Not bitwise: a FAST identity.
+struct GlmMlaFlashPolicy {
+    struct Args {
+        const std::uint16_t* latent;
+        const std::uint32_t* tokens;
+        const std::uint32_t* n;
+        const float* qt;
+        float* ob;
+    };
+    static constexpr unsigned kHeads = 32, kDim = kKvLora;
+    static constexpr attn_core::tile::Operand kOp = attn_core::tile::Operand::bf16;
+    static constexpr float kScaleLog2 = kMlaScale * 1.4426950408889634F;
+    __device__ static unsigned count(const Args& a, unsigned r) { return a.n[r]; }
+    __device__ static unsigned key(const Args& a, unsigned r, unsigned j) { return a.tokens[static_cast<std::size_t>(r) * kMaxTokens + j]; }
+    // absorbed MLA: key and value are the same normed latent row
+    __device__ static const std::uint16_t* key_row(const Args& a, unsigned, unsigned pos) { return a.latent + static_cast<std::size_t>(pos) * kKvLora; }
+    __device__ static const std::uint16_t* value_row(const Args& a, unsigned r, unsigned pos) { return key_row(a, r, pos); }
+    __device__ static const float* query(const Args& a, unsigned r) { return a.qt + static_cast<std::size_t>(r) * kHeads * kKvLora; }
+    __device__ static float* out(const Args& a, unsigned r) { return a.ob + static_cast<std::size_t>(r) * kHeads * kKvLora; }
+};
+// Same core on the bf16 q-tilde image the absorb GEMM wrote in qt's memory (mla_gemm_rows_v3_kernel<false, true>).
+struct GlmMlaFlashQ16Policy : GlmMlaFlashPolicy {
+    __device__ static const std::uint16_t* query_op(const Args& a, unsigned r) {
+        return reinterpret_cast<const std::uint16_t*>(a.qt) + static_cast<std::size_t>(r) * kHeads * kKvLora;
+    }
+};
+// FP16 o-bar image (FAST MLA WMMA out GEMM only: it rounds its FP32 A operand with the same static_cast<_Float16>, so
+// the out GEMM sees the same bits from half the bytes; flash writes half too). [C][H][512] u16 in ob's memory.
+template <class Base> struct GlmMlaFlashOb16 : Base {
+    static constexpr attn_core::tile::Operand kOutOp = attn_core::tile::Operand::f16;
+    __device__ static std::uint16_t* out_op(const typename Base::Args& a, unsigned r) {
+        return reinterpret_cast<std::uint16_t*>(a.ob) + static_cast<std::size_t>(r) * Base::kHeads * kKvLora;
+    }
+};
+// Diagnostic (STRIX_GLM_PF_TOPK_OVERLAP=1; reads the lists only, no effect on bits; syncs the stream per call, so not for
+// timing): how many keys neighbouring query rows share, the input of the row-group flash analysis. Per aligned group of
+// 8 rows: the sum of the list sizes and the union size of each aligned pair, quad and the octet (LDS bitmap of cache
+// positions mod 2^17), split dense (every row's n < kIdxTopk: causal prefix, all keys) / sparse.
+__device__ unsigned long long g_topk_ovl[2][4];  // [dense, sparse][sum n, union 2, union 4, union 8]
+constexpr unsigned kOvlBits = 1U << 17;
+__global__ void __launch_bounds__(256) topk_overlap_kernel(const std::uint32_t* tokens, const std::uint32_t* n, unsigned C) {
+    __shared__ unsigned bm[kOvlBits / 32];
+    __shared__ unsigned cnt;
+    const unsigned r0 = blockIdx.x * 8, rows = min(8U, C - r0);
+    bool dense = true;
+    unsigned long long sum = 0;
+    for (unsigned i = 0; i < rows; ++i) {
+        sum += n[r0 + i];
+        dense = dense && n[r0 + i] < kIdxTopk;
+    }
+    const unsigned cls = dense ? 0U : 1U;
+    for (unsigned lg = 1; lg <= 3; ++lg) {
+        const unsigned g = 1U << lg;
+        for (unsigned s0 = 0; s0 < rows; s0 += g) {
+            for (unsigned w = threadIdx.x; w < kOvlBits / 32; w += blockDim.x) bm[w] = 0;
+            if (threadIdx.x == 0) cnt = 0;
+            __syncthreads();
+            unsigned mine = 0;
+            for (unsigned i = s0; i < min(s0 + g, rows); ++i) {
+                const std::uint32_t* t = tokens + static_cast<std::size_t>(r0 + i) * kMaxTokens;
+                for (unsigned j = threadIdx.x; j < n[r0 + i]; j += blockDim.x) {
+                    const unsigned p = t[j] % kOvlBits, bit = 1U << (p & 31U);
+                    if (!(atomicOr(&bm[p >> 5], bit) & bit)) ++mine;
+                }
+            }
+            atomicAdd(&cnt, mine);
+            __syncthreads();
+            if (threadIdx.x == 0) atomicAdd(&g_topk_ovl[cls][lg], static_cast<unsigned long long>(cnt));
+            __syncthreads();
+        }
+    }
+    if (threadIdx.x == 0) atomicAdd(&g_topk_ovl[cls][0], sum);
+}
+static void topk_overlap_diag(const std::uint32_t* tokens, const std::uint32_t* n, unsigned C, hipStream_t s) {
+    static strix::env_arms::Resolved<bool> enabled;
+    if (!enabled.get([] { return strix::envcfg::flag("STRIX_GLM_PF_TOPK_OVERLAP", false); })) return;
+    unsigned long long z[2][4] = {};
+    ok(hipMemcpyToSymbolAsync(HIP_SYMBOL(g_topk_ovl), z, sizeof z, 0, hipMemcpyHostToDevice, s), "glm pf topk overlap clear");
+    STRIX_HIP_LAUNCH(Rdna3Layout, topk_overlap_kernel<<<(C + 7) / 8, 256, 0, s>>>(tokens, n, C));
+    ok(hipGetLastError(), "glm pf topk overlap");
+    ok(hipMemcpyFromSymbolAsync(z, HIP_SYMBOL(g_topk_ovl), sizeof z, 0, hipMemcpyDeviceToHost, s), "glm pf topk overlap read");
+    ok(hipStreamSynchronize(s), "glm pf topk overlap sync");
+    std::printf("glm pf topk overlap C %u dense n %llu u2 %llu u4 %llu u8 %llu sparse n %llu u2 %llu u4 %llu u8 %llu\n", C, z[0][0], z[0][1],
+                z[0][2], z[0][3], z[1][0], z[1][1], z[1][2], z[1][3]);
+}
+static void mla_flash_rows(const DsaSlot& sl, const std::uint32_t* tokens, const std::uint32_t* n, const float* qt, float* ob, unsigned C,
+                    unsigned keys, bool q16, hipStream_t s, bool ob16, unsigned max_keys) {
+    namespace M = strix::attn_core::sparse;
+    topk_overlap_diag(tokens, n, C, s);
+    const GlmMlaFlashPolicy::Args a{sl.latent, tokens, n, qt, ob};
+    using O16 = GlmMlaFlashOb16<GlmMlaFlashPolicy>;
+    using QO16 = GlmMlaFlashOb16<GlmMlaFlashQ16Policy>;
+    // Pf auto bound (host, no sync): the caller's causal bound, never above the list capacity kMaxTokens.
+    const unsigned mk = std::min(max_keys, kMaxTokens);
+    if (ob16 && q16 && keys == 16) M::launch_flash_rows<QO16, 16>(a, C, s, mk);
+    else if (ob16 && q16) M::launch_flash_rows<QO16, 32>(a, C, s, mk);
+    else if (ob16 && keys == 16) M::launch_flash_rows<O16, 16>(a, C, s, mk);
+    else if (ob16) M::launch_flash_rows<O16, 32>(a, C, s, mk);
+    else if (q16 && keys == 16) M::launch_flash_rows<GlmMlaFlashQ16Policy, 16>(a, C, s, mk);
+    else if (q16) M::launch_flash_rows<GlmMlaFlashQ16Policy, 32>(a, C, s, mk);
+    else if (keys == 16) M::launch_flash_rows<GlmMlaFlashPolicy, 16>(a, C, s, mk);
+    else M::launch_flash_rows<GlmMlaFlashPolicy, 32>(a, C, s, mk);
+    ok(hipGetLastError(), "glm pf mla flash (attn-wmma)");
+    attn_wmma::calls.fetch_add(1, std::memory_order_relaxed);
+}
+
+namespace {
+hipEvent_t* g_mla_prof = nullptr;  // 6 events: before absorb, scores, softmax, o-bar, out, after
+void mla_mark(unsigned i, hipStream_t s) {
+    if (g_mla_prof) ok(hipEventRecord(g_mla_prof[i], s), "glm pf mla profile event");
+}
+}  // namespace
+void set_mla_profile(hipEvent_t* ev6) { g_mla_prof = ev6; }
+// FAST glm-pf-attn-wmma (default with STRIX_GLM_PF_WMMA=1, STRIX_GLM_PF_ATTN_WMMA=0 opts out; heads 32): the fused core
+// (20 = T 32, 21 = T 16; 22 / 23 = the same with the bf16 q-tilde image, same bits, STRIX_GLM_PF_MLA_QT16=0 opts out)
+// instead of the o-bar selector; absorb / out keep the exact GEMM selector (the image needs absorb v3 or the FAST MLA
+// WMMA GEMM, which stores the same bf16 image of its own sums; else 22/23 = 20/21).
+static unsigned obar_env_version(unsigned heads) {
+    static const bool fused = attn_wmma::enabled();
+    static const unsigned keys = attn_wmma::block_keys();
+    static const unsigned image = attn_wmma::qt16() ? 2U : 0U;
+    if (fused && heads == 32) return (keys == 16 ? 21U : 20U) + image;
+    return obar_version();
+}
+bool mla_e_lane_major(unsigned heads) {
+    const unsigned v = obar_version();
+    return !mla_v1() && (v == 5 || v == 7 || v == 10) && heads == 32;
+}
+
+// FAST glm-pf-mla-wmma-v1: absorb (kOut = false) / out GEMM on the shared short-K FP16
+// WMMA tile GEMM (glm_pf_mla_wmma.hpp); false = not selected, the caller runs its exact GEMM version.
+bool mla_wmma_selected(const float* x, const std::uint16_t* kv_b, unsigned heads, unsigned C,
+                       const mla_gemm::Dispatch& dispatch) {
+    return dispatch.use_wmma(mla_wmma::fits<kKvLora, kMlaDim>(x, x, kv_b, heads, C));
+}
+// image (absorb only): y receives the bf16 q-tilde image the fused core 22 / 23 reads (same bits as its own conversion).
+template <bool kOut>
+bool mla_gemm_wmma(const float* x, const std::uint16_t* kv_b, unsigned heads, unsigned C, float* y, hipStream_t s, const mla_gemm::Dispatch& dispatch,
+                   bool image = false, bool a16 = false) {
+    if (!mla_wmma_selected(x, kv_b, heads, C, dispatch)) return false;
+    mla_wmma::gemm<kKvLora, kMlaDim, kOut>(x, kv_b, heads, C, y, s, image, a16);
+    mla_wmma::calls.fetch_add(1, std::memory_order_relaxed);
+    return true;
+}
+
+static void mla_attention_rows_impl(const DsaSlot& slot, const std::uint32_t* tokens, const std::uint32_t* n, const float* q,
+                        const std::uint16_t* kv_b, unsigned heads, float* qt, float* e, float* ob, float* o, unsigned C,
+                        hipStream_t s, unsigned scores_v, unsigned obar_v, unsigned gemm_v, const mla_gemm::Dispatch& dispatch,
+                        unsigned max_keys) {
+    if (C == 0) return;
+    if (heads != 32 && heads != 64) throw std::runtime_error("glm pf mla_attention_rows: heads must be 32 or 64");
+    if (gemm_v != 1 && gemm_v != 2 && gemm_v != 3) throw std::runtime_error("glm pf mla_attention_rows_versions: unsupported gemm version");
+    if (obar_v >= 20 && obar_v <= 23) {  // FAST fused core (T = 32 / 16, FP32 / bf16 q-tilde): absorb GEMM, flash core, out GEMM
+        if (heads != 32) throw std::runtime_error("glm pf mla_attention_rows_versions: the fused attn-wmma core needs heads 32");
+        const bool q16 = obar_v >= 22 && (gemm_v == 3 || mla_wmma_selected(q, kv_b, heads, C, dispatch));
+        const unsigned keys = obar_v % 2 == 1 ? 16U : 32U;
+        mla_mark(0, s);
+        if (mla_gemm_wmma<false>(q, kv_b, heads, C, qt, s, dispatch, q16)) {
+        } else if (q16) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v3_kernel<false, true><<<g3_grid(kKvLora, C, heads, dispatch.heads_mid), 256, 0, s>>>(q, kv_b, heads, C, qt, dispatch.heads_mid));
+        else if (gemm_v == 3) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v3_kernel<false><<<g3_grid(kKvLora, C, heads, dispatch.heads_mid), 256, 0, s>>>(q, kv_b, heads, C, qt, dispatch.heads_mid));
+        else if (gemm_v == 2) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v2_kernel<false><<<dim3((C + kG2R - 1) / kG2R, kKvLora / kG2C, heads), 256, 0, s>>>(q, kv_b, heads, C, qt));
+        else STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_kernel<false><<<dim3((C + kGT - 1) / kGT, kKvLora / kGT, heads), 256, 0, s>>>(q, kv_b, heads, C, qt));
+        ok(hipGetLastError(), "glm pf mla absorb");
+        mla_mark(1, s);
+        mla_mark(2, s);
+        mla_mark(3, s);
+        const bool ob16 = dispatch.ob16 && mla_wmma_selected(ob, kv_b, heads, C, dispatch);  // out GEMM on WMMA: FP16 o-bar image
+        mla_flash_rows(slot, tokens, n, qt, ob, C, keys, q16, s, ob16, max_keys);
+        mla_mark(4, s);
+        if (mla_gemm_wmma<true>(ob, kv_b, heads, C, o, s, dispatch, false, ob16)) {
+        } else if (gemm_v == 3) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v3_kernel<true><<<g3_grid(kMlaDim, C, heads, dispatch.heads_mid), 256, 0, s>>>(ob, kv_b, heads, C, o, dispatch.heads_mid));
+        else if (gemm_v == 2) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v2_kernel<true><<<dim3((C + kG2R - 1) / kG2R, kMlaDim / kG2C, heads), 256, 0, s>>>(ob, kv_b, heads, C, o));
+        else STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_kernel<true><<<dim3((C + kGT - 1) / kGT, kMlaDim / kGT, heads), 256, 0, s>>>(ob, kv_b, heads, C, o));
+        ok(hipGetLastError(), "glm pf mla out");
+        mla_mark(5, s);
+        return;
+    }
+    if ((scores_v != 1 && scores_v != 2 && scores_v != 3 && scores_v != 4 && scores_v != 5 && scores_v != 6 && scores_v != 7) ||
+        (obar_v != 1 && obar_v != 2 && obar_v != 4 && obar_v != 5 && obar_v != 6 && obar_v != 7 && obar_v != 10) ||
+        ((scores_v == 1) != (obar_v == 1)))
+        throw std::runtime_error("glm pf mla_attention_rows_versions: unsupported version pair");
+    const bool v1 = scores_v == 1;  // explicit legacy pair
+    const dim3 sg((kMaxTokens + 255) / 256, C);
+    mla_mark(0, s);
+    if (v1) {
+        STRIX_HIP_LAUNCH(Rdna3Layout, mla_absorb_rows_kernel<<<dim3(kKvLora / 256, heads, C), 256, 0, s>>>(q, kv_b, heads, qt));
+        mla_mark(1, s);
+        if (heads == 32) STRIX_HIP_LAUNCH(Rdna3Layout, mla_scores_rows_kernel<32><<<sg, 256, 0, s>>>(slot, tokens, n, qt, e));
+        else STRIX_HIP_LAUNCH(Rdna3Layout, mla_scores_rows_kernel<64><<<sg, 256, 0, s>>>(slot, tokens, n, qt, e));
+    } else {
+        if (mla_gemm_wmma<false>(q, kv_b, heads, C, qt, s, dispatch)) {
+        } else if (gemm_v == 3) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v3_kernel<false><<<g3_grid(kKvLora, C, heads, dispatch.heads_mid), 256, 0, s>>>(q, kv_b, heads, C, qt, dispatch.heads_mid));
+        else if (gemm_v == 2) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v2_kernel<false><<<dim3((C + kG2R - 1) / kG2R, kKvLora / kG2C, heads), 256, 0, s>>>(q, kv_b, heads, C, qt));
+        else STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_kernel<false><<<dim3((C + kGT - 1) / kGT, kKvLora / kGT, heads), 256, 0, s>>>(q, kv_b, heads, C, qt));
+        mla_mark(1, s);
+        if (scores_v == 2) {
+            if (heads == 32) STRIX_HIP_LAUNCH(Rdna3Layout, mla_scores_v2_kernel<32><<<sg, 256, 0, s>>>(slot, tokens, n, qt, e));
+            else STRIX_HIP_LAUNCH(Rdna3Layout, mla_scores_v2_kernel<64><<<sg, 256, 0, s>>>(slot, tokens, n, qt, e));
+        } else if (scores_v >= 5) {  // v6 / v7: heads 32 only (heads 64 runs v5)
+            constexpr unsigned tile = 32 * sx::kScoreWaves * 2;  // entries per CTA at H = 32 (half that at H = 64)
+            if (heads == 32 && scores_v == 7)
+                STRIX_HIP_LAUNCH(Rdna3Layout, sx::scores_paired_kernel<MlaExactSpec, kS7Group><<<(C + kS7Group - 1) / kS7Group * kS7Group * sx::kPairedTiles<MlaExactSpec>, 32 * sx::kScoreWaves, 0, s>>>(slot, tokens, n, qt, e, C));
+            else if (heads == 32 && scores_v == 6)
+                STRIX_HIP_LAUNCH(Rdna3Layout, sx::scores_paired_kernel<MlaExactSpec, 0><<<dim3((kMaxTokens + tile - 1) / tile, C), 32 * sx::kScoreWaves, 0, s>>>(slot, tokens, n, qt, e, C));
+            else if (heads == 32) STRIX_HIP_LAUNCH(Rdna3Layout, sx::scores_kernel<MlaExactSpec, 32><<<dim3((kMaxTokens + tile - 1) / tile, C), 32 * sx::kScoreWaves, 0, s>>>(slot, tokens, n, qt, e));
+            else STRIX_HIP_LAUNCH(Rdna3Layout, sx::scores_kernel<MlaExactSpec, 64><<<dim3((kMaxTokens + tile / 2 - 1) / (tile / 2), C), 32 * sx::kScoreWaves, 0, s>>>(slot, tokens, n, qt, e));
+        } else {
+            const dim3 g3((kMaxTokens + kS3Tok - 1) / kS3Tok, C);
+            if (scores_v == 4 && heads == 32) STRIX_HIP_LAUNCH(Rdna3Layout, mla_scores_v4_kernel<32><<<g3, 256, 0, s>>>(slot, tokens, n, qt, e));
+            else if (scores_v == 4) STRIX_HIP_LAUNCH(Rdna3Layout, mla_scores_v4_kernel<64><<<g3, 256, 0, s>>>(slot, tokens, n, qt, e));
+            else if (heads == 32) STRIX_HIP_LAUNCH(Rdna3Layout, mla_scores_v3_kernel<32><<<g3, 256, 0, s>>>(slot, tokens, n, qt, e));
+            else STRIX_HIP_LAUNCH(Rdna3Layout, mla_scores_v3_kernel<64><<<g3, 256, 0, s>>>(slot, tokens, n, qt, e));
+        }
+    }
+    ok(hipGetLastError(), "glm pf mla absorb/scores");
+    mla_mark(2, s);
+    const bool lane_major_ob = obar_v == 5 || obar_v == 7 || obar_v == 10;  // v5 / v7 / v10: heads 32 only
+    const unsigned obv = v1 ? 1U : lane_major_ob && heads == 64 ? 2U : obar_v;
+    if (obv == 5 || obv == 7 || obv == 10) STRIX_HIP_LAUNCH(Rdna3Layout, sx::softmax_kernel<MlaExactSpec, true><<<dim3(heads, C), 256, 0, s>>>(n, heads, e));
+    else STRIX_HIP_LAUNCH(Rdna3Layout, sx::softmax_kernel<MlaExactSpec, false><<<dim3(heads, C), 256, 0, s>>>(n, heads, e));
+    ok(hipGetLastError(), "glm pf mla_softmax_rows");
+    mla_mark(3, s);
+    if (v1) {
+        STRIX_HIP_LAUNCH(Rdna3Layout, mla_obar_rows_kernel<<<dim3(kKvLora / kObLat, C), 256, 0, s>>>(slot, tokens, n, heads, e, ob));
+        mla_mark(4, s);
+        STRIX_HIP_LAUNCH(Rdna3Layout, mla_out_rows_kernel<<<dim3(heads, C), 256, 0, s>>>(ob, kv_b, heads, o));
+    } else {
+        if (obv == 10) STRIX_HIP_LAUNCH(Rdna3Layout, sx::obar_lanes_kernel<MlaExactSpec, 2><<<dim3(sx::kLanesTiles<MlaExactSpec>, C), 256, 0, s>>>(slot, tokens, n, e, ob));
+        else if (obv == 7) STRIX_HIP_LAUNCH(Rdna3Layout, sx::obar_lanes_kernel<MlaExactSpec, kOb7Steps><<<dim3(sx::kLanesTiles<MlaExactSpec>, C), 256, 0, s>>>(slot, tokens, n, e, ob));
+        else if (obv == 6) STRIX_HIP_LAUNCH(Rdna3Layout, mla_obar_v6_kernel<<<dim3(heads / kOb6Heads, kKvLora / kOb6Dims, C), 256, 0, s>>>(slot, tokens, n, heads, e, ob));
+        else if (obv == 5) STRIX_HIP_LAUNCH(Rdna3Layout, mla_obar_v5_kernel<<<dim3(kKvLora / kOb5Dims, C), 256, 0, s>>>(slot, tokens, n, e, ob));
+        else if (obv == 4) STRIX_HIP_LAUNCH(Rdna3Layout, mla_obar_v4_kernel<<<dim3(heads / kOb4Heads, kKvLora / kOb4Dims, C), 256, 0, s>>>(slot, tokens, n, heads, e, ob));
+        else STRIX_HIP_LAUNCH(Rdna3Layout, sx::obar_tree_kernel<MlaExactSpec><<<dim3(kKvLora / sx::kTreeDims, C), 256, 0, s>>>(slot, tokens, n, heads, e, ob));
+        mla_mark(4, s);
+        if (mla_gemm_wmma<true>(ob, kv_b, heads, C, o, s, dispatch)) {
+        } else if (gemm_v == 3) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v3_kernel<true><<<g3_grid(kMlaDim, C, heads, dispatch.heads_mid), 256, 0, s>>>(ob, kv_b, heads, C, o, dispatch.heads_mid));
+        else if (gemm_v == 2) STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_v2_kernel<true><<<dim3((C + kG2R - 1) / kG2R, kMlaDim / kG2C, heads), 256, 0, s>>>(ob, kv_b, heads, C, o));
+        else STRIX_HIP_LAUNCH(Rdna3Layout, mla_gemm_rows_kernel<true><<<dim3((C + kGT - 1) / kGT, kMlaDim / kGT, heads), 256, 0, s>>>(ob, kv_b, heads, C, o));
+    }
+    ok(hipGetLastError(), "glm pf mla obar/out");
+    mla_mark(5, s);
+}
+
+void mla_attention_rows_versions(const DsaSlot& slot, const std::uint32_t* tokens, const std::uint32_t* n, const float* q,
+                        const std::uint16_t* kv_b, unsigned heads, float* qt, float* e, float* ob, float* o, unsigned C,
+                        hipStream_t s, unsigned scores_v, unsigned obar_v, unsigned gemm_v) {
+    mla_attention_rows_impl(slot, tokens, n, q, kv_b, heads, qt, e, ob, o, C, s, scores_v, obar_v, gemm_v, {}, ~0U);
+}
+
+void mla_attention_rows_selected(const DsaSlot& slot, const std::uint32_t* tokens, const std::uint32_t* n, const float* q,
+                        const std::uint16_t* kv_b, unsigned heads, float* qt, float* e, float* ob, float* o, unsigned C,
+                        hipStream_t s, unsigned scores_v, unsigned obar_v, unsigned gemm_v, unsigned query_window,
+                        mla_gemm::Dispatch dispatch, unsigned max_keys) {
+    if (C == 0) return;
+    const unsigned Q = attention_scratch_rows(C, query_window);
+    // All KV is already appended/selected. Reuse qt/e/ob on the existing stream;
+    // only the query/list/count/output origins move. No recursion or extra waits.
+    // max_keys bounds every row of the call, so it also bounds each window.
+    for (unsigned begin = 0; begin < C; begin += Q) {
+        const std::size_t offset = std::size_t{begin} * heads * kMlaDim;
+        mla_attention_rows_impl(slot, tokens + std::size_t{begin} * kMaxTokens, n + begin, q + offset,
+            kv_b, heads, qt, e, ob, o + offset, std::min(Q, C - begin), s, scores_v, obar_v, gemm_v, dispatch, max_keys);
+    }
+}
+
+void mla_attention_rows_versions(const DsaSlot& slot, const std::uint32_t* tokens, const std::uint32_t* n, const float* q,
+                        const std::uint16_t* kv_b, unsigned heads, float* qt, float* e, float* ob, float* o, unsigned C,
+                        hipStream_t s, unsigned scores_v, unsigned obar_v, unsigned gemm_v, unsigned query_window) {
+    mla_attention_rows_selected(slot, tokens, n, q, kv_b, heads, qt, e, ob, o, C, s,
+                                scores_v, obar_v, gemm_v, query_window, {}, ~0U);
+}
+
+void mla_attention_rows(const DsaSlot& slot, const std::uint32_t* tokens, const std::uint32_t* n, const float* q,
+                        const std::uint16_t* kv_b, unsigned heads, float* qt, float* e, float* ob, float* o, unsigned C,
+                        hipStream_t s) {
+    mla_attention_rows_impl(slot, tokens, n, q, kv_b, heads, qt, e, ob, o, C, s,
+        mla_v1() ? 1U : scores_version(), mla_v1() ? 1U : obar_env_version(heads), mla_gemm_version(),
+        mla_gemm::automatic_dispatch(), ~0U);
+}
+
+void mla_attention_rows(const DsaSlot& slot, const std::uint32_t* tokens, const std::uint32_t* n, const float* q,
+                        const std::uint16_t* kv_b, unsigned heads, float* qt, float* e, float* ob, float* o, unsigned C,
+                        hipStream_t s, unsigned query_window, unsigned max_keys) {
+    mla_attention_rows_selected(slot, tokens, n, q, kv_b, heads, qt, e, ob, o, C, s,
+        mla_v1() ? 1U : scores_version(), mla_v1() ? 1U : obar_env_version(heads), mla_gemm_version(),
+        query_window, mla_gemm::automatic_dispatch(), max_keys);
+}
+
+}  // namespace strix::glm::pf

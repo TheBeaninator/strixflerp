@@ -1,0 +1,79 @@
+id        = "runtime.enginelab.inkling2_dspark"
+kind      = "runtime"
+summary   = "Inkling 2 Mini DSpark (checkpoint, context, reference, taps, resident): 6 origin files under src/inkling2"
+why       = "DSpark drafting for Inkling 2; where it would go: beside the catalogue's draft.dspark/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: draft.dspark/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/inkling2/inkling2_mini_dspark_checkpoint.hpp",
+  "src/inkling2/inkling2_mini_dspark_context.hpp",
+  "src/inkling2/inkling2_mini_dspark_reference.cpp",
+  "src/inkling2/inkling2_mini_dspark_reference.hpp",
+  "src/inkling2/inkling2_mini_dspark_taps.hpp",
+  "src/inkling2/inkling2_mini_resident_dspark.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/inkling2/inkling2_mini_dspark_reference.cpp"]
+includes  = ["src/src", "src/src/inkling2"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "draft.dspark/-/f32.enginelab-inkling2"
+api       = "src/inkling2/inkling2_mini_dspark*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_engine"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_resident"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.core_bf16"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_head"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "kernel.enginelab.ops_rope"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

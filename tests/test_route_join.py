@@ -6,9 +6,16 @@ task-level bootstrap does not let one hard task with many draws dominate the way
 a multi-turn attempt sums its records; a truncated last line, a missing record and a duplicate id are counted
 and are not fatal; a cell under --min-attempts gets no verdict; the same seed writes the same bytes; --mask-out
 is layer:expert lines and a directory only reads route-*.jsonl.
+
+Multiple comparisons (card 010ab353c3): on pure-noise records (labels independent of routing) no cell reaches
+q < 0.05 in at least 19 of 20 seeds, under both the permutation FDR and Benjamini-Hochberg, while the uncorrected
+CI verdict flags noise cells; a planted effect is recovered, is the only mask line, and the mask header records
+method, threshold, permutations and seed; the same seed gives the same bytes; the numpy and pure-python paths
+agree; a hard task cannot move the permutation null; BH q-values match a hand calculation.
 """
 import json
 import os
+import random
 import shutil
 import sys
 import tempfile
@@ -95,7 +102,14 @@ class Join(unittest.TestCase):
         self.assertIsNone(null["verdict"])
         self.assertEqual([s["expert"] for s in dom["suspects"]], [SUSPECT])
         self.assertEqual([s["expert"] for s in dom["keepers"]], [KEEPER])
-        self.assertEqual(set(dom["suspects"][0]), {"layer", "expert", "lift", "ci", "within_task", "support"})
+        self.assertEqual(set(dom["suspects"][0]), {"layer", "expert", "lift", "ci", "within_task", "support", "p", "q", "q_perm", "q_bh"})
+        self.assertLess(dom["suspects"][0]["q"], 0.05)
+        self.assertEqual(dom["suspects"][0]["q"], dom["suspects"][0]["q_perm"])
+        self.assertGreater(null["q_perm"], 0.05)
+        self.assertGreater(null["q_bh"], 0.05)
+        self.assertEqual(suspect["fdr_verdict"], "suspect")
+        self.assertEqual(keeper["fdr_verdict"], "keeper")
+        self.assertIsNone(null["fdr_verdict"])
         self.assertGreater(suspect["within_task"], 0)
         self.assertLess(keeper["within_task"], 0)
         self.assertAlmostEqual(null["within_task"], 0.0, places=9)
@@ -232,17 +246,170 @@ class Join(unittest.TestCase):
         argv = ["--rows", rows_path, "--records", d, "--boot", "30", "--seed", "0", "--min-attempts", "10"]
         self.assertEqual(J.main(argv + ["--out", out1, "--mask-out", mask]), 0)
         self.assertEqual(J.main(argv + ["--out", out2, "--mask-out", mask]), 0)
-        self.assertEqual(open(out1, "rb").read(), open(out2, "rb").read())
-        lines = open(mask, encoding="utf-8").read().splitlines()
+        with open(out1, "rb") as f1, open(out2, "rb") as f2:
+            self.assertEqual(f1.read(), f2.read())
+        with open(mask, encoding="utf-8") as f:
+            raw = f.read().splitlines()
+        self.assertTrue(raw[0].startswith("#"))
+        for word in ("q < 0.05", "permutation", "permutations=1000", "seed=0"):
+            self.assertIn(word, raw[0].replace("perm-fdr", "permutation"))
+        lines = [x for x in raw if not x.startswith("#")]
         self.assertTrue(lines and all(part.split(":")[0].isdigit() and part.split(":")[1].isdigit() and part.count(":") == 1 for part in lines))
         self.assertIn("%d:%d" % (LAYER, SUSPECT), lines)
         self.assertNotIn("%d:%d" % (LAYER, KEEPER), lines)
         self.assertNotIn("%d:%d" % (LAYER, NULL), lines)
         # the decoy file is not a route-*.jsonl, so the first record's mass stands
-        rep = json.loads(open(out1, encoding="utf-8").read())
+        with open(out1, encoding="utf-8") as f:
+            rep = json.load(f)
         cell = [c for c in rep["domains"]["math"]["cells"] if c["expert"] == SUSPECT][0]
         self.assertEqual(cell["mass_correct"], 12 * 0.5)
         self.assertEqual(rep["coverage"]["duplicate_ids"], 0)
+
+
+def noise_data(seed, tasks=40, draws=3, arms=("a", "b"), layers=2, experts=12, plant=None):
+    """Attempts whose correct/incorrect label is independent of routing. plant=(layer, expert): that expert is
+    always in an incorrect attempt's top list with a big share and only sometimes, and small, in a correct one."""
+    rng = random.Random(seed)
+    recs, rows = [], []
+    for arm in arms:
+        for t in range(tasks):
+            for d in range(draws):
+                correct = rng.random() < 0.5
+                rid = "rr-%s-%d-%d" % (arm, t, d)
+                lay = []
+                for l in range(layers):
+                    top = {e: rng.uniform(0.5, 3.0) for e in rng.sample(range(experts), 4)}
+                    if plant and plant[0] == l:
+                        if not correct:
+                            top[plant[1]] = 8.0 + rng.random()
+                        elif plant[1] in top:
+                            top[plant[1]] = 0.5
+                    lay.append((l, 20.0, [(e, m, 1) for e, m in sorted(top.items())]))
+                recs.append(record(rid, lay))
+                rows.append(attempt_row("t%02d" % t, correct, [rid], arm=arm, draw=d + 1))
+    return recs, rows
+
+
+class Fdr(unittest.TestCase):
+    def setUp(self):
+        self.d = tempfile.mkdtemp(prefix="route-join-fdr-")
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def go(self, rows, recs, **kw):
+        rp, cp = os.path.join(self.d, "rows.jsonl"), os.path.join(self.d, "recs.jsonl")
+        dump(rp, rows)
+        dump(cp, recs)
+        kw.setdefault("boot", 50)
+        return J.join([rp], [cp], **kw)
+
+    def test_pure_noise_has_no_cell_under_q_05_in_19_of_20_seeds(self):
+        clean_perm = clean_bh = tested = ci_flagged = 0
+        for seed in range(20):
+            recs, rows = noise_data(seed)
+            rep = self.go(rows, recs, seed=seed, perms=1000)
+            cells = rep["domains"]["math"]["cells"]
+            tested += sum(c["q_perm"] is not None for c in cells)
+            ci_flagged += sum(c["verdict"] is not None for c in cells)
+            clean_perm += all(c["q_perm"] is None or c["q_perm"] >= 0.05 for c in cells)
+            clean_bh += all(c["q_bh"] is None or c["q_bh"] >= 0.05 for c in cells)
+            if all(c["q_perm"] is None or c["q_perm"] >= 0.05 for c in cells):
+                self.assertEqual(rep["domains"]["math"]["mask"], [])
+        self.assertGreater(tested, 20 * 20)  # most of the 24 cells per run were really tested
+        self.assertGreaterEqual(clean_perm, 19)
+        self.assertGreaterEqual(clean_bh, 19)
+        self.assertGreater(ci_flagged, 0)  # the uncorrected CI verdict does flag noise, which is why it no longer gates
+
+    def test_planted_effect_is_recovered_and_alone_in_the_mask(self):
+        recs, rows = noise_data(7, plant=(1, 5))
+        mask = os.path.join(self.d, "mask.txt")
+        rp, cp, out = (os.path.join(self.d, n) for n in ("rows.jsonl", "recs.jsonl", "out.json"))
+        dump(rp, rows)
+        dump(cp, recs)
+        self.assertEqual(J.main(["--rows", rp, "--records", cp, "--out", out, "--mask-out", mask, "--boot", "20", "--seed", "3", "--perms", "1000"]), 0)
+        with open(out, encoding="utf-8") as f:
+            rep = json.load(f)
+        dom = rep["domains"]["math"]
+        self.assertEqual([(s["layer"], s["expert"]) for s in dom["suspects"]], [(1, 5)])
+        top = dom["suspects"][0]
+        self.assertLess(top["q_perm"], 0.05)
+        self.assertLess(top["q_bh"], 0.05)
+        self.assertGreater(top["lift"], 3)
+        self.assertEqual(dom["keepers"], [])
+        with open(mask, encoding="utf-8") as f:
+            raw = f.read().splitlines()
+        self.assertEqual([x for x in raw if not x.startswith("#")], ["1:5"])
+        self.assertEqual(rep["method"]["fdr"]["alpha"], 0.05)
+        self.assertEqual(rep["method"]["fdr"]["perms"], 1000)
+        self.assertEqual(rep["method"]["fdr"]["seed"], 3)
+        self.assertIn("seed=3", raw[0])
+        self.assertIn("permutations=1000", raw[0])
+
+    def test_seeded_and_numpy_matches_pure_python(self):
+        recs, rows = noise_data(11, tasks=12, draws=2, plant=(0, 2))
+        a = self.go(rows, recs, seed=4, perms=200)
+        b = self.go(rows, recs, seed=4, perms=200)
+        self.assertEqual(json.dumps(a, sort_keys=True), json.dumps(b, sort_keys=True))
+        c = self.go(rows, recs, seed=5, perms=200)
+        self.assertNotEqual([x["p_perm"] for x in a["domains"]["math"]["cells"]], [x["p_perm"] for x in c["domains"]["math"]["cells"]])
+        if J.np is not None:
+            saved, J.np = J.np, None
+            try:
+                py = self.go(rows, recs, seed=4, perms=200)
+            finally:
+                J.np = saved
+            for x, y in zip(a["domains"]["math"]["cells"], py["domains"]["math"]["cells"]):
+                for k in ("p_perm", "q_perm", "q_bh", "fdr_verdict"):
+                    if isinstance(x[k], float):
+                        self.assertAlmostEqual(x[k], y[k], places=9)
+                    else:
+                        self.assertEqual(x[k], y[k])
+
+    def test_permutation_keeps_task_structure(self):
+        """A task whose draws are all incorrect stays all incorrect under the null, so it cannot create a hit."""
+        recs, rows = [], []
+        for i in range(30):
+            rid = "rr-hard-%d" % i
+            recs.append(record(rid, [(2, 10.0, [(21, 9.0, 9)])]))
+            rows.append(attempt_row("hard", False, [rid], draw=i + 1))
+        for t in range(10):
+            for k in range(4):
+                for correct in (True, False):
+                    rid = "rr-n%02d-%d-%d" % (t, k, correct)
+                    recs.append(record(rid, [(2, 10.0, [(21, 2.0, 2)])]))
+                    rows.append(attempt_row("n%02d" % t, correct, [rid], draw=k * 2 + correct))
+        rep = self.go(rows, recs, perms=200)
+        cell = rep["domains"]["math"]["cells"][0]
+        self.assertGreater(cell["lift"], 1.5)  # the raw lift is large
+        self.assertEqual(cell["p_perm"], 1.0)  # but no permutation can tell: the structure fixes it
+        self.assertEqual(rep["domains"]["math"]["suspects"], [])
+        # row clustering gives up the task structure and the same data is flagged
+        row = self.go(rows, recs, perms=200, cluster="row")
+        self.assertEqual([s["expert"] for s in row["domains"]["math"]["suspects"]], [21])
+
+    def test_perms_zero_and_bad_fdr(self):
+        recs, rows = noise_data(1, tasks=6, draws=2, plant=(0, 1))
+        rep = self.go(rows, recs, perms=0)
+        self.assertTrue(all(c["q_perm"] is None and c["fdr_verdict"] is None for c in rep["domains"]["math"]["cells"]))
+        self.assertEqual(rep["domains"]["math"]["mask"], [])
+        with self.assertRaises(ValueError):
+            self.go(rows, recs, fdr="nope")
+
+    def test_bh_matches_hand_calculation(self):
+        # p sorted: .01 .02 .03 .04 .5 with m = 5 -> raw .05 .05 .05 .05 .5, so every q is its running minimum
+        q = J.bh_qvalues([0.5, 0.01, 0.04, 0.02, 0.03])
+        for got, want in zip(q, [0.5, 0.05, 0.05, 0.05, 0.05]):
+            self.assertAlmostEqual(got, want)
+        self.assertEqual(J.bh_qvalues([]), [])
+        self.assertEqual(J.bh_qvalues([0.9]), [0.9])
+
+    def test_fdr_bh_selects_the_gating_q(self):
+        recs, rows = noise_data(7, plant=(1, 5))
+        rep = self.go(rows, recs, perms=1000, fdr="bh")
+        s = rep["domains"]["math"]["suspects"][0]
+        self.assertEqual(s["q"], s["q_bh"])
+        self.assertEqual(rep["method"]["fdr"]["primary"], "bh")
 
 
 if __name__ == "__main__":

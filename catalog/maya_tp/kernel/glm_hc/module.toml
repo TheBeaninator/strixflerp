@@ -1,0 +1,44 @@
+id        = "kernel.maya_tp.glm_hc"
+kind      = "kernel"
+summary   = "GLM-5.3-Flash's manifold hyper-connection (mHC) read and write halves (glm_hc.cu)"
+why       = "the mHC residual is what the two TP2 all-reduce points complete; its read / write kernels fix the residual layout on both ranks"
+notes     = "Interface tag: hc.mix/bf16/f32.maya-tp-mhc. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/glm_hc.hpp", "src/kernels/cuda/glm_hc.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/glm_hc.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "hc.mix/bf16/f32.maya-tp-mhc"
+api       = "strata::kernels glm_hc launches (glm_hc.hpp)"
+numeric   = "FP32 streams"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.glm_hc.json"

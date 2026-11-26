@@ -1,0 +1,50 @@
+id        = "kernel.maya_tp.mm3_exl3"
+kind      = "kernel"
+summary   = "maya-mm3's EXL3 device kernels (mm3_exl3.cu / .hpp), a copy of the shared EXL3 kernels shaped for MiniMax-M3.1"
+why       = "EXL3 GEMVs specialised for one model family; compare with kernel.maya_tp.exl3 for what the specialisation buys"
+notes     = "Interface tag: linear.decode/exl3/f32-f32.maya-tp-mm3. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/mm3/mm3_exl3.cu", "src/mm3/mm3_exl3.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/mm3/mm3_exl3.cu"]
+includes  = ["src/src/mm3"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/exl3/f32-f32.maya-tp-mm3"
+api       = "mm3 EXL3 launches (mm3_exl3.hpp)"
+numeric   = "EXL3 trellis, FP32 out"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.mm3_gguf"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.mm3_exl3.json"

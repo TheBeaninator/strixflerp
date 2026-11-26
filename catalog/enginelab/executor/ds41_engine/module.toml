@@ -1,0 +1,191 @@
+id        = "executor.enginelab.ds41_engine"
+kind      = "executor"
+summary   = "the DeepSeek V4.1 engine: model, family, plan, describe and model description, host / device / batch forward and batch schedule, layer, pair defaults and pair profile table, exact flags and fast profile, the file reader, weight overlay and read options, prepared load and the MSVC builtins shim"
+why       = "the binding of DS41 to the shared cores: what is model-specific and nothing else (AGENTS.md); where it would go: beside the catalogue's executor.model/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.model/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 3 HIP unit(s) compiled standalone by the gate; 11 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/deepseek41_batch_forward.hpp",
+  "include/strix/deepseek41_batch_schedule.hpp",
+  "include/strix/deepseek41_describe.hpp",
+  "include/strix/deepseek41_device_forward.hpp",
+  "include/strix/deepseek41_family.hpp",
+  "include/strix/deepseek41_host_forward.hpp",
+  "include/strix/deepseek41_model.hpp",
+  "include/strix/deepseek41_model_description.hpp",
+  "include/strix/deepseek41_pair_defaults.hpp",
+  "include/strix/deepseek41_pair_profile_table.hpp",
+  "include/strix/deepseek41_plan.hpp",
+  "include/strix/ds41_exact_flags.hpp",
+  "include/strix/ds41_fast_profile.hpp",
+  "include/strix/ds41_file_reader.hpp",
+  "include/strix/ds41_layer.hpp",
+  "include/strix/ds41_msvc_builtins.hpp",
+  "include/strix/ds41_prepared_load.hpp",
+  "include/strix/ds41_weight_overlay.hpp",
+  "include/strix/ds41_weight_read_options.hpp",
+  "include/strix/hip_ds41_layer.hpp",
+  "src/deepseek41_describe.cpp",
+  "src/deepseek41_family.cpp",
+  "src/deepseek41_host_forward.cpp",
+  "src/deepseek41_model.cpp",
+  "src/deepseek41_model_description.cpp",
+  "src/deepseek41_pair_defaults.cpp",
+  "src/deepseek41_plan.cpp",
+  "src/ds41_file_reader.cpp",
+  "src/ds41_layer.cpp",
+  "src/ds41_prepared_load.cpp",
+  "src/ds41_weight_overlay.cpp",
+  "src/hip_deepseek41_batch_forward.hip",
+  "src/hip_deepseek41_device_forward.hip",
+  "src/hip_ds41_layer.hip",
+  "src/hip_ds41_prepared_load.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/hip_deepseek41_batch_forward.hip",
+  "src/src/hip_deepseek41_device_forward.hip",
+  "src/src/hip_ds41_layer.hip",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model-enginelab-ds41/-/-"
+api       = "src/deepseek41_model.cpp, hip_deepseek41_device_forward.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_pipeline"
+
+[[requires]]
+module    = "executor.enginelab.ds41_prefill"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_hc"
+
+[[requires]]
+module    = "kernel.enginelab.core_tp_join"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_attention"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_engram"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_expert_tp"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_routes"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_trellis"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.ops_a8"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "kernel.enginelab.ops_rope"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.dist_host_staged"
+
+[[requires]]
+module    = "runtime.enginelab.ds41_expert_tier"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.logprobs"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_graph"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.numeric"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[[requires]]
+module    = "serve.enginelab.ds41_serve"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.ds41_engine.json"

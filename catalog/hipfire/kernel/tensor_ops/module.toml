@@ -97,8 +97,9 @@ module    = "kernel.hipfire.common_headers"
 module    = "kernel.hipfire.gemm_mq"
 
 [gate]
-parity    = "origin-test:crates/rdna-compute/tests"
+parity    = "flerp:gate/interface/residual-add.toml"
 bench     = "none"
-status    = "builds"
+status    = "parity"
 compile   = "standalone"
-evidence  = "gate/results/compile/kernel.hipfire.tensor_ops.json"
+evidence  = "gate/results/interface/residual-add/result.json"
+reason    = "parity: interface gate residual-add on control-node (result.json, provider hipfire: pass; the gate overall pass=True); compile gate evidence gate/results/compile/kernel.hipfire.tensor_ops.json"

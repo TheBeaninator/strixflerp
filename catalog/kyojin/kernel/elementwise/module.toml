@@ -1,0 +1,51 @@
+id        = "kernel.kyojin.elementwise"
+kind      = "kernel"
+summary   = "Small elementwise kernels of the extension that Kyojin changed: residual add (with dtype mixes), logit soft-capping and a value histogram"
+why       = "changed for the ROCm build; small but on every step. Where the shape would go: a residual.add/-/f32 provider beside kernel.fastasfuck.residual, kernel.flerp.residual_add_gufo, kernel.flerp.residual_add_hipfire and 3 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: residual.add/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 3 changed (add.cu, histogram.cu, softcap.cu). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/add.cu",
+  "exllamav3/exllamav3_ext/histogram.cu",
+  "exllamav3/exllamav3_ext/softcap.cu",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/exllamav3/exllamav3_ext/add.cu",
+  "src/exllamav3/exllamav3_ext/histogram.cu",
+  "src/exllamav3/exllamav3_ext/softcap.cu",
+]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "residual.add/-/f32.kyojin-ext"
+api       = "add.cu, histogram.cu, softcap.cu; kernels: copy2d_kernel, moe_bias_add_kernel, moe_bias_add_weighted_kernel, histogram_kernel, softcap_kernel, softcap_h_kernel"
+numeric   = "fp16 / bf16 / fp32 operands"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: add.cu, histogram.cu, softcap.cu"

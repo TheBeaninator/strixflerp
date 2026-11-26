@@ -1,0 +1,67 @@
+id        = "runtime.enginelab.xport_tp_gather"
+kind      = "runtime"
+summary   = "the tensor-parallel slot gathers: the one instantiation of the shared Channel for TP gathers (tp_gather.hip and its traits), the TP join BF16 / exec / map HIP pieces, the BF16 wire format and the pair device link"
+why       = "the transport half of exact TP2 decode: each rank's slot partials travel over the pair link and are joined in the declared order (core_tp_join); where it would go: a new strixflerp interface collective.tp-gather/-/bf16-f32.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, collective.tp-gather/-/bf16-f32.enginelab. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/xport/bf16_wire_hip.hpp",
+  "src/xport/pair_device_link.hpp",
+  "src/xport/tp_gather.hip",
+  "src/xport/tp_gather_hip.hpp",
+  "src/xport/tp_gather_traits.hpp",
+  "src/xport/tp_join_bf16_hip.hpp",
+  "src/xport/tp_join_exec_hip.hpp",
+  "src/xport/tp_join_map_hip.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/xport/tp_gather.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.tp-gather/-/bf16-f32.enginelab"
+api       = "strix::xport tp_gather_hip.hpp, tp_join_*_hip.hpp"
+numeric   = "bytes moved verbatim; the join order is fixed"
+regime    = "two ranks, every decode layer"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[[requires]]
+module    = "kernel.enginelab.core_tp_join"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.xport_tp_gather.json"

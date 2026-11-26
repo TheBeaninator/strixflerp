@@ -1,0 +1,61 @@
+id        = "tool.kestrel.hip_tests"
+kind      = "tool"
+summary   = "the origin's other HIP device tests and benches: tests/hip (expert cache staging, GLM attention / MV benches, GLM expert helper and handoffs, MiniMax attention bench, PLE IQ4, prefill fused bench and parity, native batch prefill) and tools/hip (the prefill bench driver and the Windows HIP build script)"
+why       = "the origin's remaining HIP device tests and benches (prefill parity, expert staging, handoffs, GLM benches); they define what correct means for the harvested kernels in the origin's own terms, which a timing or parity card needs first"
+notes     = "Interface tag: none. Nothing was compiled, run or timed on the pod."
+
+[provenance]
+origin    = "kestrel"
+repo      = "https://github.com/itechmedic/kestrel"
+commit    = "717c76975cd20d37b2e4162072d7745d6e1576ff"
+branch    = "kestrel"
+paths     = [
+  "tests/hip/expert_cache_staging.cpp",
+  "tests/hip/glm_attn_bench.cu",
+  "tests/hip/glm_expert_helper.cpp",
+  "tests/hip/glm_handoff.cpp",
+  "tests/hip/glm_mv_bench.cu",
+  "tests/hip/glm_prefill_attention.cpp",
+  "tests/hip/handoff.cpp",
+  "tests/hip/mm3_attn_bench.cu",
+  "tests/hip/ple_iq4.cpp",
+  "tests/hip/prefill_fused_bench.cpp",
+  "tests/hip/prefill_fused_parity.cpp",
+  "tests/hip/prefill_native_batch.cpp",
+  "tools/hip/bench_prefill.py",
+  "tools/hip/build_maya_windows.bat",
+]
+authors   = ["itechmedic", "Project Maya contributors (mw00)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/tests/hip"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "verify.kernel-reference-kestrel/-/-"
+api       = "the CMake test targets under MAYA_BUILD_TESTS with MAYA_ENABLE_HIP; tools/hip/bench_prefill.py"
+numeric   = "each test states its own reference and tolerance"
+regime    = "offline, on an AMD GPU with the origin built; not run by this harvest"
+
+[[requires]]
+module    = "kernel.kestrel.hip_compat"
+
+[[requires]]
+module    = "kernel.kestrel.amd_experts"
+
+[[requires]]
+module    = "kernel.kestrel.prefill_moe"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of Maya's CMake build with MAYA_ENABLE_HIP (cmake/hip_backend.cmake): the .cu file is compiled as HIP through include/maya/hip_compat, for gfx1100 / gfx1201 / gfx1151 (validated) with the engine's include roots and ggml from third_party; it needs headers this harvest leaves in the origin, so it is not compiled here; tests and benches, not run"

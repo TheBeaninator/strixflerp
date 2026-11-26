@@ -1,0 +1,53 @@
+id        = "kernel.kyojin.hgemm"
+kind      = "kernel"
+summary   = "Dense fp16 GEMM of the extension with Kyojin's row-padded operand support (a non-power-of-two row pitch such as K=6144 rows of 12288 B) and hgemm_f16acc.cu, an fp16-accumulator tensor-core GEMM flushing to fp32 across K (a GeForce rate lever)"
+why       = "dense projections; the padded-pitch form avoids channel conflicts. Where the shape would go: a linear.prefill/f16/f16-f32 provider beside kernel.gufo.ds4_linear, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: linear.prefill/f16/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 3 changed (hgemm.cu, hgemm.cuh, hgemm_f16acc.cu). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/hgemm.cu",
+  "exllamav3/exllamav3_ext/hgemm.cuh",
+  "exllamav3/exllamav3_ext/hgemm_f16acc.cu",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/hgemm.cu", "src/exllamav3/exllamav3_ext/hgemm_f16acc.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.prefill/f16/f16-f32.kyojin-hgemm"
+api       = "hgemm.cu, hgemm.cuh, hgemm_f16acc.cu; kernels: skinny_partials_kernel, skinny_reduce_kernel, skinny_cat_kernel, gemm_kernel, rate_kernel"
+numeric   = "fp16 operands, fp32 accumulation (f16acc: fp16 partials folded to fp32 per k-slice)"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.graph"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: hgemm.cu, hgemm_f16acc.cu"

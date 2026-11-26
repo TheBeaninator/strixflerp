@@ -1,0 +1,53 @@
+id        = "runtime.ds4.kmultinode_engine"
+kind      = "runtime"
+summary   = "kyuz0/ds4 rocm-multi-node 89c1ea9 (head commit by antirez, \"Fix ROCm MTP startup residency\"): its copy of the engine family against antirez/ds4 b3f5018: LICENSE changed (+0 -1 lines); ds4.c changed (+2546 -65702 lines); ds4.h changed (+4 -344 lines). The family: ds4.c and ds4.h, the engine: mmap GGUF loading, the fixed DeepSeek V4 / V4.1 / Pro, GLM-5.2 / 5.3 / 5.3-Flash and Qwen3.8-Flash-Next layouts and their graph drivers, CPU reference kernels, sessions (one mutable inference timeline owning KV and logits; ds4_session_sync reuses, extends or rebuilds), MTP and DSpark speculation control, the TP and distributed hooks, tokenizer wiring"
+why       = "an early ROCm multi-node line of ds4, five months older than the base: the ROCm backend before it grew V4.1, GLM-5.3 and Qwen kernels, with the pipeline-parallel distributed runtime; kept as the record of where the ROCm multi-node work started. The family in the base: the whole host side of the engine in one deliberately vertical file; every backend and transport module plugs into it"
+notes     = "Overlay kyuz0_rocm_multi_node: files under overlay/kyuz0_rocm_multi_node/ are the branch's bytes at 89c1ea982df2; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_rocm_multi_node.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "89c1ea982df20b7578f95bb10d894f5447146fc3"
+branch    = "rocm-multi-node"
+paths     = [
+  "overlay/kyuz0_rocm_multi_node/LICENSE",
+  "overlay/kyuz0_rocm_multi_node/ds4.c",
+  "overlay/kyuz0_rocm_multi_node/ds4.h",
+]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/overlay/kyuz0_rocm_multi_node"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.model-ds4-kmultinode/gguf/-"
+api       = "ds4_engine_*, ds4_session_* (ds4.h)"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "runtime.ds4.distributed"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_gpu_api"
+
+[[requires]]
+module    = "runtime.ds4.ssd"
+
+[[requires]]
+module    = "runtime.ds4.streaming_hotlist"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

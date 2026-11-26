@@ -101,7 +101,7 @@ class M:
     def __init__(self, id, summary, paths, provides=(), requires=(), lang='hip-c++', sources=(), includes=None,
                  flags=(), toolchain=None, authors=None, spdx=None, upstream=None, notes=None, compile='standalone',
                  reason=None, prebuilt=None, variants=None, parity='none', bench='none', extra_files=None,
-                 units=None, exclude=(), display_paths=None, source_flags=None, closure=None):
+                 units=None, exclude=(), display_paths=None, source_flags=None, closure=None, why=None):
         self.__dict__.update(locals())
         del self.__dict__['self']
         self.kind, self.origin_name, self.name = id.split('.', 2)
@@ -161,6 +161,8 @@ def write_module(origin, m, compile_results, extra_requires=()):
     o.append(f'id        = {tq(m.id)}')
     o.append(f'kind      = {tq(m.kind)}')
     o.append(f'summary   = {tq(m.summary)}')
+    if m.why:
+        o.append(f'why       = {tq(m.why)}')
     if m.notes:
         o.append(f'notes     = {tq(m.notes)}')
     o.append('')
@@ -283,8 +285,9 @@ def include_requires(modules, provided_by):
 
 def unharvested(origin, owned, licence_files):
     """Patterns (flerp diff-origin's [harvest] unharvested) naming every origin file that is in no module: whole
-    directories where nothing under them was taken, single files elsewhere."""
-    files = [f for f in origin.files() if f not in owned]
+    directories where nothing under them was taken, single files elsewhere. Licence files run() copies beside
+    ORIGIN.toml ([licence] files, checked by flerp diff-origin) are accounted for, so they are not listed."""
+    files = [f for f in origin.files() if f not in owned and f not in licence_files]
     owned_dirs = set()
     for f in owned:
         parts = f.split('/')
@@ -305,14 +308,30 @@ def unharvested(origin, owned, licence_files):
     return out
 
 
-def run(origin, modules, origin_toml, left_out=None, licence_files=()):
+CANON = os.path.join(REPO, 'docs', 'harvest', 'data', 'licences')   # canonical texts, sources in SOURCES.tsv
+
+
+def run(origin, modules, origin_toml, left_out=None, licence_files=(), canonical=None):
+    """licence_files: origin-relative paths copied verbatim beside ORIGIN.toml ([licence] files). A path with a
+    directory (LICENSES/MIT.txt) lands under that directory of catalog/<origin>; such a top directory holds licence
+    texts only, so it is rebuilt here and never read as a module kind (flerplib/catalog.py skips it too).
+    canonical: {path in catalog/<origin>: repo-relative source} for licence texts the origin declares but does not
+    ship ([licence] canonical_files), copied verbatim from a canonical copy (docs/harvest/data/licences, or another
+    origin's verbatim text); flerp diff-origin does not compare them with the checkout."""
+    canonical = canonical or {}
     odir = os.path.join(REPO, 'catalog', origin.name)
     os.makedirs(odir, exist_ok=True)
+    lic_dirs = {f.split('/', 1)[0] for f in list(licence_files) + list(canonical) if '/' in f}
+    clash = lic_dirs & {m.kind for m in modules}
+    if clash:
+        raise SystemExit(f'licence directories {sorted(clash)} are also module kinds')
     # drop module directories that are no longer in the spec
     want = {(m.kind, m.name) for m in modules}
     for kind in os.listdir(odir):
         kd = os.path.join(odir, kind)
-        if os.path.isdir(kd):
+        if os.path.isdir(kd) and kind in lic_dirs:
+            shutil.rmtree(kd)
+        elif os.path.isdir(kd):
             for name in os.listdir(kd):
                 if (kind, name) not in want:
                     shutil.rmtree(os.path.join(kd, name))
@@ -334,7 +353,11 @@ def run(origin, modules, origin_toml, left_out=None, licence_files=()):
         if extra[m.id]:
             write_module(origin, m, results, extra[m.id])
     for f in licence_files:
+        os.makedirs(os.path.dirname(os.path.join(odir, f)), exist_ok=True)
         shutil.copyfile(origin.find(f), os.path.join(odir, f))
+    for f, src in canonical.items():
+        os.makedirs(os.path.dirname(os.path.join(odir, f)), exist_ok=True)
+        shutil.copyfile(os.path.join(REPO, src), os.path.join(odir, f))
     un = unharvested(origin, set(owner), licence_files)
     toml = origin_toml.strip() + '\n\n[harvest]\nmode      = "modules"\ntool      = ' + tq(f'docs/harvest/harvest_{origin.name}.py') + \
         '\n# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.\nunharvested = ' + tlist(un) + '\n'

@@ -1,0 +1,54 @@
+id        = "tool.odinlink5.cli"
+kind      = "tool"
+summary   = "odl_tb5_cli, the link test tool: server mode answers, client mode runs bandwidth, latency, latency-under-load, jitter, MIMO (multi-stream) and diagnostics tests over the library with a small wire protocol and statistics"
+why       = "link qualification before any collective runs: bandwidth and tail latency by message size are the two numbers that decide which traffic a USB4 pair should carry"
+notes     = "Interface tag: none. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "cli/CMakeLists.txt",
+  "cli/src/odl_tb5_cli.h",
+  "cli/src/odl_tb5_cli_bandwidth.c",
+  "cli/src/odl_tb5_cli_client.c",
+  "cli/src/odl_tb5_cli_diag.c",
+  "cli/src/odl_tb5_cli_jitter.c",
+  "cli/src/odl_tb5_cli_latency.c",
+  "cli/src/odl_tb5_cli_latency_load.c",
+  "cli/src/odl_tb5_cli_main.c",
+  "cli/src/odl_tb5_cli_mimo.c",
+  "cli/src/odl_tb5_cli_proto.c",
+  "cli/src/odl_tb5_cli_server.c",
+  "cli/src/odl_tb5_cli_stats.c",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/cli/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.link-bench-odl-cli/-/-"
+api       = "odl_tb5_cli server | client <test> [options]"
+numeric   = "timing"
+regime    = "one link"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/tool.odinlink5.cli.json"
+reason    = "c: compiled by the C gate, not gate/compile/run.py (python3 docs/harvest/harvest_odinlink5.py --c-gate on control-node CPU, gcc with the include paths of the origin's CMake)"

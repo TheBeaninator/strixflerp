@@ -1,0 +1,25 @@
+{
+ "module": "kernel.strata.prefill_moe_fused",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-24T23:07:06Z",
+ "toolchain": "therock-10.2",
+ "toolchain_root": "/data/models/tools/therock-10.2",
+ "compiler": "AMD clang version 24.0.0git (https://github.com/ROCm/llvm-project.git 7667f52dd687899256a3285ab0bce3c53bc73394) | Target: x86_64-unknown-linux-gnu",
+ "units": 1,
+ "passed": 1,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 2.5,
+ "results": [
+  {
+   "unit": "src/src/prefill/moe_fused.cu",
+   "cmd": "/data/models/tools/therock-10.2/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.2 -x hip -O3 -DNDEBUG -fPIC -DSTRATA_USE_HIP=1 '-DSTRATA_HIP_ARCHS=\"gfx1151\"' -DSTRATA_WMMA_GFX11=1 -include cuda_runtime.h -c -DGGML_USE_HIP=1 -I catalog/strata/kernel/prefill_moe_fused/src/include -I catalog/strata/kernel/common/src/include/strata/hip_compat -I catalog/strata/kernel/common/src/include -I catalog/strata/kernel/common/src/third_party/ggml -I catalog/strata/kernel/common/src/src/kernels/cuda -I /data/models/tools/therock-10.2/include catalog/strata/kernel/prefill_moe_fused/src/src/prefill/moe_fused.cu -o build/compile-gate/kernel.strata.prefill_moe_fused/0-moe_fused.cu.o",
+   "rc": 0,
+   "seconds": 2.46,
+   "object_bytes": 62904,
+   "object_sha256": "c5160c96f8549c9d19904a317da2d4d8f150d8a61a6502ade295296ee71c876f"
+  }
+ ]
+}

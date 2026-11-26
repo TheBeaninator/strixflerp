@@ -105,6 +105,23 @@ pub fn setProcess(gpa: std.mem.Allocator, io: std.Io) void {
     g_io = io;
 }
 
+extern "c" fn fflush(stream: ?*anyopaque) c_int;
+
+/// The host's way out once its C or C++ main has returned `rc`: the last line, every stdio stream flushed, then
+/// _exit - not a return from main and not std.process.exit, which both reach libc's exit() and the fini list.
+/// Why (card 91a9cda544): the engine dlopens libhipblas.so.3, which brings therock's libomp.so (DF_1_NODELETE), and
+/// closes hipBLAS again at flerp_close. libomp.so stays mapped, and at exit() its __do_fini calls
+/// __deregister_frame_info through a slot that is NULL by then: SIGSEGV at pc 0, exit status 139, after every step
+/// of the close - the frame gdb shows for this host with hipBLAS opened and closed and no device at all
+/// (tests/test_strixfold_host_exit.py), and the one StrixFold's rank 1 died of (it leaves by _exit too).
+/// Nothing is lost by skipping the exit handlers: flerp_close has released the device and the pair, the C side
+/// registers no atexit function, and the streams are flushed here.
+pub fn leave(rc: c_int) noreturn {
+    std.debug.print("host: main returned {d}; the process leaves by _exit\n", .{rc});
+    _ = fflush(null);
+    std.c._exit(@intCast(@as(u32, @bitCast(rc)) & 0xff));
+}
+
 /// Zig owns the process start (allocator, io); the driver's C main runs as a function and calls back into the ABI.
 pub fn main(init: std.process.Init) !u8 {
     g_gpa = init.gpa;
@@ -113,9 +130,7 @@ pub fn main(init: std.process.Init) !u8 {
     const args = try init.minimal.args.toSlice(a);
     const argv = try a.alloc([*:0]const u8, args.len);
     for (args, argv) |arg, *p| p.* = arg.ptr;
-    const rc = flerp_host_main(@intCast(args.len), argv.ptr);
-    std.debug.print("host: main returned {d}; the process exits\n", .{rc});
-    return @intCast(@as(u32, @bitCast(rc)) & 0xff);
+    leave(flerp_host_main(@intCast(args.len), argv.ptr));
 }
 
 fn fail(st: c_int, comptime fmt: []const u8, args: anytype) c_int {
@@ -229,7 +244,7 @@ export fn flerp_close(p: ?*anyopaque) void {
     ex.ctx.deinit();
     // Host.close closes the driver last (a dlclose of libamdhip64). A build that left the runtime loaded instead
     // crashed just the same (2026-11-11T02:50Z: every step here done, SIGSEGV after the host's main returned), so the
-    // close is the origin's again and the crash is looked for after it.
+    // close is the origin's again. The crash is libomp.so's fini at exit(), which the host no longer reaches (leave).
     closing("closing the HIP driver");
     ex.driver.close();
     g_gpa.free(ex.seqs);

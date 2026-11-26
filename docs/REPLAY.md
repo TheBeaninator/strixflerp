@@ -94,3 +94,68 @@ python3 gate/replay.py --corpus /data/pod/flerp-replay/corpus-v1 --target strixi
   --b http://127.0.0.1:5392 --b-kind flerp --b-cmd '<front end argv>' \
   --out gate/results/qwen38-flash-next.flerp-swap.replay
 ```
+
+## Factory replay: the same traffic as load (FACTORY-REPLAY 2587bc1599)
+
+`tools/replay/factory_replay.py` answers a different question from the gate above: not "do two servers agree" but
+"how much does one engine commit under the factory's traffic, and does a thread get the same reply in company as
+alone". It takes the engine URL and the model name as arguments, so the same set runs against strixite on a worker
+(`qwen3.8-flash-next`) and against the DeepSeek pair (`dsv41`). Python stdlib only. It starts, stops and holds
+nothing: the engine belongs to whoever holds the window (`gate/factory-replay.toml` is the baseline run).
+
+```
+# once: freeze a set from a corpus directory (numbers and hashes only, no message text; commit it)
+python3 tools/replay/factory_replay.py freeze --corpus /data/pod/flerp-replay/corpus-v1 --targets strixite \
+  --out gate/replay/factory-v1.set.json
+# any time: is the corpus still the frozen one
+python3 tools/replay/factory_replay.py verify --set gate/replay/factory-v1.set.json --corpus /data/pod/flerp-replay/corpus-v1
+# the run: every stream alone first, then 3 reps with 2 in flight
+python3 tools/replay/factory_replay.py run --set gate/replay/factory-v1.set.json --corpus /data/pod/flerp-replay/corpus-v1 \
+  --url http://WORKER:5300 --model qwen3.8-flash-next --concurrency 2 --reps 3 --max-tokens 256 --solo all --out RESULTS
+```
+
+Tests: `python3 -m unittest tests.test_factory_replay` (a fake OpenAI server in the test file; no GPU, no pod).
+
+**The set.** `freeze` keeps the complete `/v1/chat/completions` exchanges with status 200 and chains them into
+streams: an exchange continues the stream whose last request's messages are a prefix of its own, so a stream is one
+recorded thread, turn after turn. `gate/replay/factory-v1.set.json` is corpus-v1's strixite traffic: 207 exchanges in
+27 streams (1 to 21 turns; recorded median 44,955 prompt tokens and 794 new tokens a turn), set_sha256
+`176af79dc121...`. Each turn carries the sha256 of its exchange file, and `run` exits 2 before sending anything when a
+file differs. `--targets` picks corpus subdirectories (all of corpus-v1: 358 exchanges in 50 streams, the pair's
+bench drives included), `--max-turns T` splits longer threads into streams of at most T turns, `--max-streams S` keeps
+the first S. These sha256 are of the file bytes; `scrub.py`'s manifest hashes are its own and are not compared.
+
+**What a turn sends.** The recorded request with `model` replaced by `--model`, `temperature` 0, `stream` false, the
+recorded `seed` (or the gate's rule: the first 31 bits of sha256(exchange id)), and `max_tokens` capped at
+`--max-tokens` (0 = as recorded, 16,384 in corpus-v1). `--strip KEY` drops a request key an engine does not take,
+`--set-json KEY=JSON` adds one. The history a turn resends is the recorded one, not the engine's replies of this run:
+every engine and every rep gets the same prompts, and a reply that differs cannot change the load that follows it.
+
+`run --first-streams N` plays only the first N streams in the order of their first turn's sha256, a fixed rule for
+cutting the set to fit a hold; the summary names the streams kept. `gate/replay/baseline-run.sh` and
+`gate/replay/serve.sh` are the baseline's win_run command and its engine start.
+
+**Phases.** `solo-K`: the streams named by `--solo` (all, none, or the first K), one at a time. It is the identity
+reference and it warms the engine's prompt cache, so the reps start from the same cache state. `rep-K`: all streams
+with `--concurrency N` in flight; N workers each take the next stream and play its turns in order. `result.json` and
+`summary.md` in `--out` are rewritten after every phase, so a job stopped by its time limit keeps what it finished.
+`--wait-ready SECS` polls `/health` first; `--expect-slots N` refuses to run unless `/metrics` says `strix_slots N`.
+
+**The numbers** (per phase, and the median of the reps):
+
+| printed | is |
+|---|---|
+| committed tokens a second | the sum of `usage.completion_tokens` of the phase's answered turns over the phase's wall time: prefill, queueing and decode all count against it. This is the number a throughput gate compares |
+| while saturated | the same up to the moment the first worker found no stream left; after that fewer than N are in flight |
+| turn time p50, p95 | wall seconds from sending a turn to its full reply, nearest rank over the phase's answered turns |
+| prefilled tokens a request | `usage.prompt_tokens` minus `usage.prompt_tokens_details.cached_tokens` (or `timings.prompt_n`), mean over the turns: what the engine had to run forward |
+| cached tokens a request | `usage.prompt_tokens_details.cached_tokens` (or `timings.cache_n`), mean: what the prompt cache gave |
+| errors | turns with no reply (HTTP error, timeout); they add no tokens and make the exit code 4 |
+| identity | per rep, each stream against the same stream of the last solo pass, turn by turn: the reply's token ids when it carries them (`flerp.token_ids`; add `--set-json flerp_trace=true` for a flerp front end), else the sha256 of content, reasoning, tool calls (name and arguments; call ids are random) and finish reason. A stream is identical when every turn is; otherwise the first differing turn and its exchange id are listed, and the exit code is 3 |
+
+Read identity with the cache in mind: strixite's forward shape depends on where the cache cut the prompt
+(`docs/EXECUTOR-ABI.md`, "Forward shape"), and the solo pass runs colder than the reps. `--solo-passes 2` runs the
+solo pass twice and reports solo-1 against solo-2 as well: a stream that differs there differs without any company.
+With `--max-tokens` below the recorded reply lengths the decode share of a turn is smaller than in the factory
+(corpus-v1 strixite: 375,385 recorded new tokens, 49,872 under a cap of 256), so compare runs at one cap only.
+Nothing in `--out` holds message text.

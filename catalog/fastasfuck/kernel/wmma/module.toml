@@ -1,0 +1,46 @@
+id        = "kernel.fastasfuck.wmma"
+kind      = "kernel"
+summary   = "fastasfuck's wave32 WMMA tile helpers, the tile-check entry point and the tiled-GEMM building blocks"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its wmma kernel file so a timing card can set it against kernel.strixite.wmma, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/wmma.hip gemm.wmma-tile/- (byte-identical to kernel.strixite.wmma kernels/wmma.hip at d19945e); kernels/wmma_gemm.hpp gemm.wmma-blocks/- (77 changed lines against kernel.strixite.wmma_gemm kernels/wmma_gemm.hpp at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/wmma.hip", "kernels/wmma.hpp", "kernels/wmma_gemm.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/wmma.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "gemm.wmma-tile/-/bf16"
+api       = "strix::kernels::wmma_tile_product (kernels/wmma.hpp)"
+numeric   = "the same source as kernel.strixite.wmma (byte-identical to kernel.strixite.wmma kernels/wmma.hip at d19945e), so its arithmetic: bf16 (or f16) inputs, fp32 accumulate; not bit-exact IEEE: up to 2^-23 of sum|a*b| per 16x16x16 step"
+regime    = "as kernel.strixite.wmma: v_wmma_f32_16x16x16_bf16 on RDNA3 / RDNA3.5"
+
+[[provides]]
+interface = "gemm.wmma-blocks/-/bf16"
+api       = "kernels/wmma_gemm.hpp"
+numeric   = "derived from kernel.strixite.wmma_gemm (77 changed lines against kernel.strixite.wmma_gemm kernels/wmma_gemm.hpp at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.wmma_gemm: included by .hip files only; K step kWmmaKC, lower-precision path"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.wmma.json"

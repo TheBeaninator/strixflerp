@@ -1,0 +1,43 @@
+id        = "kernel.enginelab.lab_moe_q8_0"
+kind      = "kernel"
+summary   = "the MoE Q8_0 lab kernel with its qualification script and test (lab/moe_q8_0): 5 origin files under lab/moe_q8_0"
+why       = "Q8_0 expert prototype; where it would go: a new strixflerp interface kernel-research.enginelab-lab-moe-q8-0/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kernel-research.enginelab-lab-moe-q8-0/-/-. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "lab/moe_q8_0/CMakeLists.txt",
+  "lab/moe_q8_0/README.md",
+  "lab/moe_q8_0/moe_q8_0.hip",
+  "lab/moe_q8_0/qualify.py",
+  "lab/moe_q8_0/test_qualify.py",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/lab/moe_q8_0/moe_q8_0.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-research.enginelab-lab-moe-q8-0/-/-"
+api       = "lab/moe_q8_0"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.lab_moe_q8_0.json"

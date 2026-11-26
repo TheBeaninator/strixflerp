@@ -1,0 +1,78 @@
+id        = "kernel.enginelab.core_f16_dense"
+kind      = "kernel"
+summary   = "FP16 dense forms of the shared core: tall and hi-lo FP16 dense, Q8 x A8 dense, the hi-lo math, the dense linear and row / MMA-group / pair-map / f32-input-major plans and the dense model configuration"
+why       = "the dense projection family every engine binds for its non-expert linears, with the plans that pick tile and split per shape; where it would go: beside the catalogue's linear.dense/f16+q8_0/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.dense/f16+q8_0/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/core/dense_bf16_narrow_plan.hpp",
+  "src/core/dense_f32_input_major_plan.hpp",
+  "src/core/dense_linear.hpp",
+  "src/core/dense_mma_group_plan.hpp",
+  "src/core/dense_model_config.cpp",
+  "src/core/dense_pair_map.hpp",
+  "src/core/dense_row_plan.hpp",
+  "src/core/f16_dense_q8a8.hpp",
+  "src/core/f16_dense_tall.hpp",
+  "src/core/f16_dense_tall_hilo.hpp",
+  "src/core/f16_hilo_math.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/core/dense_model_config.cpp"]
+includes  = ["src/src", "src/src/core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.dense/f16+q8_0/f16-f32.enginelab"
+api       = "strix::core dense_*.hpp, f16_dense_*.hpp, dense_model_config.cpp"
+numeric   = "FP16 or Q8 weights, FP32 accumulation; hi-lo split keeps FP32-equivalent sums"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "format.enginelab.hip_weight"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.core_bf16"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.dense_launch"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

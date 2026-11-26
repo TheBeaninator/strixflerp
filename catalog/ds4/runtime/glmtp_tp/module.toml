@@ -1,0 +1,43 @@
+id        = "runtime.ds4.glmtp_tp"
+kind      = "runtime"
+summary   = "davidcanar/ds4 glm-tp-rocm 8ebf672 (antirez/ds4 PR #1024, stacked on #813, #835 and #1018): its copy of the tp family against antirez/ds4 b3f5018: ds4_tp.c changed (+1717 -205 lines); ds4_tp.h changed (+61 -4 lines). The family: the tensor-parallel transport and lockstep protocol: two ranks run the same graph, each with one contiguous half of the routed experts; rank 0 mirrors every session call to rank 1 over a TCP control socket, and inside each token the partial block outputs go through a registered slab by two-sided RDMA send / recv (Thunderbolt UC on Metal, RoCE RC on Linux) or a full-duplex TCP socket; versioned wire features (command mailbox, verify flags, DSpark agreement)"
+why       = "GLM-5.3-Flash tensor parallel across two ROCm machines: the KDA heads split between the ranks, the routed experts split 50/50, and the TP slab in host-mapped pinned memory that GPU kernels and the CPU transport thread share on Strix Halo (rocm/ds4_rocm_tp.cuh); the branch head is \"GLM TP: keep the transport slab unified on ROCm builds\". The family in the base: two-machine TP over a network link, the shape the pod's own TP4 work lives in"
+notes     = "The branch grows the TP protocol for GLM-5.3-Flash on ROCm (+1,717 lines in ds4_tp.c): the KDA head split and the 50/50 routed-expert split across the two ranks. Overlay glm_tp_rocm: files under overlay/glm_tp_rocm/ are the branch's bytes at 8ebf67295a4f; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/glm_tp_rocm.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/davidcanar/ds4"
+commit    = "8ebf67295a4f4663c326aa415145a35175e02b84"
+branch    = "glm-tp-rocm"
+paths     = ["overlay/glm_tp_rocm/ds4_tp.c", "overlay/glm_tp_rocm/ds4_tp.h"]
+authors   = ["davidcanar", "The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/overlay/glm_tp_rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.interface-ds4-tp-glmtp/-/-"
+api       = "ds4_tp_* (ds4_tp.h)"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "runtime.ds4.engine"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_gpu_api"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

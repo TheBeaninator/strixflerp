@@ -1,0 +1,70 @@
+id        = "kernel.enginelab.ops_recur"
+kind      = "kernel"
+summary   = "shared recurrence ops (src/ops/recur): gated-delta policy, prologue, rows (body), step (body) and window, the recurrent decode plan and step"
+why       = "the backend-neutral recurrence family (one per AGENTS.md) the GDN engines bind; where it would go: beside the catalogue's mixer.gdn/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: mixer.gdn/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/ops/recur/gated_delta_policy.hpp",
+  "src/ops/recur/gated_delta_prologue.hpp",
+  "src/ops/recur/gated_delta_rows.hpp",
+  "src/ops/recur/gated_delta_rows_body.inc",
+  "src/ops/recur/gated_delta_step.hpp",
+  "src/ops/recur/gated_delta_step_body.inc",
+  "src/ops/recur/gated_delta_window.hpp",
+  "src/ops/recur/recur_decode_plan.hpp",
+  "src/ops/recur/recur_decode_step.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.enginelab-ops"
+api       = "src/ops/recur/gated_delta_*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_short_conv"
+
+[[requires]]
+module    = "kernel.enginelab.gdn_decode"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[[requires]]
+module    = "runtime.enginelab.recurrent_state"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

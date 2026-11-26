@@ -1,0 +1,69 @@
+id        = "kernel.lucebox.attn_prefill"
+kind      = "kernel"
+summary   = "prefill attention: the chunked-prefill FlashAttention driver with strided dequant per chunk, the GGML_OP_FLASH_ATTN_SPARSE dispatch, the rocWMMA block-sparse flashprefill kernels (PFlash) and their BSA-compatible launcher"
+why       = "The only block-sparse prefill attention for gfx1151 in the catalogue (PFlash)"
+notes     = "INTERFACES.md section: none (attention); the sparse selection is nearest 5. Interface tags: attn.prefill-causal/kv-f16/f16.lucebox-chunked; attn.block-sparse/kv-bf16/bf16.lucebox-pflash. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-chunked.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-sparse.cu, server/src/flashprefill_kernels.hip.cu, server/src/bsa_launcher_hip.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-chunked.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-chunked.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-rdna-wmma.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-sparse.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-sparse.cuh",
+  "server/src/bsa_launcher_hip.cu",
+  "server/src/flashprefill_kernels.hip.cu",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-chunked.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-sparse.cu",
+  "src/server/src/flashprefill_kernels.hip.cu",
+  "src/server/src/bsa_launcher_hip.cu",
+]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/src", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/src/flashprefill_kernels.hip.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1", "-DLUCE_HAVE_FLASHPREFILL=1", "-DLUCE_CUDA_MIN_SM=80"], "src/server/src/bsa_launcher_hip.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1", "-DLUCE_HAVE_BSA=1", "-DLUCE_HAVE_FLASHPREFILL=1", "-DLUCE_CUDA_MIN_SM=80"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-chunked.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/fattn-sparse.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "attn.prefill-causal/kv-f16/f16.lucebox-chunked"
+api       = "GGML op in fattn-chunked.cu"
+numeric   = "K/V extracted per chunk at chunk_len x nh_kv x D (file header)"
+regime    = "long prefill"
+
+[[provides]]
+interface = "attn.block-sparse/kv-bf16/bf16.lucebox-pflash"
+api       = "fattn-sparse.cu dispatch; server flashprefill_kernels.hip.cu and the extern \"C\" launcher of bsa_launcher_hip.cu"
+numeric   = "BF16 Q/K/V in flash_prefill_forward_bf16 layout, rocWMMA 16x16x16 tiles (file header)"
+regime    = "speculative and long prefill; built by the origin only with LUCE_HIP_SM80_EQUIV=ON (flashprefill) and LUCE_ENABLE_BSA=ON (launcher), both off in Dockerfile.rocm"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.server_headers"
+
+[[requires]]
+module    = "kernel.lucebox.rocmfp"
+
+[[requires]]
+module    = "kernel.lucebox.kvquant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.attn_prefill.json"

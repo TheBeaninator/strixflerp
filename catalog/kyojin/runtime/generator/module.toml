@@ -1,0 +1,40 @@
+id        = "runtime.kyojin.generator"
+kind      = "runtime"
+summary   = "The paged generator and job model as Kyojin rewrote them (2,894 + 2,492 lines): continuous batching, chunked prefill, speculative rounds (MTP, DFlash2, n-gram), page sharing and the async front"
+why       = "the scheduler every Kyojin server runs. Where the shape would go: an executor.decode-loop/exl3/- provider beside runtime.flerp.decode_loop, through a port of the python / Triton logic"
+notes     = "Interface tag: executor.decode-loop/exl3/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 3 changed (async_generator.py, generator.py, job.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/generator/async_generator.py",
+  "exllamav3/generator/generator.py",
+  "exllamav3/generator/job.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.decode-loop-kyojin/exl3/-"
+api       = "async_generator.py, generator.py, job.py"
+numeric   = "n/a"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

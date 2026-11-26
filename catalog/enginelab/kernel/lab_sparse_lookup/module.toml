@@ -1,0 +1,47 @@
+id        = "kernel.enginelab.lab_sparse_lookup"
+kind      = "kernel"
+summary   = "the sparse lookup lab (lab/sparse_lookup): 7 origin files under lab/sparse_lookup"
+why       = "sparse lookup prototype; where it would go: a new strixflerp interface kernel-research.enginelab-lab-sparse-lookup/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kernel-research.enginelab-lab-sparse-lookup/-/-. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "lab/sparse_lookup/CMakeLists.txt",
+  "lab/sparse_lookup/README.md",
+  "lab/sparse_lookup/qualify_serial_ple.py",
+  "lab/sparse_lookup/sparse_lookup.cpp",
+  "lab/sparse_lookup/sweep_serial_ple.py",
+  "lab/sparse_lookup/test_qualify_serial_ple.py",
+  "lab/sparse_lookup/test_sweep_serial_ple.py",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/lab/sparse_lookup/sparse_lookup.cpp"]
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kernel-research.enginelab-lab-sparse-lookup/-/-"
+api       = "lab/sparse_lookup"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.prompt_lookup"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,49 @@
+id        = "tool.fastasfuck.sim_qwen_wave2"
+kind      = "tool"
+summary   = "fastasfuck's round-4 simulator: Q6 hotspot GPTQ, coordinate-descent refits and asymmetric GPTAQ on top of the round-3 recipe (new in 1.1.0)"
+why       = "it is where the README's GPTQ versus GPTAQ ablation comes from"
+notes     = "Files vs strixite: tools/sim_qwen_wave2.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/sim_qwen_wave2.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.sim-qwen-wave2/-/-"
+api       = "tools/sim_qwen_wave2.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[[requires]]
+module    = "tool.fastasfuck.sim_qwen_awq_gptq"
+
+[[requires]]
+module    = "tool.fastasfuck.sim_qwen_calib"
+
+[[requires]]
+module    = "tool.fastasfuck.sim_qwen_gptq_r3"
+
+[[requires]]
+module    = "tool.fastasfuck.sim_qwen_quant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

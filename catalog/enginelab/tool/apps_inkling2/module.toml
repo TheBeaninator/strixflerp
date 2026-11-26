@@ -1,0 +1,90 @@
+id        = "tool.enginelab.apps_inkling2"
+kind      = "tool"
+summary   = "the Inkling 2 Mini programs: CLI, CPU, CUDA, GPU main, HIP, inspect and media: 7 origin files under apps/inkling2_mini_cli.hpp, apps/inkling2_mini_cpu.cpp, apps/inkling2_mini_cuda.cu, apps/inkling2_mini_gpu_main.hpp"
+why       = "Inkling 2 binaries; where it would go: kept as a reference program or lab (tool.enginelab-inkling2/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-inkling2/-/-. 1 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "apps/inkling2_mini_cli.hpp",
+  "apps/inkling2_mini_cpu.cpp",
+  "apps/inkling2_mini_cuda.cu",
+  "apps/inkling2_mini_gpu_main.hpp",
+  "apps/inkling2_mini_hip.hip",
+  "apps/inkling2_mini_inspect.cpp",
+  "apps/inkling2_mini_media.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/apps/inkling2_mini_hip.hip"]
+includes  = ["src/apps"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.enginelab-inkling2/-/-"
+api       = "apps/inkling2_mini_*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_cuda"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_engine"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_resident"
+
+[[requires]]
+module    = "executor.enginelab.vision"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.inkling2_dspark"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.spec_core"
+
+[[requires]]
+module    = "serve.enginelab.serve_chat"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/tool.enginelab.apps_inkling2.json"

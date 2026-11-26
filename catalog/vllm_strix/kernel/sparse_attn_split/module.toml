@@ -1,0 +1,36 @@
+id        = "kernel.vllm_strix.sparse_attn_split"
+kind      = "kernel"
+summary   = "Triton split-KV (flash-decoding) variant of vLLM's _sparse_attn_prefill_ragged_kernel for GLM-5.3 sparse MLA decode: the ~2048 selected latent keys (512-dim) of each query are split across programs and combined by log-sum-exp, with a unit test against the original kernel"
+why       = "GLM decode ran its sparse MLA through the prefill ragged kernel with one program per (query, 16-head block): 8 workgroups at M=4 and 2 at M=1 on a 40-CU GPU (PATCHES 28.4). Split-KV over the selected keys is the decode shape for any top-k sparse attention"
+notes     = "Interface tag: none (the catalogue's sparse attention is attn.sparse-sink, a different selection). Hook: runtime.vllm_strix.sparse_attn_split_hook. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh_sparse_attn_split.py", "scripts/test_split.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.sparse-mla/-/bf16.split-kv"
+api       = "vsh_sparse_attn_split(...) (Triton; same arguments as the ragged prefill kernel)"
+numeric   = "bf16 in, fp32 softmax and accumulation, log-sum-exp combine"
+regime    = "decode, small query counts (MTP verify rows, draft steps)"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

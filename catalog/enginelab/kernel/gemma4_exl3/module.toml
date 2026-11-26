@@ -1,0 +1,80 @@
+id        = "kernel.enginelab.gemma4_exl3"
+kind      = "kernel"
+summary   = "Gemma 4 EXL3 device decode (with its notices) (src/gemma4/exl3): 12 origin files under src/gemma4"
+why       = "EXL3 weights for Gemma 4; where it would go: beside the catalogue's linear.decode/exl3-trellis/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.decode/exl3-trellis/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 4 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/exl3/README.md",
+  "src/gemma4/exl3/check_main.cpp",
+  "src/gemma4/exl3/device.hip",
+  "src/gemma4/exl3/device.hpp",
+  "src/gemma4/exl3/emulator.cpp",
+  "src/gemma4/exl3/emulator.hpp",
+  "src/gemma4/exl3/format.hpp",
+  "src/gemma4/exl3/host.cpp",
+  "src/gemma4/exl3/notices/APACHE-2.0.txt",
+  "src/gemma4/exl3/notices/NOTICE.txt",
+  "src/gemma4/exl3/pack.cpp",
+  "src/gemma4/exl3/pack.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/gemma4/exl3/device.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/exl3-trellis/f16-f32.enginelab-gemma4"
+api       = "src/gemma4/exl3/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_model"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.core_trellis"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_kernels"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_contracts"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_dflash"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_ref"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.gemma4_exl3.json"

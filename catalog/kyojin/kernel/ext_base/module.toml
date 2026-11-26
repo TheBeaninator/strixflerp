@@ -1,0 +1,99 @@
+id        = "kernel.kyojin.ext_base"
+kind      = "kernel"
+summary   = "Unchanged ExLlamaV3 base files (turboderp-org/exllamav3 8c593e4e) that the Kyojin C / HIP files include: 49 headers of exllamav3_ext"
+why       = "SPEC.md gives headers that several modules include a module of their own; these are base files, taken only so that the Kyojin families compile standalone; the rest of the base is not harvested"
+notes     = "Interface tag: none. Files: the include closure that docs/harvest/harvest_kyojin.py computes from the Kyojin files; each is byte-identical to the base (base-diff.tsv has no row for it)."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/activation.cuh",
+  "exllamav3/exllamav3_ext/activation_kernels.cuh",
+  "exllamav3/exllamav3_ext/add.cuh",
+  "exllamav3/exllamav3_ext/attention.cuh",
+  "exllamav3/exllamav3_ext/cache/q_cache.cuh",
+  "exllamav3/exllamav3_ext/dsv4_compress.cuh",
+  "exllamav3/exllamav3_ext/dsv4_pool_quant.cuh",
+  "exllamav3/exllamav3_ext/generator/cache.cuh",
+  "exllamav3/exllamav3_ext/generator/dry.cuh",
+  "exllamav3/exllamav3_ext/generator/gumbel.cuh",
+  "exllamav3/exllamav3_ext/generator/rep_pen.cuh",
+  "exllamav3/exllamav3_ext/generator/sampling_basic.cuh",
+  "exllamav3/exllamav3_ext/generator/sampling_extra.cuh",
+  "exllamav3/exllamav3_ext/generator/sampling_fused.cuh",
+  "exllamav3/exllamav3_ext/generator/strings.h",
+  "exllamav3/exllamav3_ext/hadamard.h",
+  "exllamav3/exllamav3_ext/histogram.cuh",
+  "exllamav3/exllamav3_ext/libtorch/dsv4_attn_bc.h",
+  "exllamav3/exllamav3_ext/libtorch/dsv4_compressor.h",
+  "exllamav3/exllamav3_ext/libtorch/dsv4_compressor_bc.h",
+  "exllamav3/exllamav3_ext/libtorch/gated_rmsnorm.h",
+  "exllamav3/exllamav3_ext/libtorch/gated_rmsnorm_bc.h",
+  "exllamav3/exllamav3_ext/libtorch/mla_attention.h",
+  "exllamav3/exllamav3_ext/libtorch/mla_attention_bc.h",
+  "exllamav3/exllamav3_ext/norm.cuh",
+  "exllamav3/exllamav3_ext/parallel/all_reduce.cuh",
+  "exllamav3/exllamav3_ext/parallel/all_reduce_cpu_avx512.h",
+  "exllamav3/exllamav3_ext/parallel/barrier.cuh",
+  "exllamav3/exllamav3_ext/parallel/broadcast.cuh",
+  "exllamav3/exllamav3_ext/parallel/gather.cuh",
+  "exllamav3/exllamav3_ext/parallel/ll.cuh",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_comp_unit_1.cuh",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_comp_unit_2.cuh",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_comp_unit_3.cuh",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_comp_unit_4.cuh",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_comp_unit_5.cuh",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_comp_unit_6.cuh",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_comp_unit_7.cuh",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_comp_unit_8.cuh",
+  "exllamav3/exllamav3_ext/quant/hadamard.cuh",
+  "exllamav3/exllamav3_ext/quant/hadamard_inner.cuh",
+  "exllamav3/exllamav3_ext/quant/pack.cuh",
+  "exllamav3/exllamav3_ext/quant/reconstruct.cuh",
+  "exllamav3/exllamav3_ext/quant/util.cuh",
+  "exllamav3/exllamav3_ext/rope.cuh",
+  "exllamav3/exllamav3_ext/softcap.cuh",
+  "exllamav3/exllamav3_ext/stloader_cu.cuh",
+  "exllamav3/exllamav3_ext/triton_kernel.h",
+  "exllamav3/exllamav3_ext/util.h",
+]
+authors   = ["turboderp (ExLlamaV3)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.kyojin-exl3-base/-/-"
+api       = "activation.cuh, activation_kernels.cuh, add.cuh, attention.cuh, q_cache.cuh, dsv4_compress.cuh, dsv4_pool_quant.cuh, cache.cuh ..."
+numeric   = "n/a here: headers"
+regime    = "compiled inside the kernel.kyojin.* units that include them"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.bc_mlp"
+
+[[requires]]
+module    = "runtime.kyojin.graph"
+
+[[requires]]
+module    = "runtime.kyojin.tp_context"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the units that include it"

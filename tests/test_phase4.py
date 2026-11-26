@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import sys
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -357,7 +358,8 @@ class GateLogicTests(unittest.TestCase):
     def test_every_gate_config_states_its_criteria_and_real_modules(self):
         cat = Catalog(repo_root())
         names = [f[:-5] for f in os.listdir(self.iface.CONFIG_DIR) if f.endswith(".toml") and f != "host.toml"]
-        self.assertEqual(sorted(names), ["dense-bf16", "gguf-gemv", "logits-topk", "moe-router", "residual-add"])
+        self.assertEqual(sorted(names), ["dense-bf16", "gguf-gemv", "logits-topk", "moe-router", "residual-add",
+                                        "strixw-decode"])
         for name in names:
             cfg = self.iface.load_config(name)
             self.assertIn(cfg["criteria"]["parity"], self.iface.PARITY_LEVELS, name)
@@ -385,6 +387,47 @@ class GateLogicTests(unittest.TestCase):
             f.write(text)
         self.addCleanup(os.remove, path)
         self.assertEqual(self.recipe.adapter_tallies(path)["kernel.flerp.a"]["foreign_launches"], 42)
+
+    # linear_q4p's label holds spaces and parentheses; the strixw-decode GPU run of 2026-11-24 printed these lines
+    # and the old provider=(\S+) read none of them, so both panel adapters failed "never launched" (card a9ac7b1c0f).
+    PANEL = ("flerp-adapter kernel.flerp.linear_q4p provider=panel kernels (Q4Panel16) foreign_launches=1 origin_launches=0 "
+             "(first launch through the provider)\nstrixw_decode {}\n"
+             "flerp-adapter kernel.flerp.linear_q4p provider=panel kernels (Q4Panel16) foreign_launches=9013 "
+             "origin_launches=0 (exit)\n")
+
+    def test_tally_label_with_spaces(self):
+        self.assertEqual(self.iface.adapter_tallies(self.PANEL),
+                         [{"adapter": "kernel.flerp.linear_q4p", "provider": "panel kernels (Q4Panel16)",
+                           "foreign_launches": 9013, "origin_launches": 0}])
+        path = os.path.join(repo_root(), "build", "test-tally-panel.log")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(self.PANEL)
+        self.addCleanup(os.remove, path)
+        t = self.recipe.adapter_tallies(path)["kernel.flerp.linear_q4p"]
+        self.assertEqual((t["provider"], t["foreign_launches"], t["line"]), ("panel kernels (Q4Panel16)", 9013, "exit"))
+
+    def test_rejudge_reads_the_recorded_driver_output(self):
+        root = os.path.join(repo_root(), "build", "test-rejudge")
+        shutil.rmtree(root, ignore_errors=True)
+        self.addCleanup(shutil.rmtree, root, True)
+        os.makedirs(os.path.join(root, "p"))
+        with open(os.path.join(root, "p", "driver.txt"), "w") as f:
+            f.write(self.PANEL)
+        with open(os.path.join(root, "p", "driver.json"), "w") as f:
+            json.dump(self.run_rows()["cases"], f)
+        cfg = dict(self.cfg(), _sha256="x", provider=[{"name": "p", "adapter": True}])
+        doc = {"config_sha256": "x", "complete": True, "pass": False,
+               "providers": {"p": {"pass": False, "problems": ["the adapter never launched the foreign provider"],
+                                   "run": {"ran": True, "rc": 0, "adapter_tallies": []}}}}
+        doc = self.iface.rejudge(cfg, doc, root)
+        self.assertTrue(doc["pass"], doc["providers"]["p"]["problems"])
+        self.assertEqual(doc["providers"]["p"]["run"]["adapter_tallies"][0]["foreign_launches"], 9013)
+        with open(os.path.join(root, "p", "driver.txt"), "w") as f:
+            f.write(self.PANEL.replace("origin_launches=0 (exit)", "origin_launches=5 (exit)"))
+        self.assertFalse(self.iface.rejudge(cfg, doc, root)["pass"])          # a fall-back still fails
+        with self.assertRaises(SystemExit):
+            self.iface.rejudge(dict(cfg, _sha256="y"), doc, root)            # other criteria: re-run, not re-judge
 
     def test_variant_config_inherits(self):
         cfg = self.recipe.load_config(os.path.join(repo_root(), "gate", "qwen38-flash-next.dense-strixfold.toml"))

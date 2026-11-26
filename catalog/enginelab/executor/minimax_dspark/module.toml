@@ -1,0 +1,71 @@
+id        = "executor.enginelab.minimax_dspark"
+kind      = "executor"
+summary   = "MiniMax DSpark: HIP DSpark, Markov candidates, auto mode, DSpark files and host, n-gram drafter, reference and tests"
+why       = "DSpark auto on MiniMax: 23.3 -> 32.4 code tok/s (README); where it would go: beside the catalogue's draft.dspark/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: draft.dspark/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 4 HIP unit(s) compiled standalone by the gate; 4 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/minimax/dspark/hip_minimax_dspark.hip",
+  "src/minimax/dspark/hip_minimax_dspark.hpp",
+  "src/minimax/dspark/markov_cand.hip",
+  "src/minimax/dspark/markov_cand.hpp",
+  "src/minimax/dspark/minimax_auto.hpp",
+  "src/minimax/dspark/minimax_dspark.hpp",
+  "src/minimax/dspark/minimax_dspark_files.cpp",
+  "src/minimax/dspark/minimax_dspark_host.cpp",
+  "src/minimax/dspark/minimax_ngram.cpp",
+  "src/minimax/dspark/minimax_ngram.hpp",
+  "src/minimax/dspark/ref/accept_eval.py",
+  "src/minimax/dspark/ref/dspark_reference.py",
+  "src/minimax/dspark/ref/quant_draft.py",
+  "src/minimax/dspark/ref/quant_head.py",
+  "src/minimax/dspark/ref/target_taps.py",
+  "src/minimax/dspark/tests/hip_markov_cand_tests.hip",
+  "src/minimax/dspark/tests/hip_minimax_dspark_tests.hip",
+  "src/minimax/dspark/tests/minimax_dspark_tests.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/minimax/dspark/hip_minimax_dspark.hip",
+  "src/src/minimax/dspark/markov_cand.hip",
+  "src/src/minimax/dspark/tests/hip_markov_cand_tests.hip",
+  "src/src/minimax/dspark/tests/hip_minimax_dspark_tests.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "draft.dspark/-/f32.enginelab-minimax"
+api       = "src/minimax/dspark/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.minimax_engine"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.dspark_markov"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.minimax_dspark.json"
+reason    = "compile gate: fail: 2 of 4 units failed; first: src/src/minimax/dspark/markov_cand.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/executor/minimax_dspark/src/src/minimax/dspark/markov_cand.hip:5:10: error: '../../dspark_common/markov_cand_kernels.hpp' file not found, did you mean 'dspark_common/markov_cand_kernels.hpp'?"

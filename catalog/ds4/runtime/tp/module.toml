@@ -1,0 +1,43 @@
+id        = "runtime.ds4.tp"
+kind      = "runtime"
+summary   = "the tensor-parallel transport and lockstep protocol: two ranks run the same graph, each with one contiguous half of the routed experts; rank 0 mirrors every session call to rank 1 over a TCP control socket, and inside each token the partial block outputs go through a registered slab by two-sided RDMA send / recv (Thunderbolt UC on Metal, RoCE RC on Linux) or a full-duplex TCP socket; versioned wire features (command mailbox, verify flags, DSpark agreement)"
+why       = "two-machine TP over a network link, the shape the pod's own TP4 work lives in"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["ds4_tp.c", "ds4_tp.h"]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.interface-ds4-tp/-/-"
+api       = "ds4_tp_* (ds4_tp.h)"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "runtime.ds4.engine"
+
+[[requires]]
+module    = "runtime.ds4.glmtp_gpu_api"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

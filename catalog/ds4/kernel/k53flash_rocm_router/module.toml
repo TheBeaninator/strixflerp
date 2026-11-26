@@ -1,0 +1,36 @@
+id        = "kernel.ds4.k53flash_rocm_router"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-flash 4bdbcc2: its copy of the rocm_router family against antirez/ds4 b3f5018: rocm/ds4_rocm_router.cuh changed (+4 -15 lines). The family: the warp top-k router select; a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "kyuz0's gfx1151 GLM-5.3-Flash decode branch: on-the-fly WMMA Q8_0 batch GEMMs and partial HC expand (ds4_rocm_q8.cuh), the GLM dense-compact causal attention and row-wise Q8 projections (ds4_rocm_glm.cuh) and a stand-alone selected multi-head attention kernel (rocm/ds4_rocm_glm_selected_multihead.cu); the tree is a fork from before the base's V4.1 and Qwen work, so its base-diff also shows files the base changed later. The family in the base: expert routing for DSV4 / V4.1"
+notes     = "Overlay kyuz0_glm53_flash: files under overlay/kyuz0_glm53_flash/ are the branch's bytes at 4bdbcc206828; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_flash.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "4bdbcc206828ab4e7cdfc45a1052cb5f35400fdc"
+branch    = "perf/rocm-gfx1151-glm53-flash"
+paths     = ["overlay/kyuz0_glm53_flash/rocm/ds4_rocm_router.cuh"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_flash", "src/overlay/kyuz0_glm53_flash/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.router/-/f32.ds4-k53flash"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.k53flash_rocm_backend"

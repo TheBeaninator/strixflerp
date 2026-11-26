@@ -35,6 +35,8 @@ module = "kernel.strixite.hip_common"
 module = "runtime.strixite.check"
 
 [gate]
-parity = "none"
+parity    = "flerp:gate/interface/logits-topk.toml"
 bench  = "none"
-status = "harvested"
+status    = "parity"
+evidence  = "gate/results/interface/logits-topk/result.json"
+reason    = "parity: interface gate logits-topk on control-node (result.json, provider strixite: pass; the gate overall pass=True); builds in recipe qwen38-flash-next.strixite-pf on control-node, 2026-11-24, CPU only at nice 19: compiled or read by objects of the recipe build (10 files named in gate/results/qwen38-flash-next.strixite-pf/built-modules.json, from ninja -t deps); log gate/results/qwen38-flash-next.strixite-pf/build.txt; not run on a GPU from that build"

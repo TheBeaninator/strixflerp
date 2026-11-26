@@ -1,12 +1,14 @@
 # Recipe gate: qwen38-flash-next.three-engines
 
-Host control-node, 2026-11-11T00:08:44Z. Stages run: check, origin, build, unit, gpu.
+Host control-node, 2026-11-24T19:02:26Z. Stages run: check, origin, build, unit, gpu.
 
-- **check**: PASS - flerp check (origin strixite): 105 modules, 8 recipe(s), 0 error(s), 4 warning(s)
-- **origin**: PASS - diff-origin origin strixite vs /data/projects/strixite-v070: 105 module(s), 269/269 files byte-identical, 0 problem(s), 29 origin files listed as unharvested
-- **build**: PASS
-- **unit**: PASS
-- **gpu**: PASS
+- **check**: PASS (2026-11-24T18:58:26Z) - flerp check (origin strixite): 107 modules, 19 recipe(s), 0 error(s), 8 warning(s), 3 dependency cycle warning(s) inside vendored origins (gufo 3)
+- **origin**: PASS (2026-11-24T18:58:27Z) - diff-origin origin strixite vs /data/projects/strixite-d19945e: 107 module(s), 272/272 files byte-identical, 0 problem(s), 29 origin files listed as unharvested
+- **build**: PASS (2026-11-24T19:02:26Z)
+- **unit**: PASS (carried over from an earlier run of this gate)
+- **gpu**: PASS (carried over from an earlier run of this gate)
+
+Origin commit (ORIGIN.toml, reference checkout HEAD): d19945e.
 
 | MTP | prompt | decode t/s reference (median) | decode t/s assembled (median) | diff | within noise | host load, 1 min (reference / assembled) |
 |---|---|---|---|---|---|---|

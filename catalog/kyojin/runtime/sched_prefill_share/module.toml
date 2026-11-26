@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.sched_prefill_share"
+kind      = "runtime"
+summary   = "Concurrent prefill of one shared prefix: jobs starting together on one prompt prefix wait for the page owner instead of prefilling it twice"
+why       = "agent fan-out with a common prompt. Where the shape would go: a cache.prompt/-/- provider beside runtime.crucible.conversation_cache, runtime.gufo.cache, runtime.hipfire.runtime and 4 more, through a port of the python / Triton logic"
+notes     = "Interface tag: cache.prompt/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (prefill_share.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/generator/prefill_share.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "cache.prompt-kyojin-prefill-share/-/-"
+api       = "prefill_share.py"
+numeric   = "n/a"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

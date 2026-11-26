@@ -1,0 +1,50 @@
+id        = "kernel.maya_tp.glm_batch"
+kind      = "kernel"
+summary   = "GLM's batched (several rows / conversations) expert and dense kernels (glm_batch.cu): the multi-row forms of the fast-path GEMVs used by multi-sequence decode and verify windows"
+why       = "multi-slot serving and MTP windows run several rows at once; this is the batched expert body that the TP2 batch frames feed"
+notes     = "Interface tag: moe.experts-decode/gguf-iq2+iq3/f32.maya-tp-rows. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/glm_batch.hpp", "src/kernels/cuda/glm_batch.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/glm_batch.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-iq2+iq3/f32.maya-tp-rows"
+api       = "strata::kernels glm_batch launches (glm_batch.hpp)"
+numeric   = "FP32 out"
+regime    = "decode, up to 64 rows"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_kv_stream"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.glm_batch.json"

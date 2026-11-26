@@ -1,0 +1,49 @@
+id        = "tool.fastasfuck.check_stream_calls"
+kind      = "tool"
+summary   = "fastasfuck's host-only differential test: streamed tool calls fed byte by byte and in random pieces must match the buffered output parser"
+why       = "it is the guard that streaming tool-call output does not diverge from the buffered parser"
+notes     = "Files vs strixite: tools/check_stream_calls.cpp byte-identical to tool.strixite.check_stream_calls at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/check_stream_calls.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/check_stream_calls.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.check-stream-calls/-/-"
+api       = "main (check_stream_calls)"
+numeric   = "the same source as tool.strixite.check_stream_calls, so its behaviour: n/a"
+regime    = "as tool.strixite.check_stream_calls: host only test; check_stream_calls <tokenizer.json> [random cases] [seed]"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.output_parser"
+
+[[requires]]
+module    = "runtime.fastasfuck.tokenizer"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable check_stream_calls) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,40 @@
+id        = "kernel.kyojin.dsa_topk_par"
+kind      = "kernel"
+summary   = "QSA selection with many blocks per row, bitwise identical to dsa_topk_gfx12: the row sweeps run on the whole GPU, which a decode-batch-1 selection over a 32K..512K pool row needs"
+why       = "long-context decode: one block per row leaves the GPU idle at batch 1. Where the shape would go: an attn.indexer-topk/-/i32 provider beside kernel.ciru_iu4.attn, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: attn.indexer-topk/-/i32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (dsa_topk_par.cu, dsa_topk_par.cuh), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/dsa_topk_par.cu", "exllamav3/exllamav3_ext/dsa_topk_par.cuh"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/dsa_topk_par.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.indexer-topk/-/i32.kyojin-par"
+api       = "dsa_topk_par.cu, dsa_topk_par.cuh; kernels: dsa_topk_par_hi_kernel, dsa_topk_par_lo_kernel, dsa_topk_par_count_kernel, dsa_topk_par_write_kernel"
+numeric   = "fp16 scores, int32 indices"
+regime    = "decode, long context"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: dsa_topk_par.cu"

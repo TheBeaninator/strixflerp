@@ -1,0 +1,55 @@
+id        = "runtime.radiance.halo_rows"
+kind      = "runtime"
+summary   = "libhalo's declaration side on the host: the row table the engine selects kernels from (a row = op, constraint band, priority, tunables, optional chain and fusion claims), the shape and extent functions, the weight layout tags with gfx1151's fragment order, the fusion pass over chains of unfused ops, and the generated weak stubs that answer RAD_E_UNSUPPORTED for units not yet ported"
+why       = "selection by declared rows with measured bands is how one engine picks the right kernel per shape and how a half-ported library still loads and reports its gaps by name"
+notes     = "A row table with measured constraint bands per shape is what strixflerp's champion ledger does per model by hand; the stub count as a porting scoreboard is the same idea as [gate] status."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_fuse.cpp",
+  "libhalo/halo_layout.cpp",
+  "libhalo/halo_rows.cpp",
+  "libhalo/halo_shapes.cpp",
+  "libhalo/halo_stubs.cpp",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/libhalo/halo_rows.cpp",
+  "src/libhalo/halo_shapes.cpp",
+  "src/libhalo/halo_layout.cpp",
+  "src/libhalo/halo_fuse.cpp",
+  "src/libhalo/halo_stubs.cpp",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-select.rows/radiance/-"
+api       = "RadKernelInfo rows, rad_plugin_open (halo_rows.cpp); halo_fuse.cpp fusion claims"
+numeric   = "n/a"
+regime    = "selection by op, shape band and measured priority; declines machines without a gfx1151"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

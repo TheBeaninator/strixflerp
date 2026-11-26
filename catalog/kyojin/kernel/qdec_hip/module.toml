@@ -1,0 +1,39 @@
+id        = "kernel.kyojin.qdec_hip"
+kind      = "kernel"
+summary   = "Quantized-KV flash-decoding split kernel for gfx11.5 (wave32 WMMA f16): QK^T and PV straight from the packed bit-plane words of the quantized cache, per-split partials reduced by the combine kernel; compiled at first use with hipcc --genco and launched through the HIP module API"
+why       = "decode attention over the 2..8-bit paged cache without a dequant pass. Where the shape would go: an attn.softmax-gqa/kv-f16+i8+q4_0/f32 provider beside kernel.maya_tp.qsa, kernel.strata.qsa, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: attn.softmax-gqa/kv-f16+i8+q4_0/f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (qdec.hip, qdec_hip.py), 0 changed. No timing was taken on the pod. The loader specialises the kernel per call with -D defines (qdec_hip.py _compile); the gate compiles one decode configuration: head 256, 24 query / 2 KV heads, 4-bit K and V, one query row, 256-token pages, NW=4, DW=2 (what make_cfg picks for that shape). The origin builds it at first use with hipcc --genco --offload-arch=gfx1151 -O3 (-ffp-contract=off) into a code object; the gate compiles it device-only the same way."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/attention_fn/qdec.hip", "exllamav3/modules/attention_fn/qdec_hip.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/modules/attention_fn/qdec.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = ["-x", "hip", "-std=c++17", "-O3", "-ffp-contract=off", "--offload-device-only", "-c"]
+source_options = { "src/exllamav3/modules/attention_fn/qdec.hip" = ["-DHD=256", "-DKB=4", "-DVB=4", "-DNKV=2", "-DNQH=24", "-DQLEN=1", "-DPAGE=256", "-DNW=4", "-DDW=2", "-DCAUSAL=1", "-DHAS_SINKS=0", "-DKEY_LO=0", "-DTQ=0", "-DVPF=1", "-DSMM1=0", "-DSCALE=0.0625f"] }
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+i8+q4_0/f32.kyojin-qdec"
+api       = "qdec.hip, qdec_hip.py; kernels: qdec_split, qdec_combine"
+numeric   = "dequant (raw - (2^(B-1) - 0.5)) * scale * 2^-(B-1) in fp16, fp32 softmax and accumulation"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.kyojin.qdec_hip.json"

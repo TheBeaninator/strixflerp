@@ -1,0 +1,40 @@
+id        = "kernel.ciru_inkling.glue_prefill"
+kind      = "kernel"
+summary   = "Inkling 2 Mini prefill glue (hip_glue_prefill.hip): static short convolution of the residual streams, the loop controller, block attention residuals with their message coefficients, and the two-output router GEMM"
+notes     = "Interface tags by launch group: launch_q4_coeffs: none; launch_hip_sconv_prefill: none; launch_hip_loop_zeromat_prefill: none; launch_hip_attn_res_prefill: none; launch_hip_router_prefill: moe.gate-logits/bf16/bf16-f32 (catalog/ciru_inkling/KERNELS.md has the table). Launch functions take raw device pointers, element strides and a stream (ctypes from ops/hip_runtime.py); none takes a torch tensor. No timing was taken on the pod; figures are the author's (README.md, v1.5.0)."
+
+[provenance]
+origin    = "ciru_inkling"
+repo      = "https://github.com/ciru-ai/Inkling-2-Mini-CIRU-Halo-Agent-gfx1151"
+commit    = "b3870f35926fb322f398e6c373a93098534f8fdb"
+branch    = "main"
+paths     = ["overlay/vllm/models/inkling2/amd/ops/hip_glue_prefill.hip"]
+authors   = ["Ciru (CIRU AI)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/vllm/models/inkling2/amd/ops/hip_glue_prefill.hip"]
+includes  = ["src/overlay/vllm/models/inkling2/amd/ops"]
+arch      = "gfx1151"
+toolchain = "therock-10.0"
+options   = ["-fPIC", "-O3", "-DINKLING_HIP_ABI_VERSION=3", "-DINKLING_HIP_SRC_HASH_RAW=671b45b80972", "-c"]
+
+[[provides]]
+interface = "moe.gate-logits/bf16/bf16-f32.ciru-inkling"
+api       = "launch_hip_router_prefill (extern \"C\", hip_glue_prefill.hip)"
+numeric   = "BF16 X and router weight, FP32 accumulate and outputs"
+regime    = "prefill; 128 experts, hidden 2304"
+
+[[requires]]
+module    = "kernel.ciru_inkling.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_inkling.glue_prefill.json"

@@ -1,0 +1,64 @@
+id        = "kernel.fastasfuck.hc_wmma"
+kind      = "kernel"
+summary   = "fastasfuck's multi-token hyper-connection mixes on the WMMA units, with a fused 4-stream down mix"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its hc_wmma kernel file so a timing card can set it against kernel.strixite.hc_wmma, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/hc_wmma.hip hc.mix-prefill/strixw-q4, hc.mix-prefill/strixw-q8 (305 changed lines against kernel.strixite.hc_wmma kernels/hc_wmma.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/hc_wmma.hip", "kernels/hc_wmma.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/hc_wmma.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "hc.mix-prefill/strixw-q4/bf16"
+api       = "strix::kernels::hc_inject_inv, hc_mix_down_wmma, hc_mix_up_wmma, hc_wmma_workspace_bytes (kernels/hc_wmma.hpp)"
+numeric   = "derived from kernel.strixite.hc_wmma (305 changed lines against kernel.strixite.hc_wmma kernels/hc_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.hc_wmma: prefill: 64-token tiles; H == 4, d % 64 == 0, r % 64 == 0"
+
+[[provides]]
+interface = "hc.mix-prefill/strixw-q4/f32"
+api       = "strix::kernels::hc_inject_inv, hc_mix_down_wmma, hc_mix_up_wmma, hc_wmma_workspace_bytes (kernels/hc_wmma.hpp)"
+numeric   = "derived from kernel.strixite.hc_wmma (305 changed lines against kernel.strixite.hc_wmma kernels/hc_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.hc_wmma: prefill: 64-token tiles; H == 4, d % 64 == 0, r % 64 == 0"
+
+[[provides]]
+interface = "hc.mix-prefill/strixw-q8/bf16"
+api       = "strix::kernels::hc_inject_inv, hc_mix_down_wmma, hc_mix_up_wmma, hc_wmma_workspace_bytes (kernels/hc_wmma.hpp)"
+numeric   = "derived from kernel.strixite.hc_wmma (305 changed lines against kernel.strixite.hc_wmma kernels/hc_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.hc_wmma: prefill: 64-token tiles; H == 4, d % 64 == 0, r % 64 == 0"
+
+[[provides]]
+interface = "hc.mix-prefill/strixw-q8/f32"
+api       = "strix::kernels::hc_inject_inv, hc_mix_down_wmma, hc_mix_up_wmma, hc_wmma_workspace_bytes (kernels/hc_wmma.hpp)"
+numeric   = "derived from kernel.strixite.hc_wmma (305 changed lines against kernel.strixite.hc_wmma kernels/hc_wmma.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.hc_wmma: prefill: 64-token tiles; H == 4, d % 64 == 0, r % 64 == 0"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.wmma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.hc_wmma.json"

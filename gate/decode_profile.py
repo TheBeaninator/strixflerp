@@ -28,7 +28,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DECODE_PROFILE_RES / DECODE_PROFILE_BIN: another results dir and binary (DECODE-KERN3 profiles build/kern3/after).
 RES = os.path.join(ROOT, os.environ.get("DECODE_PROFILE_RES", "gate/results/decode-profile"))
 M35 = "/data/models/qwen36-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf"
-TR = "/data/tools/therock-10.1.0a20260823"
+TR = "/data/models/tools/therock-10.1"
 BIN = os.path.join(ROOT, os.environ.get("DECODE_PROFILE_BIN", "build/xfer-r1-fold/after/out/flerp-qwen35moe-generate"))
 PROMPT = os.path.join(ROOT, "build", "xfer-r1-fold", "prompts", "code.ids")
 POLITE = ["timeout", "1500", "ionice", "-c3", "nice", "-n", "19", "taskset", "-c", "0-3", "env", "OMP_NUM_THREADS=4",

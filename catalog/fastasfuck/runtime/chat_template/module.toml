@@ -1,0 +1,46 @@
+id        = "runtime.fastasfuck.chat_template"
+kind      = "runtime"
+summary   = "fastasfuck's hand-rendered Qwen3.8-Flash-Next chat template in C++, byte-identical to transformers' apply_chat_template with tools and thinking switches"
+why       = "prompts must match the reference tokens for prefix reuse and quality, and the server renders every chat request through this file"
+notes     = "Files vs strixite: serve/chat_template.cpp 6 changed lines against runtime.strixite.chat_template at d19945e; serve/chat_template.hpp byte-identical to runtime.strixite.chat_template at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/chat_template.cpp", "serve/chat_template.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/chat_template.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "text.chat-template/-/-"
+api       = "strix::render_chat, strix::ChatTemplateOptions"
+numeric   = "derived from runtime.strixite.chat_template (serve/chat_template.cpp 6 changed lines against runtime.strixite.chat_template at d19945e; serve/chat_template.hpp byte-identical to runtime.strixite.chat_template at d19945e); not compared here"
+regime    = "as runtime.strixite.chat_template: host"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.unicode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

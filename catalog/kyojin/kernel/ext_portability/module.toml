@@ -1,0 +1,46 @@
+id        = "kernel.kyojin.ext_portability"
+kind      = "kernel"
+summary   = "The portability layer the Kyojin kernels share: port.cuh (one-source HIP gfx11.5 / CUDA sm_86 macros), compat_rocm.cuh (maskless shuffles and the CUDA-to-HIP spellings), hip/hip_mma.cuh (the HIP WMMA fragment vocabulary and mma_ab_h_hip, gfx11 and gfx12 layouts), ptx.cuh, util.cuh, reduction.cuh and pad_pitch.h (row-padded activation index arithmetic shared with a CPU bounds proof)"
+why       = "every kernel family below includes these; a strixflerp adapter that lifts a Kyojin kernel needs this layer or its own equivalent. Where the shape would go: no catalogue interface matches; it stays a reference for an adapter from its launcher to the flerp module ABI, kept beside the module it serves"
+notes     = "Interface tag: none. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (compat_rocm.cuh, hip_mma.cuh, pad_pitch.h, port.cuh), 4 changed (compat.cuh, ptx.cuh, reduction.cuh, util.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/compat.cuh",
+  "exllamav3/exllamav3_ext/compat_rocm.cuh",
+  "exllamav3/exllamav3_ext/hip/hip_mma.cuh",
+  "exllamav3/exllamav3_ext/pad_pitch.h",
+  "exllamav3/exllamav3_ext/port.cuh",
+  "exllamav3/exllamav3_ext/ptx.cuh",
+  "exllamav3/exllamav3_ext/reduction.cuh",
+  "exllamav3/exllamav3_ext/util.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.kyojin-ext-portability/-/-"
+api       = "compat.cuh, compat_rocm.cuh, hip_mma.cuh, pad_pitch.h, port.cuh, ptx.cuh, reduction.cuh, util.cuh"
+numeric   = "n/a here: headers"
+regime    = "compiled inside every kernel.kyojin.* unit"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the units that include it"

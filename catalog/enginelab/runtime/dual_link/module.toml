@@ -1,0 +1,44 @@
+id        = "runtime.enginelab.dual_link"
+kind      = "runtime"
+summary   = "dual-link runtime and telemetry: two USB4 cables as one link: 4 origin files under include/strix, src/dual_link_runtime.cpp, src/dual_link_telemetry.cpp"
+why       = "about 37 Gb/s a direction with four streams over two cables (usb4-driver README); where it would go: a new strixflerp interface transport.dual-link/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, transport.dual-link/-/-. 2 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/dual_link_runtime.hpp",
+  "include/strix/dual_link_telemetry.hpp",
+  "src/dual_link_runtime.cpp",
+  "src/dual_link_telemetry.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/dual_link_runtime.cpp", "src/src/dual_link_telemetry.cpp"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.dual-link/-/-"
+api       = "strix dual_link_runtime.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

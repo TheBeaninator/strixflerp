@@ -46,8 +46,9 @@ module    = "kernel.gufo.core_headers"
 interface = "format.device-view/gguf-kquant/-"
 
 [gate]
-parity    = "origin-test:tests/kernels"
+parity    = "flerp:gate/interface/logits-topk.toml"
 bench     = "none"
-status    = "builds"
+status    = "parity"
 compile   = "standalone"
-evidence  = "gate/results/compile/kernel.gufo.qwen_sampling.json"
+evidence  = "gate/results/interface/logits-topk/result.json"
+reason    = "parity: interface gate logits-topk on control-node (result.json, provider gufo: pass; the gate overall pass=True); compile gate evidence gate/results/compile/kernel.gufo.qwen_sampling.json"

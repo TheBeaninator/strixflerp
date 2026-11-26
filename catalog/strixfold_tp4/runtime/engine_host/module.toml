@@ -1,0 +1,48 @@
+id        = "runtime.strixfold_tp4.engine_host"
+kind      = "runtime"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for runtime.strixfold.engine_host: 1 file(s) of runtime.strixfold.engine_host and 3 file(s) the TP4 tree adds beside them (dsv41_keep_replay.tsv, dsv41_keep_replay_test.zig, dsv41_place_replay.tsv, hip.zig), laid over the f64b5ff files"
+why       = "runtime.strixfold.engine_host is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over runtime.strixfold.engine_host without touching it or the TP2 recipes"
+notes     = "Overlay of runtime.strixfold.engine_host (overlay.json has every file with both sha256 and its commits). Cards behind the changes: ef450588a1, ee6892da53, 73bab11681, 4f9ba05838, 345bacf673, 1c020d2ac2. Latest commits: 6aa4a985 dsv41: a host replay of a factory run's prompt passes through the prompt cache and the pool placement (pod card ef450588a1); cd96cd39 dsv41 lanes: a kept state's path is its cache key's, so a same-size picture is another conversation's; cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest; c790acc3 dsv41 placement: superseded kept states give room first, spared when clear of the placed extent (pod card ee6892da53)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/native/dsv41_keep_replay.tsv",
+  "zig/src/native/dsv41_keep_replay_test.zig",
+  "zig/src/native/dsv41_place_replay.tsv",
+  "zig/src/native/hip.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.engine_host (origin strixfold, f64b5ff): 1 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "executor.host/hip/-.tp4"
+api       = "native/hip.zig (open, families), native/cache_fit.zig, native/cuda_memory.zig (budget)"
+numeric   = "n/a"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); one engine a process"
+
+[[requires]]
+module    = "runtime.strixfold.engine_host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

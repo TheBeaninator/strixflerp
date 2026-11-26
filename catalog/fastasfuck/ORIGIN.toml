@@ -1,0 +1,56 @@
+# fastasfuck: a C++20 + HIP inference engine for Qwen3.8-Flash-Next on one AMD Strix Halo (gfx1151, wave32 WMMA), with an
+# OpenAI-compatible server (chat completions and the Responses API), MTP speculative decoding and up to 4 concurrent slots.
+# A fork of strixite (AGENTS.md "Why We Forked"); its 25 kernel files are strixite's kernels, some renamed or changed
+# (catalog/fastasfuck/KERNELS.md counts the changed lines of each). Card ORIGIN-FASTASFUCK 80ae224db4 harvested the kernels at
+# main 35015b5; card FASTASFUCK-110 17eead1048 moved the pin to release 1.1.0 and harvested the engine around them
+# (catalog/fastasfuck/MODULES.md). 1.1.0 changed no kernel: docs/harvest/data/fastasfuck/delta-35015b5.md.
+name      = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+version   = "release tag 1.1.0 (73bd170) as pinned in the ark (repos.tsv, ark commit 9d833fc, 2026-11-25); the previous harvest pinned main 35015b5, and the delta against it is docs/harvest/data/fastasfuck/delta-35015b5.tsv (no kernel changed: GPTQ calibration tools, the converter's --prebuilt import, a calibration tag in the state fingerprint, docs)"
+reference_checkout = "control-node:/data/ark-inbox/src/github.com__Cheblan__fastasfuck#73bd1703cbe04f1556b17a3c36bd05fd7ee0372e (ark copy, a depth-1 clone); laptop: ~/Code/strixflerp-upstream-supplement/fastasfuck-1.1.0 (that directory without .git)"
+tree_sha256 = "1cacae21215aa376152480386e39a6e9940bc9e8bc1ad25a5d224956243146f0"   # sha256 of the sorted sha256sum listing of every file without .git (docs/harvest/harvest_fastasfuck.py)
+
+[licence]
+spdx      = "AGPL-3.0-only"
+# copied verbatim next to this file at their origin paths: LICENSE, THIRD_PARTY.md and the vendored licence texts it names
+files     = ["LICENSE", "THIRD_PARTY.md", "third_party/cpp-httplib/LICENSE", "third_party/libwebp/COPYING", "third_party/libwebp/PATENTS"]
+source    = "the laptop copy above, byte-identical to the ark copy control-node:/data/ark-inbox/src/github.com__Cheblan__fastasfuck#73bd1703cbe04f1556b17a3c36bd05fd7ee0372e (checked 2026-11-26)"
+note      = "README.md and its badge say AGPL-3.0 with no version clause; LICENSE is byte-identical to strixite's GNU AGPL v3 text and the kernels derive from strixite, which is AGPL-3.0-only, so the catalogue records AGPL-3.0-only. Copied verbatim with attribution, not relicensed. THIRD_PARTY.md says the engine was written from scratch; the kernel files say otherwise (a fork of strixite, whose THIRD_PARTY.md has the same sentence)."
+third_party = "vendored and not harvested: cpp-httplib (MIT), stb (MIT OR Unlicense), libwebp decoder (BSD-3-Clause), Unicode tables (THIRD_PARTY.md); the cpp-httplib and libwebp licence texts THIRD_PARTY.md names ride beside this file, stb's licence is at the end of each header (not harvested). Model weights are not in the tree."
+
+[toolchain]
+host      = "C++20, CMake 3.28 or newer with Ninja (CMakePresets.json, preset strix, Release); the ROCm clang compiles host and device; a GCC 13-16 libstdc++"
+device    = "therock-10.1"                               # README.md:140: tested with ROCm 10.1 / HIP 7.16 (Arch rocm-hip-sdk)
+
+[compile]                                                # CMakeLists.txt:70-187: no hipcc, every kernels/*.hip is a CXX source with -x hip, Release flags
+driver    = "<rocm>/lib/llvm/bin/clang++"
+arch_flag = "--offload-arch=gfx1151"
+rocm_flag = "--rocm-path=<rocm>"
+flags     = ["-x", "hip", "-std=c++20", "-O3", "-march=znver5", "-DNDEBUG", "-D__HIP_PLATFORM_AMD__", "-Wall", "-Wextra", "-Wno-unused-parameter", "-c"]
+system_includes = ["include"]
+output    = "host object with the gfx1151 device code embedded (.o), one per kernels/*.hip"
+note      = "Release adds -flto (host LTO); the gate leaves it out so each unit gives a plain object. The origin's include root is the repository root (target_include_directories), here each module's src."
+
+[kernels]
+loading   = "statically linked: the 25 kernel files form the static library strix_kernels (CMakeLists.txt:181-187); each .hip holds its device kernels and host launchers in namespace strix::kernels; no runtime kernel registry"
+models    = "Qwen3.8-Flash-Next (and its vision tower), q4g128 / q6g64 / q8g64 weights in .faf files (docs/WEIGHTS.md); author's figures 73.8 tok/s solo, 104.4 tok/s over 4 slots (README.md); 1.1.0 adds a GPTQ-calibrated package of 65.51 GiB with -30.7% held-out KLD against round-to-nearest and 74.16 tok/s solo MTP (README.md); all unverified here"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_fastasfuck.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".containerignore",
+  ".dockerignore",
+  ".gitignore",
+  "AGENTS.md",
+  "CMakeLists.txt",
+  "CMakePresets.json",
+  "CONTRIBUTING.md",
+  "README.md",
+  "deploy/**",
+  "docs/**",
+  "third_party/**",
+]

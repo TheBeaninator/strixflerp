@@ -1,0 +1,79 @@
+id        = "runtime.enginelab.xport_channel"
+kind      = "runtime"
+summary   = "the shared exchange channel (src/xport): backend and transport backend, borrowed transport, channel (device, HIP, impl.hip, communicator), exchange format (host and HIP), framed exchange, split frame, HIP pipe staging and staging, the HIP channel runtime, small progress, stats, wire and the DS41 adapter"
+why       = "one channel that every engine's pair traffic goes through (AGENTS.md: two-node pipelines, transports, exchange overlap are shared code); where it would go: a new strixflerp interface transport.channel/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, transport.channel/-/-. 0 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/xport/backend.hpp",
+  "src/xport/borrowed_transport.hpp",
+  "src/xport/channel.hpp",
+  "src/xport/channel_communicator.hpp",
+  "src/xport/channel_device.hpp",
+  "src/xport/channel_hip.hpp",
+  "src/xport/channel_impl.hip",
+  "src/xport/communicator_backend.hpp",
+  "src/xport/ds41_adapter.hpp",
+  "src/xport/exchange_format.hpp",
+  "src/xport/exchange_format_hip.hpp",
+  "src/xport/framed_exchange.hpp",
+  "src/xport/hip_channel_runtime.hpp",
+  "src/xport/hip_pipe_staging.hpp",
+  "src/xport/small_progress.hpp",
+  "src/xport/split_frame.hpp",
+  "src/xport/staging.hpp",
+  "src/xport/stats.hpp",
+  "src/xport/transport_backend.hpp",
+  "src/xport/wire.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src", "src/src/xport"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "transport.channel/-/-"
+api       = "strix::xport channel.hpp, channel_hip.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.dist_host_staged"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[[requires]]
+module    = "runtime.enginelab.xport_crc"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "its .hip files are fragments #included by another unit"

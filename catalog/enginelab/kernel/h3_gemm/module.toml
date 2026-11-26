@@ -1,0 +1,50 @@
+id        = "kernel.enginelab.h3_gemm"
+kind      = "kernel"
+summary   = "H3 GEMMs (src/h3/gemm): 6 origin files under src/h3"
+why       = "its GEMM kernels; where it would go: beside the catalogue's gemm.wmma-tile/-/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: gemm.wmma-tile/-/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/h3/gemm/api.hpp",
+  "src/h3/gemm/dense.hip",
+  "src/h3/gemm/dense.hpp",
+  "src/h3/gemm/kernels.hpp",
+  "src/h3/gemm/operand.hpp",
+  "src/h3/gemm/ref.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/h3/gemm/dense.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "gemm.wmma-tile/-/f16-f32.enginelab-h3"
+api       = "src/h3/gemm/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.h3_gemm.json"

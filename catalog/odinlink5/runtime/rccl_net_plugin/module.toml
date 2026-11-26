@@ -1,0 +1,62 @@
+id        = "runtime.odinlink5.rccl_net_plugin"
+kind      = "runtime"
+summary   = "the RCCL net plugin (librccl_net_odl_tb5.so, symlinked librccl-net.so for RCCL's probe): ncclNet_v7 over the stream API, NCCL_PTR_HOST only so RCCL stages GPU <-> host itself, one shared ref-counted device handle a process with each connection a stream multiplexed over the link, blocking stream transfers moved to background threads so isend / irecv / test keep RCCL's non-blocking contract; plus odl_tb5_net_v7.c, an alternative against NVIDIA's real v7 headers (rccl/official) that the build does not compile"
+why       = "RCCL silently falls back to TCP sockets (~4x slower) when no net plugin loads, and it ignores LD_PRELOAD verbs interposers (docs/GPU.md); this plugin is how vllm-strix-halo's prefill collectives ride the cable, and the shape any RCCL-over-USB4 pod pair would load"
+notes     = "Interface tag: none (collective.* providers in the catalogue are collectives, not RCCL transports). rccl/official/nccl/*.h are NVIDIA's plugin headers (Apache-2.0, SPDX in each); the plugin sources carry no SPDX line and fall under the README's MIT for userspace. odl_tb5_net_v7.c says it replaces odl_tb5_plugin.c, but rccl/CMakeLists.txt builds only odl_tb5_plugin.c; both are compiled by the gate. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "rccl/CMakeLists.txt",
+  "rccl/official/nccl/common.h",
+  "rccl/official/nccl/err.h",
+  "rccl/official/nccl/gin_v11.h",
+  "rccl/official/nccl/net.h",
+  "rccl/official/nccl/net_device.h",
+  "rccl/official/nccl/net_v10.h",
+  "rccl/official/nccl/net_v11.h",
+  "rccl/official/nccl/net_v12.h",
+  "rccl/official/nccl/net_v2.h",
+  "rccl/official/nccl/net_v3.h",
+  "rccl/official/nccl/net_v4.h",
+  "rccl/official/nccl/net_v5.h",
+  "rccl/official/nccl/net_v6.h",
+  "rccl/official/nccl/net_v7.h",
+  "rccl/official/nccl/net_v8.h",
+  "rccl/official/nccl/net_v9.h",
+  "rccl/official/nccl/types.h",
+  "rccl/src/odl_tb5_net_v7.c",
+  "rccl/src/odl_tb5_plugin.c",
+  "third_party/rccl/net_v7.h",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT AND Apache-2.0"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/third_party/rccl", "src/rccl/official"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "collective.net-plugin-rccl-odl/-/-"
+api       = "ncclNet_v7 (NCCL_NET_PLUGIN=odl_tb5 / librccl-net.so): init, devices, getProperties, listen, connect, accept, regMr, isend, irecv, test, close*"
+numeric   = "bytes; host pointers"
+regime    = "RCCL over one Thunderbolt / USB4 link"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/runtime.odinlink5.rccl_net_plugin.json"
+reason    = "c: compiled by the C gate, not gate/compile/run.py (python3 docs/harvest/harvest_odinlink5.py --c-gate on control-node CPU, gcc with the include paths of the origin's CMake)"

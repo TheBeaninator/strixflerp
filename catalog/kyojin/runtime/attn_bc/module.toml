@@ -1,0 +1,40 @@
+id        = "runtime.kyojin.attn_bc"
+kind      = "runtime"
+summary   = "Python side of the graph-captured attention blocks (GQA, DSA, MLA): buffers, capture and patch-and-replay of each attention step"
+why       = "the captured decode step of each attention family. Where the shape would go: an executor.device-graph/exl3/- provider beside kernel.gufo.ds4_backend, through a port of the python / Triton logic"
+notes     = "Interface tag: executor.device-graph/exl3/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 3 changed (bc_attn.py, bc_dsa.py, bc_mla.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/modules/attention_fn/bc_attn.py",
+  "exllamav3/modules/attention_fn/bc_dsa.py",
+  "exllamav3/modules/attention_fn/bc_mla.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.device-graph-kyojin-bc-attn/exl3/-"
+api       = "bc_attn.py, bc_dsa.py, bc_mla.py"
+numeric   = "n/a"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

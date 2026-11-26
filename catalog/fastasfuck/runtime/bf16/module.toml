@@ -1,0 +1,37 @@
+id        = "runtime.fastasfuck.bf16"
+kind      = "runtime"
+summary   = "fastasfuck's header-only host BF16 widening and round-to-nearest-even narrowing by bit manipulation"
+why       = "the host converters and loaders round to BF16 with these helpers, the host twin of the device conversions in the kernels"
+notes     = "Files vs strixite: common/bf16.hpp byte-identical to runtime.strixite.bf16 at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["common/bf16.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.bf16/-/-"
+api       = "strix::f32_to_bf16_bits, strix::bf16_bits_to_f32"
+numeric   = "the same source as runtime.strixite.bf16, so its behaviour: round to nearest even, non-finite values preserved"
+regime    = "as runtime.strixite.bf16: host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host C++ header; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,71 @@
+id        = "executor.enginelab.gemma4_model"
+kind      = "executor"
+summary   = "Gemma 4 model description and layers (src/gemma4/model): 7 origin files under src/gemma4"
+why       = "the model binding; where it would go: beside the catalogue's executor.model/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.model/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 5 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/model/description.cpp",
+  "src/gemma4/model/description.hpp",
+  "src/gemma4/model/export_description_main.cpp",
+  "src/gemma4/model/gguf.cpp",
+  "src/gemma4/model/manifest.cpp",
+  "src/gemma4/model/model.hpp",
+  "src/gemma4/model/safetensors.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/gemma4/model/description.cpp",
+  "src/src/gemma4/model/export_description_main.cpp",
+  "src/src/gemma4/model/gguf.cpp",
+  "src/src/gemma4/model/manifest.cpp",
+  "src/src/gemma4/model/safetensors.cpp",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.model-enginelab-gemma4/-/-"
+api       = "src/gemma4/model/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_exl3"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_contracts"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

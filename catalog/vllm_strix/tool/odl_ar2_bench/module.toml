@@ -1,0 +1,37 @@
+id        = "tool.vllm_strix.odl_ar2_bench"
+kind      = "tool"
+summary   = "standalone two-rank bench for odl_ar2: loads libodl_ar2.so, runs warm-up and timed all-reduces of decode-sized bf16 / fp16 / fp32 buffers on a HIP stream and checks the sums against the expected rank pattern"
+why       = "the all-reduce has to be measured and checked without vLLM in the way: this bench isolates the transport and the wait+add kernels, the first thing to run when bringing a USB4 pair up"
+notes     = "Interface tag: none (tool). Compiled as HIP host code (-x hip). Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["odinlink/ar2/odl_ar2_bench.cpp"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/odinlink/ar2/odl_ar2_bench.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.collective-bench/-/-"
+api       = "odl_ar2_bench <rank> <peer_ip> ... (main in odl_ar2_bench.cpp)"
+numeric   = "checks exact sums"
+regime    = "two hosts, decode-sized messages"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/tool.vllm_strix.odl_ar2_bench.json"

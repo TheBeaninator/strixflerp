@@ -1,0 +1,46 @@
+id        = "kernel.fastasfuck.ple"
+kind      = "kernel"
+summary   = "fastasfuck's PLE injection: gate and dilated causal conv"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its ple kernel file so a timing card can set it against kernel.strixite.ple, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/ple.hip ple.inject/- (byte-identical to kernel.strixite.ple kernels/ple.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/ple.hip", "kernels/ple.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/ple.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.inject/-/bf16"
+api       = "strix::kernels::ple_conv, ple_gate (kernels/ple.hpp)"
+numeric   = "the same source as kernel.strixite.ple (byte-identical to kernel.strixite.ple kernels/ple.hip at d19945e), so its arithmetic: fp32 math; vn and the conv state stored in the activation dtype, sigma fp32, X rounded once per element"
+regime    = "as kernel.strixite.ple: two launches; K = 4 taps, dilation 3, 9 carried state rows"
+
+[[provides]]
+interface = "ple.inject/-/f32"
+api       = "strix::kernels::ple_conv, ple_gate (kernels/ple.hpp)"
+numeric   = "the same source as kernel.strixite.ple (byte-identical to kernel.strixite.ple kernels/ple.hip at d19945e), so its arithmetic: fp32 math; vn and the conv state stored in the activation dtype, sigma fp32, X rounded once per element"
+regime    = "as kernel.strixite.ple: two launches; K = 4 taps, dilation 3, 9 carried state rows"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.ple.json"

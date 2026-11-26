@@ -1,0 +1,39 @@
+id        = "runtime.vllm_strix.fp8_prefill"
+kind      = "runtime"
+summary   = "DeepSeek-V4 block-FP8 linears at prefill sizes: the fp8 weight is dequantised once to an exact bf16 copy by a HIP kernel and the GEMM runs on hipBLASLt, instead of fp8 activation quant + Triton _w8a8_triton_block_scaled_mm; test against fp32 and the stock path"
+why       = "the Triton block GEMM took 2.5-9 ms a linear at a 512-token chunk, 49 % of DS4 prefill GPU time, because gfx1151 has no fp8 matrix path (PATCHES 41): trading memory for a bf16 copy is the right call on a 128 GB UMA box"
+notes     = "Interface tag: linear.prefill. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-fp8-prefill.py", "scripts/test_fp8_prefill.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.prefill/fp8-block128/bf16.dequant-hipblaslt"
+api       = "hook on the block-FP8 linear for M > 8"
+numeric   = "exact bf16 dequant, hipBLASLt bf16 GEMM"
+regime    = "prefill chunks"
+
+[[requires]]
+module    = "runtime.vllm_strix.w8a16_requant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

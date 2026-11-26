@@ -1,0 +1,42 @@
+id        = "serve.vllm_strix.launcher"
+kind      = "serve"
+summary   = "the single entry point: vllm-strix-halo.sh <glm53|ds4> start|stop|status|logs over both boxes, the flat vsh-config.yaml (every key becomes a VSH_* env var through vsh-config) and the systemd units that hold the whole two-box stack"
+why       = "one config file and one verb per model is how the rig switches GLM and DS4 on the same container and port; strixflerp's serve recipes need the same single source of truth for a two-host pair"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "host/systemd/vsh-ds4.service",
+  "host/systemd/vsh-glm.service",
+  "host/vsh-config",
+  "host/vsh-config.yaml",
+  "vllm-strix-halo.sh",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "shell"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.cluster-launcher/-/-"
+api       = "vllm-strix-halo.sh, vsh-config (python), vsh-config.yaml, vsh-glm.service, vsh-ds4.service"
+numeric   = "n/a"
+regime    = "two Strix Halo (gfx1151, Radeon 8060S) boxes, TP=2 over one Thunderbolt / USB4 cable"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "shell: scripts and units, read and not run (host plumbing for the two-box rig)"

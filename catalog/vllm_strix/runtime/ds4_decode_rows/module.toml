@@ -1,0 +1,36 @@
+id        = "runtime.vllm_strix.ds4_decode_rows"
+kind      = "runtime"
+summary   = "explicit cap for the gfx1151 paged-MQA decode logits workspace: (heads, decode_rows, max_model_len) fp32 is 128 MiB a row at 512K, and the hook bounds decode_rows by max_num_seqs x (1 + spec) where the worker cannot read the config"
+why       = "without the cap the 512K context and 2048-token chunks did not fit the 6 GiB KV pin (PATCHES 42)"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-ds4-decode-rows.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.workspace-cap-ds4-decode-logits/-/-"
+api       = "patch script over the DS4 indexer"
+numeric   = "n/a"
+regime    = "512K context"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

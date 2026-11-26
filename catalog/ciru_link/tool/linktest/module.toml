@@ -1,0 +1,48 @@
+id        = "tool.ciru_link.linktest"
+kind      = "tool"
+summary   = "a dependency-free TCP link test (internal/bench: token-authenticated protocol on port 55321, upload / download throughput over N streams, RTT percentiles, payload integrity and reconnect checks) and the policy that turns its numbers into a conservative runtime class with heartbeat, timeout, reconnect and in-flight limits (internal/quality)"
+why       = "a link test with an integrity check and a declared policy output is what a two-node bring-up needs before any collective runs; nothing in the catalogue tests a link this way"
+notes     = "Interface tag: none. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "internal/bench/bench.go",
+  "internal/bench/bench_test.go",
+  "internal/quality/quality.go",
+  "internal/quality/quality_test.go",
+]
+authors   = ["Ciru (ciru-ai)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "go"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.link-test-usb4/-/-"
+api       = "bench.Serve, bench.Run, Config, Result (internal/bench/bench.go)"
+numeric   = "throughput in Gb/s, RTT in ms; integrity by payload check"
+regime    = "any TCP path; the origin runs it over USB4NET"
+
+[[provides]]
+interface = "verify.link-quality-policy/-/-"
+api       = "quality.Classify(Metrics) Policy (internal/quality/quality.go)"
+numeric   = "thresholds on throughput, p99 RTT, reconnects and integrity"
+regime    = "transport-neutral"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/tool.ciru_link.linktest.json"
+reason    = "go: built by the Go gate, not gate/compile/run.py (python3 docs/harvest/harvest_ciru_link.py --go-gate on control-node CPU: go vet, the tests compiled without running, the static binary built)"

@@ -1,0 +1,66 @@
+id        = "kernel.enginelab.glm_prefill_wmma"
+kind      = "kernel"
+summary   = "GLM WMMA prefill: WMMA attention, KDA, MLA (GEMM VOPD, WMMA), router, and the generic, MoE and x WMMA prefill"
+why       = "GLM-5.3 prefill at 8-32K (617 / 595 tok/s on the pair); where it would go: beside the catalogue's linear.prefill/-/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.prefill/-/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/glm/prefill/glm_pf_attn_wmma.hpp",
+  "src/glm/prefill/glm_pf_kda_wmma.hpp",
+  "src/glm/prefill/glm_pf_mla_gemm_vopd.inc",
+  "src/glm/prefill/glm_pf_mla_wmma.hpp",
+  "src/glm/prefill/glm_pf_router_wmma.hpp",
+  "src/glm/prefill/glm_pf_wmma.hpp",
+  "src/glm/prefill/glm_pf_wmma_moe.inc",
+  "src/glm/prefill/glm_pf_wmma_x.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "linear.prefill/-/f16-f32.enginelab-glm"
+api       = "src/glm/prefill/glm_pf_*wmma*.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.glm_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.glm_moe"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "runtime.enginelab.glm_rtxpf"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

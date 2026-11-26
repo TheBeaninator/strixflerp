@@ -1,0 +1,157 @@
+id        = "tool.maya_tp.kernel_parity"
+kind      = "tool"
+summary   = "the kernel parity programs and tests (src/kernels/*_parity.cpp, *_test.cpp, qsa_select_bench.cpp and the oracle vectors .inc)"
+why       = "each kernel family's parity program is its oracle; they are what a strixflerp parity gate would run against these modules"
+notes     = "Interface tag: verify.kernel-parity-maya-tp/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "src/kernels/bf16_gemv_parity.cpp",
+  "src/kernels/cvec_parity.cpp",
+  "src/kernels/dequant_bf16_test.cpp",
+  "src/kernels/dequant_s2_parity.cpp",
+  "src/kernels/elementwise_parity.cpp",
+  "src/kernels/gdn_parity.cpp",
+  "src/kernels/glm_dsa_parity.cpp",
+  "src/kernels/glm_ffn_parity.cpp",
+  "src/kernels/glm_hc_parity.cpp",
+  "src/kernels/glm_kda_parity.cpp",
+  "src/kernels/glm_kv_stream_parity.cpp",
+  "src/kernels/glm_layer_parity.cpp",
+  "src/kernels/gr_parity.cpp",
+  "src/kernels/iq1_s_parity.cpp",
+  "src/kernels/iq_parity.cpp",
+  "src/kernels/kv_hybrid_parity.cpp",
+  "src/kernels/kv_q4_parity.cpp",
+  "src/kernels/kv_q8_parity.cpp",
+  "src/kernels/kv_stream_parity.cpp",
+  "src/kernels/native_expert_parity.cpp",
+  "src/kernels/pf_wmma_parity.cpp",
+  "src/kernels/ple_oracle_vectors.inc",
+  "src/kernels/ple_parity.cpp",
+  "src/kernels/qsa_oracle_vectors.inc",
+  "src/kernels/qsa_parity.cpp",
+  "src/kernels/qsa_prompt_attn_parity.cpp",
+  "src/kernels/qsa_select_bench.cpp",
+  "src/kernels/quantize_act_parity.cpp",
+  "src/kernels/rope_parity.cpp",
+  "src/kernels/router_sigmoid_parity.cpp",
+  "src/kernels/router_top10_parity.cpp",
+  "src/kernels/s2_gemv_parity.cpp",
+  "src/kernels/s2_gemv_q8_parity.cpp",
+  "src/kernels/s_gemv_parity.cpp",
+  "src/kernels/s_gemv_q8k_parity.cpp",
+  "src/kernels/sampler_parity.cpp",
+  "src/kernels/shared_expert_parity.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.kernel-parity-maya-tp/-/-"
+api       = "the parity programs' main()"
+numeric   = "per-family tolerances"
+regime    = "one GPU"
+
+[[requires]]
+module    = "format.maya_tp.gguf_reader"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_iq"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.elementwise"
+
+[[requires]]
+module    = "kernel.maya_tp.gdn"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_batch"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_dsa"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_ffn"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_hc"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_kda"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_kv_stream"
+
+[[requires]]
+module    = "kernel.maya_tp.hyperconn"
+
+[[requires]]
+module    = "kernel.maya_tp.kvcache"
+
+[[requires]]
+module    = "kernel.maya_tp.moe_experts"
+
+[[requires]]
+module    = "kernel.maya_tp.ple"
+
+[[requires]]
+module    = "kernel.maya_tp.qsa"
+
+[[requires]]
+module    = "kernel.maya_tp.quantize_act"
+
+[[requires]]
+module    = "kernel.maya_tp.rope"
+
+[[requires]]
+module    = "kernel.maya_tp.router"
+
+[[requires]]
+module    = "kernel.maya_tp.s_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.sampler"
+
+[[requires]]
+module    = "runtime.maya_tp.spec_controller"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

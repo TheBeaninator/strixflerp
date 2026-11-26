@@ -1,0 +1,47 @@
+id        = "runtime.enginelab_usb4.stream_lifecycle"
+kind      = "runtime"
+summary   = "stream open / close / IO correctness: open error path and frame arrays (0014), detach RAM rings and domain / XDomain teardown (0017), a bounded wait for the peer on open (0019), device state under lock (0021), resume failure fails open files (0022), a damaged RX frame fails the read (0025), a bounded wait for a TX slot on close (0026), partial IO accounting (0027), close does not flush RX (0028) and a damaged close is an error (0037)"
+why       = "fail-closed semantics a userspace transport can rely on: an error is reported, never silently dropped"
+notes     = "Interface tag: none (no catalogue interface is a USB4 stream device; the nearest are transport.verbs and the collective.* providers over RoCE / TCP). Stable patches 0014, 0017, 0019, 0021, 0022, 0025, 0026, 0027, 0028, 0037 of patches/series; apply the whole series in order to Linux 72d3fcf8. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "patches/0014-stream-open-error-path-and-frame-arrays.patch",
+  "patches/0017-stream-detach-ram-rings-and-domain-xdomain-teardown.patch",
+  "patches/0019-stream-open-bounded-wait-for-peer.patch",
+  "patches/0021-stream-device-state-under-lock.patch",
+  "patches/0022-stream-resume-failure-fails-open-files.patch",
+  "patches/0025-stream-damaged-rx-frame-fails-read.patch",
+  "patches/0026-stream-close-bounded-wait-for-tx-slot.patch",
+  "patches/0027-stream-partial-io-accounting.patch",
+  "patches/0028-stream-close-does-not-flush-rx.patch",
+  "patches/0037-stream-damaged-close-is-an-error.patch",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-stream-lifecycle/-/-"
+api       = "open / read / write / close of /dev/tbstreamN"
+numeric   = "bytes only"
+regime    = "stream setup and teardown"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 72d3fcf8 tree on the island); python3 docs/harvest/harvest_enginelab_usb4.py --patch-gate parses it (gate/results/compile/enginelab_usb4.patches.json)"

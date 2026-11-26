@@ -1,0 +1,40 @@
+id        = "runtime.ds4.k53prefill_tp"
+kind      = "runtime"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-flash-prefill-restoration 4fef372: its copy of the tp family against antirez/ds4 b3f5018: ds4_tp.c changed (+288 -1777 lines); ds4_tp.h changed (+7 -113 lines). The family: the tensor-parallel transport and lockstep protocol: two ranks run the same graph, each with one contiguous half of the routed experts; rank 0 mirrors every session call to rank 1 over a TCP control socket, and inside each token the partial block outputs go through a registered slab by two-sided RDMA send / recv (Thunderbolt UC on Metal, RoCE RC on Linux) or a full-duplex TCP socket; versioned wire features (command mailbox, verify flags, DSpark agreement)"
+why       = "the glm53-flash branch with the GLM-5.3-Flash prefill path restored and accelerated (head commit \"rocm: accelerate GLM 5.3 Flash prefill\"); same fork point as kyuz0_glm53_flash. The family in the base: two-machine TP over a network link, the shape the pod's own TP4 work lives in"
+notes     = "Overlay kyuz0_glm53_prefill: files under overlay/kyuz0_glm53_prefill/ are the branch's bytes at 4fef372a4631; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_prefill.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "4fef372a46315bd6b34b0e58b7fc91a7e5f4f21f"
+branch    = "perf/rocm-gfx1151-glm53-flash-prefill-restoration"
+paths     = ["overlay/kyuz0_glm53_prefill/ds4_tp.c", "overlay/kyuz0_glm53_prefill/ds4_tp.h"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/overlay/kyuz0_glm53_prefill"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.interface-ds4-tp-k53prefill/-/-"
+api       = "ds4_tp_* (ds4_tp.h)"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[[requires]]
+module    = "runtime.ds4.engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C99 / C11 built by the origin Makefile with cc; the compile gate builds hip-c++ modules only"

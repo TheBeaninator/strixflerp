@@ -1,0 +1,40 @@
+id        = "kernel.radiance.halo_mhc"
+kind      = "kernel"
+summary   = "GLM's manifold hyper-connections: parallel projections, then one workgroup a token forms the Sinkhorn mixing matrix; f32 mixing weights"
+why       = "GLM and DeepSeek-V4.1 mix residual streams with a Sinkhorn-normalised matrix rather than Qwen's low-rank pair, a different kernel shape that the pod meets on StrixFold"
+notes     = "Same job as kernel.strixfold.mhc_mix (DeepSeek-V4.1 mHC, 80 mix sites); SPEED-FUSE-1 b7269694f8 fuses StrixFold's chain into one launch a site."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = ["libhalo/halo_mhc.hip"]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/libhalo/halo_mhc.hip"]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "hc.mix-decode/glm-mhc-f32/bf16"
+api       = "halo_mhc_* (halo_mhc.hip)"
+numeric   = "f32 Sinkhorn iterations in one workgroup a token"
+regime    = "decode and prefill rows"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

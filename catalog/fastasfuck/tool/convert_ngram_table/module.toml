@@ -1,0 +1,52 @@
+id        = "tool.fastasfuck.convert_ngram_table"
+kind      = "tool"
+summary   = "fastasfuck's converter from the checkpoint's 128 ngram_embedding shards to one exact BF16 ngram.table with a sampled re-read check"
+why       = "the served PLE table is made by this tool and then transcoded to 8 bits"
+notes     = "Files vs strixite: tools/convert_ngram_table.cpp byte-identical to tool.strixite.convert_ngram_table at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/convert_ngram_table.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/convert_ngram_table.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.convert-ngram-table/-/-"
+api       = "main (convert_ngram_table)"
+numeric   = "the same source as tool.strixite.convert_ngram_table, so its behaviour: n/a"
+regime    = "as tool.strixite.convert_ngram_table: host only"
+
+[[requires]]
+module    = "format.fastasfuck.convert_qwen4exp"
+
+[[requires]]
+module    = "format.fastasfuck.ngram_table"
+
+[[requires]]
+module    = "format.fastasfuck.safetensors"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.args"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable convert_ngram_table) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

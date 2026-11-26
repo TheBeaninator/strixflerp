@@ -1,0 +1,48 @@
+id        = "runtime.enginelab_usb4.nhi_overlay"
+kind      = "runtime"
+summary   = "the rest of the 0001 capture: overlay/drivers/thunderbolt (domain.c, nhi.c / nhi.h / nhi_regs.h, pci.c, stream.c, tunnel.c, xdomain.c, Kconfig), the pristine base/include/linux/thunderbolt.h and the kernel config fragment config/usb4-gpu.fragment"
+why       = "the stream device and NHI as the series starts them; the config fragment names the options a test kernel needs"
+notes     = "Interface tag: none. Capture only. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "base/include/linux/thunderbolt.h",
+  "config/usb4-gpu.fragment",
+  "overlay/drivers/thunderbolt/Kconfig",
+  "overlay/drivers/thunderbolt/domain.c",
+  "overlay/drivers/thunderbolt/nhi.c",
+  "overlay/drivers/thunderbolt/nhi.h",
+  "overlay/drivers/thunderbolt/nhi_regs.h",
+  "overlay/drivers/thunderbolt/pci.c",
+  "overlay/drivers/thunderbolt/stream.c",
+  "overlay/drivers/thunderbolt/tunnel.c",
+  "overlay/drivers/thunderbolt/xdomain.c",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-stream-overlay/-/-"
+api       = "kernel-internal thunderbolt stream / NHI"
+numeric   = "bytes only"
+regime    = "patched kernel"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel source: needs the kernel tree to build"

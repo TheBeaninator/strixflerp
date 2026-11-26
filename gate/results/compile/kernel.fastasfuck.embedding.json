@@ -1,0 +1,25 @@
+{
+ "module": "kernel.fastasfuck.embedding",
+ "gate": "compile",
+ "arch": "gfx1151",
+ "host": "control-node",
+ "date": "2026-11-26T00:09:24Z",
+ "toolchain": "therock-10.1",
+ "toolchain_root": "/data/models/tools/therock-10.1",
+ "compiler": "AMD clang version 23.0.0git (https://github.com/ROCm/llvm-project.git 0bace1908348b840e6aa1b4b6e12151dae208158) | Target: x86_64-unknown-linux-gnu",
+ "units": 1,
+ "passed": 1,
+ "failed": 0,
+ "status": "pass",
+ "seconds": 3.5,
+ "results": [
+  {
+   "unit": "src/kernels/embedding.hip",
+   "cmd": "/data/models/tools/therock-10.1/lib/llvm/bin/clang++ --offload-arch=gfx1151 --rocm-path=/data/models/tools/therock-10.1 -x hip -std=c++20 -O3 -march=znver5 -DNDEBUG -D__HIP_PLATFORM_AMD__ -Wall -Wextra -Wno-unused-parameter -c -I catalog/fastasfuck/kernel/embedding/src -I catalog/fastasfuck/format/qn_device/src -I catalog/fastasfuck/kernel/common/src -I /data/models/tools/therock-10.1/include catalog/fastasfuck/kernel/embedding/src/kernels/embedding.hip -o build/compile-gate/kernel.fastasfuck.embedding/0-embedding.hip.o",
+   "rc": 0,
+   "seconds": 3.54,
+   "object_bytes": 103592,
+   "object_sha256": "164c0bf3932777bf05cbfbbb99dc3965a03464e5f8749eb48337a4c49ad34d3f"
+  }
+ ]
+}

@@ -1,0 +1,46 @@
+id        = "tool.enginelab_usb4.lab"
+kind      = "tool"
+summary   = "the lab setup: usb4stream_describe.py and its udev rule and refresh service, setup-usb4stream-lab, node_check.sh, the lab service and its reviewed-kernel drop-in, and the dedicated-stream configuration"
+why       = "how the two lab nodes are brought up the same way each boot (describe service, udev rule, dedicated-stream config); a reference for a pod USB4 pair, not installed here"
+notes     = "Interface tag: none. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "tools/lab/90-usb4stream-describe.rules",
+  "tools/lab/node_check.sh",
+  "tools/lab/reviewed-kernel-dropin",
+  "tools/lab/setup-usb4stream-lab",
+  "tools/lab/usb4stream-dedicated.conf",
+  "tools/lab/usb4stream-describe-refresh.service",
+  "tools/lab/usb4stream-lab.service",
+  "tools/lab/usb4stream-lab.service.d/10-reviewed-kernel.conf.example",
+  "tools/lab/usb4stream_describe.py",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.usb4-lab-setup/-/-"
+api       = "setup-usb4stream-lab, usb4stream_describe.py --logs --summary"
+numeric   = "n/a"
+regime    = "the two lab hosts"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python, shell and systemd units: not compiled, not installed"

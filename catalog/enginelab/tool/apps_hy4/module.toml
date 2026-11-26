@@ -1,0 +1,86 @@
+id        = "tool.enginelab.apps_hy4"
+kind      = "tool"
+summary   = "the Hy4 programs: DFly, rank, reference and rows: 4 origin files under apps/hy4_dfly_main.cpp, apps/hy4_rank_main.cpp, apps/hy4_ref_main.cpp, apps/hy4_rows_main.cpp"
+why       = "Hy4 binaries; where it would go: kept as a reference program or lab (tool.enginelab-hy4/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-hy4/-/-. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["apps/hy4_dfly_main.cpp", "apps/hy4_rank_main.cpp", "apps/hy4_ref_main.cpp", "apps/hy4_rows_main.cpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/apps/hy4_dfly_main.cpp",
+  "src/apps/hy4_rank_main.cpp",
+  "src/apps/hy4_ref_main.cpp",
+  "src/apps/hy4_rows_main.cpp",
+]
+includes  = ["src/apps"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.enginelab-hy4/-/-"
+api       = "apps/hy4_*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "executor.enginelab.hy4_engine"
+
+[[requires]]
+module    = "kernel.enginelab.hy4_hip"
+
+[[requires]]
+module    = "runtime.enginelab.backend_intel"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.hy4_ref"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[[requires]]
+module    = "runtime.enginelab.pair_pipeline"
+
+[[requires]]
+module    = "runtime.enginelab.pair_state"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[[requires]]
+module    = "runtime.enginelab.spec_core"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[[requires]]
+module    = "runtime.enginelab.xport_tp_gather"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

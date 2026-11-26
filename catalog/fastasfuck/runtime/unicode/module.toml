@@ -1,0 +1,40 @@
+id        = "runtime.fastasfuck.unicode"
+kind      = "runtime"
+summary   = "fastasfuck's UTF-8 repair, Unicode classes and NFC composition from tables generated off Python's unicodedata"
+why       = "the tokenizer's pre-tokenizer and the chat template's strip need Python-identical Unicode behaviour"
+notes     = "Files vs strixite: serve/unicode.cpp byte-identical to runtime.strixite.unicode at d19945e; serve/unicode.hpp byte-identical to runtime.strixite.unicode at d19945e; serve/unicode_tables.inc byte-identical to runtime.strixite.unicode at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/unicode.cpp", "serve/unicode.hpp", "serve/unicode_tables.inc"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/unicode.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "text.unicode/-/-"
+api       = "strix::unicode::{decode_utf8, encode_utf8, char_class, nfc}"
+numeric   = "the same source as runtime.strixite.unicode, so its behaviour: Unicode 16.0.0 categories, 15.0.0 normalization data"
+regime    = "as runtime.strixite.unicode: host"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

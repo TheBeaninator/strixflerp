@@ -1,0 +1,43 @@
+id        = "kernel.enginelab.h3_attn"
+kind      = "kernel"
+summary   = "H3 attention (src/h3/attn): 4 origin files under src/h3"
+why       = "diffusion transformer attention; where it would go: a new strixflerp interface attn.dit/-/bf16-f32.enginelab-h3, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, attn.dit/-/bf16-f32.enginelab-h3. 1 HIP unit(s) compiled standalone by the gate; 1 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["src/h3/attn/attn.hip", "src/h3/attn/attn.hpp", "src/h3/attn/attn_ref.cpp", "src/h3/attn/attn_ref.hpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/h3/attn/attn.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.dit/-/bf16-f32.enginelab-h3"
+api       = "src/h3/attn/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.h3_attn.json"

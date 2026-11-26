@@ -1,0 +1,79 @@
+id        = "runtime.fastasfuck.engine"
+kind      = "runtime"
+summary   = "fastasfuck's serving loop: one worker per slot behind LmBackend, longest-prefix resume, chunked prefill, sampling, parsing and streaming with MTP draft-and-verify, and SeqBackend batching several slots' verifies into one forward"
+why       = "the 104 tok/s 4-slot figure the author quotes comes from this loop batching slots; it is the module a slots experiment would swap"
+notes     = "Files vs strixite: serve/engine.cpp 471 changed lines against runtime.strixite.engine at d19945e; serve/engine.hpp 210 changed lines against runtime.strixite.engine at d19945e; serve/seq_backend.cpp 360 changed lines against runtime.strixite.engine at d19945e; serve/seq_backend.hpp 74 changed lines against runtime.strixite.engine at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/engine.cpp", "serve/engine.hpp", "serve/seq_backend.cpp", "serve/seq_backend.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/engine.cpp", "src/serve/seq_backend.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.engine/-/-"
+api       = "strix::Engine, strix::LmBackend, strix::SeqBackend, strix::GpuArbiter, strix::GenerationRequest"
+numeric   = "derived from runtime.strixite.engine (serve/engine.cpp 471 changed lines against runtime.strixite.engine at d19945e; serve/engine.hpp 210 changed lines against runtime.strixite.engine at d19945e; serve/seq_backend.cpp 360 changed lines against runtime.strixite.engine at d19945e; serve/seq_backend.hpp 74 changed lines against runtime.strixite.engine at d19945e); not compared here"
+regime    = "as runtime.strixite.engine: host; one GPU, conversations batched per forward"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.capture"
+
+[[requires]]
+module    = "runtime.fastasfuck.grammar"
+
+[[requires]]
+module    = "runtime.fastasfuck.mtp_calib"
+
+[[requires]]
+module    = "runtime.fastasfuck.output_parser"
+
+[[requires]]
+module    = "runtime.fastasfuck.paged_state"
+
+[[requires]]
+module    = "runtime.fastasfuck.prompt_cache"
+
+[[requires]]
+module    = "runtime.fastasfuck.resume_loss"
+
+[[requires]]
+module    = "runtime.fastasfuck.sampler"
+
+[[requires]]
+module    = "runtime.fastasfuck.serve_log"
+
+[[requires]]
+module    = "runtime.fastasfuck.structured_output"
+
+[[requires]]
+module    = "runtime.fastasfuck.think_nudge"
+
+[[requires]]
+module    = "runtime.fastasfuck.token_mask"
+
+[[requires]]
+module    = "runtime.fastasfuck.tokenizer"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

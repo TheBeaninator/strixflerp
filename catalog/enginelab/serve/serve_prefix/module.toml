@@ -1,0 +1,78 @@
+id        = "serve.enginelab.serve_prefix"
+kind      = "serve"
+summary   = "serve-side prompt caching: prefix directory, join and cache-queue binding, prompt join, piece, service and stream, conversation keep, queued-prefix protection, cache budget rule, prefill chunk fallback, group and interleave"
+why       = "keeps conversations warm and joins new prompts onto cached prefixes; where it would go: beside the catalogue's cache.prompt/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: cache.prompt/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 3 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/serve/cache_budget_rule.hpp",
+  "include/strix/serve/conversation_keep.hpp",
+  "include/strix/serve/prefill_chunk_fallback.hpp",
+  "include/strix/serve/prefill_group.hpp",
+  "include/strix/serve/prefill_interleave.hpp",
+  "include/strix/serve/prefix_cache_queue_binding.hpp",
+  "include/strix/serve/prefix_directory.hpp",
+  "include/strix/serve/prefix_join.hpp",
+  "include/strix/serve/prompt_join.hpp",
+  "include/strix/serve/prompt_piece.hpp",
+  "include/strix/serve/prompt_service.hpp",
+  "include/strix/serve/prompt_stream.hpp",
+  "include/strix/serve/queued_prefix_protection.hpp",
+  "src/serve/conversation_keep.cpp",
+  "src/serve/prefix_directory.cpp",
+  "src/serve/prompt_stream.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/serve/conversation_keep.cpp",
+  "src/src/serve/prefix_directory.cpp",
+  "src/src/serve/prompt_stream.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "cache.prompt-enginelab-serve/-/-"
+api       = "strix::serve prefix_directory.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[[requires]]
+module    = "serve.enginelab.serve_tokenizer"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

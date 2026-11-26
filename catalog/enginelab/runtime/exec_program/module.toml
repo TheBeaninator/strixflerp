@@ -1,0 +1,108 @@
+id        = "runtime.enginelab.exec_program"
+kind      = "runtime"
+summary   = "the exec layer (src/exec, include/strix/exec): arena, catalog, cohort programs, compiler, descriptor, draft runner, generic engine, program, step lanes, width graphs and width replay, the CPU executor and profiler and the scheduled stage graph"
+why       = "a backend-neutral program compiler: stage graphs lowered to width-specialised programs and replayed; where it would go: beside the catalogue's executor.device-graph/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.device-graph/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 9 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/exec/arena.hpp",
+  "include/strix/exec/catalog.hpp",
+  "include/strix/exec/cohort_programs.hpp",
+  "include/strix/exec/compiler.hpp",
+  "include/strix/exec/descriptor.hpp",
+  "include/strix/exec/draft_runner.hpp",
+  "include/strix/exec/generic_engine.hpp",
+  "include/strix/exec/profiler.hpp",
+  "include/strix/exec/program.hpp",
+  "include/strix/exec/step_lanes.hpp",
+  "include/strix/exec/width_graphs.hpp",
+  "include/strix/exec/width_replay.hpp",
+  "src/exec/arena.cpp",
+  "src/exec/catalog.cpp",
+  "src/exec/compiler.cpp",
+  "src/exec/descriptor.cpp",
+  "src/exec/draft_runner.cpp",
+  "src/exec/executor_cpu.cpp",
+  "src/exec/executor_cpu.hpp",
+  "src/exec/executor_cpu_binding.hpp",
+  "src/exec/generic_engine.cpp",
+  "src/exec/profiler_cpu.cpp",
+  "src/exec/scheduled_stage_graph.cpp",
+  "src/exec/scheduled_stage_graph.hpp",
+  "src/exec/step_replay_row.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/exec/arena.cpp",
+  "src/src/exec/catalog.cpp",
+  "src/src/exec/compiler.cpp",
+  "src/src/exec/descriptor.cpp",
+  "src/src/exec/draft_runner.cpp",
+  "src/src/exec/executor_cpu.cpp",
+  "src/src/exec/generic_engine.cpp",
+  "src/src/exec/profiler_cpu.cpp",
+  "src/src/exec/scheduled_stage_graph.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.device-graph-enginelab/-/-"
+api       = "strix::exec compiler.hpp, generic_engine.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "runtime.enginelab.cuda_exec"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.graph"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.receipts"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[[requires]]
+module    = "runtime.enginelab.spec_core"
+
+[[requires]]
+module    = "runtime.enginelab.state_txn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

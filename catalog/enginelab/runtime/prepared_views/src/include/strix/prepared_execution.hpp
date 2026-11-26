@@ -1,0 +1,78 @@
+#pragma once
+
+#include "strix/compiled_execution.hpp"
+
+#include <functional>
+#include <memory>
+#include <optional>
+#include <span>
+
+namespace strix {
+struct SerialSessionContext;
+struct PreparedEagerExecutionResult {
+    std::uint32_t completed_steps = 0;
+    std::uint32_t kernel_steps = 0;
+    std::uint32_t runtime_steps = 0;
+    PersistentStateGenerations state;
+    // Immutable prepared submission order, not evidence of GPU completion.
+    // Valid across subsequent runs until the PreparedEagerExecution is destroyed.
+    std::span<const std::uint32_t> completion_order;
+};
+
+// Bounded eager preparation: privately owns an immutable deep copy of the
+// compiled DAG/IO/arena, its validated submission order and admitted immutable
+// tensor views with retained owners. Launcher functions remain in the existing
+// compiled launch plan. Request spans are never retained.
+//
+// actual_owner must retain the actual prepared allocations. The caller must
+// additionally retain every borrowed resource/dispatcher and exclude mutation
+// of resources and their reachable metadata from run()/session entry until
+// device quiescence, including through aliases held by backends or dispatchers.
+// PLE backend internal state and PleLookupPrefetchState may evolve as prescribed
+// by their protocol; implementation_identity() must remain invariant. Other
+// mutation inside that window is outside this contract and need not be detected.
+// Changes between calls are checked against deep metadata and binding
+// snapshots on each entry, without rebuilding the model's runtime hashes.
+// A returned dispatch is not a completion fence; the session owner remains
+// responsible for drain, commit and failure poisoning.
+class PreparedEagerExecution final {
+public:
+    PreparedEagerExecution(CompiledSerialExecution compiled,
+        const ExecutionRuntimeResources& prepare_resources,
+        const EagerExecutionRequest& prototype,
+        std::shared_ptr<const void> actual_owner);
+    ~PreparedEagerExecution();
+    PreparedEagerExecution(const PreparedEagerExecution&) = delete;
+    PreparedEagerExecution& operator=(const PreparedEagerExecution&) = delete;
+    PreparedEagerExecution(PreparedEagerExecution&&) = delete;
+    PreparedEagerExecution& operator=(PreparedEagerExecution&&) = delete;
+
+    // Successful runs allocate no result/order/completed-vector storage. Dynamic
+    // resource validation and each launcher's own validation remain in place.
+    [[nodiscard]] PreparedEagerExecutionResult run(
+        const ExecutionRuntimeResources& resources,
+        const EagerExecutionRequest& request,
+        EagerExecutionDispatcher& dispatcher) const;
+    [[nodiscard]] const CompiledSerialExecution& compiled() const noexcept;
+    // Frozen compatibility metadata only; this accessor does not admit a run.
+    [[nodiscard]] std::uint64_t compatibility_identity() const noexcept;
+    [[nodiscard]] std::optional<std::uint32_t> ple_step_id() const noexcept;
+    // No dispatch and no static DAG/IO traversal. Session wrappers may use this
+    // before starting PLE work or entering their dispatch-failure poison scope.
+    void validate_dynamic(const ExecutionRuntimeResources& resources,
+                          const EagerExecutionRequest& request) const;
+private:
+    // Dispatch only. The sole friend validates the same resources and const
+    // request once before starting PLE work, within the same session call.
+    [[nodiscard]] PreparedEagerExecutionResult run_admitted(
+        const ExecutionRuntimeResources& resources,
+        const EagerExecutionRequest& request,
+        EagerExecutionDispatcher& dispatcher) const;
+    friend PreparedEagerExecutionResult execute_prepared_serial_token(
+        const PreparedEagerExecution& prepared, SerialSessionContext& session,
+        const ExecutionRuntimeResources& resources, std::uint32_t input_token_id,
+        EagerExecutionDispatcher& dispatcher, const std::function<void()>& before_commit);
+    struct Impl;
+    std::unique_ptr<const Impl> impl_;
+};
+} // namespace strix

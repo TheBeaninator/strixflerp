@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.hy4_hc"
+kind      = "runtime"
+summary   = "Fused hyper-connection sites and norms (Triton), generic by shape"
+why       = "Hy4 decode. Where the shape would go: a hc.mix/-/f32 provider beside kernel.ds4.k53perf_rocm_halo_hc, kernel.ds4.k53perf_rocm_hc_sgemm, kernel.ds4.rocm_hc and 2 more, through a port of the python / Triton logic"
+notes     = "Interface tag: hc.mix/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (hc_fused.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/loader/hc_fused.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "hc.mix/-/f32.kyojin-hy4-triton"
+api       = "hc_fused.py"
+numeric   = "fp32"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

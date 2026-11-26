@@ -1,0 +1,46 @@
+id        = "kernel.fastasfuck.residual"
+kind      = "kernel"
+summary   = "fastasfuck's element-wise in-place residual add x += y on F32 or BF16 rows, an FP32 add with one rounding to the activation dtype"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its residual kernel file so a timing card can set it against kernel.strixite.residual, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/residual.hip residual.add/- (byte-identical to kernel.strixite.residual kernels/residual.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/residual.hip", "kernels/residual.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/residual.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "residual.add/-/bf16"
+api       = "strix::kernels::residual_add (kernels/residual.hpp)"
+numeric   = "the same source as kernel.strixite.residual (byte-identical to kernel.strixite.residual kernels/residual.hip at d19945e), so its arithmetic: fp32 add, one rounding to the activation dtype"
+regime    = "as kernel.strixite.residual: element-wise"
+
+[[provides]]
+interface = "residual.add/-/f32"
+api       = "strix::kernels::residual_add (kernels/residual.hpp)"
+numeric   = "the same source as kernel.strixite.residual (byte-identical to kernel.strixite.residual kernels/residual.hip at d19945e), so its arithmetic: fp32 add, one rounding to the activation dtype"
+regime    = "as kernel.strixite.residual: element-wise"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.residual.json"

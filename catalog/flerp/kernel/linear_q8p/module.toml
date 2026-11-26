@@ -64,8 +64,9 @@ module    = "kernel.strixite.norm"
 module    = "kernel.flerp.adapter_rt"
 
 [gate]
-parity    = "flerp:gate/strixw-panel-kernels.toml"
-bench     = "flerp:gate/strixw-panel-kernels.toml"
-status    = "harvested"
+parity    = "flerp:gate/interface/strixw-decode.toml"
+bench     = "flerp:gate/interface/strixw-decode.toml"
+status    = "benched"
+evidence  = "gate/results/interface/strixw-decode/result.json"
 compile   = "n/a"
-reason    = "built inside recipes/qwen38-flash-next.strixite-p16.toml; kernel gate gate/strixw-panel-kernels.toml (results gate/results/strixw-panel-kernels)"
+reason    = "module-level interface gate gate/interface/strixw-decode.toml (panel layout through strixite's call sites vs the CPU reference, Q8 bits byte-equal to strixite's on 7 of 7 parity cases, 9013 foreign launches 0 origin); also built inside recipes/qwen38-flash-next.strixite-p16.toml and compared on real tensors by gate/strixw-panel-kernels.toml"

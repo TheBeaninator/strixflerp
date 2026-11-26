@@ -1,0 +1,49 @@
+id        = "executor.kyojin.dsv41_reference"
+kind      = "executor"
+summary   = "DeepSeek-V4.1-Flash CPU-exact reference engine (ops, fp8 / fp4 quant, Engram, model, weights I/O)"
+why       = "the reference the DS4.1 HIP kernels match bit for bit. Where the shape would go: an executor.model/deepseek-v4.1-flash/exl3 provider beside executor.flerp.dsv41_zip2, executor.strixfold.dsv41, executor.strixfold_tp4.dsv41, through a port of the python / Triton logic"
+notes     = "Interface tag: executor.model/deepseek-v4.1-flash/exl3. Against the base turboderp-org/exllamav3 8c593e4e: 12 added (__init__.py, config.py, engram.py, experts.py, gguf.py, iq2_tables.py) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/dsv41/__init__.py",
+  "exllamav3/dsv41/config.py",
+  "exllamav3/dsv41/engram.py",
+  "exllamav3/dsv41/experts.py",
+  "exllamav3/dsv41/gguf.py",
+  "exllamav3/dsv41/iq2_tables.py",
+  "exllamav3/dsv41/linear.py",
+  "exllamav3/dsv41/model.py",
+  "exllamav3/dsv41/ops.py",
+  "exllamav3/dsv41/quant.py",
+  "exllamav3/dsv41/safetensors_io.py",
+  "exllamav3/dsv41/weights.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.model/deepseek-v4.1-flash/exl3.kyojin-ref"
+api       = "__init__.py, config.py, engram.py, experts.py, gguf.py, iq2_tables.py, linear.py, model.py ..."
+numeric   = "explicit-rounding fp32 reference"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

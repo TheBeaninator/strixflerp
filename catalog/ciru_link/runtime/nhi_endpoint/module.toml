@@ -1,0 +1,54 @@
+id        = "runtime.ciru_link.nhi_endpoint"
+kind      = "runtime"
+summary   = "the NHI endpoint lifecycle in Go (internal/transport): Inspect discovers thunderbolt-net, the stream service and device index, HopIDs, ring 4095 and throttle 8192 ns, open device holders and the lease; Reconcile turns two host reports into one pair verdict (arm_allowed, nhi_ready, lease_available); BuildEndpointPlan / ApplyEndpoint prepare and clean up an endpoint under a file lock without killing holders; GenerateEnvironment emits the portable (NCCL_SOCKET_IFNAME==thunderbolt0, GLOO_SOCKET_IFNAME) or NHI runtime environment"
+why       = "the two-sided arming order (inspect both, reconcile, prepare both, inspect again, then launch) is the part of a pair transport that keeps one half-prepared host from hanging the other; flerp's own two-node paths could take the same pair-verdict shape"
+notes     = "Interface tag: none. Runtime needs the patched thunderbolt_stream (runtime.ciru_link.tbstream_*); not a build dependency. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "internal/transport/endpoint.go",
+  "internal/transport/env.go",
+  "internal/transport/env_test.go",
+  "internal/transport/lock_linux.go",
+  "internal/transport/lock_other.go",
+  "internal/transport/transport.go",
+  "internal/transport/transport_test.go",
+]
+authors   = ["Ciru (ciru-ai)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "go"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-nhi-endpoint/-/-"
+api       = "transport.Inspect, Reconcile, BuildEndpointPlan, ApplyEndpoint, LoadReport (internal/transport/transport.go, endpoint.go)"
+numeric   = "n/a (control path); JSON reports, schema_version 1"
+regime    = "two hosts, one USB4 link"
+
+[[provides]]
+interface = "transport.collective-env-usb4/-/-"
+api       = "transport.GenerateEnvironment, Environment.DotEnv, ParseDotEnv (internal/transport/env.go)"
+numeric   = "n/a"
+regime    = "RCCL / Gloo socket binding (portable) or the NHI adapter variables"
+
+[[requires]]
+module    = "runtime.ciru_link.usb4net"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/runtime.ciru_link.nhi_endpoint.json"
+reason    = "go: built by the Go gate, not gate/compile/run.py (python3 docs/harvest/harvest_ciru_link.py --go-gate on control-node CPU: go vet, the tests compiled without running, the static binary built)"

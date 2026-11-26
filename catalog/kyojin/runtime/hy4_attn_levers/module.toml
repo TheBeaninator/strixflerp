@@ -1,0 +1,43 @@
+id        = "runtime.kyojin.hy4_attn_levers"
+kind      = "runtime"
+summary   = "Hy4 attention decode levers, each behind a flag: fewer eager launches, grouped projections on the stored bytes, positional rope rows, fp8 latent K cache, one-kernel K-row writes, absorbed MLA matrices read from stored Q8_0"
+why       = "Hy4-flash decode. Where the shape would go: an attn.qk-norm-rope-store/-/bf16 provider beside kernel.radiance.halo_attn, through a port of the python / Triton logic"
+notes     = "Interface tag: attn.qk-norm-rope-store/-/bf16. Against the base turboderp-org/exllamav3 8c593e4e: 6 added (attn_eager.py, attn_grouped.py, kv_fp8.py, kv_fused.py, mla_bgemv.py, rope_rows.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/loader/attn_eager.py",
+  "exllamav3/loader/attn_grouped.py",
+  "exllamav3/loader/kv_fp8.py",
+  "exllamav3/loader/kv_fused.py",
+  "exllamav3/loader/mla_bgemv.py",
+  "exllamav3/loader/rope_rows.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.qk-norm-rope-store/-/bf16.kyojin-hy4"
+api       = "attn_eager.py, attn_grouped.py, kv_fp8.py, kv_fused.py, mla_bgemv.py, rope_rows.py"
+numeric   = "see each file"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

@@ -1,0 +1,97 @@
+id        = "executor.enginelab.inkling2_cuda"
+kind      = "executor"
+summary   = "Inkling 2 Mini CUDA pieces (attention, block candidates, controller operands, dense, MoE, program, serve)"
+why       = "the RTX route of Inkling 2 Mini; where it would go: a new strixflerp interface executor.model-enginelab-inkling2-cuda/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, executor.model-enginelab-inkling2-cuda/-/-. CUDA (RTX PRO 6000 route). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/inkling2/inkling2_mini_attention_cuda.hpp",
+  "src/inkling2/inkling2_mini_attention_prepare_cuda.hpp",
+  "src/inkling2/inkling2_mini_block_candidate_cuda.cu",
+  "src/inkling2/inkling2_mini_block_candidate_cuda.hpp",
+  "src/inkling2/inkling2_mini_controller_operands_cuda.hpp",
+  "src/inkling2/inkling2_mini_dense_cuda.hpp",
+  "src/inkling2/inkling2_mini_moe_cuda.hpp",
+  "src/inkling2/inkling2_mini_program_cuda.hpp",
+  "src/inkling2/inkling2_mini_serve_cuda.cu",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = ["src/src", "src/src/inkling2"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.model-enginelab-inkling2-cuda/-/-"
+api       = "src/inkling2/*_cuda.cu"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_engine"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_resident"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.core_bf16"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "kernel.enginelab.inkling2_attention"
+
+[[requires]]
+module    = "kernel.enginelab.inkling2_moe"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "runtime.enginelab.cuda_exec"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.graph"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[[requires]]
+module    = "serve.enginelab.inkling2_serve"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source for the optional RTX PRO route: no CUDA toolkit on the island and no NVIDIA device on the pod, so it is not compiled"

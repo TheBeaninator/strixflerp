@@ -1,0 +1,102 @@
+id        = "executor.enginelab.vision"
+kind      = "executor"
+summary   = "the shared vision tower (src/vision, include/strix/vision): API media, decode, embed cache and spans, encoder (CUDA, layout, plan), GGUF weights, host math, image, lookup weights, patchify, preprocess, projector, reference, resize and serial media"
+why       = "one vision encoder every vision model binds; where it would go: beside the catalogue's vision.tower/-/bf16 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: vision.tower/-/bf16 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 8 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/vision/adapter.hpp",
+  "include/strix/vision/api_media.hpp",
+  "include/strix/vision/compare.hpp",
+  "include/strix/vision/embed_cache.hpp",
+  "include/strix/vision/embed_span.hpp",
+  "include/strix/vision/encoder.hpp",
+  "include/strix/vision/encoder_cuda.hpp",
+  "include/strix/vision/gguf_weights.hpp",
+  "include/strix/vision/host_math.hpp",
+  "include/strix/vision/image.hpp",
+  "include/strix/vision/lookup_weights.hpp",
+  "include/strix/vision/preprocess.hpp",
+  "include/strix/vision/serial_media.hpp",
+  "src/vision/api_media.cpp",
+  "src/vision/decode.cpp",
+  "src/vision/embed_cache.cpp",
+  "src/vision/encoder.hip",
+  "src/vision/encoder_cuda.cu",
+  "src/vision/encoder_layout.hpp",
+  "src/vision/encoder_plan.hpp",
+  "src/vision/gguf_weights.cpp",
+  "src/vision/patchify.cpp",
+  "src/vision/projector.cpp",
+  "src/vision/reference.cpp",
+  "src/vision/resize.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/vision/encoder.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "vision.tower/-/bf16.enginelab"
+api       = "strix::vision encoder.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "runtime.enginelab.backend_cpu"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "runtime.enginelab.stb_image"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.vision.json"

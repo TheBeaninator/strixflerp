@@ -1,0 +1,75 @@
+id        = "runtime.maya_tp.glm_dsa_reference"
+kind      = "runtime"
+summary   = "the glm-dsa F32 reference forward (glm_dsa_ref.cu with its host pieces and no-GPU stub) and the CPU twins of the reference, fast and Volta decode kernels (glm_dsa_cpu_ref, glm_dsa_cpu_fast_twin, glm_dsa_cpu_volta_twin)"
+why       = "a reference forward and CPU twins are the oracle a parity gate needs for every GLM DSA kernel; they transfer as strixflerp verify references"
+notes     = "Interface tag: verify.reference-forward-glm-dsa/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "src/core/glm_dsa_cpu_fast_twin.cpp",
+  "src/core/glm_dsa_cpu_ref.cpp",
+  "src/core/glm_dsa_cpu_volta_twin.cpp",
+  "src/core/glm_dsa_ref.cu",
+  "src/core/glm_dsa_ref_host.cpp",
+  "src/core/glm_dsa_ref_stub.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.reference-forward-glm-dsa/-/-"
+api       = "Glm5Model::step_layers_dsa, CPU twins"
+numeric   = "F32"
+regime    = "parity runs"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_decode"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_mixer"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_ref"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_dsa_decode"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_model"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

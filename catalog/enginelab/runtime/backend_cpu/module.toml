@@ -1,0 +1,89 @@
+id        = "runtime.enginelab.backend_cpu"
+kind      = "runtime"
+summary   = "the CPU backend (src/cpu: arch, core, weight): 24 origin files under src/cpu"
+why       = "a CPU route and reference for the same contracts; where it would go: beside the catalogue's executor.lane-backend/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.lane-backend/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 12 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/cpu/arch/avx2/dense.cpp",
+  "src/cpu/arch/avx2/routed_expert_avx2.cpp",
+  "src/cpu/arch/avx2/routed_expert_avx2.hpp",
+  "src/cpu/arch/avx512/dense.cpp",
+  "src/cpu/arch/avx512/kernels.cpp",
+  "src/cpu/arch/avx512/kernels.hpp",
+  "src/cpu/arch/neon/kernels.cpp",
+  "src/cpu/arch/neon/kernels.hpp",
+  "src/cpu/core/backend.hpp",
+  "src/cpu/core/chunk16_reduce.hpp",
+  "src/cpu/core/dense.cpp",
+  "src/cpu/core/dense.hpp",
+  "src/cpu/core/gdn_reference.hpp",
+  "src/cpu/core/isa.cpp",
+  "src/cpu/core/isa.hpp",
+  "src/cpu/core/reference.cpp",
+  "src/cpu/core/routed_expert.cpp",
+  "src/cpu/core/routed_expert.hpp",
+  "src/cpu/core/routed_expert_kernels.hpp",
+  "src/cpu/core/select.cpp",
+  "src/cpu/weight/registry.cpp",
+  "src/cpu/weight/runtime.cpp",
+  "src/cpu/weight/runtime.hpp",
+  "src/cpu/weight/source.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/cpu/arch/avx2/dense.cpp",
+  "src/src/cpu/arch/avx2/routed_expert_avx2.cpp",
+  "src/src/cpu/arch/avx512/dense.cpp",
+  "src/src/cpu/arch/avx512/kernels.cpp",
+  "src/src/cpu/arch/neon/kernels.cpp",
+  "src/src/cpu/core/dense.cpp",
+  "src/src/cpu/core/isa.cpp",
+  "src/src/cpu/core/reference.cpp",
+  "src/src/cpu/core/routed_expert.cpp",
+  "src/src/cpu/core/select.cpp",
+  "src/src/cpu/weight/registry.cpp",
+  "src/src/cpu/weight/runtime.cpp",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.lane-backend-enginelab-cpu/-/-"
+api       = "src/cpu/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.core_integer"
+
+[[requires]]
+module    = "kernel.enginelab.ops_norm"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.numeric"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

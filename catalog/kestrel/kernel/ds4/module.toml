@@ -1,0 +1,62 @@
+id        = "kernel.kestrel.ds4"
+kind      = "kernel"
+summary   = "Maya's DeepSeek-V4.1 device kernels as Kestrel 0.1.6 ships them: src/ds4/ds4_kernels.cu (5,404 lines: sparse attention with gfx11 / gfx12 WMMA modes (DS4_ATTN_SHARE), rotary, MoE combine, the helper hand-off helper_take, logprob rows, F16 / Q6_K GEMVs, the light-expert gather and add Kestrel added) and src/ds4/ds4_iq.cu (3,052 lines: a GGUF's low-bit routed experts on the device, ggml's block layouts and llama.cpp's sign and grid tricks), with the headers they include"
+why       = "the DeepSeek-V4.1 device kernels of a second engine for the same model (attention with gfx11 / gfx12 WMMA modes, MoE combine, sampling and logprobs, the GGUF IQ routed experts), and the file Kestrel changed most for AMD (helper hand-off with 8 host-mapped loads in flight, light-expert gather / add)"
+notes     = "Interface tags: moe.experts-decode/gguf-iq2+q2_k/f32 (the class of kernel.gufo.ds4_moe), the rest none (engine-internal launches). Kestrel's delta over Maya v1.1.78: ds4_kernels.cu +57 / -5 (helper_take keeps 8 host-mapped loads in flight, light_gather / light_add for DS4_PROMPT_LIGHT, gfx12 attention share mode 1), ds4_iq.cu +90 / -50 (MMQ link for maya-mm3 on HIP, MiniMax-M3.1 expert geometry). The host that drives them (ds4_model.cu, with the peer prefill all-reduce of docs/HIP_PEER_PREFILL.md) is not harvested. Nothing was compiled, run or timed on the pod."
+
+[provenance]
+origin    = "kestrel"
+repo      = "https://github.com/itechmedic/kestrel"
+commit    = "717c76975cd20d37b2e4162072d7745d6e1576ff"
+branch    = "kestrel"
+paths     = [
+  "include/maya/kernels/lane_xor.hpp",
+  "include/maya/kernels/sampler.hpp",
+  "src/ds4/ds4_iq.cu",
+  "src/ds4/ds4_iq.cuh",
+  "src/ds4/ds4_iq1_codes.hpp",
+  "src/ds4/ds4_kernels.cu",
+  "src/ds4/ds4_kernels.cuh",
+  "src/ds4/ds4_logprobs.hpp",
+  "src/ds4/ds4_numerics.cuh",
+  "src/ds4/ds4_os.hpp",
+  "src/ds4/ds4_par_exp.h",
+  "src/ds4/ds4_pdl.cuh",
+  "src/ds4/ds4_peer_cuda_compat.cuh",
+  "src/ds4/ds4_pool.hpp",
+  "src/ds4/ds4_q6k.cuh",
+]
+authors   = ["itechmedic", "Project Maya contributors (mw00)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "cuda"
+sources   = ["src/src/ds4/ds4_kernels.cu", "src/src/ds4/ds4_iq.cu"]
+includes  = ["src/include", "src/include/maya/kernels", "src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-iq2+q2_k/f32.kestrel"
+api       = "maya::ds4 IQ expert launches (src/ds4/ds4_iq.cuh)"
+numeric   = "ggml block layouts, llama.cpp vecdotq arithmetic, fp32 accumulate"
+regime    = "decode and prompt sets of DeepSeek-V4.1 (n_embd 5120) and, since Kestrel, MiniMax-M3.1 routed experts"
+
+[[provides]]
+interface = "kernel-abi.kestrel-ds4/-/-"
+api       = "maya::ds4 device kernels (src/ds4/ds4_kernels.cuh)"
+numeric   = "no fast math: rotary angles, softmaxes and roundings follow the reference's F32 arithmetic (file header)"
+regime    = "decode windows (a window's token is blockIdx.y) and prompt chunks"
+
+[[requires]]
+module    = "kernel.kestrel.hip_compat"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of Maya's CMake build with MAYA_ENABLE_HIP (cmake/hip_backend.cmake): the .cu file is compiled as HIP through include/maya/hip_compat, for gfx1100 / gfx1201 / gfx1151 (validated) with the engine's include roots and ggml from third_party; it needs headers this harvest leaves in the origin, so it is not compiled here"

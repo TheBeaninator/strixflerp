@@ -1,0 +1,50 @@
+id        = "kernel.kyojin.hc_mix"
+kind      = "kernel"
+summary   = "Fused mHC hyper-connection mix and HyperHead collapse (2,432 lines), plus hc_mix_q8r.cuh: a one-pass int8 gated-residual mix for 2..4 rows (decode verify / MTP) that fetches each weight byte once instead of R times"
+why       = "hyper-connection models (DeepSeek V4.x, Hy4-flash, Qwen gated residual) mix streams every layer; the R-row int8 form is a verify-step lever. Where the shape would go: a hc.mix/-/f32 provider beside kernel.ds4.k53perf_rocm_halo_hc, kernel.ds4.k53perf_rocm_hc_sgemm, kernel.ds4.rocm_hc and 2 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: hc.mix/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (hc_mix_q8r.cuh), 2 changed (hc_mix.cu, hc_mix.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/hc_mix.cu",
+  "exllamav3/exllamav3_ext/hc_mix.cuh",
+  "exllamav3/exllamav3_ext/hc_mix_q8r.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/hc_mix.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "hc.mix/-/f32.kyojin"
+api       = "hc_mix.cu, hc_mix.cuh, hc_mix_q8r.cuh; kernels: hc_mix_partials_kernel, hc_mix_finalize_kernel, hc_mix_finalize_norm_kernel, hc_mix_norm_1pass_kernel, hc_pf_apply_mix_norm_1pass_kernel, gr_dots_kernel, gr_finalize_kernel, hc_apply_kernel, gr_dots_rows_kernel, gr_finalize_rows_kernel ..."
+numeric   = "fp32 mix math; int8 weights with scales in the q8r form"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.graph"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: hc_mix.cu"

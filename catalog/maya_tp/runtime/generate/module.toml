@@ -1,0 +1,132 @@
+id        = "runtime.maya_tp.generate"
+kind      = "runtime"
+summary   = "the generate program (src/program/generate.cpp, 10,336 lines): the strata generate / maya engine process loop that serves the HTTP front end, with the conversation cache and logits selection"
+why       = "the engine process the server talks to, including the TP2 rank-0 / rank-1 paths and slot handling; it shows how an engine exposes TP2 to a server"
+notes     = "Interface tag: serve.program-maya-tp/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/program/conv_cache.hpp",
+  "include/strata/program/logits_selection.hpp",
+  "src/program/generate.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "serve.program-maya-tp/-/-"
+api       = "main() of the generate program, conv_cache.hpp, logits_selection.hpp"
+numeric   = "no arithmetic of its own"
+regime    = "one host or one rank of two"
+
+[[requires]]
+module    = "format.maya_tp.gguf_reader"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_iq"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.elementwise"
+
+[[requires]]
+module    = "kernel.maya_tp.gdn"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.kvcache"
+
+[[requires]]
+module    = "kernel.maya_tp.moe_experts"
+
+[[requires]]
+module    = "kernel.maya_tp.qsa"
+
+[[requires]]
+module    = "kernel.maya_tp.rope"
+
+[[requires]]
+module    = "kernel.maya_tp.router"
+
+[[requires]]
+module    = "kernel.maya_tp.sampler"
+
+[[requires]]
+module    = "kernel.maya_tp.verify"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.core_session"
+
+[[requires]]
+module    = "runtime.maya_tp.expert_store"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_model"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_mtp"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_ngram"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_prompt_cache"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_tp_batch"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[[requires]]
+module    = "runtime.maya_tp.prefill_host"
+
+[[requires]]
+module    = "runtime.maya_tp.spec_controller"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_context"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_rdma"
+
+[[requires]]
+module    = "runtime.maya_tp.verify_mtp"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

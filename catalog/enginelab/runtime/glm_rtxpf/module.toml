@@ -1,0 +1,50 @@
+id        = "runtime.enginelab.glm_rtxpf"
+kind      = "runtime"
+summary   = "GLM RTX prefill route: 4 origin files under src/glm"
+why       = "prefill on an attached RTX PRO; where it would go: a new strixflerp interface runtime.hetero-route-enginelab-glm/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, runtime.hetero-route-enginelab-glm/-/-. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/glm/rtxpf/import/glm_dims.hpp",
+  "src/glm/rtxpf/import/glm_import.hpp",
+  "src/glm/rtxpf/import/glm_import_socket.hpp",
+  "src/glm/rtxpf/import/glm_state_layout.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/glm/rtxpf"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.hetero-route-enginelab-glm/-/-"
+api       = "src/glm/rtxpf/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.model_data"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

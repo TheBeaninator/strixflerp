@@ -1,0 +1,44 @@
+id        = "kernel.maya_tp.peer_probe"
+kind      = "kernel"
+summary   = "a peer-access probe program (src/kernels/peer_probe.cu): checks hipDeviceCanAccessPeer and times peer copies between local GPUs"
+why       = "the single-host multi-GPU check Maya runs before choosing a split; the counterpart of the two-host link checks in tools/tp2"
+notes     = "Interface tag: verify.peer-access/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/kernels/peer_probe.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/peer_probe.cu"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.peer-access/-/-"
+api       = "main() (peer_probe.cu)"
+numeric   = "copy timing"
+regime    = "several GPUs on one host"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.peer_probe.json"

@@ -1,0 +1,37 @@
+id        = "tool.fastasfuck.sim_qwen_quant"
+kind      = "tool"
+summary   = "fastasfuck's layer-by-layer BF16 to Q4/Q5/Q6/Q8 Pareto simulator in pure PyTorch for qwen4exp, with bit-identical fake quantizers (new in 1.1.0)"
+why       = "the shared base the other 1.1.0 calibration simulators import: its forward and held-out document define the KLD they report"
+notes     = "Files vs strixite: tools/sim_qwen_quant.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/sim_qwen_quant.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.sim-qwen-quant/-/-"
+api       = "tools/sim_qwen_quant.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

@@ -1,0 +1,39 @@
+id        = "tool.ciru_link.tbstream_diag"
+kind      = "tool"
+summary   = "zero-copy progress diagnostics for thunderbolt_stream: ring and slot progress counters in nhi.c and stream.c with their uapi query (0010, the largest patch of the series)"
+why       = "a stalled two-host exchange is only debuggable when both ends report where each ring stands; this is the instrumentation the series was qualified with"
+notes     = "Interface tag: none. Applies after patches 0001-0009. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = ["kernel/linux-7.2.2/0010-thunderbolt-stream-Add-zero-copy-progress-diagnostic.patch"]
+authors   = ["Jonathan Yates (jyatesdotdev/strix-rdma 06c1836)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only AND GPL-2.0-only WITH Linux-syscall-note"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-stream-progress/-/-"
+api       = "the progress-diagnostic ioctl and counters added to include/uapi/linux/thunderbolt-stream.h and include/linux/thunderbolt.h"
+numeric   = "counters only"
+regime    = "diagnostics, any ring"
+
+[[requires]]
+module    = "runtime.ciru_link.tbstream_zerocopy"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 7.2.2 tree on the island); python3 docs/harvest/harvest_ciru_link.py --patch-gate checks every patch against SHA256SUMS and parses it with git apply --numstat (gate/results/compile/ciru_link.patches.json)"

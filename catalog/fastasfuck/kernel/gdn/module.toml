@@ -1,0 +1,49 @@
+id        = "kernel.fastasfuck.gdn"
+kind      = "kernel"
+summary   = "fastasfuck's Gated DeltaNet mixer: the conv + gates front end and the delta-rule recurrence"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its gdn kernel file so a timing card can set it against kernel.strixite.gdn, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/gdn.hip mixer.gdn/- (2 changed lines against kernel.strixite.gdn kernels/gdn.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/gdn.hip", "kernels/gdn.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/gdn.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "mixer.gdn/-/bf16"
+api       = "strix::kernels::delta_rule, gdn_front (kernels/gdn.hpp)"
+numeric   = "derived from kernel.strixite.gdn (2 changed lines against kernel.strixite.gdn kernels/gdn.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.gdn: conv width 4 with a 3-row carried state; decode (T = 1) and chunked prompts give the same result"
+
+[[provides]]
+interface = "mixer.gdn/-/f32"
+api       = "strix::kernels::delta_rule, gdn_front (kernels/gdn.hpp)"
+numeric   = "derived from kernel.strixite.gdn (2 changed lines against kernel.strixite.gdn kernels/gdn.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.gdn: conv width 4 with a 3-row carried state; decode (T = 1) and chunked prompts give the same result"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.wmma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.gdn.json"

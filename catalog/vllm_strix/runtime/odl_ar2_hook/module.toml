@@ -1,0 +1,42 @@
+id        = "runtime.vllm_strix.odl_ar2_hook"
+kind      = "runtime"
+summary   = "the vLLM hook that sends decode-sized all-reduces in CudaCommunicator.all_reduce to odl_ar2 when DS4_ODL_AR2=1 and the size fits, everything else to RCCL"
+why       = "one branch in the communicator is all it takes to give small collectives their own transport; ported in intent from AlexKGwyn/ds4-vllm and re-anchored on the 73859fec pin (PATCHES 15)"
+notes     = "Interface tag: collective.allreduce-p2p (dispatch). Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh-odl-ar2-allreduce.patch"]
+authors   = [
+  "davidcanar (vllm-strix-halo)",
+  "AlexKGwyn/ds4-vllm (design of the DS4_ODL_AR2 hook and odl_mq, Apache-2.0)",
+]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "collective.allreduce-dispatch-size-split/-/-"
+api       = "patch to vllm/distributed/device_communicators/cuda_communicator.py; env DS4_ODL_AR2"
+numeric   = "n/a"
+regime    = "TP=2"
+
+[[requires]]
+module    = "runtime.vllm_strix.odl_ar2"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "patch: applies to vLLM 73859fec or OdinLink-Five 4534f58, neither of which is on the island; --side-gates parses each with git apply --numstat (gate/results/compile/vllm_strix.side-gates.json)"

@@ -1,0 +1,43 @@
+id        = "kernel.vllm_strix.moe_int4_gemv"
+kind      = "kernel"
+summary   = "decode-specialised MoE expert GEMVs for gfx1151 in one HIP unit, wvSplitK style (16 contiguous packed bytes a lane, one wave an output row): vsh_moe_int4_gemv on moe_align blocks (AWQ W4A16, symmetric uint4b8, group 128), vsh_moe_int4_direct (gate-up then down straight from the routed ids, no moe_align), vsh_moe_topk_sum, vsh_moe_swiglu, and five generations of the MXFP4 direct expert kernel (v1 to v5: row-pair passes, fp16 v_perm decode plus dot2, K-chunked staging)"
+why       = "routed MoE was 90 ms of a GLM-5.3 decode step on the stock Triton fused_moe_kernel_gptq_awq (70-80 GB/s, padded to BLOCK_SIZE_M) and 37 ms with this kernel (PATCHES 28.5); the MXFP4 v5 kernel took DeepSeek-V4 routed experts from ~99 ms a step to parity with the June stack (PATCHES 38-41). The shape, a skinny expert GEMV over routed ids that skips the align pass, is the decode MoE strixflerp needs for AWQ int4 and MXFP4 checkpoints"
+notes     = "Interface tag: moe.experts-decode (formats awq-int4 and mxfp4 are new to the catalogue). The prebuilt libvsh_moe_int4.so the origin ships is not harvested. The ctypes wrapper and its vLLM hooks are runtime.vllm_strix.moe_int4_dispatch and runtime.vllm_strix.mxfp4_direct. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh_moe_int4.hip"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/container/patches/vsh_moe_int4.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/awq-int4/bf16"
+api       = "extern \"C\" vsh_moe_int4_gemv, vsh_moe_int4_direct, vsh_moe_topk_sum, vsh_moe_swiglu (stream first, bf16 activations)"
+numeric   = "fp32 accumulate, bf16 out; symmetric uint4b8 with one scale per 128 K"
+regime    = "decode, <= 64 token-expert pairs, E=288 N=1024 (GLM-5.3-Flash TP=2)"
+
+[[provides]]
+interface = "moe.experts-decode/mxfp4/bf16"
+api       = "extern \"C\" vsh_moe_mxfp4_direct, vsh_moe_mxfp4_v2 .. v5 (phase 0 = w13, 1 = w2; mt / rp / rc tile knobs)"
+numeric   = "e2m1 values with e8m0 block scales decoded in-kernel, fp32 accumulate"
+regime    = "decode, E=256 (DeepSeek-V4-Flash TP=2), tuned on real routing dumps"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.vllm_strix.moe_int4_gemv.json"

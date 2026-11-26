@@ -1,0 +1,70 @@
+id        = "kernel.enginelab.moe_core_microscaled"
+kind      = "kernel"
+summary   = "microscaled (MX / NVFP4-style) grouped MoE: the R1 microscaled geometry, pipe and CUDA plans, NVFP4 activation rule and the INT4 layer policy"
+why       = "the low-bit expert path whose plans are backend-neutral (CUDA and HIP both bind them); where it would go: beside the catalogue's moe.experts-decode/nvfp4+mx/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.experts-decode/nvfp4+mx/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/moe_core/int4_layer_policy.hpp",
+  "src/moe_core/microscaled_r1.hpp",
+  "src/moe_core/microscaled_r1_cuda_plan.hpp",
+  "src/moe_core/microscaled_r1_geometry.hpp",
+  "src/moe_core/microscaled_r1_pipe_plan.hpp",
+  "src/moe_core/nvfp4_act_rule.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-decode/nvfp4+mx/f16-f32.enginelab"
+api       = "src/moe_core/microscaled_*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_moe"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

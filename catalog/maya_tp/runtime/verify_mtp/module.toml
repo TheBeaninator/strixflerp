@@ -1,0 +1,109 @@
+id        = "runtime.maya_tp.verify_mtp"
+kind      = "runtime"
+summary   = "the Strata-lineage speculative verify and MTP drivers (verify.cpp, mtp.cpp) with the MTP row helpers"
+why       = "the engine-agnostic verify window driver that the GLM, DeepSeek and MiniMax engines reuse; under TP2 rank 0 owns acceptance"
+notes     = "Interface tag: speculation.window-verify-driver/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/mtp.hpp",
+  "include/strata/core/verify.hpp",
+  "src/core/mtp.cpp",
+  "src/core/verify.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "speculation.window-verify-driver/-/-"
+api       = "include/strata/core/verify.hpp, mtp.hpp"
+numeric   = "greedy or keyed acceptance"
+regime    = "verify windows"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_iq"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.elementwise"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.hyperconn"
+
+[[requires]]
+module    = "kernel.maya_tp.kvcache"
+
+[[requires]]
+module    = "kernel.maya_tp.moe_experts"
+
+[[requires]]
+module    = "kernel.maya_tp.ple"
+
+[[requires]]
+module    = "kernel.maya_tp.qsa"
+
+[[requires]]
+module    = "kernel.maya_tp.quantize_act"
+
+[[requires]]
+module    = "kernel.maya_tp.rope"
+
+[[requires]]
+module    = "kernel.maya_tp.router"
+
+[[requires]]
+module    = "kernel.maya_tp.sampler"
+
+[[requires]]
+module    = "kernel.maya_tp.verify"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.core_session"
+
+[[requires]]
+module    = "runtime.maya_tp.expert_store"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[[requires]]
+module    = "runtime.maya_tp.spec_controller"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

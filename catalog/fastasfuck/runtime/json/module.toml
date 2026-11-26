@@ -1,0 +1,40 @@
+id        = "runtime.fastasfuck.json"
+kind      = "runtime"
+summary   = "fastasfuck's strict RFC 8259 JSON value, parser and printers, one of them reproducing Python json.dumps byte for byte"
+why       = "the chat template's tojson must print exactly as Python does for prompts to match, and the whole server speaks JSON through this file"
+notes     = "Files vs strixite: serve/json.cpp 7 changed lines against runtime.strixite.json at d19945e; serve/json.hpp 1 changed lines against runtime.strixite.json at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/json.cpp", "serve/json.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/json.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.json/-/-"
+api       = "strix::json::Value"
+numeric   = "derived from runtime.strixite.json (serve/json.cpp 7 changed lines against runtime.strixite.json at d19945e; serve/json.hpp 1 changed lines against runtime.strixite.json at d19945e); not compared here"
+regime    = "as runtime.strixite.json: host, self-contained"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve, executable convert_qwen4exp) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

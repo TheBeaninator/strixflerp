@@ -1,0 +1,99 @@
+id        = "serve.enginelab.serve_http"
+kind      = "serve"
+summary   = "the HTTP front (include/strix/serve, src/serve): HTTP server and client, the OpenAI-style API and session API, the Ollama API, health, request fields, JSON and media"
+why       = "strix-serve's wire surface; where it would go: beside the catalogue's serve.http/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: serve.http/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 8 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/serve/api.hpp",
+  "include/strix/serve/health.hpp",
+  "include/strix/serve/http_client.hpp",
+  "include/strix/serve/http_server.hpp",
+  "include/strix/serve/json.hpp",
+  "include/strix/serve/media.hpp",
+  "include/strix/serve/ollama.hpp",
+  "include/strix/serve/request_fields.hpp",
+  "include/strix/serve/session_api.hpp",
+  "src/serve/api.cpp",
+  "src/serve/health.cpp",
+  "src/serve/http_client.cpp",
+  "src/serve/http_server.cpp",
+  "src/serve/json.cpp",
+  "src/serve/media.cpp",
+  "src/serve/ollama.cpp",
+  "src/serve/request_fields.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/serve/api.cpp",
+  "src/src/serve/health.cpp",
+  "src/src/serve/http_client.cpp",
+  "src/src/serve/http_server.cpp",
+  "src/src/serve/json.cpp",
+  "src/src/serve/media.cpp",
+  "src/src/serve/ollama.cpp",
+  "src/src/serve/request_fields.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.http-enginelab/-/-"
+api       = "strix::serve http_server.hpp, api.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.power"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "serve.enginelab.serve_chat"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_constraint"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[[requires]]
+module    = "serve.enginelab.serve_tokenizer"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

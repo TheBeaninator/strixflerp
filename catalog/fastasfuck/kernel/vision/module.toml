@@ -1,0 +1,49 @@
+id        = "kernel.fastasfuck.vision"
+kind      = "kernel"
+summary   = "fastasfuck's vision tower kernels and its bias-add linear"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its vision kernel file so a timing card can set it against kernel.strixite.vision, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/vision.hip vision.tower-ops/bf16 (16 changed lines against kernel.strixite.vision kernels/vision.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/vision.hip", "kernels/vision.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/vision.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "vision.tower-ops/bf16/bf16"
+api       = "strix::kernels::vision_attn, vision_bias_add, vision_embedding_scatter, vision_gelu, vision_layernorm, vision_linear_bias, vision_merge_regroup, vision_pos_add, vision_rope_qk (kernels/vision.hpp)"
+numeric   = "derived from kernel.strixite.vision (16 changed lines against kernel.strixite.vision kernels/vision.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.vision: one image per forward; sequence capped at kMaxVisionSeq"
+
+[[provides]]
+interface = "vision.tower-ops/bf16/f32"
+api       = "strix::kernels::vision_attn, vision_bias_add, vision_embedding_scatter, vision_gelu, vision_layernorm, vision_linear_bias, vision_merge_regroup, vision_pos_add, vision_rope_qk (kernels/vision.hpp)"
+numeric   = "derived from kernel.strixite.vision (16 changed lines against kernel.strixite.vision kernels/vision.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.vision: one image per forward; sequence capped at kMaxVisionSeq"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.wmma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.vision.json"

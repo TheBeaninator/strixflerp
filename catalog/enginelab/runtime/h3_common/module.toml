@@ -1,0 +1,36 @@
+id        = "runtime.enginelab.h3_common"
+kind      = "runtime"
+summary   = "H3 common headers (src/h3/common): 3 origin files under src/h3"
+why       = "shared H3 pieces; where it would go: a new strixflerp interface kernel-abi.enginelab-h3/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kernel-abi.enginelab-h3/-/-. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["src/h3/common/alongside.hpp", "src/h3/common/fixture.hpp", "src/h3/common/png.hpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kernel-abi.enginelab-h3/-/-"
+api       = "src/h3/common/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

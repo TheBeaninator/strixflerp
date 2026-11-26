@@ -1,0 +1,46 @@
+id        = "tool.fastasfuck.convert_qwen4exp"
+kind      = "tool"
+summary   = "fastasfuck's convert_qwen4exp program: HF safetensors to weights.faf by --layout, with --mtp-from, --vision and, new in 1.1.0, --prebuilt DIR for GPTQ-calibrated tensors"
+why       = "the 1.1.0 release adds the --prebuilt flag here, the entry point to pair tools/quantize_qwen_gptq.py output with the converter"
+notes     = "Files vs strixite: tools/convert_qwen4exp.cpp 17 changed lines against tool.strixite.convert_qwen4exp at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/convert_qwen4exp.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/convert_qwen4exp.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.convert-qwen4exp/-/-"
+api       = "main (convert_qwen4exp)"
+numeric   = "derived from tool.strixite.convert_qwen4exp (tools/convert_qwen4exp.cpp 17 changed lines against tool.strixite.convert_qwen4exp at d19945e); not compared here"
+regime    = "as tool.strixite.convert_qwen4exp: host only"
+
+[[requires]]
+module    = "format.fastasfuck.convert_qwen4exp"
+
+[[requires]]
+module    = "runtime.fastasfuck.args"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable convert_qwen4exp) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

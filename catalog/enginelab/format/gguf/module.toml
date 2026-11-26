@@ -1,0 +1,56 @@
+id        = "format.enginelab.gguf"
+kind      = "format"
+summary   = "GGUF: reader and writer, ggml dequantisation and weight formats, IQ4_NL and IQ4_XS"
+why       = "the GGUF container every Strix Halo model ships in; where it would go: beside the catalogue's format.reader/gguf/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: format.reader/gguf/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/ggml_dequant.hpp",
+  "include/strix/gguf_reader.hpp",
+  "include/strix/gguf_writer.hpp",
+  "include/strix/hip_ggml_weight_formats.hpp",
+  "include/strix/iq4_nl.hpp",
+  "include/strix/iq4_xs.hpp",
+  "src/ggml_dequant.cpp",
+  "src/gguf_reader.cpp",
+  "src/iq4_nl.cpp",
+  "src/iq4_xs.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/ggml_dequant.cpp", "src/src/gguf_reader.cpp", "src/src/iq4_nl.cpp", "src/src/iq4_xs.cpp"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.reader-enginelab/gguf/-"
+api       = "src/gguf_reader.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.qwen_grids"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

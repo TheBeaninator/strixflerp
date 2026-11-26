@@ -1,0 +1,43 @@
+id        = "kernel.kyojin.fq_gemv"
+kind      = "kernel"
+summary   = "Cooperative decode GEMV for foreign-quant weights (M = 1..16): threads share a row's weight stream instead of each reading a whole dot product"
+why       = "decode GEMV bandwidth for GGUF weights. Where the shape would go: a linear.decode/gguf-iquant+q8/f32 provider beside kernel.ciru_inkling.glue_decode, kernel.ciru_inkling.quant_decode, kernel.ciru_iu4.q5 and 55 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: linear.decode/gguf-iquant+q8/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (fq_gemv.cu), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/foreign_quant/fq_gemv.cu"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/foreign_quant/fq_gemv.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/gguf-iquant+q8/f32.kyojin-fq-gemv"
+api       = "fq_gemv.cu; kernels: fq_gemv_kernel"
+numeric   = "fp32 accumulation"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.fq_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: fq_gemv.cu"

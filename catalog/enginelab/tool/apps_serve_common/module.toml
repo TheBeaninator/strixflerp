@@ -1,0 +1,109 @@
+id        = "tool.enginelab.apps_serve_common"
+kind      = "tool"
+summary   = "shared application headers: TP2 resident (launch environment snapshot of every lever, 8-field TP2 agreement and per-slot barrier), HTTP session completion and slot capacity, known-prefill reservation, PLE reclaim mapping and resident fallback, prefix-state cache identity, QSA input receipt, RTX state-import routes, runtime owner inventory and shared prefetch receipts, state cache stats, bitcalc measurement, deferred MoE receipt and the offline tuning build context template"
+why       = "the glue the resident TP2 servers share; where it would go: kept as a reference program or lab (serve.resident-tp2/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, serve.resident-tp2/-/-. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "apps/bitcalc_measurement.hpp",
+  "apps/deferred_moe_receipt.hpp",
+  "apps/http_session_completion.hpp",
+  "apps/http_slot_capacity.hpp",
+  "apps/known_prefill_reservation.hpp",
+  "apps/offline_tuning_build_context.hpp.in",
+  "apps/ple_reclaim_mapping.hpp",
+  "apps/ple_resident_fallback.hpp",
+  "apps/prefix_state_cache_identity.hpp",
+  "apps/qsa_input_receipt.hpp",
+  "apps/resident_tp2.hpp",
+  "apps/rtx_state_import_routes.hpp",
+  "apps/runtime_owner_inventory_receipt.hpp",
+  "apps/shared_prefetch_receipt.hpp",
+  "apps/state_cache_stats.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/apps", "src/apps"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.resident-tp2/-/-"
+api       = "apps/resident_tp2.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.moe_launch"
+
+[[requires]]
+module    = "kernel.enginelab.ple"
+
+[[requires]]
+module    = "kernel.enginelab.shared_expert"
+
+[[requires]]
+module    = "runtime.enginelab.ds41_rtx"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[[requires]]
+module    = "runtime.enginelab.qpf2k_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.qsa_plan"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[[requires]]
+module    = "tool.enginelab.apps_hip_decode"
+
+[[requires]]
+module    = "tool.enginelab.apps_qwen"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

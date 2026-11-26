@@ -1,0 +1,67 @@
+id        = "kernel.ciru_iu4.q5"
+kind      = "kernel"
+summary   = "CIRU's Q5_K kernels for the dense layers: a short-batch exact FP32 GEMM adapted from Gufo's SmallBatchKQuantExactFp32GEMMKernel (a 4-token kernel and an opt-in 5-token one, wave64), the hook that routes MMVQ to it, an isolated Q5_K wave64 prefill GEMM around the unmodified Gufo 990fdce WKQuantA8BlockedWmmaGEMMKernel excerpt, and the Q8_1 activation quantizer change that keeps the stored scale for both the dot and its offset correction"
+why       = "short batches of 4 and 5 tokens are the MTP verify shape (draft depth 3 and 4), and CIRU replaces MMVQ there with an exact FP32 path; the wave64 GEMM is a default-off experiment that carries a Gufo kernel into ggml, comparable with kernel.gufo.qwen_linear_prefill"
+notes     = "Interface tags by file: q5_short.cu linear.verify/gguf-q5k/f32; q5_short.cuh none; q5_wave64.cu linear.prefill/gguf-q5k/f32; q5_wave64.cuh none; donor_wkquant_kernel.cuh none; mmvq.cu linear.decode/gguf-kquant/f32; quantize.cu none (catalog/ciru_iu4/KERNELS.md has the table). Against the base pwilkin/llama.cpp f5daaa3c: added q5_short.cu, q5_short.cuh, q5_wave64.cu, q5_wave64.cuh, donor_wkquant_kernel.cuh; changed mmvq.cu +9 lines; quantize.cu +23 -4 lines. No timing was taken on the pod."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = [
+  "ggml/src/ggml-cuda/donor_wkquant_kernel.cuh",
+  "ggml/src/ggml-cuda/mmvq.cu",
+  "ggml/src/ggml-cuda/q5_short.cu",
+  "ggml/src/ggml-cuda/q5_short.cuh",
+  "ggml/src/ggml-cuda/q5_wave64.cu",
+  "ggml/src/ggml-cuda/q5_wave64.cuh",
+  "ggml/src/ggml-cuda/quantize.cu",
+]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+upstream  = "q5_short.cu adapts Gufo's SmallBatchKQuantExactFp32GEMMKernel and Q5_K decoder (MIT notice in the file); donor_wkquant_kernel.cuh is an unmodified excerpt of Gufo 990fdce45640 src/models/qwen/hip/kernels/prefill_quant_gemm.hpp (MIT)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/ggml/src/ggml-cuda/q5_short.cu",
+  "src/ggml/src/ggml-cuda/q5_wave64.cu",
+  "src/ggml/src/ggml-cuda/mmvq.cu",
+  "src/ggml/src/ggml-cuda/quantize.cu",
+]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+source_options = { "src/ggml/src/ggml-cuda/q5_short.cu" = ["-mwavefrontsize64", "-O2", "-fno-fast-math", "-DCIRU_Q5_SHORT_GFX1151=1"], "src/ggml/src/ggml-cuda/q5_wave64.cu" = ["-mwavefrontsize64"] }
+
+[[provides]]
+interface = "linear.verify/gguf-q5k/f32.ciru-short"
+api       = "q5_short.cu: q5_short_f32_t4_kernel, q5_short_f32_t5_kernel"
+numeric   = "Q5_K weights decoded exactly; q5_short multiplies in FP32 (exact FP32 GEMM, no activation quantization); the wave64 GEMM quantizes activations to Q8 with block sums (Gufo A8 format)"
+regime    = "q5_short: 4 or 5 tokens; wave64 GEMM: prefill, off by default"
+
+[[provides]]
+interface = "linear.prefill/gguf-q5k/f32.ciru-wave64"
+api       = "q5_wave64.cu: pack_q8_and_sums, zero_q8_tail"
+numeric   = "Q5_K weights decoded exactly; q5_short multiplies in FP32 (exact FP32 GEMM, no activation quantization); the wave64 GEMM quantizes activations to Q8 with block sums (Gufo A8 format)"
+regime    = "q5_short: 4 or 5 tokens; wave64 GEMM: prefill, off by default"
+
+[[provides]]
+interface = "linear.decode/gguf-kquant/f32.ciru-mmvq"
+api       = "mmvq.cu: host path"
+numeric   = "Q5_K weights decoded exactly; q5_short multiplies in FP32 (exact FP32 GEMM, no activation quantization); the wave64 GEMM quantizes activations to Q8 with block sums (Gufo A8 format)"
+regime    = "q5_short: 4 or 5 tokens; wave64 GEMM: prefill, off by default"
+
+[[requires]]
+module    = "kernel.ciru_iu4.cuda_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_iu4.q5.json"

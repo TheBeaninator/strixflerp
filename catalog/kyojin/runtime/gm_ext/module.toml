@@ -1,0 +1,46 @@
+id        = "runtime.kyojin.gm_ext"
+kind      = "runtime"
+summary   = "The small JIT-built extension beside exllamav3_ext (gm_bindings.cpp binds the gm_* kernels; __init__.py builds or loads it, get() returns None when absent)"
+why       = "how a side extension ships kernels without rebuilding the main one. Where the shape would go: no catalogue interface matches; it stays a reference for the host code behind the flerp ABI, kept beside the module it serves"
+notes     = "Interface tag: none. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (__init__.py, gm_bindings.cpp), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/gm_ext/__init__.py", "exllamav3/gm_ext/gm_bindings.cpp"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/exllamav3/gm_ext/gm_bindings.cpp"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.kyojin-gm-ext/-/-"
+api       = "__init__.py, gm_bindings.cpp"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module    = "kernel.kyojin.gm_dense_q8"
+
+[[requires]]
+module    = "kernel.kyojin.gm_moe"
+
+[[requires]]
+module    = "kernel.kyojin.gm_router"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: gm_bindings.cpp"

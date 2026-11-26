@@ -1,0 +1,50 @@
+id        = "kernel.enginelab.moe_prefill_launch"
+kind      = "kernel"
+summary   = "MoE prefill launch pieces: prefill commit, route, small, tiers and tile64 bodies, tile64 down body and the fast-prefill router"
+why       = "the Qwen MoE prompt path; where it would go: beside the catalogue's moe.experts-prefill/-/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.experts-prefill/-/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/hip_moe_prefill_commit.inc",
+  "src/hip_moe_prefill_route.inc",
+  "src/hip_moe_prefill_small.inc",
+  "src/hip_moe_prefill_tiers.inc",
+  "src/hip_moe_prefill_tile64.inc",
+  "src/hip_moe_tile64_down_body.inc",
+  "src/hip_router_fast_prefill.inc",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.experts-prefill/-/f16-f32.enginelab-launch"
+api       = "hip_moe_prefill_*.inc"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_prefill"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

@@ -1,0 +1,36 @@
+id        = "kernel.ds4.glm53_vision"
+kind      = "kernel"
+summary   = "GLM-5.3 vision tower operations shared by CUDA and ROCm: attention, bias, layernorm + GELU, QKV RoPE, reorder, RMS, HC scatter, SwiGLU bias"
+why       = "the GLM-5.3 image path on the GPU"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["ds4_glm53_vision_gpu.cuh"]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "vision.tower-ops/bf16/f32.ds4-glm53"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.rocm_backend"

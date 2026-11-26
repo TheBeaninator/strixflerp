@@ -1,0 +1,63 @@
+id        = "runtime.maya_tp.ds4_cpu"
+kind      = "runtime"
+summary   = "maya-ds4's CPU lane: GGUF experts on the CPU (ds4_gguf_cpu), the i-quant CPU rows (ds4_iq_cpu), EXL3 on the CPU (ds4_cpu_exl3), row preparation (ds4_cpu_prepare_rows) and the host all-reduce (ds4_host_ar)"
+why       = "DeepSeek experts on Zen 5 cores, and a host-side all-reduce for single-host multi-GPU, both reusable outside maya-ds4"
+notes     = "Interface tag: moe.experts-decode-cpu/gguf-iq+exl3/f32.maya-tp-ds4. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "src/ds4/ds4_cpu_exl3.hpp",
+  "src/ds4/ds4_cpu_prepare_rows.hpp",
+  "src/ds4/ds4_gguf_cpu.cpp",
+  "src/ds4/ds4_gguf_cpu.hpp",
+  "src/ds4/ds4_host_ar.cpp",
+  "src/ds4/ds4_iq_cpu.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode-cpu/gguf-iq+exl3/f32.maya-tp-ds4"
+api       = "ds4 CPU lane"
+numeric   = "FP32"
+regime    = "decode on the CPU"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_iq"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_store"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

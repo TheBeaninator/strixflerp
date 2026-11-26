@@ -1,0 +1,47 @@
+id        = "tool.vllm_strix.trace_analysis"
+kind      = "tool"
+summary   = "torch-profiler trace analysis: device to host copies (pipeline drains), where a decode step's wall time goes, kernel-class share per step / token, blocking host ops, DS4 decode and prefill GPU time by kernel family, which host op launched a kernel (correlation ids), and two live hooks for indexer selection"
+why       = "every PATCHES section starts from one of these readings (step wall vs GPU busy, top kernels, host self-time); they turn a trace into the one number that decides the next change"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "scripts/ds4-trace-agg.py",
+  "scripts/ds4prefill.py",
+  "scripts/ds4trace.py",
+  "scripts/ds4who.py",
+  "scripts/trace_dtoh.py",
+  "scripts/trace_gap_analyze.py",
+  "scripts/trace_share.py",
+  "scripts/trace_sync.py",
+  "scripts/vsh_kpl_hook.py",
+  "scripts/vsh_kpl_hook4.py",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.trace-analysis/-/-"
+api       = "python over chrome-trace JSON"
+numeric   = "n/a"
+regime    = "offline"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

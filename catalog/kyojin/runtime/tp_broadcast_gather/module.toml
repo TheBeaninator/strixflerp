@@ -1,0 +1,46 @@
+id        = "runtime.kyojin.tp_broadcast_gather"
+kind      = "runtime"
+summary   = "Broadcast and gather collectives over pinned host memory with per-block stage flags"
+why       = "the TP backend's other collectives. Where the shape would go: a collective.allgather-tcp/-/f32 provider beside runtime.strixfold.coll_tcp, runtime.strixfold_tp4.coll_tcp, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: collective.allgather-tcp/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 2 changed (broadcast.cu, gather.cu). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/parallel/broadcast.cu", "exllamav3/exllamav3_ext/parallel/gather.cu"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/parallel/broadcast.cu", "src/exllamav3/exllamav3_ext/parallel/gather.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.allgather-tcp/-/f32.kyojin-pinned"
+api       = "broadcast.cu, gather.cu; kernels: pg_broadcast_kernel, pg_broadcast_ll_kernel, pg_gather_kernel, pg_gather_small_kernel"
+numeric   = "byte copies"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.tp_context"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: broadcast.cu, gather.cu"

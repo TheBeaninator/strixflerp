@@ -1,0 +1,123 @@
+id        = "runtime.maya_tp.core_session"
+kind      = "runtime"
+summary   = "the Strata-lineage engine core: one token through all layers with per-layer graphs (session), the composed GDN layer (layer), the graph registry, the shape checks (layout), the dense-weight loader (weights), native dense and head layers, the device arena (device.cu) and the pinned host arena with the parallel expert load (pinned.cu)"
+why       = "the executor skeleton every Maya engine reuses; the per-layer graph and arena rules carry to strixflerp executors"
+notes     = "Interface tag: executor.strata-core/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/device.hpp",
+  "include/strata/core/graph.hpp",
+  "include/strata/core/layer.hpp",
+  "include/strata/core/layout.hpp",
+  "include/strata/core/native_dense.hpp",
+  "include/strata/core/native_head.hpp",
+  "include/strata/core/pinned.hpp",
+  "include/strata/core/session.hpp",
+  "include/strata/core/weights.hpp",
+  "src/core/device.cu",
+  "src/core/graph.cpp",
+  "src/core/layer.cpp",
+  "src/core/layout.cpp",
+  "src/core/native_dense.cpp",
+  "src/core/native_head.cpp",
+  "src/core/pinned.cu",
+  "src/core/session.cpp",
+  "src/core/weights.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.strata-core/-/-"
+api       = "strata::core::Session, Layer, GraphRegistry, Weights (include/strata/core/)"
+numeric   = "per-kernel numerics"
+regime    = "one host"
+
+[[requires]]
+module    = "format.maya_tp.gguf_reader"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "kernel.maya_tp.elementwise"
+
+[[requires]]
+module    = "kernel.maya_tp.flash_attn"
+
+[[requires]]
+module    = "kernel.maya_tp.gdn"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.hyperconn"
+
+[[requires]]
+module    = "kernel.maya_tp.kvcache"
+
+[[requires]]
+module    = "kernel.maya_tp.moe_experts"
+
+[[requires]]
+module    = "kernel.maya_tp.ple"
+
+[[requires]]
+module    = "kernel.maya_tp.qsa"
+
+[[requires]]
+module    = "kernel.maya_tp.quantize_act"
+
+[[requires]]
+module    = "kernel.maya_tp.rope"
+
+[[requires]]
+module    = "kernel.maya_tp.router"
+
+[[requires]]
+module    = "kernel.maya_tp.s_gemv"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.expert_store"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[[requires]]
+module    = "runtime.maya_tp.spec_controller"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

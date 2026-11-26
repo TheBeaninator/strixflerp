@@ -1,0 +1,52 @@
+id        = "runtime.fastasfuck.vision_request"
+kind      = "runtime"
+summary   = "fastasfuck's serving side of image prompts: base64 data URLs, image pad expansion, mRoPE positions and content-derived cache ids"
+why       = "it lets image prompts share the prompt cache safely: the same image bytes hit, different images miss"
+notes     = "Files vs strixite: serve/vision_request.cpp 11 changed lines against runtime.strixite.vision_request at d19945e; serve/vision_request.hpp 5 changed lines against runtime.strixite.vision_request at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/vision_request.cpp", "serve/vision_request.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/vision_request.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "vision.request/-/-"
+api       = "strix::vision::{prepare_images, plan_vision_prompt, load_vision_config, ServedVision}"
+numeric   = "derived from runtime.strixite.vision_request (serve/vision_request.cpp 11 changed lines against runtime.strixite.vision_request at d19945e; serve/vision_request.hpp 5 changed lines against runtime.strixite.vision_request at d19945e); not compared here"
+regime    = "as runtime.strixite.vision_request: host"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.engine"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.vision_preprocess"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

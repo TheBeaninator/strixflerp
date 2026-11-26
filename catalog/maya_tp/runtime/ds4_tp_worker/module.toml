@@ -1,0 +1,47 @@
+id        = "runtime.maya_tp.ds4_tp_worker"
+kind      = "runtime"
+summary   = "TP2 delta: DeepSeek TP2's rank-1 side (ds4_tp_worker.hpp, ds4_tp_worker_state.hpp, ds4_tp_model_worker.hpp): the worker loop that receives control frames, its state machine and the model worker that runs the matching forward on its slices"
+why       = "the follower half of a two-rank engine; the state machine mirrors the controller's so either side can detect a broken pair"
+notes     = "Interface tag: sched.tp2-worker-ds4/-/-. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/ds4/ds4_tp_model_worker.hpp", "src/ds4/ds4_tp_worker.hpp", "src/ds4/ds4_tp_worker_state.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "sched.tp2-worker-ds4/-/-"
+api       = "strata::ds4::tp2::Worker, WorkerState, ModelWorker"
+numeric   = "no arithmetic of its own"
+regime    = "rank 1 of 2"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_batch"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_control"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside the modules that include it"

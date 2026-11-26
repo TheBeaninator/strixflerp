@@ -1,0 +1,130 @@
+id        = "executor.fastasfuck.qwen4exp"
+kind      = "executor"
+summary   = "fastasfuck's Qwen3.8-Flash-Next engine: loads weights.faf and the n-gram table, runs 4 hyper-connected streams through 36 GDN and 12 QSA attention layers with PLE and a top-10-of-512 MoE, chunked prefill, MTP drafts and batched verify"
+why       = "the forward that ties every kernel family together; set against executor.strixite.qwen4exp it shows what the fork changed in scheduling and precision"
+notes     = "Files vs strixite: runtime/qwen4exp.cpp 2088 changed lines against executor.strixite.qwen4exp at d19945e; runtime/qwen4exp.hpp 268 changed lines against executor.strixite.qwen4exp at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/qwen4exp.cpp", "runtime/qwen4exp.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/qwen4exp.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.forward/qwen4exp/bf16"
+api       = "strix::Qwen4ExpModel, strix::Qwen4ExpSession"
+numeric   = "derived from executor.strixite.qwen4exp (runtime/qwen4exp.cpp 2088 changed lines against executor.strixite.qwen4exp at d19945e; runtime/qwen4exp.hpp 268 changed lines against executor.strixite.qwen4exp at d19945e); not compared here"
+regime    = "as executor.strixite.qwen4exp: weights.strixw resident on the device; decode, chunked prefill, MTP verify, batched runs"
+
+[[requires]]
+module    = "executor.fastasfuck.vision_tower"
+
+[[requires]]
+module    = "format.fastasfuck.faf_loader"
+
+[[requires]]
+module    = "format.fastasfuck.q4_from_q8"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.attention_gqa"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.embedding"
+
+[[requires]]
+module    = "kernel.fastasfuck.gdn"
+
+[[requires]]
+module    = "kernel.fastasfuck.hc"
+
+[[requires]]
+module    = "kernel.fastasfuck.hc_wmma"
+
+[[requires]]
+module    = "kernel.fastasfuck.linear"
+
+[[requires]]
+module    = "kernel.fastasfuck.logits_bias"
+
+[[requires]]
+module    = "kernel.fastasfuck.logits_topk"
+
+[[requires]]
+module    = "kernel.fastasfuck.moe_grouped"
+
+[[requires]]
+module    = "kernel.fastasfuck.moe_router"
+
+[[requires]]
+module    = "kernel.fastasfuck.mtp_pick"
+
+[[requires]]
+module    = "kernel.fastasfuck.norm"
+
+[[requires]]
+module    = "kernel.fastasfuck.ple"
+
+[[requires]]
+module    = "kernel.fastasfuck.qsa_indexer"
+
+[[requires]]
+module    = "kernel.fastasfuck.residual"
+
+[[requires]]
+module    = "kernel.fastasfuck.rope"
+
+[[requires]]
+module    = "kernel.fastasfuck.swiglu"
+
+[[requires]]
+module    = "kernel.fastasfuck.vision"
+
+[[requires]]
+module    = "runtime.fastasfuck.bf16"
+
+[[requires]]
+module    = "runtime.fastasfuck.log"
+
+[[requires]]
+module    = "runtime.fastasfuck.ngram_rows"
+
+[[requires]]
+module    = "runtime.fastasfuck.ngram_table"
+
+[[requires]]
+module    = "runtime.fastasfuck.paged_state"
+
+[[requires]]
+module    = "runtime.fastasfuck.ple_hash"
+
+[[requires]]
+module    = "runtime.fastasfuck.qweight"
+
+[[requires]]
+module    = "runtime.fastasfuck.trace"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_model) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

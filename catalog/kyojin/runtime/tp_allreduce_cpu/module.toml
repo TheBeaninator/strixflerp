@@ -1,0 +1,58 @@
+id        = "runtime.kyojin.tp_allreduce_cpu"
+kind      = "runtime"
+summary   = "CPU-assisted all-reduce of the native tensor-parallel backend: devices stage 128 KB wire chunks to pinned memory, a worker pool of the CPU-reduce process accumulates (AVX2 / AVX-512 BF16 adds) and the result flows back"
+why       = "tensor parallelism without peer access (the multi-device split). Where the shape would go: a collective.allreduce-p2p/-/bf16+f32 provider beside kernel.radiance.halo_allreduce, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: collective.allreduce-p2p/-/bf16+f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 4 changed (all_reduce_cpu.cu, all_reduce_cpu_avx2.cpp, all_reduce_cpu_avx2.h, all_reduce_cpu_avx512.cpp). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/parallel/all_reduce_cpu.cu",
+  "exllamav3/exllamav3_ext/parallel/all_reduce_cpu_avx2.cpp",
+  "exllamav3/exllamav3_ext/parallel/all_reduce_cpu_avx2.h",
+  "exllamav3/exllamav3_ext/parallel/all_reduce_cpu_avx512.cpp",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/exllamav3/exllamav3_ext/parallel/all_reduce_cpu.cu",
+  "src/exllamav3/exllamav3_ext/parallel/all_reduce_cpu_avx2.cpp",
+  "src/exllamav3/exllamav3_ext/parallel/all_reduce_cpu_avx512.cpp",
+]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.allreduce-p2p/-/bf16+f32.kyojin-cpu"
+api       = "all_reduce_cpu.cu, all_reduce_cpu_avx2.cpp, all_reduce_cpu_avx2.h, all_reduce_cpu_avx512.cpp; kernels: pg_all_reduce_cpu_kernel, pg_all_reduce_cpu_send_kernel, pg_all_reduce_cpu_recv_kernel"
+numeric   = "bf16 / fp32 adds"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.cpu_moe_mul1"
+
+[[requires]]
+module    = "runtime.kyojin.tp_context"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: all_reduce_cpu.cu, all_reduce_cpu_avx2.cpp, all_reduce_cpu_avx512.cpp"

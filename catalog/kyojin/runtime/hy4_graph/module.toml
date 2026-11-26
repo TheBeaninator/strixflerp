@@ -1,0 +1,44 @@
+id        = "runtime.kyojin.hy4_graph"
+kind      = "runtime"
+summary   = "Hy4 decode step as one HIP graph per context bucket, multi-session replay (rows of several sessions in one replay), the host-sync-free driver, context buckets, per-session ops, fault localisation and lever hit counters"
+why       = "the ~4,000 small launches of the eager step become one replay. Where the shape would go: an executor.device-graph/hy4-flash/gguf provider beside kernel.gufo.ds4_backend, through a port of the python / Triton logic"
+notes     = "Interface tag: executor.device-graph/hy4-flash/gguf. Against the base turboderp-org/exllamav3 8c593e4e: 7 added (graph_bucket.py, lever_fires.py, mu_debug.py, mu_slots.py, step_graph.py, step_mu.py) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/loader/graph_bucket.py",
+  "exllamav3/loader/lever_fires.py",
+  "exllamav3/loader/mu_debug.py",
+  "exllamav3/loader/mu_slots.py",
+  "exllamav3/loader/step_graph.py",
+  "exllamav3/loader/step_mu.py",
+  "exllamav3/loader/step_nosync.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.device-graph/hy4-flash/gguf.kyojin"
+api       = "graph_bucket.py, lever_fires.py, mu_debug.py, mu_slots.py, step_graph.py, step_mu.py, step_nosync.py"
+numeric   = "n/a"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

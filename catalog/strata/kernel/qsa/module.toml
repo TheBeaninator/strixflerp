@@ -1,0 +1,114 @@
+id        = "kernel.strata.qsa"
+kind      = "kernel"
+summary   = "the QSA (sparse full-attention) layers: the reference cache, indexer, top-k and attention (qsa), split-K decode attention over the selected cells straight from the KV pools (qsa_decode_attn), the prompt path's attention on matrix cores (qsa_prompt_attn), the indexer's block scores and radix top-k for many queries at long context (qsa_select), and llama.cpp-pinned pieces: the QSA norms and gate, the indexer key cache (pooling, norm, IMRoPE), the block scores and the short-context F16 flash attention"
+why       = "QSA is the attention of Qwen3.8-Flash-Next's 12 full-attention layers and decides long-context decode and prefill cost; the indexer, top-k and sparse attention are the ops of strixite's, crucible's and gufo's qsa modules"
+notes     = "Interface tags by file: qsa.cu attn.qsa-indexer/-/f32; qsa_decode_attn.cu attn.softmax-gqa/kv-f16+i8+q4_0/f32; qsa_prompt_attn.cu attn.softmax-gqa/kv-f16+i8+q4_0/f32; qsa_select.cu attn.indexer-topk/-/f32; native_qsa.cu norm.rmsnorm/-/f32; native_qsa_indexer.cu attn.qsa-indexer/-/f32; native_qsa_score.cu attn.indexer-score/-/f32; native_flash_attn.cu attn.softmax-gqa/kv-f16/f32. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/native_flash_attn.hpp",
+  "include/strata/kernels/native_qsa.hpp",
+  "include/strata/kernels/native_qsa_indexer.hpp",
+  "include/strata/kernels/native_qsa_score.hpp",
+  "include/strata/kernels/qsa.hpp",
+  "include/strata/kernels/qsa_decode_attn.hpp",
+  "include/strata/kernels/qsa_prompt_attn.hpp",
+  "include/strata/kernels/qsa_select.hpp",
+  "src/kernels/cuda/native_flash_attn.cu",
+  "src/kernels/cuda/native_qsa.cu",
+  "src/kernels/cuda/native_qsa_indexer.cu",
+  "src/kernels/cuda/native_qsa_score.cu",
+  "src/kernels/cuda/qsa.cu",
+  "src/kernels/cuda/qsa_decode_attn.cu",
+  "src/kernels/cuda/qsa_prompt_attn.cu",
+  "src/kernels/cuda/qsa_select.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/qsa.cu",
+  "src/src/kernels/cuda/qsa_decode_attn.cu",
+  "src/src/kernels/cuda/qsa_prompt_attn.cu",
+  "src/src/kernels/cuda/qsa_select.cu",
+  "src/src/kernels/cuda/native_qsa.cu",
+  "src/src/kernels/cuda/native_qsa_indexer.cu",
+  "src/src/kernels/cuda/native_qsa_score.cu",
+  "src/src/kernels/cuda/native_flash_attn.cu",
+]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32.strata-ref"
+api       = "strata::kernels::kv_append, kv_gather, indexer_key_append, qsa_index, topk_512, qsa_attend (src/kernels/cuda/qsa.cu)"
+numeric   = "FP32 scores (an FP64 block a row in qsa_index), FP16 K / V pools"
+regime    = "decode; 24 query heads, 2 KV heads, head 256"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+i8+q4_0/f32.strata-decode"
+api       = "strata::kernels::qsa_decode_attn_step, qsa_decode_attn_batch (src/kernels/cuda/qsa_decode_attn.cu)"
+numeric   = "FP32 accumulation; K / V decoded per format (Q4_0 V rotated back by the Hadamard transform)"
+regime    = "decode and verify windows over about 2,051 selected cells at 4K"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+i8+q4_0/f32.strata-prompt"
+api       = "strata::kernels::qsa_prompt_attn_batch (src/kernels/cuda/qsa_prompt_attn.cu)"
+numeric   = "FP16 / INT8 K and V; the decode kernel stays the reference"
+regime    = "prefill chunks; refuses a device without the matrix-core path"
+
+[[provides]]
+interface = "attn.indexer-topk/-/f32.strata"
+api       = "strata::kernels::qsa_block_scores(_tc), qsa_block_topk(_cluster, _ref) (src/kernels/cuda/qsa_select.cu)"
+numeric   = "FP32 scores; the radix select is exact on the key bits"
+regime    = "prefill and long-context decode; capacity up to 262,144 cells"
+
+[[provides]]
+interface = "norm.rmsnorm/-/f32.strata-native-qsa"
+api       = "strata::kernels::native_qsa_rms_norm_weighted, native_qsa_rms_norm_grouped, native_qsa_gate_apply (src/kernels/cuda/native_qsa.cu)"
+numeric   = "FP32; fast-math on CUDA"
+regime    = "decode"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32.strata-native-keys"
+api       = "strata::kernels::native_qsa_indexer_append(_batch, _steps) (src/kernels/cuda/native_qsa_indexer.cu)"
+numeric   = "F16 raw-key cache, F32 pooled keys"
+regime    = "single sequence; idx_dim 128, idx_block 4, n_rot 64"
+
+[[provides]]
+interface = "attn.indexer-score/-/f32.strata-native"
+api       = "strata::kernels::native_qsa_score (src/kernels/cuda/native_qsa_score.cu)"
+numeric   = "F32; the padded tile as in the pinned CUDA path"
+regime    = "single text sequence, four-cell blocks, top-k budget 2048"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.strata-native-fa"
+api       = "strata::kernels::native_flash_attn_short_step (src/kernels/cuda/native_flash_attn.cu)"
+numeric   = "F16 K / V, F32 q and output, scale 1/16, no ALiBi, softcap or sink"
+regime    = "short contexts only, chosen explicitly"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[[requires]]
+module    = "kernel.strata.kvcache"
+
+[[requires]]
+module    = "kernel.strata.rope"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.qsa.json"

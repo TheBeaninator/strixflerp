@@ -1,0 +1,74 @@
+id        = "kernel.kyojin.gmmq"
+kind      = "kernel"
+summary   = "Routed (MoE) HIP MMQ for GGUF Q4_K / Q5_K / Q5_1 / Q8_0: out[t * n_used + s] = dequant(W[ids[t, s]]) @ x[t] with q8_1 activations, adapted from Gufo 07e1191's mmq (itself llama.cpp 5c0e946 mmq / mmid / quantize), one mul_mat_q_case per translation unit, with a torch binding"
+why       = "GGUF MoE prefill (Hy4-flash, generic GGUF MoE); compare the gufo mmq it came from. Where the shape would go: a moe.experts-prefill/gguf-kquant/q8_1-f32 provider beside kernel.maya_tp.prefill_moe_mmq, kernel.strata.prefill_moe_ggml, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-prefill/gguf-kquant/q8_1-f32. Against the base turboderp-org/exllamav3 8c593e4e: 25 added (common.hpp, ggml-common.h, ggml-hip.h, ggml-impl.h, ggml.h, gmmq.h) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/rocm/gmmq/common.hpp",
+  "exllamav3/exllamav3_ext/rocm/gmmq/ggml-common.h",
+  "exllamav3/exllamav3_ext/rocm/gmmq/ggml-hip.h",
+  "exllamav3/exllamav3_ext/rocm/gmmq/ggml-impl.h",
+  "exllamav3/exllamav3_ext/rocm/gmmq/ggml.h",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq.h",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq_api.h",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case.cuh",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case_q4_k.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case_q5_1.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case_q5_k.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case_q8_0.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq_moe.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/gmmq_torch.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/mma.hpp",
+  "exllamav3/exllamav3_ext/rocm/gmmq/mmid.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/mmid.hpp",
+  "exllamav3/exllamav3_ext/rocm/gmmq/mmq.hpp",
+  "exllamav3/exllamav3_ext/rocm/gmmq/qfn_ggml_stubs.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/qfn_ggml_stubs.h",
+  "exllamav3/exllamav3_ext/rocm/gmmq/qfn_mmq_prelude.h",
+  "exllamav3/exllamav3_ext/rocm/gmmq/quantize.cu",
+  "exllamav3/exllamav3_ext/rocm/gmmq/quantize.hpp",
+  "exllamav3/exllamav3_ext/rocm/gmmq/vecdotq.hpp",
+  "exllamav3/exllamav3_ext/rocm/gmmq/vendors/hip.h",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+upstream  = "adapted from Gufo 07e1191 src/models/qwen38_flash_next/kernels/rocm/mmq (MIT), itself from llama.cpp 5c0e946 ggml-cuda mmq / mmid / quantize (MIT); every file keeps its licence header"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case_q4_k.cu",
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case_q5_1.cu",
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case_q5_k.cu",
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/gmmq_case_q8_0.cu",
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/gmmq_moe.cu",
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/gmmq_torch.cu",
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/mmid.cu",
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/qfn_ggml_stubs.cu",
+  "src/exllamav3/exllamav3_ext/rocm/gmmq/quantize.cu",
+]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-kquant/q8_1-f32.kyojin-gmmq"
+api       = "common.hpp, ggml-common.h, ggml-hip.h, ggml-impl.h, ggml.h, gmmq.h, gmmq_api.h, gmmq_case.cuh ...; kernels: mm_ids_rank_kernel, mm_ids_bounds_kernel, mm_ids_scatter_kernel, quantize_q8_1, quantize_q8_1_by_expert, quantize_mmq_q8_1"
+numeric   = "q8_1 activations, integer MMA, fp32 out"
+regime    = "prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: gmmq_case_q4_k.cu, gmmq_case_q5_1.cu, gmmq_case_q5_k.cu, gmmq_case_q8_0.cu, gmmq_moe.cu, gmmq_torch.cu ..."

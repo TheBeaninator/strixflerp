@@ -1,0 +1,74 @@
+id        = "serve.ciru_link.console"
+kind      = "serve"
+summary   = "the embedded operator console and peer agent (internal/ui): a loopback HTTP console on 7749 with a static page (index.html, app.js, styles.css) for transport state, bounded link tests, model PP/TG and draft acceptance read from one frontend's /v1/models and /metrics; a USB4-bound agent on 7748 behind a peer token; and the optional Launch control that starts the packaged GLM TP2 pair rank 0 then rank 1, checks context readiness and rolls back on failure"
+why       = "a two-host serving pair is one service with two halves; the paired load / unload with readiness checks and rollback is the shape a pod TP2 keeper needs, and the metrics reading avoids double-counting mirrored ranks"
+notes     = "Interface tag: none (serve.gufo.http and flerp's servers are model frontends, not pair consoles). The console's static/assets (IBM Plex fonts, Ciru emblem, logo and favicon) are not harvested: the fonts' OFL licence text is not in the tree and the images are Ciru branding; //go:embed static still compiles without them. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "internal/ui/agent.go",
+  "internal/ui/console.go",
+  "internal/ui/launch.go",
+  "internal/ui/launch_test.go",
+  "internal/ui/model.go",
+  "internal/ui/model_test.go",
+  "internal/ui/static/app.js",
+  "internal/ui/static/index.html",
+  "internal/ui/static/styles.css",
+  "internal/ui/status_helper.go",
+  "internal/ui/ui.go",
+  "internal/ui/ui_test.go",
+]
+authors   = ["Ciru (ciru-ai)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "go"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.operator-console-usb4/-/-"
+api       = "ui.NewConsole, Console.ServeHTTP, ConsoleConfig (internal/ui/console.go, ui.go)"
+numeric   = "n/a"
+regime    = "loopback 127.0.0.1:7749"
+
+[[provides]]
+interface = "serve.peer-agent-usb4/-/-"
+api       = "ui.NewAgent, Agent.ServeHTTP, AgentConfig (internal/ui/agent.go)"
+numeric   = "n/a"
+regime    = "binds the USB4 address only, TCP 7748, token-protected"
+
+[[provides]]
+interface = "serve.tp2-pair-control/-/-"
+api       = "ui.RunModelNode and the Launch handlers (internal/ui/launch.go, model.go, status_helper.go)"
+numeric   = "n/a"
+regime    = "the packaged GLM5.3-Flash-CIRU-STRIX-IU4 pair, fixed complementary ranks, scoped root-owned helpers"
+
+[[requires]]
+module    = "runtime.ciru_link.nhi_endpoint"
+
+[[requires]]
+module    = "runtime.ciru_link.usb4net"
+
+[[requires]]
+module    = "tool.ciru_link.linktest"
+
+[[requires]]
+module    = "tool.ciru_link.prereq"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/serve.ciru_link.console.json"
+reason    = "go: built by the Go gate, not gate/compile/run.py (python3 docs/harvest/harvest_ciru_link.py --go-gate on control-node CPU: go vet, the tests compiled without running, the static binary built)"

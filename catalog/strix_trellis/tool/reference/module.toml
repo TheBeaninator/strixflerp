@@ -1,0 +1,52 @@
+id        = "tool.strix_trellis.reference"
+kind      = "tool"
+summary   = "NumPy CPU reference and loader: exact trellis decode of the 3inst, mcg and mul1 codebooks at integer rates of 1 to 8 bits (and 1.5 / 2.5 / 3.5 bits for mul1), a reference matmul with every rounding stage explicit (input scale to fp16, H128, core dot in fp32, output H128 and svh), a safetensors reader that maps an EXL3 group's trellis, suh, svh, codebook marker and optional bias without expanding the weights and exports them as the regions strix_weights_prepare_parts takes, and the per-rank partition of a tensor for two-way tensor parallelism"
+why       = "a kernel swap between engines is only safe against a reference that fixes every rounding stage; this NumPy model decodes all 65,536 states of each codebook exactly and names the stages of the linear, so it can judge StrixFold's exl3 output and strix-trellis' on the same tensors without a GPU"
+notes     = "Interface tag: none. A reference and a loader, not a kernel. Beside tool.crucible.reference (NumPy EXL3 codec and matvec) and StrixFold's numerics contract (numerics.json exl3.linear). Rejects external out_scales and older formats without an explicit scale contract (README.md \"Status\"). Not run by this harvest."
+
+[provenance]
+origin    = "strix_trellis"
+repo      = "https://github.com/hyukudan/strix-trellis"
+commit    = "a34516bf91b9c66166bf6d3678d10fc68d6c122c"
+branch    = "master"
+paths     = [
+  "python/.gitignore",
+  "python/pyproject.toml",
+  "python/strix_trellis/__init__.py",
+  "python/strix_trellis/codec.py",
+  "python/strix_trellis/container.py",
+  "python/strix_trellis/fixture.py",
+  "python/strix_trellis/linear.py",
+  "python/strix_trellis/tp.py",
+]
+authors   = ["hyukudan"]
+modified  = false
+upstream  = "EXL3 format after exllamav3 (MIT, turboderp) and QTIP (Tseng et al., NeurIPS 2024); read for the format and its arithmetic, no upstream code included (NOTICE, docs/SOURCES.md)"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.numerics-contract-strix-trellis/exl3/-"
+api       = "strix_trellis.matmul_fp32, matmul_fp32_stages, input_stages_fp32, core_dot_fp32, output_stages_fp32, decode_states, dequantize_rotated (python/strix_trellis/linear.py, codec.py)"
+numeric   = "fp32 stages with declared roundings; per the origin README it matches the EXL3 reference CUDA kernels bit for bit on 2,621,440 real weights and on all 65,536 states of each codebook"
+regime    = "offline, CPU"
+
+[[provides]]
+interface = "format.loader-strix-trellis/exl3-safetensors/-"
+api       = "strix_trellis.load_exl3, SafetensorsFile, Exl3Tensor (transport_regions, transport_buffer, transport_blob), rank_partition (python/strix_trellis/container.py, tp.py)"
+numeric   = "exact (bytes mapped; tiles kept in EXL3 encoding)"
+regime    = "load time"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

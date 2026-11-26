@@ -1,0 +1,1453 @@
+#include "moe-fused.cuh"
+
+#include <cstdio>
+#include <thread>
+#include "ggml-cuda/vecdotq.cuh"
+#include "ggml-cuda/dequantize.cuh"
+#include "ggml-cuda/mmvq.cuh"
+#include "ggml-cuda/moe-fused-combine.cuh"
+
+#include <algorithm>
+#include <climits>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+
+static __device__ __forceinline__ float silu_f32(float x) {
+    return x / (1.0f + expf(-x));
+}
+
+// IQ2_XS: compute dot product of one weight row (256 values) with input vector
+// Weight row starts at: (const char*)w_base + row * row_stride
+// block_stride = nb[0] (74 bytes per block)
+static __device__ float dot_iq2_xs(
+        const char * w_row, const float * input) {
+    float sum = 0.0f;
+    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+        const block_iq2_xs * blk = (const block_iq2_xs *)(w_row + ib32 * sizeof(block_iq2_xs));
+        const float d = (float)blk->d;
+        for (int l = 0; l < 4; ++l) {
+            const float db = d * (0.5f + ((blk->scales[ib32] >> 4*(l/2)) & 0xf)) * 0.25f;
+            const uint8_t * grid = (const uint8_t *)(iq2xs_grid + (blk->qs[4*ib32 + l] & 511));
+            const uint8_t signs = ksigns_iq2xs[blk->qs[4*ib32 + l] >> 9];
+            const int off = 32*ib32 + 8*l;
+            for (int j = 0; j < 8; ++j) {
+                sum += db * grid[j] * (signs & kmask_iq2xs[j] ? -1.f : 1.f) * input[off + j];
+            }
+        }
+    }
+    return sum;
+}
+
+// IQ3_XXS: compute dot product of one weight row (256 values) with input vector
+static __device__ float dot_iq3_xxs(
+        const char * w_row, const float * input) {
+    float sum = 0.0f;
+    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+        const block_iq3_xxs * blk = (const block_iq3_xxs *)(w_row + ib32 * sizeof(block_iq3_xxs));
+        const float d = (float)blk->d;
+        const uint8_t * qs = blk->qs;
+        const uint16_t * gas = (const uint16_t *)(blk->qs + QK_K/4);
+        const uint32_t aux32 = gas[0] | (gas[1] << 16);
+        const float db = d * (0.5f + (aux32 >> 28)) * 0.5f;
+        for (int l = 0; l < 4; ++l) {
+            const uint8_t signs = ksigns_iq2xs[(aux32 >> 7*l) & 127];
+            const uint8_t * grid1 = (const uint8_t *)(iq3xxs_grid + qs[2*l+0]);
+            const uint8_t * grid2 = (const uint8_t *)(iq3xxs_grid + qs[2*l+1]);
+            const int off = 8*l;
+            for (int j = 0; j < 4; ++j) {
+                sum += db * grid1[j] * (signs & kmask_iq2xs[j+0] ? -1.f : 1.f) * input[32*ib32 + off + j];
+                sum += db * grid2[j] * (signs & kmask_iq2xs[j+4] ? -1.f : 1.f) * input[32*ib32 + off + 4 + j];
+            }
+        }
+    }
+    return sum;
+}
+
+template<int BLOCK_SIZE>
+static __global__ void moe_fused_kernel(
+    const float * __restrict__ input,
+    const void * __restrict__ gate_w,
+    const void * __restrict__ up_w,
+    const void * __restrict__ down_w,
+    const int32_t * __restrict__ expert_ids,
+    const float * __restrict__ expert_wts,
+    const void * __restrict__ sh_gate_w,
+    const void * __restrict__ sh_up_w,
+    const void * __restrict__ sh_down_w,
+    const void * __restrict__ sh_gate_inp_w,
+    float * __restrict__ output,
+    const int n_embd,
+    const int ff_dim,
+    const int n_expert_used,
+    const int n_expert_total,
+    const int gate_type,
+    const int up_type,
+    const int down_type,
+    const size_t gate_row_stride,
+    const size_t up_row_stride,
+    const size_t down_row_stride,
+    const size_t gate_expert_stride,
+    const size_t up_expert_stride,
+    const size_t down_expert_stride,
+    const size_t gate_block_stride,
+    const size_t up_block_stride,
+    const size_t down_block_stride) {
+
+    extern __shared__ float gu_smem[];
+
+    const int tid = threadIdx.x;
+    const int nblocks_in = n_embd / QK_K;
+    const int nblocks_ff = ff_dim / QK_K;
+
+    for (int e = 0; e < n_expert_used; e++) {
+        const int eidx = expert_ids[e];
+        const char * g_exp = (const char *) gate_w + (size_t) eidx * gate_expert_stride;
+        const char * u_exp = (const char *) up_w   + (size_t) eidx * up_expert_stride;
+
+        for (int k = tid; k < ff_dim; k += BLOCK_SIZE) {
+            float g_sum = 0.0f;
+            float u_sum = 0.0f;
+
+            const char * g_row = g_exp + k * gate_row_stride;
+            const char * u_row = u_exp + k * up_row_stride;
+
+            if (gate_type == 17) {
+                for (int b = 0; b < nblocks_in; b++) {
+                    const block_iq2_xs * g_blk = (const block_iq2_xs *)(g_row + b * sizeof(block_iq2_xs));
+                    const float d = (float)g_blk->d;
+                    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+                        for (int l = 0; l < 4; ++l) {
+                            const float db = d * (0.5f + ((g_blk->scales[ib32] >> 4*(l/2)) & 0xf)) * 0.25f;
+                            const uint8_t * grid = (const uint8_t *)(iq2xs_grid + (g_blk->qs[4*ib32 + l] & 511));
+                            const uint8_t signs = ksigns_iq2xs[g_blk->qs[4*ib32 + l] >> 9];
+                            const int off = b*QK_K + 32*ib32 + 8*l;
+                            for (int j = 0; j < 8; ++j)
+                                g_sum += db * grid[j] * (signs & kmask_iq2xs[j] ? -1.f : 1.f) * input[off + j];
+                        }
+                    }
+                }
+            } else if (gate_type == 18) {
+                for (int b = 0; b < nblocks_in; b++) {
+                    const block_iq3_xxs * g_blk = (const block_iq3_xxs *)(g_row + b * sizeof(block_iq3_xxs));
+                    const float gd = (float)g_blk->d;
+                    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+                        const uint8_t * qs = g_blk->qs + 8*ib32;
+                        const uint16_t * gas = (const uint16_t *)(g_blk->qs + QK_K/4) + 2*ib32;
+                        const uint32_t aux32 = gas[0] | (gas[1] << 16);
+                        const float gdb = gd * (0.5f + (aux32 >> 28)) * 0.5f;
+                        for (int l = 0; l < 4; ++l) {
+                            const uint8_t signs = ksigns_iq2xs[(aux32 >> 7*l) & 127];
+                            const uint8_t * grid1 = (const uint8_t *)(iq3xxs_grid + qs[2*l+0]);
+                            const uint8_t * grid2 = (const uint8_t *)(iq3xxs_grid + qs[2*l+1]);
+                            const int off = b*QK_K + 32*ib32 + 8*l;
+                            for (int j = 0; j < 4; ++j) {
+                                g_sum += gdb * grid1[j] * (signs & kmask_iq2xs[j+0] ? -1.f : 1.f) * input[off + j];
+                                g_sum += gdb * grid2[j] * (signs & kmask_iq2xs[j+4] ? -1.f : 1.f) * input[off + 4 + j];
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (up_type == 17) {
+                for (int b = 0; b < nblocks_in; b++) {
+                    const block_iq2_xs * u_blk = (const block_iq2_xs *)(u_row + b * sizeof(block_iq2_xs));
+                    const float d = (float)u_blk->d;
+                    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+                        for (int l = 0; l < 4; ++l) {
+                            const float db = d * (0.5f + ((u_blk->scales[ib32] >> 4*(l/2)) & 0xf)) * 0.25f;
+                            const uint8_t * grid = (const uint8_t *)(iq2xs_grid + (u_blk->qs[4*ib32 + l] & 511));
+                            const uint8_t signs = ksigns_iq2xs[u_blk->qs[4*ib32 + l] >> 9];
+                            const int off = b*QK_K + 32*ib32 + 8*l;
+                            for (int j = 0; j < 8; ++j)
+                                u_sum += db * grid[j] * (signs & kmask_iq2xs[j] ? -1.f : 1.f) * input[off + j];
+                        }
+                    }
+                }
+            } else if (up_type == 18) {
+                for (int b = 0; b < nblocks_in; b++) {
+                    const block_iq3_xxs * u_blk = (const block_iq3_xxs *)(u_row + b * sizeof(block_iq3_xxs));
+                    const float ud = (float)u_blk->d;
+                    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+                        const uint8_t * qs = u_blk->qs + 8*ib32;
+                        const uint16_t * gas = (const uint16_t *)(u_blk->qs + QK_K/4) + 2*ib32;
+                        const uint32_t aux32 = gas[0] | (gas[1] << 16);
+                        const float udb = ud * (0.5f + (aux32 >> 28)) * 0.5f;
+                        for (int l = 0; l < 4; ++l) {
+                            const uint8_t signs = ksigns_iq2xs[(aux32 >> 7*l) & 127];
+                            const uint8_t * grid1 = (const uint8_t *)(iq3xxs_grid + qs[2*l+0]);
+                            const uint8_t * grid2 = (const uint8_t *)(iq3xxs_grid + qs[2*l+1]);
+                            const int off = b*QK_K + 32*ib32 + 8*l;
+                            for (int j = 0; j < 4; ++j) {
+                                u_sum += udb * grid1[j] * (signs & kmask_iq2xs[j+0] ? -1.f : 1.f) * input[off + j];
+                                u_sum += udb * grid2[j] * (signs & kmask_iq2xs[j+4] ? -1.f : 1.f) * input[off + 4 + j];
+                            }
+                        }
+                    }
+                }
+            }
+
+            gu_smem[e * ff_dim + k] = silu_f32(g_sum) * u_sum;
+        }
+    }
+    __syncthreads();
+
+    // Phase 2: down projection + weighted sum
+    const char * d_base = (const char *) down_w;
+    for (int n = tid; n < n_embd; n += BLOCK_SIZE) {
+        float sum = 0.0f;
+
+        for (int e = 0; e < n_expert_used; e++) {
+            const int eidx = expert_ids[e];
+            const char * d_exp = d_base + (size_t) eidx * down_expert_stride;
+            const char * d_row = d_exp + n * down_row_stride;
+            float d_sum = 0.0f;
+
+            if (down_type == 17) {
+                for (int b = 0; b < nblocks_ff; b++) {
+                    const block_iq2_xs * d_blk = (const block_iq2_xs *)(d_row + b * sizeof(block_iq2_xs));
+                    const float d = (float)d_blk->d;
+                    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+                        for (int l = 0; l < 4; ++l) {
+                            const float db = d * (0.5f + ((d_blk->scales[ib32] >> 4*(l/2)) & 0xf)) * 0.25f;
+                            const uint8_t * grid = (const uint8_t *)(iq2xs_grid + (d_blk->qs[4*ib32 + l] & 511));
+                            const uint8_t signs = ksigns_iq2xs[d_blk->qs[4*ib32 + l] >> 9];
+                            const int off = b*QK_K + 32*ib32 + 8*l;
+                            for (int j = 0; j < 8; ++j)
+                                d_sum += db * grid[j] * (signs & kmask_iq2xs[j] ? -1.f : 1.f) * gu_smem[e * ff_dim + off + j];
+                        }
+                    }
+                }
+            } else if (down_type == 18) {
+                for (int b = 0; b < nblocks_ff; b++) {
+                    const block_iq3_xxs * d_blk = (const block_iq3_xxs *)(d_row + b * sizeof(block_iq3_xxs));
+                    const float dd = (float)d_blk->d;
+                    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+                        const uint8_t * qs = d_blk->qs + 8*ib32;
+                        const uint16_t * gas = (const uint16_t *)(d_blk->qs + QK_K/4) + 2*ib32;
+                        const uint32_t aux32 = gas[0] | (gas[1] << 16);
+                        const float ddb = dd * (0.5f + (aux32 >> 28)) * 0.5f;
+                        for (int l = 0; l < 4; ++l) {
+                            const uint8_t signs = ksigns_iq2xs[(aux32 >> 7*l) & 127];
+                            const uint8_t * grid1 = (const uint8_t *)(iq3xxs_grid + qs[2*l+0]);
+                            const uint8_t * grid2 = (const uint8_t *)(iq3xxs_grid + qs[2*l+1]);
+                            const int off = b*QK_K + 32*ib32 + 8*l;
+                            for (int j = 0; j < 4; ++j) {
+                                d_sum += ddb * grid1[j] * (signs & kmask_iq2xs[j+0] ? -1.f : 1.f) * gu_smem[e * ff_dim + off + j];
+                                d_sum += ddb * grid2[j] * (signs & kmask_iq2xs[j+4] ? -1.f : 1.f) * gu_smem[e * ff_dim + off + 4 + j];
+                            }
+                        }
+                    }
+                }
+            } else if (down_type == 23) {
+                for (int b = 0; b < nblocks_ff; b++) {
+                    const block_iq4_xs * d_blk = (const block_iq4_xs *)(d_row + b * sizeof(block_iq4_xs));
+                    const float dd = (float)d_blk->d;
+                    for (int ib32 = 0; ib32 < QK_K/32; ++ib32) {
+                        const int ls = ((d_blk->scales_l[ib32/2] >> 4*(ib32%2)) & 0xf)
+                                     | (((d_blk->scales_h >> 2*ib32) & 3) << 4);
+                        const float ddb = dd * (ls - 32);
+                        const uint8_t * q4 = d_blk->qs + 16*ib32;
+                        for (int l = 0; l < 4; ++l) {
+                            const int off = b*QK_K + 32*ib32 + 8*l;
+                            d_sum += ddb * kvalues_iq4nl[q4[4*l+0] & 0xf] * gu_smem[e * ff_dim + off + 0];
+                            d_sum += ddb * kvalues_iq4nl[q4[4*l+1] & 0xf] * gu_smem[e * ff_dim + off + 1];
+                            d_sum += ddb * kvalues_iq4nl[q4[4*l+2] & 0xf] * gu_smem[e * ff_dim + off + 2];
+                            d_sum += ddb * kvalues_iq4nl[q4[4*l+3] & 0xf] * gu_smem[e * ff_dim + off + 3];
+                            d_sum += ddb * kvalues_iq4nl[q4[4*l+0] >>  4] * gu_smem[e * ff_dim + off + 4];
+                            d_sum += ddb * kvalues_iq4nl[q4[4*l+1] >>  4] * gu_smem[e * ff_dim + off + 5];
+                            d_sum += ddb * kvalues_iq4nl[q4[4*l+2] >>  4] * gu_smem[e * ff_dim + off + 6];
+                            d_sum += ddb * kvalues_iq4nl[q4[4*l+3] >>  4] * gu_smem[e * ff_dim + off + 7];
+                        }
+                    }
+                }
+            }
+            sum += expert_wts[e] * d_sum;
+        }
+
+        output[n] = sum;
+    }
+}
+
+static __global__ void laguna_moe_combine_kernel(
+    const char * __restrict__ experts,
+    const char * __restrict__ weights,
+    char * __restrict__ output,
+    const int n_embd,
+    const int n_used,
+    const int n_tokens,
+    const size_t experts_nb0,
+    const size_t experts_nb1,
+    const size_t experts_nb2,
+    const size_t weights_nb0,
+    const size_t weights_nb1,
+    const size_t output_nb0,
+    const size_t output_nb1,
+    const float value_scale) {
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    const int total = n_embd * n_tokens;
+    if (idx >= total) return;
+
+    const int h = idx % n_embd;
+    const int t = idx / n_embd;
+    float sum = 0.0f;
+    for (int e = 0; e < n_used; ++e) {
+        const float w = *(const float *)(weights +
+            (size_t)e * weights_nb0 +
+            (size_t)t * weights_nb1);
+        // Masked owner IDs deliberately leave this expert slot unwritten.
+        // Reading it before multiplying by zero can turn stale NaNs into a
+        // visible result, because IEEE NaN * 0 remains NaN.
+        if (w == 0.0f) {
+            if (e == 0) sum = 0.0f;
+            continue;
+        }
+        const float v = *(const float *)(experts +
+            (size_t)h * experts_nb0 +
+            (size_t)e * experts_nb1 +
+            (size_t)t * experts_nb2);
+        const float scaled = value_scale == 1.0f
+            ? v : __fmul_rn(v, value_scale);
+        const float prod = __fmul_rn(scaled, w);
+        sum = (e == 0) ? prod : __fadd_rn(sum, prod);
+    }
+    *(float *)(output +
+        (size_t)h * output_nb0 +
+        (size_t)t * output_nb1) = sum;
+}
+
+static __global__ void moe_combine_vec4_kernel(
+    const char * __restrict__ experts,
+    const char * __restrict__ weights,
+    char * __restrict__ output,
+    const int n_embd_vec4,
+    const int n_used,
+    const int n_tokens,
+    const size_t experts_nb1,
+    const size_t experts_nb2,
+    const size_t weights_nb0,
+    const size_t weights_nb1,
+    const size_t output_nb1,
+    const float value_scale) {
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    const int total = n_embd_vec4 * n_tokens;
+    if (idx >= total) return;
+
+    const int h4 = idx % n_embd_vec4;
+    const int t = idx / n_embd_vec4;
+    float4 sum = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    for (int e = 0; e < n_used; ++e) {
+        const float w = *(const float *)(weights +
+            (size_t)e * weights_nb0 +
+            (size_t)t * weights_nb1);
+        if (w == 0.0f) {
+            if (e == 0) sum = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+            continue;
+        }
+        const float4 value = *(const float4 *)(experts +
+            (size_t)h4 * sizeof(float4) +
+            (size_t)e * experts_nb1 +
+            (size_t)t * experts_nb2);
+        const float4 scaled = value_scale == 1.0f
+            ? value
+            : make_float4(
+                __fmul_rn(value.x, value_scale),
+                __fmul_rn(value.y, value_scale),
+                __fmul_rn(value.z, value_scale),
+                __fmul_rn(value.w, value_scale));
+        const float4 product = make_float4(
+            __fmul_rn(scaled.x, w),
+            __fmul_rn(scaled.y, w),
+            __fmul_rn(scaled.z, w),
+            __fmul_rn(scaled.w, w));
+        if (e == 0) {
+            sum = product;
+        } else {
+            sum.x = __fadd_rn(sum.x, product.x);
+            sum.y = __fadd_rn(sum.y, product.y);
+            sum.z = __fadd_rn(sum.z, product.z);
+            sum.w = __fadd_rn(sum.w, product.w);
+        }
+    }
+    *(float4 *)(output +
+        (size_t)h4 * sizeof(float4) +
+        (size_t)t * output_nb1) = sum;
+}
+
+// GGML_MOE_FUSED_COMBINE_MASKED: laguna_moe_combine_kernel with the owner's
+// masked route weight formed inline: w = weights[e, t] * valid[ids[e, t], t],
+// the product the separate mul(weights, get_rows(valid, ids)) rounds.
+static __global__ void moe_combine_masked_kernel(
+    const char * __restrict__ experts,
+    const char * __restrict__ weights,
+    const char * __restrict__ valid,
+    const char * __restrict__ ids,
+    char * __restrict__ output,
+    const int n_embd,
+    const int n_used,
+    const int n_tokens,
+    const size_t experts_nb1,
+    const size_t experts_nb2,
+    const size_t weights_nb1,
+    const size_t valid_nb1,
+    const size_t valid_nb2,
+    const size_t ids_nb1,
+    const size_t output_nb1) {
+    // The replaced mul, mul and repeat_back round every product and sum on
+    // their own. The product must not fuse into the following add: __fmul_rn
+    // keeps it a separate rounding on CUDA, where nvcc ignores the clang
+    // pragma and builds with fast math; on HIP the pragma keeps the plain add
+    // out of an FMA (HIP's __fadd_rn is a header function that would fuse).
+#pragma clang fp contract(off)
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    const int total = n_embd * n_tokens;
+    if (idx >= total) return;
+
+    const int h = idx % n_embd;
+    const int t = idx / n_embd;
+    float sum = 0.0f;
+    for (int e = 0; e < n_used; ++e) {
+        const int32_t id = *(const int32_t *)(ids + (size_t)e * sizeof(int32_t) + (size_t)t * ids_nb1);
+        // A route masked to -1 (another rank's expert) has no validity row.
+        if (id < 0) {
+            continue;
+        }
+        const float valid_w = *(const float *)(valid + (size_t)id * valid_nb1 + (size_t)t * valid_nb2);
+        const float w = *(const float *)(weights + (size_t)e * sizeof(float) + (size_t)t * weights_nb1) * valid_w;
+        if (w == 0.0f) {
+            continue;
+        }
+        const float v = *(const float *)(experts + (size_t)h * sizeof(float) +
+                                         (size_t)e * experts_nb1 + (size_t)t * experts_nb2);
+        sum = sum + __fmul_rn(v, w);
+    }
+    *(float *)(output + (size_t)h * sizeof(float) + (size_t)t * output_nb1) = sum;
+}
+
+static void launch_moe_combine(
+        cudaStream_t stream,
+        const char * experts,
+        const char * weights,
+        char * output,
+        int n_embd,
+        int n_used,
+        int n_tokens,
+        size_t experts_nb0,
+        size_t experts_nb1,
+        size_t experts_nb2,
+        size_t weights_nb0,
+        size_t weights_nb1,
+        size_t output_nb0,
+        size_t output_nb1,
+        float value_scale) {
+    static const bool vec4_requested = []() {
+        const char * raw = std::getenv("LUCE_MOE_COMBINE_VEC4");
+        return raw && *raw && std::strcmp(raw, "0") != 0;
+    }();
+    static_assert(sizeof(float4) == 4 * sizeof(float));
+    constexpr size_t vec4_alignment = sizeof(float4);
+    const bool aligned =
+        (reinterpret_cast<uintptr_t>(experts) % vec4_alignment) == 0 &&
+        (reinterpret_cast<uintptr_t>(output) % vec4_alignment) == 0 &&
+        experts_nb1 % vec4_alignment == 0 &&
+        experts_nb2 % vec4_alignment == 0 &&
+        output_nb1 % vec4_alignment == 0;
+    const bool use_vec4 = vec4_requested && n_embd % 4 == 0 && aligned &&
+        experts_nb0 == sizeof(float) && output_nb0 == sizeof(float);
+    constexpr int block = 256;
+    if (use_vec4) {
+        const int n_embd_vec4 = n_embd / 4;
+        const int total = n_embd_vec4 * n_tokens;
+        const int grid = (total + block - 1) / block;
+        moe_combine_vec4_kernel<<<grid, block, 0, stream>>>(
+            experts, weights, output, n_embd_vec4, n_used, n_tokens,
+            experts_nb1, experts_nb2, weights_nb0, weights_nb1,
+            output_nb1, value_scale);
+        return;
+    }
+
+    const int total = n_embd * n_tokens;
+    const int grid = (total + block - 1) / block;
+    laguna_moe_combine_kernel<<<grid, block, 0, stream>>>(
+        experts, weights, output, n_embd, n_used, n_tokens,
+        experts_nb0, experts_nb1, experts_nb2,
+        weights_nb0, weights_nb1, output_nb0, output_nb1,
+        value_scale);
+}
+
+// GGML_MOE_FUSED_PREFETCH: reads the ranges so the device's last-level cache holds them for the nodes that follow
+// (the R9700's 64 MB Infinity Cache keeps 56 MB read this way: a warm 48 MB read takes 39 us, a cold one 90-100).
+// Nothing the graph reads is written: the loads feed an XOR that only the first thread stores, into the node's own
+// one-element output.
+struct moe_prefetch_ranges {
+    const uint4 * p[GGML_MAX_SRC];
+    int64_t       n[GGML_MAX_SRC];   // 16-byte words
+    int           count;
+};
+
+static __global__ void moe_prefetch_kernel(const moe_prefetch_ranges r, uint32_t * sink) {
+    const int64_t stride = (int64_t) gridDim.x * blockDim.x;
+    uint32_t acc = 0;
+    for (int k = 0; k < r.count; ++k) {
+        const uint4 * p = r.p[k];
+        const int64_t n = r.n[k];
+        int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+        for (; i + 3 * stride < n; i += 4 * stride) {   // four loads in flight per thread
+            const uint4 a = p[i], b = p[i + stride], c = p[i + 2 * stride], d = p[i + 3 * stride];
+            acc ^= a.x ^ a.y ^ a.z ^ a.w ^ b.x ^ b.y ^ b.z ^ b.w ^ c.x ^ c.y ^ c.z ^ c.w ^ d.x ^ d.y ^ d.z ^ d.w;
+        }
+        for (; i < n; i += stride) {
+            const uint4 a = p[i];
+            acc ^= a.x ^ a.y ^ a.z ^ a.w;
+        }
+    }
+    if (acc == 0x9e3779b9u) {   // every thread's loads stay live; the store almost never runs
+        sink[0] = acc;
+    }
+}
+
+#if defined(GGML_USE_HIP)
+// GGML_MOE_FUSED_WAKE_HOLD: one lane sleeps between polls of the router's post count until it moves past the count
+// this slot's last hold saw, or max_ticks of the constant-rate wall clock pass; then records what it saw. A post that
+// came before the hold ends it at once; a post with no hold after it (the hold was not reached) is absorbed by the
+// next hold of the slot, which then passes at once.
+static __global__ void k_wake_hold(const uint32_t * post, uint32_t * seen, const long long max_ticks) {
+    if (threadIdx.x != 0) {
+        return;
+    }
+    const uint32_t s = __hip_atomic_load(seen, __ATOMIC_RELAXED, __HIP_MEMORY_SCOPE_SYSTEM);
+    const long long t0 = wall_clock64();
+    uint32_t p = __hip_atomic_load(post, __ATOMIC_RELAXED, __HIP_MEMORY_SCOPE_SYSTEM);
+    while (p == s && wall_clock64() - t0 < max_ticks) {
+        __builtin_amdgcn_s_sleep(2);
+        p = __hip_atomic_load(post, __ATOMIC_RELAXED, __HIP_MEMORY_SCOPE_SYSTEM);
+    }
+    __hip_atomic_store(seen, p, __ATOMIC_RELAXED, __HIP_MEMORY_SCOPE_SYSTEM);
+}
+#endif // defined(GGML_USE_HIP)
+
+// GGML_MOE_FUSED_PREFETCH_ROWS: every block builds the same expert list in shared memory (rank order, each expert
+// once, at most max_experts), then blockIdx.y takes one expert and blockIdx.x a share of its slices.
+// The sink is written only when a thread's XOR hits a fixed value, so every thread's loads stay live.
+struct moe_prefetch_stacks {
+    const char * base[GGML_MAX_SRC];
+    int64_t      slice[GGML_MAX_SRC];      // bytes per expert (nb[2]), a multiple of 16
+    int64_t      n_expert[GGML_MAX_SRC];
+    int          count;
+};
+
+static __global__ void moe_prefetch_rows_kernel(
+        const int32_t * picks, const int k, const int n_rows, const int ne1, const int64_t stride1, const int64_t stride2,
+        const int32_t * map, const int n_map, const moe_prefetch_stacks s, const int max_experts, uint32_t * sink) {
+    __shared__ int list[64];
+    __shared__ int n_list;
+    if (threadIdx.x == 0) {
+        int n = 0;
+        for (int r = 0; r < k && n < max_experts; ++r) {
+            for (int t = 0; t < n_rows && n < max_experts; ++t) {
+                int e = picks[(int64_t) (t % ne1) * stride1 + (int64_t) (t / ne1) * stride2 + r];
+                if (map) e = e >= 0 && e < n_map ? map[e] : -1;
+                if (e < 0) continue;
+                bool seen = false;
+                for (int j = 0; j < n; ++j) seen |= list[j] == e;
+                if (!seen) list[n++] = e;
+            }
+        }
+        n_list = n;
+    }
+    __syncthreads();
+    if ((int) blockIdx.y >= n_list) return;
+    const int e = list[blockIdx.y];
+    const int64_t stride = (int64_t) gridDim.x * blockDim.x;
+    uint32_t acc = 0;
+    for (int q = 0; q < s.count; ++q) {
+        if (e >= s.n_expert[q]) continue;
+        const uint4 * p = (const uint4 *) (s.base[q] + (int64_t) e * s.slice[q]);
+        const int64_t n = s.slice[q] / (int64_t) sizeof(uint4);
+        int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+        for (; i + 3 * stride < n; i += 4 * stride) {
+            const uint4 a = p[i], b = p[i + stride], c = p[i + 2 * stride], d = p[i + 3 * stride];
+            acc ^= a.x ^ a.y ^ a.z ^ a.w ^ b.x ^ b.y ^ b.z ^ b.w ^ c.x ^ c.y ^ c.z ^ c.w ^ d.x ^ d.y ^ d.z ^ d.w;
+        }
+        for (; i < n; i += stride) {
+            const uint4 a = p[i];
+            acc ^= a.x ^ a.y ^ a.z ^ a.w;
+        }
+    }
+    if (acc == 0x9e3779b9u) {
+        sink[0] = acc;
+    }
+}
+
+static __global__ void ds4_peer_copy_f32_kernel(
+        const float * __restrict__ src,
+        float * __restrict__ dst,
+        const int64_t n) {
+    const int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        dst[i] = src[i];
+    }
+}
+
+static __global__ void ds4_protected_routes_kernel(
+        const int32_t * biased, int64_t biased_ld,
+        const int32_t * native, int64_t native_ld,
+        const int32_t * protected_mask, int n_expert,
+        int32_t * dst, int k) {
+    const int t = blockIdx.x;
+    const int32_t * nat = native + (int64_t) t * native_ld;
+    bool keep_native = false;
+    for (int i = 0; i < k; ++i) {
+        const int32_t e = nat[i];
+        keep_native |= e >= 0 && e < n_expert && protected_mask[e] != 0;
+    }
+    const int32_t * src = keep_native ? nat : biased + (int64_t) t * biased_ld;
+    for (int i = threadIdx.x; i < k; i += blockDim.x) dst[(int64_t) t * k + i] = src[i];
+}
+
+// Host mailbox. The words live in host-mapped, coherent memory, so every
+// access that orders the exchange uses system scope.
+static __device__ __forceinline__ uint32_t host_mailbox_load(const uint32_t * p) {
+#if defined(GGML_USE_HIP)
+    return __hip_atomic_load(p, __ATOMIC_ACQUIRE, __HIP_MEMORY_SCOPE_SYSTEM);
+#else
+    const uint32_t v = *(const volatile uint32_t *) p;
+    __threadfence_system();
+    return v;
+#endif
+}
+
+static __device__ __forceinline__ void host_mailbox_store(uint32_t * p, uint32_t v) {
+#if defined(GGML_USE_HIP)
+    __hip_atomic_store(p, v, __ATOMIC_RELEASE, __HIP_MEMORY_SCOPE_SYSTEM);
+#else
+    __threadfence_system();
+    *(volatile uint32_t *) p = v;
+#endif
+}
+
+static __global__ void host_mailbox_post_kernel(
+        const uint32_t * __restrict__ src, int64_t n_words,
+        const uint32_t * step, uint32_t * flag, uint32_t * payload,
+        int32_t * dst) {
+    for (int64_t i = threadIdx.x; i < n_words; i += blockDim.x) {
+        ((volatile uint32_t *) payload)[i] = src[i];
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        __threadfence_system();
+        const uint32_t s = host_mailbox_load(step);
+        host_mailbox_store(flag, s);
+        dst[0] = (int32_t) s;
+    }
+}
+
+// Copies the host's answer once it is published (HIP: after a stream wait).
+static __global__ void host_mailbox_copy_kernel(
+        const uint32_t * payload, uint32_t * __restrict__ dst, int64_t n_words) {
+    for (int64_t i = threadIdx.x; i < n_words; i += blockDim.x) {
+        dst[i] = ((const volatile uint32_t *) payload)[i];
+    }
+}
+
+#if !defined(GGML_USE_HIP)
+// Waits for the host's answer to this step. The bound only turns a lost
+// answer (a host-side bug) into wrong output instead of a hung device.
+static __global__ void host_mailbox_wait_kernel(
+        const uint32_t * step, const uint32_t * flag,
+        const uint32_t * payload, uint32_t * __restrict__ dst, int64_t n_words) {
+    if (threadIdx.x == 0) {
+        const uint32_t s = host_mailbox_load(step);
+        for (uint64_t spin = 0; host_mailbox_load(flag) != s && spin < (1ull << 32); ++spin) {
+#if defined(GGML_USE_HIP)
+            __builtin_amdgcn_s_sleep(2);
+#endif
+        }
+    }
+    __syncthreads();
+    for (int64_t i = threadIdx.x; i < n_words; i += blockDim.x) {
+        dst[i] = ((const volatile uint32_t *) payload)[i];
+    }
+}
+#endif // !defined(GGML_USE_HIP)
+
+template <typename T>
+static T host_mailbox_ptr(const ggml_tensor * t, int word) {
+    T ptr = nullptr;
+    memcpy(&ptr, &t->op_params[word], sizeof(ptr));
+    GGML_ASSERT(ptr);
+    return ptr;
+}
+
+// Align equal owner-local expert IDs across q-token warps.  The high 16 bits
+// of every valid output encode the original route slot; invalid entries use
+// the sign bit plus the original slot.  The dedicated MoE MMVQ kernel decodes
+// this metadata and scatters its result back to the original route layout.
+// A single thread is deliberate: this is at most a 4 x 6 assignment problem
+// and runs once per owner/layer, outside the weight-streaming kernels.
+static __global__ void ds4_align_moe_ids_kernel(
+        const int32_t * __restrict__ ids,
+        int32_t * __restrict__ aligned,
+        int n_routes,
+        int n_tokens,
+        int ids_stride,
+        int aligned_stride) {
+    if (blockIdx.x != 0 || threadIdx.x != 0) {
+        return;
+    }
+
+    constexpr int max_routes = 6;
+    constexpr int max_tokens = 4;
+    if (n_routes > max_routes || n_tokens > max_tokens) {
+        for (int t = 0; t < n_tokens; ++t) {
+            for (int r = 0; r < n_routes; ++r) {
+                const int32_t id = ids[t * ids_stride + r];
+                aligned[t * aligned_stride + r] = id >= 0
+                    ? (int32_t) (0x5a000000u | ((uint32_t) r << 16) |
+                                 ((uint32_t) id & 0xffffu))
+                    : (int32_t) (0xda00ffffu | ((uint32_t) r << 16));
+            }
+        }
+        return;
+    }
+
+    int route_for_slot[max_tokens][max_routes];
+    for (int t = 0; t < max_tokens; ++t) {
+        for (int s = 0; s < max_routes; ++s) {
+            route_for_slot[t][s] = -1;
+        }
+    }
+    for (int r = 0; r < n_routes; ++r) {
+        route_for_slot[0][r] = r;
+    }
+
+    for (int t = 1; t < n_tokens; ++t) {
+        bool used_slot[max_routes] = {};
+        bool assigned_route[max_routes] = {};
+
+        // Prefer assignments that preserve the most previous occurrences of
+        // this expert in one slot.  This handles conflicts deterministically
+        // when two earlier tokens placed different experts in the same slot.
+        for (int pass = 0; pass < n_routes; ++pass) {
+            int best_route = -1;
+            int best_slot = -1;
+            int best_count = 0;
+            for (int r = 0; r < n_routes; ++r) {
+                if (assigned_route[r]) continue;
+                const int32_t id = ids[t * ids_stride + r];
+                if (id < 0) continue;
+                for (int s = 0; s < n_routes; ++s) {
+                    if (used_slot[s]) continue;
+                    int count = 0;
+                    for (int p = 0; p < t; ++p) {
+                        const int prev_route = route_for_slot[p][s];
+                        if (prev_route >= 0 &&
+                            ids[p * ids_stride + prev_route] == id) {
+                            ++count;
+                        }
+                    }
+                    if (count > best_count ||
+                        (count == best_count && count > 0 &&
+                         (best_route < 0 || r < best_route ||
+                          (r == best_route && s < best_slot)))) {
+                        best_route = r;
+                        best_slot = s;
+                        best_count = count;
+                    }
+                }
+            }
+            if (best_count == 0) break;
+            route_for_slot[t][best_slot] = best_route;
+            used_slot[best_slot] = true;
+            assigned_route[best_route] = true;
+        }
+
+        // Keep unmatched routes in their original slot when possible, then
+        // fill the remaining permutation slots in ascending order.
+        for (int r = 0; r < n_routes; ++r) {
+            if (assigned_route[r]) continue;
+            int slot = !used_slot[r] ? r : -1;
+            if (slot < 0) {
+                for (int s = 0; s < n_routes; ++s) {
+                    if (!used_slot[s]) {
+                        slot = s;
+                        break;
+                    }
+                }
+            }
+            route_for_slot[t][slot] = r;
+            used_slot[slot] = true;
+            assigned_route[r] = true;
+        }
+    }
+
+    for (int t = 0; t < n_tokens; ++t) {
+        for (int s = 0; s < n_routes; ++s) {
+            const int original_route = route_for_slot[t][s];
+            const int32_t id = ids[t * ids_stride + original_route];
+            aligned[t * aligned_stride + s] = id >= 0
+                ? (int32_t) (0x5a000000u |
+                             ((uint32_t) original_route << 16) |
+                             ((uint32_t) id & 0xffffu))
+                : (int32_t) (0xda00ffffu |
+                             ((uint32_t) original_route << 16));
+        }
+    }
+}
+
+static __global__ void ds4_balanced_owner_ids_kernel(
+        const int32_t * __restrict__ global_ids,
+        const float * __restrict__ router_weights,
+        const int32_t * __restrict__ local_id_lut,
+        const float * __restrict__ main_candidate_lut,
+        int32_t * __restrict__ owner_ids,
+        int n_routes,
+        int n_tokens,
+        int n_expert,
+        int main_quota,
+        bool main_owner) {
+    if (blockIdx.x != 0 || threadIdx.x != 0) {
+        return;
+    }
+
+    // Assign one shared, host-rounded quota over the complete verification
+    // batch while keeping the decision device-local and identical on both
+    // owners.
+    int64_t assigned_main = 0;
+    for (int token = 0; token < n_tokens; ++token) {
+        const int64_t row = (int64_t) token * n_routes;
+        for (int route = 0; route < n_routes; ++route) {
+            const int64_t index = row + route;
+            const int32_t global_id = global_ids[index];
+            const bool active = router_weights[index] != 0.0f;
+            const bool valid_global = global_id >= 0 && global_id < n_expert;
+            const bool main_candidate = active && valid_global &&
+                main_candidate_lut[global_id] != 0.0f;
+            const bool route_on_main =
+                main_candidate && assigned_main < main_quota;
+            if (route_on_main) {
+                ++assigned_main;
+            }
+
+            const bool keep = active && valid_global &&
+                (main_owner ? route_on_main : !route_on_main);
+            const int32_t local_id = keep ? local_id_lut[global_id] : -1;
+            owner_ids[index] = local_id >= 0 ? local_id : -1;
+        }
+    }
+}
+
+static ggml_tensor make_contiguous_f32_tensor(
+        float * data,
+        int64_t ne0,
+        int64_t ne1,
+        int64_t ne2) {
+    ggml_tensor tensor = {};
+    tensor.type  = GGML_TYPE_F32;
+    tensor.data  = data;
+    tensor.ne[0] = ne0;
+    tensor.ne[1] = ne1;
+    tensor.ne[2] = ne2;
+    tensor.ne[3] = 1;
+    tensor.nb[0] = sizeof(float);
+    tensor.nb[1] = tensor.nb[0] * ne0;
+    tensor.nb[2] = tensor.nb[1] * ne1;
+    tensor.nb[3] = tensor.nb[2] * ne2;
+    return tensor;
+}
+
+static void ggml_cuda_op_ds4_moe_owner(
+        ggml_backend_cuda_context & ctx,
+        ggml_tensor * dst) {
+    const ggml_tensor * input      = dst->src[0];  // [n_embd, n_tokens]
+    const ggml_tensor * gate_up_w  = dst->src[1];  // [n_embd, 2*n_ff, n_expert]
+    const ggml_tensor * down_w     = dst->src[2];  // [n_ff, n_embd, n_expert]
+    const ggml_tensor * expert_ids = dst->src[3];  // [n_used, n_tokens]
+    const ggml_tensor * weights    = dst->src[4];  // [n_used, n_tokens]
+
+    const int n_embd   = (int) input->ne[0];
+    const int n_tokens = (int) input->ne[1];
+    const int n_used   = (int) expert_ids->ne[0];
+    const int n_ff     = ggml_get_op_params_i32(dst, 1);
+    const float clamp  = ggml_get_op_params_f32(dst, 2);
+    const float down_scale = ggml_get_op_params_f32(dst, 3);
+
+    GGML_ASSERT(gate_up_w->ne[0] == n_embd);
+    GGML_ASSERT(gate_up_w->ne[1] == 2 * n_ff);
+    GGML_ASSERT(down_w->ne[0] == n_ff);
+    GGML_ASSERT(down_w->ne[1] == n_embd);
+    GGML_ASSERT(expert_ids->ne[1] == n_tokens);
+    GGML_ASSERT(weights->ne[0] == n_used && weights->ne[1] == n_tokens);
+    GGML_ASSERT(dst->ne[0] == n_embd && dst->ne[1] == n_tokens);
+
+    // The checkpoint concatenates gate rows followed by up rows inside each
+    // expert. Keep the original expert stride while viewing each half.
+    ggml_tensor gate_w = *gate_up_w;
+    ggml_tensor up_w   = *gate_up_w;
+    gate_w.ne[1] = n_ff;
+    up_w.ne[1]   = n_ff;
+    up_w.data = (char *) gate_up_w->data + (size_t) n_ff * gate_up_w->nb[1];
+
+    // MUL_MAT_ID expects token columns in dimension 2. The input is physically
+    // identical; only the descriptor changes from [D,T] to [D,1,T].
+    ggml_tensor input_3d = *input;
+    input_3d.ne[1] = 1;
+    input_3d.ne[2] = n_tokens;
+    input_3d.ne[3] = 1;
+    input_3d.nb[1] = input->nb[1];
+    input_3d.nb[2] = input->nb[1];
+    input_3d.nb[3] = input->nb[1] * n_tokens;
+    // This descriptor is stack-local. Disable q8 memoization for it.
+    input_3d.buffer = nullptr;
+
+    ggml_cuda_pool_alloc<float> gu_alloc(
+        ctx.pool(), (size_t) n_ff * n_used * n_tokens);
+    ggml_tensor gu = make_contiguous_f32_tensor(
+        gu_alloc.ptr, n_ff, n_used, n_tokens);
+
+    ggml_cuda_mm_fusion_args_host gate_up_fusion{};
+    gate_up_fusion.gate = &gate_w;
+    gate_up_fusion.glu_op = clamp > 1.0e-6f
+        ? GGML_GLU_OP_SWIGLU_DS4 : GGML_GLU_OP_SWIGLU;
+    gate_up_fusion.glu_param0 = clamp;
+    ggml_cuda_mul_mat_vec_q(
+        ctx, &up_w, &input_3d, expert_ids, &gu, &gate_up_fusion);
+
+    ggml_cuda_pool_alloc<float> experts_alloc(
+        ctx.pool(), (size_t) n_embd * n_used * n_tokens);
+    ggml_tensor experts = make_contiguous_f32_tensor(
+        experts_alloc.ptr, n_embd, n_used, n_tokens);
+    ggml_cuda_mul_mat_vec_q(
+        ctx, down_w, &gu, expert_ids, &experts, nullptr);
+
+    launch_moe_combine(
+        ctx.stream(),
+        (const char *) experts.data,
+        (const char *) weights->data,
+        (char *) dst->data,
+        n_embd, n_used, n_tokens,
+        experts.nb[0], experts.nb[1], experts.nb[2],
+        weights->nb[0], weights->nb[1],
+        dst->nb[0], dst->nb[1],
+        down_scale);
+}
+
+static void ggml_cuda_op_ds4_moe_owner_split(
+        ggml_backend_cuda_context & ctx,
+        ggml_tensor * dst) {
+    const ggml_tensor * input      = dst->src[0];  // [n_embd, n_tokens]
+    const ggml_tensor * gate_w     = dst->src[1];  // [n_embd, n_ff, n_expert]
+    const ggml_tensor * up_w       = dst->src[2];  // [n_embd, n_ff, n_expert]
+    const ggml_tensor * down_w     = dst->src[3];  // [n_ff, n_embd, n_expert]
+    const ggml_tensor * expert_ids = dst->src[4];  // [n_used, n_tokens]
+    const ggml_tensor * weights    = dst->src[5];  // [n_used, n_tokens]
+
+    const int n_embd   = (int) input->ne[0];
+    const int n_tokens = (int) input->ne[1];
+    const int n_used   = (int) expert_ids->ne[0];
+    const int n_ff     = ggml_get_op_params_i32(dst, 1);
+    const float clamp      = ggml_get_op_params_f32(dst, 2);
+    const float gate_scale = ggml_get_op_params_f32(dst, 3);
+    const float up_scale   = ggml_get_op_params_f32(dst, 4);
+    const float down_scale = ggml_get_op_params_f32(dst, 5);
+
+    GGML_ASSERT(gate_w->ne[0] == n_embd && gate_w->ne[1] == n_ff);
+    GGML_ASSERT(up_w->ne[0] == n_embd && up_w->ne[1] == n_ff);
+    GGML_ASSERT(down_w->ne[0] == n_ff && down_w->ne[1] == n_embd);
+    GGML_ASSERT(expert_ids->ne[1] == n_tokens);
+    GGML_ASSERT(weights->ne[0] == n_used && weights->ne[1] == n_tokens);
+    GGML_ASSERT(dst->ne[0] == n_embd && dst->ne[1] == n_tokens);
+
+    // MUL_MAT_ID consumes token columns in dimension 2. This descriptor is
+    // stack-local, so it deliberately does not participate in q8 memoization.
+    ggml_tensor input_3d = *input;
+    input_3d.ne[1] = 1;
+    input_3d.ne[2] = n_tokens;
+    input_3d.ne[3] = 1;
+    input_3d.nb[1] = input->nb[1];
+    input_3d.nb[2] = input->nb[1];
+    input_3d.nb[3] = input->nb[1] * n_tokens;
+    input_3d.buffer = nullptr;
+
+    ggml_cuda_pool_alloc<float> gu_alloc(
+        ctx.pool(), (size_t) n_ff * n_used * n_tokens);
+    ggml_tensor gu = make_contiguous_f32_tensor(
+        gu_alloc.ptr, n_ff, n_used, n_tokens);
+
+    ggml_cuda_mm_fusion_args_host gate_up_fusion{};
+    gate_up_fusion.gate = gate_w;
+    gate_up_fusion.glu_op = clamp > 1.0e-6f
+        ? GGML_GLU_OP_SWIGLU_DS4 : GGML_GLU_OP_SWIGLU;
+    gate_up_fusion.glu_param0 = clamp;
+    gate_up_fusion.gate_value_scale = gate_scale;
+    gate_up_fusion.x_value_scale = up_scale;
+    ggml_cuda_mul_mat_vec_q(
+        ctx, up_w, &input_3d, expert_ids, &gu, &gate_up_fusion);
+
+    ggml_cuda_pool_alloc<float> experts_alloc(
+        ctx.pool(), (size_t) n_embd * n_used * n_tokens);
+    ggml_tensor experts = make_contiguous_f32_tensor(
+        experts_alloc.ptr, n_embd, n_used, n_tokens);
+    ggml_cuda_mul_mat_vec_q(
+        ctx, down_w, &gu, expert_ids, &experts, nullptr);
+
+    launch_moe_combine(
+        ctx.stream(),
+        (const char *) experts.data,
+        (const char *) weights->data,
+        (char *) dst->data,
+        n_embd, n_used, n_tokens,
+        experts.nb[0], experts.nb[1], experts.nb[2],
+        weights->nb[0], weights->nb[1],
+        dst->nb[0], dst->nb[1],
+        down_scale);
+}
+
+// GGML_MOE_FUSED_HOT_ROUTES: one thread per token walks its picks in route order and gives each of the first n_lanes
+// picks with a hot slot a lane (ggml_moe_hot_routes). Both outputs come from the same walk, so the expert device's
+// lane numbers and the target's lane slots agree.
+static __global__ void moe_hot_routes_kernel(
+        const int32_t * __restrict__ sel, const int64_t sel_ld, const int32_t * __restrict__ lut, const int n_expert,
+        int32_t * __restrict__ hist, int32_t * __restrict__ dst, const int n_used, const int n_lanes, const int n_tokens,
+        const bool hot_slots) {
+    const int t = blockIdx.x * blockDim.x + threadIdx.x;
+    if (t >= n_tokens) {
+        return;
+    }
+    const int32_t * s = sel + (int64_t) t * sel_ld;
+    int lane = 0;
+    if (hot_slots) {
+        int32_t * d = dst + (int64_t) t * n_lanes;
+        for (int k = 0; k < n_used && lane < n_lanes; ++k) {
+            const int32_t e = s[k];
+            const int32_t slot = e >= 0 && e < n_expert ? lut[e] : -1;
+            if (slot >= 0) {
+                d[lane++] = slot;
+            }
+        }
+        for (; lane < n_lanes; ++lane) {
+            d[lane] = -1;
+        }
+    } else {
+        int32_t * d = dst + (int64_t) t * n_used;
+        for (int k = 0; k < n_used; ++k) {
+            const int32_t e = s[k];
+            const bool valid = e >= 0 && e < n_expert;
+            const int32_t slot = lane < n_lanes && valid ? lut[e] : -1;
+            d[k] = slot >= 0 ? -2 - lane++ : e;
+            if (hist && valid) {
+                atomicAdd(hist + e, 1);
+            }
+        }
+    }
+}
+
+// GGML_MOE_FUSED_COMBINE_LANES: moe_fused_combine_shared_kernel_f32 without a shared expert (route order from +0,
+// products and sums rounded one by one, zero weights skipped), reading a pick's output from its lane when the target
+// computed it.
+static __global__ void moe_combine_lanes_kernel(
+        const float4 * __restrict__ down, const float4 * __restrict__ lanes, const float * __restrict__ weights,
+        const int32_t * __restrict__ routes, float4 * __restrict__ out, const int n_embd_vec4, const int n_used,
+        const int n_tokens, const int64_t down_nb1, const int64_t down_nb2, const int64_t lanes_nb1,
+        const int64_t lanes_nb2, const int64_t weights_nb1, const int64_t routes_nb1, const int64_t out_nb1) {
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= n_embd_vec4 * n_tokens) {
+        return;
+    }
+    const int h4 = idx % n_embd_vec4;
+    const int t  = idx / n_embd_vec4;
+    float sum0 = 0.0f;
+    float sum1 = 0.0f;
+    float sum2 = 0.0f;
+    float sum3 = 0.0f;
+    for (int e = 0; e < n_used; ++e) {
+        const float w = weights[e + t * weights_nb1];
+        if (w == 0.0f) {
+            continue;
+        }
+        const int32_t r = routes[e + t * routes_nb1];
+        const float4 v = r <= -2 ? lanes[h4 + (int64_t) (-2 - r) * lanes_nb1 + t * lanes_nb2]
+                                 : down[h4 + (int64_t) e * down_nb1 + t * down_nb2];
+        sum0 = __fadd_rn(sum0, __fmul_rn(v.x, w));
+        sum1 = __fadd_rn(sum1, __fmul_rn(v.y, w));
+        sum2 = __fadd_rn(sum2, __fmul_rn(v.z, w));
+        sum3 = __fadd_rn(sum3, __fmul_rn(v.w, w));
+    }
+    out[h4 + t * out_nb1] = make_float4(sum0, sum1, sum2, sum3);
+}
+
+void ggml_cuda_op_moe_fused(ggml_backend_cuda_context & ctx, ggml_tensor * dst) {
+    const int mode = ggml_get_op_params_i32(dst, 0);
+    if (mode == GGML_MOE_FUSED_HOT_ROUTES) {
+        const ggml_tensor * sel = dst->src[0];
+        const ggml_tensor * lut = dst->src[1];
+        const int n_lanes = ggml_get_op_params_i32(dst, 1);
+        const bool hot_slots = ggml_get_op_params_i32(dst, 2) != 0;
+        GGML_ASSERT(ggml_is_contiguous(dst) && dst->type == GGML_TYPE_I32);
+        const int n_used = (int) sel->ne[0];
+        const int n_tokens = (int) sel->ne[1];
+        moe_hot_routes_kernel<<<(n_tokens + 63) / 64, 64, 0, ctx.stream()>>>(
+            (const int32_t *) sel->data, (int64_t) (sel->nb[1] / sizeof(int32_t)), (const int32_t *) lut->data,
+            (int) ggml_nelements(lut), dst->src[2] ? (int32_t *) dst->src[2]->data : nullptr, (int32_t *) dst->data,
+            n_used, n_lanes, n_tokens, hot_slots);
+        CUDA_CHECK(cudaGetLastError());
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_COMBINE_LANES) {
+        const ggml_tensor * down = dst->src[0];
+        const ggml_tensor * lanes = dst->src[1];
+        const ggml_tensor * weights = dst->src[2];
+        const ggml_tensor * routes = dst->src[3];
+        for (const ggml_tensor * t : {down, lanes}) {
+            GGML_ASSERT((uintptr_t) t->data % sizeof(float4) == 0 && t->nb[1] % sizeof(float4) == 0 &&
+                        t->nb[2] % sizeof(float4) == 0);
+        }
+        GGML_ASSERT((uintptr_t) dst->data % sizeof(float4) == 0 && dst->nb[1] % sizeof(float4) == 0);
+        const int n_embd_vec4 = (int) (down->ne[0] / 4);
+        const int n_used = (int) down->ne[1];
+        const int n_tokens = (int) down->ne[2];
+        const int total = n_embd_vec4 * n_tokens;
+        moe_combine_lanes_kernel<<<(total + 255) / 256, 256, 0, ctx.stream()>>>(
+            (const float4 *) down->data, (const float4 *) lanes->data, (const float *) weights->data,
+            (const int32_t *) routes->data, (float4 *) dst->data, n_embd_vec4, n_used, n_tokens,
+            (int64_t) (down->nb[1] / sizeof(float4)), (int64_t) (down->nb[2] / sizeof(float4)),
+            (int64_t) (lanes->nb[1] / sizeof(float4)), (int64_t) (lanes->nb[2] / sizeof(float4)),
+            (int64_t) (weights->nb[1] / sizeof(float)), (int64_t) (routes->nb[1] / sizeof(int32_t)),
+            (int64_t) (dst->nb[1] / sizeof(float4)));
+        CUDA_CHECK(cudaGetLastError());
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_BALANCED_OWNER_IDS) {
+        const ggml_tensor * global_ids = dst->src[0];
+        const ggml_tensor * weights = dst->src[1];
+        const ggml_tensor * local_lut = dst->src[2];
+        const ggml_tensor * candidate_lut = dst->src[3];
+        GGML_ASSERT(global_ids && global_ids->type == GGML_TYPE_I32);
+        GGML_ASSERT(weights && weights->type == GGML_TYPE_F32);
+        GGML_ASSERT(local_lut && local_lut->type == GGML_TYPE_I32);
+        GGML_ASSERT(candidate_lut && candidate_lut->type == GGML_TYPE_F32);
+        GGML_ASSERT(dst->type == GGML_TYPE_I32);
+        GGML_ASSERT(ggml_are_same_shape(global_ids, weights));
+        GGML_ASSERT(ggml_are_same_shape(global_ids, dst));
+        GGML_ASSERT(ggml_is_contiguous(global_ids));
+        GGML_ASSERT(ggml_is_contiguous(weights));
+        GGML_ASSERT(ggml_is_contiguous(local_lut));
+        GGML_ASSERT(ggml_is_contiguous(candidate_lut));
+        GGML_ASSERT(ggml_is_contiguous(dst));
+
+        GGML_ASSERT(global_ids->ne[0] > 0 && global_ids->ne[0] <= INT_MAX / 4 &&
+                    global_ids->ne[1] > 0 && global_ids->ne[1] <= INT_MAX &&
+                    global_ids->ne[2] == 1 && global_ids->ne[3] == 1);
+        const int n_routes = (int) global_ids->ne[0];
+        const int n_tokens = (int) global_ids->ne[1];
+        GGML_ASSERT(local_lut->ne[0] == 1 && local_lut->ne[2] == n_tokens &&
+                    local_lut->ne[3] == 1);
+        GGML_ASSERT(candidate_lut->ne[0] == 1 &&
+                    candidate_lut->ne[1] == local_lut->ne[1] &&
+                    candidate_lut->ne[2] == n_tokens &&
+                    candidate_lut->ne[3] == 1);
+        GGML_ASSERT(local_lut->ne[1] > 0 && local_lut->ne[1] <= INT_MAX);
+        // Dimension 1 is the base expert domain; later dimensions are only
+        // verifier-token replicas and must not expand the valid ID range.
+        const int n_expert = (int) local_lut->ne[1];
+        const int main_quota = ggml_get_op_params_i32(dst, 1);
+        GGML_ASSERT(main_quota > 0 &&
+                    (int64_t) main_quota <= (int64_t) n_routes * n_tokens);
+        const bool main_owner = ggml_get_op_params_i32(dst, 2) != 0;
+        ds4_balanced_owner_ids_kernel<<<1, 1, 0, ctx.stream()>>>(
+            (const int32_t *) global_ids->data,
+            (const float *) weights->data,
+            (const int32_t *) local_lut->data,
+            (const float *) candidate_lut->data,
+            (int32_t *) dst->data,
+            n_routes, n_tokens, n_expert, main_quota, main_owner);
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_PROTECTED_ROUTES) {
+        const ggml_tensor * biased = dst->src[0];
+        const ggml_tensor * native = dst->src[1];
+        const ggml_tensor * mask = dst->src[2];
+        GGML_ASSERT(biased->nb[0] == sizeof(int32_t) && native->nb[0] == sizeof(int32_t));
+        GGML_ASSERT(ggml_is_contiguous(dst));
+        const int k = (int) dst->ne[0];
+        ds4_protected_routes_kernel<<<(int) dst->ne[1], 32, 0, ctx.stream()>>>(
+            (const int32_t *) biased->data, (int64_t) (biased->nb[1] / sizeof(int32_t)),
+            (const int32_t *) native->data, (int64_t) (native->nb[1] / sizeof(int32_t)),
+            (const int32_t *) mask->data, (int) ggml_nelements(mask),
+            (int32_t *) dst->data, k);
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_HOST_POST || mode == GGML_MOE_FUSED_HOST_WAIT) {
+        const auto * step = host_mailbox_ptr<const uint32_t *>(dst, GGML_MOE_FUSED_HOST_STEP_WORD);
+        auto * flag = host_mailbox_ptr<uint32_t *>(dst, GGML_MOE_FUSED_HOST_FLAG_WORD);
+        auto * payload = host_mailbox_ptr<uint32_t *>(dst, GGML_MOE_FUSED_HOST_PAYLOAD_WORD);
+        if (mode == GGML_MOE_FUSED_HOST_POST) {
+            const ggml_tensor * src = dst->src[0];
+            GGML_ASSERT(src && ggml_is_contiguous(src) && dst->type == GGML_TYPE_I32);
+            host_mailbox_post_kernel<<<1, 256, 0, ctx.stream()>>>(
+                (const uint32_t *) src->data, (int64_t) (ggml_nbytes(src) / sizeof(uint32_t)),
+                step, flag, payload, (int32_t *) dst->data);
+        } else {
+            GGML_ASSERT(ggml_is_contiguous(dst));
+#if defined(GGML_USE_HIP)
+            // The wait runs on the host: a device wave waiting for the host
+            // would hold its queue, and without compute wave save/restore
+            // (amdgpu cwsr_enable=0, the Lucebox setting) a queue that cannot
+            // be evicted ends in an MES timeout and a GPU reset. The resolver
+            // answers once the device has run the post enqueued before this
+            // wait; only this thread waits, and the device keeps running what
+            // is already queued. The step is read at launch, which keeps
+            // these graphs eager.
+            const uint32_t s = *(const volatile uint32_t *) step;
+            for (uint32_t spin = 0; __atomic_load_n(flag, __ATOMIC_ACQUIRE) != s;) {
+                if (spin < 1024) ++spin;
+                else std::this_thread::yield();
+            }
+            host_mailbox_copy_kernel<<<1, 256, 0, ctx.stream()>>>(
+                payload, (uint32_t *) dst->data, (int64_t) (ggml_nbytes(dst) / sizeof(uint32_t)));
+#else
+            host_mailbox_wait_kernel<<<1, 256, 0, ctx.stream()>>>(
+                step, flag, payload, (uint32_t *) dst->data,
+                (int64_t) (ggml_nbytes(dst) / sizeof(uint32_t)));
+#endif
+        }
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_ALIGN_IDS) {
+        const ggml_tensor * ids = dst->src[0];
+        GGML_ASSERT(ids && ids->type == GGML_TYPE_I32);
+        GGML_ASSERT(dst->type == GGML_TYPE_I32);
+        GGML_ASSERT(ggml_is_contiguous(ids) && ggml_is_contiguous(dst));
+        ds4_align_moe_ids_kernel<<<1, 1, 0, ctx.stream()>>>(
+            (const int32_t *) ids->data,
+            (int32_t *) dst->data,
+            (int) ids->ne[0],
+            (int) ids->ne[1],
+            (int) (ids->nb[1] / sizeof(int32_t)),
+            (int) (dst->nb[1] / sizeof(int32_t)));
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_CLUSTER_ALLREDUCE) {
+        // The collective runs as an ordinary graph node on this backend's
+        // stream, so partial sums are combined between the kernels that
+        // produce and consume them without a host round trip. ggml stays free
+        // of any collective library: the caller registered a callback.
+        const ggml_tensor * src = dst->src[0];
+        GGML_ASSERT(src && src->type == GGML_TYPE_F32);
+        GGML_ASSERT(dst->type == GGML_TYPE_F32);
+        GGML_ASSERT(ggml_is_contiguous(src) && ggml_is_contiguous(dst));
+        GGML_ASSERT(ggml_nelements(src) == ggml_nelements(dst));
+
+        ggml_cluster_allreduce_fn fn = nullptr;
+        memcpy(&fn, &dst->op_params[GGML_MOE_FUSED_CLUSTER_ALLREDUCE_FN_WORD],
+               sizeof(fn));
+        GGML_ASSERT(fn);
+        void * user = nullptr;
+        memcpy(&user, &dst->op_params[GGML_MOE_FUSED_CLUSTER_ALLREDUCE_USER_WORD],
+               sizeof(user));
+
+        const size_t n = (size_t) ggml_nelements(dst);
+        if (dst->data != src->data) {
+            CUDA_CHECK(cudaMemcpyAsync(dst->data, src->data, n * sizeof(float),
+                                       cudaMemcpyDeviceToDevice, ctx.stream()));
+        }
+        fn(user, dst->data, n, (void *) ctx.stream());
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_WAKE_HOLD) {
+#if defined(GGML_USE_HIP)
+        static int khz[GGML_CUDA_MAX_DEVICES] = {};
+        if (khz[ctx.device] == 0) {
+            int wc = 0;
+            khz[ctx.device] = hipDeviceGetAttribute(&wc, hipDeviceAttributeWallClockRate, ctx.device) == hipSuccess &&
+                    wc >= 1000 ? wc : 100000;
+        }
+        const int slot = ggml_get_op_params_i32(dst, 1) - 1;
+        GGML_ASSERT(slot >= 0 && slot < GGML_MOE_FUSED_WAKE_SLOTS);
+        const long long ticks = (long long) ggml_get_op_params_i32(dst, 2) * (khz[ctx.device] / 1000);
+        uint32_t * f = ggml_cuda_wake_flags();
+        k_wake_hold<<<1, 32, 0, ctx.stream()>>>(f + slot, f + GGML_MOE_FUSED_WAKE_SLOTS + slot, ticks);
+        CUDA_CHECK(cudaGetLastError());
+#endif // defined(GGML_USE_HIP)
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_PREFETCH_ROWS) {
+        GGML_ASSERT(dst->type == GGML_TYPE_F32 && ggml_nelements(dst) == 1);
+        const ggml_tensor * picks = dst->src[0];
+        const ggml_tensor * map = dst->src[1];
+        GGML_ASSERT(picks && picks->type == GGML_TYPE_I32 && picks->ne[3] == 1);
+        const int max_experts = std::min(ggml_get_op_params_i32(dst, 1), 64);
+        moe_prefetch_stacks st = {};
+        for (int i = 2; i < GGML_MAX_SRC && dst->src[i] != nullptr; ++i) {
+            const ggml_tensor * t = dst->src[i];
+            GGML_ASSERT(t->nb[2] % sizeof(uint4) == 0);
+            st.base[st.count] = (const char *) t->data;
+            st.slice[st.count] = (int64_t) t->nb[2];
+            st.n_expert[st.count] = t->ne[2];
+            st.count++;
+        }
+        if (st.count == 0 || max_experts < 1) {
+            return;
+        }
+        const int nsm = ggml_cuda_info().devices[ctx.device].nsm;
+        const dim3 grid((4 * nsm + max_experts - 1) / max_experts, max_experts);
+        moe_prefetch_rows_kernel<<<grid, 256, 0, ctx.stream()>>>(
+            (const int32_t *) picks->data, (int) picks->ne[0], (int) (picks->ne[1] * picks->ne[2]), (int) picks->ne[1],
+            (int64_t) (picks->nb[1] / sizeof(int32_t)), (int64_t) (picks->nb[2] / sizeof(int32_t)),
+            map ? (const int32_t *) map->data : nullptr, map ? (int) ggml_nelements(map) : 0, st, max_experts,
+            (uint32_t *) dst->data);
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_PREFETCH) {
+        GGML_ASSERT(dst->type == GGML_TYPE_F32 && ggml_nelements(dst) == 1);
+        uint64_t left = 0;
+        memcpy(&left, &dst->op_params[2], sizeof(left));
+        moe_prefetch_ranges r = {};
+        for (int i = 1; i < GGML_MAX_SRC && dst->src[i] != nullptr && left >= sizeof(uint4); ++i) {
+            const uint64_t bytes = std::min<uint64_t>(ggml_nbytes(dst->src[i]), left);
+            r.p[r.count] = (const uint4 *) dst->src[i]->data;
+            r.n[r.count] = (int64_t) (bytes / sizeof(uint4));
+            r.count++;
+            left -= bytes;
+        }
+        if (r.count == 0) {
+            return;
+        }
+        moe_prefetch_kernel<<<4 * ggml_cuda_info().devices[ctx.device].nsm, 256, 0, ctx.stream()>>>(
+            r, (uint32_t *) dst->data);
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_DEFERRED_PEER_COPY) {
+        GGML_ASSERT(ggml_is_contiguous(dst));
+
+        void * event_context = nullptr;
+        memcpy(&event_context,
+               &dst->op_params[GGML_MOE_FUSED_DEFERRED_EVENT_WORD],
+               sizeof(event_context));
+        GGML_ASSERT(event_context);
+
+        void * source_data = nullptr;
+        memcpy(&source_data,
+               &dst->op_params[GGML_MOE_FUSED_DEFERRED_SOURCE_WORD],
+               sizeof(source_data));
+        GGML_ASSERT(source_data);
+
+        if (ggml_get_op_params_i32(
+                dst, GGML_MOE_FUSED_DEFERRED_EXTERNAL_WAIT_WORD) == 0) {
+            // Same-split control: capture the wait at its exact position in
+            // the main GPU graph. On the current ROCm runtime this preserves
+            // correctness but realizes almost no cross-device overlap.
+            CUDA_CHECK(cudaStreamWaitEvent(
+                ctx.stream(), (cudaEvent_t) event_context, 0));
+        }
+
+        // Direct peer reads are required here. On this R9700 + gfx1151 pair,
+        // embedding hipMemcpyPeerAsync in the captured consumer graph returned
+        // stale/corrupt values even with a host-synchronized producer event.
+        // The small contiguous activation is only 16-64 KiB, and the peer-read
+        // kernel is exact with both eager execution and HIP graph replay.
+        const int64_t n = ggml_nelements(dst);
+        const int block = 256;
+        const int grid = (int) ((n + block - 1) / block);
+        ds4_peer_copy_f32_kernel<<<grid, block, 0, ctx.stream()>>>(
+            (const float *) source_data, (float *) dst->data, n);
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_OWNER) {
+        ggml_cuda_op_ds4_moe_owner(ctx, dst);
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_OWNER_SPLIT) {
+        ggml_cuda_op_ds4_moe_owner_split(ctx, dst);
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_COMBINE_MASKED) {
+        const ggml_tensor * experts = dst->src[0];  // [n_embd, n_used, n_tokens]
+        const ggml_tensor * weights = dst->src[1];  // [n_used, n_tokens]
+        const ggml_tensor * valid   = dst->src[2];  // [1, n_expert, n_tokens]
+        const ggml_tensor * ids     = dst->src[3];  // [n_used, n_tokens]
+        GGML_ASSERT(experts->nb[0] == sizeof(float) && dst->nb[0] == sizeof(float));
+        const int n_embd   = (int) experts->ne[0];
+        const int n_used   = (int) experts->ne[1];
+        const int n_tokens = (int) experts->ne[2];
+        const int total = n_embd * n_tokens;
+        constexpr int block = 256;
+        moe_combine_masked_kernel<<<(total + block - 1) / block, block, 0, ctx.stream()>>>(
+            (const char *) experts->data, (const char *) weights->data,
+            (const char *) valid->data, (const char *) ids->data, (char *) dst->data,
+            n_embd, n_used, n_tokens,
+            experts->nb[1], experts->nb[2], weights->nb[1],
+            valid->nb[1], valid->nb[2], ids->nb[1], dst->nb[1]);
+        CUDA_CHECK(cudaGetLastError());
+        return;
+    }
+    if (mode == GGML_MOE_FUSED_COMBINE) {
+        const ggml_tensor * experts = dst->src[0];  // [n_embd, n_used, n_tokens]
+        const ggml_tensor * weights = dst->src[1];  // [n_used, n_tokens]
+        const int n_embd   = (int) experts->ne[0];
+        const int n_used   = (int) experts->ne[1];
+        const int n_tokens = (int) experts->ne[2];
+        launch_moe_combine(
+            ctx.stream(),
+            (const char *) experts->data,
+            (const char *) weights->data,
+            (char *) dst->data,
+            n_embd, n_used, n_tokens,
+            experts->nb[0], experts->nb[1], experts->nb[2],
+            weights->nb[0], weights->nb[1],
+            dst->nb[0], dst->nb[1],
+            1.0f);
+        return;
+    }
+
+    const ggml_tensor * input        = dst->src[0];
+    const ggml_tensor * gate_w       = dst->src[1];
+    const ggml_tensor * up_w         = dst->src[2];
+    const ggml_tensor * down_w       = dst->src[3];
+    const ggml_tensor * expert_ids   = dst->src[4];
+    const ggml_tensor * expert_wts   = dst->src[5];
+
+    const int n_embd         = (int) gate_w->ne[0];
+    const int ff_dim         = (int) gate_w->ne[1];
+    const int n_expert_used  = (int) expert_ids->ne[0];
+
+    const size_t gate_row_stride = gate_w->nb[1];
+    const size_t up_row_stride   = up_w->nb[1];
+    const size_t down_row_stride = down_w->nb[1];
+    const size_t gate_expert_stride = gate_w->nb[2];
+    const size_t up_expert_stride   = up_w->nb[2];
+    const size_t down_expert_stride = down_w->nb[2];
+
+    const int BLOCK_SIZE = 256;
+    const int smem_size = n_expert_used * ff_dim * sizeof(float);
+
+    moe_fused_kernel<BLOCK_SIZE><<<1, BLOCK_SIZE, smem_size, ctx.stream()>>>(
+        (const float *) input->data,
+        gate_w->data,
+        up_w->data,
+        down_w->data,
+        (const int32_t *) expert_ids->data,
+        (const float *) expert_wts->data,
+        dst->src[6] ? dst->src[6]->data : nullptr,
+        dst->src[7] ? dst->src[7]->data : nullptr,
+        dst->src[8] ? dst->src[8]->data : nullptr,
+        dst->src[9] ? dst->src[9]->data : nullptr,
+        (float *) dst->data,
+        n_embd,
+        ff_dim,
+        n_expert_used,
+        (int) gate_w->ne[2],
+        (int) gate_w->type,
+        (int) up_w->type,
+        (int) down_w->type,
+        gate_row_stride,
+        up_row_stride,
+        down_row_stride,
+        gate_expert_stride,
+        up_expert_stride,
+        down_expert_stride,
+        gate_w->nb[0],
+        up_w->nb[0],
+        down_w->nb[0]);
+}

@@ -1,0 +1,47 @@
+id        = "runtime.strixfold_tp4.coll"
+kind      = "runtime"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for runtime.strixfold.coll: 3 file(s) of runtime.strixfold.coll (coll.zig, fan.zig, link.zig), laid over the f64b5ff files"
+why       = "runtime.strixfold.coll is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over runtime.strixfold.coll without touching it or the TP2 recipes"
+notes     = "Overlay of runtime.strixfold.coll (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 023c5d2ad9, e96f0f5fa0, 034bf2c6cd, 6f42c090eb, 12c50c5d8d, 3760ed527a, b7eb57e048, b1f8fd4cf0. Latest commits: 7bc5cbf4 dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9); 2513d98c dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0); 5cb6ff9e dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0); 4467d9c4 dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/families/dsv41/coll.zig",
+  "zig/src/families/dsv41/fan.zig",
+  "zig/src/families/dsv41/link.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.coll (origin strixfold, f64b5ff): 3 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "collective.interface/-/-.tp4"
+api       = "coll.zig Coll (VTable.all_gather, the gatherBegin / gatherEnd halves, abort, close), Identity, DType, Site"
+numeric   = "a collective only moves bytes; every reduction is an all-gather of fp32 partials each rank adds in rank order, so results are identical on every rank and independent of the transport"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); TP2; first failure poisons the Coll"
+
+[[requires]]
+module    = "runtime.strixfold.coll"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

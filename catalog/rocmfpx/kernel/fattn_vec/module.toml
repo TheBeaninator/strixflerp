@@ -1,0 +1,58 @@
+id        = "kernel.rocmfpx.fattn_vec"
+kind      = "kernel"
+summary   = "ROCmFPX quantized-KV flash attention: ggml's vector flash-attention kernel (decode) with K and V in ROCmFP3, ROCmFP4, ROCmFP4-fast, ROCmFP6 or ROCmFP8, one template instance a type pair, and the shared dequantize / dot helpers of fattn-common.cuh"
+why       = "a KV cache in the ROCmFPX types is attended without a dequantized copy; the catalogue's quantized-KV attention providers are hipfire's (q8_0 KV) and radiance's (e4m3)"
+notes     = "Interface tags by file: fattn-vec.cuh attn.softmax-gqa/kv-rocmfpx/f32; fattn-common.cuh none; the template instances none (catalog/rocmfpx/KERNELS.md has the table). No timing was taken on the pod."
+
+[provenance]
+origin    = "rocmfpx"
+repo      = "https://github.com/ciru-ai/ROCmFPX"
+commit    = "efd1ef5a17db576168d849831e1ef3346582881e"
+branch    = "main"
+paths     = [
+  "ggml/src/ggml-cuda/fattn-common.cuh",
+  "ggml/src/ggml-cuda/fattn-vec.cuh",
+  "ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q3_0_rocmfpx-q3_0_rocmfpx.cu",
+  "ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q4_0_rocmfp4-q4_0_rocmfp4.cu",
+  "ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q4_0_rocmfp4_fast-q4_0_rocmfp4_fast.cu",
+  "ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q6_0_rocmfpx-q6_0_rocmfpx.cu",
+  "ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q8_0_rocmfpx-q8_0_rocmfpx.cu",
+]
+authors   = ["Ciru (ciru-ai)", "the ggml authors"]
+modified  = false
+upstream  = "ggml-org/llama.cpp 15586e2d7165570fb3aa7c26e0d442e289ef69de: the llama.cpp files of this family carry the ROCmFPX code as extra type cases; the q7-*.cuh, the ROCmFP template instances and rocmfp4_hip.cu are ROCmFPX files"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q3_0_rocmfpx-q3_0_rocmfpx.cu",
+  "src/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q4_0_rocmfp4-q4_0_rocmfp4.cu",
+  "src/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q4_0_rocmfp4_fast-q4_0_rocmfp4_fast.cu",
+  "src/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q6_0_rocmfpx-q6_0_rocmfpx.cu",
+  "src/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-q8_0_rocmfpx-q8_0_rocmfpx.cu",
+]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-rocmfpx/f32.rocmfpx-vec"
+api       = "ggml/src/ggml-cuda/fattn-vec.cuh: ggml's flash_attn_ext_vec with the ROCmFPX K / V cases"
+numeric   = "f16 Q against dequantized K blocks (or the q8_1 dot path of fattn-common.cuh), online softmax in f32, V dequantized per block; f32 output"
+regime    = "decode (one or a few query rows a head); the origin compiles these five pairs without GGML_CUDA_FA_ALL_QUANTS (ggml-hip/CMakeLists.txt)"
+
+[[requires]]
+module    = "kernel.rocmfpx.common"
+
+[[requires]]
+interface = "format.device-view/gguf-rocmfpx/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.rocmfpx.fattn_vec.json"

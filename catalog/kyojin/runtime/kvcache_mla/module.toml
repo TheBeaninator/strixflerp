@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.kvcache_mla"
+kind      = "runtime"
+summary   = "MLA latent cache layer: one compressed latent (ckv, kv_lora_rank) and one shared RoPE key (kpe) per token in pages, instead of per-head K and V"
+why       = "MLA models. Where the shape would go: a kvcache.store/kv-bf16/bf16 provider beside kernel.ciru_inkling.attn_decode, kernel.ciru_inkling.attn_prefill, through a port of the python / Triton logic"
+notes     = "Interface tag: kvcache.store/kv-bf16/bf16. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 1 changed (mla.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/cache/mla.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.store/kv-bf16/bf16.kyojin-mla"
+api       = "mla.py"
+numeric   = "n/a"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

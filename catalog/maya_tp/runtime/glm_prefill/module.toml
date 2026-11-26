@@ -1,0 +1,89 @@
+id        = "runtime.maya_tp.glm_prefill"
+kind      = "runtime"
+summary   = "the glm5-next batched prompt path (glm_prefill.cu, 5,273 lines) with its FP16 weight types (glm_prefill_types.hpp)"
+why       = "GLM prompt processing in chunks; under TP2 both ranks agree on chunk sizes that fit the transport's receive window"
+notes     = "Interface tag: executor.glm5-next-prefill/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/core/glm_prefill.cu", "src/core/glm_prefill_types.hpp"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.glm5-next-prefill/-/-"
+api       = "Glm5Model prompt members"
+numeric   = "FP16 weights, FP32 accumulate"
+regime    = "prompt chunks"
+
+[[requires]]
+module    = "kernel.maya_tp.bf16_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_iq"
+
+[[requires]]
+module    = "kernel.maya_tp.exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_batch"
+
+[[requires]]
+module    = "kernel.maya_tp.prefill"
+
+[[requires]]
+module    = "kernel.maya_tp.prefill_moe_mmq"
+
+[[requires]]
+module    = "kernel.maya_tp.prefill_moe_rdna4"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_dsa_prompt"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_tiers"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_context"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

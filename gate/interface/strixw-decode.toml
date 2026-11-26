@@ -1,0 +1,601 @@
+# Interface gate: the strixw decode GEMV (linear.decode/strixw-q4|q5|q6|q8), strixite's kernels and the flerp panel
+# adapters, against the CPU reference gate/interface/reference/strixw_decode.hpp. Card a9ac7b1c0f (FLERP-H-STRIXW-DEC).
+# The production Flash-Next decode path: kernel.strixite.linear_q4 / q8 / q56 serve FreeFitty, and the p16 champion
+# configs bind kernel.flerp.linear_q4p / q8p. gate/strixw-panel-kernels.toml already compares the panel kernels with
+# strixite's on real tensors (byte-equal); this gate adds what neither has had: the CPU reference for both.
+# Pass criteria fixed on 2026-11-24 before the first run. Do not edit them to turn a failure into a pass.
+interface = "linear.decode/strixw-q4/bf16"
+api       = "strix::kernels::linear_q4 / linear_q5 / linear_q6 / linear_q8(x, view, y, M, act, out_act, stream)"
+driver    = "gate/interface/drivers/strixw_decode"
+toolchain = "therock-10.1"
+
+[criteria]
+# The kernels compute s * sum(x q) + m * sum(x) per 16-byte chunk, split-K partial sums meeting in LDS: a different
+# order and association from the exact sum, so the providers' bits need not equal the reference's. The criterion is
+# the any-order bound against the exact (double) sum over the real-valued weights w = q * s + m:
+#   F32 out   |y - exact| <= (2K - 1 + 4) * 2^-24 * sum (|x q s| + |x m|)
+#   BF16 out  the same plus one BF16 rounding: + 2^-9 * (|exact| + that bound)
+# (gate/interface/reference/strixw_decode.hpp, the driver). Above 1.0 of the bound fails. The panel adapters claim
+# strixite's bits (their module.toml numeric lines): the cross-provider comparison of interface.py shows whether
+# strixite-q4 / flerp-q4p and strixite-q8 / flerp-q8p dumps are byte-equal; that claim is reported, the bound decides.
+parity                          = "order-bound"
+max_err_over_bound              = 1.0
+adapter_must_launch_foreign     = true
+adapter_origin_launches_allowed = 0      # a panel case must never fall back to strixite's row-major kernel
+
+# Five providers, one per kernel module. The three strixite providers bind the same modules (one assembly each:
+# the gate builds per provider) and differ in the cases they take; the flerp providers take panel tensors
+# (case_args layout = "panel") through strixite's call sites, as the p16 recipe does.
+[[provider]]
+name      = "strixite-q4"
+module    = "kernel.strixite.linear_q4"
+cases     = "^q4-"
+case_args = { layout = "row" }
+[provider.bind]
+"linear.decode/strixw-q4/bf16"      = "kernel.strixite.linear_q4"
+"linear.decode/strixw-q8/bf16"      = "kernel.strixite.linear_q8"
+"linear.decode/strixw-q5/bf16"      = "kernel.strixite.linear_q56"
+"linear.decode/strixw-q6/bf16"      = "kernel.strixite.linear_q56"
+"format.device-view/strixw-q4/-"    = "format.strixite.q4_device"
+"format.device-view/strixw-q5/-"    = "format.strixite.q5_device"
+"format.device-view/strixw-q6/-"    = "format.strixite.q6_device"
+"format.device-view/strixw-q8/-"    = "format.strixite.q8_device"
+"format.host/strixw-q4p16/-"        = "format.flerp.q4panel"
+"format.device-view/strixw-q4p16/-" = "format.flerp.panel_device"
+
+[[provider]]
+name      = "strixite-q8"
+module    = "kernel.strixite.linear_q8"
+cases     = "^q8-"
+case_args = { layout = "row" }
+[provider.bind]
+"linear.decode/strixw-q4/bf16"      = "kernel.strixite.linear_q4"
+"linear.decode/strixw-q8/bf16"      = "kernel.strixite.linear_q8"
+"linear.decode/strixw-q5/bf16"      = "kernel.strixite.linear_q56"
+"linear.decode/strixw-q6/bf16"      = "kernel.strixite.linear_q56"
+"format.device-view/strixw-q4/-"    = "format.strixite.q4_device"
+"format.device-view/strixw-q5/-"    = "format.strixite.q5_device"
+"format.device-view/strixw-q6/-"    = "format.strixite.q6_device"
+"format.device-view/strixw-q8/-"    = "format.strixite.q8_device"
+"format.host/strixw-q4p16/-"        = "format.flerp.q4panel"
+"format.device-view/strixw-q4p16/-" = "format.flerp.panel_device"
+
+[[provider]]
+name      = "strixite-q56"
+module    = "kernel.strixite.linear_q56"
+cases     = "^q[56]-"
+case_args = { layout = "row" }
+[provider.bind]
+"linear.decode/strixw-q4/bf16"      = "kernel.strixite.linear_q4"
+"linear.decode/strixw-q8/bf16"      = "kernel.strixite.linear_q8"
+"linear.decode/strixw-q5/bf16"      = "kernel.strixite.linear_q56"
+"linear.decode/strixw-q6/bf16"      = "kernel.strixite.linear_q56"
+"format.device-view/strixw-q4/-"    = "format.strixite.q4_device"
+"format.device-view/strixw-q5/-"    = "format.strixite.q5_device"
+"format.device-view/strixw-q6/-"    = "format.strixite.q6_device"
+"format.device-view/strixw-q8/-"    = "format.strixite.q8_device"
+"format.host/strixw-q4p16/-"        = "format.flerp.q4panel"
+"format.device-view/strixw-q4p16/-" = "format.flerp.panel_device"
+
+[[provider]]
+name      = "flerp-q4p"
+module    = "kernel.flerp.linear_q4p"
+adapter   = true
+cases     = "^q4-"
+case_args = { layout = "panel" }
+[provider.bind]
+"linear.decode/strixw-q4/bf16"      = "kernel.flerp.linear_q4p"
+"linear.decode/strixw-q8/bf16"      = "kernel.flerp.linear_q8p"
+"linear.decode/strixw-q5/bf16"      = "kernel.strixite.linear_q56"
+"linear.decode/strixw-q6/bf16"      = "kernel.strixite.linear_q56"
+"format.device-view/strixw-q4/-"    = "format.strixite.q4_device"
+"format.device-view/strixw-q5/-"    = "format.strixite.q5_device"
+"format.device-view/strixw-q6/-"    = "format.strixite.q6_device"
+"format.device-view/strixw-q8/-"    = "format.strixite.q8_device"
+"format.host/strixw-q4p16/-"        = "format.flerp.q4panel"
+"format.device-view/strixw-q4p16/-" = "format.flerp.panel_device"
+
+[[provider]]
+name      = "flerp-q8p"
+module    = "kernel.flerp.linear_q8p"
+adapter   = true
+cases     = "^q8-"
+case_args = { layout = "panel" }
+[provider.bind]
+"linear.decode/strixw-q4/bf16"      = "kernel.flerp.linear_q4p"
+"linear.decode/strixw-q8/bf16"      = "kernel.flerp.linear_q8p"
+"linear.decode/strixw-q5/bf16"      = "kernel.strixite.linear_q56"
+"linear.decode/strixw-q6/bf16"      = "kernel.strixite.linear_q56"
+"format.device-view/strixw-q4/-"    = "format.strixite.q4_device"
+"format.device-view/strixw-q5/-"    = "format.strixite.q5_device"
+"format.device-view/strixw-q6/-"    = "format.strixite.q6_device"
+"format.device-view/strixw-q8/-"    = "format.strixite.q8_device"
+"format.host/strixw-q4p16/-"        = "format.flerp.q4panel"
+"format.device-view/strixw-q4p16/-" = "format.flerp.panel_device"
+
+# --- cases: per format, decode row counts 1..16 (M == 1 has its own instantiation; 8 rows a pass above), group sizes
+# 32 / 64 / 128, BF16 and F32 activations, BF16 -> F32 output (the router form), the smallest panel (N 16, K 128),
+# a row count that is not a power of two (N 272) and a wide-range activation; benches at a decode projection.
+[[case]]
+name = "q4-m1-n16-k128-g32"
+kind = "parity"
+bits = 4
+M = 1
+N = 16
+K = 128
+G = 32
+act = "bf16"
+out = "bf16"
+seed = 600
+pattern = "gauss"
+
+[[case]]
+name = "q4-m1-n256-k2560-g64"
+kind = "parity"
+bits = 4
+M = 1
+N = 256
+K = 2560
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 601
+pattern = "gauss"
+
+[[case]]
+name = "q4-m2-n512-k2048-g128-out-f32"
+kind = "parity"
+bits = 4
+M = 2
+N = 512
+K = 2048
+G = 128
+act = "bf16"
+out = "f32"
+seed = 602
+pattern = "gauss"
+
+[[case]]
+name = "q4-m3-n272-k4096-g32-f32"
+kind = "parity"
+bits = 4
+M = 3
+N = 272
+K = 4096
+G = 32
+act = "f32"
+out = "f32"
+seed = 603
+pattern = "gauss"
+
+[[case]]
+name = "q4-m8-n1024-k2048-g64"
+kind = "parity"
+bits = 4
+M = 8
+N = 1024
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 604
+pattern = "gauss"
+
+[[case]]
+name = "q4-m16-n256-k2048-g64"
+kind = "parity"
+bits = 4
+M = 16
+N = 256
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 605
+pattern = "gauss"
+
+[[case]]
+name = "q4-m4-n256-k6144-g128-wide-range-f32"
+kind = "parity"
+bits = 4
+M = 4
+N = 256
+K = 6144
+G = 128
+act = "f32"
+out = "f32"
+seed = 606
+pattern = "wide-range"
+
+[[case]]
+name = "q4-bench-m1-4096x2048"
+kind = "bench"
+shape = "M=1, N=4096, K=2048, G=64, BF16 in and out: a decode projection"
+bits = 4
+M = 1
+N = 4096
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 607
+iters = 500
+repeats = 9
+
+[[case]]
+name = "q4-bench-m8-4096x2048"
+kind = "bench"
+shape = "M=8, N=4096, K=2048, G=64, BF16 in and out: a decode projection"
+bits = 4
+M = 8
+N = 4096
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 608
+iters = 500
+repeats = 9
+
+[[case]]
+name = "q8-m1-n16-k128-g32"
+kind = "parity"
+bits = 8
+M = 1
+N = 16
+K = 128
+G = 32
+act = "bf16"
+out = "bf16"
+seed = 609
+pattern = "gauss"
+
+[[case]]
+name = "q8-m1-n256-k2560-g64"
+kind = "parity"
+bits = 8
+M = 1
+N = 256
+K = 2560
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 610
+pattern = "gauss"
+
+[[case]]
+name = "q8-m2-n512-k2048-g128-out-f32"
+kind = "parity"
+bits = 8
+M = 2
+N = 512
+K = 2048
+G = 128
+act = "bf16"
+out = "f32"
+seed = 611
+pattern = "gauss"
+
+[[case]]
+name = "q8-m3-n272-k4096-g32-f32"
+kind = "parity"
+bits = 8
+M = 3
+N = 272
+K = 4096
+G = 32
+act = "f32"
+out = "f32"
+seed = 612
+pattern = "gauss"
+
+[[case]]
+name = "q8-m8-n1024-k2048-g64"
+kind = "parity"
+bits = 8
+M = 8
+N = 1024
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 613
+pattern = "gauss"
+
+[[case]]
+name = "q8-m16-n256-k2048-g64"
+kind = "parity"
+bits = 8
+M = 16
+N = 256
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 614
+pattern = "gauss"
+
+[[case]]
+name = "q8-m4-n256-k6144-g128-wide-range-f32"
+kind = "parity"
+bits = 8
+M = 4
+N = 256
+K = 6144
+G = 128
+act = "f32"
+out = "f32"
+seed = 615
+pattern = "wide-range"
+
+[[case]]
+name = "q8-bench-m1-4096x2048"
+kind = "bench"
+shape = "M=1, N=4096, K=2048, G=64, BF16 in and out: a decode projection"
+bits = 8
+M = 1
+N = 4096
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 616
+iters = 500
+repeats = 9
+
+[[case]]
+name = "q8-bench-m8-4096x2048"
+kind = "bench"
+shape = "M=8, N=4096, K=2048, G=64, BF16 in and out: a decode projection"
+bits = 8
+M = 8
+N = 4096
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 617
+iters = 500
+repeats = 9
+
+[[case]]
+name = "q5-m1-n16-k128-g32"
+kind = "parity"
+bits = 5
+M = 1
+N = 16
+K = 128
+G = 32
+act = "bf16"
+out = "bf16"
+seed = 618
+pattern = "gauss"
+
+[[case]]
+name = "q5-m1-n256-k2560-g64"
+kind = "parity"
+bits = 5
+M = 1
+N = 256
+K = 2560
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 619
+pattern = "gauss"
+
+[[case]]
+name = "q5-m2-n512-k2048-g128-out-f32"
+kind = "parity"
+bits = 5
+M = 2
+N = 512
+K = 2048
+G = 128
+act = "bf16"
+out = "f32"
+seed = 620
+pattern = "gauss"
+
+[[case]]
+name = "q5-m3-n272-k4096-g32-f32"
+kind = "parity"
+bits = 5
+M = 3
+N = 272
+K = 4096
+G = 32
+act = "f32"
+out = "f32"
+seed = 621
+pattern = "gauss"
+
+[[case]]
+name = "q5-m8-n1024-k2048-g64"
+kind = "parity"
+bits = 5
+M = 8
+N = 1024
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 622
+pattern = "gauss"
+
+[[case]]
+name = "q5-m16-n256-k2048-g64"
+kind = "parity"
+bits = 5
+M = 16
+N = 256
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 623
+pattern = "gauss"
+
+[[case]]
+name = "q5-m4-n256-k6144-g128-wide-range-f32"
+kind = "parity"
+bits = 5
+M = 4
+N = 256
+K = 6144
+G = 128
+act = "f32"
+out = "f32"
+seed = 624
+pattern = "wide-range"
+
+[[case]]
+name = "q5-bench-m1-4096x2048"
+kind = "bench"
+shape = "M=1, N=4096, K=2048, G=64, BF16 in and out: a decode projection"
+bits = 5
+M = 1
+N = 4096
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 625
+iters = 500
+repeats = 9
+
+[[case]]
+name = "q5-bench-m8-4096x2048"
+kind = "bench"
+shape = "M=8, N=4096, K=2048, G=64, BF16 in and out: a decode projection"
+bits = 5
+M = 8
+N = 4096
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 626
+iters = 500
+repeats = 9
+
+[[case]]
+name = "q6-m1-n16-k128-g32"
+kind = "parity"
+bits = 6
+M = 1
+N = 16
+K = 128
+G = 32
+act = "bf16"
+out = "bf16"
+seed = 627
+pattern = "gauss"
+
+[[case]]
+name = "q6-m1-n256-k2560-g64"
+kind = "parity"
+bits = 6
+M = 1
+N = 256
+K = 2560
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 628
+pattern = "gauss"
+
+[[case]]
+name = "q6-m2-n512-k2048-g128-out-f32"
+kind = "parity"
+bits = 6
+M = 2
+N = 512
+K = 2048
+G = 128
+act = "bf16"
+out = "f32"
+seed = 629
+pattern = "gauss"
+
+[[case]]
+name = "q6-m3-n272-k4096-g32-f32"
+kind = "parity"
+bits = 6
+M = 3
+N = 272
+K = 4096
+G = 32
+act = "f32"
+out = "f32"
+seed = 630
+pattern = "gauss"
+
+[[case]]
+name = "q6-m8-n1024-k2048-g64"
+kind = "parity"
+bits = 6
+M = 8
+N = 1024
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 631
+pattern = "gauss"
+
+[[case]]
+name = "q6-m16-n256-k2048-g64"
+kind = "parity"
+bits = 6
+M = 16
+N = 256
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 632
+pattern = "gauss"
+
+[[case]]
+name = "q6-m4-n256-k6144-g128-wide-range-f32"
+kind = "parity"
+bits = 6
+M = 4
+N = 256
+K = 6144
+G = 128
+act = "f32"
+out = "f32"
+seed = 633
+pattern = "wide-range"
+
+[[case]]
+name = "q6-bench-m1-4096x2048"
+kind = "bench"
+shape = "M=1, N=4096, K=2048, G=64, BF16 in and out: a decode projection"
+bits = 6
+M = 1
+N = 4096
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 634
+iters = 500
+repeats = 9
+
+[[case]]
+name = "q6-bench-m8-4096x2048"
+kind = "bench"
+shape = "M=8, N=4096, K=2048, G=64, BF16 in and out: a decode projection"
+bits = 6
+M = 8
+N = 4096
+K = 2048
+G = 64
+act = "bf16"
+out = "bf16"
+seed = 635
+iters = 500
+repeats = 9

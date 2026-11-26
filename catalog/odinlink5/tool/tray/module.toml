@@ -1,0 +1,58 @@
+id        = "tool.odinlink5.tray"
+kind      = "tool"
+summary   = "the GTK / Ayatana AppIndicator tray app: peers window, link tests with charts and result parsing, RCCL stats view, sync status and file actions, talking to the daemon over D-Bus"
+why       = "a desktop front end for the daemon; not for the pod, kept so the origin is complete and the D-Bus contract has its client"
+notes     = "Interface tag: none. Not compiled: needs GTK 3 and ayatana-appindicator. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "tray/CMakeLists.txt",
+  "tray/data/odl-tb5-tray.desktop",
+  "tray/dbus/com.odinlink.Tb5Daemon.xml",
+  "tray/icons/odl_tb5_connected.svg",
+  "tray/icons/odl_tb5_disconnected.svg",
+  "tray/icons/odl_tb5_error.svg",
+  "tray/icons/odl_tb5_syncing.svg",
+  "tray/src/odl_tb5_tray.h",
+  "tray/src/odl_tb5_tray_dbus.c",
+  "tray/src/odl_tb5_tray_files.c",
+  "tray/src/odl_tb5_tray_main.c",
+  "tray/src/odl_tb5_tray_menu.c",
+  "tray/src/odl_tb5_tray_peers.c",
+  "tray/src/odl_tb5_tray_rccl.c",
+  "tray/src/odl_tb5_tray_sync.c",
+  "tray/src/odl_tb5_tray_test_charts.c",
+  "tray/src/odl_tb5_tray_test_charts.h",
+  "tray/src/odl_tb5_tray_test_overview.c",
+  "tray/src/odl_tb5_tray_test_parse.c",
+  "tray/src/odl_tb5_tray_test_parse.h",
+  "tray/src/odl_tb5_tray_tests.c",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/tray/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.link-tray/-/-"
+api       = "odl-tb5-tray (GTK 3)"
+numeric   = "n/a"
+regime    = "desktop Linux"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c: not compiled by the gate (needs GTK 3 and ayatana-appindicator)"

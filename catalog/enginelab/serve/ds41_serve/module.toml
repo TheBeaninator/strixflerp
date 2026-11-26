@@ -1,0 +1,93 @@
+id        = "serve.enginelab.ds41_serve"
+kind      = "serve"
+summary   = "DS41 serving: serve cache policy, observation and scheduling, the prefix and session caches, the cache lease and the HTTP session owner"
+why       = "how DS41 keeps conversations warm across requests on a pair; where it would go: beside the catalogue's serve.engine/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: serve.engine/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 3 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/deepseek41_cache_lease.hpp",
+  "include/strix/deepseek41_prefix_cache.hpp",
+  "include/strix/deepseek41_serve_cache_policy.hpp",
+  "include/strix/deepseek41_serve_observe.hpp",
+  "include/strix/deepseek41_serve_sched.hpp",
+  "include/strix/deepseek41_session_cache.hpp",
+  "src/deepseek41/http_session_owner.cpp",
+  "src/deepseek41/http_session_owner.hpp",
+  "src/deepseek41_prefix_cache.cpp",
+  "src/deepseek41_session_cache.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/deepseek41/http_session_owner.cpp",
+  "src/src/deepseek41_prefix_cache.cpp",
+  "src/src/deepseek41_session_cache.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.engine-enginelab-ds41/-/-"
+api       = "src/deepseek41_*cache.cpp, src/deepseek41/http_session_owner.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_dspark"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_attention"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_trellis"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_prefix"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

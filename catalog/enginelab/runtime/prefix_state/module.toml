@@ -1,0 +1,52 @@
+id        = "runtime.enginelab.prefix_state"
+kind      = "runtime"
+summary   = "prefix state caching: the prefix state cache, state-cache snapshot, context key index, block summary state and repeat digests"
+why       = "reuse of a prompt prefix's state across requests; where it would go: beside the catalogue's cache.prompt/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: cache.prompt/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/block_summary_state.hpp",
+  "include/strix/context_key_index.hpp",
+  "include/strix/prefix_state_cache.hpp",
+  "include/strix/repeat_digests.hpp",
+  "include/strix/state_cache_snapshot.hpp",
+  "src/prefix_state_cache.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/prefix_state_cache.cpp"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "cache.prompt-enginelab/-/-"
+api       = "src/prefix_state_cache.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

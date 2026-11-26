@@ -1,0 +1,159 @@
+id        = "kernel.kyojin.exl3_moe"
+kind      = "kernel"
+summary   = "EXL3 MoE expert kernels: input Hadamard, gate / up GEMMs, activation, down GEMM and output Hadamard per (K, codebook, N tile, M tile) instance, with M_TILE 32 / 64 instances for experts with many tokens and the [count_lo, count_hi] split"
+why       = "routed experts of the EXL3 packs (GLM-5.3-Flash-EXL3-Yamz, Qwen3.8-Flash-Next-EXL3-Yamz). Where the shape would go: a moe.experts-decode/exl3/f16-f32 provider beside kernel.crucible.moe_decode, kernel.strix_trellis.exl3_tp_moe, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-decode/exl3/f16-f32. Against the base turboderp-org/exllamav3 8c593e4e: 10 added (exl3_moe_inst_k0_n128_cb0.cu, exl3_moe_inst_k0_n256_cb0.cu, exl3_moe_inst_k1_cb0.cu, exl3_moe_inst_k2_cb0.cu, exl3_moe_inst_k3_cb0.cu, exl3_moe_inst_k4_cb0.cu) ..., 43 changed (exl3_moe_inst_k0_n128_cb1.cu, exl3_moe_inst_k0_n128_cb2.cu, exl3_moe_inst_k0_n128_cb2_m32.cu, exl3_moe_inst_k0_n128_cb2_m64.cu, exl3_moe_inst_k0_n256_cb1.cu, exl3_moe_inst_k0_n256_cb2.cu) .... No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n256_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n256_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n256_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb0.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb2_m32.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb2_m64.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_instances.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_moe.cu",
+  "exllamav3/exllamav3_ext/quant/exl3_moe.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_moe_common.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_moe_kernel.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n128_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n256_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n256_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k0_n256_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k1_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k2_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k3_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k4_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k5_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k6_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k7_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb0.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb2_m32.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_inst_k8_cb2_m64.cu",
+  "src/exllamav3/exllamav3_ext/quant/exl3_moe.cu",
+]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/f16-f32.kyojin"
+api       = "exl3_moe_inst_k0_n128_cb0.cu, exl3_moe_inst_k0_n128_cb1.cu, exl3_moe_inst_k0_n128_cb2.cu, exl3_moe_inst_k0_n128_cb2_m32.cu, exl3_moe_inst_k0_n128_cb2_m64.cu, exl3_moe_inst_k0_n256_cb0.cu, exl3_moe_inst_k0_n256_cb1.cu, exl3_moe_inst_k0_n256_cb2.cu ...; kernels: exl3_moe_gather_kernel, exl3_moe_kernel"
+numeric   = "fp16 activations, fp32 accumulation"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemm"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_kernel_map"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.graph"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: exl3_moe_inst_k0_n128_cb0.cu, exl3_moe_inst_k0_n128_cb1.cu, exl3_moe_inst_k0_n128_cb2.cu, exl3_moe_inst_k0_n128_cb2_m32.cu, exl3_moe_inst_k0_n128_cb2_m64.cu, exl3_moe_inst_k0_n256_cb0.cu ..."

@@ -1,0 +1,36 @@
+id        = "kernel.ds4.glmtp_dsv41"
+kind      = "kernel"
+summary   = "davidcanar/ds4 glm-tp-rocm 8ebf672 (antirez/ds4 PR #1024, stacked on #813, #835 and #1018): its copy of the dsv41 family against antirez/ds4 b3f5018: ds4_deepseek41_cuda.cuh changed (+30 -249 lines); ds4_deepseek41_gpu.h changed (+2 -165 lines). The family: DeepSeek V4.1-specific GPU operations shared by CUDA and ROCm (included after the shared kernels): BF16, candidates, carry, causal and index scores, engram, gather, indexer, pool, quantize, RoPE and the shared-expert gate / up / down / mask / owner kernels; ds4_deepseek41_gpu.h declares them"
+why       = "GLM-5.3-Flash tensor parallel across two ROCm machines: the KDA heads split between the ranks, the routed experts split 50/50, and the TP slab in host-mapped pinned memory that GPU kernels and the CPU transport thread share on Strix Halo (rocm/ds4_rocm_tp.cuh); the branch head is \"GLM TP: keep the transport slab unified on ROCm builds\". The family in the base: the V4.1 graph's ops in one place for both GPU backends"
+notes     = "Overlay glm_tp_rocm: files under overlay/glm_tp_rocm/ are the branch's bytes at 8ebf67295a4f; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/glm_tp_rocm.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/davidcanar/ds4"
+commit    = "8ebf67295a4f4663c326aa415145a35175e02b84"
+branch    = "glm-tp-rocm"
+paths     = ["overlay/glm_tp_rocm/ds4_deepseek41_cuda.cuh", "overlay/glm_tp_rocm/ds4_deepseek41_gpu.h"]
+authors   = ["davidcanar", "The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/glm_tp_rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.ds4-dsv41-ds4-glmtp/-/-"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.glmtp_rocm_backend"

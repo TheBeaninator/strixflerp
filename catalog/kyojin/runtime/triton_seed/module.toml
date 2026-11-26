@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.triton_seed"
+kind      = "runtime"
+summary   = "Pre-compiled Triton kernels shipped with the code (kernel_seed tarball per Triton version and arch) and a log of Triton JIT compiles"
+why       = "cold-start compile time of a fresh container. Where the shape would go: a verify.kit-manifest/triton-cache/- provider beside runtime.strixfold.kit, runtime.strixfold_tp4.kit, through a port of the python / Triton logic"
+notes     = "Interface tag: verify.kit-manifest/triton-cache/-. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (jit_log.py, kernel_seed.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/util/jit_log.py", "exllamav3/util/kernel_seed.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.kit-manifest-kyojin/triton-cache/-"
+api       = "jit_log.py, kernel_seed.py"
+numeric   = "n/a"
+regime    = "host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

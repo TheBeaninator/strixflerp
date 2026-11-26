@@ -1,0 +1,113 @@
+#pragma once
+
+#include <cstdint>
+#include <filesystem>
+#include <istream>
+#include <optional>
+#include <string>
+#include <vector>
+
+namespace strix::gguf {
+
+enum class ValueType : std::uint32_t {
+    uint8 = 0,
+    int8 = 1,
+    uint16 = 2,
+    int16 = 3,
+    uint32 = 4,
+    int32 = 5,
+    float32 = 6,
+    boolean = 7,
+    string = 8,
+    array = 9,
+    uint64 = 10,
+    int64 = 11,
+    float64 = 12,
+};
+
+struct Limits {
+    std::uint64_t max_metadata_entries = 1'000'000;
+    std::uint64_t max_tensors = 1'000'000;
+    std::uint64_t max_string_bytes = 64ULL * 1024ULL * 1024ULL;
+    std::uint64_t max_total_array_elements = 100'000'000;
+    std::uint32_t max_array_depth = 8;
+    std::uint32_t max_tensor_dimensions = 4;
+    // Top-level numeric arrays up to this length keep their values (0: summaries only, the default).
+    std::uint64_t max_retained_array_elements = 0;
+    // Metadata keys are lower-case snake case separated by dots. Some converted files prefix their keys with a
+    // hyphenated architecture name; a caller that admits such a file opts in here.
+    bool allow_hyphen_in_keys = false;
+};
+
+struct MetadataEntry {
+    std::string key;
+    ValueType type{};
+    std::optional<std::uint64_t> unsigned_value;
+    std::optional<std::int64_t> signed_value;
+    std::optional<double> floating_value;
+    std::optional<bool> boolean_value;
+    std::optional<std::string> string_value;
+    std::optional<ValueType> array_element_type;
+    std::optional<std::uint64_t> array_length;
+    // Retained top-level numeric array values (see Limits::max_retained_array_elements); exactly one of
+    // these is filled, by element signedness: unsigned/boolean, signed, or float32/float64.
+    std::vector<std::uint64_t> unsigned_array;
+    std::vector<std::int64_t> signed_array;
+    std::vector<double> floating_array;
+};
+
+// Strix NVFP4 tile pack (converted weights, see strix::cuda_core nvfp4): dimensions [in, out], data is out/16 x in/128 records of
+// 1152 bytes (the cuda_core tile layout). Not the upstream GGML NVFP4 layout. The wire id collides with upstream GGML F8_E4M3
+// (also 43: one byte per element, no block scale), so the id is read by file: a file is a Strix tile pack only when it carries
+// the F32 global-scale table kNvfp4TilePackMarker (every converted pack writes it); in any other file 43 is upstream F8_E4M3.
+inline constexpr std::uint32_t kNvfp4TilePack = 43;
+inline constexpr std::uint32_t kGgmlF8E4M3 = 43;
+inline constexpr const char* kNvfp4TilePackMarker = "strix.nvfp4.gscale";
+// Private (non-ggml) tensor type: shared IU4 g64 dense projection, N outputs x K inputs (core/iu4.hpp): tiles
+// [K/16][N/16][column within tile][K within tile / 2] signed nibbles, then FP16 scales [N][K/64]. Geometry per row of K:
+// K/64 blocks of 64 elements, 34 bytes (32 nibble bytes + 2 scale bytes), N % 64 == 0.
+inline constexpr std::uint32_t type_strix_iu4_g64 = 200;
+
+struct TensorTypeGeometry {
+    std::uint64_t block_elements = 0;
+    std::uint64_t block_bytes = 0;
+};
+
+[[nodiscard]] std::optional<TensorTypeGeometry> tensor_type_geometry(
+    std::uint32_t ggml_type) noexcept;
+
+struct TensorInfo {
+    std::string name;
+    std::vector<std::uint64_t> dimensions;
+    std::uint32_t ggml_type = 0;
+    std::uint64_t relative_offset = 0;
+    std::uint64_t absolute_offset = 0;
+    std::uint64_t byte_size = 0;
+    std::uint64_t absolute_end = 0;
+};
+
+struct FileInfo {
+    std::uint32_t version = 0;
+    std::uint64_t file_size = 0;
+    std::uint64_t alignment = 32;
+    std::uint64_t data_offset = 0;
+    std::uint64_t metadata_count = 0;  // number of key/value entries
+    std::uint64_t metadata_end = 0;    // file offset just after the last key/value entry (they start at byte 24)
+    std::vector<MetadataEntry> metadata;
+    std::vector<TensorInfo> tensors;
+    // True when the file carries kNvfp4TilePackMarker: wire type 43 is then the Strix NVFP4 tile pack, otherwise upstream F8_E4M3.
+    bool strix_nvfp4_tile_pack = false;
+
+    [[nodiscard]] const MetadataEntry* find_metadata(const std::string& key) const;
+    [[nodiscard]] bool is_f8_e4m3(const TensorInfo& tensor) const noexcept {
+        return tensor.ggml_type == kGgmlF8E4M3 && !strix_nvfp4_tile_pack;
+    }
+};
+
+[[nodiscard]] FileInfo read(std::istream& input,
+                            std::uint64_t file_size,
+                            const Limits& limits = {});
+[[nodiscard]] FileInfo read_file(const std::filesystem::path& path,
+                                 const Limits& limits = {});
+
+}  // namespace strix::gguf

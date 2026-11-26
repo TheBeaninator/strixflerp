@@ -1,0 +1,79 @@
+id        = "kernel.radiance.halo_quant_act"
+kind      = "kernel"
+summary   = "Junction kernels that write the quantised activation the next GEMM reads, so a quantised trunk adds no quantiser launch: per-row int8 and per-(row, 128) E4M3 quantisers alone, and fused behind their producers (residual add + RMS norm, RMS norm + block Hadamard, gated product + Hadamard, gelu(gate) * up, and producers that already hold the row in registers); ParoQuant's Givens rotation dense on the matrix cores or to f16; and the GPTQ Gram accumulation H += X^T X"
+why       = "an integer GEMM needs integer activations, and a separate quantiser launch per junction would cost more than the GEMM saves, so the producer that already holds the row writes the codes"
+notes     = "The fusion that paid in radiance is producer + quantiser (it removes a launch AND a pass over the row). SFX-PKG measured strixite's plain boundary fusion at 0.9 % of a step; this family is the reason to revisit it only together with int8 activations."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_fused_quant_fp8.hip",
+  "libhalo/halo_gated_had_quant_i8.hip",
+  "libhalo/halo_gelu_mul_quant_i8.hip",
+  "libhalo/halo_givens_dense.hip",
+  "libhalo/halo_givens_rotate.hip",
+  "libhalo/halo_gram_accum_fp8.hip",
+  "libhalo/halo_had_quant_act_i8.hip",
+  "libhalo/halo_quant_act_fp8.hip",
+  "libhalo/halo_quant_act_i8.hip",
+  "libhalo/halo_rmsnorm_had_quant_i8.hip",
+  "libhalo/halo_rmsnorm_quant_i8.hip",
+]
+authors   = ["Deadcode", "keptn42", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_quant_act_i8.hip",
+  "src/libhalo/halo_quant_act_fp8.hip",
+  "src/libhalo/halo_had_quant_act_i8.hip",
+  "src/libhalo/halo_rmsnorm_quant_i8.hip",
+  "src/libhalo/halo_rmsnorm_had_quant_i8.hip",
+  "src/libhalo/halo_gated_had_quant_i8.hip",
+  "src/libhalo/halo_gelu_mul_quant_i8.hip",
+  "src/libhalo/halo_fused_quant_fp8.hip",
+  "src/libhalo/halo_givens_dense.hip",
+  "src/libhalo/halo_givens_rotate.hip",
+  "src/libhalo/halo_gram_accum_fp8.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "quant.activation/-/i8+e4m3"
+api       = "halo_quant_act_i8, halo_quant_act_fp8, halo_rmsnorm_quant_i8, halo_rmsnorm_had_quant_i8, halo_gated_had_quant_i8, halo_gelu_mul_quant_i8"
+numeric   = "per-row symmetric int8, or E4M3 with an f32 scale per (row, 128 of K), written in the consumer GEMM's fragment order"
+regime    = "one launch a junction, decode and prefill"
+
+[[provides]]
+interface = "quant.calibration-gram/-/f32"
+api       = "halo_gram_accum_fp8"
+numeric   = "f32 Gram matrix over the served activations"
+regime    = "offline calibration on the device"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_allreduce"
+
+[[requires]]
+module    = "kernel.radiance.halo_chain"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

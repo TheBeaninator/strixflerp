@@ -1,0 +1,95 @@
+id        = "kernel.ds4.k53prefill_mmq_moe"
+kind      = "kernel"
+summary   = "kyuz0/ds4 perf/rocm-gfx1151-glm53-flash-prefill-restoration 4fef372: its copy of the mmq_moe family against antirez/ds4 b3f5018: cuda/mmq/ds4_mmq.cu changed (+61 -782 lines); cuda/mmq/ds4_mmq.h changed (+4 -7 lines); cuda/mmq/mmq.cuh changed (+19 -78 lines). The family: ds4's quantized-matmul C ABI over llama.cpp's mul_mat_q (mmq.cuh): dense Q8_0 / Q2_K / IQ2_XXS and MoE _id variants, the aligned-artifact MoE vec kernels (IQ2_XXS gate / up / mid with dedup, Q2_K, Q8_0 dense), the MXFP4 staged gate / up and the sum-6 down"
+why       = "the glm53-flash branch with the GLM-5.3-Flash prefill path restored and accelerated (head commit \"rocm: accelerate GLM 5.3 Flash prefill\"); same fork point as kyuz0_glm53_flash. The family in the base: llama.cpp's MMQ as a ds4 kernel library; the ROCm build uses it for the expert and dense quantized GEMMs"
+notes     = "Overlay kyuz0_glm53_prefill: files under overlay/kyuz0_glm53_prefill/ are the branch's bytes at 4fef372a4631; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_glm53_prefill.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "4fef372a46315bd6b34b0e58b7fc91a7e5f4f21f"
+branch    = "perf/rocm-gfx1151-glm53-flash-prefill-restoration"
+paths     = [
+  "overlay/kyuz0_glm53_prefill/cuda/mmq/ds4_mmq.cu",
+  "overlay/kyuz0_glm53_prefill/cuda/mmq/ds4_mmq.h",
+  "overlay/kyuz0_glm53_prefill/cuda/mmq/mmq.cuh",
+]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors", "The ggml authors (llama.cpp 5c0e9468, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/kyuz0_glm53_prefill/cuda/mmq/ds4_mmq.cu"]
+includes  = ["src/overlay/kyuz0_glm53_prefill", "src/overlay/kyuz0_glm53_prefill/cuda/mmq"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "-x",
+  "hip",
+  "-O3",
+  "-ffast-math",
+  "-fno-finite-math-only",
+  "-pthread",
+  "-D__HIP_PLATFORM_AMD__",
+  "-Wno-unused-command-line-argument",
+  "-std=c++17",
+  "-DGGML_USE_HIP",
+  "-DDS4_HIP_MMQ_Y=64",
+  "-c",
+]
+
+[[provides]]
+interface = "moe.experts-decode/iq2_xxs+q2_k+q8_0/q8_1-f32.ds4-mmq-k53prefill"
+api       = "see summary"
+numeric   = "q8_1 activations, integer dots, F32 out"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "kernel.ds4.k53prefill_mmq_common"
+
+[[requires]]
+module    = "kernel.ds4.k53prefill_mmq_ggml_stubs"
+
+[[requires]]
+module    = "kernel.ds4.k53prefill_mmq_mmvq"
+
+[[requires]]
+module    = "kernel.ds4.k53prefill_mmq_repack"
+
+[[requires]]
+module    = "kernel.ds4.mmq_common"
+
+[[requires]]
+module    = "kernel.ds4.mmq_ggml_stubs"
+
+[[requires]]
+module    = "kernel.ds4.mmq_quantize"
+
+[[requires]]
+module    = "kernel.ds4.mmq_mmid"
+
+[[requires]]
+module    = "kernel.ds4.mmq_mmvq"
+
+[[requires]]
+module    = "kernel.ds4.mmq_moe"
+
+[[requires]]
+module    = "kernel.ds4.mmq_d2r"
+
+[[requires]]
+module    = "kernel.ds4.mmq_repack"
+
+[[requires]]
+module    = "runtime.ds4.linux_memory"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ds4.k53prefill_mmq_moe.json"
+reason    = "compile gate: fail: 1 of 1 units failed; first: src/overlay/kyuz0_glm53_prefill/cuda/mmq/ds4_mmq.cu: /data/pod/plans/31224b4ca3/wt/catalog/ds4/kernel/mmq_common/src/cuda/mmq/vendors/hip.h:262:39: error: redefinition of '__vsubss4'"

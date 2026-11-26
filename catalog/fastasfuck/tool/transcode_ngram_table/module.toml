@@ -1,0 +1,46 @@
+id        = "tool.fastasfuck.transcode_ngram_table"
+kind      = "tool"
+summary   = "fastasfuck's BF16 ngram.table to FP8 or int8 row transcoder with a bit-exact read-back check and row error statistics"
+why       = "the published n-gram table is the int8 one this tool writes from the BF16 table, at half the size on SSD"
+notes     = "Files vs strixite: tools/transcode_ngram_table.cpp byte-identical to tool.strixite.transcode_ngram_table at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/transcode_ngram_table.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/transcode_ngram_table.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.transcode-ngram-table/-/-"
+api       = "main (transcode_ngram_table)"
+numeric   = "the same source as tool.strixite.transcode_ngram_table, so its behaviour: n/a"
+regime    = "as tool.strixite.transcode_ngram_table: host only"
+
+[[requires]]
+module    = "format.fastasfuck.ngram_table"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.ngram_table"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable transcode_ngram_table) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

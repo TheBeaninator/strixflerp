@@ -1,0 +1,54 @@
+id        = "kernel.maya_tp.prefill_moe_mmq"
+kind      = "kernel"
+summary   = "the llama.cpp MMQ view of the prompt experts: moe_mmq.cu and glm-dsa's moe_mmq_strata.cu compile ggml-cuda's MMQ from the pinned llama.cpp checkout, ggml_cuda_host.cu supplies the host symbols, mmq-fused-swiglu.patch is the fused-SwiGLU patch applied to it"
+why       = "the HIP build requires this path (CMakeLists refuses HIP without STRATA_PREFILL_MMQ); it records exactly which llama.cpp MMQ pieces and patch a GLM prompt path needs"
+notes     = "Interface tag: moe.experts-prefill/gguf-kquant/q8_1-f32.maya-tp-mmq. Not compiled: needs llama.cpp ggml-cuda sources (MMQ, the pinned 3cf03257 checkout) that the maya-tp tree does not contain. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/prefill/moe_mmq.hpp",
+  "include/strata/prefill/moe_mmq_strata.hpp",
+  "src/prefill/ggml_cuda_host.cu",
+  "src/prefill/moe_mmq.cu",
+  "src/prefill/moe_mmq_strata.cu",
+  "third_party/ggml/mmq-fused-swiglu.patch",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/third_party/ggml"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-kquant/q8_1-f32.maya-tp-mmq"
+api       = "strata::prefill::moe_mmq_*"
+numeric   = "llama.cpp MMQ arithmetic"
+regime    = "prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "runtime.maya_tp.prefill_host"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs llama.cpp ggml-cuda sources (MMQ, the pinned 3cf03257 checkout) that the maya-tp tree does not contain."

@@ -1,0 +1,42 @@
+id        = "runtime.vllm_strix.odinlink_local_patch"
+kind      = "runtime"
+summary   = "five fixes on OdinLink-Five 4534f58 and nothing else: connection restart after a failed DMA verify, verify that survives a peer re-login, the RCCL plugin's logger-ABI segfault (a 2-argument call into the 6-argument ncclDebugLogger_t), marking a reassembly buffer bad when a fragment drops, and preallocated RX assembly buffers (rx_asm_max 2 MiB, rx_asm_pool 4) so the drop path stops firing; registers only the tb_protocol_handler fields mainline defines so odl_tb5.ko builds on a stock kernel"
+why       = "upstream grew the RX assembly buffer with kmalloc(GFP_ATOMIC), an order-8 request that fails on a UMA box with weights in RAM, then delivered the short message as complete: the all-reduce returned plausible wrong data and the model answered questions nobody asked (odinlink/README.md). This is the hardening any OdinLink deployment on a pod pair would need"
+notes     = "Interface tag: none. The two copies are byte-identical (host build and image build). Written against 4534f58; the catalogue's OdinLink-Five is 0315225 (the ark copy), where git apply --check passes the driver hunks (with offsets) and fails the rccl/src/odl_tb5_plugin.c hunk, whose context upstream rewrote (gate/results/compile/vllm_strix.side-gates.json); whether 0315225 already carries the logger-ABI fix was not established. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/odinlink/odinlink-local.patch", "odinlink/odinlink-local.patch"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.odl-hardening/-/-"
+api       = "git apply on OdinLink-Five 4534f58 (driver, rccl plugin)"
+numeric   = "n/a"
+regime    = "one cable, stock kernel"
+
+[[requires]]
+module    = "runtime.odinlink5.driver_core"
+
+[[requires]]
+module    = "runtime.odinlink5.rccl_net_plugin"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "patch: applies to vLLM 73859fec or OdinLink-Five 4534f58, neither of which is on the island; --side-gates parses each with git apply --numstat (gate/results/compile/vllm_strix.side-gates.json)"

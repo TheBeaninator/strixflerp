@@ -1,0 +1,39 @@
+id        = "kernel.enginelab.core_tp_join"
+kind      = "kernel"
+summary   = "the exact tensor-parallel join: tp_join.hpp and tp_join_sum.hpp sum the two ranks' partial outputs in a declared order so a TP2 result is bitwise the single-rank one"
+why       = "the arithmetic half of the lab's exact TP2 decode: partials are joined in the same order the single-node kernel would have accumulated them; where it would go: a new strixflerp interface collective.tp-join/-/f32.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, collective.tp-join/-/f32.enginelab. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["src/core/tp_join.hpp", "src/core/tp_join_sum.hpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "collective.tp-join/-/f32.enginelab"
+api       = "strix::core tp_join*.hpp"
+numeric   = "fixed-order FP32 sums: bitwise the single-rank reference"
+regime    = "two ranks, decode"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

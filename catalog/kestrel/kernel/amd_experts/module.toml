@@ -1,0 +1,62 @@
+id        = "kernel.kestrel.amd_experts"
+kind      = "kernel"
+summary   = "Maya's GLM fast-path kernels with the AMD expert kernels (src/kernels/cuda/glm_fast.cu, 7,911 lines; MAYA_HIP_EXPERTS_LEGACY): IQ2_XXS gate_up<16>, IQ2_S down<22> and IQ3_XXS down<18> decode experts with packed sign expansion (a multiply spreads four sign bits into four bytes, masks and shifts give the XOR masks and two's-complement corrections), 2 KiB / 1 KiB codebooks in LDS, chosen per architecture, with the headers glm_fast.cu includes, the expert kernel bench and docs/AMD_EXPERT_KERNELS.md"
+why       = "packed sign expansion for the IQ2_XXS / IQ2_S / IQ3_XXS decode experts, measured by its origin on gfx1151 (gate_up 1.124x, IQ2_S down 1.038x, docs/AMD_EXPERT_KERNELS.md) with byte-identical parity over 620 cases; the technique transfers to any GGUF IQ expert path in the catalogue (gufo ds4_moe)"
+notes     = "Interface tag: moe.experts-decode/gguf-iq2+iq3/f32, beside kernel.gufo.ds4_moe (IQ2_XXS + Q2_K, DeepSeek shapes). Origin numbers on a Radeon 8060S (gfx1151), docs/AMD_EXPERT_KERNELS.md: gate_up<16> 203.9 -> 181.4 us (1.124x), down<22> 131.4 -> 126.6 us (1.038x), down<18> 126.5 -> 130.2 us (0.972x), full-model decode 17.8 -> 18.0 tok/s. The signed-codebook technique is adapted from Niko1221/Strata fb58e0db moe_fused_iq.cu (MIT). glm_fast.cu also includes ggml-common.h from third_party (not harvested). Nothing was compiled, run or timed on the pod."
+
+[provenance]
+origin    = "kestrel"
+repo      = "https://github.com/itechmedic/kestrel"
+commit    = "717c76975cd20d37b2e4162072d7745d6e1576ff"
+branch    = "kestrel"
+paths     = [
+  "docs/AMD_EXPERT_KERNELS.md",
+  "include/maya/core/glm_env.hpp",
+  "include/maya/core/glm_req_knobs.hpp",
+  "include/maya/kernels/glm_batch.hpp",
+  "include/maya/kernels/glm_expert_bench.hpp",
+  "include/maya/kernels/glm_fast.hpp",
+  "include/maya/kernels/glmd_random_route.hpp",
+  "src/kernels/cuda/dsa_topk.cuh",
+  "src/kernels/cuda/glm_fast.cu",
+  "src/kernels/cuda/glmd_mv_dots.cuh",
+  "src/kernels/cuda/glmd_mv_ext.cuh",
+  "tests/hip/expert_kernel_bench.cpp",
+]
+authors   = ["itechmedic", "Project Maya contributors (mw00)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "cuda"
+sources   = ["src/src/kernels/cuda/glm_fast.cu"]
+includes  = [
+  "src/include",
+  "src/include/maya/core",
+  "src/include/maya/kernels",
+  "src/src/kernels/cuda",
+  "src/tests/hip",
+]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-iq2+iq3/f32.kestrel"
+api       = "maya::kernels::glm fast-path expert launches (include/maya/kernels/glm_fast.hpp)"
+numeric   = "llama.cpp vecdotq expressions; the original integer scale divisions, FP32 accumulation order, clamping, q8_1 quantization and combine order kept, so byte-identical q8_1 and bit-identical FP32 outputs against the legacy kernels (docs/AMD_EXPERT_KERNELS.md: 620 comparisons)"
+regime    = "GLM decode experts n_embd 4096, n_ff 2048; gfx1100 all three optimized, gfx1151 gate_up<16> and down<22> optimized (down<18> legacy: 0.972x), gfx1201 legacy"
+
+[[requires]]
+module    = "kernel.kestrel.hip_compat"
+
+[[requires]]
+module    = "kernel.kestrel.exl3"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of Maya's CMake build with MAYA_ENABLE_HIP (cmake/hip_backend.cmake): the .cu file is compiled as HIP through include/maya/hip_compat, for gfx1100 / gfx1201 / gfx1151 (validated) with the engine's include roots and ggml from third_party; it needs headers this harvest leaves in the origin, so it is not compiled here"

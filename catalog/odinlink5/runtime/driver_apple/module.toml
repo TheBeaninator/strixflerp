@@ -1,0 +1,44 @@
+id        = "runtime.odinlink5.driver_apple"
+kind      = "runtime"
+summary   = "the Apple-Silicon transport backend: Apple NHI DMA on the ACIO fabric from analysis of macOS's AppleThunderboltNHI kext (register layout from firmware tunable device-tree blobs, per-HopID MSI-X routing, a shared TX descriptor buffer, completion callback chain, the stopDMA sequence, XDomain login with Apple's protocol UUID 0xFA57), probing on apple,thunderbolt-nhi"
+why       = "it implements the same transport-ops interface as the NHI backend, which shows the seam: a second link type slots in under an unchanged core; relevant to strixflerp only as the pattern for adding a transport backend"
+notes     = "Interface tag: none. Not compiled (kernel code). Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = [
+  "driver/apple_tb5_nhi_regs.h",
+  "driver/odl_tb5_service_apple.c",
+  "driver/odl_tb5_transport_apple.c",
+  "driver/odl_tb5_xd_proto_apple.h",
+]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT AND GPL-2.0-only"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.apple-acio-dma/-/-"
+api       = "odl_tb5_transport_ops for apple,thunderbolt-nhi"
+numeric   = "bytes"
+regime    = "Linux on Apple Silicon"
+
+[[requires]]
+module    = "runtime.odinlink5.driver_core"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c: not compiled by the gate ((kernel code))"

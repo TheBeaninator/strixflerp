@@ -1,0 +1,100 @@
+id        = "kernel.enginelab.gemma4_kernels"
+kind      = "kernel"
+summary   = "Gemma 4 device kernels (src/gemma4/kernels): 25 origin files under src/gemma4"
+why       = "its device kernels; where it would go: a new strixflerp interface kernel-abi.enginelab-gemma4/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kernel-abi.enginelab-gemma4/-/-. 8 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/kernels/README.md",
+  "src/gemma4/kernels/a8.hip",
+  "src/gemma4/kernels/a8.hpp",
+  "src/gemma4/kernels/a8_device.hpp",
+  "src/gemma4/kernels/a8_host.hpp",
+  "src/gemma4/kernels/a8_ops.hpp",
+  "src/gemma4/kernels/a8_teacher_main.cpp",
+  "src/gemma4/kernels/attention.hip",
+  "src/gemma4/kernels/attention_fast_decode.hip",
+  "src/gemma4/kernels/attention_fast_decode.hpp",
+  "src/gemma4/kernels/bench_main.cpp",
+  "src/gemma4/kernels/capture_guard.hpp",
+  "src/gemma4/kernels/chunk.hpp",
+  "src/gemma4/kernels/device.hpp",
+  "src/gemma4/kernels/internal.hpp",
+  "src/gemma4/kernels/linear.hip",
+  "src/gemma4/kernels/norm_bounds.hpp",
+  "src/gemma4/kernels/norm_intervals.inc",
+  "src/gemma4/kernels/ops.hpp",
+  "src/gemma4/kernels/ple.hip",
+  "src/gemma4/kernels/rows_linear.hip",
+  "src/gemma4/kernels/rows_linear.hpp",
+  "src/gemma4/kernels/runtime.hip",
+  "src/gemma4/kernels/target.hip",
+  "src/gemma4/kernels/weight_policy.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/gemma4/kernels/a8.hip",
+  "src/src/gemma4/kernels/attention.hip",
+  "src/src/gemma4/kernels/attention_fast_decode.hip",
+  "src/src/gemma4/kernels/linear.hip",
+  "src/src/gemma4/kernels/ple.hip",
+  "src/src/gemma4/kernels/rows_linear.hip",
+  "src/src/gemma4/kernels/runtime.hip",
+  "src/src/gemma4/kernels/target.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kernel-abi.enginelab-gemma4/-/-"
+api       = "src/gemma4/kernels/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_exl3"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_contracts"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_kv"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_ref"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.gemma4_kernels.json"
+reason    = "compile gate: fail: 4 of 8 units failed; first: src/src/gemma4/kernels/a8.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/kernel/gemma4_kernels/src/src/gemma4/kernels/chunk.hpp:3:10: error: '../../core/weight_decode.hpp' file not found, did you mean 'core/weight_decode.hpp'?"

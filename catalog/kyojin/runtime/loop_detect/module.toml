@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.loop_detect"
+kind      = "runtime"
+summary   = "Repetition loop detection on the generated stream"
+why       = "stops runaway loops in long thinking. Where the shape would go: a serve.think-nudge/-/- provider beside runtime.strixite.think_nudge, through a port of the python / Triton logic"
+notes     = "Interface tag: serve.think-nudge/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 1 changed (loop_detect.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/generator/loop_detect.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.think-nudge-kyojin-loop-detect/-/-"
+api       = "loop_detect.py"
+numeric   = "n/a"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

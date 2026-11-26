@@ -1,0 +1,51 @@
+id        = "runtime.enginelab.moe_policy"
+kind      = "runtime"
+summary   = "MoE contracts (include/strix/moe): activation policy, combine, declared experts, expert union, route file, route policy, route project and route-tap exchange"
+why       = "the engine-neutral MoE declarations: how routed outputs combine and how a pair exchanges route taps; where it would go: beside the catalogue's moe.combine/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.combine/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/moe/activation_policy.hpp",
+  "include/strix/moe/combine.hpp",
+  "include/strix/moe/declared_exp.hpp",
+  "include/strix/moe/expert_union.hpp",
+  "include/strix/moe/route_file.hpp",
+  "include/strix/moe/route_policy.hpp",
+  "include/strix/moe/route_project.hpp",
+  "include/strix/moe/route_tap_exchange.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include", "src/include/strix/moe"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.combine/-/f32.enginelab"
+api       = "include/strix/moe/*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

@@ -1,0 +1,36 @@
+id        = "kernel.ds4.kmultinode_rocm_indexer"
+kind      = "kernel"
+summary   = "kyuz0/ds4 rocm-multi-node 89c1ea9 (head commit by antirez, \"Fix ROCm MTP startup residency\"): its copy of the rocm_indexer family against antirez/ds4 b3f5018: rocm/ds4_rocm_indexer.cuh changed (+8 -269 lines). The family: the DSV4 lightning indexer: Hadamard FP4 keys, scores (direct, batched, WMMA-128), top-k (pow2, chunked, tree merge, 1024, 8192 via hipcub), top-1 rows, masks, argmax and the DSpark Markov argmax; a fragment of the single ROCm translation unit ds4_rocm.cu, where its kernels and helpers stay static"
+why       = "an early ROCm multi-node line of ds4, five months older than the base: the ROCm backend before it grew V4.1, GLM-5.3 and Qwen kernels, with the pipeline-parallel distributed runtime; kept as the record of where the ROCm multi-node work started. The family in the base: sparse attention selection for DSV4 / V4.1; beside the catalogue's attn.indexer-topk providers"
+notes     = "Overlay kyuz0_rocm_multi_node: files under overlay/kyuz0_rocm_multi_node/ are the branch's bytes at 89c1ea982df2; unchanged files of the branch are the base modules' (docs/harvest/data/ds4/kyuz0_rocm_multi_node.tsv). Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/kyuz0/ds4"
+commit    = "89c1ea982df20b7578f95bb10d894f5447146fc3"
+branch    = "rocm-multi-node"
+paths     = ["overlay/kyuz0_rocm_multi_node/rocm/ds4_rocm_indexer.cuh"]
+authors   = ["kyuz0", "The ds4.c authors", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/overlay/kyuz0_rocm_multi_node", "src/overlay/kyuz0_rocm_multi_node/rocm"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.indexer-topk/-/f32.ds4-kmultinode"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "via:kernel.ds4.kmultinode_rocm_backend"

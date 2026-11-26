@@ -1,0 +1,68 @@
+id        = "kernel.kyojin.exl3_gemv_int8"
+kind      = "kernel"
+summary   = "Fused int8-activation GEMV for mul1 (cb 2) tensors: one cooperative launch covering the input Hadamard, activation quantization, dp4a GEMV and output Hadamard; plain int8 or an error-feedback residual mode (~15-16 bit effective activations); per-K instances in comp_units"
+why       = "decode GEMV at int8 rate; opt-in on ROCm until measured. Where the shape would go: a linear.decode/exl3/f32 provider beside kernel.tensorfold.cuda_exl3, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: linear.decode/exl3/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 10 changed (exl3_gemv_int8_inst_sq_k1.cu, exl3_gemv_int8_inst_sq_k2.cu, exl3_gemv_int8_inst_sq_k3.cu, exl3_gemv_int8_inst_sq_k4.cu, exl3_gemv_int8_inst_sq_k5.cu, exl3_gemv_int8_inst_sq_k6.cu) .... No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k1.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k2.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k3.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k4.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k5.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k6.cu",
+  "exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_instances.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_gemv_int8.cu",
+  "exllamav3/exllamav3_ext/quant/exl3_gemv_int8.cuh",
+  "exllamav3/exllamav3_ext/quant/exl3_gemv_int8_kernel.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k1.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k2.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k3.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k4.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k5.cu",
+  "src/exllamav3/exllamav3_ext/quant/comp_units/exl3_gemv_int8_inst_sq_k6.cu",
+  "src/exllamav3/exllamav3_ext/quant/exl3_gemv_int8.cu",
+]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/exl3/f32.kyojin-int8"
+api       = "exl3_gemv_int8_inst_sq_k1.cu, exl3_gemv_int8_inst_sq_k2.cu, exl3_gemv_int8_inst_sq_k3.cu, exl3_gemv_int8_inst_sq_k4.cu, exl3_gemv_int8_inst_sq_k5.cu, exl3_gemv_int8_inst_sq_k6.cu, exl3_gemv_int8_instances.cuh, exl3_gemv_int8.cu ...; kernels: exl3_gemv_int8_sq_kernel, exl3_gemv_int8_coop_kernel"
+numeric   = "int8 activations (with an optional residual pass), dp4a, fp32 accumulation"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "runtime.kyojin.graph"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: exl3_gemv_int8_inst_sq_k1.cu, exl3_gemv_int8_inst_sq_k2.cu, exl3_gemv_int8_inst_sq_k3.cu, exl3_gemv_int8_inst_sq_k4.cu, exl3_gemv_int8_inst_sq_k5.cu, exl3_gemv_int8_inst_sq_k6.cu ..."

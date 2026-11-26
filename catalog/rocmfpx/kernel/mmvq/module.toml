@@ -1,0 +1,53 @@
+id        = "kernel.rocmfpx.mmvq"
+kind      = "kernel"
+summary   = "ROCmFPX MMVQ: ggml's quantized matrix-vector multiply (MUL_MAT and MUL_MAT_ID for one to a few tokens) with the ROCmFPX type cases, the vec_dot dispatch of all seven types and the origin's ROCmFPX tuning defines (rows per block for MoE, VDR), reading canonical blocks including Q7"
+why       = "the decode path of the same seven formats; its arithmetic is the per-block dot products of vecdotq.cuh (kernel.rocmfpx.common), which the MMQ and flash-attention families reuse"
+notes     = "Interface tags by file: mmvq.cu linear.decode/gguf-rocmfpx/f32; the template instances none (catalog/rocmfpx/KERNELS.md has the table). No timing was taken on the pod."
+
+[provenance]
+origin    = "rocmfpx"
+repo      = "https://github.com/ciru-ai/ROCmFPX"
+commit    = "efd1ef5a17db576168d849831e1ef3346582881e"
+branch    = "main"
+paths     = ["ggml/src/ggml-cuda/mmvq.cu"]
+authors   = ["Ciru (ciru-ai)", "the ggml authors"]
+modified  = false
+upstream  = "ggml-org/llama.cpp 15586e2d7165570fb3aa7c26e0d442e289ef69de: the llama.cpp files of this family carry the ROCmFPX code as extra type cases; the q7-*.cuh, the ROCmFP template instances and rocmfp4_hip.cu are ROCmFPX files"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/ggml/src/ggml-cuda/mmvq.cu"]
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "linear.decode/gguf-rocmfpx/f32.rocmfpx-mmvq"
+api       = "ggml/src/ggml-cuda/mmvq.cu: ggml's mul_mat_vec_q with the ROCmFPX cases in the vec-dot, VDR and rows-per-block tables and the MUL_MAT_ID expert path (GGML_ROCMFPX_MOE_MMVQ_ROWS_PER_BLOCK and friends are build-time tuning defines)"
+numeric   = "q8_1 activations; per-block integer dot of the decoded codes (vec_dot_rocmfp*_q8_1 in vecdotq.cuh) times the weight scale and the q8_1 scale, f32 accumulation and output"
+regime    = "decode and small batches (up to ggml's MMVQ column limit), dense and MoE experts"
+
+[[provides]]
+interface = "moe.experts-decode/gguf-rocmfpx/f32.rocmfpx-mmvq"
+api       = "mmvq.cu: ggml_cuda_mul_mat_vec_q with ids (MUL_MAT_ID), one expert channel a token"
+numeric   = "q8_1 activations; per-block integer dot of the decoded codes (vec_dot_rocmfp*_q8_1 in vecdotq.cuh) times the weight scale and the q8_1 scale, f32 accumulation and output"
+regime    = "decode and small batches (up to ggml's MMVQ column limit), dense and MoE experts"
+
+[[requires]]
+module    = "kernel.rocmfpx.common"
+
+[[requires]]
+interface = "format.device-view/gguf-rocmfpx/-"
+
+[[requires]]
+module    = "kernel.rocmfpx.mmq"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.rocmfpx.mmvq.json"

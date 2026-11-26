@@ -1,0 +1,37 @@
+id        = "kernel.ds4.qwen4_cuda"
+kind      = "kernel"
+summary   = "Qwen3.8 Flash Next on CUDA, included by ds4_cuda.cu: GDN, attention, HC, indexer, router, MoE, matvec / matrix (tensor-core) and MTP kernels"
+why       = "the CUDA reference that the gfx1151 Qwen port (k53perf_rocm_qwen4) follows"
+notes     = "Verbatim; the module is one family of the ds4 harvest (docs/harvest/harvest_ds4.py, card 31224b4ca3)."
+
+[provenance]
+origin    = "ds4"
+repo      = "https://github.com/antirez/ds4"
+commit    = "b3f50180ec2c7324892be1f50bc83555ccb8d5e7"
+branch    = "main"
+paths     = ["ds4_qwen4_cuda.cuh"]
+authors   = ["The ds4.c authors", "The ggml authors", "DeepSeek"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.ds4-qwen4-cuda"
+api       = "see summary"
+numeric   = "as the origin builds it"
+regime    = "as the origin runs it"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA source (nvcc in the origin Makefile); the compile gate builds hip-c++ modules only"

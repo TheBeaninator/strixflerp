@@ -1,0 +1,108 @@
+id        = "runtime.enginelab.mtp_drafters"
+kind      = "runtime"
+summary   = "MTP drafting control: draft activation, binding, contract, cycle input, profiles, qualification, readiness, split, state contract and memory, tensor audit and vocabulary; the context, frame and n-gram drafters, the compiled draft plan and the qualified draft backend"
+why       = "which drafter proposes what each cycle (MTP head, copy spans from the context, n-grams), qualified before it may run; where it would go: beside the catalogue's speculation.draft/-/i32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: speculation.draft/-/i32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 15 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/compiled_mtp_draft_plan.hpp",
+  "include/strix/mtp_context_draft.hpp",
+  "include/strix/mtp_draft_activation.hpp",
+  "include/strix/mtp_draft_binding.hpp",
+  "include/strix/mtp_draft_contract.hpp",
+  "include/strix/mtp_draft_cycle_input.hpp",
+  "include/strix/mtp_draft_profiles.hpp",
+  "include/strix/mtp_draft_qualification.hpp",
+  "include/strix/mtp_draft_readiness.hpp",
+  "include/strix/mtp_draft_split.hpp",
+  "include/strix/mtp_draft_state_contract.hpp",
+  "include/strix/mtp_draft_state_memory.hpp",
+  "include/strix/mtp_draft_tensor_audit.hpp",
+  "include/strix/mtp_frame_draft.hpp",
+  "include/strix/mtp_ngram_draft.hpp",
+  "include/strix/qualified_mtp_draft_backend.hpp",
+  "src/compiled_mtp_draft_plan.cpp",
+  "src/mtp_context_draft.cpp",
+  "src/mtp_draft_activation.cpp",
+  "src/mtp_draft_binding.cpp",
+  "src/mtp_draft_contract.cpp",
+  "src/mtp_draft_cycle_input.cpp",
+  "src/mtp_draft_qualification.cpp",
+  "src/mtp_draft_readiness.cpp",
+  "src/mtp_draft_state_contract.cpp",
+  "src/mtp_draft_state_memory.cpp",
+  "src/mtp_draft_tensor_audit.cpp",
+  "src/mtp_draft_vocabulary.cpp",
+  "src/mtp_frame_draft.cpp",
+  "src/mtp_ngram_draft.cpp",
+  "src/qualified_mtp_draft_backend.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/compiled_mtp_draft_plan.cpp",
+  "src/src/mtp_context_draft.cpp",
+  "src/src/mtp_draft_activation.cpp",
+  "src/src/mtp_draft_binding.cpp",
+  "src/src/mtp_draft_contract.cpp",
+  "src/src/mtp_draft_cycle_input.cpp",
+  "src/src/mtp_draft_qualification.cpp",
+  "src/src/mtp_draft_readiness.cpp",
+  "src/src/mtp_draft_state_contract.cpp",
+  "src/src/mtp_draft_state_memory.cpp",
+  "src/src/mtp_draft_tensor_audit.cpp",
+  "src/src/mtp_draft_vocabulary.cpp",
+  "src/src/mtp_frame_draft.cpp",
+  "src/src/mtp_ngram_draft.cpp",
+  "src/src/qualified_mtp_draft_backend.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "speculation.draft/-/i32.enginelab-mtp"
+api       = "src/mtp_draft_*.cpp, mtp_context_draft.cpp, mtp_ngram_draft.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.mtp_draft_head"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_forward"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.speculation_control"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

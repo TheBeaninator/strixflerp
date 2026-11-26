@@ -1,0 +1,155 @@
+id        = "tool.enginelab.apps_glm"
+kind      = "tool"
+summary   = "the GLM programs: auto rows, deploy (owners, provider), model facts, prefill main, rank (defaults, receipt, startup, transport), route levers, serve and vision"
+why       = "the GLM pair binaries; where it would go: kept as a reference program or lab (tool.enginelab-glm/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-glm/-/-. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "apps/glm_auto_rows.hpp",
+  "apps/glm_deploy.inc",
+  "apps/glm_deploy_owners.hpp",
+  "apps/glm_deploy_provider.hpp",
+  "apps/glm_model_facts.hpp",
+  "apps/glm_pf_main.cpp",
+  "apps/glm_rank_defaults.hpp",
+  "apps/glm_rank_main.cpp",
+  "apps/glm_rank_receipt.hpp",
+  "apps/glm_rank_startup.hpp",
+  "apps/glm_rank_transport.hpp",
+  "apps/glm_route_levers.hpp",
+  "apps/glm_serve_main.cpp",
+  "apps/glm_vision_main.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/apps/glm_pf_main.cpp",
+  "src/apps/glm_rank_main.cpp",
+  "src/apps/glm_serve_main.cpp",
+  "src/apps/glm_vision_main.cpp",
+]
+includes  = ["src/apps"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.enginelab-glm/-/-"
+api       = "apps/glm_rank_main.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.glm_engine"
+
+[[requires]]
+module    = "executor.enginelab.glm_kvshard"
+
+[[requires]]
+module    = "executor.enginelab.glm_prefill"
+
+[[requires]]
+module    = "executor.enginelab.glm_vision"
+
+[[requires]]
+module    = "executor.enginelab.vision"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_select"
+
+[[requires]]
+module    = "kernel.enginelab.glm_attn"
+
+[[requires]]
+module    = "kernel.enginelab.glm_prefill_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.deploy"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.dist_gpu_direct"
+
+[[requires]]
+module    = "runtime.enginelab.glm_load"
+
+[[requires]]
+module    = "runtime.enginelab.glm_rtxpf"
+
+[[requires]]
+module    = "runtime.enginelab.glm_spec"
+
+[[requires]]
+module    = "runtime.enginelab.glm_xfer"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.pair_state"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[[requires]]
+module    = "serve.enginelab.glm_serve"
+
+[[requires]]
+module    = "serve.enginelab.serve_chat"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_prefix"
+
+[[requires]]
+module    = "serve.enginelab.serve_tokenizer"
+
+[[requires]]
+module    = "tool.enginelab.apps_serve_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

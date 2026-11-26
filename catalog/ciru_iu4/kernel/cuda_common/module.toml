@@ -1,0 +1,148 @@
+id        = "kernel.ciru_iu4.cuda_common"
+kind      = "kernel"
+summary   = "Header-only layer the CIRU kernel units include: ggml-cuda's shared device header common.cuh (CIRU changes two lines) and the 103 unchanged base headers of ggml-cuda, ggml/src and ggml/include that the CIRU files reach through #include (vendors/hip.h, the quantization block and conversion helpers, MMA / WMMA wrappers, the ggml backend headers)"
+why       = "SPEC.md gives headers that several modules include a module of their own; these are base files (pwilkin/llama.cpp f5daaa3c) except common.cuh, taken only so that the CIRU families compile standalone; the rest of the base is not harvested"
+notes     = "Interface tag: none. Files: common.cuh (CIRU, +2 -2 lines against the base) and 103 base files listed by the include closure that docs/harvest/harvest_ciru_iu4.py computes from the CIRU kernel files."
+
+[provenance]
+origin    = "ciru_iu4"
+repo      = "https://github.com/ciru-ai/Qwen3.8-Flash-CIRU-STRIX-IU4"
+commit    = "47cb9239fa4913aa5a7c4b36dc21ca63e69da184"
+branch    = "main"
+paths     = [
+  "ggml/include/ggml-alloc.h",
+  "ggml/include/ggml-backend.h",
+  "ggml/include/ggml-cuda.h",
+  "ggml/include/gguf.h",
+  "ggml/src/ggml-backend-impl.h",
+  "ggml/src/ggml-common.h",
+  "ggml/src/ggml-cuda/acc.cuh",
+  "ggml/src/ggml-cuda/add-id.cuh",
+  "ggml/src/ggml-cuda/allreduce.cuh",
+  "ggml/src/ggml-cuda/arange.cuh",
+  "ggml/src/ggml-cuda/argmax.cuh",
+  "ggml/src/ggml-cuda/argsort.cuh",
+  "ggml/src/ggml-cuda/binbcast.cuh",
+  "ggml/src/ggml-cuda/clamp.cuh",
+  "ggml/src/ggml-cuda/col2im-1d.cuh",
+  "ggml/src/ggml-cuda/common.cuh",
+  "ggml/src/ggml-cuda/concat.cuh",
+  "ggml/src/ggml-cuda/conv-transpose-1d.cuh",
+  "ggml/src/ggml-cuda/conv2d-dw.cuh",
+  "ggml/src/ggml-cuda/conv2d-transpose.cuh",
+  "ggml/src/ggml-cuda/conv2d.cuh",
+  "ggml/src/ggml-cuda/convert.cuh",
+  "ggml/src/ggml-cuda/count-equal.cuh",
+  "ggml/src/ggml-cuda/cp-async.cuh",
+  "ggml/src/ggml-cuda/cpy.cuh",
+  "ggml/src/ggml-cuda/cross-entropy-loss.cuh",
+  "ggml/src/ggml-cuda/cumsum.cuh",
+  "ggml/src/ggml-cuda/dequantize.cuh",
+  "ggml/src/ggml-cuda/diag.cuh",
+  "ggml/src/ggml-cuda/diagmask.cuh",
+  "ggml/src/ggml-cuda/dsv4-hc.cuh",
+  "ggml/src/ggml-cuda/expand.cuh",
+  "ggml/src/ggml-cuda/fattn-swizzle.cuh",
+  "ggml/src/ggml-cuda/fattn-tile.cuh",
+  "ggml/src/ggml-cuda/fattn-vec.cuh",
+  "ggml/src/ggml-cuda/fattn.cuh",
+  "ggml/src/ggml-cuda/fill.cuh",
+  "ggml/src/ggml-cuda/fwht.cuh",
+  "ggml/src/ggml-cuda/gdn-conv.cuh",
+  "ggml/src/ggml-cuda/getrows.cuh",
+  "ggml/src/ggml-cuda/gla.cuh",
+  "ggml/src/ggml-cuda/hc-cn.cuh",
+  "ggml/src/ggml-cuda/hc-match.inc",
+  "ggml/src/ggml-cuda/hc-mix.cuh",
+  "ggml/src/ggml-cuda/idx-relu-sum.cuh",
+  "ggml/src/ggml-cuda/im2col.cuh",
+  "ggml/src/ggml-cuda/lightning-indexer.cuh",
+  "ggml/src/ggml-cuda/match.inc",
+  "ggml/src/ggml-cuda/mean.cuh",
+  "ggml/src/ggml-cuda/mma.cuh",
+  "ggml/src/ggml-cuda/mmf.cuh",
+  "ggml/src/ggml-cuda/mmid.cuh",
+  "ggml/src/ggml-cuda/mmq-config-ampere.cuh",
+  "ggml/src/ggml-cuda/mmq-config-blackwell.cuh",
+  "ggml/src/ggml-cuda/mmq-config-cdna.cuh",
+  "ggml/src/ggml-cuda/mmq-config-pascal-dp4a.cuh",
+  "ggml/src/ggml-cuda/mmq-config-pascal-older.cuh",
+  "ggml/src/ggml-cuda/mmq-config-rdna2.cuh",
+  "ggml/src/ggml-cuda/mmq-config-rdna3-5.cuh",
+  "ggml/src/ggml-cuda/mmq-config-rdna3.cuh",
+  "ggml/src/ggml-cuda/mmq-config-rdna4.cuh",
+  "ggml/src/ggml-cuda/mmq-load-tiles.cuh",
+  "ggml/src/ggml-cuda/mmq-vec-dot.cuh",
+  "ggml/src/ggml-cuda/mmq.cuh",
+  "ggml/src/ggml-cuda/mmvf.cuh",
+  "ggml/src/ggml-cuda/mmvq.cuh",
+  "ggml/src/ggml-cuda/moe-weighted-reduction.cuh",
+  "ggml/src/ggml-cuda/norm-gated.cuh",
+  "ggml/src/ggml-cuda/norm.cuh",
+  "ggml/src/ggml-cuda/opt-step-adamw.cuh",
+  "ggml/src/ggml-cuda/opt-step-sgd.cuh",
+  "ggml/src/ggml-cuda/out-prod.cuh",
+  "ggml/src/ggml-cuda/pad.cuh",
+  "ggml/src/ggml-cuda/pad_reflect_1d.cuh",
+  "ggml/src/ggml-cuda/ple-conv.cuh",
+  "ggml/src/ggml-cuda/pool1d.cuh",
+  "ggml/src/ggml-cuda/pool2d.cuh",
+  "ggml/src/ggml-cuda/qsa.cuh",
+  "ggml/src/ggml-cuda/quantize.cuh",
+  "ggml/src/ggml-cuda/roll.cuh",
+  "ggml/src/ggml-cuda/rope.cuh",
+  "ggml/src/ggml-cuda/scale.cuh",
+  "ggml/src/ggml-cuda/set-rows.cuh",
+  "ggml/src/ggml-cuda/set.cuh",
+  "ggml/src/ggml-cuda/snake.cuh",
+  "ggml/src/ggml-cuda/softcap.cuh",
+  "ggml/src/ggml-cuda/softmax.cuh",
+  "ggml/src/ggml-cuda/solve_tri.cuh",
+  "ggml/src/ggml-cuda/ssm-conv.cuh",
+  "ggml/src/ggml-cuda/ssm-scan.cuh",
+  "ggml/src/ggml-cuda/sum.cuh",
+  "ggml/src/ggml-cuda/sumrows.cuh",
+  "ggml/src/ggml-cuda/top-k.cuh",
+  "ggml/src/ggml-cuda/topk-moe.cuh",
+  "ggml/src/ggml-cuda/tri.cuh",
+  "ggml/src/ggml-cuda/tsembd.cuh",
+  "ggml/src/ggml-cuda/unary.cuh",
+  "ggml/src/ggml-cuda/upscale.cuh",
+  "ggml/src/ggml-cuda/vecdotq.cuh",
+  "ggml/src/ggml-cuda/vendors/cuda.h",
+  "ggml/src/ggml-cuda/vendors/hip.h",
+  "ggml/src/ggml-cuda/vendors/musa.h",
+  "ggml/src/ggml-cuda/wkv.cuh",
+  "ggml/src/ggml-impl.h",
+]
+authors   = ["Ciru (ciru-ai)", "pwilkin", "llama.cpp / ggml contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/ggml/src/ggml-cuda", "src/ggml/src", "src/ggml/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.ciru-ggml-cuda/-/-"
+api       = "ggml-cuda/common.cuh: ggml_backend_cuda_context, the CUDA-to-HIP vendor mapping, warp and block helpers"
+numeric   = "n/a here"
+regime    = "compiled inside every kernel.ciru_iu4.* unit"
+
+[[requires]]
+module    = "format.ciru_iu4.c1_g16"
+
+[[requires]]
+module    = "kernel.ciru_iu4.attn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; compiled inside every other kernel.ciru_iu4.* unit"

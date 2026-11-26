@@ -1,0 +1,74 @@
+id        = "kernel.kestrel.hipblaslt"
+kind      = "kernel"
+summary   = "hipBLASLt tuning for the prompt's dense GEMMs: src/prefill/hipblaslt_tuning.hpp (MAYA_HIPBLASLT_TUNING_V1 tables: input type, n, k, ldy, row bucket -> solution id, scoped to one architecture and hipBLASLt version), the callers src/prefill/gemm.cu and src/ds4/ds4_lt.cu, the table maker tools/hip/tune_hipblaslt.cpp, the shipped tables for gfx1100 / gfx1151 / gfx1201 / gfx942 (gfx1151: GLM and GLM-5.3 shapes for hipBLASLt 100202, 100401, 100500), and the table and GEMM tests"
+why       = "a per-architecture, per-hipBLASLt-version solution table for the prompt's dense GEMMs with gfx1151 tables and the tool that makes them; INTERFACES.md section 3 names the bf16-weight hipBLASLt route as the one cross-engine GEMM gate worth having"
+notes     = "Interface tag: linear.prefill/bf16/bf16-f32 (the class of gufo's hipBLASLt route, INTERFACES.md section 3). The tables are GLM shapes; tune_hipblaslt.cpp would make DeepSeek-V4.1 or Qwen ones. gemm.cu includes include/maya/kernels/dequant_bf16.hpp, which is not harvested. Nothing was compiled, run or timed on the pod."
+
+[provenance]
+origin    = "kestrel"
+repo      = "https://github.com/itechmedic/kestrel"
+commit    = "717c76975cd20d37b2e4162072d7745d6e1576ff"
+branch    = "kestrel"
+paths     = [
+  "include/maya/prefill/gemm.hpp",
+  "src/ds4/ds4_lt.cu",
+  "src/ds4/ds4_lt.hpp",
+  "src/prefill/gemm.cu",
+  "src/prefill/hipblaslt_tuning.hpp",
+  "tests/hip/prefill_hipblaslt_gemm.cpp",
+  "tests/hipblaslt_table_list_test.cpp",
+  "tools/hip/gfx1100-glm-hipblaslt-100202.txt",
+  "tools/hip/gfx1100-glm-hipblaslt-100401.txt",
+  "tools/hip/gfx1100-glm-hipblaslt-100500.txt",
+  "tools/hip/gfx1100-hipblaslt-100100.txt",
+  "tools/hip/gfx1100-hipblaslt-100200.txt",
+  "tools/hip/gfx1151-glm-hipblaslt-100202.txt",
+  "tools/hip/gfx1151-glm-hipblaslt-100401-b.txt",
+  "tools/hip/gfx1151-glm-hipblaslt-100401.txt",
+  "tools/hip/gfx1151-glm-hipblaslt-100500.txt",
+  "tools/hip/gfx1151-glm53-hipblaslt-100202.txt",
+  "tools/hip/gfx1201-glm-hipblaslt-100202.txt",
+  "tools/hip/gfx1201-hipblaslt-100202.txt",
+  "tools/hip/gfx1201-hipblaslt-100500.txt",
+  "tools/hip/gfx942-glm-hipblaslt-100401.txt",
+  "tools/hip/tune_hipblaslt.cpp",
+]
+authors   = ["itechmedic", "Project Maya contributors (mw00)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "cuda"
+sources   = ["src/src/prefill/gemm.cu", "src/src/ds4/ds4_lt.cu"]
+includes  = [
+  "src/include",
+  "src/include/maya/prefill",
+  "src/src/ds4",
+  "src/src/prefill",
+  "src/tests",
+  "src/tests/hip",
+  "src/tools/hip",
+]
+arch      = "gfx1151"
+toolchain = "rocm-7.2.4"
+
+[[provides]]
+interface = "linear.prefill/bf16/bf16-f32.kestrel-hipblaslt"
+api       = "maya::prefill GEMM (include/maya/prefill/gemm.hpp) and ds4_lt (src/ds4/ds4_lt.hpp) over hipBLASLt with TuningTable::load(path, arch, version)"
+numeric   = "hipBLASLt's own solution; the table only picks the solution id, so the result is the library plan's order"
+regime    = "prompt chunks; bf16 / f16 weights; a row bucket a table row"
+
+[[requires]]
+module    = "kernel.kestrel.hip_compat"
+
+[[requires]]
+module    = "kernel.kestrel.prefill_moe"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of Maya's CMake build with MAYA_ENABLE_HIP (cmake/hip_backend.cmake): the .cu file is compiled as HIP through include/maya/hip_compat, for gfx1100 / gfx1201 / gfx1151 (validated) with the engine's include roots and ggml from third_party; it needs headers this harvest leaves in the origin, so it is not compiled here"

@@ -1,0 +1,70 @@
+id        = "kernel.radiance.halo_media"
+kind      = "kernel"
+summary   = "Image, video, audio and vision-tower kernels: diffusion transformer norms and sampler steps, LTX-2 and video ops, video sparse attention, the upscaler's 3-D convolution, vocoder convolutions, NHWC convolution as an implicit GEMM, ViT and SAM attention and the vision tower's norm and position embedding"
+why       = "radiance serves image, video and audio models through the same kernel library; kept for the vision tower and for any media recipe the factory later needs"
+notes     = "No strixflerp interface matches: recorded for the vision tower (FLERP-VISION cb7f93a5f5) and for a later media recipe."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_attn_vit_h72_bf16.hip",
+  "libhalo/halo_audio.hip",
+  "libhalo/halo_conv2d_nhwc.hip",
+  "libhalo/halo_conv_t1d.hip",
+  "libhalo/halo_gen.hip",
+  "libhalo/halo_ltx.hip",
+  "libhalo/halo_sam_attn_bf16.hip",
+  "libhalo/halo_upscaler.hip",
+  "libhalo/halo_video.hip",
+  "libhalo/halo_vit_norm_embed.hip",
+  "libhalo/halo_vsa.hip",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_gen.hip",
+  "src/libhalo/halo_ltx.hip",
+  "src/libhalo/halo_video.hip",
+  "src/libhalo/halo_vsa.hip",
+  "src/libhalo/halo_upscaler.hip",
+  "src/libhalo/halo_audio.hip",
+  "src/libhalo/halo_conv2d_nhwc.hip",
+  "src/libhalo/halo_conv_t1d.hip",
+  "src/libhalo/halo_attn_vit_h72_bf16.hip",
+  "src/libhalo/halo_sam_attn_bf16.hip",
+  "src/libhalo/halo_vit_norm_embed.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "media.generation-ops/-/bf16.radiance"
+api       = "halo_* rows of docs/OPS.md \"Image generation\", \"Video generation\", \"Audio generation\", \"LTX-2\""
+numeric   = "bf16, fp32 accumulate"
+regime    = "image, video and audio models; vision towers"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

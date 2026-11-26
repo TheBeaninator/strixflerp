@@ -1,0 +1,62 @@
+id        = "kernel.enginelab.glm_moe"
+kind      = "kernel"
+summary   = "GLM MoE and its trellis device kernels: 3 origin files under src/glm"
+why       = "GLM routed experts on trellis weights; where it would go: beside the catalogue's moe.experts-decode/exl3-trellis/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: moe.experts-decode/exl3-trellis/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["src/glm/moe/glm_moe.hip", "src/glm/moe/glm_moe.hpp", "src/glm/moe/glm_trellis_device.hpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/glm/moe/glm_moe.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/exl3-trellis/f16-f32.enginelab-glm"
+api       = "src/glm/moe/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.glm_engine"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_route"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "runtime.enginelab.glm_rtxpf"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.glm_moe.json"
+reason    = "compile gate: fail: 1 of 1 units failed; first: src/src/glm/moe/glm_moe.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/kernel/glm_moe/src/src/glm/moe/glm_trellis_device.hpp:4:10: error: '../../moe_core/exl3_trellis.hpp' file not found, did you mean 'moe_core/exl3_trellis.hpp'?"

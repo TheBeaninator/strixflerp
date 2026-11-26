@@ -1,0 +1,51 @@
+id        = "kernel.kyojin.routing"
+kind      = "kernel"
+summary   = "MoE routers: the extension's top-k routing kernels (softmax / sigmoid-bias / grouped top-k, normalisation and scaling) and a gfx12 standard-router variant"
+why       = "every MoE layer's router; GLM-5.3-Flash and Qwen3.8-Flash-Next route through it. Where the shape would go: a moe.router/-/f32 provider beside kernel.ciru_inkling.glue_decode, kernel.crucible.ops, kernel.ds4.k53flash_rocm_router and 16 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.router/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (routing_std_gfx12.cu, routing_std_gfx12.cuh), 2 changed (routing.cu, routing.cuh). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/routing.cu",
+  "exllamav3/exllamav3_ext/routing.cuh",
+  "exllamav3/exllamav3_ext/routing_std_gfx12.cu",
+  "exllamav3/exllamav3_ext/routing_std_gfx12.cuh",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/routing.cu", "src/exllamav3/exllamav3_ext/routing_std_gfx12.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.router/-/f32.kyojin-ext"
+api       = "routing.cu, routing.cuh, routing_std_gfx12.cu, routing_std_gfx12.cuh; kernels: routing_gemv_kernel, routing_ds3_nogroup_topk_kernel, routing_ds3_nogroup_kernel, routing_std_topk_kernel, routing_std_kernel, moe_split_map_kernel, moe_split_issue_kernel, moe_split_collect_add_kernel, routing_sel_norm_kernel, routing_gemv_gfx12_bsz1_kernel ..."
+numeric   = "fp32 logits and weights"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[[requires]]
+module    = "kernel.kyojin.hgemm"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: routing.cu, routing_std_gfx12.cu"

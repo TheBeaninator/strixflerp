@@ -1,0 +1,103 @@
+id        = "executor.enginelab.inkling2_resident"
+kind      = "executor"
+summary   = "Inkling 2 Mini resident backend, decoder, forward, route and weights: 6 origin files under src/inkling2"
+why       = "the all-resident decode of Inkling 2; where it would go: beside the catalogue's executor.forward/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.forward/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/inkling2/inkling2_mini_resident_backend.hpp",
+  "src/inkling2/inkling2_mini_resident_decoder.hpp",
+  "src/inkling2/inkling2_mini_resident_forward.hpp",
+  "src/inkling2/inkling2_mini_resident_route.hpp",
+  "src/inkling2/inkling2_mini_resident_weights.cpp",
+  "src/inkling2/inkling2_mini_resident_weights.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/inkling2/inkling2_mini_resident_weights.cpp"]
+includes  = ["src/src", "src/src/inkling2"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.forward-enginelab-inkling2/-/-"
+api       = "src/inkling2/inkling2_mini_resident*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_cuda"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_engine"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_head"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_core_common"
+
+[[requires]]
+module    = "kernel.enginelab.cuda_head"
+
+[[requires]]
+module    = "kernel.enginelab.inkling2_attention"
+
+[[requires]]
+module    = "kernel.enginelab.inkling2_moe"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_microscaled"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.inkling2_dspark"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

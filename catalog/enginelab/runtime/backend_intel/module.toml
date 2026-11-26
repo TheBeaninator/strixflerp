@@ -1,0 +1,70 @@
+id        = "runtime.enginelab.backend_intel"
+kind      = "runtime"
+summary   = "the Intel GPU backend (src/intel: arch, core, weight): 15 origin files under src/intel"
+why       = "an XPU route; where it would go: beside the catalogue's executor.lane-backend/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: executor.lane-backend/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 5 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/intel/CMakeLists.txt",
+  "src/intel/arch/xe2/caps.hpp",
+  "src/intel/core/backend.cpp",
+  "src/intel/core/backend.hpp",
+  "src/intel/core/backend_sycl.hpp",
+  "src/intel/core/dense_q8a8_ref.hpp",
+  "src/intel/core/fp16.hpp",
+  "src/intel/core/reference.cpp",
+  "src/intel/core/reference.hpp",
+  "src/intel/core/reference_sycl.cpp",
+  "src/intel/core/xmx_sycl.hpp",
+  "src/intel/weight/registry.cpp",
+  "src/intel/weight/runtime.cpp",
+  "src/intel/weight/runtime.hpp",
+  "src/intel/weight/source.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/intel/core/backend.cpp",
+  "src/src/intel/core/reference.cpp",
+  "src/src/intel/core/reference_sycl.cpp",
+  "src/src/intel/weight/registry.cpp",
+  "src/src/intel/weight/runtime.cpp",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "executor.lane-backend-enginelab-intel/-/-"
+api       = "src/intel/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,119 @@
+id        = "executor.enginelab.ds41_prefill"
+kind      = "executor"
+summary   = "DS41 prefill: the HIP prefill and its relaxed form, adapter, precision, route and tuning, the DeepSeek prefill and its levers"
+why       = "the prompt path of DS41 (docs/ds41-prefill-tuning.md); where it would go: a new strixflerp interface executor.prefill-enginelab-ds41/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, executor.prefill-enginelab-ds41/-/-. 2 HIP unit(s) compiled standalone by the gate; 1 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/deepseek41_prefill.hpp",
+  "include/strix/deepseek41_prefill_levers.hpp",
+  "include/strix/ds41_prefill.hpp",
+  "include/strix/ds41_prefill_precision.hpp",
+  "include/strix/ds41_prefill_route.hpp",
+  "include/strix/ds41_prefill_tuning.hpp",
+  "include/strix/hip_ds41_prefill.hpp",
+  "src/ds41_prefill.cpp",
+  "src/ds41_prefill_adapter.inc",
+  "src/hip_deepseek41_prefill.hip",
+  "src/hip_ds41_prefill.hip",
+  "src/hip_ds41_prefill_relaxed.inl",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_deepseek41_prefill.hip", "src/src/hip_ds41_prefill.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.prefill-enginelab-ds41/-/-"
+api       = "hip_ds41_prefill.hip, hip_deepseek41_prefill.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "executor.enginelab.ds41_pipeline"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_tp_join"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_attention"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_engram"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_expert_tp"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_routes"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_grouped"
+
+[[requires]]
+module    = "kernel.enginelab.moe_core_prefill"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "runtime.enginelab.xport_channel"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_prefix"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.ds41_prefill.json"

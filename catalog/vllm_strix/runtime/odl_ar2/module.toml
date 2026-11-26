@@ -1,0 +1,48 @@
+id        = "runtime.vllm_strix.odl_ar2"
+kind      = "runtime"
+summary   = "odl_ar2, a two-rank decode all-reduce over OdinLink streams: on the stream a D2H copy into a pinned send slot, a doorbell kernel and a wait+add kernel that spins on a pinned per-slot flag and adds the peer slot in place (UMA zero-copy); a CPU progress thread sends each round with one STREAM_SEND ioctl (<= 64 KiB latency path, 4024-byte fragments) and polls nonblocking STREAM_RECV; rendezvous by a TCP barrier; ctypes wrapper odl_ar2.py"
+why       = "decode all-reduces are tiny (a 48 KiB message is 13 frames) and latency-bound; RCCL over a net plugin pays proxy and syscall cost per step, so the rig carries them on a dedicated path and leaves RCCL the big prefill collectives. Stream order makes message k round k, so slot reuse needs no extra handshake. This is the shape a two-host strixflerp pair over USB4 would use for its per-layer partial sums"
+notes     = "Interface tag: collective.allreduce-p2p (the catalogue providers run over RoCE; this one over OdinLink streams). container/native/odl_ar2.hip and site-packages/odl_ar2.py are byte-identical copies of odinlink/ar2/ (the image build reads the former); both kept, one compiled. Needs <odl_tb5/odl_tb5.h> from runtime.odinlink5.lib (OdinLink-Five 0315225 in the catalogue; the origin builds against 4534f58 + odinlink-local.patch, runtime.vllm_strix.odinlink_local_patch). The vLLM hook is runtime.vllm_strix.odl_ar2_hook. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "container/native/odl_ar2.hip",
+  "container/rootfs/opt/venv/lib/python3.12/site-packages/odl_ar2.py",
+  "odinlink/ar2/odl_ar2.hip",
+  "odinlink/ar2/odl_ar2.py",
+]
+authors   = [
+  "davidcanar (vllm-strix-halo)",
+  "AlexKGwyn/ds4-vllm (design of the DS4_ODL_AR2 hook and odl_mq, Apache-2.0)",
+]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/odinlink/ar2/odl_ar2.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.allreduce-p2p/-/bf16.odl-stream"
+api       = "extern \"C\" odl2_init(rank, dev_index, peer_ip, port), odl2_enqueue(stream, dst, src, count, dtype), odl2_seq, odl2_shutdown; python odl_ar2.py"
+numeric   = "elementwise SUM, dtype bf16 / fp16 / fp32, bf16 and fp16 accumulate in fp32; both ranks compute the same sum"
+regime    = "two ranks, one OdinLink device, decode-sized messages; progress thread spins hot for 5 ms after activity then sleeps 200 us"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.vllm_strix.odl_ar2.json"

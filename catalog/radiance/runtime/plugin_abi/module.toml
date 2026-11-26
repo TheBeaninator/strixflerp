@@ -1,0 +1,56 @@
+id        = "runtime.radiance.plugin_abi"
+kind      = "runtime"
+summary   = "radiance's plugin ABI headers: the op and row declarations a kernel library answers (rad_abi.h, rad_plugin.h), the chained-launch record type (RadKernelChainFn), weight layout and encoding tags, the Philox draw, the sampler and YaRN contracts"
+why       = "radiance keeps model plugins and kernel libraries apart behind one C ABI so a card gets its own kernel library without touching a model; libhalo cannot be read or compiled without these headers"
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "abi/rad_abi.h",
+  "abi/rad_abi_layout.h",
+  "abi/rad_abi_layout_rows.h",
+  "abi/rad_builder.h",
+  "abi/rad_clef.h",
+  "abi/rad_device.h",
+  "abi/rad_encoding.h",
+  "abi/rad_format.h",
+  "abi/rad_laya.h",
+  "abi/rad_philox.h",
+  "abi/rad_planes.h",
+  "abi/rad_plugin.h",
+  "abi/rad_prefill_split.h",
+  "abi/rad_quant.h",
+  "abi/rad_runtime.h",
+  "abi/rad_sample.h",
+  "abi/rad_spechub.h",
+  "abi/rad_types.h",
+  "abi/rad_yarn.h",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/abi"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "kernel-abi.radiance-plugin/-/-"
+api       = "RadArgs, RadStream, RadKernelInfo rows, rad_plugin_open (abi/rad_abi.h, abi/rad_plugin.h)"
+numeric   = "n/a"
+regime    = "n/a"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "headers only; every libhalo unit includes them"

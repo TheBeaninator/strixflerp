@@ -1,0 +1,43 @@
+id        = "format.fastasfuck.safetensors_loader"
+kind      = "format"
+summary   = "fastasfuck's bulk safetensors loader: concurrent pread workers into pinned host memory, then fdatasync and page-cache eviction"
+why       = "the Qwen3.5 BF16 path and the tests load checkpoints through it without leaving the file in the page cache of a unified-memory machine"
+notes     = "Files vs strixite: runtime/weight_loader.cpp byte-identical to format.strixite.safetensors_loader at d19945e; runtime/weight_loader.hpp byte-identical to format.strixite.safetensors_loader at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/weight_loader.cpp", "runtime/weight_loader.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/weight_loader.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.device-loader/safetensors/-"
+api       = "strix::WeightLoader, strix::read_file_parallel"
+numeric   = "the same source as format.strixite.safetensors_loader, so its behaviour: bytes as stored"
+regime    = "as format.strixite.safetensors_loader: buffered or O_DIRECT; drops the file from the page cache after the read"
+
+[[requires]]
+module    = "format.fastasfuck.safetensors"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_runtime) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

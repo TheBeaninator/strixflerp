@@ -1,0 +1,42 @@
+id        = "runtime.vllm_strix.ds4_gfx1151_gates"
+kind      = "runtime"
+summary   = "five gfx1151 gates for the DS4 AMD path: the C4A block-flat decode layout enabled for gfx1151 (a note: applied inline, no diff body), the MI300-only aiter blockscale GEMM replaced by the generic GEMM, aiter's fp8 scaled-mm refused (no fp8 matrix path), and the attention and gate-up B-preshuffles skipped (they exist only for aiter linears)"
+why       = "each gate removes one CDNA assumption from the DS4 model code; together they are the list of what DS4 on RDNA 3.5 must not call"
+notes     = "Interface tag: none. vsh-ds4-c4a-decode-layout-gfx1151.patch holds only a two-line note; the change is inside ds4-native-fixed-refs/rocm_aiter_mla_sparse.py. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "container/patches/vsh-ds4-c4a-decode-layout-gfx1151.patch",
+  "container/patches/vsh-ds4-generic-gemm-gfx1151.patch",
+  "container/patches/vsh-ds4-no-aiter-fp8-gfx1151.patch",
+  "container/patches/vsh-ds4-no-attn-preshuffle-gfx1151.patch",
+  "container/patches/vsh-ds4-no-gateup-preshuffle-gfx1151.patch",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.platform-gate-ds4-gfx1151/-/-"
+api       = "patches to models/deepseek_v4/amd/{rocm,model}.py and scaled_mm/aiter.py"
+numeric   = "n/a"
+regime    = "gfx1151"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "patch: applies to vLLM 73859fec or OdinLink-Five 4534f58, neither of which is on the island; --side-gates parses each with git apply --numstat (gate/results/compile/vllm_strix.side-gates.json)"

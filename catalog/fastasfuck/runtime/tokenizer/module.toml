@@ -1,0 +1,46 @@
+id        = "runtime.fastasfuck.tokenizer"
+kind      = "runtime"
+summary   = "fastasfuck's hand-written byte-level BPE for Qwen3.8-Flash-Next loaded and checked against tokenizer.json"
+why       = "no Python or HF tokenizer runs in the server; token ids for every request come from this file"
+notes     = "Files vs strixite: serve/tokenizer.cpp 10 changed lines against runtime.strixite.tokenizer at d19945e; serve/tokenizer.hpp byte-identical to runtime.strixite.tokenizer at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/tokenizer.cpp", "serve/tokenizer.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/tokenizer.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "text.tokenizer/-/-"
+api       = "strix::Tokenizer"
+numeric   = "derived from runtime.strixite.tokenizer (serve/tokenizer.cpp 10 changed lines against runtime.strixite.tokenizer at d19945e; serve/tokenizer.hpp byte-identical to runtime.strixite.tokenizer at d19945e); not compared here"
+regime    = "as runtime.strixite.tokenizer: host"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.unicode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

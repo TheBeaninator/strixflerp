@@ -1,0 +1,49 @@
+id        = "format.fastasfuck.faf_loader"
+kind      = "format"
+summary   = "fastasfuck's .faf to device loader: one allocation for the data region, concurrent preads through two event-gated pinned staging buffers, typed Q4/Q5/Q6/Q8 views, and a HostExperts placement that leaves the expert stacks in pinned host memory"
+why       = "the event gate on staging-buffer reuse is a gfx1151 host-buffer hazard the file documents; the HostExperts placement lets a smaller discrete card run the same kernels on the same bytes"
+notes     = "Files vs strixite: runtime/faf_loader.cpp no file of that path in format.strixite.strixw_loader; runtime/faf_loader.hpp no file of that path in format.strixite.strixw_loader. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here. Interface tag: its own, because fastasfuck changed the job (strixite's format.strixite.strixw_loader provides format.device-loader/strixw/-)."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/faf_loader.cpp", "runtime/faf_loader.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/faf_loader.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.device-loader/faf/-"
+api       = "strix::FafDevice (runtime/faf_loader.hpp)"
+numeric   = "n/a: bytes copied unchanged, alignment carried from the file"
+regime    = "host to device, one GPU (GTT on gfx1151)"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.qweight"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_model) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

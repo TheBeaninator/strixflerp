@@ -1,0 +1,36 @@
+id        = "kernel.kyojin.triton_mla"
+kind      = "kernel"
+summary   = "Triton kernels for multi-head latent attention (compressed latent and shared RoPE key in the cache; absorb / unfold WMMA kernels) and mla_sinks.py, the shared maths of per-head sinks, sliding window and sigmoid output gate"
+why       = "GLM-5.3-Flash MLA decode and prefill. Where the shape would go: an attn.sparse-sink/kv-latent/bf16 provider beside kernel.radiance.halo_glm_family, through a port of the python / Triton logic"
+notes     = "Interface tag: attn.sparse-sink/kv-latent/bf16. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (mla_sinks.py), 1 changed (mla_triton.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/attention_fn/mla_sinks.py", "exllamav3/modules/attention_fn/mla_triton.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-latent/bf16.kyojin-triton-mla"
+api       = "mla_sinks.py, mla_triton.py"
+numeric   = "fp16 WMMA, fp32 accumulation"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

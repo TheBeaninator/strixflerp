@@ -1,0 +1,36 @@
+id        = "kernel.kyojin.triton_qwrite"
+kind      = "kernel"
+summary   = "Native Triton 8-bit paged cache writer replacing the torch fallback of ext.quant_cache_paged on ROCm (q_cache.cu is not in the ROCm build): same format and float32 operation order (unnormalised H32 butterfly, scale = absmax + eps)"
+why       = "the ROCm cache write. Where the shape would go: a kvcache.quant8/-/f32 provider beside kernel.fastasfuck.kv8, kernel.strata.kvcache, kernel.strixite.kv8, through a port of the python / Triton logic"
+notes     = "Interface tag: kvcache.quant8/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (qwrite_triton.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/attention_fn/qwrite_triton.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.quant8/-/f32.kyojin-triton-writer"
+api       = "qwrite_triton.py"
+numeric   = "fp32 math, 8-bit codes"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

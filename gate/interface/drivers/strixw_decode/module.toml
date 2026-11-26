@@ -1,0 +1,51 @@
+# Not a catalogue module: the driver program of an interface gate, assembled by gate/interface.py with the
+# interfaces bound to each provider in turn.
+id        = "tool.flerp.gate_strixw_decode"
+kind      = "tool"
+summary   = "Interface gate driver: linear.decode/strixw-q4|q5|q6|q8 through strixite's launch API (strix::kernels::linear_q4 / q5 / q6 / q8), row-major or Q4Panel16 / Q8Panel16 tensors"
+
+[provenance]
+origin    = "flerp"
+repo      = "in-tree"
+commit    = "in-tree"
+paths     = ["driver.cpp"]
+authors   = ["pod"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/driver.cpp"]
+includes  = ["../../common", "../../reference"]
+uses      = ["hip-runtime"]
+
+[[provides]]
+interface = "gate.driver/-/-.strixw-decode"
+api       = "main"
+numeric   = "n/a"
+regime    = "gate"
+
+[[requires]]
+interface = "linear.decode/strixw-q4/bf16"
+
+[[requires]]
+interface = "linear.decode/strixw-q5/bf16"
+
+[[requires]]
+interface = "linear.decode/strixw-q6/bf16"
+
+[[requires]]
+interface = "linear.decode/strixw-q8/bf16"
+
+[[requires]]
+interface = "format.host/strixw-q4p16/-"
+
+[[requires]]
+interface = "format.device-view/strixw-q4p16/-"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"

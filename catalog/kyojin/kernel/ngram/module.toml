@@ -1,0 +1,47 @@
+id        = "kernel.kyojin.ngram"
+kind      = "kernel"
+summary   = "N-gram embedding rows: device gather of hashed n-gram rows, and the scattered disk gather of rows on Windows (overlapped ReadFile at high queue depth)"
+why       = "n-gram embedding tables (Engram-style) too large to hold resident. Where the shape would go: a ple.ngram-rows/exl3-ngram/- provider beside format.crucible.ngram16, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: ple.ngram-rows/exl3-ngram/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 3 changed (ngram.cu, ngram.cuh, ngram_gather_win.cpp). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/ngram.cu",
+  "exllamav3/exllamav3_ext/ngram.cuh",
+  "exllamav3/exllamav3_ext/ngram_gather_win.cpp",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/ngram.cu", "src/exllamav3/exllamav3_ext/ngram_gather_win.cpp"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "ple.ngram-rows-kyojin/exl3-ngram/-"
+api       = "ngram.cu, ngram.cuh, ngram_gather_win.cpp; kernels: ngram_dequant_kernel"
+numeric   = "rows copied verbatim"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: ngram.cu, ngram_gather_win.cpp"

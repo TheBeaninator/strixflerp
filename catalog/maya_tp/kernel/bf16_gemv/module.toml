@@ -1,0 +1,57 @@
+id        = "kernel.maya_tp.bf16_gemv"
+kind      = "kernel"
+summary   = "BF16 weight GEMVs and conversions: the naive and warp-split BF16 GEMV, llama.cpp's FP32-activation MMVF (single, multi-column, multi-matrix) and the BF16 dequantizers"
+why       = "routers, hyper-connection projections and other BF16 tensors run through these every token; a third BF16 GEMV family beside strixite's and strata's"
+notes     = "Interface tag: linear.dense/bf16/bf16-f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/bf16_gemv.hpp",
+  "include/strata/kernels/dequant_bf16.hpp",
+  "src/kernels/cuda/bf16_gemv.cu",
+  "src/kernels/cuda/dequant_bf16.cu",
+  "src/kernels/cuda/native_bf16.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/bf16_gemv.cu",
+  "src/src/kernels/cuda/dequant_bf16.cu",
+  "src/src/kernels/cuda/native_bf16.cu",
+]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.dense/bf16/bf16-f32.maya-tp"
+api       = "strata::kernels::bf16_gemv(_split), bf16_gemv_fp32_mmvf(_cols, _multi)"
+numeric   = "BF16 weights, FP32 accumulation"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.gguf_gemv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.bf16_gemv.json"

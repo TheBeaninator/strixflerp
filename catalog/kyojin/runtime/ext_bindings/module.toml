@@ -1,0 +1,160 @@
+id        = "runtime.kyojin.ext_bindings"
+kind      = "runtime"
+summary   = "The extension's pybind11 module (every op bound, CUDA and ROCm branches) and build_config.py (which sources build on ROCm)"
+why       = "the call surface of every kernel above. Where the shape would go: an executor.provider-api/exl3-ext/- provider beside runtime.gufo.ext_api, through the host code behind the flerp ABI"
+notes     = "Interface tag: executor.provider-api/exl3-ext/-. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (build_config.py), 1 changed (bindings.cpp). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/bindings.cpp", "exllamav3/exllamav3_ext/build_config.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/exllamav3/exllamav3_ext/bindings.cpp"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.provider-api-kyojin/exl3-ext/-"
+api       = "bindings.cpp, build_config.py"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module    = "kernel.kyojin.dflash2"
+
+[[requires]]
+module    = "kernel.kyojin.dsa_topk"
+
+[[requires]]
+module    = "kernel.kyojin.dsa_topk_gfx12"
+
+[[requires]]
+module    = "kernel.kyojin.dsa_topk_par"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_codec"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_dec"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemm"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemv"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemv_int8"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_kernel_map"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe_coop"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe_fused"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe_grouped"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe_prefill"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_quantize"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.fq_common"
+
+[[requires]]
+module    = "kernel.kyojin.fused_elt"
+
+[[requires]]
+module    = "kernel.kyojin.gdn"
+
+[[requires]]
+module    = "kernel.kyojin.gmmq"
+
+[[requires]]
+module    = "kernel.kyojin.hc_mix"
+
+[[requires]]
+module    = "kernel.kyojin.hgemm"
+
+[[requires]]
+module    = "kernel.kyojin.kda_inter"
+
+[[requires]]
+module    = "kernel.kyojin.mla_dec_valu"
+
+[[requires]]
+module    = "kernel.kyojin.moe_unswizzle"
+
+[[requires]]
+module    = "kernel.kyojin.ngram"
+
+[[requires]]
+module    = "kernel.kyojin.ple"
+
+[[requires]]
+module    = "kernel.kyojin.routed_f16"
+
+[[requires]]
+module    = "kernel.kyojin.routing"
+
+[[requires]]
+module    = "runtime.kyojin.bc_attention"
+
+[[requires]]
+module    = "runtime.kyojin.bc_blocksparse_mlp"
+
+[[requires]]
+module    = "runtime.kyojin.bc_dsv4_attn"
+
+[[requires]]
+module    = "runtime.kyojin.bc_gated_delta_net"
+
+[[requires]]
+module    = "runtime.kyojin.bc_mlp"
+
+[[requires]]
+module    = "runtime.kyojin.cpu_moe_mul1"
+
+[[requires]]
+module    = "runtime.kyojin.host_mem"
+
+[[requires]]
+module    = "runtime.kyojin.moe_handoff"
+
+[[requires]]
+module    = "runtime.kyojin.sam"
+
+[[requires]]
+module    = "runtime.kyojin.stloader"
+
+[[requires]]
+module    = "runtime.kyojin.tp_context"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: bindings.cpp"

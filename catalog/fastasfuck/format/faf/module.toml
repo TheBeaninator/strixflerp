@@ -1,0 +1,43 @@
+id        = "format.fastasfuck.faf"
+kind      = "format"
+summary   = "fastasfuck's .faf weights container: header, hashed index and a data region with every tensor in its kernel's layout (Q4/Q5/Q6/Q8 row- or chunk-major, BF16, F32, I64), a streaming writer and an mmap reader"
+why       = ".faf is what fastasfuck renamed strixite's strixw container to and extended (format v4 adds Q6 and Q5 row-major); every served model and every 1.1.0 calibrated package is one of these files"
+notes     = "Files vs strixite: formats/faf.cpp new in fastasfuck; formats/faf.hpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["formats/faf.cpp", "formats/faf.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/formats/faf.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.container/faf/-"
+api       = "strix::FafWriter, strix::FafFile (formats/faf.hpp)"
+numeric   = "n/a: tensors are stored as written, each component hashed"
+regime    = "host, offline write and mmap read"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_formats) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

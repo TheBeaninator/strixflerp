@@ -1,0 +1,74 @@
+{
+ "what": "StrixFold 72c0f083's versions of files that a module of origin strixfold also holds; laid over them by a recipe's [build.overlay] \"<id>\" = \".\" (docs/harvest/harvest_strixfold_tp4.py)",
+ "parent_origin": "strixfold",
+ "parent_commit": "f64b5ff",
+ "head_commit": "72c0f083fca18f80fcf73b2358cf8235c3dd5363",
+ "files": [
+  {
+   "path": "tools/dsv41-hip/rdma_check.py",
+   "parent_module": "runtime.strixfold.coll_rdma",
+   "parent_sha256": "28a30c56ee390e18fce04829508918edd18d3fd7ef76925181151cd6d5e095eb",
+   "tp4_sha256": "73eb8c4666d261c69080ed4adb2a430f2c8bd4ca8b62157fce2ffdf3336150b7",
+   "commits": [
+    "27ea85ea dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+   ]
+  },
+  {
+   "path": "zig/src/families/dsv41/rdma_proxy.zig",
+   "parent_module": "runtime.strixfold.coll_rdma",
+   "parent_sha256": "ee00e234f9d21adf73ee6388c51f38395eec00f71a14276c0e4202f5d1e49bb9",
+   "tp4_sha256": "5a2f6bde2d1a227d59885ccb585e19b8a89c41cdf6881ce0110770ea3f8ef98e",
+   "commits": [
+    "09a812eb dsv41 reap: world-2 RDMA exchange delegates to the host link (pod card 023c5d2ad9)",
+    "2513d98c dsv41 2D: VGATHER assembles multi-row quarters with two copy_rows16 (pod card e96f0f5fa0)",
+    "5cb6ff9e dsv41 2D: TF_DS_VGATHER assembles multi-row quarters with two strided copies (pod card e96f0f5fa0)",
+    "4467d9c4 dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)",
+    "96d9d9ed dsv41 rdma_proxy world 4: lanes, so a prompt-size call keeps up to 4 slot chunks on the wire (TF_COLL_LANES, pod card 96431609cf)",
+    "bfebed5c dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)",
+    "0def23ec dsv41 collectives: a thread a data link for tcp_host's striped exchanges, off by default (pod card 3760ed527a)",
+    "fc1399ca rdma_proxy: a gather's end on a different stream from its begin is refused; why RX slot reuse is safe (review)",
+    "27ea85ea dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+   ]
+  },
+  {
+   "path": "zig/src/families/dsv41/rdma_core.zig",
+   "added": true,
+   "tp4_sha256": "4924fb7e751eb86b501aaf596bbd8ef2cf517d755a4d3b3f92e62614ada55622",
+   "commits": [
+    "4467d9c4 dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)",
+    "96d9d9ed dsv41 rdma_proxy world 4: lanes, so a prompt-size call keeps up to 4 slot chunks on the wire (TF_COLL_LANES, pod card 96431609cf)",
+    "bfebed5c dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)",
+    "74bdec30 rdma_proxy: the idle wait sleeps as tcp_proxy's does (idleWait), not only yields past 20 ms (review)",
+    "27ea85ea dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+   ]
+  },
+  {
+   "path": "zig/src/families/dsv41/rdma_nic.zig",
+   "added": true,
+   "tp4_sha256": "a05c4b1430ad93922035f9d70258e97eca2a1ca3a5604a29976936673f51efb4",
+   "commits": [
+    "bfebed5c dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)",
+    "27ea85ea dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+   ]
+  },
+  {
+   "path": "zig/src/families/dsv41/rdma_proxy4_test.zig",
+   "added": true,
+   "tp4_sha256": "6cd71d639fee31f2e1f6447b4701312b37e603325a5040e11c80521c25d810f6",
+   "commits": [
+    "4467d9c4 dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd)",
+    "96d9d9ed dsv41 rdma_proxy world 4: lanes, so a prompt-size call keeps up to 4 slot chunks on the wire (TF_COLL_LANES, pod card 96431609cf)",
+    "bfebed5c dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)"
+   ]
+  },
+  {
+   "path": "zig/src/families/dsv41/rdma_proxy_test.zig",
+   "added": true,
+   "tp4_sha256": "694a912136d483f711dbbf8e65350ad8c82b88696d9d79e9dc1440d04dce92d0",
+   "commits": [
+    "74bdec30 rdma_proxy: the idle wait sleeps as tcp_proxy's does (idleWait), not only yields past 20 ms (review)",
+    "27ea85ea dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma)"
+   ]
+  }
+ ]
+}

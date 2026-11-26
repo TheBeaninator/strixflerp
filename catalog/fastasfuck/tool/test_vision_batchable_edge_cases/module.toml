@@ -1,0 +1,61 @@
+id        = "tool.fastasfuck.test_vision_batchable_edge_cases"
+kind      = "tool"
+summary   = "fastasfuck's test of image requests batched across slots on the real backend: pads, positions and cache ids in edge cases"
+why       = "mixing image and text slots in one batched verify is easy to get wrong; this test covers the cases the author hit"
+notes     = "Files vs strixite: tools/test_vision_batchable_edge_cases.cpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/test_vision_batchable_edge_cases.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/test_vision_batchable_edge_cases.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.test-vision-batchable-edge-cases/-/-"
+api       = "tools/test_vision_batchable_edge_cases.cpp"
+numeric   = "n/a"
+regime    = "host program"
+
+[[requires]]
+module    = "executor.fastasfuck.qwen4exp"
+
+[[requires]]
+module    = "executor.fastasfuck.qwen4exp_backend"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.engine"
+
+[[requires]]
+module    = "runtime.fastasfuck.serve_log"
+
+[[requires]]
+module    = "runtime.fastasfuck.tokenizer"
+
+[[requires]]
+module    = "runtime.fastasfuck.vision_request"
+
+[[requires]]
+module    = "serve.fastasfuck.http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable test_vision_batchable_edge_cases) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,47 @@
+id        = "runtime.strixfold_tp4.prompt_cache"
+kind      = "runtime"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for runtime.strixfold.prompt_cache: 2 file(s) of runtime.strixfold.prompt_cache and 1 file(s) the TP4 tree adds beside them (prompt_cache.zig, prompt_cache_test.zig, prompt_cache_transfer_test.zig), laid over the f64b5ff files"
+why       = "runtime.strixfold.prompt_cache is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over runtime.strixfold.prompt_cache without touching it or the TP2 recipes"
+notes     = "Overlay of runtime.strixfold.prompt_cache (overlay.json has every file with both sha256 and its commits). Cards behind the changes: d6a577e1a1, 345bacf673, ef450588a1. Latest commits: 1fbbbd21 prompt cache: a submit's resume guess asks the family nothing (guessSealed), cache transfers under cache_lock, an import never dedupes onto a sealed state (pod card d6a577e1a1); cd96cd39 dsv41 lanes: a kept state's path is its cache key's, so a same-size picture is another conversation's; cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest; 251ed089 prompt cache: shared cuts land on the family's chunk ends (dsv41 grain), split from f4ae58bd (pod card 345bacf673, 594536982e)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/core/prompt_cache.zig",
+  "zig/src/core/prompt_cache_test.zig",
+  "zig/src/core/prompt_cache_transfer_test.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.prompt_cache (origin strixfold, f64b5ff): 2 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "cache.prompt-strixfold/-/-.tp4"
+api       = "core/prompt_cache.zig Snapshots vtable, core/prompt_imprint.zig Imprint"
+numeric   = "exact reuse: a restored state is byte-equal to the one saved"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); chunk-end granularity"
+
+[[requires]]
+module    = "runtime.strixfold.prompt_cache"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

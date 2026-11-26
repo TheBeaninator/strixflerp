@@ -1,0 +1,64 @@
+id        = "runtime.enginelab.pair_pipeline"
+kind      = "runtime"
+summary   = "two-node pipelines (include/strix/pair): layer pipeline, layer cut, stage map, chains and chain topology, prefill groups, window overlap and window ring, split plan, planner, placement inputs, balance, regime, relayout and column split"
+why       = "the pipeline-parallel shape of the DS41 and MiniMax pairs: where to cut the layers and how to overlap windows with the exchange; where it would go: a new strixflerp interface runtime.pair-pipeline/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, runtime.pair-pipeline/-/-. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/pair/balance.hpp",
+  "include/strix/pair/chain.hpp",
+  "include/strix/pair/chain_topology.hpp",
+  "include/strix/pair/column_split.hpp",
+  "include/strix/pair/layer_pipeline.hpp",
+  "include/strix/pair/layercut.hpp",
+  "include/strix/pair/placement_inputs.hpp",
+  "include/strix/pair/planner.hpp",
+  "include/strix/pair/prefill_group.hpp",
+  "include/strix/pair/regime.hpp",
+  "include/strix/pair/relayout.hpp",
+  "include/strix/pair/split_plan.hpp",
+  "include/strix/pair/stage_map.hpp",
+  "include/strix/pair/window_overlap.hpp",
+  "include/strix/pair/window_ring.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.pair-pipeline/-/-"
+api       = "include/strix/pair/*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

@@ -1,0 +1,52 @@
+id        = "kernel.fastasfuck.qsa_indexer"
+kind      = "kernel"
+summary   = "fastasfuck's QSA indexer (strixite's qsa.hip renamed): block keys, scores and top-k block pick"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its qsa_indexer kernel file so a timing card can set it against kernel.strixite.qsa, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/qsa_indexer.hip attn.qsa-indexer/- (31 changed lines against kernel.strixite.qsa kernels/qsa.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/qsa_indexer.hip", "kernels/qsa_indexer.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/qsa_indexer.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/bf16"
+api       = "strix::kernels::qsa_block_keys, qsa_scores, qsa_topk, qsa_topk_workspace_bytes (kernels/qsa_indexer.hpp)"
+numeric   = "derived from kernel.strixite.qsa (31 changed lines against kernel.strixite.qsa kernels/qsa.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.qsa: 4-token blocks; k = budget / 4 (512 on the target); H <= 8 heads, D % 8 == 0, D <= 256"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32"
+api       = "strix::kernels::qsa_block_keys, qsa_scores, qsa_topk, qsa_topk_workspace_bytes (kernels/qsa_indexer.hpp)"
+numeric   = "derived from kernel.strixite.qsa (31 changed lines against kernel.strixite.qsa kernels/qsa.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.qsa: 4-token blocks; k = budget / 4 (512 on the target); H <= 8 heads, D % 8 == 0, D <= 256"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.rope"
+
+[[requires]]
+module    = "kernel.fastasfuck.wmma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.qsa_indexer.json"

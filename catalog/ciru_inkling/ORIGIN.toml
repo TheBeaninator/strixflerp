@@ -1,0 +1,95 @@
+# Inkling 2 Mini CIRU Halo Agent: Ciru's runtime for Thinking Machines Lab's Inkling 2 Mini on one Strix Halo (gfx1151),
+# a tuned ROCm vLLM with a complete native RDNA 3.5 HIP prefill and decode engine (seven translation units, 299 kernels by
+# the author), DSpark speculative decoding and Ciru's fitted expert weight banks (card ORIGIN-CIRU-INKLING 8bd576841e).
+name      = "ciru_inkling"
+repo      = "https://github.com/ciru-ai/Inkling-2-Mini-CIRU-Halo-Agent-gfx1151"
+commit    = "b3870f35926fb322f398e6c373a93098534f8fdb"
+branch    = "main"
+version   = "v1.5.0 (commit of 2026-11-23: Release v1.5.0: all-HIP RDNA 3.5 prefill and decode engine); HIP ABI version 3; source hash 671b45b80972"
+reference_checkout = "control-node: /data/ark-inbox/src/github.com__ciru-ai__Inkling-2-Mini-CIRU-Halo-Agent-gfx1151#b3870f35926fb322f398e6c373a93098534f8fdb (ark intake 7546d7e, a depth-1 clone; its .git has no refs directory, so git commands fail there and the harvest reads .git/HEAD); laptop: ~/Code/strixflerp-upstream-supplement/ciru_inkling (rsync of that copy, 2026-11-24). Every file named in the release's MANIFEST.sha256 matches it in both"
+
+[licence]
+spdx      = "Apache-2.0"
+files     = ["LICENSE", "NOTICE"]                          # copied verbatim next to this file
+third_party = "NOTICE: Ciru's runtime changes, fitted weights and packaging are Apache-2.0; the runtime incorporates modified vLLM code (Apache-2.0) and the Python overlay files carry the vLLM contributors' SPDX header; the seven .hip units and hip_common.cuh carry only 'SPDX-License-Identifier: Apache-2.0, Copyright (c) 2026 CIRU AI'. The bundled ROCr library (scripts/rocm, AMD ROCr 6b0e43f3 with the idle-polling fix 46558b7a; its own licence files) and the model weights (Thinking Machines Lab, Apache-2.0, not in this repository) are not harvested."
+
+[toolchain]
+host      = "python 3.12 with PyTorch 2.13.0+rocm10.0.0, Triton 3.8.0 and vLLM 0.34.0+rocm100 patched by patches/vllm-inkling2-gfx1151.patch and the overlay (README.md:58, scripts/install.sh); the HIP library itself links only libamdhip64.so.7 and libc"
+device    = "therock-10.0"                               # the release pins the ROCm 10.0 SDK wheels (README.md:48, 58)
+build     = "ops/hip_runtime.py builds one shared object from the seven units when no prebuilt library matches the source hash: hipcc -shared -fPIC -O3 --offload-arch=gfx1151 -Wl,--as-needed -DINKLING_HIP_ABI_VERSION=3 -DINKLING_HIP_SRC_HASH_RAW=<hash> -I<ops> <seven .hip> -o hip_inkling_gfx1151_<hash>.so. The release ships that library prebuilt: scripts/rocm/hip_inkling_gfx1151_671b45b80972.so, 6424320 bytes, sha256 8c0fe76c35738fb10d88a8de591808b0f625c352a70ca830d1355bc74f30a1c9 (MANIFEST.sha256); 671b45b80972 is the hash of exactly the harvested sources (recomputed by the harvest script). It is not harvested and was not rebuilt or compared here"
+
+[compile]                                                # the origin's hipcc line, one object per unit (-c for -shared)
+driver    = "<rocm>/bin/hipcc"
+arch_flag = "--offload-arch=gfx1151"
+rocm_flag = "--rocm-path=<rocm>"
+flags     = ["-fPIC", "-O3", "-DINKLING_HIP_ABI_VERSION=3", "-DINKLING_HIP_SRC_HASH_RAW=671b45b80972", "-c"]
+output    = "host object with the gfx1151 device code embedded (.o), one per translation unit"
+note      = "the origin links the seven units into one shared object (-shared -Wl,--as-needed); the gate compiles each unit on its own with -c. hip_glue_decode.hip declares launch_hip_reduce_splits, which hip_quant_decode.hip defines, so the units link only together. Compile gate: 7 of 7 units build (therock-10.0 on control-node, 2026-11-24; gate/results/compile/kernel.ciru_inkling.<unit>.json)"
+
+[kernels]
+loading   = "ctypes: ops/hip_runtime.py loads the prebuilt library (or $INKLING_AMD_HIP_SO, or a cached or freshly compiled one), checks inkling_hip_abi_version() == 3, the source hash and a list of required launch symbols, and falls back to the Triton / Gluon kernels when any check fails; seven per-unit kill switches (README.md:30)"
+selection = "the Python ops (overlay/vllm/models/inkling2/amd/ops/*.py) pick a HIP launch or the Triton / Gluon fallback per call from shape and mode; HIP graphs are captured over 1..8 active sequences"
+models    = "thinkingmachines/Inkling-2-Mini (48 layers, hidden 2304, 128 experts top 8, 8 KV heads of 128) with its DSpark draft, on the original NVFP4 experts or Ciru's fitted banks. Author figures, v1.5.0 (README.md:19): 2,299.4 client / 2,421.9 server prompt tok/s at 4K, 50.2 server decode tok/s at 128K, 194-208 tok/s 8-stream decode"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_ciru_inkling.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".gitignore",
+  "INSTALL.md",
+  "LICENSE",
+  "MANIFEST.sha256",
+  "NOTICE",
+  "README.md",
+  "WEIGHTS.sha256",
+  "assets/**",
+  "overlay/vllm/config/**",
+  "overlay/vllm/models/inkling2/__init__.py",
+  "overlay/vllm/models/inkling2/amd/__init__.py",
+  "overlay/vllm/models/inkling2/amd/attention.py",
+  "overlay/vllm/models/inkling2/amd/conv_state.py",
+  "overlay/vllm/models/inkling2/amd/copy_drafts.py",
+  "overlay/vllm/models/inkling2/amd/dspark.py",
+  "overlay/vllm/models/inkling2/amd/model.py",
+  "overlay/vllm/models/inkling2/amd/moe.py",
+  "overlay/vllm/models/inkling2/amd/moe_mxfp8_decode.py",
+  "overlay/vllm/models/inkling2/amd/moe_prefill.py",
+  "overlay/vllm/models/inkling2/amd/ops/__init__.py",
+  "overlay/vllm/models/inkling2/amd/ops/attention.py",
+  "overlay/vllm/models/inkling2/amd/ops/attn_res.py",
+  "overlay/vllm/models/inkling2/amd/ops/coda_wmma_pretile.py",
+  "overlay/vllm/models/inkling2/amd/ops/dspark.py",
+  "overlay/vllm/models/inkling2/amd/ops/dspark_w8_backbone.py",
+  "overlay/vllm/models/inkling2/amd/ops/expert_e2m1_g16.py",
+  "overlay/vllm/models/inkling2/amd/ops/expert_nvfp4.py",
+  "overlay/vllm/models/inkling2/amd/ops/grouped_decode.py",
+  "overlay/vllm/models/inkling2/amd/ops/groupwise_w6_head.py",
+  "overlay/vllm/models/inkling2/amd/ops/groupwise_w8_head.py",
+  "overlay/vllm/models/inkling2/amd/ops/hip_moe_prefill.py",
+  "overlay/vllm/models/inkling2/amd/ops/hip_runtime.py",
+  "overlay/vllm/models/inkling2/amd/ops/linear.py",
+  "overlay/vllm/models/inkling2/amd/ops/loop.py",
+  "overlay/vllm/models/inkling2/amd/ops/loop_controller.py",
+  "overlay/vllm/models/inkling2/amd/ops/loop_m8_fused.py",
+  "overlay/vllm/models/inkling2/amd/ops/lossless_bf16.py",
+  "overlay/vllm/models/inkling2/amd/ops/markov_argmax.py",
+  "overlay/vllm/models/inkling2/amd/ops/mixed_grouped_decode.py",
+  "overlay/vllm/models/inkling2/amd/ops/mixed_wmma_pretile.py",
+  "overlay/vllm/models/inkling2/amd/ops/norm.py",
+  "overlay/vllm/models/inkling2/amd/ops/qkvr_w8.py",
+  "overlay/vllm/models/inkling2/amd/ops/router.py",
+  "overlay/vllm/models/inkling2/amd/ops/router_m8.py",
+  "overlay/vllm/models/inkling2/amd/ops/sconv.py",
+  "overlay/vllm/models/inkling2/amd/ops/source_wave_decode.py",
+  "overlay/vllm/models/inkling2/amd/ops/source_wmma_pretile.py",
+  "overlay/vllm/models/inkling2/amd/ops/turbo_kernels.py",
+  "overlay/vllm/models/inkling2/amd/ops/vision.py",
+  "overlay/vllm/models/inkling2/amd/sconv.py",
+  "overlay/vllm/models/inkling2/amd/vision.py",
+  "overlay/vllm/models/inkling2/speculator.py",
+  "overlay/vllm/platforms/**",
+  "overlay/vllm/v1/**",
+  "patches/**",
+  "scripts/**",
+]

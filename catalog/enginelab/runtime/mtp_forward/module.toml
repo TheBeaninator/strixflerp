@@ -1,0 +1,96 @@
+id        = "runtime.enginelab.mtp_forward"
+kind      = "runtime"
+summary   = "the MTP forward: contract, golden file, payload, replay, runtime and semantics; the qualified forward runtime, payload geometry, output contract, logits dump and step digest, native validation and shared execution witness"
+why       = "proves a draft forward computes what its contract says before its proposals are trusted; where it would go: a new strixflerp interface draft.mtp-forward/-/f32.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, draft.mtp-forward/-/f32.enginelab. 1 HIP unit(s) compiled standalone by the gate; 7 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_mtp_forward_replay.hpp",
+  "include/strix/hip_mtp_native_validation.hpp",
+  "include/strix/mtp_forward_contract.hpp",
+  "include/strix/mtp_forward_golden_file.hpp",
+  "include/strix/mtp_forward_payload.hpp",
+  "include/strix/mtp_forward_replay.hpp",
+  "include/strix/mtp_forward_runtime.hpp",
+  "include/strix/mtp_forward_semantics.hpp",
+  "include/strix/mtp_logits_dump.hpp",
+  "include/strix/mtp_output_contract.hpp",
+  "include/strix/mtp_payload_geometry.hpp",
+  "include/strix/mtp_shared_execution_witness.hpp",
+  "include/strix/mtp_step_logits_digest.hpp",
+  "include/strix/qualified_mtp_forward_runtime.hpp",
+  "src/hip_mtp_forward_replay.hip",
+  "src/mtp_forward_contract.cpp",
+  "src/mtp_forward_golden_file.cpp",
+  "src/mtp_forward_replay.cpp",
+  "src/mtp_forward_runtime.cpp",
+  "src/mtp_forward_semantics.cpp",
+  "src/mtp_output_contract.cpp",
+  "src/qualified_mtp_forward_runtime.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_mtp_forward_replay.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "draft.mtp-forward/-/f32.enginelab"
+api       = "src/mtp_forward_*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "kernel.enginelab.mtp_draft_head"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_drafters"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_window"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.speculation_control"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.mtp_forward.json"

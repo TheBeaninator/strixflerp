@@ -1,0 +1,37 @@
+id        = "kernel.kyojin.triton_paged_cu"
+kind      = "kernel"
+summary   = "CUDA-only paged decode attention (flash-decoding split + combine) ported from upstream exllamav3 1.6.0"
+why       = "the NVIDIA decode path. Where the shape would go: an attn.softmax-gqa/kv-f16/f32 provider beside kernel.ciru_iu4.attn, kernel.ds4.k53perf_rocm_halo_static_query, kernel.gufo.qfn_kernels and 5 more, through a port of the python / Triton logic"
+notes     = "Interface tag: attn.softmax-gqa/kv-f16/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (triton_paged_cu.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/attention_fn/triton_paged_cu.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+upstream  = "ported from exllamav3 1.6.0 modules/attention_fn/triton_paged.py (MIT, turboderp)"
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.kyojin-triton-paged-cu"
+api       = "triton_paged_cu.py"
+numeric   = "fp16, fp32 softmax"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

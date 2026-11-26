@@ -1,0 +1,206 @@
+{
+ "what": "StrixFold 72c0f083's versions of files that a module of origin strixfold also holds; laid over them by a recipe's [build.overlay] \"<id>\" = \".\" (docs/harvest/harvest_strixfold_tp4.py)",
+ "parent_origin": "strixfold",
+ "parent_commit": "f64b5ff",
+ "head_commit": "72c0f083fca18f80fcf73b2358cf8235c3dd5363",
+ "files": [
+  {
+   "path": "zig/src/core/engine_api.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "e91d0b9643d91f85f8775601795a92a8932beadc286ea0b4c06a0d59011b4961",
+   "tp4_sha256": "e738e2986aff23d1d8f880b43b4894e10e4efb35685db0d90459457f8a7715ef",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "21003c69 lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)",
+    "c45214eb dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)",
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "353a7b87 lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)",
+    "6c9bc923 server: on HIP the server leaves through _exit after its teardown, so libomp's fini no longer faults",
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped",
+    "2185cdb3 core: prompt_cache moves a kept state off the engine and back (probe, exportState, importState); LaneHost runs the transfers between rounds",
+    "0a6eb9c2 lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)",
+    "adf536fb dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lane_host.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "1537daf3691c8ce07475d025d4f38f836563df9988b170dcef25b66f4701c339",
+   "tp4_sha256": "5a7c4252a80ace9d234d981f64e4b77b16664f2311d3b21d6de6a95dadad87bb",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "21003c69 lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)",
+    "c45214eb dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)",
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)",
+    "76252c4f dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)",
+    "d8c366de server: reap_domain, GET /stats/reap and bucket admission (pod card 023c5d2ad9)",
+    "1fbbbd21 prompt cache: a submit's resume guess asks the family nothing (guessSealed), cache transfers under cache_lock, an import never dedupes onto a sealed state (pod card d6a577e1a1)",
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest",
+    "353a7b87 lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)",
+    "2185cdb3 core: prompt_cache moves a kept state off the engine and back (probe, exportState, importState); LaneHost runs the transfers between rounds",
+    "0a6eb9c2 lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)",
+    "adf536fb dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lane_host_reuse_test.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "a1543c4853c140cd52b786f41f5d3b9002f44ac28ac52a61d702a926e885fe3f",
+   "tp4_sha256": "2b14d6fed6184797fae17962fd68049d09be19d710d5af5f46de480af5d201e4",
+   "commits": [
+    "da090917 dsv41 encoder: a picture cache, rows kept by the picture's BLAKE3-256 digest (ENCODE_CACHE_MIB, rank 0, unset 512 MiB, 0 off) (pod card d6a577e1a1)",
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest",
+    "79800a6e prompt cache: a Store test for a family that says which kept states still restore (pod card ef450588a1)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lane_host_test.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "c586a761dd2daa8ea603463b4c7d2218044511c35769fb32829038ff4acb305f",
+   "tp4_sha256": "87aa05f8dee57548b7d1164da0f138f991c962c26abd6ade57d58d1cf4c8e994",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "353a7b87 lane host: FINISH_LEFT sets how near its max_tokens a stream must be for the next prompt pass to wait (pod card 1c020d2ac2)",
+    "0a6eb9c2 lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/backend.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "723cf9740bd8b46fc1ef529e3f2a8556e1883835cf4e7fe2567e94b8fb24d378",
+   "tp4_sha256": "64eb2178e4cef276a06175568ee3becb47c02112342f43a8d8aefd6a6a42810a",
+   "commits": [
+    "0a6eb9c2 lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/engine.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "41439e0fd796e1570b653166bcf9264ded57b89475259443d9d592cc85fdca9c",
+   "tp4_sha256": "9ebbeaf7346b446d9ec4c9779bcdddded03ecceec9c401ee9de762440fa9c9bd",
+   "commits": [
+    "0a6eb9c2 lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/engine_test.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "eae365b7cb9eca1ed3a1f3661bb0caf4f4c7563da599dd491edab34f704c8fe2",
+   "tp4_sha256": "1b4377faa173b39d6d12f572d5d0ca152f5615af379889bba5152816fea8f194",
+   "commits": [
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/fake.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "4723b758a8e845afb1d555a59564cb075cb8f49e0de050450abb30a1f5da0ead",
+   "tp4_sha256": "a669a473600f0989026bf1c0029bdd00a65bea721dd9e14d75bcca771dc16b7b",
+   "commits": [
+    "0a6eb9c2 lanes: a cold prompt reads in slices between the decoding streams' rounds (#27)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/lanes.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "adf1c6638130418c96c1f4c1db9b486fa9d4888882045f3a4f4cfc85c9e0b668",
+   "tp4_sha256": "9d8d77e565ad7fb0eb8e5bc3b7e7bef8310bf6132701f3e172829f6de3bddc35",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "21003c69 lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)",
+    "7bc5cbf4 dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)",
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/stream.zig",
+   "parent_module": "runtime.strixfold.lanes",
+   "parent_sha256": "83e8e8c545e848bae9698c423d8c5615985dc5aebba49a3f7282f29b21821198",
+   "tp4_sha256": "d9fa8e24e038e2e5eb8ac2d4c9645c00468b48cd4ebb7950e24db33b139d44a3",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)",
+    "21003c69 lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)",
+    "c45214eb dsv41 rrec: rank-0 per-request accumulation over prompt chunks and committed decode rows, record at stream release (pod card 28153e18f3)",
+    "06a8ec1b lanes: loop policy close with an empty think_close ends with reason stop again (review fix, pod card f64f606edd)",
+    "298bce67 lanes+server: loop policy close/stop/count with a per-request tensorfold.loop report (pod card f64f606edd)",
+    "7bc5cbf4 dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)",
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest",
+    "c16dc5bf server: a request's images are refused past the pixels its engine decodes for one request (dsv41: 134,217,728)",
+    "f925e82a server: a request whose images take more tokens than the engine holds is refused with 400 before it queues (review)",
+    "adf536fb dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)",
+    "bd6ac7b1 lanes: loop_max_period's comment on one line (review)",
+    "05df54cd lanes: the thinking loop guard sees cycles of up to 64 tokens (upstream 8)"
+   ]
+  },
+  {
+   "path": "zig/src/core/cache_wire.zig",
+   "added": true,
+   "tp4_sha256": "8fe50c70d5ef950404b120100fa9d8365521a75409923c78c86e165ec642dc06",
+   "commits": [
+    "2143f0dc server: POST /cache/probe, /cache/export and /cache/import, behind --cache-transfer-key FILE, signed, gated and capped",
+    "96367d3d core: cache_wire, a kept prompt state on the wire (SFCX): every length checked against the engine's shape before any read"
+   ]
+  },
+  {
+   "path": "zig/src/core/cache_wire_test.zig",
+   "added": true,
+   "tp4_sha256": "b4e7aa88deeb31cacf9d66cea43522763d348731f6fa2d3585b6c8917a4312e0",
+   "commits": [
+    "96367d3d core: cache_wire, a kept prompt state on the wire (SFCX): every length checked against the engine's shape before any read"
+   ]
+  },
+  {
+   "path": "zig/src/core/lane_host_cache.zig",
+   "added": true,
+   "tp4_sha256": "400e22481a6ad9d1b625fdb9dc7d4dcfb83ee23df90f8e1949863544576e34b4",
+   "commits": [
+    "1fbbbd21 prompt cache: a submit's resume guess asks the family nothing (guessSealed), cache transfers under cache_lock, an import never dedupes onto a sealed state (pod card d6a577e1a1)",
+    "2185cdb3 core: prompt_cache moves a kept state off the engine and back (probe, exportState, importState); LaneHost runs the transfers between rounds"
+   ]
+  },
+  {
+   "path": "zig/src/core/lane_host_encode_test.zig",
+   "added": true,
+   "tp4_sha256": "e39960aac98c31fcf934ed503247483f48c33a3f2b9999958743d81a3e081a76",
+   "commits": [
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest",
+    "adf536fb dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/acts.zig",
+   "added": true,
+   "tp4_sha256": "278e756de3d2bd7d9eab4593d352ac976384c684474fd8c19e14db65daea7ed3",
+   "commits": [
+    "bdde4822 dsv41 acts: the drafter absorb takes a chunk's last 128 rows on every rank and at every fill path (review F1); a chunk not tappable whole is dropped and counted, never a rank-0-only error mid-chunk; tap buffers sized by dumpRows (pod card 4f9ba05838)",
+    "21003c69 lanes acts: per-request dump switches (Spec), the engine's facts (Info) and the bounded off-thread Writer; a request with acts is never kept in nor resumed from the prompt cache (pod card 4f9ba05838)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/image_key.zig",
+   "added": true,
+   "tp4_sha256": "0d1f56083256e51cc5a4bc78d7e5375e6713fe78b6d7dc2d2b23867fc5bd376d",
+   "commits": [
+    "cae56ddd dsv41: the prompt caches keep and resume prompts with images, keyed by each picture's whole BLAKE3-256 digest"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/logprobs.zig",
+   "added": true,
+   "tp4_sha256": "323aeaf70b79fdf614f85d21420cb7697fdf486e616baa410ff9cb1aa53295f2",
+   "commits": [
+    "4209827b dsv41 serve: OpenAI logprobs and top_logprobs (<= 20) on non-streamed chat completions, from rank 0's draw rows (pod card 73bab11681)"
+   ]
+  },
+  {
+   "path": "zig/src/core/lanes/reap_hook.zig",
+   "added": true,
+   "tp4_sha256": "37938f30cdcb402efcbae026471557af4e7e5ea59e110f81e3ca34e9eae556f4",
+   "commits": [
+    "76252c4f dsv41 reap: engine-thread mirror, snapshot writer, smaller y staging, golden export (pod card 023c5d2ad9)",
+    "7bc5cbf4 dsv41 reap: collect routing stats on the serving path when REAP_STATS is on (pod card 023c5d2ad9)"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,56 @@
+id        = "kernel.lucebox.vision"
+kind      = "kernel"
+summary   = "the four DS4V vision tower ops: a hipBLASLt BF16 bias matmul, and F32 softmax, rotary and AV kernels that keep PyTorch eager arithmetic"
+why       = "A second DeepSeek V4.1 image-input path beside strixfold_pr6"
+notes     = "INTERFACES.md section: 13. Image input for DeepSeek-V4.1. Interface tags: vision.ds4v-ops/bf16/f32.lucebox. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/vision-av.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/vision-bias.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/vision-rotary.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/vision-softmax.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-av.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-av.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-bias.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-bias.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-rotary.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-rotary.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-softmax-kernels.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-softmax.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/vision-softmax.cuh",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/vision-av.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/vision-bias.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/vision-rotary.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/vision-softmax.cu",
+]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/deps/llama.cpp/ggml/src/ggml-cuda/vision-av.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/vision-bias.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/vision-rotary.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/vision-softmax.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing", "-fno-fast-math", "-ffp-contract=off"] }
+
+[[provides]]
+interface = "vision.ds4v-ops/bf16/f32.lucebox"
+api       = "GGML_OP_MUL_MAT_BIAS_BF16, GGML_OP_RMS_NORM_VISION_F32, GGML_OP_SOFT_MAX_VISION_F32, GGML_OP_MUL_MAT_VISION_AV_F32 (VENDOR.md)"
+numeric   = "F32 eager materialisation as PyTorch 3d3aa83 does it (vision-rotary.cu header); vision-softmax.cu built with -fno-fast-math -ffp-contract=off"
+regime    = "DS4V vision tower; built only with hipBLASLt (GGML_HIP_DS4V_VISION)"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.vision.json"

@@ -1,0 +1,36 @@
+id        = "kernel.kyojin.triton_paged"
+kind      = "kernel"
+summary   = "Triton paged attention of the engine as Kyojin changed it (2,694 lines): flash-decoding split / combine over the paged fp16 and quantized caches, prefill and verify forms"
+why       = "the generic attention path on ROCm. Where the shape would go: an attn.softmax-gqa/kv-f16+i8+q4_0/f32 provider beside kernel.maya_tp.qsa, kernel.strata.qsa, through a port of the python / Triton logic"
+notes     = "Interface tag: attn.softmax-gqa/kv-f16+i8+q4_0/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 1 changed (triton_paged.py). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/attention_fn/triton_paged.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+i8+q4_0/f32.kyojin-triton-paged"
+api       = "triton_paged.py"
+numeric   = "fp16 operands, fp32 softmax"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; the Triton kernels in it are JIT-compiled at run time"

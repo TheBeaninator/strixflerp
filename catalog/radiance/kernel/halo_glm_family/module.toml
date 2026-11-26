@@ -1,0 +1,54 @@
+id        = "kernel.radiance.halo_glm_family"
+kind      = "kernel"
+summary   = "Kernels of model families the pod does not serve on radiance's path: GLM-5.3 routing and blocks (halo_glm), KDA exact recurrence with speculative candidate snapshots, absorbed MLA attention over one 512-wide latent a token, and the DSA indexer (pool, query, score)"
+why       = "GLM-5.3 and Ling-3.0 use latent attention, KDA recurrence and sigmoid routing; the kernels are kept so those families can be compared with StrixFold's when the pod serves one"
+notes     = "DSA and MLA are the DeepSeek-V4.1 / GLM surfaces StrixFold's sparse_attn and indexer_score cover (STRIX-META widgets A, B, F)."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = ["libhalo/halo_dsa.hip", "libhalo/halo_glm.hip", "libhalo/halo_kda.hip", "libhalo/halo_mla.hip"]
+authors   = ["Deadcode", "keptn42", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_glm.hip",
+  "src/libhalo/halo_kda.hip",
+  "src/libhalo/halo_mla.hip",
+  "src/libhalo/halo_dsa.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-latent/bf16.radiance-mla"
+api       = "halo_mla_*, halo_dsa_* , halo_kda_*, halo_glm_*"
+numeric   = "fp32 softmax statistics merged across waves"
+regime    = "GLM-5.3 / Ling-3.0 decode and prefill"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_moe"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

@@ -1,0 +1,81 @@
+id        = "kernel.lucebox.gdn"
+kind      = "kernel"
+summary   = "Gated DeltaNet pieces: SiLU conv with the q/k L2 norm folded in, the replay-log commit of speculative chains (paged and single-sequence), the gated norm, and the server SpecLA DeltaConstruct commit"
+why       = "Speculative-decode state commit for GDN layers is what strixite and libstrix solve differently (MTP decode kernels); this is a third way"
+notes     = "INTERFACES.md section: 6. Gated DeltaNet. Interface tags: mixer.gdn-front/-/f32.lucebox; mixer.gdn-commit/-/f32.lucebox; norm.gated/-/f32.lucebox; mixer.gdn-commit/-/f32.lucebox-specla. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-conv.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-chain-commit.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-replay-log.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/gated-norm.cu, server/src/common/specla_commit_cuda.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/gated-norm.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/gated-norm.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-chain-commit.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-conv.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-conv.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-replay-log.cu",
+  "server/src/common/specla_commit_cuda.cu",
+  "server/src/common/specla_commit_cuda.h",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-conv.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-chain-commit.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-replay-log.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gated-norm.cu",
+  "src/server/src/common/specla_commit_cuda.cu",
+]
+includes  = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda",
+  "src/server/src/common",
+  "src/server/deps/llama.cpp/ggml/src",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/src/common/specla_commit_cuda.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-conv.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-chain-commit.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gdn-replay-log.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/gated-norm.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "mixer.gdn-front/-/f32.lucebox"
+api       = "GGML op in gdn-conv.cu"
+numeric   = "rms_norm(eps) * post_scale + bias per 128-channel head with the thread mapping of rms_norm_scale_f32 (file header)"
+regime    = "GDN prefill and verify"
+
+[[provides]]
+interface = "mixer.gdn-commit/-/f32.lucebox"
+api       = "gdn-replay-log.cu, gdn-chain-commit.cu (ggml-cuda-gdn-chain.h)"
+numeric   = "commit of the accepted prefix of a speculative chain from the replay log"
+regime    = "speculative decode on hybrid GDN models"
+
+[[provides]]
+interface = "norm.gated/-/f32.lucebox"
+api       = "GGML op in gated-norm.cu"
+numeric   = "sigmoid(z) * x, with or without the RMS norm; the reduction of rms_norm_f32<256, true> (file header)"
+regime    = "GDN heads and attention output gate"
+
+[[provides]]
+interface = "mixer.gdn-commit/-/f32.lucebox-specla"
+api       = "server/src/common/specla_commit_cuda.h"
+numeric   = "fused DeltaConstruct commit (file header)"
+regime    = "SpecLA speculative decode"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.server_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.gdn.json"

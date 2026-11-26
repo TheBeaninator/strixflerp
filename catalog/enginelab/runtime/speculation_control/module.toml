@@ -1,0 +1,80 @@
+id        = "runtime.enginelab.speculation_control"
+kind      = "runtime"
+summary   = "the speculation controller: speculation, controller, cycle, executor, measurement and multi-draft, and the draft proposal state"
+why       = "picks drafter and window per cycle from measured costs; where it would go: a new strixflerp interface speculation.controller/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, speculation.controller/-/-. 7 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/draft_proposal_state.hpp",
+  "include/strix/speculation.hpp",
+  "include/strix/speculation_controller.hpp",
+  "include/strix/speculation_cycle.hpp",
+  "include/strix/speculation_executor.hpp",
+  "include/strix/speculation_measurement.hpp",
+  "include/strix/speculation_multi_draft.hpp",
+  "src/draft_proposal_state.cpp",
+  "src/speculation.cpp",
+  "src/speculation_controller.cpp",
+  "src/speculation_cycle.cpp",
+  "src/speculation_executor.cpp",
+  "src/speculation_measurement.cpp",
+  "src/speculation_multi_draft.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/draft_proposal_state.cpp",
+  "src/src/speculation.cpp",
+  "src/src/speculation_controller.cpp",
+  "src/src/speculation_cycle.cpp",
+  "src/src/speculation_executor.cpp",
+  "src/src/speculation_measurement.cpp",
+  "src/src/speculation_multi_draft.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "speculation.controller/-/-"
+api       = "src/speculation_controller.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[[requires]]
+module    = "runtime.enginelab.spec_core"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

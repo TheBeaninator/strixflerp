@@ -1,0 +1,86 @@
+id        = "runtime.enginelab.session_kv"
+kind      = "runtime"
+summary   = "session KV and state (include/strix/session, src/session): KV, KV capacity, pages, precision and row append, prefix cache, ring plan, state image, mark plan, checkpoint IO, growing visit checkpoints, step replay and recurrent state"
+why       = "the engine-neutral KV / state store every engine session uses; where it would go: beside the catalogue's kvcache.store/-/bf16 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: kvcache.store/-/bf16 (a class the catalogue already has); the module provides it with an enginelab variant tag. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/session/checkpoint_io.hpp",
+  "include/strix/session/growing_visit_checkpoint.hpp",
+  "include/strix/session/kv.hpp",
+  "include/strix/session/kv_capacity.hpp",
+  "include/strix/session/kv_pages.hpp",
+  "include/strix/session/kv_precision.hpp",
+  "include/strix/session/kv_row_append.hpp",
+  "include/strix/session/mark_plan.hpp",
+  "include/strix/session/prefix_cache.hpp",
+  "include/strix/session/recurrent_state.hpp",
+  "include/strix/session/ring_plan.hpp",
+  "include/strix/session/state_image.hpp",
+  "include/strix/session/step_replay.hpp",
+  "src/session/checkpoint_io.cpp",
+  "src/session/kv.cpp",
+  "src/session/kv_capacity.cpp",
+  "src/session/prefix_cache.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/session/checkpoint_io.cpp",
+  "src/src/session/kv.cpp",
+  "src/src/session/kv_capacity.cpp",
+  "src/src/session/prefix_cache.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kvcache.store/-/bf16.enginelab"
+api       = "strix::session kv.hpp, kv_pages.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefix_state"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

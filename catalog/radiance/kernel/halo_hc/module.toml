@@ -1,0 +1,58 @@
+id        = "kernel.radiance.halo_hc"
+kind      = "kernel"
+summary   = "Qwen4-Exp's gated residual (hyper-connections) in four ops: hc_enter, hc_read (grouped RMS norm of the sub-streams, the low-rank mixing pair on f16 WMMA, bf16 or E4M3 weights), hc_write and hc_project; plus mtp_enter, the MTP head's entry over the same stored rows. In hc_write the last of a group's workgroups to arrive (an arrival counter) does that group's quantisation"
+why       = "the gated residual is read and written around every block (97 mixes a Flash-Next token), so its bytes and its launch count are a fixed tax on decode that a second hand-written gfx1151 implementation lets us compare against strixite's"
+notes     = "Compare kernel.strixite.hc (Q8 G64 mixes, 97 down + 97 up launches a decode step, 3.88 ms of 26.9 ms: hc-decode.md) and HC-Q4 89f1c108d8 (Q4 mixes fail fidelity, KL 0.123). The arrival-counter fold is the pattern FOLD-1 75f1d18d2f / FOLD-2 8c7f1aab87 use."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_hc_bf16.hip",
+  "libhalo/halo_hc_f16.h",
+  "libhalo/halo_hc_fp8.h",
+  "libhalo/halo_hc_read.hip",
+  "libhalo/halo_mtp_enter.hip",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/libhalo/halo_hc_bf16.hip", "src/libhalo/halo_hc_read.hip", "src/libhalo/halo_mtp_enter.hip"]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "hc.mix/radiance-e4m3+bf16/bf16"
+api       = "halo_hc_enter, halo_hc_read_bf16 / _e4m3, halo_hc_write, halo_hc_project"
+numeric   = "fp32 accumulate over f16 WMMA operands; an E4M3 byte widened exactly to f16; one rounding to bf16 on store"
+regime    = "decode and verify heights (1..64 rows), a weight stream bound by ~256 GB/s LPDDR5X; the same rows at prefill"
+
+[[provides]]
+interface = "draft.mtp-enter/radiance-e4m3+bf16/bf16"
+api       = "halo_mtp_enter_bf16 / _e4m3"
+numeric   = "as hc_read"
+regime    = "one launch a draft step"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[[requires]]
+module    = "kernel.radiance.halo_gemm_fp8"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

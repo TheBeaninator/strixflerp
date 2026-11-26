@@ -1,0 +1,49 @@
+id        = "format.kyojin.fq_formats"
+kind      = "format"
+summary   = "Python reference decoders of the foreign formats (k-quants, IQ2_XXS, NVFP4, Q8_0, legacy, gap formats), GGUF tables and the IQ grid generator that writes fq_tables.cuh"
+why       = "the bit-exact references the fq_* kernels are checked against. Where the shape would go: a format.device-view/gguf-kquant/- provider beside format.flerp.gguf_placed, format.gufo.gguf_kquant, format.hipfire.loader, through a port of the python / Triton logic"
+notes     = "Interface tag: format.device-view/gguf-kquant/-. Against the base turboderp-org/exllamav3 8c593e4e: 12 added (__init__.py, gap_formats.py, gguf_fast.py, gguf_tables.py, iq2_xxs.py, iq_grids_gen.py) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/foreign_quant/__init__.py",
+  "exllamav3/foreign_quant/gap_formats.py",
+  "exllamav3/foreign_quant/gguf_fast.py",
+  "exllamav3/foreign_quant/gguf_tables.py",
+  "exllamav3/foreign_quant/iq2_xxs.py",
+  "exllamav3/foreign_quant/iq_grids_gen.py",
+  "exllamav3/foreign_quant/iq_seeds.py",
+  "exllamav3/foreign_quant/k_quants.py",
+  "exllamav3/foreign_quant/legacy_dq.py",
+  "exllamav3/foreign_quant/nvfp4.py",
+  "exllamav3/foreign_quant/q8_0.py",
+  "exllamav3/foreign_quant/vendor_input.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.device-view-kyojin-py/gguf-kquant/-"
+api       = "__init__.py, gap_formats.py, gguf_fast.py, gguf_tables.py, iq2_xxs.py, iq_grids_gen.py, iq_seeds.py, k_quants.py ..."
+numeric   = "exact decode"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

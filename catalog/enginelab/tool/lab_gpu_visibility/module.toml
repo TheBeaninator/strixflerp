@@ -1,0 +1,53 @@
+id        = "tool.enginelab.lab_gpu_visibility"
+kind      = "tool"
+summary   = "the GPU visibility lab (lab/gpu_visibility): 3 origin files under lab/gpu_visibility"
+why       = "proves iGPU memory written by the NIC is visible to kernels; where it would go: kept as a reference program or lab (tool.enginelab-lab-gpu-visibility/-/-), not linked into an engine"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, tool.enginelab-lab-gpu-visibility/-/-. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "lab/gpu_visibility/CMakeLists.txt",
+  "lab/gpu_visibility/run_options.hpp",
+  "lab/gpu_visibility/visibility_main.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/lab/gpu_visibility/visibility_main.hip"]
+includes  = ["src/lab/gpu_visibility"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "tool.enginelab-lab-gpu-visibility/-/-"
+api       = "lab/gpu_visibility"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.direct_gpu_stream"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "tool.enginelab.lab_direct_gpu_stream"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/tool.enginelab.lab_gpu_visibility.json"

@@ -1,0 +1,36 @@
+id        = "tool.enginelab_usb4.bench"
+kind      = "tool"
+summary   = "stream benchmarks: pingpong.c (round-trip latency), stream_mem_bench.c (throughput) and tools/lab/run_stream_bench.py"
+why       = "the measurement protocol behind the README numbers (docs/BENCHMARKS.md, not harvested)"
+notes     = "Interface tag: none. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = ["tools/lab/run_stream_bench.py", "tools/pingpong.c", "tools/stream_mem_bench.c"]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "c"
+sources   = ["src/tools/pingpong.c", "src/tools/stream_mem_bench.c"]
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.usb4-stream-bench/-/-"
+api       = "pingpong / stream_mem_bench on /dev/tbstreamN"
+numeric   = "n/a"
+regime    = "two hosts"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C tools; the patch gate compiles both with the host cc (gate/results/compile/enginelab_usb4.patches.json)"

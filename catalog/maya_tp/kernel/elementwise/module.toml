@@ -1,0 +1,50 @@
+id        = "kernel.maya_tp.elementwise"
+kind      = "kernel"
+summary   = "the glue kernels (elementwise: residual adds, gathers, scaling, compiled -ffp-contract=off) and the control-vector row add (cvec)"
+why       = "small kernels every engine needs between the big ones; the contract flag shows which glue operations have rounding that matters"
+notes     = "Interface tag: tensor.ops/-/f32.maya-tp-glue. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/cvec.hpp",
+  "include/strata/kernels/elementwise.hpp",
+  "src/kernels/cuda/cvec.cu",
+  "src/kernels/cuda/elementwise.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/cvec.cu", "src/src/kernels/cuda/elementwise.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/src/kernels/cuda/elementwise.cu" = ["-ffp-contract=off"] }
+
+[[provides]]
+interface = "tensor.ops/-/f32.maya-tp-glue"
+api       = "strata::kernels::elementwise ops, cvec_add_rows"
+numeric   = "separately rounded FP32 (-ffp-contract=off)"
+regime    = "any"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.elementwise.json"

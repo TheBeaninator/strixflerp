@@ -1,0 +1,82 @@
+id        = "executor.enginelab.h3_block"
+kind      = "executor"
+summary   = "H3 transformer blocks (src/h3/block): 21 origin files under src/h3"
+why       = "the DiT blocks; where it would go: a new strixflerp interface executor.block-enginelab-h3/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, executor.block-enginelab-h3/-/-. 4 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/h3/block/carry_io.hpp",
+  "src/h3/block/checkpoint_names.hpp",
+  "src/h3/block/device_forward.hip",
+  "src/h3/block/device_forward.hpp",
+  "src/h3/block/glue.hip",
+  "src/h3/block/glue.hpp",
+  "src/h3/block/host_ref.cpp",
+  "src/h3/block/host_ref.hpp",
+  "src/h3/block/image_policy.hpp",
+  "src/h3/block/layout.hpp",
+  "src/h3/block/lora_host.cpp",
+  "src/h3/block/ops_ref.hpp",
+  "src/h3/block/parallel.hpp",
+  "src/h3/block/safetensors.hpp",
+  "src/h3/block/sampler.hpp",
+  "src/h3/block/sparse_accel.hip",
+  "src/h3/block/torch_rng.hpp",
+  "src/h3/block/turbo_accel.hip",
+  "src/h3/block/turbo_accel.hpp",
+  "src/h3/block/weights.hpp",
+  "src/h3/block/weights_device.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/h3/block/device_forward.hip",
+  "src/src/h3/block/glue.hip",
+  "src/src/h3/block/sparse_accel.hip",
+  "src/src/h3/block/turbo_accel.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.block-enginelab-h3/-/-"
+api       = "src/h3/block/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.h3_attn"
+
+[[requires]]
+module    = "kernel.enginelab.h3_gemm"
+
+[[requires]]
+module    = "runtime.enginelab.h3_common"
+
+[[requires]]
+module    = "runtime.enginelab.h3_levers"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.h3_block.json"

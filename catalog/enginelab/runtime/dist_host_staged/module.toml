@@ -1,0 +1,45 @@
+id        = "runtime.enginelab.dist_host_staged"
+kind      = "runtime"
+summary   = "host-path staging: host copies, host waits and the staged-ready protocol with its HIP kernels (a producer publishes a ready word the consumer polls)"
+why       = "producer-published buffers and an in-kernel wait were measured to cut MiniMax exchange overhead from 2.91 to 1.89 ms a token (usb4-driver README); where it would go: a new strixflerp interface transport.staged-ready/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, transport.staged-ready/-/-. 2 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/dist/host_copy.hpp",
+  "include/strix/dist/host_wait.hpp",
+  "include/strix/dist/staged_ready.hpp",
+  "include/strix/dist/staged_ready_hip.hpp",
+  "include/strix/dist/staged_ready_kernels.hpp",
+  "src/dist_host_copy.hip",
+  "src/dist_staged_ready.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/dist_host_copy.hip", "src/src/dist_staged_ready.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "transport.staged-ready/-/-"
+api       = "strix::dist staged_ready*.hpp, host_copy.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.dist_host_staged.json"

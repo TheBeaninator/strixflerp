@@ -1,0 +1,69 @@
+id        = "serve.enginelab.serve_pflash"
+kind      = "serve"
+summary   = "PFlash prompt compression: per-model regions (DeepSeek, GLM, MiniMax, Qwen), the prompt compressor and scorer, the CPU drafter and scorer and the GGUF probe (src/pflash)"
+why       = "shrinks a long prompt before prefill by scoring regions with a small drafter; where it would go: a new strixflerp interface serve.prompt-compress/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, serve.prompt-compress/-/-. 9 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/pflash/drafter.hpp",
+  "include/strix/serve/pflash_regions.hpp",
+  "include/strix/serve/prompt_compress.hpp",
+  "include/strix/serve/prompt_scorer.hpp",
+  "src/pflash/drafter_cpu.cpp",
+  "src/pflash/probe_gguf.cpp",
+  "src/pflash/scorer_cpu.cpp",
+  "src/serve/pflash_regions.cpp",
+  "src/serve/pflash_regions_deepseek.cpp",
+  "src/serve/pflash_regions_glm.cpp",
+  "src/serve/pflash_regions_minimax.cpp",
+  "src/serve/pflash_regions_qwen.cpp",
+  "src/serve/prompt_compress.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/pflash/drafter_cpu.cpp",
+  "src/src/pflash/probe_gguf.cpp",
+  "src/src/pflash/scorer_cpu.cpp",
+  "src/src/serve/pflash_regions.cpp",
+  "src/src/serve/pflash_regions_deepseek.cpp",
+  "src/src/serve/pflash_regions_glm.cpp",
+  "src/src/serve/pflash_regions_minimax.cpp",
+  "src/src/serve/pflash_regions_qwen.cpp",
+  "src/src/serve/prompt_compress.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.prompt-compress/-/-"
+api       = "strix::serve pflash_regions.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "serve.enginelab.serve_chat"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

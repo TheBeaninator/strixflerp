@@ -1,0 +1,128 @@
+id        = "kernel.enginelab.gdn_decode"
+kind      = "kernel"
+summary   = "gated delta-net decode: the GDN launcher (HIP) and decode fuse, recurrence rows, recurrent layout, LDS index and storage, dims, identity, output admission and the wave8 / layout diagnostics"
+why       = "the per-token GDN step and the state layout it reads; where it would go: beside the catalogue's mixer.gdn/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: mixer.gdn/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 1 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/gdn_lm_wave8_diagnostic_contract.hpp",
+  "include/strix/gdn_output_admission.hpp",
+  "include/strix/gdn_recurrence_rows.hpp",
+  "include/strix/gdn_recurrent_layout.hpp",
+  "include/strix/gdn_recurrent_layout_diagnostic.hpp",
+  "include/strix/gdn_recurrent_lds_index.hpp",
+  "include/strix/gdn_recurrent_storage.hpp",
+  "include/strix/hip_gdn_decode_fuse.hpp",
+  "include/strix/hip_gdn_dims.hpp",
+  "include/strix/hip_gdn_launcher.hpp",
+  "include/strix/hip_gdn_lm_wave8_diagnostic.hpp",
+  "src/gdn_output_admission.cpp",
+  "src/hip_gdn_decode_fuse.inc",
+  "src/hip_gdn_identity.hpp",
+  "src/hip_gdn_launcher.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_gdn_launcher.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "mixer.gdn/-/f32.enginelab"
+api       = "hip_gdn_launcher.hip"
+numeric   = "EXACT profile: bitwise the engine's declared reference (fixed fmaf order, -ffp-contract=off, denormals kept); FAST levers change bits only behind the quality gate (AGENTS.md)"
+regime    = "decode"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_prepared"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_short_conv"
+
+[[requires]]
+module    = "kernel.enginelab.core_tiled_wmma"
+
+[[requires]]
+module    = "kernel.enginelab.dense_launch"
+
+[[requires]]
+module    = "kernel.enginelab.gdn_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.integer_projection"
+
+[[requires]]
+module    = "kernel.enginelab.moe_q4k_a8"
+
+[[requires]]
+module    = "kernel.enginelab.ops_recur"
+
+[[requires]]
+module    = "kernel.enginelab.q8_rows"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.graph"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "runtime.enginelab.prepared_views"
+
+[[requires]]
+module    = "runtime.enginelab.qpf2k_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.recurrent_state"
+
+[[requires]]
+module    = "serve.enginelab.serving_cohort"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.gdn_decode.json"

@@ -1,0 +1,208 @@
+# Strata: a C++ engine for Qwen3.8-Flash-Next on one consumer GPU (CUDA, HIP for wave32 RDNA, SYCL, CPU), the routed
+# experts streamed from host memory into a CPU pool and a GPU expert tier; an OpenAI / Anthropic-compatible server.
+# Its GPU kernels are CUDA-shaped .cu files that the HIP build compiles as HIP through a force-included compatibility
+# header (card ORIGIN-STRATA ef16e87953).
+name      = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main"
+version   = "release tag v0.1.40, the build ciru-ai/strataflash measured on Strix Halo: 75.8 tok/s decode, 762.5 tok/s cold 64K prefill, tools 77/100 (card ef16e87953); main HEAD 2af30cc (v0.2.21.1) is also in the ark and was not harvested"
+reference_checkout = "control-node:/data/ark-inbox/src/github.com__Niko1221__Strata#1cbcacbcae2953f3be9edc46369f0c875bc6ab8b (ark copy: the tree at the commit, .git without objects, ark 7546d7e); laptop: ~/Code/strixflerp-upstream-supplement/strata (the same files, by tarball through control-node get); docs/harvest/harvest_strata.py pins the tree digest"
+
+[licence]
+spdx      = "MIT"
+files     = ["LICENSE"]                                  # copied verbatim next to this file
+third_party = "LICENSE: MIT, Copyright (c) 2026 Niko1221 and the Strata contributors. third_party/ggml (ggml-common.h, VERSION.txt, LICENSE) is llama.cpp's, MIT, The ggml authors (in kernel.strata.common). The native_*.cu kernels, iq_kernels.cu and dequant_bf16.cu say in their headers that they are adapted or transcribed from llama.cpp 3cf03257 (MIT) and carry its copyright line; kv_q4.cu is from PR #21 by code-martin. src/prefill/moe_mmq.cu compiles llama.cpp's MMQ sources, which are not in the tree. ciru-ai/strataflash (the measurement repo) has no licence file and was not harvested. Weights are not part of the tree."
+
+[toolchain]
+host      = "C++20 (CMAKE_CXX_STANDARD 20), CMake with the HIP language; the HIP sources get no -std of their own (no HIP_STANDARD is set), so clang's default applies"
+device    = "therock-10.2"                               # hipBLAS, hipBLASLt and rocBLAS from the same ROCm; the origin names ROCm 7.x / HIP SDK 7.2 (Windows) and leaves the toolkit to the user
+build     = "cmake -DSTRATA_ENABLE_HIP=ON -DCMAKE_HIP_ARCHITECTURES=gfx1151 (cmake/hip_backend.cmake: every src/**/*.cu, bench/**/*.cu and tests/**/*.cu gets LANGUAGE HIP; strata_hip_runtime adds -include include/strata/hip_compat/cuda_runtime.h, include/strata/hip_compat before include/, STRATA_USE_HIP=1, STRATA_HIP_ARCHS, STRATA_WMMA_GFX11=1 for gfx11 targets); Release (-O3 -DNDEBUG), position-independent code; libraries strata_core, strata_kernels, strata_prefill (+ strata_mmq with -DSTRATA_PREFILL_MMQ=ON) link into the strata program. gfx1151 is in the unvalidated list at v0.1.40 (configure warns)"
+
+[compile]                                                # CMake's HIP language: clang++ -x hip, one object per .cu
+driver    = "<rocm>/lib/llvm/bin/clang++"
+arch_flag = "--offload-arch=gfx1151"
+rocm_flag = "--rocm-path=<rocm>"
+flags     = ["-x", "hip", "-O3", "-DNDEBUG", "-fPIC", "-DSTRATA_USE_HIP=1", "-DSTRATA_HIP_ARCHS=\"gfx1151\"", "-DSTRATA_WMMA_GFX11=1", "-include", "cuda_runtime.h", "-c"]
+system_includes = ["include"]
+output    = "host object with the gfx1151 device code embedded (.o), one per translation unit"
+gate      = "gate/compile/run.py --origin strata on control-node's CPU, 2026-11-24, therock-10.2: 16 of 16 standalone modules and 51 of 51 units compile for gfx1151 (gate/results/compile/kernel.strata.*.json); kernel.strata.common is header-only and kernel.strata.prefill_moe_ggml needs llama.cpp's ggml, so neither is compiled"
+note      = "-include cuda_runtime.h resolves through the -I list to kernel.strata.common's include/strata/hip_compat, as the origin's absolute -include path does. Per-source options from CMakeLists.txt are in [build] source_options: -ffp-contract=off for elementwise.cu and quantize_act.cu, STRATA_HIPBLASLT_AVAILABLE=1 for gemm.cu (defined when hipBLASLt is found, as in TheRock), GGML_USE_HIP=1 for the strata_mmq sources. -Wall -Wextra (strata_warnings) are left out."
+
+[kernels]
+loading   = "statically linked: each .cu holds its kernels and the host launchers declared in include/strata/kernels/*.hpp and include/strata/prefill/*.hpp; launches go to an explicit stream; the decode step is captured into a HIP graph (src/core/graph.cpp). No code-object kit or kernel registry"
+selection = "the layer and session code pick a kernel by format, shape and switch: STRATA_* environment variables and set_enabled() calls choose the llama.cpp-pinned native_* kernels or Strata's own, fused or split forms (docs/)"
+models    = "Qwen3.8-Flash-Next (qwen4exp in llama.cpp terms: 48 layers, 36 GDN and 12 QSA, 512 experts top 10, 4-stream hyper-connections, PLE) from Strata packs (Q2_0 as S2) or native GGUF (IQ2_XS, IQ3_XXS, Unsloth UD-Q4_K_XL); README.md"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_strata.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".dockerignore",
+  ".gitattributes",
+  ".github/**",
+  ".gitignore",
+  "AGENTS.md",
+  "CMakeLists.txt",
+  "Dockerfile",
+  "LICENSE",
+  "README.de.md",
+  "README.es.md",
+  "README.fr.md",
+  "README.ja.md",
+  "README.md",
+  "README.pt-BR.md",
+  "README.zh-CN.md",
+  "SECURITY.md",
+  "SETUP.bat",
+  "START-HERE.bat",
+  "UPDATE.bat",
+  "bench/**",
+  "chat.py",
+  "cmake/**",
+  "data/**",
+  "docker-entrypoint.sh",
+  "docs/**",
+  "include/strata/artifact/**",
+  "include/strata/core/arch_defaults.hpp",
+  "include/strata/core/conversation_buffer.hpp",
+  "include/strata/core/conversation_cache.hpp",
+  "include/strata/core/conversation_file.hpp",
+  "include/strata/core/conversation_memory.hpp",
+  "include/strata/core/conversation_snapshot.hpp",
+  "include/strata/core/graph.hpp",
+  "include/strata/core/layer.hpp",
+  "include/strata/core/layout.hpp",
+  "include/strata/core/mtp.hpp",
+  "include/strata/core/native_dense.hpp",
+  "include/strata/core/native_head.hpp",
+  "include/strata/core/peer_experts.hpp",
+  "include/strata/core/progress.hpp",
+  "include/strata/core/session.hpp",
+  "include/strata/core/verify.hpp",
+  "include/strata/core/weights.hpp",
+  "include/strata/kernels/cpu/iq_avx2.hpp",
+  "include/strata/kernels/cpu/iq_avx512.hpp",
+  "include/strata/kernels/cpu/kq_avx1.hpp",
+  "include/strata/kernels/cpu/kq_avx2.hpp",
+  "include/strata/ngram/**",
+  "include/strata/plan/**",
+  "include/strata/platform/direct_file.hpp",
+  "include/strata/prefill/prefill.hpp",
+  "include/strata/program/**",
+  "include/strata/spec/**",
+  "ref/**",
+  "requirements.txt",
+  "serve/**",
+  "setup.py",
+  "setup.sh",
+  "src/artifact/**",
+  "src/core/arch_defaults.cpp",
+  "src/core/arch_defaults_test.cpp",
+  "src/core/concurrent_main.cpp",
+  "src/core/conversation_cache_test.cpp",
+  "src/core/conversation_checked.hpp",
+  "src/core/conversation_file.cpp",
+  "src/core/conversation_file_test.cpp",
+  "src/core/conversation_memory.cpp",
+  "src/core/conversation_memory_test.cpp",
+  "src/core/conversation_snapshot.cpp",
+  "src/core/conversation_snapshot_test.cpp",
+  "src/core/conversation_split_failure_test.cpp",
+  "src/core/conversation_state.cpp",
+  "src/core/conversation_validation_test.cpp",
+  "src/core/coupled_draft_test.cpp",
+  "src/core/device_main.cpp",
+  "src/core/expert_cache.cpp",
+  "src/core/expert_source.cpp",
+  "src/core/graph.cpp",
+  "src/core/layer.cpp",
+  "src/core/layout.cpp",
+  "src/core/load_main.cpp",
+  "src/core/mtp.cpp",
+  "src/core/native_dense.cpp",
+  "src/core/native_head.cpp",
+  "src/core/overlap_main.cpp",
+  "src/core/peer_experts.cpp",
+  "src/core/pinned_shared_test.cpp",
+  "src/core/remote_experts.cpp",
+  "src/core/session.cpp",
+  "src/core/verify.cpp",
+  "src/core/vmm.cpp",
+  "src/core/weights.cpp",
+  "src/kernels/bf16_bits_test.cpp",
+  "src/kernels/bf16_gemv_parity.cpp",
+  "src/kernels/cpu/**",
+  "src/kernels/cvec_parity.cpp",
+  "src/kernels/decode_cluster_parity.cpp",
+  "src/kernels/dequant_bf16_test.cpp",
+  "src/kernels/dequant_s2_parity.cpp",
+  "src/kernels/elementwise_parity.cpp",
+  "src/kernels/fused_gr_bench.cpp",
+  "src/kernels/gdn_parity.cpp",
+  "src/kernels/gr_multi_parity.cpp",
+  "src/kernels/gr_parity.cpp",
+  "src/kernels/iq_multi_parity.cpp",
+  "src/kernels/iq_parity.cpp",
+  "src/kernels/kv_hybrid_parity.cpp",
+  "src/kernels/kv_q4_parity.cpp",
+  "src/kernels/kv_q8_parity.cpp",
+  "src/kernels/kv_steps_parity.cpp",
+  "src/kernels/kv_stream_parity.cpp",
+  "src/kernels/mmvq_multi_parity.cpp",
+  "src/kernels/native_expert_bench.cpp",
+  "src/kernels/native_expert_parity.cpp",
+  "src/kernels/native_grouped_parity.cpp",
+  "src/kernels/native_multi_parity.cpp",
+  "src/kernels/ngram.cpp",
+  "src/kernels/ple_fp8_parity.cpp",
+  "src/kernels/ple_oracle_vectors.inc",
+  "src/kernels/ple_parity.cpp",
+  "src/kernels/ple_q5_parity.cpp",
+  "src/kernels/q5_projection_parity.cpp",
+  "src/kernels/qsa_oracle_vectors.inc",
+  "src/kernels/qsa_parity.cpp",
+  "src/kernels/qsa_prompt_attn_parity.cpp",
+  "src/kernels/qsa_select_bench.cpp",
+  "src/kernels/qsa_topk_active_parity.cpp",
+  "src/kernels/qsa_topk_parity.cpp",
+  "src/kernels/quantize_act_parity.cpp",
+  "src/kernels/resident_plan_parity.cpp",
+  "src/kernels/rope_parity.cpp",
+  "src/kernels/route_window_parity.cpp",
+  "src/kernels/router_top10_parity.cpp",
+  "src/kernels/s2_expert_grouped_parity.cpp",
+  "src/kernels/s2_gemv_parity.cpp",
+  "src/kernels/s2_gemv_q8_parity.cpp",
+  "src/kernels/s_gemv_parity.cpp",
+  "src/kernels/s_gemv_q8k_parity.cpp",
+  "src/kernels/sampler_parity.cpp",
+  "src/kernels/shared_expert_parity.cpp",
+  "src/kernels/verify_parity.cpp",
+  "src/ngram/**",
+  "src/plan/**",
+  "src/platform/**",
+  "src/prefill/prefill.cpp",
+  "src/program/**",
+  "src/spec/**",
+  "sycl/**",
+  "tests/core/dequant_q5_1_test.cpp",
+  "tests/core/exchange_storage_test.cpp",
+  "tests/core/expert_cache_per_layer_test.cpp",
+  "tests/core/expert_cache_segmented_test.cpp",
+  "tests/core/expert_layout_test.cpp",
+  "tests/core/expert_profile_save_test.cpp",
+  "tests/core/file_expert_source_test.cpp",
+  "tests/core/gguf_fixture.hpp",
+  "tests/core/gguf_split_test.cpp",
+  "tests/core/native_dense_ple_key_test.cpp",
+  "tests/core/vmm_test.cpp",
+  "tests/cuda/**",
+  "tests/data/**",
+  "tests/hip/**",
+  "tests/platform/**",
+  "tests/prefill/**",
+  "tools/**",
+  "update.sh",
+]

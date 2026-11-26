@@ -1,0 +1,76 @@
+id        = "kernel.enginelab.mtp_draft_head"
+kind      = "kernel"
+summary   = "the MTP draft head on the device: draft head, fast draft, projection, shared expert, attention (and its contract), input fusion and prime rows"
+why       = "the multi-token-prediction head that proposes tokens for the verify window; device side; where it would go: beside the catalogue's draft.mtp/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: draft.mtp/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 3 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_mtp_attention.hpp",
+  "include/strix/hip_mtp_draft_head.hpp",
+  "include/strix/hip_mtp_fast_draft.hpp",
+  "include/strix/hip_mtp_input_fusion.hpp",
+  "include/strix/hip_mtp_prime_rows.hpp",
+  "include/strix/hip_mtp_projection.hpp",
+  "include/strix/hip_mtp_shared_expert.hpp",
+  "include/strix/mtp_attention_contract.hpp",
+  "include/strix/mtp_input_fusion.hpp",
+  "src/hip_mtp_draft_head.hip",
+  "src/hip_mtp_fast_draft.hip",
+  "src/hip_mtp_input_fusion.hip",
+  "src/mtp_attention_contract.cpp",
+  "src/mtp_input_fusion.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_mtp_draft_head.hip", "src/src/hip_mtp_fast_draft.hip", "src/src/hip_mtp_input_fusion.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "draft.mtp/-/f32.enginelab-head"
+api       = "hip_mtp_draft_head.hip, hip_mtp_fast_draft.hip, hip_mtp_input_fusion.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.q8_rows"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_forward"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_runtime"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.mtp_draft_head.json"

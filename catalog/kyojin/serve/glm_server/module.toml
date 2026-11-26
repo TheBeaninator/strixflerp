@@ -1,0 +1,45 @@
+id        = "serve.kyojin.glm_server"
+kind      = "serve"
+summary   = "GLM-5.3-Flash OpenAI-compatible server (aiohttp): chat template, streaming, MTP depth, request log, metrics, health ping, image embedding cache (memory and disk), acceptance metrics"
+why       = "the server behind the 26-32 tok/s MTP decode and 580-633 tok/s prefill numbers on one Strix Halo. Where the shape would go: a serve.http/openai/- provider beside serve.flerp.http, serve.gufo.http, serve.strixite.http, through a port of the python / Triton logic"
+notes     = "Interface tag: serve.http/openai/-. Against the base turboderp-org/exllamav3 8c593e4e: 8 added (SERVE.md, image_cache.py, image_cache_disk.py, serve.py, serve_accept.py, serve_metrics.py) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "tools/glm/SERVE.md",
+  "tools/glm/image_cache.py",
+  "tools/glm/image_cache_disk.py",
+  "tools/glm/serve.py",
+  "tools/glm/serve_accept.py",
+  "tools/glm/serve_metrics.py",
+  "tools/glm/serve_ping.py",
+  "tools/glm/serve_reqlog.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.http-kyojin-glm/openai/-"
+api       = "SERVE.md, image_cache.py, image_cache_disk.py, serve.py, serve_accept.py, serve_metrics.py, serve_ping.py, serve_reqlog.py"
+numeric   = "n/a"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

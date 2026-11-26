@@ -1,0 +1,43 @@
+id        = "runtime.kyojin.hy4_moe_levers"
+kind      = "runtime"
+summary   = "Hy4 MoE / dense decode levers: HIP WMMA grouped expert GEMM on stored k-quants, int8 draft experts, one-launch router GEMV, run-time dense requant arms, bf16 head mat-vec, fused router select"
+why       = "Hy4-flash decode. Where the shape would go: a moe.router/-/f32 provider beside kernel.ciru_inkling.glue_decode, kernel.crucible.ops, kernel.ds4.k53flash_rocm_router and 16 more, through a port of the python / Triton logic"
+notes     = "Interface tag: moe.router/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 6 added (dense_req.py, head_bf16.py, kq_moe_hip.py, moe_i8.py, ref_fused.py, router_gemv.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/loader/dense_req.py",
+  "exllamav3/loader/head_bf16.py",
+  "exllamav3/loader/kq_moe_hip.py",
+  "exllamav3/loader/moe_i8.py",
+  "exllamav3/loader/ref_fused.py",
+  "exllamav3/loader/router_gemv.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.router/-/f32.kyojin-hy4"
+api       = "dense_req.py, head_bf16.py, kq_moe_hip.py, moe_i8.py, ref_fused.py, router_gemv.py"
+numeric   = "see each file"
+regime    = "decode"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

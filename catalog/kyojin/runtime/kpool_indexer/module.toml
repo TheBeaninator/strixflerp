@@ -1,0 +1,36 @@
+id        = "runtime.kyojin.kpool_indexer"
+kind      = "runtime"
+summary   = "k-pool DSA indexer module (Hy4 row-list form)"
+why       = "Hy4 sparse attention. Where the shape would go: an attn.qsa-indexer/-/f32 provider beside kernel.ciru_iu4.attn, kernel.crucible.qsa, kernel.fastasfuck.qsa_indexer and 6 more, through a port of the python / Triton logic"
+notes     = "Interface tag: attn.qsa-indexer/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 1 added (kpool_indexer.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/kpool_indexer.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/f32.kyojin-kpool"
+api       = "kpool_indexer.py"
+numeric   = "fp32 scores"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

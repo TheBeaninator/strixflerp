@@ -1,0 +1,44 @@
+id        = "runtime.enginelab_usb4.link_training"
+kind      = "runtime"
+summary   = "link and XDomain: credit accounting and link diagnostics (0002), kernel-doc for the stream / tbnet / CM ops members (0032), the XDomain lane-bonding result checked (0033), the host router reset result checked (0034), opt-in Gen3 retrain (0035) serialized and exclusive (0039), and the XDomain property chunk length (0049)"
+why       = "getting and keeping a bonded 40 Gb/s link between two hosts, with the diagnostics to see why not"
+notes     = "Interface tag: none (no catalogue interface is a USB4 stream device; the nearest are transport.verbs and the collective.* providers over RoCE / TCP). Stable patches 0002, 0032, 0033, 0034, 0035, 0039, 0049 of patches/series; apply the whole series in order to Linux 72d3fcf8. Nothing was applied, built or run against a kernel on the pod: there is no Linux 72d3fcf8 tree on the island and no USB4 link between pod nodes; the patch gate parses every patch (git apply --numstat) and checks the series files."
+
+[provenance]
+origin    = "enginelab_usb4"
+repo      = "https://github.com/hyukudan/strix-halo-usb4-driver"
+commit    = "d5de947cb405d30db65f810c9248d825c1bcedc6"
+branch    = "main"
+paths     = [
+  "patches/0002-credit-accounting-and-link-diagnostics.patch",
+  "patches/0032-kernel-doc-stream-tbnet-cm-ops-members.patch",
+  "patches/0033-xdomain-lane-bonding-result-checked.patch",
+  "patches/0034-host-router-reset-result-checked.patch",
+  "patches/0035-opt-in-gen3-retrain.patch",
+  "patches/0039-gen3-retrain-serialized-and-exclusive.patch",
+  "patches/0049-xdomain-property-chunk-length.patch",
+]
+authors   = ["hyukudan", "the Linux kernel authors (thunderbolt driver, Intel USB4STREAM; notices kept in the files)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-link/-/-"
+api       = "debugfs / sysfs link diagnostics, retrain parameter"
+numeric   = "bytes only"
+regime    = "link bring-up"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 72d3fcf8 tree on the island); python3 docs/harvest/harvest_enginelab_usb4.py --patch-gate parses it (gate/results/compile/enginelab_usb4.patches.json)"

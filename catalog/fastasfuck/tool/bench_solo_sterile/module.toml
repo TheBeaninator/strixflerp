@@ -1,0 +1,40 @@
+id        = "tool.fastasfuck.bench_solo_sterile"
+kind      = "tool"
+summary   = "fastasfuck's single-slot T = 0 decode bench with dynamic bit-identity across passes"
+why       = "the solo tok/s figure and the determinism check behind it come from this bench"
+notes     = "Files vs strixite: tools/bench/bench_solo_sterile.py new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/bench/bench_solo_sterile.py"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.bench-solo-sterile/-/-"
+api       = "tools/bench/bench_solo_sterile.py"
+numeric   = "n/a"
+regime    = "offline tool"
+
+[[requires]]
+module    = "tool.fastasfuck.bench_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a Python script run with python3 (torch, numpy or scipy where it imports them); nothing to compile"

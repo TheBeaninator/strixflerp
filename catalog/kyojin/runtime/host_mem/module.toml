@@ -1,0 +1,50 @@
+id        = "runtime.kyojin.host_mem"
+kind      = "runtime"
+summary   = "Host-memory registration (shared arena, CPU expert offload segment), driver API entry points resolved at run time, and launching precompiled Triton kernels through the driver API"
+why       = "zero-copy host memory on the unified-memory APU. Where the shape would go: a device.memory/hip/- provider beside runtime.crucible.device_memory, runtime.gufo.hip_host, through the host code behind the flerp ABI"
+notes     = "Interface tag: device.memory/hip/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 5 changed (cuda_drv.cpp, cuda_drv.h, cuda_host.cpp, cuda_host.h, triton_kernel.cpp). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/cuda_drv.cpp",
+  "exllamav3/exllamav3_ext/cuda_drv.h",
+  "exllamav3/exllamav3_ext/cuda_host.cpp",
+  "exllamav3/exllamav3_ext/cuda_host.h",
+  "exllamav3/exllamav3_ext/triton_kernel.cpp",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/exllamav3/exllamav3_ext/cuda_drv.cpp",
+  "src/exllamav3/exllamav3_ext/cuda_host.cpp",
+  "src/exllamav3/exllamav3_ext/triton_kernel.cpp",
+]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "device.memory-kyojin-host-register/hip/-"
+api       = "cuda_drv.cpp, cuda_drv.h, cuda_host.cpp, cuda_host.h, triton_kernel.cpp"
+numeric   = "n/a"
+regime    = "host"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: cuda_drv.cpp, cuda_host.cpp, triton_kernel.cpp"

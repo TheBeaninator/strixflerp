@@ -1,0 +1,46 @@
+id        = "kernel.fastasfuck.swiglu"
+kind      = "kernel"
+summary   = "fastasfuck's SwiGLU over [gate | up] rows"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its swiglu kernel file so a timing card can set it against kernel.strixite.swiglu, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/swiglu.hip act.swiglu/- (byte-identical to kernel.strixite.swiglu kernels/swiglu.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/swiglu.hip", "kernels/swiglu.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/swiglu.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "act.swiglu/-/bf16"
+api       = "strix::kernels::swiglu (kernels/swiglu.hpp)"
+numeric   = "the same source as kernel.strixite.swiglu (byte-identical to kernel.strixite.swiglu kernels/swiglu.hip at d19945e), so its arithmetic: fp32 math; bf16 rounds where the reference does: h = bf16(bf16(silu(gate)) * up)"
+regime    = "as kernel.strixite.swiglu: rows of [gate (I) | up (I)]: dense MLP and the expert gather's output"
+
+[[provides]]
+interface = "act.swiglu/-/f32"
+api       = "strix::kernels::swiglu (kernels/swiglu.hpp)"
+numeric   = "the same source as kernel.strixite.swiglu (byte-identical to kernel.strixite.swiglu kernels/swiglu.hip at d19945e), so its arithmetic: fp32 math; bf16 rounds where the reference does: h = bf16(bf16(silu(gate)) * up)"
+regime    = "as kernel.strixite.swiglu: rows of [gate (I) | up (I)]: dense MLP and the expert gather's output"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.swiglu.json"

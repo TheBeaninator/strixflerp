@@ -1,0 +1,58 @@
+id        = "serve.fastasfuck.responses_api"
+kind      = "serve"
+summary   = "fastasfuck's OpenAI Responses API: input items (messages, function calls and outputs), instructions, previous_response_id chaining through the response store, tools and streaming events"
+why       = "the Responses API is what fastasfuck adds over strixite's chat-completions server for agent clients that use it"
+notes     = "Files vs strixite: serve/responses_api.cpp new in fastasfuck; serve/responses_api.hpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/responses_api.cpp", "serve/responses_api.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/responses_api.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "serve.api/openai-responses/-"
+api       = "strix::ResponsesRequest and its handlers (serve/responses_api.hpp)"
+numeric   = "n/a"
+regime    = "host, over runtime.fastasfuck.engine"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.chat_template"
+
+[[requires]]
+module    = "runtime.fastasfuck.engine"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.response_store"
+
+[[requires]]
+module    = "runtime.fastasfuck.tokenizer"
+
+[[requires]]
+module    = "serve.fastasfuck.openai"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

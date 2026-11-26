@@ -1,0 +1,74 @@
+id        = "runtime.enginelab.direct_gpu_stream"
+kind      = "runtime"
+summary   = "GPU-direct streams: boundary staging, pool allocator, stream commissioning and the GPU side, the Linux GPU-stream UAPI binding, GPU queue sessions and the GPU visibility probe and pattern"
+why       = "commissioning proves the USB4 controller sees the iGPU memory it was given before any real traffic flows; where it would go: a new strixflerp interface transport.usb4-gpu-stream/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, transport.usb4-gpu-stream/-/-. 6 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/direct_gpu_boundary_staging.hpp",
+  "include/strix/direct_gpu_stream_commissioning.hpp",
+  "include/strix/direct_gpu_stream_gpu.hpp",
+  "include/strix/gpu_queue_session.hpp",
+  "include/strix/gpu_visibility_pattern.hpp",
+  "include/strix/hip_direct_gpu_pool_allocator.hpp",
+  "include/strix/hip_direct_gpu_stream_gpu.hpp",
+  "include/strix/linux_direct_gpu_stream_uapi.h",
+  "include/strix/linux_gpu_queue.hpp",
+  "src/direct_gpu_boundary_staging.cpp",
+  "src/direct_gpu_stream_commissioning.cpp",
+  "src/gpu_queue_session.cpp",
+  "src/hip_direct_gpu_pool_allocator.cpp",
+  "src/hip_direct_gpu_stream_gpu.cpp",
+  "src/linux_gpu_queue.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/direct_gpu_boundary_staging.cpp",
+  "src/src/direct_gpu_stream_commissioning.cpp",
+  "src/src/gpu_queue_session.cpp",
+  "src/src/hip_direct_gpu_pool_allocator.cpp",
+  "src/src/hip_direct_gpu_stream_gpu.cpp",
+  "src/src/linux_gpu_queue.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-gpu-stream/-/-"
+api       = "strix direct_gpu_*.hpp, linux_direct_gpu_stream_uapi.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.direct_transport"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

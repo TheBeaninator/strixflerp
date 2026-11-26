@@ -1,0 +1,67 @@
+id        = "kernel.maya_tp.cpu_pool"
+kind      = "kernel"
+summary   = "the CPU expert pool and its tables: the worker pool protocol (pool), the per-layer expert table (expert_layout), native GGUF experts through ggml-cpu (native_expert) and the portable fallback (portable)"
+why       = "the scheduler side of the CPU lane: how experts are handed to cores while the GPU works; the overlap that makes a CPU tier pay"
+notes     = "Interface tag: sched.cpu-expert-pool/-/-. Not compiled by the gate (host C++). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/cpu/expert_layout.hpp",
+  "include/strata/kernels/cpu/native_expert.hpp",
+  "include/strata/kernels/cpu/pool.hpp",
+  "src/kernels/cpu/expert_layout.cpp",
+  "src/kernels/cpu/native_expert.cpp",
+  "src/kernels/cpu/pool.cpp",
+  "src/kernels/cpu/portable.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "sched.cpu-expert-pool/-/-"
+api       = "strata::kernels::cpu::Pool (pool.hpp)"
+numeric   = "no arithmetic of its own"
+regime    = "decode with a CPU lane"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_glm_lane"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_iq"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Not compiled by the gate (host C++)."

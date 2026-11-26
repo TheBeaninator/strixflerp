@@ -1,0 +1,48 @@
+id        = "runtime.strixfold_tp4.gpu_facade"
+kind      = "runtime"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for runtime.strixfold.gpu_facade: 3 file(s) of runtime.strixfold.gpu_facade and 1 file(s) the TP4 tree adds beside them (hip_facade.zig, kit.zig, launch.zig, rccl.zig), laid over the f64b5ff files"
+why       = "runtime.strixfold.gpu_facade is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over runtime.strixfold.gpu_facade without touching it or the TP2 recipes"
+notes     = "Overlay of runtime.strixfold.gpu_facade (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 01574d76b3, 12c50c5d8d. Latest commits: f7c5d83a SPEED-FUSE-2 31e3ab5061: cherry-pick SFF-COUNTS (sff-counts-291bf8cdad c0a95612) so the fused launches are countable; 5051d5f9 dsv41 HIP: a text kit does not load vision.hsaco (review); 3d03a954 dsv41 HIP: the encoder stops between pictures when its request goes or the encoder stops; per-thread launch counts (review); adf536fb dsv41 HIP: the vision tower encodes on its own thread and stream, off the engine thread (review)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/gpu/hip/kit.zig",
+  "zig/src/gpu/hip/launch.zig",
+  "zig/src/gpu/hip/rccl.zig",
+  "zig/src/gpu/hip_facade.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.gpu_facade (origin strixfold, f64b5ff): 3 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "device.facade/hip/-.tp4"
+api       = "gpu/interface.zig (top, Driver, Stream, Kernel, Graph), gpu/hip/root.zig"
+numeric   = "n/a"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); kernel launch about 0.024 ms on gfx1151; HIP graphs capture decode rounds"
+
+[[requires]]
+module    = "runtime.strixfold.gpu_facade"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

@@ -1,0 +1,47 @@
+id        = "kernel.maya_tp.mm3_kernels"
+kind      = "kernel"
+summary   = "maya-mm3's kernels around the EXL3 matrices for MiniMax-M3.1-Flash (mm3_kernels.cu / .cuh): attention, norms, router and glue"
+why       = "the MiniMax engine's per-layer kernels; its TP path cuts these layers over the group members"
+notes     = "Interface tag: attn.softmax-gqa/kv-f16/f32.maya-tp-mm3. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/mm3/mm3_kernels.cu", "src/mm3/mm3_kernels.cuh"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/mm3/mm3_kernels.cu"]
+includes  = ["src/src/mm3"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f32.maya-tp-mm3"
+api       = "mm3 kernel launches (mm3_kernels.cuh)"
+numeric   = "FP32"
+regime    = "decode and prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_kernels"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.mm3_kernels.json"

@@ -1,0 +1,107 @@
+id        = "kernel.enginelab.hc_hyper"
+kind      = "kernel"
+summary   = "hyper-connection decode: the hyper-mix launcher (HIP), fast WMMA HC, wide2 VOPD bodies, repacked down layout and pack, parallel projection oracle, projection prefetch, lane-chain hyper output, the HC contract and host reference, and their tests"
+why       = "the decode-side HC mix with VOPD dual-issue bodies on gfx1151; where it would go: beside the catalogue's hc.mix-decode/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: hc.mix-decode/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 2 HIP unit(s) compiled standalone by the gate; 3 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hc/hc_contract.hpp",
+  "include/strix/hc/hc_ref.hpp",
+  "include/strix/hc_parallel_projection_oracle.hpp",
+  "include/strix/hc_projection_prefetch.hpp",
+  "include/strix/hc_repacked_down_layout.hpp",
+  "include/strix/hc_repacked_down_pack.hpp",
+  "include/strix/hip_hc_deferred_norm_tests.hpp",
+  "include/strix/hip_hc_wide_rows_tests.hpp",
+  "include/strix/hip_hyper_mix_launcher.hpp",
+  "include/strix/hip_lane_chain_hyper_output_tests.hpp",
+  "include/strix/hip_lane_chain_hyper_projection_tests.hpp",
+  "include/strix/hip_repacked_hyper_projection_tests.hpp",
+  "include/strix/lane_chain_hyper_output.hpp",
+  "src/hc/hc_ref.cpp",
+  "src/hc_repacked_down_pack.cpp",
+  "src/hip_hc_fast_wmma.inc",
+  "src/hip_hc_repacked_diagnostic.hip",
+  "src/hip_hc_wide2_output_vopd.inc",
+  "src/hip_hc_wide2_vopd.inc",
+  "src/hip_hyper_mix_launcher.hip",
+  "src/lane_chain_hyper_output.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_hc_repacked_diagnostic.hip", "src/src/hip_hyper_mix_launcher.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "hc.mix-decode/-/f32.enginelab"
+api       = "hip_hyper_mix_launcher.hip, hip_hc_*.inc"
+numeric   = "EXACT profile: bitwise the engine's declared reference (fixed fmaf order, -ffp-contract=off, denormals kept); FAST levers change bits only behind the quality gate (AGENTS.md)"
+regime    = "decode"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "format.enginelab.hip_weight"
+
+[[requires]]
+module    = "format.enginelab.model_data"
+
+[[requires]]
+module    = "kernel.enginelab.core_hc"
+
+[[requires]]
+module    = "kernel.enginelab.hc_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.mtp_draft_head"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.distributed_runtime"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "runtime.enginelab.qpf2k_schedule"
+
+[[requires]]
+module    = "serve.enginelab.serving_cohort"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.hc_hyper.json"

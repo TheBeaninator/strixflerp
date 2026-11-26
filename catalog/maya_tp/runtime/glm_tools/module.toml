@@ -1,0 +1,66 @@
+id        = "runtime.maya_tp.glm_tools"
+kind      = "runtime"
+summary   = "GLM engine side tools: refusal ablation on the GLM residual (glm_ablate.cu / .hpp, ablate_capture.hpp), the CPU routed-expert speed probe (glm_cpu_bench) and the Maya v1.1.3 feature sync against glm-dsa (glm_maya_sync)"
+why       = "the steering / ablation hook is the same shape as strixflerp's steer modules; the CPU expert probe sizes a CPU lane before it is used"
+notes     = "Interface tag: steer.ablate-direction/-/f32.maya-tp. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/glm_maya_sync.hpp",
+  "src/core/ablate_capture.hpp",
+  "src/core/glm_ablate.cu",
+  "src/core/glm_ablate.hpp",
+  "src/core/glm_cpu_bench.cpp",
+  "src/core/glm_maya_sync.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "steer.ablate-direction/-/f32.maya-tp"
+api       = "glm_ablate.hpp"
+numeric   = "FP32 projection"
+regime    = "decode"
+
+[[requires]]
+module    = "format.maya_tp.gguf_reader"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_glm_lane"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_model"
+
+[[requires]]
+module    = "runtime.maya_tp.mm3_engine"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

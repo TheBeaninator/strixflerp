@@ -1,0 +1,60 @@
+id        = "kernel.lucebox.qsa"
+kind      = "kernel"
+summary   = "QSA (Qwen3.8-Flash-Next sparse attention) on gfx11 / gfx12 WMMA fragments with the sigmoid gate folded into the store, the prefill union builder, decode variants, and a sort of the selected ids per query"
+why       = "A further QSA provider beside kernel.strixite.qsa, kernel.libstrix.attn and gufo qfn, with a decode WMMA path"
+notes     = "INTERFACES.md section: 5. Sparse-attention indexer and QSA. Interface tags: attn.softmax-gqa/kv-f16/f16.lucebox-qsa; attn.qsa-ids/-/-. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/qsa.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/qsa-ids.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/qsa-decode-wmma.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/qsa-decode.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/qsa-ids.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/qsa-ids.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/qsa.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/qsa.cuh",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/qsa.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/qsa-ids.cu",
+]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/deps/llama.cpp/ggml/src/ggml-cuda/qsa.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/qsa-ids.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16/f16.lucebox-qsa"
+api       = "GGML ops in qsa.cu"
+numeric   = "F16 store byte-identical to the plain path with the gate folded in (server/CMakeLists.txt test_qsa3_gate_parity)"
+regime    = "Qwen3.8-Flash-Next prefill (union) and decode"
+
+[[provides]]
+interface = "attn.qsa-ids/-/-"
+api       = "GGML op in qsa-ids.cu"
+numeric   = "sorts only the selected ids, never scores; one CTA a query"
+regime    = "Qwen3.8-Flash-Next"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.gdn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.qsa.json"

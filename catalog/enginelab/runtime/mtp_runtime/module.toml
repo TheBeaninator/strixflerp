@@ -1,0 +1,124 @@
+id        = "runtime.enginelab.mtp_runtime"
+kind      = "runtime"
+summary   = "the MTP runtime: runtime and greedy runtime (HIP), resources, asset loader, sidecar binding, cost-table session and the rest of the MTP host pieces"
+why       = "ties the draft head, drafters and verify windows into one decode loop per engine; where it would go: beside the catalogue's draft.mtp/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: draft.mtp/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 4 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_mtp_asset_loader.hpp",
+  "include/strix/hip_mtp_greedy_runtime.hpp",
+  "include/strix/hip_mtp_resources.hpp",
+  "include/strix/hip_mtp_runtime.hpp",
+  "include/strix/mtp_cost_table_session.hpp",
+  "include/strix/mtp_sidecar_binding.hpp",
+  "src/hip_mtp_asset_loader.hip",
+  "src/hip_mtp_greedy_runtime.hip",
+  "src/hip_mtp_resources.hip",
+  "src/hip_mtp_runtime.hip",
+  "src/mtp_cost_table_session.cpp",
+  "src/mtp_sidecar_binding.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/hip_mtp_asset_loader.hip",
+  "src/src/hip_mtp_greedy_runtime.hip",
+  "src/src/hip_mtp_resources.hip",
+  "src/src/hip_mtp_runtime.hip",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "draft.mtp/-/f32.enginelab-runtime"
+api       = "hip_mtp_runtime.hip, hip_mtp_greedy_runtime.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "kernel.enginelab.logits_head"
+
+[[requires]]
+module    = "kernel.enginelab.moe_launch"
+
+[[requires]]
+module    = "kernel.enginelab.mtp_draft_head"
+
+[[requires]]
+module    = "kernel.enginelab.ple"
+
+[[requires]]
+module    = "kernel.enginelab.qwen_rotary"
+
+[[requires]]
+module    = "kernel.enginelab.shared_expert"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_drafters"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_forward"
+
+[[requires]]
+module    = "runtime.enginelab.mtp_window"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serving_cohort"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.mtp_runtime.json"

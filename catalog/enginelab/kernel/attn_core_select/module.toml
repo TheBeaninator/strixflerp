@@ -1,0 +1,57 @@
+id        = "kernel.enginelab.attn_core_select"
+kind      = "kernel"
+summary   = "top-k selection for sparse attention: select, radix-3 select and threshold select with their rules and spec, the group select kernel, group score scan and pool, index score (band, mode, WMMA) and the eager softmax rule"
+why       = "the indexer half of DSA-style attention: score the cache, pick the top tokens exactly; where it would go: beside the catalogue's attn.indexer-topk/-/f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: attn.indexer-topk/-/f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/attn_core/eager_softmax.hpp",
+  "src/attn_core/eager_softmax_rule.hpp",
+  "src/attn_core/group_pool.hpp",
+  "src/attn_core/group_score_scan.hpp",
+  "src/attn_core/group_select_kernel.hpp",
+  "src/attn_core/index_score_band.hpp",
+  "src/attn_core/index_score_mode.hpp",
+  "src/attn_core/index_score_wmma.hpp",
+  "src/attn_core/select.hpp",
+  "src/attn_core/select_radix3.hpp",
+  "src/attn_core/select_radix3_rule.hpp",
+  "src/attn_core/select_spec.hpp",
+  "src/attn_core/select_threshold.hpp",
+  "src/attn_core/select_threshold_rule.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "attn.indexer-topk/-/f32.enginelab"
+api       = "src/attn_core select headers"
+numeric   = "exact top-k with declared tie order"
+regime    = "decode and prefill"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

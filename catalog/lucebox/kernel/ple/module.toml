@@ -1,0 +1,44 @@
+id        = "kernel.lucebox.ple"
+kind      = "kernel"
+summary   = "the fused PLE (per-layer embedding) conv matcher of the qwen4exp graph"
+why       = "Model-specific; recorded so every Lucebox HIP unit has a home"
+notes     = "INTERFACES.md section: none. Interface tags: embed.ple-conv/-/f32.lucebox. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/ple-conv.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/ple-conv.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/ple-conv.cuh",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda/ple-conv.cu"]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/deps/llama.cpp/ggml/src/ggml-cuda/ple-conv.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "embed.ple-conv/-/f32.lucebox"
+api       = "GGML op in ple-conv.cu"
+numeric   = "matched subgraph replaced by one fused kernel; LUCE_PLE_FUSE_LEGACY=1 keeps the unfused graph (file header)"
+regime    = "qwen4exp per-layer embeddings"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.ple.json"

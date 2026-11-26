@@ -1,0 +1,56 @@
+id        = "kernel.strata.prefill_moe_ggml"
+kind      = "kernel"
+summary   = "the prompt path's routed-expert sources that build against llama.cpp's ggml (the checkout the origin CMake fetches): prompt-speed plan step 2b, the experts through llama.cpp's MMQ kernels (ggml-cuda mmq.cuh) with expert gathers into a group buffer, q8_1 activations and one launch a product (moe_mmq), the few host symbols of ggml-cuda.cu that MMQ references (ggml_cuda_host), the resident-expert sort (mmq_resident_sort.hpp), and #136's fused int8 experts for native GGUF packs (moe_fused_iq, which takes the block types from ggml.h); opt-in -DSTRATA_PREFILL_MMQ=ON on HIP"
+why       = "MMQ keeps prompt experts quantized (one read of a 1.4-2 MB expert instead of 10 MB of FP16), the same idea as gufo's qfn_mmq module, and moe_fused_iq is the native-pack form of the fused int8 experts; all three need llama.cpp sources or headers the Strata tree does not contain"
+notes     = "Interface tags by file: moe_mmq.cu moe.experts-prefill/gguf-kquant/q8_1-f32; moe_fused_iq.cu moe.experts-prefill/gguf-iq+kquant/i8-f32; none: ggml_cuda_host.cu. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/prefill/moe_fused_iq.hpp",
+  "include/strata/prefill/moe_mmq.hpp",
+  "src/prefill/ggml_cuda_host.cu",
+  "src/prefill/mmq_resident_sort.hpp",
+  "src/prefill/moe_fused_iq.cu",
+  "src/prefill/moe_mmq.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-kquant/q8_1-f32.strata-mmq"
+api       = "strata::prefill::mmq::quantize, gather_native, Product::run, supported, fits (src/prefill/moe_mmq.cu)"
+numeric   = "q8_1 activations, llama.cpp's MMQ integer tiles, FP32 output"
+regime    = "prefill; types q2_0, iq2_xxs, iq2_xs, iq2_s, iq3_xxs, iq3_s, iq4_nl, iq4_xs, q8_0 (+ q5_0, K-quants by option)"
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-iq+kquant/i8-f32.strata-fused"
+api       = "strata::prefill::fused::experts_native, quantize_act_native, native_supported (src/prefill/moe_fused_iq.cu)"
+numeric   = "int8 activations; llama.cpp block layouts from ggml-common.h"
+regime    = "prefill; gfx11 WMMA on HIP"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[[requires]]
+module    = "kernel.strata.prefill_moe_fused"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs llama.cpp's ggml at the commit in third_party/ggml/VERSION.txt, which the origin CMake fetches and the Strata tree does not contain: ggml/include/ggml.h (moe_fused_iq.cu) and ggml/src/ggml-cuda (common.cuh, mmq.cuh, quantize.cu and the mmq-instance-<type>.cu files; moe_mmq.cu, ggml_cuda_host.cu); the HIP build compiles these only with -DSTRATA_PREFILL_MMQ=ON; not compiled by this harvest"

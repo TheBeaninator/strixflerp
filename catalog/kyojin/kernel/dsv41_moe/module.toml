@@ -1,0 +1,46 @@
+id        = "kernel.kyojin.dsv41_moe"
+kind      = "kernel"
+summary   = "DS4.1 batch-1 routed experts of a layer in 5 launches for all K groups at once (top-6), bit-identical to the per-K-group exl3_moe_gfx12_k3 path"
+why       = "MoE decode launch count. Where the shape would go: a moe.experts-decode/exl3/f32 provider beside kernel.kestrel.exl3, kernel.maya_tp.cpu_exl3, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: moe.experts-decode/exl3/f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (dsv41_moe.hip, dsv41_moe.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/modules/dsv41_fn/dsv41_moe.hip", "exllamav3/modules/dsv41_fn/dsv41_moe.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/modules/dsv41_fn/dsv41_moe.hip"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode/exl3/f32.kyojin-dsv41"
+api       = "dsv41_moe.hip, dsv41_moe.py; kernels: ds41m_had_in, ds41m_valu_gu, ds41m_valu_down, ds41m_mid, ds41m_final"
+numeric   = "fp16 activations, fp32 accumulation"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemv"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_moe_valu"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: dsv41_moe.hip"

@@ -1,0 +1,105 @@
+id        = "runtime.enginelab.model_registry"
+kind      = "runtime"
+summary   = "model registry and residency: content hash, contract, copy-residency layout, description, family registry, manifest, mapping accounting, registry, residency (HIP, diagnostic), runtime binding and tensor index"
+why       = "one registry the CLI, server and planner read; where it would go: a new strixflerp interface format.model-registry/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, format.model-registry/-/-. 10 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_model_residency.hpp",
+  "include/strix/hip_model_residency_diagnostic.hpp",
+  "include/strix/model_content_hash.hpp",
+  "include/strix/model_contract.hpp",
+  "include/strix/model_description.hpp",
+  "include/strix/model_family_registry.hpp",
+  "include/strix/model_manifest.hpp",
+  "include/strix/model_mapping_accounting.hpp",
+  "include/strix/model_registry.hpp",
+  "include/strix/model_runtime_binding.hpp",
+  "include/strix/model_tensor_index.hpp",
+  "src/hip_model_residency.cpp",
+  "src/model_content_hash.cpp",
+  "src/model_contract.cpp",
+  "src/model_copy_residency_layout.cpp",
+  "src/model_description.cpp",
+  "src/model_family_registry.cpp",
+  "src/model_manifest.cpp",
+  "src/model_registry.cpp",
+  "src/model_runtime_binding.cpp",
+  "src/model_tensor_index.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/hip_model_residency.cpp",
+  "src/src/model_content_hash.cpp",
+  "src/src/model_contract.cpp",
+  "src/src/model_copy_residency_layout.cpp",
+  "src/src/model_description.cpp",
+  "src/src/model_family_registry.cpp",
+  "src/src/model_manifest.cpp",
+  "src/src/model_registry.cpp",
+  "src/src/model_runtime_binding.cpp",
+  "src/src/model_tensor_index.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.model-registry/-/-"
+api       = "src/model_registry.cpp, model_manifest.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "kernel.enginelab.ple"
+
+[[requires]]
+module    = "kernel.enginelab.qwen_rotary"
+
+[[requires]]
+module    = "runtime.enginelab.backend_cpu"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.recurrent_state"
+
+[[requires]]
+module    = "runtime.enginelab.residency"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

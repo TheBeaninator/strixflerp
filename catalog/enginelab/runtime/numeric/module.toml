@@ -1,0 +1,49 @@
+id        = "runtime.enginelab.numeric"
+kind      = "runtime"
+summary   = "numerics declarations: declared numerics, gfx1151 math and exact rsqrt: 3 origin files under include/strix"
+why       = "the bit-level contracts the EXACT profile rests on; where it would go: beside the catalogue's verify.numerics-contract/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: verify.numerics-contract/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/numeric/declared.hpp",
+  "include/strix/numeric/math_gfx1151.hpp",
+  "include/strix/numeric/rsqrt_exact.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.numerics-contract-enginelab/-/-"
+api       = "include/strix/numeric/*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

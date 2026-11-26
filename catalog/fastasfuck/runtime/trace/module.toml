@@ -1,0 +1,37 @@
+id        = "runtime.fastasfuck.trace"
+kind      = "runtime"
+summary   = "fastasfuck's ROCTX range macros for rocprofv3 timelines, compiled to nothing unless STRIX_ROCTX is defined"
+why       = "tools/profile_run.py reads the ranges these macros emit (forward, layer, sublayer), so profiles of fastasfuck depend on this header"
+notes     = "Files vs strixite: common/trace.hpp byte-identical to runtime.strixite.trace at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["common/trace.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "host.trace/-/-"
+api       = "STRIX_TRACE_RANGE, STRIX_TRACE_STAGE"
+numeric   = "the same source as runtime.strixite.trace, so its behaviour: n/a"
+regime    = "as runtime.strixite.trace: host, profiling builds"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host C++ header; the compile gate builds hip-c++ modules only"

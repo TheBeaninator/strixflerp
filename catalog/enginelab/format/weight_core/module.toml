@@ -1,0 +1,151 @@
+id        = "format.enginelab.weight_core"
+kind      = "format"
+summary   = "the shared weight layer (src/weight, include/strix/weight): admission, block draft, cache, calibration moments and provenance, confined files, contracts, decision table, decoder, family, host low-bit (GPTQ) and Q8, image identity, levers, load, low-bit pack, model binding, native runtime, operand cache plan, reference, registry, resident slices, resolve, row pitch, runtime, source, tensor access / launch plan / map, typed slices and types"
+why       = "one loader for every model and backend; models bring only their naming maps; where it would go: beside the catalogue's format.loader/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: format.loader/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 21 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/weight/admission.hpp",
+  "include/strix/weight/block_draft.hpp",
+  "include/strix/weight/cache.hpp",
+  "include/strix/weight/calib_moments.hpp",
+  "include/strix/weight/calib_provenance.hpp",
+  "include/strix/weight/confined_file.hpp",
+  "include/strix/weight/decoder.hpp",
+  "include/strix/weight/family.hpp",
+  "include/strix/weight/host_lowbit.hpp",
+  "include/strix/weight/host_lowbit_gptq.hpp",
+  "include/strix/weight/host_q8.hpp",
+  "include/strix/weight/hy4_dfly_map.hpp",
+  "include/strix/weight/levers.hpp",
+  "include/strix/weight/load.hpp",
+  "include/strix/weight/lowbit_pack.hpp",
+  "include/strix/weight/operand_cache_plan.hpp",
+  "include/strix/weight/reference.hpp",
+  "include/strix/weight/registry.hpp",
+  "include/strix/weight/resident_slices.hpp",
+  "include/strix/weight/resolve.hpp",
+  "include/strix/weight/row_pitch.hpp",
+  "include/strix/weight/runtime.hpp",
+  "include/strix/weight/source.hpp",
+  "include/strix/weight/tensor_access.hpp",
+  "include/strix/weight/tensor_launch_plan.hpp",
+  "include/strix/weight/tensor_map.hpp",
+  "include/strix/weight/typed_slice.hpp",
+  "include/strix/weight/types.hpp",
+  "src/weight/admission.cpp",
+  "src/weight/block_draft.cpp",
+  "src/weight/cache.cpp",
+  "src/weight/calib_provenance.cpp",
+  "src/weight/contracts.cpp",
+  "src/weight/decision_table.cpp",
+  "src/weight/family.cpp",
+  "src/weight/host_q8.cpp",
+  "src/weight/image_identity.cpp",
+  "src/weight/levers.cpp",
+  "src/weight/load.cpp",
+  "src/weight/lowbit_pack.cpp",
+  "src/weight/model_binding.cpp",
+  "src/weight/native_runtime.hpp",
+  "src/weight/reference.cpp",
+  "src/weight/registry.cpp",
+  "src/weight/resolve.cpp",
+  "src/weight/runtime.cpp",
+  "src/weight/source.cpp",
+  "src/weight/tensor_access.cpp",
+  "src/weight/tensor_map.cpp",
+  "src/weight/types.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/weight/admission.cpp",
+  "src/src/weight/block_draft.cpp",
+  "src/src/weight/cache.cpp",
+  "src/src/weight/calib_provenance.cpp",
+  "src/src/weight/contracts.cpp",
+  "src/src/weight/decision_table.cpp",
+  "src/src/weight/family.cpp",
+  "src/src/weight/host_q8.cpp",
+  "src/src/weight/image_identity.cpp",
+  "src/src/weight/levers.cpp",
+  "src/src/weight/load.cpp",
+  "src/src/weight/lowbit_pack.cpp",
+  "src/src/weight/model_binding.cpp",
+  "src/src/weight/reference.cpp",
+  "src/src/weight/registry.cpp",
+  "src/src/weight/resolve.cpp",
+  "src/src/weight/runtime.cpp",
+  "src/src/weight/source.cpp",
+  "src/src/weight/tensor_access.cpp",
+  "src/src/weight/tensor_map.cpp",
+  "src/src/weight/types.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.loader-enginelab/-/-"
+api       = "src/weight/load.cpp, registry.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_adapters"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.core_iu4"
+
+[[requires]]
+module    = "kernel.enginelab.core_trellis"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[[requires]]
+module    = "runtime.enginelab.xport_crc"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

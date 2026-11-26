@@ -1,0 +1,39 @@
+id        = "runtime.odinlink5.driver_nhi"
+kind      = "runtime"
+summary   = "the NHI data path of the driver: the transport backend that wraps the kernel's tb_ring API and XDomain path management, and the DMA engine (TX / RX rings of 4-KiB frames, a reusable frame pool, a latency mode that pushes one frame at a time inside the ioctl and a throughput mode of 256-KiB batches, RX reassembly of fragmented messages)"
+why       = "the latency mode is why a 48 KiB decode all-reduce is 13 frames from one syscall with no wait for TX completion; the RX reassembly is where odinlink-local.patch had to preallocate buffers on UMA hosts (catalog/vllm_strix runtime.vllm_strix.odinlink_local_patch)"
+notes     = "Interface tag: none. Not compiled (kernel code). Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = ["driver/odl_tb5_ring_dma.c", "driver/odl_tb5_transport_nhi.c"]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.nhi-dma-rings/-/-"
+api       = "odl_tb5_transport_ops (driver/odl_tb5_transport.h) for Intel / AMD USB4 NHI"
+numeric   = "bytes; 4-KiB frames with framing / CRC reserve"
+regime    = "one ring pair a peer"
+
+[[requires]]
+module    = "runtime.odinlink5.driver_core"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "c: not compiled by the gate ((kernel code))"

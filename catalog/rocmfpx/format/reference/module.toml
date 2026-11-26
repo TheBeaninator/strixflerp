@@ -1,0 +1,48 @@
+id        = "format.rocmfpx.reference"
+kind      = "format"
+summary   = "CPU reference of the seven ROCmFPX GGUF weight types: quantize (reconstruction-MSE UE4M3 scale search per 16-weight half block for FP3 / FP6, the S40 codebook search for FP2, signed Q7 groups with FP16 scales), dequantize and dot for ROCmFP2, 3, 6, 7 and 8 (ggml/rocmfpx) and ROCmFP4 dual- and single-scale (ggml/rocmfp4), with the origin's unit tests and format notes; the block structs live in kernel.rocmfpx.common"
+why       = "the format ladder the catalogue lacks: 2.5 to 8.25 bits a weight on one block and scale contract, with a CPU reference that the HIP families are held to"
+notes     = "Interface tag: none (no catalogue format reads ROCmFPX blocks). ggml.c / ggml-quants.c register the types (type traits, quantize dispatch) and are left out as base files. Tests: test_rocmfpx.c and test_rocmfp2_reference.c (scripts/check-rocmfpx-reference.sh and check-rocmfp2-reference.sh build them with cc); not run here."
+
+[provenance]
+origin    = "rocmfpx"
+repo      = "https://github.com/ciru-ai/ROCmFPX"
+commit    = "efd1ef5a17db576168d849831e1ef3346582881e"
+branch    = "main"
+paths     = [
+  "ggml/rocmfp4/README.md",
+  "ggml/rocmfp4/rocmfp4.c",
+  "ggml/rocmfpx/README.md",
+  "ggml/rocmfpx/rocmfp2_reference.c",
+  "ggml/rocmfpx/rocmfp2_reference.h",
+  "ggml/rocmfpx/rocmfpx.c",
+  "ggml/rocmfpx/test_rocmfp2_reference.c",
+  "ggml/rocmfpx/test_rocmfpx.c",
+]
+authors   = ["Ciru (ciru-ai)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.device-view/gguf-rocmfpx/-"
+api       = "GGML_TYPE_Q2_0_ROCMFPX = 108, Q3_0 = 104, Q4_0_ROCMFP4 = 100, Q4_0_ROCMFP4_FAST = 101, Q6_0 = 102, Q7_0 = 107, Q8_0 = 103 (ggml/include/ggml.h); block_rocmfp2 / 3 / 6 / 7 / 8 (ggml/rocmfpx/rocmfpx.h), block_rocmfp4 / block_rocmfp4_fast (ggml/rocmfp4/rocmfp4.h); the quantize / dequantize / dot routines of rocmfpx.c, rocmfp2_reference.c and rocmfp4.c"
+numeric   = "value = integer code times decoded scale: finite unsigned UE4M3 scale bytes (0x7f and sign-bit bytes invalid) for FP2 / 3 / 4 / 6 / 8, FP16 group scales for FP7; bits a weight: FP2 2.5, FP3 3.5, FP4 4.5, FP4-fast 4.25, FP6 6.5, FP7 7.5, FP8 8.25"
+regime    = "32-value blocks (FP7: 256-value macroblocks of eight 32-value groups); GGUF tensors of llama.cpp models"
+
+[[requires]]
+module    = "kernel.rocmfpx.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CPU reference compiled into libggml-base by ggml/src/CMakeLists.txt with the rest of ggml; the compile gate builds hip-c++ modules only"

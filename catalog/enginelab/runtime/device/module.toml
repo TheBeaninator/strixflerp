@@ -1,0 +1,102 @@
+id        = "runtime.enginelab.device"
+kind      = "runtime"
+summary   = "devices (src/device, include/strix/device): budget, cost identity (CUDA, HIP), declarations, eager code load, gates (HIP, none), CUDA / HIP / Intel enumerators, link class, low-bit rows, process budget and topology, profiles, runtime host memory, sets and topology, nvidia-smi and xpu-smi readers; device allocation errors, profile and the platform probe"
+why       = "no device, node count or link is compiled in: everything comes from these declarations or a calibration at load (AGENTS.md); where it would go: beside the catalogue's device.info/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: device.info/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 12 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/device/budget.hpp",
+  "include/strix/device/cost_identity.hpp",
+  "include/strix/device/cuda_enumerator.hpp",
+  "include/strix/device/declaration.hpp",
+  "include/strix/device/eager_code_load.hpp",
+  "include/strix/device/gate.hpp",
+  "include/strix/device/hip_enumerator.hpp",
+  "include/strix/device/hip_gate.hpp",
+  "include/strix/device/intel_enumerator.hpp",
+  "include/strix/device/link_class.hpp",
+  "include/strix/device/lowbit_rows.hpp",
+  "include/strix/device/process_budget.hpp",
+  "include/strix/device/process_topology.hpp",
+  "include/strix/device/profiles.hpp",
+  "include/strix/device/runtime.hpp",
+  "include/strix/device/runtime_host_memory.hpp",
+  "include/strix/device/set.hpp",
+  "include/strix/device/topology.hpp",
+  "include/strix/device_allocation_error.hpp",
+  "include/strix/device_profile.hpp",
+  "include/strix/hip_gpu_visibility_probe.hpp",
+  "include/strix/platform_probe.hpp",
+  "src/device/budget.cpp",
+  "src/device/cuda_cost_identity.hpp",
+  "src/device/declaration.cpp",
+  "src/device/gate.cpp",
+  "src/device/hip_cost_identity.hpp",
+  "src/device/hip_gate.cpp",
+  "src/device/hip_gate_none.cpp",
+  "src/device/nvidia_smi.cpp",
+  "src/device/process_topology.cpp",
+  "src/device/profiles.cpp",
+  "src/device/topology.cpp",
+  "src/device/xpu_smi.cpp",
+  "src/device_profile.cpp",
+  "src/hip_gpu_visibility_probe.hip",
+  "src/platform_probe.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_gpu_visibility_probe.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "device.info-enginelab/-/-"
+api       = "strix::device declaration.hpp, topology.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.direct_gpu_stream"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.power"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.device.json"

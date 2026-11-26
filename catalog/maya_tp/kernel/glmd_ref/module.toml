@@ -1,0 +1,50 @@
+id        = "kernel.maya_tp.glmd_ref"
+kind      = "kernel"
+summary   = "the glm-dsa F32 reference kernels (glmd_ref.cu, B3.4) and the device halves of the wave-9 guards: the FP16 activation range guard and friends (glmd_guards.cu)"
+why       = "a reference forward on the GPU is what a parity gate compares the fast path against; the guards are the runtime numerics checks"
+notes     = "Interface tag: verify.kernel-reference-maya-tp/-/-. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["include/strata/kernels/glmd_ref.hpp", "src/kernels/cuda/glmd_guards.cu", "src/kernels/cuda/glmd_ref.cu"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/glmd_guards.cu", "src/src/kernels/cuda/glmd_ref.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "verify.kernel-reference-maya-tp/-/-"
+api       = "strata::kernels glmd_ref, glmd guards"
+numeric   = "F32 reference"
+regime    = "parity runs"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.glmd_decode"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.glmd_ref.json"

@@ -1,0 +1,38 @@
+id        = "tool.kyojin.hipsp_probes"
+kind      = "tool"
+summary   = "WMMA peak-rate probes for gfx1151: two kernels that issue back-to-back v_wmma f16 ops to measure the matrix-core ceiling"
+why       = "roofline numbers for the sparse MLA work. Where the shape would go: a tool.kernel-bench/-/- provider beside tool.flerp.strixw_panel_kernel_bench, tool.vllm_strix.fp8_sweep, tool.vllm_strix.mxfp4_sweeps and 1 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: tool.kernel-bench/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (wpeak.cu, wpeak2.cu), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["hipsp/wpeak.cu", "hipsp/wpeak2.cu"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/hipsp/wpeak.cu", "src/hipsp/wpeak2.cu"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = ["-x", "hip", "-std=c++17", "-O3", "-fPIC", "-c"]
+
+[[provides]]
+interface = "tool.kernel-bench-kyojin-wmma-peak/-/-"
+api       = "wpeak.cu, wpeak2.cu; kernels: k"
+numeric   = "n/a"
+regime    = "offline"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/tool.kyojin.hipsp_probes.json"

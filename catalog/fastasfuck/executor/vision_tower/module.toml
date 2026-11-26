@@ -1,0 +1,61 @@
+id        = "executor.fastasfuck.vision_tower"
+kind      = "executor"
+summary   = "fastasfuck's device-resident ViT and patch merger loaded from vision.faf as exact BF16 rows, one image per forward"
+why       = "image prompts go through it before the language forward splices the merged rows in"
+notes     = "Files vs strixite: runtime/vision_tower.cpp 36 changed lines against executor.strixite.vision_tower at d19945e; runtime/vision_tower.hpp 24 changed lines against executor.strixite.vision_tower at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["runtime/vision_tower.cpp", "runtime/vision_tower.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/runtime/vision_tower.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "executor.vision-tower/qwen4exp/bf16"
+api       = "strix::VisionTower"
+numeric   = "derived from executor.strixite.vision_tower (runtime/vision_tower.cpp 36 changed lines against executor.strixite.vision_tower at d19945e; runtime/vision_tower.hpp 24 changed lines against executor.strixite.vision_tower at d19945e); not compared here"
+regime    = "as executor.strixite.vision_tower: one image per forward (temporal axis 1)"
+
+[[requires]]
+module    = "format.fastasfuck.faf"
+
+[[requires]]
+module    = "format.fastasfuck.faf_loader"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.norm"
+
+[[requires]]
+module    = "kernel.fastasfuck.residual"
+
+[[requires]]
+module    = "kernel.fastasfuck.vision"
+
+[[requires]]
+module    = "runtime.fastasfuck.bf16"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_model) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

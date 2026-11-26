@@ -1,0 +1,47 @@
+id        = "kernel.ciru_inkling.attn_decode"
+kind      = "kernel"
+summary   = "Inkling 2 Mini decode attention (hip_attn_decode.hip): K/V short convolution with the paged cache write and split-KV flash decode attention with the relative-position bias, a 32-row cooperative variant and the gate / sink combine, int64 paged addressing to 1M tokens"
+why       = "a split-KV decode attention with a 32-row cooperative variant for B = 1, M = 6..8 verify batches, the third kernel of the multi-slot decode step, with int64 paged addressing to 1M tokens"
+notes     = "Interface tags by launch group: launch_hip_kv_conv_decode: kvcache.store/kv-bf16/bf16; launch_hip_flash_rel_decode_split and 1 more: attn.softmax-gqa/kv-bf16/bf16 (catalog/ciru_inkling/KERNELS.md has the table). Launch functions take raw device pointers, element strides and a stream (ctypes from ops/hip_runtime.py); none takes a torch tensor. No timing was taken on the pod; figures are the author's (README.md, v1.5.0)."
+
+[provenance]
+origin    = "ciru_inkling"
+repo      = "https://github.com/ciru-ai/Inkling-2-Mini-CIRU-Halo-Agent-gfx1151"
+commit    = "b3870f35926fb322f398e6c373a93098534f8fdb"
+branch    = "main"
+paths     = ["overlay/vllm/models/inkling2/amd/ops/hip_attn_decode.hip"]
+authors   = ["Ciru (CIRU AI)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/overlay/vllm/models/inkling2/amd/ops/hip_attn_decode.hip"]
+includes  = ["src/overlay/vllm/models/inkling2/amd/ops"]
+arch      = "gfx1151"
+toolchain = "therock-10.0"
+options   = ["-fPIC", "-O3", "-DINKLING_HIP_ABI_VERSION=3", "-DINKLING_HIP_SRC_HASH_RAW=671b45b80972", "-c"]
+
+[[provides]]
+interface = "kvcache.store/kv-bf16/bf16.ciru-inkling-conv-decode"
+api       = "launch_hip_kv_conv_decode (extern \"C\", hip_attn_decode.hip)"
+numeric   = "BF16 in and out, FP32 conv math; head_dim 128"
+regime    = "decode, several query tokens a request (cu_seqlens_q); positions int32 or int64"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-bf16/bf16.ciru-inkling-rel-split"
+api       = "launch_hip_flash_rel_decode_split, launch_hip_decode_combine (extern \"C\", hip_attn_decode.hip)"
+numeric   = "BF16 Q / K / V on the BF16 WMMA, FP32 partials and log-sum-exp per split; int64 paged addressing up to 1,048,576 tokens"
+regime    = "decode and speculative verify; head_dim 128, 8 KV heads; author figure: 227.7 GB/s at 128K context (README.md:31)"
+
+[[requires]]
+module    = "kernel.ciru_inkling.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.ciru_inkling.attn_decode.json"

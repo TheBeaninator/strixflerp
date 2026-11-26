@@ -1,0 +1,89 @@
+id        = "format.enginelab.weight_formats"
+kind      = "format"
+summary   = "weight formats (src/weight/formats, include/strix/weight/formats): catalog, channel quant, DS41, EXL3, FP8, ggml, GSQ, microscaled (matrix, encode), NVFP4, packed, plain, IEEE half and scalar float"
+why       = "every weight encoding the engine reads, one decoder each; where it would go: beside the catalogue's format.decode/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: format.decode/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 10 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/weight/formats/ggml.hpp",
+  "include/strix/weight/formats/ieee_half.hpp",
+  "include/strix/weight/formats/microscaled.hpp",
+  "include/strix/weight/formats/microscaled_encode.hpp",
+  "include/strix/weight/formats/microscaled_matrix.hpp",
+  "include/strix/weight/formats/scalar_float.hpp",
+  "src/weight/formats/catalog.hpp",
+  "src/weight/formats/channel_quant.cpp",
+  "src/weight/formats/ds41.cpp",
+  "src/weight/formats/exl3.cpp",
+  "src/weight/formats/fp8.cpp",
+  "src/weight/formats/ggml.cpp",
+  "src/weight/formats/gsq.cpp",
+  "src/weight/formats/microscaled_matrix.cpp",
+  "src/weight/formats/nvfp4.cpp",
+  "src/weight/formats/packed.cpp",
+  "src/weight/formats/plain.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/weight/formats/channel_quant.cpp",
+  "src/src/weight/formats/ds41.cpp",
+  "src/src/weight/formats/exl3.cpp",
+  "src/src/weight/formats/fp8.cpp",
+  "src/src/weight/formats/ggml.cpp",
+  "src/src/weight/formats/gsq.cpp",
+  "src/src/weight/formats/microscaled_matrix.cpp",
+  "src/src/weight/formats/nvfp4.cpp",
+  "src/src/weight/formats/packed.cpp",
+  "src/src/weight/formats/plain.cpp",
+]
+includes  = ["src/src", "src/include", "src/src/weight"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.decode-enginelab/-/-"
+api       = "src/weight/formats/*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.hip_weight"
+
+[[requires]]
+module    = "format.enginelab.qwen_grids"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_exl3"
+
+[[requires]]
+module    = "kernel.enginelab.h3_gemm"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,44 @@
+id        = "kernel.strixfold_tp4.reap"
+kind      = "kernel"
+summary   = "Edge-REAP routing statistics on gfx1151: pack a sampled row's routed expert outputs, their sum of squares, the per-(expert, bucket) count and gate-mass adds and the norm join, all into f64 device accumulators"
+why       = "Expert pruning needs per-expert statistics from served traffic; under tensor parallelism no rank holds a whole expert output, so the engine joins the partial norms itself; off (REAP_STATS=0) nothing launches (pod card 023c5d2ad9, docs of catalog/strixfold_reap)"
+notes     = "New in the TP4 serving tree (zig/kernels/hip/dsv41/reap.hip, not in f64b5ff); compiled into the serving kit by the origin's build graph (zig/build/hip_dsv41.zig, flags as catalog/strixfold ORIGIN.toml [compile]). Cards: 023c5d2ad9."
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/reap.hip",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/zig/kernels/hip/dsv41/reap.hip"]
+includes  = ["src/zig/kernels/hip/dsv41"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = ["--offload-device-only", "--no-gpu-bundle-output", "-O3", "-std=c++20", "-fno-gpu-rdc", "-mno-wavefrontsize64", "-ffp-contract=off", "-fno-fast-math", "-fdenormal-fp-math=ieee", "-D__HIP_PLATFORM_AMD__"]
+
+[[provides]]
+interface = "moe.route-stats/-/f64.hip"
+api       = "tf_ds_reap_pack, tf_ds_reap_ssq, tf_ds_reap_route, tf_ds_reap_norm"
+numeric   = "exact: f64 adds of the router's own bf16/f32 outputs; replies do not depend on it"
+regime    = "REAP_STATS=1 only, every REAP_EVERY-th committed token"
+
+[[requires]]
+module    = "kernel.strixfold_tp4.dsv41_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "compiled only inside the recipe dsv41-flash.strixfold-tp4 by the origin's build graph (its object is pinned there and came out as the deployed one); not in gate/compile"

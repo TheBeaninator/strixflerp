@@ -1,0 +1,52 @@
+id        = "tool.ciru_link.cli"
+kind      = "tool"
+summary   = "the ciru-strixlink command (cmd/ciru-strixlink/main.go) with go.mod and the Makefile: version, prerequisites, setup / rollback, doctor, serve / test, transport inspect / reconcile / endpoint / env, agent and ui, built as one static linux/amd64 binary (CGO_ENABLED=0)"
+why       = "the entry point that composes every internal package; go.mod (no dependencies, go 1.22) and the Makefile are what make the module set build on its own"
+notes     = "Interface tag: none. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = ["Makefile", "cmd/ciru-strixlink/main.go", "go.mod"]
+authors   = ["Ciru (ciru-ai)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "go"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.cli-ciru-strixlink/-/-"
+api       = "main (cmd/ciru-strixlink/main.go); make build | linux-amd64 | test | vet"
+numeric   = "n/a"
+regime    = "Linux x86-64"
+
+[[requires]]
+module    = "runtime.ciru_link.nhi_endpoint"
+
+[[requires]]
+module    = "runtime.ciru_link.usb4net"
+
+[[requires]]
+module    = "serve.ciru_link.console"
+
+[[requires]]
+module    = "tool.ciru_link.linktest"
+
+[[requires]]
+module    = "tool.ciru_link.prereq"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/tool.ciru_link.cli.json"
+reason    = "go: built by the Go gate, not gate/compile/run.py (python3 docs/harvest/harvest_ciru_link.py --go-gate on control-node CPU: go vet, the tests compiled without running, the static binary built)"

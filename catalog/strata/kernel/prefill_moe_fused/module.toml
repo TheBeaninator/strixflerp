@@ -1,0 +1,41 @@
+id        = "kernel.strata.prefill_moe_fused"
+kind      = "kernel"
+summary   = "#136: the prompt path's routed experts of a Q2_0 pack on Strata's own int8 matrix-core kernels with the token grouping on the GPU (moe_fused); opt-in STRATA_PF_FUSED=1, built into strata_mmq only with -DSTRATA_PREFILL_MMQ=ON on HIP, where the gfx11 WMMA kernels run. Its native-GGUF sibling moe_fused_iq.cu includes llama.cpp's ggml.h and is in kernel.strata.prefill_moe_ggml"
+why       = "the routed experts are most of a prompt chunk's weight traffic; these group the (token, k) pairs on the device and read each expert once, beside the catalogue's moe.experts-prefill providers"
+notes     = "Interface tags by file: moe_fused.cu moe.experts-prefill/gguf-q2_0/i8-f32. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = ["include/strata/prefill/moe_fused.hpp", "src/prefill/moe_fused.cu"]
+authors   = ["Niko1221", "Strata contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/prefill/moe_fused.cu"]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/src/prefill/moe_fused.cu" = ["-DGGML_USE_HIP=1"] }
+
+[[provides]]
+interface = "moe.experts-prefill/gguf-q2_0/i8-f32.strata-fused"
+api       = "strata::prefill::fused::group, quantize_act, experts (src/prefill/moe_fused.cu)"
+numeric   = "int8 activations a 32-value block with an FP32 scale, Q2_0 weights d_w (q - 1); integer dots, FP32 output"
+regime    = "prefill; gfx11 WMMA on HIP, sm_80+ on CUDA"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.prefill_moe_fused.json"

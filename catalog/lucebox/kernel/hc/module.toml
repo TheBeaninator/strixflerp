@@ -1,0 +1,72 @@
+id        = "kernel.lucebox.hc"
+kind      = "kernel"
+summary   = "DeepSeek4 hyper-connections as fused ggml ops (pre, post and mix modes on the f32 residual streams), the W8A8 Q8 activation tiles of the HC down projection, the stream mix with an optional q8_1 output, and the server-side DeepSeek4 HC kernels"
+why       = "A third DeepSeek-V4 hyper-connection implementation on gfx1151 beside kernel.gufo.ds4_hc and StrixFold, with a W8A8 down-projection path neither has"
+notes     = "INTERFACES.md section: 7. Hyper-connections. Interface tags: hc.mix/-/f32.lucebox; hc.mix/-/f32.lucebox-server. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-hc.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/hc-cn.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/hc-mix.cu, server/src/deepseek4/deepseek4_hc_cuda.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-hc.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-hc.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/hc-cn.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/hc-cn.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/hc-match.inc",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/hc-mix.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/hc-mix.cuh",
+  "server/src/deepseek4/deepseek4_hc_cuda.cu",
+  "server/src/deepseek4/deepseek4_hc_cuda.h",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0 AND MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-hc.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/hc-cn.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/hc-mix.cu",
+  "src/server/src/deepseek4/deepseek4_hc_cuda.cu",
+]
+includes  = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda",
+  "src/server/src/deepseek4",
+  "src/server/deps/llama.cpp/ggml/src",
+]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/src/deepseek4/deepseek4_hc_cuda.cu" = ["-DLUCE_BACKEND_HIP=1", "-DLUCE_HAVE_DRAFT_TOPK=1", "-DLUCE_HAVE_KVFLASH_FUSED_MASS=1"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/ds4-hc.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/hc-cn.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/hc-mix.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "hc.mix/-/f32.lucebox"
+api       = "GGML ops dispatched from ggml-cuda.cu: ds4-hc.cu (modes pre / post), hc-mix.cu, hc-cn.cu (ggml_backend_cuda_context, ggml_tensor)"
+numeric   = "f32 residual streams and mix; streams summed in order 0..hc-1 (hc-mix.cu header); q8 output as MMVQ quantize_q8_1 writes it"
+regime    = "DeepSeek V4 / V4.1 Flash (4 streams) and the qwen4exp family; decode and prefill"
+
+[[provides]]
+interface = "hc.mix/-/f32.lucebox-server"
+api       = "server/src/deepseek4/deepseek4_hc_cuda.h C entry points"
+numeric   = "f32; contract in deepseek4_hc_cuda.h"
+regime    = "DeepSeek V4 server graph"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.server_headers"
+
+[[requires]]
+module    = "kernel.lucebox.gemv"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.hc.json"

@@ -1,0 +1,115 @@
+id        = "runtime.maya_tp.ds4_engine"
+kind      = "runtime"
+summary   = "maya-ds4, DeepSeek-V4.1-Flash on Maya (ds4_model.cu, 22,390 lines; ds4_model.hpp, ds4_multi_attn, ds4_logprobs, ds4_evt, ds4_marks, ds4_watchdog, ds4_path_policy, ds4_prefill_stats, ds4_prompt_mem, ds4_markov_q8, ds4_ablate, ds4_chunk_policy)"
+why       = "the DeepSeek executor the TP2 DSpark path runs on both ranks; the reference for a DeepSeek-V4.1 TP2 recipe beside strixfold's TP4"
+notes     = "Interface tag: executor.dsv41-maya-tp/-/-. Not compiled alone: host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "src/ds4/ds4_ablate.hpp",
+  "src/ds4/ds4_chunk_policy.hpp",
+  "src/ds4/ds4_evt.hpp",
+  "src/ds4/ds4_logprobs.hpp",
+  "src/ds4/ds4_markov_q8.hpp",
+  "src/ds4/ds4_marks.hpp",
+  "src/ds4/ds4_model.cu",
+  "src/ds4/ds4_model.hpp",
+  "src/ds4/ds4_multi_attn.hpp",
+  "src/ds4/ds4_path_policy.hpp",
+  "src/ds4/ds4_prefill_stats.hpp",
+  "src/ds4/ds4_prompt_mem.hpp",
+  "src/ds4/ds4_watchdog.hpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.dsv41-maya-tp/-/-"
+api       = "ds4 Model (ds4_model.hpp)"
+numeric   = "per-kernel numerics"
+regime    = "one host or one rank of two"
+
+[[requires]]
+module    = "format.maya_tp.gguf_reader"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_gguf"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_iq"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_kernels"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_lt"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_pcie"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_vision"
+
+[[requires]]
+module    = "kernel.maya_tp.exl3"
+
+[[requires]]
+module    = "kernel.maya_tp.glm_fast"
+
+[[requires]]
+module    = "kernel.maya_tp.sampler"
+
+[[requires]]
+module    = "kernel.maya_tp.tp_kernels"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_cpu"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_store"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_control"
+
+[[requires]]
+module    = "runtime.maya_tp.ds4_tp_loader"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_tools"
+
+[[requires]]
+module    = "runtime.maya_tp.platform"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_comm_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone."

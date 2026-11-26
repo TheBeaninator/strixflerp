@@ -1,0 +1,44 @@
+id        = "kernel.radiance.halo_ple"
+kind      = "kernel"
+summary   = "Qwen4-Exp's Per-Layer Embedding: the hashed n-gram row ids on the device, the dot-product gate and the dilated depthwise convolution with its silu and residual add"
+why       = "Qwen4-Exp adds a hashed n-gram embedding at one layer; computing the row ids and the gate on the device keeps the table lookup off the host path of a decode step"
+notes     = "strixite reads n-gram rows through a row cache from NVMe or NFS (PLE wait 333 s of 51,600 engine seconds on worker B, max 4.7 s); radiance keeps the table in RAM (NOTICE: keptn42)."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = ["libhalo/halo_ngram_ids.hip", "libhalo/halo_ple_conv_bf16.hip", "libhalo/halo_ple_gate_bf16.hip"]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_ngram_ids.hip",
+  "src/libhalo/halo_ple_gate_bf16.hip",
+  "src/libhalo/halo_ple_conv_bf16.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "ple.inject/-/bf16.radiance"
+api       = "halo_ngram_ids, halo_ple_gate_bf16, halo_ple_conv_bf16"
+numeric   = "int64 wrapping hash; bf16 rows, fp32 accumulate"
+regime    = "one layer a step; the table itself is held in RAM by the engine"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

@@ -1,0 +1,42 @@
+id        = "runtime.ciru_link.tbstream_dmabuf"
+kind      = "runtime"
+summary   = "import of GPU-owned DMA-BUFs into thunderbolt_stream: a DMA-BUF import probe with the scatter-gather helpers in drivers/thunderbolt/stream-sg.h (0013) and imported DMA-BUF frame pools that the NHI rings transmit from and receive into (0014; TBSTREAM_ZC_IMPORT / TBSTREAM_ZC_ENABLE)"
+why       = "this is the step that takes the CPU out of the payload path: dedicated uncached HIP allocations exported with hipMemGetHandleForAddressRange(..., hipMemRangeHandleTypeDmaBufFd) become the USB4 controller's TX / RX pools, so GPU kernels pack and consume tensors in place. The shape would go under a flerp collective provider for two hosts joined by USB4 (an allreduce-p2p beside the RoCE ones)"
+notes     = "Interface tag: none (no catalogue interface imports a DMA-BUF into a link; the gpu side that fills these pools is the HIP bridge in the jcbtc GLM runtime package, not harvested, ORIGIN.toml [bridge]). stream-sg.h is GPL-2.0, the uapi additions GPL-2.0 WITH Linux-syscall-note. Applies after patches 0001-0012. Nothing was run on the pod beyond the compile and patch gates; no USB4 link exists between pod nodes."
+
+[provenance]
+origin    = "ciru_link"
+repo      = "https://github.com/ciru-ai/CiruStrixLink"
+commit    = "1c7f1ae89298c5be2ac4f916b589c77a10c903d8"
+branch    = "main (v0.3.3 line)"
+paths     = [
+  "kernel/linux-7.2.2/0013-thunderbolt-stream-Add-DMA-BUF-import-probe.patch",
+  "kernel/linux-7.2.2/0014-thunderbolt-stream-Add-imported-DMA-BUF-frame-pools.patch",
+]
+authors   = ["Jonathan Yates (jyatesdotdev/strix-rdma 06c1836)", "Jordan Yates (jyatesdotdev/strix-rdma 06c1836)"]
+modified  = false
+
+[licence]
+spdx      = "GPL-2.0-only AND GPL-2.0-only WITH Linux-syscall-note"
+
+[build]
+lang      = "patch"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.usb4-dmabuf-import/-/-"
+api       = "TBSTREAM_ZC_IMPORT (DMA-BUF fd per pool), TBSTREAM_ZC_ENABLE and the import probe ioctl (include/uapi/linux/thunderbolt-stream.h)"
+numeric   = "bytes only; pools must be dedicated, uncached device allocations"
+regime    = "per device one TX and one RX pool of whole 4-KiB frames"
+
+[[requires]]
+module    = "runtime.ciru_link.tbstream_zerocopy"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Linux kernel patch: not compiled here (no Linux 7.2.2 tree on the island); python3 docs/harvest/harvest_ciru_link.py --patch-gate checks every patch against SHA256SUMS and parses it with git apply --numstat (gate/results/compile/ciru_link.patches.json)"

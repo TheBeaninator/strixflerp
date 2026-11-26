@@ -1,0 +1,42 @@
+id        = "runtime.enginelab.gemma4_contracts"
+kind      = "runtime"
+summary   = "Gemma 4 numeric contracts (src/gemma4/contracts): 2 origin files under src/gemma4"
+why       = "its declared contracts; where it would go: beside the catalogue's verify.numerics-contract/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: verify.numerics-contract/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = ["src/gemma4/contracts/g4_identity.hpp", "src/gemma4/contracts/g4_types.hpp"]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/src", "src/src/gemma4/contracts"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "verify.numerics-contract-enginelab-gemma4/-/-"
+api       = "src/gemma4/contracts/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.model_data"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"

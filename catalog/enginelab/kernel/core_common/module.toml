@@ -1,0 +1,112 @@
+id        = "kernel.enginelab.core_common"
+kind      = "kernel"
+summary   = "the remaining shared-core headers: backend selection (backend.hpp, backend_hip.hpp), byte budget and range, GLU pair, glu / pointwise / round-store, ordered reduce, numeric partition, NVFP4 BF16 table, null perturbation, block-draft reference, GPU port and SHA-256, weight archive and certificate, weight decode, file source, load queue and slice loader, host lane and free memory, layer set, load cohort, looped layers, window state buffers, HIP host ready, range weight loader and weight uploader"
+why       = "the plumbing the shared kernels and loaders compile against; every other core module includes some of it; where it would go: beside the catalogue's kernel-abi.enginelab-core/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: kernel-abi.enginelab-core/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 4 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/core/backend.hpp",
+  "src/core/backend_hip.hpp",
+  "src/core/block_draft_reference.cpp",
+  "src/core/byte_budget.hpp",
+  "src/core/byte_range.hpp",
+  "src/core/glu_pair.hpp",
+  "src/core/gpu_port.cpp",
+  "src/core/gpu_port.hpp",
+  "src/core/hip_host_ready.hpp",
+  "src/core/hip_range_weight_loader.hpp",
+  "src/core/hip_weight_uploader.hpp",
+  "src/core/host_free_memory.hpp",
+  "src/core/host_lane.hpp",
+  "src/core/layer_set.hpp",
+  "src/core/load_cohort.hpp",
+  "src/core/looped_layers.hpp",
+  "src/core/null_perturb.hpp",
+  "src/core/numeric_partition.hpp",
+  "src/core/nvfp4_bf16_table.hpp",
+  "src/core/ordered_reduce.hpp",
+  "src/core/pointwise.hpp",
+  "src/core/round_store.hpp",
+  "src/core/sha256.cpp",
+  "src/core/sha256.hpp",
+  "src/core/weight_archive.cpp",
+  "src/core/weight_certificate.hpp",
+  "src/core/weight_decode.hpp",
+  "src/core/weight_file_source.hpp",
+  "src/core/weight_load_queue.hpp",
+  "src/core/weight_slice_loader.hpp",
+  "src/core/window_state_buffers.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/core/block_draft_reference.cpp",
+  "src/src/core/gpu_port.cpp",
+  "src/src/core/sha256.cpp",
+  "src/src/core/weight_archive.cpp",
+]
+includes  = ["src/src", "src/src/core"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kernel-abi.enginelab-core/-/-"
+api       = "strix::core headers"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.attn_contracts"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.core_gemv_rows"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.spec_block_draft"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

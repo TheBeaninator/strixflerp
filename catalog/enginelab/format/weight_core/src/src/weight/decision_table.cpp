@@ -1,0 +1,273 @@
+#include <strix/weight/resolve.hpp>
+#include <strix/weight/levers.hpp>
+#include <strix/weight/source.hpp>
+#include <cmath>
+#include <algorithm>
+#include <limits>
+#include <strix/serve/json.hpp>
+#include <charconv>
+#include <set>
+#include <vector>
+namespace strix::weight {
+Digest256 implementation_identity(std::span<const ArithmeticId> consumers) {
+    std::vector<ArithmeticId> ids(consumers.begin(), consumers.end());
+    const auto less = [](const ArithmeticId& a, const ArithmeticId& b) {
+        return a.name != b.name ? a.name < b.name : a.revision < b.revision;
+    };
+    std::ranges::sort(ids, less);
+    if (ids.empty() || std::ranges::any_of(ids, [](const ArithmeticId& id) { return id.name.empty() || !id.revision; }) ||
+        std::ranges::adjacent_find(ids, [](const ArithmeticId& a, const ArithmeticId& b) { return a.name == b.name; }) != ids.end())
+        return {};
+    std::vector<Byte> bytes;
+    const auto put = [&](std::string_view text) {
+        for (std::size_t i = 0; i < 8; ++i) bytes.push_back(static_cast<Byte>((text.size() >> (8 * i)) & 0xffU));
+        for (const char c : text) bytes.push_back(static_cast<Byte>(c));
+    };
+    put("strix.weight.implementation-identity@1");
+    for (const auto& id : ids) {
+        put(id.name);
+        for (std::size_t i = 0; i < 4; ++i) bytes.push_back(static_cast<Byte>((id.revision >> (8 * i)) & 0xffU));
+    }
+    return digest_bytes(bytes);
+}
+
+namespace {
+// The one scope rule of every lookup: a complete request scope, and a row of the same backend, device, toolkit,
+// regime, consumer identity and checkpoint.
+bool complete_scope(const WeightLoadScope& scope) {
+    return !scope.device_class.empty() && !scope.compiler_id.empty() && !scope.regime.empty() &&
+           !(scope.build == Digest256{}) && !(scope.checkpoint == Digest256{});
+}
+
+bool same_scope(const WeightLoadDecision& row, const WeightLoadScope& scope) {
+    const auto& s = row.scope;
+    return s.backend == scope.backend && s.device_class == scope.device_class && s.compiler_id == scope.compiler_id &&
+           s.regime == scope.regime && s.build == scope.build && s.checkpoint == scope.checkpoint;
+}
+
+// Same scope and a gate v2 PASS (the rows a FAST image may take).
+bool same_scope_pass(const WeightLoadDecision& row, const WeightLoadScope& scope) {
+    return same_scope(row, scope) && !(row.gate_v2_pass == Digest256{});
+}
+
+// Same scope and a row the tier may take: a gate v2 PASS, or for TURBO a row with its quality against BF16 stated
+// (a TURBO-only row; its gain is judged like any other timed row).
+bool same_scope_qualifies(const WeightLoadDecision& row, const WeightLoadScope& scope, profile::Name tier) {
+    return same_scope_pass(row, scope) ||
+           (tier == profile::Name::turbo && same_scope(row, scope) && !row.turbo_quality.empty());
+}
+
+// The one timing decision of the point and extent lookups. A row is timed when it carries a measured-gain digest; it
+// is a win only with a receipt and a speedup beyond its noise (the ladder rule).
+bool timed(const WeightLoadDecision& row) { return !(row.measured_gain == Digest256{}); }
+bool timed_win(const WeightLoadDecision& row) {
+    return timed(row) && !row.evidence.receipt.empty() && profile::ladder_gain(row.evidence.speedup, row.evidence.noise);
+}
+
+// The bands of `e` share a regime with the extent [first, last] (an unknown context or lane count, 0, overlaps every
+// band: the request may land anywhere).
+bool bands_overlap(const WeightLoadEvidence& e, WeightLoadExtent first, WeightLoadExtent last) {
+    if (e.min_context == 0U || e.min_lanes == 0U) return false;  // malformed bands never hold a regime
+    const auto max_context = e.max_context ? e.max_context : std::numeric_limits<std::uint32_t>::max();
+    const auto max_lanes = e.max_lanes ? e.max_lanes : std::numeric_limits<std::uint32_t>::max();
+    const bool contexts = first.context == 0U || last.context == 0U ||
+                          (first.context <= max_context && last.context >= e.min_context);
+    const bool lanes = first.lanes == 0U || last.lanes == 0U || (first.lanes <= max_lanes && last.lanes >= e.min_lanes);
+    return contexts && lanes;
+}
+
+// A timed row of the same policy, scope, tier and reference that is not a win and shares a regime with the extent:
+// it vetoes every win of that comparison over the extent (a measured losing sub-band inside a broad gain).
+template <class SamePolicy>
+const WeightLoadDecision* losing_overlap(SamePolicy same_policy, const WeightLoadScope& scope,
+                                         std::span<const WeightLoadDecision> decisions, const WeightLoadEvidence& win,
+                                         WeightLoadExtent first, WeightLoadExtent last) {
+    for (const auto& row : decisions)
+        if (same_policy(row.policy) && same_scope_qualifies(row, scope, win.tier) && row.evidence.tier == win.tier &&
+            row.evidence.reference == win.reference && timed(row) && !timed_win(row) &&
+            bands_overlap(row.evidence, first, last))
+            return &row;
+    return nullptr;
+}
+
+template <class SamePolicy>
+const WeightLoadDecision* find_decision(SamePolicy same_policy, const WeightLoadScope& scope,
+                                        std::span<const WeightLoadDecision> decisions, WeightLoadExtent extent) {
+    // A timed win selects storage only at a known point: an unknown context or lane count (0) may land anywhere, as
+    // in match_weight_load_evidence (the extent lookup), even under unbounded bands.
+    if (!complete_scope(scope) || extent.context == 0U || extent.lanes == 0U) return nullptr;
+    for (const auto& row : decisions)
+        if (same_policy(row.policy) && same_scope_pass(row, scope) && weight_load_gain_selects(row, extent) &&
+            timed_win(row) && !losing_overlap(same_policy, scope, decisions, row.evidence, extent, extent))
+            return &row;
+    return nullptr;
+}
+}  // namespace
+
+const WeightLoadDecision* find_weight_load_decision(Id policy, const WeightLoadScope& scope,
+                                                  std::span<const WeightLoadDecision> decisions, WeightLoadExtent extent) {
+    return find_decision([policy](Id stored) { return stored == policy; }, scope, decisions, extent);
+}
+
+const WeightLoadDecision* find_weight_load_decision(const WeightLoadPolicy& policy, const WeightLoadScope& scope,
+                                                  std::span<const WeightLoadDecision> decisions, WeightLoadExtent extent) {
+    return find_decision([&policy](Id stored) { return policy_has_id(policy, stored); }, scope, decisions, extent);
+}
+
+const WeightLoadDecision* find_weight_load_gate(const WeightLoadPolicy& policy, const WeightLoadScope& scope,
+                                                std::span<const WeightLoadDecision> decisions, WeightLoadExtent extent,
+                                                const WeightLoadDecision** outside_band, bool turbo) {
+    if (outside_band) *outside_band = nullptr;
+    if (!complete_scope(scope)) return nullptr;
+    const WeightLoadDecision* gate_only = nullptr;
+    const WeightLoadDecision* turbo_row = nullptr;
+    for (const auto& row : decisions) {
+        if (!policy_has_id(policy, row.policy) || !same_scope(row, scope)) continue;
+        const bool pass = !(row.gate_v2_pass == Digest256{});
+        const bool gains = weight_load_gain_covers_lanes(row.evidence, extent.lanes) &&
+                           !(row.measured_gain == Digest256{});
+        if (!pass && (!turbo || !gains || row.turbo_quality.empty())) continue;
+        if (!weight_load_context_in_band(row.evidence, extent.context)) {
+            if (outside_band && !*outside_band) *outside_band = &row;
+            continue;
+        }
+        if (pass && gains) return &row;
+        if (pass && !gate_only) gate_only = &row;
+        if (!pass && !turbo_row) turbo_row = &row;
+    }
+    return turbo_row ? turbo_row : gate_only;
+}
+
+void match_weight_load_evidence(const WeightLoadPolicy& policy, const WeightLoadScope& scope,
+                                std::span<const WeightLoadDecision> decisions, const WeightLoadRequest& request,
+                                FormatId reference, RegimeWeightLoad& entry) {
+    if (!complete_scope(scope)) return;
+    const auto last = request.extent;
+    const auto first = WeightLoadExtent{request.first.context ? request.first.context : last.context,
+                                        request.first.lanes ? request.first.lanes : last.lanes};
+    if (first.context > last.context || first.lanes > last.lanes) return;
+    const auto same_policy = [&policy](Id stored) { return policy_has_id(policy, stored); };
+    const WeightLoadDecision* blocking = nullptr;
+    for (const auto& row : decisions) {
+        const auto& e = row.evidence;
+        if (!same_policy(row.policy) || !same_scope_qualifies(row, scope, request.tier) ||
+            e.tier != request.tier || e.reference != reference) continue;
+        const bool contexts = weight_load_context_in_band(e, first.context) &&
+                              weight_load_context_in_band(e, last.context);
+        const bool lanes = weight_load_gain_covers_lanes(e, first.lanes) &&
+                           weight_load_gain_covers_lanes(e, last.lanes);
+        const bool row_timed = timed(row);
+        const bool faster = timed_win(row);
+        // A measured losing sub-band vetoes a covering win for the same fixed image (the point lookups share it).
+        if (!blocking && row_timed && !faster)
+            blocking = losing_overlap(same_policy, scope, std::span(&row, 1), e, first, last);
+        if (!contexts) {
+            if (!entry.outside_band) entry.outside_band = &row;
+            continue;
+        }
+        const bool selects = faster && lanes && first.context != 0U && first.lanes != 0U;
+        // A gate v2 PASS row is preferred to a TURBO-only row of the same regime.
+        const bool pass_over_turbo = selects && entry.faster && !(row.gate_v2_pass == Digest256{}) &&
+                                     entry.row->gate_v2_pass == Digest256{};
+        if (!entry.row || (selects && !entry.faster) || pass_over_turbo) {
+            entry.row = &row;
+            entry.gain_outside_lanes = row_timed && !lanes;
+        }
+        entry.faster |= selects;
+    }
+    if (blocking && entry.faster) {
+        entry.row = blocking;
+        entry.gain_outside_lanes = false;
+        entry.faster = false;
+    }
+}
+
+Status validate_qualification(const Qualification& q) {
+    if (q.receipt == Digest256{} || q.device_class.empty() || q.compiler_id.empty() || q.shape_regime.empty() ||
+        q.build_identity == Digest256{} || q.incumbent_implementation == Digest256{} ||
+        q.replacement_implementation == Digest256{} || !q.byte_equal || !q.faster || q.arithmetic.name.empty() || !q.arithmetic.revision)
+        return {Error::unqualified, "measured decision requires content receipt, compiler, device, regime and byte-equal faster evidence"};
+    return {Error::ok, {}};
+}
+Status estimate_cost(const Candidate& c, const Hardware& h, const Workload& w, double& us) {
+    us = std::numeric_limits<double>::quiet_NaN();
+    auto rational = [](Rational r) { return r.denominator ? static_cast<double>(r.numerator) / static_cast<double>(r.denominator) : 0.; };
+    if (!c.cost.packed_bytes_per_weight.denominator || !c.cost.image_bytes_per_weight.denominator)
+        return {Error::unqualified, "missing exact byte geometry"};
+    const double weights = static_cast<double>(w.n) * static_cast<double>(w.k);
+    const double bytes = weights * (w.warm_image ? rational(c.cost.image_bytes_per_weight) : rational(c.cost.packed_bytes_per_weight)) +
+        static_cast<double>(c.cost.fixed_metadata_bytes);
+    if (!std::isfinite(h.memory_bytes_per_second) || h.memory_bytes_per_second <= 0)
+        return {Error::unqualified, "missing memory throughput calibration"};
+    double seconds = bytes / h.memory_bytes_per_second;
+    const auto& d = c.cost.decode;
+    for (auto op : {d.bit_extracts,d.table_lookups,d.sign_applications,d.packs,d.int_to_float,d.float_multiplies,d.rounds,d.integer_dots})
+        if (!op.denominator) return {Error::unqualified, "missing exact decode/product operation counts"};
+    const double lookups = rational(d.table_lookups);
+    const double dots = rational(d.integer_dots);
+    const double valu = rational(d.bit_extracts) + rational(d.sign_applications) + rational(d.packs) +
+        rational(d.int_to_float) + rational(d.float_multiplies) + rational(d.rounds);
+    if ((lookups && (!std::isfinite(h.lookup_per_second) || h.lookup_per_second <= 0)) ||
+        (dots && (!std::isfinite(h.dot4_per_second) || h.dot4_per_second <= 0)) ||
+        (valu && (!std::isfinite(h.valu_ops_per_second) || h.valu_ops_per_second <= 0)))
+        return {Error::unqualified, "missing decode/product throughput calibration"};
+    double compute = (lookups ? lookups / h.lookup_per_second : 0) + (dots ? dots / h.dot4_per_second : 0) +
+        (valu ? valu / h.valu_ops_per_second : 0);
+    compute *= weights;
+    // Integer dots above already describe product work, and must not be counted twice.
+    if (!dots) {
+        const bool matrix = c.cost.operand == Scalar::f16 || c.cost.operand == Scalar::bf16 || c.cost.operand == Scalar::e4m3fn || c.cost.operand == Scalar::e2m1;
+        const double rate = matrix ? h.matrix_ops_per_second : h.valu_ops_per_second;
+        if (!std::isfinite(rate) || rate <= 0) return {Error::unqualified, "missing product throughput calibration"};
+        compute += 2. * weights * static_cast<double>(w.m) / rate;
+    } else if (w.m > 1) compute += weights * dots * static_cast<double>(w.m - 1) / h.dot4_per_second;
+    seconds = h.valu_matrix_serialize ? seconds + compute : std::max(seconds, compute);
+    us = seconds * 1.e6;
+    if (!std::isfinite(us)) return {Error::malformed, "cost overflow"};
+    return {Error::ok, {}};
+}
+Status import_decisions(std::string_view json, DecisionTable& out) {
+    if (json.size()>1024*1024) return {Error::malformed,"decision table exceeds bounded metadata limit"};
+    try {
+        const auto root=strix::serve::parse_json_unique(json);
+        const auto* schema=root.find("schema"); const auto* rows=root.find("decisions");
+        if (!schema || schema->as_string()!="wfmt.decisions@2" || !rows || !rows->is_array())
+            return {Error::malformed,"unknown decision schema"};
+        for (const auto& [key,value]:root.as_object()) { (void)value; if (key!="schema" && key!="decisions") return {Error::malformed,"unknown decision table key"}; }
+        DecisionTable table; std::set<std::string> keys;
+        for (const auto& row:rows->as_array()) {
+            auto field=[&](const char* name) -> const strix::serve::Json& { const auto* v=row.find(name); if (!v) throw std::runtime_error(std::string("missing ")+name); return *v; };
+            const std::set<std::string> allowed{"receipt","build_identity","device_class","compiler_id","compiler_flags","source_commit","shape_regime","incumbent","replacement","arithmetic","byte_equal","faster","quality_passed"};
+            for (const auto& [key,value]:row.as_object()) { (void)value; if (!allowed.contains(key)) throw std::runtime_error("unknown decision semantic key"); }
+            Qualification q{};
+            auto hex=[](char c) -> int { if(c>='0' && c<='9') return c-'0'; if(c>='a' && c<='f') return c-'a'+10; if(c>='A' && c<='F') return c-'A'+10; return -1; };
+            auto digest=[&](const char* name) {
+                Digest256 result{}; const auto& value=field(name).as_string();
+                if(value.size()!=64) throw std::runtime_error("invalid content digest length");
+                for(std::size_t i=0;i<32;++i) { int a=hex(value[2*i]),b=hex(value[2*i+1]); if(a<0 || b<0) throw std::runtime_error("invalid content digest hex"); result.bytes[i]=static_cast<std::uint8_t>(a*16+b); }
+                return result;
+            };
+            q.receipt=digest("receipt"); q.build_identity=digest("build_identity");
+            q.incumbent_implementation=digest("incumbent"); q.replacement_implementation=digest("replacement");
+            const auto& commit=field("source_commit").as_string();
+            if ((commit.size()!=40 && commit.size()!=64) || !std::all_of(commit.begin(),commit.end(),[&](char c){return hex(c)>=0;})) throw std::runtime_error("missing source commit identity");
+            const auto& flags=field("compiler_flags").as_string(); if(flags.empty()) throw std::runtime_error("missing compiler flags");
+            q.device_class=field("device_class").as_string(); q.compiler_id=field("compiler_id").as_string()+"|"+flags;
+            q.shape_regime=field("shape_regime").as_string();
+            const auto& arithmetic=field("arithmetic").as_string(); const auto at=arithmetic.rfind('@');
+            if(at==std::string::npos || at==0) throw std::runtime_error("unversioned arithmetic id");
+            std::uint32_t revision=0; const auto parsed=std::from_chars(arithmetic.data()+at+1,arithmetic.data()+arithmetic.size(),revision);
+            if(parsed.ec!=std::errc{} || parsed.ptr!=arithmetic.data()+arithmetic.size() || !revision) throw std::runtime_error("invalid arithmetic revision");
+            table.owned_arithmetic.push_back(std::make_shared<const std::string>(arithmetic.substr(0,at)));
+            q.arithmetic={*table.owned_arithmetic.back(),revision};
+            q.byte_equal=field("byte_equal").as_bool(); q.faster=field("faster").as_bool(); q.quality_passed=field("quality_passed").as_bool();
+            auto status=validate_qualification(q); if(!status) return status;
+            const auto key=q.device_class+"/"+q.compiler_id+"/"+q.shape_regime+"/"+field("build_identity").as_string()+"/"+field("incumbent").as_string()+"/"+field("replacement").as_string()+"/"+serialize_id(q.arithmetic);
+            if(!keys.insert(key).second) throw std::runtime_error("duplicate measured decision");
+            table.entries.push_back(q); table.source_commits.push_back(commit); table.compiler_flags.push_back(flags);
+        }
+        out=std::move(table); return {Error::ok,{}};
+    } catch(const std::exception& e) { return {Error::malformed,e.what()}; }
+}
+
+}

@@ -1,0 +1,133 @@
+id        = "serve.enginelab.serve_session"
+kind      = "serve"
+summary   = "serve sessions and runners: engine, run, serve config, deployment, session runtime and reservation, serve session, serial session owner and generation CLI, resident plan and session, native handoff, startup phases and warm-up, aux lane and units, file key"
+why       = "the engine-neutral serving runner every model plugs into; where it would go: beside the catalogue's serve.engine/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: serve.engine/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 10 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/serve/aux_lane.hpp",
+  "include/strix/serve/aux_units.hpp",
+  "include/strix/serve/deployment.hpp",
+  "include/strix/serve/engine.hpp",
+  "include/strix/serve/native_handoff.hpp",
+  "include/strix/serve/resident_plan.hpp",
+  "include/strix/serve/resident_session.hpp",
+  "include/strix/serve/run.hpp",
+  "include/strix/serve/serial_generation_cli.hpp",
+  "include/strix/serve/serial_session_owner.hpp",
+  "include/strix/serve/serve_config.hpp",
+  "include/strix/serve/session_reservation.hpp",
+  "include/strix/serve/session_runtime.hpp",
+  "include/strix/serve/startup_phases.hpp",
+  "include/strix/serve/startup_warmup.hpp",
+  "src/serve/aux_lane.cpp",
+  "src/serve/deployment.cpp",
+  "src/serve/engine.cpp",
+  "src/serve/file_key.cpp",
+  "src/serve/run.cpp",
+  "src/serve/serial_generation_cli.cpp",
+  "src/serve/serial_session_owner.cpp",
+  "src/serve/serve_config.cpp",
+  "src/serve/serve_session.cpp",
+  "src/serve/session_runtime.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/serve/aux_lane.cpp",
+  "src/src/serve/deployment.cpp",
+  "src/src/serve/engine.cpp",
+  "src/src/serve/file_key.cpp",
+  "src/src/serve/run.cpp",
+  "src/src/serve/serial_generation_cli.cpp",
+  "src/src/serve/serial_session_owner.cpp",
+  "src/src/serve/serve_config.cpp",
+  "src/src/serve/serve_session.cpp",
+  "src/src/serve/session_runtime.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.engine-enginelab/-/-"
+api       = "strix::serve engine.hpp, resident_session.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.core_common"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.token_sampling"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[[requires]]
+module    = "runtime.enginelab.session_engine"
+
+[[requires]]
+module    = "runtime.enginelab.session_kv"
+
+[[requires]]
+module    = "runtime.enginelab.spec_core"
+
+[[requires]]
+module    = "runtime.enginelab.spec_wide_window"
+
+[[requires]]
+module    = "serve.enginelab.serve_chat"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_pflash"
+
+[[requires]]
+module    = "serve.enginelab.serve_prefix"
+
+[[requires]]
+module    = "serve.enginelab.serve_tokenizer"
+
+[[requires]]
+module    = "tool.enginelab.cli"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

@@ -1,0 +1,37 @@
+id        = "kernel.kyojin.kda_inter"
+kind      = "kernel"
+summary   = "KDA inter-solve off-diagonal dots (kdaC7): one program per (head, 64-row chunk), full-cache-line reads, gated operands a = x * exp2(g_x - g_n), bitwise equal to vendor/fla/kda_inter_split.py's inter_off_kernel"
+why       = "Kimi delta attention chunked prefill. Where the shape would go: a mixer.kda/-/f32 provider beside kernel.ds4.glmtp_rocm_glm, kernel.ds4.k53flash_rocm_glm, kernel.ds4.k53perf_rocm_glm and 4 more, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: mixer.kda/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (kda_inter.cu, kda_inter.cuh), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/kda_inter.cu", "exllamav3/exllamav3_ext/kda_inter.cuh"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/kda_inter.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "mixer.kda/-/f32.kyojin-inter"
+api       = "kda_inter.cu, kda_inter.cuh; kernels: kda_inter_off_kernel"
+numeric   = "bf16 operands, fp32 dots"
+regime    = "prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: kda_inter.cu"

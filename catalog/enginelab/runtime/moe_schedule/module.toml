@@ -1,0 +1,76 @@
+id        = "runtime.enginelab.moe_schedule"
+kind      = "runtime"
+summary   = "MoE schedules: layer runtime and schedule, plan, token cost backend and schedule, fork-join arena, deferred MoE status, expert stream epoch, route receipt and the wave router contract"
+why       = "scheduling routed experts across lanes and windows; where it would go: a new strixflerp interface moe.schedule/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, moe.schedule/-/-. 5 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/deferred_moe_status.hpp",
+  "include/strix/expert_stream_epoch.hpp",
+  "include/strix/moe_fork_join_arena.hpp",
+  "include/strix/moe_layer_runtime.hpp",
+  "include/strix/moe_layer_schedule.hpp",
+  "include/strix/moe_plan.hpp",
+  "include/strix/moe_token_cost_backend.hpp",
+  "include/strix/moe_token_schedule.hpp",
+  "include/strix/route_receipt.hpp",
+  "include/strix/wave_router_contract.hpp",
+  "src/moe_fork_join_arena.cpp",
+  "src/moe_layer_runtime.cpp",
+  "src/moe_layer_schedule.cpp",
+  "src/moe_plan.cpp",
+  "src/moe_token_cost_backend.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/moe_fork_join_arena.cpp",
+  "src/src/moe_layer_runtime.cpp",
+  "src/src/moe_layer_schedule.cpp",
+  "src/src/moe_plan.cpp",
+  "src/src/moe_token_cost_backend.cpp",
+]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.schedule/-/-"
+api       = "src/moe_layer_schedule.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.speculation_control"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

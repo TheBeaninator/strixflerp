@@ -1,0 +1,47 @@
+id        = "kernel.kyojin.sp_mla"
+kind      = "kernel"
+summary   = "Sparse MLA prefill kernel for gfx1151 (WMMA f16, wave32): one workgroup of 16 waves = one query x 64 heads over latent rows [N, 576]; visible keys = selected groups + the own open group; address math in sp_idx.h shared with a guard-page host test"
+why       = "GLM-5.3-Flash / DSA sparse MLA prefill as a standalone library. Where the shape would go: an attn.sparse-sink/kv-latent/bf16 provider beside kernel.radiance.halo_glm_family, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: attn.sparse-sink/kv-latent/bf16. Against the base turboderp-org/exllamav3 8c593e4e: 8 added (build.sh, host_guard_test.cpp, mb_hip.py, occ.cu, sp_hip.py, sp_idx.h) ..., 0 changed. No timing was taken on the pod. occ.cu is an occupancy probe that includes sp_mla.cu (a main() asking hipOccupancyMaxActiveBlocksPerMultiprocessor for sp_mla<4, true>); it no longer matches the template parameters of sp_mla in this tree (the gate run of 22:59Z: address of overloaded function sp_mla does not match), so it rides here as a file, not a source."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "hipsp/build.sh",
+  "hipsp/host_guard_test.cpp",
+  "hipsp/mb_hip.py",
+  "hipsp/occ.cu",
+  "hipsp/sp_hip.py",
+  "hipsp/sp_idx.h",
+  "hipsp/sp_mla.cu",
+  "hipsp/test_sp_hip.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/hipsp/sp_mla.cu"]
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = ["-x", "hip", "-std=c++17", "-O3", "-fPIC", "-c"]
+
+[[provides]]
+interface = "attn.sparse-sink/kv-latent/bf16.kyojin-sp-mla"
+api       = "build.sh, host_guard_test.cpp, mb_hip.py, occ.cu, sp_hip.py, sp_idx.h, sp_mla.cu, test_sp_hip.py"
+numeric   = "fp16 WMMA, fp32 softmax, saturated fp16 out"
+regime    = "prefill"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.kyojin.sp_mla.json"

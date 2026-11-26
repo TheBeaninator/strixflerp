@@ -1,0 +1,36 @@
+id        = "runtime.vllm_strix.cgfusion_soft"
+kind      = "runtime"
+summary   = "makes the DS4 AMD path's CUDA-graph fusion check soft: models/deepseek_v4/amd/rocm.py warns instead of raising when graph fusion is unavailable"
+why       = "a hard failure in the fusion probe blocked DS4 boots on gfx1151 (PATCHES 35); soft-failing kept eager and piecewise modes available"
+notes     = "Interface tag: none. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/cgfusion-soft.py"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "runtime.platform-gate-ds4-cgfusion/-/-"
+api       = "patch script over models/deepseek_v4/amd/rocm.py"
+numeric   = "n/a"
+regime    = "boot"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

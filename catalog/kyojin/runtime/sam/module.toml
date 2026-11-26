@@ -1,0 +1,40 @@
+id        = "runtime.kyojin.sam"
+kind      = "runtime"
+summary   = "Suffix automaton over the token history (BC_SAM): incremental extend and longest-match lookup, the prompt-lookup draft source of speculative decoding"
+why       = "n-gram / prompt-lookup drafting in C++. Where the shape would go: a draft.ddtree/-/f32 provider beside kernel.hipfire.speculation, through the host code behind the flerp ABI"
+notes     = "Interface tag: draft.ddtree/-/f32. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 3 changed (sam.cpp, sam.h, sam_bc.h). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/sam.cpp", "exllamav3/exllamav3_ext/sam.h", "exllamav3/exllamav3_ext/sam_bc.h"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/exllamav3/exllamav3_ext/sam.cpp"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "draft.ddtree/-/f32.kyojin-sam"
+api       = "sam.cpp, sam.h, sam_bc.h"
+numeric   = "n/a"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: sam.cpp"

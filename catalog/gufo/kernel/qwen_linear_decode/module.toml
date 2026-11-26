@@ -72,8 +72,9 @@ module    = "kernel.gufo.core_headers"
 interface = "format.device-view/gguf-kquant/-"
 
 [gate]
-parity    = "origin-test:tests/kernels"
+parity    = "flerp:gate/interface/gguf-gemv.toml"
 bench     = "none"
-status    = "builds"
+status    = "parity"
 compile   = "standalone"
-evidence  = "gate/results/compile/kernel.gufo.qwen_linear_decode.json"
+evidence  = "gate/results/interface/gguf-gemv/result.json"
+reason    = "parity: interface gate gguf-gemv on control-node (result.json, provider gufo: pass; the gate overall pass=True); compile gate evidence gate/results/compile/kernel.gufo.qwen_linear_decode.json"

@@ -1,0 +1,68 @@
+id        = "runtime.maya_tp.tp_rdma"
+kind      = "runtime"
+summary   = "TP2 delta: the two-host RDMA transport over RoCE v2 RC queue pairs on Thunderbolt usb4_rdma (src/net/verbs.cpp, 1,632 lines, gufo's Ibrverbs ported to strata::net): one RDMA write with immediate data per exchange into the peer's rotating fixed-address receive window (hipHostRegister-mapped so the GPU reads it), queued exchanges completed by a flag the NIC raises, a TCP bootstrap for QP metadata and peer-loss detection, RoCE v2 GID choice by the netdev's IPv4 address (rdma_gid) and control-socket state classification"
+why       = "the transport the card is about: ~37 Gb/s and ~6 us tiny-write round trips between two Strix Halo hosts with no switch; it is the shape for a strixflerp two-node rail transport beside gufo's tp_verbs, and the window / immediate-data design carries to the pod's 100 GbE RoCE rail"
+notes     = "Interface tag: transport.verbs-maya-tp/-/-, collective.exchange-partial/-/f32.maya-tp. Kin: runtime.gufo.tp_verbs (the source of the port; wire structs GUFT v7 / GUCH v5 / GURD byte-compatible with gufo). Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/net/rdma_gid.hpp",
+  "include/strata/net/verbs.hpp",
+  "src/net/control_socket_state.hpp",
+  "src/net/rdma_gid.cpp",
+  "src/net/verbs.cpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/net/rdma_gid.cpp", "src/src/net/verbs.cpp"]
+includes  = ["src/include", "src/src/net"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+options   = [
+  "-x",
+  "c++",
+  "-std=c++20",
+  "-O3",
+  "-DNDEBUG",
+  "-fPIC",
+  "-D__HIP_PLATFORM_AMD__=1",
+  "-include",
+  "format",
+  "-c",
+]
+
+[[provides]]
+interface = "transport.verbs-maya-tp/-/-"
+api       = "strata::net::IbrverbsCommunicator (include/strata/net/verbs.hpp), SelectRoceV2Gid"
+numeric   = "byte moves only; the peer sums"
+regime    = "two ranks, RoCE v2 RC"
+
+[[provides]]
+interface = "collective.exchange-partial/-/f32.maya-tp"
+api       = "Communicator::ExchangePartial / QueuePartial over RDMA windows"
+numeric   = "FP32 partials, commutative two-operand sum on both ranks"
+regime    = "two ranks"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_comm_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.maya_tp.tp_rdma.json"

@@ -1,0 +1,50 @@
+id        = "kernel.strixfold_tp4.sparse_attn"
+kind      = "kernel"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for kernel.strixfold.sparse_attn: 1 file(s) of kernel.strixfold.sparse_attn (aux_attn.hip), laid over the f64b5ff files"
+why       = "kernel.strixfold.sparse_attn is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over kernel.strixfold.sparse_attn without touching it or the TP2 recipes"
+notes     = "Overlay of kernel.strixfold.sparse_attn (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 58862dad76. Latest commits: b3ce8682 dsv41 HIP: aux.sparse_attn at 16 heads a rank for the TP4 split (pod card 58862dad76)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/aux_attn.hip",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on kernel.strixfold.sparse_attn (origin strixfold, f64b5ff): 1 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-bf16/bf16.tp4"
+api       = "tf_ds_aux_sparse_attn_h32_d512"
+numeric   = "scores fp32, online softmax over 16-key chunks, p rounded to bf16 before the PV product, acc fp32; split mode writes (m, l, acc) partials in _sparse_attn_part layout, one-pass writes bf16(acc / (l + exp(sink - m))); contract sparse_attn_sink_bf16p"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound; also prompt path one-pass"
+
+[[provides]]
+interface = "attn.sparse-sink/kv-fp4-e2m1/bf16.tp4"
+api       = "tf_ds_aux_sparse_attn_h32_d512"
+numeric   = "as kv-bf16, keys decoded exactly from packed FP4 (E2M1 codes, E4M3 scale per 16 elements)"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.strixfold.sparse_attn"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

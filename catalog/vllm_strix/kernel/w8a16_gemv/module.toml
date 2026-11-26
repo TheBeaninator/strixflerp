@@ -1,0 +1,55 @@
+id        = "kernel.vllm_strix.w8a16_gemv"
+kind      = "kernel"
+summary   = "skinny decode GEMVs for gfx1151 in one HIP unit (one wave an output row, VEC x 16 contiguous bytes a lane): W8A16 (int8 weights, one fp32 scale per 128 K, bf16 in / out) and its dequant, block-scaled FP8 (128x128, ue8m0) GEMV and dequant, BF16-weight and FP32-weight GEMVs with fp32 output for router gates, and vsh_sigmoid_bias_topk, the fused sigmoid + correction bias + deterministic top-8 + renormalise router"
+why       = "the GLM AWQ checkpoint keeps ~49 ms a step of BF16 linears and DeepSeek-V4 its block-FP8 linears; on gfx1151 hipBLASLt and the Triton block GEMM run those at 3-55 GB/s for M <= 8, and these GEMVs replace them (PATCHES 28.6, 30-32, 36). A W8A16 / FP8 decode GEMV with a router fused in is the small-M linear strixflerp lacks for BF16 and FP8 checkpoints"
+notes     = "Interface tag: linear.decode (also moe.gate-logits and moe.router). The prebuilt libvsh_w8a16.so is not harvested. The load-time requantiser and hooks are runtime.vllm_strix.w8a16_requant, gate_bf16, gate_lmhead, fused_router, fp8_gemv_hook. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = ["container/patches/vsh_w8a16.hip"]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/container/patches/vsh_w8a16.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/w8a16-g128/bf16"
+api       = "extern \"C\" vsh_w8a16_gemv, vsh_w8_dequant"
+numeric   = "int8 symmetric weights, fp32 scale per 128 K, fp32 accumulate, bf16 out"
+regime    = "M <= 8 rows"
+
+[[provides]]
+interface = "linear.decode/fp8-block128/bf16"
+api       = "extern \"C\" vsh_fp8_gemv, vsh_fp8_dequant (multi-row variants by argument)"
+numeric   = "e4m3 weights, ue8m0 128x128 block scales, fp32 accumulate"
+regime    = "decode sizes, K up to 12288 (DSpark drafter fc)"
+
+[[provides]]
+interface = "moe.gate-logits/bf16/bf16-f32"
+api       = "extern \"C\" vsh_w16_gemv, vsh_w32_gemv"
+numeric   = "bf16 or fp32 weights, fp32 accumulate and output (rel err ~2e-6 for w32)"
+regime    = "router gates 288 x 4096 and 256 x 4096, M <= 8"
+
+[[provides]]
+interface = "moe.router/-/f32.sigmoid-bias-topk"
+api       = "extern \"C\" vsh_sigmoid_bias_topk"
+numeric   = "sigmoid, + correction bias, top-k by biased value desc then index asc, renormalised unbiased weights"
+regime    = "GLM-5.3 top-8 of 288"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.vllm_strix.w8a16_gemv.json"

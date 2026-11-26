@@ -1,0 +1,53 @@
+id        = "kernel.maya_tp.ds4_gguf"
+kind      = "kernel"
+summary   = "a DeepSeek-V4.1 GGUF's BF16 matrices and MXFP4 experts on the device (ds4_gguf.cu / .cuh, unsloth's DeepSeek-V4.1-Flash-1017 GGUFs)"
+why       = "the dense side of maya-ds4's GGUF path; the TP2 dense loader splits these matrices by output or input"
+notes     = "Interface tag: linear.decode/bf16+mxfp4/f32.maya-tp-ds4. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = ["src/ds4/ds4_gguf.cu", "src/ds4/ds4_gguf.cuh"]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/ds4/ds4_gguf.cu"]
+includes  = ["src/src/ds4"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/bf16+mxfp4/f32.maya-tp-ds4"
+api       = "ds4 GGUF launches (ds4_gguf.cuh)"
+numeric   = "BF16 / MXFP4"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_iq"
+
+[[requires]]
+module    = "kernel.maya_tp.ds4_kernels"
+
+[[requires]]
+module    = "kernel.maya_tp.exl3"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.ds4_gguf.json"

@@ -1,0 +1,67 @@
+id        = "kernel.lucebox.gemv"
+kind      = "kernel"
+summary   = "small-M GEMV / GEMM kernels: IQ4_NL, Q8 / F16 and W8A8 tiles staged in LDS with a v_perm LUT decode, small-M helpers, and an MXFP8 GEMV"
+why       = "Decode GEMV is the largest slice of decode time; these are new providers to set against kernel.strixite.linear_q8 and the hipfire GEMVs"
+notes     = "INTERFACES.md section: 1. Decode GEMV. Interface tags: linear.decode/gguf-iquant+q8/bf16.lucebox-mmb; linear.decode/mxfp8/f32.lucebox. Units: server/deps/llama.cpp/ggml/src/ggml-cuda/mmb.cu, server/deps/llama.cpp/ggml/src/ggml-cuda/mxfp8.cu. Licence: ggml-side files MIT (server/deps/llama.cpp/LICENSE, in kernel.lucebox.ggml_headers), server-side Apache-2.0 (LICENSE). The ggml units are ggml backend ops (ggml_backend_cuda_context, ggml_tensor) dispatched from ggml-cuda.cu, which is not harvested; a strixflerp recipe needs an adapter to call them. Nothing was run on a GPU or timed on the pod."
+
+[provenance]
+origin    = "lucebox"
+repo      = "https://github.com/Luce-Org/lucebox"
+commit    = "a70ab3ca25a945d97580043230dc33984aaf1fb2"
+branch    = "main"
+paths     = [
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mmb-q8f16.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mmb-quant.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mmb-small-m.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mmb-w8a8.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mmb.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mmb.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mxfp8.cu",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/mxfp8.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/small-m-gemm.cuh",
+  "server/deps/llama.cpp/ggml/src/ggml-cuda/small-m-qgemm.cuh",
+]
+authors   = ["Luce-Org", "The ggml authors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/mmb.cu",
+  "src/server/deps/llama.cpp/ggml/src/ggml-cuda/mxfp8.cu",
+]
+includes  = ["src/server/deps/llama.cpp/ggml/src/ggml-cuda", "src/server/deps/llama.cpp/ggml/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+source_options = { "src/server/deps/llama.cpp/ggml/src/ggml-cuda/mmb.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"], "src/server/deps/llama.cpp/ggml/src/ggml-cuda/mxfp8.cu" = ["-DcublasSgemmStridedBatched=hipblasSgemmStridedBatched", "-DcudaStreamCaptureStatus=hipStreamCaptureStatus", "-DcudaStreamCaptureStatusNone=hipStreamCaptureStatusNone", "-DcudaStreamIsCapturing=hipStreamIsCapturing"] }
+
+[[provides]]
+interface = "linear.decode/gguf-iquant+q8/bf16.lucebox-mmb"
+api       = "GGML ops in mmb.cu"
+numeric   = "IQ4_NL decoded to bf16 in LDS, LUT applied with v_perm_b32 (file header)"
+regime    = "decode and small M"
+
+[[provides]]
+interface = "linear.decode/mxfp8/f32.lucebox"
+api       = "GGML op in mxfp8.cu"
+numeric   = "one coalesced 256-byte code read a block, scale group of 32 (file header)"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.lucebox.ggml_headers"
+
+[[requires]]
+module    = "kernel.lucebox.rocmfp"
+
+[[requires]]
+module    = "kernel.lucebox.kvquant"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.lucebox.gemv.json"

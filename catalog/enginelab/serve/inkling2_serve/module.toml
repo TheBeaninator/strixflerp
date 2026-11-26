@@ -1,0 +1,68 @@
+id        = "serve.enginelab.inkling2_serve"
+kind      = "serve"
+summary   = "Inkling 2 Mini serving (device, HIP, install, options): 6 origin files under src/inkling2"
+why       = "strix-serve for Inkling 2; where it would go: beside the catalogue's serve.engine/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: serve.engine/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 1 HIP unit(s) compiled standalone by the gate; 2 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/inkling2/inkling2_mini_serve.cpp",
+  "src/inkling2/inkling2_mini_serve.hpp",
+  "src/inkling2/inkling2_mini_serve_device.hpp",
+  "src/inkling2/inkling2_mini_serve_hip.hip",
+  "src/inkling2/inkling2_mini_serve_install.cpp",
+  "src/inkling2/inkling2_mini_serve_options.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/inkling2/inkling2_mini_serve_hip.hip"]
+includes  = ["src/src", "src/src/inkling2"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "serve.engine-enginelab-inkling2/-/-"
+api       = "src/inkling2/inkling2_mini_serve*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_engine"
+
+[[requires]]
+module    = "executor.enginelab.inkling2_resident"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "serve.enginelab.serve_chat"
+
+[[requires]]
+module    = "serve.enginelab.serve_cohort"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[[requires]]
+module    = "serve.enginelab.serve_tokenizer"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/serve.enginelab.inkling2_serve.json"

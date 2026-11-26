@@ -1,0 +1,63 @@
+id        = "executor.enginelab.glm_kvshard"
+kind      = "executor"
+summary   = "GLM KV sharding: shard, dump, exchange, layout and math: 6 origin files under src/glm"
+why       = "two ranks each hold half the KV by position; where it would go: a new strixflerp interface kvcache.shard/-/bf16.enginelab-glm, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kvcache.shard/-/bf16.enginelab-glm. 1 HIP unit(s) compiled standalone by the gate. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/glm/engine/glm_kvshard.hip",
+  "src/glm/engine/glm_kvshard.hpp",
+  "src/glm/engine/glm_kvshard_dump.hpp",
+  "src/glm/engine/glm_kvshard_exchange.hpp",
+  "src/glm/engine/glm_kvshard_layout.hpp",
+  "src/glm/engine/glm_kvshard_math.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/glm/engine/glm_kvshard.hip"]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kvcache.shard/-/bf16.enginelab-glm"
+api       = "src/glm/engine/glm_kvshard*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.glm_engine"
+
+[[requires]]
+module    = "executor.enginelab.glm_prefill"
+
+[[requires]]
+module    = "kernel.enginelab.glm_attn"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.glm_xfer"
+
+[[requires]]
+module    = "runtime.enginelab.xport_kvshard"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.glm_kvshard.json"
+reason    = "compile gate: fail: 1 of 1 units failed; first: src/src/glm/engine/glm_kvshard.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/runtime/glm_xfer/src/src/glm/xfer/glm_xfer.hpp:5:10: error: '../../xport/channel_hip.hpp' file not found, did you mean 'xport/channel_hip.hpp'?"

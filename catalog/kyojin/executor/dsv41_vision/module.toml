@@ -1,0 +1,36 @@
+id        = "executor.kyojin.dsv41_vision"
+kind      = "executor"
+summary   = "DS4.1 vision tower (image patches to embeddings for the DS4.1 trunk) and its tensor spec"
+why       = "DS4.1 images. Where the shape would go: a vision.tower/deepseek-v4.1/bf16 provider beside executor.strixfold.dsv41_vision, executor.strixfold_tp4.dsv41_vision, kernel.strixfold_tp4.vision and 1 more, through a port of the python / Triton logic"
+notes     = "Interface tag: vision.tower/deepseek-v4.1/bf16. Against the base turboderp-org/exllamav3 8c593e4e: 2 added (vision.py, vision_spec.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/dsv41/vision.py", "exllamav3/dsv41/vision_spec.py"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "vision.tower/deepseek-v4.1/bf16.kyojin"
+api       = "vision.py, vision_spec.py"
+numeric   = "bf16"
+regime    = "gfx1151 serving path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

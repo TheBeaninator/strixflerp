@@ -1,0 +1,40 @@
+id        = "kernel.fastasfuck.logits_bias"
+kind      = "kernel"
+summary   = "fastasfuck's OpenAI logit_bias applied in place to the device logits"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its logits_bias kernel file so a timing card can set it against kernel.strixite.logits_bias, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/logits_bias.hip logits.bias/- (byte-identical to kernel.strixite.logits_bias kernels/logits_bias.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/logits_bias.hip", "kernels/logits_bias.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/logits_bias.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "logits.bias/-/-"
+api       = "strix::kernels::logits_bias (kernels/logits_bias.hpp)"
+numeric   = "the same source as kernel.strixite.logits_bias (byte-identical to kernel.strixite.logits_bias kernels/logits_bias.hip at d19945e), so its arithmetic: one fp32 add per entry"
+regime    = "as kernel.strixite.logits_bias: one thread per entry; entries must not collide"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.logits_bias.json"

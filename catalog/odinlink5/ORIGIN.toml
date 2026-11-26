@@ -1,0 +1,45 @@
+# OdinLink-Five: a Thunderbolt 5 / USB4 host-to-host transport for Linux on the stock thunderbolt core: a kernel driver
+# with a stream API on /dev/odl_tb5_N, its userspace library, RCCL and NCCL net plugins, a libibverbs provider and
+# tools. The fabric under vllm-strix-halo (catalog/vllm_strix; card ORIGIN-VLLM-STRIX d2a7b91dec).
+name      = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+version   = "main HEAD 2026-11-04 (Merge pull request #37 from davidcanar/multi-link-source-xdomain); CMake project version 0.1.0. vllm-strix-halo pins 4534f58 plus odinlink/odinlink-local.patch (five fixes); 4534f58 is not in the shallow ark clone"
+reference_checkout = "control-node:/data/ark-inbox/src/github.com__Geramy__OdinLink-Five (an unpinned ark row: shallow clone, .git/packed-refs names 03152258f555); laptop: ~/Code/strixflerp-upstream-supplement/odinlink5 (the same 200 files, by tarball through control-node get); docs/harvest/harvest_odinlink5.py pins the tree digest"
+
+[licence]
+spdx      = "MIT AND GPL-2.0-only AND Apache-2.0"
+files     = []                                           # the tree has no licence file
+# The licences the tree declares (README.md and per-file SPDX lines), as canonical texts copied verbatim
+# (docs/harvest/harvest_odinlink5.py CANONICAL; sources in docs/harvest/data/licences/SOURCES.tsv)
+canonical_files = ["LICENSES/GPL-2.0", "LICENSES/MIT", "LICENSES/Apache-2.0.txt"]
+canonical_source = "LICENSES/GPL-2.0 and LICENSES/MIT: the Linux kernel's LICENSES/preferred texts (control-node ark copies, docs/harvest/data/licences/SOURCES.tsv); LICENSES/Apache-2.0.txt: catalog/strixfold/LICENSES/Apache-2.0.txt (StrixFold fork f64b5ff, verbatim)"
+canonical_note = "Upstream ships no licence file. It declares MIT per file (SPDX lines) and in README.md and names no copyright holder; LICENSES/MIT is the canonical text with its template line '<year> <copyright holders>' unchanged, no holder supplied here. The GPL-2.0 driver files and NVIDIA's Apache-2.0 plugin headers keep their own notices."
+third_party = "No LICENSE file in the tree. README.md, section License: kernel driver (odl_tb5.ko) GPL v2, all userspace MIT. SPDX lines: MIT in most driver, library, compress and daemon files; GPL-2.0 in driver/odl_tb5_debugfs.c, odl_tb5_loopback.c, odl_tb5_service_apple.c; rccl/official/nccl/*.h are NVIDIA's plugin headers under Apache-2.0 (SPDX in each). Files without an SPDX line follow the README. Module spdx fields follow their files."
+
+[toolchain]
+host      = "C (CMake, project LANGUAGES C), gcc matching the kernel for the driver (gcc-14 / gcc-15), pkg-config; optional GLib 2.56, GTK 3, ayatana-appindicator, FUSE 3, libcrypto, libibverbs, CUDA + nvCOMP"
+device    = "none: no GPU code (the NCCL plugin dlopens libcuda for DMA-BUF export; nvCOMP is optional)"
+build     = "cmake -B build && cmake --build build (driver through Kbuild against /lib/modules/$(uname -r)/build; BUILD_KERNEL_MODULE, BUILD_DAEMON, BUILD_TRAY, ODL_ENABLE_NVCOMP); packaging/dkms.conf for the driver"
+
+[gate]
+c         = "2026-11-25, gcc 13.3.0: 7 of 7 modules, 38 of 38 units compile (lib 5, rccl_net_plugin 2, nccl_net_plugin 1, verbs_provider 9, compress 2, cli 11, tests 8; log /data/pod/plans/d2a7b91dec/c-gate.log). python3 docs/harvest/harvest_odinlink5.py --c-gate on control-node CPU: every userspace unit of the lib, rccl_net_plugin, nccl_net_plugin, verbs_provider, compress, cli and tests modules compiled with gcc -std=gnu11 -O2 -c and the include paths of the origin's CMake, from the catalogue copy (gate/results/compile/<module>.json). Not compiled: the driver (kernel headers), daemon and tray (GLib / GTK / FUSE), the macOS kext, nvCOMP"
+
+[harvest]
+mode      = "modules"
+tool      = "docs/harvest/harvest_odinlink5.py"
+# Origin files that are in no module (what and why: docs/HARVEST.md). Whole directories where nothing was taken.
+unharvested = [
+  ".dockerignore",
+  ".github/**",
+  ".gitignore",
+  ".grok/**",
+  "AGENTS.md",
+  "COMPAT.md",
+  "Dockerfile.test",
+  "README.md",
+  "assets/**",
+  "docker-compose.yml",
+  "docs/**",
+]

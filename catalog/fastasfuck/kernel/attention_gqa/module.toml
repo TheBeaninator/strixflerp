@@ -1,0 +1,55 @@
+id        = "kernel.fastasfuck.attention_gqa"
+kind      = "kernel"
+summary   = "fastasfuck's full-attention kernels (strixite's attention.hip renamed): fused q / k RMSNorm + partial RoPE + K/V cache write, then FP32 online-softmax GQA attention over a BF16 or 8-bit cache, scalar, WMMA and gathered (paged) forms"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its attention_gqa kernel file so a timing card can set it against kernel.strixite.attention, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/attention_gqa.hip attn.softmax-gqa/- (119 changed lines against kernel.strixite.attention kernels/attention.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/attention_gqa.hip", "kernels/attention_gqa.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/attention_gqa.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.softmax-gqa/-/bf16"
+api       = "strix::kernels::attention, attention_gathered, attention_gathered_wmma, attention_gathered_wmma_workspace_bytes, attention_gathered_workspace_bytes, attention_wmma, attention_wmma_workspace_bytes, attention_workspace_bytes, check_attention_error, qk_norm_rope, qk_norm_rope_jobs, report_attention_error (kernels/attention_gqa.hpp)"
+numeric   = "derived from kernel.strixite.attention (119 changed lines against kernel.strixite.attention kernels/attention.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.attention: decode-oriented; K/V cache [capacity, Hk, D] in the activation dtype or the kv8 8-bit format"
+
+[[provides]]
+interface = "attn.softmax-gqa/-/f32"
+api       = "strix::kernels::attention, attention_gathered, attention_gathered_wmma, attention_gathered_wmma_workspace_bytes, attention_gathered_workspace_bytes, attention_wmma, attention_wmma_workspace_bytes, attention_workspace_bytes, check_attention_error, qk_norm_rope, qk_norm_rope_jobs, report_attention_error (kernels/attention_gqa.hpp)"
+numeric   = "derived from kernel.strixite.attention (119 changed lines against kernel.strixite.attention kernels/attention.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.attention: decode-oriented; K/V cache [capacity, Hk, D] in the activation dtype or the kv8 8-bit format"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.kv8"
+
+[[requires]]
+module    = "kernel.fastasfuck.rope"
+
+[[requires]]
+module    = "kernel.fastasfuck.wmma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.attention_gqa.json"

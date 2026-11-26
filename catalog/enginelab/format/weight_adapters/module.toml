@@ -1,0 +1,69 @@
+id        = "format.enginelab.weight_adapters"
+kind      = "format"
+summary   = "per-model tensor naming maps (src/weight/adapters): DS41, Gemma 4, GLM, H3, Hy4 (and DFly), MiniMax, Qwen, vision and the schema"
+why       = "the model-specific data the shared loader consumes (AGENTS.md: naming maps as data); where it would go: beside the catalogue's format.layout/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: format.layout/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 9 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/weight/adapters/ds41.cpp",
+  "src/weight/adapters/gemma4.cpp",
+  "src/weight/adapters/glm.cpp",
+  "src/weight/adapters/h3.cpp",
+  "src/weight/adapters/hy4.cpp",
+  "src/weight/adapters/hy4_dfly.cpp",
+  "src/weight/adapters/minimax.cpp",
+  "src/weight/adapters/qwen.cpp",
+  "src/weight/adapters/schema.hpp",
+  "src/weight/adapters/vision.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/src/weight/adapters/ds41.cpp",
+  "src/src/weight/adapters/gemma4.cpp",
+  "src/src/weight/adapters/glm.cpp",
+  "src/src/weight/adapters/h3.cpp",
+  "src/src/weight/adapters/hy4.cpp",
+  "src/src/weight/adapters/hy4_dfly.cpp",
+  "src/src/weight/adapters/minimax.cpp",
+  "src/src/weight/adapters/qwen.cpp",
+  "src/src/weight/adapters/vision.cpp",
+]
+includes  = ["src/src", "src/src/weight"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.layout-enginelab/-/-"
+api       = "src/weight/adapters/*.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.qwen_engine"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.indexed_attention"
+
+[[requires]]
+module    = "runtime.enginelab.cuda_exec"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

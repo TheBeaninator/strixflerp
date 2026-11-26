@@ -1,0 +1,68 @@
+id        = "kernel.enginelab.ds41_trellis"
+kind      = "kernel"
+summary   = "DS41 trellis kernels: trellis linear and grouped trellis (HIP) and the scalar codecs"
+why       = "the K4 / K5 trellis dense path of the DS41 mix; where it would go: beside the catalogue's linear.decode/exl3-trellis/f16-f32 providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: linear.decode/exl3-trellis/f16-f32 (a class the catalogue already has); the module provides it with an enginelab variant tag. 2 HIP unit(s) compiled standalone by the gate; 1 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/ds41_scalar_codecs.hpp",
+  "include/strix/ds41_trellis.hpp",
+  "include/strix/ds41_trellis_group.hpp",
+  "src/ds41_trellis.cpp",
+  "src/hip_ds41_trellis.hip",
+  "src/hip_ds41_trellis_group.hip",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_ds41_trellis.hip", "src/src/hip_ds41_trellis_group.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.decode/exl3-trellis/f16-f32.enginelab-ds41"
+api       = "hip_ds41_trellis.hip, hip_ds41_trellis_group.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "format.enginelab.weight_formats"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_routes"
+
+[[requires]]
+module    = "kernel.enginelab.ds41_rows"
+
+[[requires]]
+module    = "kernel.enginelab.ops_glu"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.enginelab.ds41_trellis.json"

@@ -1,0 +1,44 @@
+# gate/dsv41_tp4.py --plan 2026-11-21T2350Z (pod card bb68604fa9): DRY, control-node only, no worker contact
+gate file sha256 aa058c7b7de22e7e8a7e49da31d6044018b4182f640a9eb2e8d8552957053470
+[ok] recipe kit manifest 4d7b62c5ee1220b417e018452289054c9f026e44e235e3926f6fd94d0dbca4d6 == deployed 4d7b62c5ee1220b417e018452289054c9f026e44e235e3926f6fd94d0dbca4d6
+[ok] /data/pod/plans/bb68604fa9/strixflerp/build/dsv41-flash.strixfold-tp4/built.json
+[ok] reference stage /data/pod/plans/strixfold/deploy-stage/003f679c28b1: commit 003f679c28b1f13a740a929a128c1246ed3dc826, kit 4d7b62c5ee1220b4...
+[ok] prompts /data/pod/plans/strixfold/deploy-stage/003f679c28b1/tools/dsv41-hip/tp4fl/prompts8.json sha256 d63bdf7d6d48016d...
+[ok] /data/pod/plans/strixfold/tp4-serve1.sh sha256 d57ff194dec54a29...
+[ok] /data/pod/plans/strixfold/tp4-serve1.conf sha256 9e27adef5d1bc034...
+
+## window prerequisites (checked at --run, not now)
+- a hold over F D C A owned by ff-bb68604fa9: OWNER=ff-bb68604fa9 REASON='FLERP-DSV41-TP4 gate' pod-quad hold 192.0.2.50 192.0.2.53 192.0.2.52 192.0.2.54; renew with `OWNER=ff-bb68604fa9 pod-quad renew <s>`, never pod-window open; the card in an active column (a hold whose card is in review is reaped by pod-quad sweep)
+- /data/pod/plans/br-run/boxes.lock taken (flock -w 1500); no other TP4 instance answering http://192.0.2.50:18080/health
+- no pod-thermal push while ranks run (7037bfa9e7); no NIC pause/PFC/MTU change under live RDMA
+- the engram and rank dirs on each /cache are the served ones (PLACE placements tp4s1-engram*); nothing staged by this gate
+
+## step 1: arm F's stage /data/pod/plans/strixfold/deploy-stage/flerp91ca11c (control-node)
+  rm -rf /data/pod/plans/bb68604fa9/gate/stage-flerp91ca11c && mkdir -p /data/pod/plans/bb68604fa9/gate/stage-flerp91ca11c
+  tar -C /data/pod/plans/strixfold/deploy-stage/003f679c28b1 -cf - tools | tar -xf - -C /data/pod/plans/bb68604fa9/gate/stage-flerp91ca11c            # the deployment's launcher, unchanged
+  tar -C /data/pod/plans/bb68604fa9/strixflerp/build/dsv41-flash.strixfold-tp4/tree/zig-out -cf - native-hip | tar -xf - -C /data/pod/plans/bb68604fa9/gate/stage-flerp91ca11c          # the recipe's binaries and kit
+  python3 /data/pod/plans/bb68604fa9/strixflerp/gate/dsv41_tp4.py --deploy-json /data/pod/plans/bb68604fa9/gate/stage-flerp91ca11c                       # DEPLOY.json naming the recipe, then SHA256SUMS
+  (cd /data/pod/plans/bb68604fa9/gate/stage-flerp91ca11c && find . -type f ! -name SHA256SUMS -printf '%P\n' | LC_ALL=C sort | xargs sha256sum > SHA256SUMS)
+  test "$(sha256sum < /data/pod/plans/bb68604fa9/gate/stage-flerp91ca11c/native-hip/share/tensorfold/hip/gfx1151/dsv41/manifest.json | cut -c1-64)" = 4d7b62c5ee1220b417e018452289054c9f026e44e235e3926f6fd94d0dbca4d6               # the kit, byte for byte
+  mv -T /data/pod/plans/bb68604fa9/gate/stage-flerp91ca11c /data/pod/plans/strixfold/deploy-stage/flerp91ca11c                                           # where tp4-serve1.sh reads a stage
+
+## arm R: CONF=/data/pod/plans/bb68604fa9/gate/gate-R.conf (tp4-serve1.conf with LOGITS_SHA=1, DEPLOY_DIR ~/tfp/deploy/003f679c28b1; sha256 95cc1f3fc0e8aa8b)
+  CONF=/data/pod/plans/bb68604fa9/gate/gate-R.conf /data/pod/plans/strixfold/tp4-serve1.sh check              # stage sums, deploy dirs, kit, hold, keepers off, first_light plan
+  CONF=/data/pod/plans/bb68604fa9/gate/gate-R.conf /data/pod/plans/strixfold/tp4-serve1.sh up                 # deploys ~/tfp/deploy/003f679c28b1 from the stage where missing (sha256sum -c), first_light.sh up on D, /health, smoke
+  (a failed up: /data/pod/plans/strixfold/tp4-serve1.sh down, then one retry; a second failure ends the window FAIL, nothing judged)
+  python3 /data/pod/plans/bb68604fa9/strixflerp/gate/dsv41_tp4.py --ask http://192.0.2.50:18080 /data/pod/plans/bb68604fa9/gate/run-<UTC>/R   # 8 prompts, return_token_ids
+  rank 0's log on F after the mark: the 8 prompt_logits lines -> /data/pod/plans/bb68604fa9/gate/run-<UTC>/R/shas.jsonl
+  CONF=/data/pod/plans/bb68604fa9/gate/gate-R.conf /data/pod/plans/strixfold/tp4-serve1.sh down               # first_light.sh down, then no /health and no rank process on F D C A
+
+## arm F: CONF=/data/pod/plans/bb68604fa9/gate/gate-F.conf (tp4-serve1.conf with LOGITS_SHA=1, DEPLOY_DIR ~/tfp/deploy/flerp91ca11c; sha256 f4d8b53f271fdc69)
+  CONF=/data/pod/plans/bb68604fa9/gate/gate-F.conf /data/pod/plans/strixfold/tp4-serve1.sh check              # stage sums, deploy dirs, kit, hold, keepers off, first_light plan
+  CONF=/data/pod/plans/bb68604fa9/gate/gate-F.conf /data/pod/plans/strixfold/tp4-serve1.sh up                 # deploys ~/tfp/deploy/flerp91ca11c from the stage where missing (sha256sum -c), first_light.sh up on D, /health, smoke
+  (a failed up: /data/pod/plans/strixfold/tp4-serve1.sh down, then one retry; a second failure ends the window FAIL, nothing judged)
+  python3 /data/pod/plans/bb68604fa9/strixflerp/gate/dsv41_tp4.py --ask http://192.0.2.50:18080 /data/pod/plans/bb68604fa9/gate/run-<UTC>/F   # 8 prompts, return_token_ids
+  rank 0's log on F after the mark: the 8 prompt_logits lines -> /data/pod/plans/bb68604fa9/gate/run-<UTC>/F/shas.jsonl
+  CONF=/data/pod/plans/bb68604fa9/gate/gate-F.conf /data/pod/plans/strixfold/tp4-serve1.sh down               # first_light.sh down, then no /health and no rank process on F D C A
+
+## judge: python3 /data/pod/plans/bb68604fa9/strixflerp/gate/dsv41_tp4.py --judge /data/pod/plans/bb68604fa9/gate/run-<UTC>/R /data/pod/plans/bb68604fa9/gate/run-<UTC>/F  -> verdict.json, PASS or FAIL
+## after: rm the arm F deploy dir on the four (~/tfp/deploy/flerp91ca11c) and /data/pod/plans/strixfold/deploy-stage/flerp91ca11c; release the hold; leave boxes down
+
+plan READY (rc 0)

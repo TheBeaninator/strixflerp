@@ -1,0 +1,58 @@
+id        = "format.enginelab.model_data"
+kind      = "format"
+summary   = "model data: per-model constant tables (DeepSeek V4.1 Flash, GLM-5.3 Flash, Hy4 Flash, Inkling2 Mini, MiniMax M3.1 Flash, Nemotron 3.5 Bolt E4B, Qwen3.8-27B, Qwen3.8-Flash-Next) and the constants / constant profiles"
+why       = "model facts as data; where it would go: a new strixflerp interface format.model-constants/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, format.model-constants/-/-. 1 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/model/bind.hpp",
+  "include/strix/model/constants.hpp",
+  "include/strix/model_data/deepseek_v4_1_flash.hpp",
+  "include/strix/model_data/glm_5_3_flash.hpp",
+  "include/strix/model_data/hy4_flash.hpp",
+  "include/strix/model_data/inkling2_mini.hpp",
+  "include/strix/model_data/minimax_m3_1_flash.hpp",
+  "include/strix/model_data/nemotron_3_5_bolt_e4b.hpp",
+  "include/strix/model_data/qwen3_8_27b.hpp",
+  "include/strix/model_data/qwen3_8_flash_next.hpp",
+  "src/model/constants.cpp",
+  "src/model/constants_profiles.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/model/constants.cpp"]
+includes  = ["src/src", "src/include", "src/include/strix/model"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "format.model-constants/-/-"
+api       = "include/strix/model_data/*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

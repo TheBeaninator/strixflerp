@@ -1,0 +1,76 @@
+id        = "tool.fastasfuck.breakdown_split"
+kind      = "tool"
+summary   = "fastasfuck's per-kernel layer breakdown bench on gfx1151 (GDN, dense and QSA attention, MoE, HC, LM head, MTP head) with MALL flushes"
+why       = "it shows where a decode step spends its time kernel by kernel, the input for any kernel swap"
+notes     = "Files vs strixite: tools/breakdown_split.cpp new in fastasfuck. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["tools/breakdown_split.cpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/tools/breakdown_split.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "tool.breakdown-split/-/-"
+api       = "tools/breakdown_split.cpp"
+numeric   = "n/a"
+regime    = "host program"
+
+[[requires]]
+module    = "format.fastasfuck.qn_device"
+
+[[requires]]
+module    = "kernel.fastasfuck.attention_gqa"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.gdn"
+
+[[requires]]
+module    = "kernel.fastasfuck.hc"
+
+[[requires]]
+module    = "kernel.fastasfuck.hc_wmma"
+
+[[requires]]
+module    = "kernel.fastasfuck.kv8"
+
+[[requires]]
+module    = "kernel.fastasfuck.linear"
+
+[[requires]]
+module    = "kernel.fastasfuck.moe_grouped"
+
+[[requires]]
+module    = "kernel.fastasfuck.moe_router"
+
+[[requires]]
+module    = "kernel.fastasfuck.norm"
+
+[[requires]]
+module    = "kernel.fastasfuck.qsa_indexer"
+
+[[requires]]
+module    = "kernel.fastasfuck.swiglu"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (executable breakdown_split) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

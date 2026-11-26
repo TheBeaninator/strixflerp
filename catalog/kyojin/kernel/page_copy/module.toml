@@ -1,0 +1,43 @@
+id        = "kernel.kyojin.page_copy"
+kind      = "kernel"
+summary   = "Paged KV cache page copy and rotation kernels (16-byte aligned per-CTA chunks; small DSA pools of 1792 B pages)"
+why       = "prefix reuse, forks and defragmentation of the paged cache. Where the shape would go: a cache.snapshot-copy/-/- provider beside kernel.gufo.snapshot_copy, through an adapter from its launcher to the flerp module ABI"
+notes     = "Interface tag: cache.snapshot-copy/-/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 1 changed (cache.cu). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = ["exllamav3/exllamav3_ext/generator/cache.cu"]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/exllamav3/exllamav3_ext/generator/cache.cu"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "cache.snapshot-copy-kyojin/-/-"
+api       = "cache.cu; kernels: cache_rotate_kernel, dspark_write_rows_kernel, paged_kv_update_vec8_kernel"
+numeric   = "byte copies"
+regime    = "gfx1151 serving path"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.ext_portability"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: cache.cu"

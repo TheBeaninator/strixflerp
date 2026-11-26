@@ -1,0 +1,67 @@
+id        = "kernel.strata.core"
+kind      = "kernel"
+summary   = "the .cu files of Strata's runtime core: the device arena, NaN-filled allocations and the runtime device check against the compiled architectures (device), pinned and device-mapped host memory with large-page and Windows paths (pinned), the remote-expert decode optimisation's row-skip kernels over the helper caches (remote_expert_opt), and tests/core/dma_batch_parity.cu, the batched-copy ordering test; with the core and CPU-expert headers they include"
+why       = "these are the HIP translation units of the runtime the kernels run in: the device check is what refuses a gfx1151 binary built for another target, and pinned memory carries the streamed experts and the KV ring"
+notes     = "Interface tags by file: device.cu device.info/-/-; none: pinned.cu, remote_expert_opt.cu, dma_batch_parity.cu. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/core/device.hpp",
+  "include/strata/core/dma_batch.hpp",
+  "include/strata/core/exchange_storage.hpp",
+  "include/strata/core/expert_cache.hpp",
+  "include/strata/core/expert_source.hpp",
+  "include/strata/core/hit_hook.hpp",
+  "include/strata/core/on_device.hpp",
+  "include/strata/core/pinned.hpp",
+  "include/strata/core/remote_expert_opt.hpp",
+  "include/strata/core/remote_experts.hpp",
+  "include/strata/core/vmm.hpp",
+  "include/strata/kernels/cpu/expert.hpp",
+  "include/strata/kernels/cpu/expert_layout.hpp",
+  "include/strata/kernels/cpu/native_expert.hpp",
+  "include/strata/kernels/cpu/pool.hpp",
+  "include/strata/platform/memory.hpp",
+  "src/core/device.cu",
+  "src/core/pinned.cu",
+  "src/core/remote_expert_opt.cu",
+  "tests/core/dma_batch_parity.cu",
+]
+authors   = ["Niko1221", "Strata contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/core/device.cu", "src/src/core/pinned.cu", "src/src/core/remote_expert_opt.cu"]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "device.info-strata/-/-"
+api       = "strata::core::DeviceArena, device_info, device_check (src/core/device.cu)"
+numeric   = "see the file header"
+regime    = "startup"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[[requires]]
+module    = "kernel.strata.elementwise"
+
+[[requires]]
+module    = "kernel.strata.verify"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.core.json"

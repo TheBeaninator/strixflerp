@@ -265,7 +265,7 @@ def emit_module(cat, m, deps, lines, extra_sources=(), renames=(), overlays=None
         return "${FLERP_ROOT}/" + os.path.relpath(path, cat.root)
 
     t = target(m.id)
-    hip = [s for s in sources if s.endswith(".hip")]
+    hip = [s for s in sources if s.endswith((".hip", ".cu"))]   # .cu is hip-c++ when the module says so (catalog.COMPILED)
     lines.append(f"\n# {m.id}: {m.summary}")
     lines.append(f"add_library({t} OBJECT{cm_list(rooted(s) for s in sources)})")
     if hip:

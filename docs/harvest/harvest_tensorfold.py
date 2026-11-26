@@ -16,7 +16,7 @@ per module the StrixFold module that holds it and the size of the difference (ch
 import difflib, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import harvestlib
-from harvestlib import Origin, M, P, run, REPO
+from harvestlib import Origin, M, P, run, REPO, tlist
 
 CHECKOUT = os.environ.get('TENSORFOLD_CHECKOUT', os.path.join(harvestlib.SUPPLEMENT, 'TensorFold'))
 COMMIT = '000b534a284524bbe9a4cc1f3e8996baf80af754'
@@ -246,6 +246,10 @@ add('tool.tensorfold.zig_build', 'The build graph of the HIP half: root build.zi
     [P('build.graph/zig/-.tensorfold', 'zig build (hip half: zig/build/hip.zig)', 'n/a', 'build time')],
     notes='zig/build is ignored by this repository\'s .gitignore (build/); the files are tracked with git add -f, as StrixFold\'s are.')
 
+# The root texts, LICENSES/ and the fixture licence THIRD_PARTY_NOTICES.md links, copied beside ORIGIN.toml.
+LICENCE_FILES = (['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md'] + [f for f in O.files() if f.startswith('LICENSES/')]
+                 + ['zig/src/server/fixtures/deepseek_v41_encoder/LICENSE'])
+
 ORIGIN_TOML = f'''
 # Upstream TensorFold: Zig native inference engine with Metal, CUDA, HIP, XPU and Vulkan backends.
 # StrixFold (catalog/strixfold) is the pod's fork of an older TensorFold by way of bertholomus/TensorFold deepseek-v41-tp2.
@@ -259,7 +263,9 @@ relation  = "HARVEST.json relation_to_strixfold: per module, the StrixFold modul
 
 [licence]
 spdx      = "Apache-2.0"
-files     = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "LICENSES/MIT.txt", "LICENSES/AOTriton-MIT.txt", "LICENSES/PyTorch-BSD-3.txt", "LICENSES/Kimi-K3.txt", "LICENSES/Kimi-K3.1-Pro.txt"]
+# copied verbatim next to this file at their origin paths (LICENCE_FILES in docs/harvest/harvest_tensorfold.py)
+files     = {tlist(LICENCE_FILES)}
+source    = "the reference checkout above (git clone at {COMMIT[:9]}); byte-identical to the pod ark copies control-node:/data/ark-inbox/src/github.com__ashhart__TensorFold and /data/ark/software/src/github.com__ashhart__TensorFold (checked 2026-11-26). Those ark copies are at 3795e605, which adds LICENSES/Tencent-Hy-1.0.txt (not in {COMMIT[:9]}): run flerp diff-origin against the {COMMIT[:9]} clone, not the ark copies"
 third_party = "Code before 0.6.0 keeps its MIT notice (LICENSES/MIT.txt). EXL3 sources after ExLlamaV3 (MIT, Turboderp); GLM-OCR pointwise after PyTorch (BSD-3-Clause); AOTriton ABI adapter (MIT); Kimi K3 fixtures and prompt adapter under the Kimi K3 / K3.1-Pro licences. See THIRD_PARTY_NOTICES.md."
 
 [toolchain]
@@ -318,13 +324,7 @@ def strixfold_relation(owner):
 
 
 if __name__ == '__main__':
-    import shutil
-    ld = os.path.join(REPO, 'catalog', 'tensorfold', 'LICENSES')
-    shutil.rmtree(ld, ignore_errors=True)        # run() treats every directory of the origin as a module kind
-    owner = run(O, mods, ORIGIN_TOML, LEFT_OUT, ['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md'])
-    os.makedirs(ld)
-    for f in ['MIT.txt', 'AOTriton-MIT.txt', 'PyTorch-BSD-3.txt', 'Kimi-K3.txt', 'Kimi-K3.1-Pro.txt']:
-        shutil.copyfile(O.find('LICENSES/' + f), os.path.join(ld, f))
+    owner = run(O, mods, ORIGIN_TOML, LEFT_OUT, LICENCE_FILES)
     rel = strixfold_relation(owner)
     p = os.path.join(REPO, 'catalog', 'tensorfold', 'HARVEST.json')
     idx = json.load(open(p))

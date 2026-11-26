@@ -1,0 +1,51 @@
+id        = "kernel.maya_tp.glm_kv_stream"
+kind      = "kernel"
+summary   = "the GLM latent KV stream (glm_kv_stream.cu) and the INT8 latent records (glm_lat8.cuh, MAYA_GLM_KV_INT8)"
+why       = "MLA latent KV in INT8 halves the per-token bytes of long GLM contexts; a kvcache shape for latent attention"
+notes     = "Interface tag: kvcache.store/mla-latent-i8/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/glm_kv_stream.hpp",
+  "src/kernels/cuda/glm_kv_stream.cu",
+  "src/kernels/cuda/glm_lat8.cuh",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/glm_kv_stream.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "kvcache.store/mla-latent-i8/f32.maya-tp"
+api       = "strata::kernels glm_kv_stream launches"
+numeric   = "INT8 latent with scales"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.kvcache"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.glm_kv_stream.json"

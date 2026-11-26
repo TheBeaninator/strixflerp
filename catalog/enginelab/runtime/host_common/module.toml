@@ -1,0 +1,96 @@
+id        = "runtime.enginelab.host_common"
+kind      = "runtime"
+summary   = "host common: qpersist and its diagnostic (switches for verify-window fused GDN / QSA tails, bit-identical to the separate launches, and the exact MTP draft-attention kernels), prompt terminal diagnostics, serve / CLI parity; include/strix/core (A8 G32, chunked dot, dense activation, dense reference, dense site policy, rows), include/strix/hip (arch, legacy intrinsics and launch) with the arch caps header they include, oracles, check, preflight, setup quiescence, startup markers, runtime telemetry, the build-info template, the MSVC math builtins and the CUDA spelling headers of the root"
+why       = "small shared headers most modules include; where it would go: a new strixflerp interface kernel-abi.enginelab-common/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, kernel-abi.enginelab-common/-/-. 3 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/build_info.hpp.in",
+  "include/strix/core/a8g32.hpp",
+  "include/strix/core/chunked_dot.hpp",
+  "include/strix/core/dense_activation.hpp",
+  "include/strix/core/dense_reference.hpp",
+  "include/strix/core/dense_site_policy.hpp",
+  "include/strix/core/rows.hpp",
+  "include/strix/hip/arch.hpp",
+  "include/strix/hip/legacy_intrinsics.hpp",
+  "include/strix/hip/legacy_launch.hpp",
+  "include/strix/hip_arch_caps.hpp",
+  "include/strix/hip_check.hpp",
+  "include/strix/hip_qpersist_diagnostic.hpp",
+  "include/strix/hip_runtime_telemetry.hpp",
+  "include/strix/hip_setup_quiescence.hpp",
+  "include/strix/msvc_math_builtins.hpp",
+  "include/strix/native_setup_quiescence.hpp",
+  "include/strix/oracles.hpp",
+  "include/strix/preflight.hpp",
+  "include/strix/prompt_terminal_diagnostics.hpp",
+  "include/strix/qpersist.hpp",
+  "include/strix/serve_cli_parity.hpp",
+  "include/strix/startup_markers.hpp",
+  "src/oracles.cpp",
+  "src/preflight.cpp",
+  "src/prompt_terminal_diagnostics.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = ["src/src/oracles.cpp", "src/src/preflight.cpp", "src/src/prompt_terminal_diagnostics.cpp"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "kernel-abi.enginelab-common/-/-"
+api       = "include/strix/core/*.hpp, include/strix/hip/*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "kernel.enginelab.integer_projection"
+
+[[requires]]
+module    = "kernel.enginelab.rows_select"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.moe_policy"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

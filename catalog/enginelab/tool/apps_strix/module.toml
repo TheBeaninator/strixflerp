@@ -1,0 +1,142 @@
+id        = "tool.enginelab.apps_strix"
+kind      = "tool"
+summary   = "the strix front programs: strix, strix-serve, strix-router, strix-bench, model describe, inspection bindings, tokenize, support matrix, platform probe, device and memory plans, model manifest, GGUF inspect and pack check, execution tensor audit and inventory receipt, serial decode reference"
+why       = "the user-facing binaries; where it would go: beside the catalogue's tool.launcher/-/- providers as the enginelab variant (same op, the engine lab's own operand layouts, so an adapter comes first)"
+notes     = "Interface tag: tool.launcher/-/- (a class the catalogue already has); the module provides it with an enginelab variant tag. 17 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "apps/device_plan_main.cpp",
+  "apps/execution_inventory_receipt.hpp",
+  "apps/execution_tensor_audit_main.cpp",
+  "apps/gguf_pack_check_main.cpp",
+  "apps/inspect_gguf_main.cpp",
+  "apps/memory_plan_main.cpp",
+  "apps/model_describe_main.cpp",
+  "apps/model_manifest_main.cpp",
+  "apps/platform_probe_main.cpp",
+  "apps/serial_decode_reference_main.cpp",
+  "apps/strix-model-describe.cpp",
+  "apps/strix_bench_main.cpp",
+  "apps/strix_inspection_bindings.cpp",
+  "apps/strix_main.cpp",
+  "apps/strix_router_main.cpp",
+  "apps/strix_serve_main.cpp",
+  "apps/support_matrix_main.cpp",
+  "apps/tokenize_main.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = [
+  "src/apps/device_plan_main.cpp",
+  "src/apps/execution_tensor_audit_main.cpp",
+  "src/apps/gguf_pack_check_main.cpp",
+  "src/apps/inspect_gguf_main.cpp",
+  "src/apps/memory_plan_main.cpp",
+  "src/apps/model_describe_main.cpp",
+  "src/apps/model_manifest_main.cpp",
+  "src/apps/platform_probe_main.cpp",
+  "src/apps/serial_decode_reference_main.cpp",
+  "src/apps/strix-model-describe.cpp",
+  "src/apps/strix_bench_main.cpp",
+  "src/apps/strix_inspection_bindings.cpp",
+  "src/apps/strix_main.cpp",
+  "src/apps/strix_router_main.cpp",
+  "src/apps/strix_serve_main.cpp",
+  "src/apps/support_matrix_main.cpp",
+  "src/apps/tokenize_main.cpp",
+]
+includes  = ["src/apps", "src/apps"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.launcher-enginelab/-/-"
+api       = "apps/strix_main.cpp, strix_serve_main.cpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.ds41_engine"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_engine"
+
+[[requires]]
+module    = "executor.enginelab.minimax_engine"
+
+[[requires]]
+module    = "executor.enginelab.qwen_engine"
+
+[[requires]]
+module    = "format.enginelab.gguf"
+
+[[requires]]
+module    = "format.enginelab.weight_core"
+
+[[requires]]
+module    = "format.enginelab.weight_files"
+
+[[requires]]
+module    = "runtime.enginelab.deploy"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.exec_program"
+
+[[requires]]
+module    = "runtime.enginelab.execution"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.memory"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.serial_session"
+
+[[requires]]
+module    = "runtime.enginelab.support_matrix"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[[requires]]
+module    = "serve.enginelab.serve_replica"
+
+[[requires]]
+module    = "serve.enginelab.serve_session"
+
+[[requires]]
+module    = "serve.enginelab.serve_tokenizer"
+
+[[requires]]
+module    = "tool.enginelab.apps_hip_decode"
+
+[[requires]]
+module    = "tool.enginelab.cli"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ (or C) compiled by the origin's CMake with its host toolchain; the compile gate builds hip-c++ modules only"

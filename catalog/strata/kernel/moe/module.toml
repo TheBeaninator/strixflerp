@@ -1,0 +1,93 @@
+id        = "kernel.strata.moe"
+kind      = "kernel"
+summary   = "the MoE block's GPU kernels: the router (softmax over all experts, stable top-k, renormalise with ggml's 2^-14 clamp; and llama.cpp's topk-moe for 512 experts / top 10), the shared expert (silu-gated FFN with a sigmoid scalar gate) with moe_combine, llama.cpp's weighted reduction of the routed parts, and R4's grouped GPU expert tier over S2 expert blobs (hit selection, grouped GEMV, scatter-add)"
+why       = "Qwen3.8-Flash-Next routes 10 of 512 experts a token, and Strata's grouped GPU tier is what hides the streamed CPU experts; the router and combine are the same ops as the catalogue's moe.router and moe.combine providers"
+notes     = "Interface tags by file: router_top10.cu moe.router/-/f32; native_router.cu moe.router/-/f32; native_moe.cu moe.combine/-/f32; shared_expert.cu moe.experts-decode/strata-s+bf16/f32; s2_expert_grouped.cu moe.experts-decode/strata-s2/q8_0-f32. catalog/strata/KERNELS.md has the table. No timing was taken on the pod."
+
+[provenance]
+origin    = "strata"
+repo      = "https://github.com/Niko1221/Strata"
+commit    = "1cbcacbcae2953f3be9edc46369f0c875bc6ab8b"
+branch    = "main (release tag v0.1.40)"
+paths     = [
+  "include/strata/kernels/native_moe.hpp",
+  "include/strata/kernels/native_router.hpp",
+  "include/strata/kernels/router_top10.hpp",
+  "include/strata/kernels/s2_expert_grouped.hpp",
+  "include/strata/kernels/shared_expert.hpp",
+  "src/kernels/cuda/native_moe.cu",
+  "src/kernels/cuda/native_router.cu",
+  "src/kernels/cuda/router_top10.cu",
+  "src/kernels/cuda/s2_expert_grouped.cu",
+  "src/kernels/cuda/shared_expert.cu",
+]
+authors   = ["Niko1221", "Strata contributors", "The ggml authors (llama.cpp 3cf03257, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/kernels/cuda/router_top10.cu",
+  "src/src/kernels/cuda/native_router.cu",
+  "src/src/kernels/cuda/native_moe.cu",
+  "src/src/kernels/cuda/shared_expert.cu",
+  "src/src/kernels/cuda/s2_expert_grouped.cu",
+]
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.router/-/f32.strata-top10"
+api       = "strata::kernels::router_top10, router_top10_variant (src/kernels/cuda/router_top10.cu)"
+numeric   = "FP32 logits; ties break by index; ggml's 2^-14 lower clamp on the renormaliser"
+regime    = "any expert count; top 10 in the engine"
+
+[[provides]]
+interface = "moe.router/-/f32.strata-native512"
+api       = "strata::kernels::native_router_top10(_multi) (src/kernels/cuda/native_router.cu)"
+numeric   = "finite FP32 logits, I32 ids and FP32 weights out; matches the pinned CUDA contract"
+regime    = "512 experts, k = 10 only"
+
+[[provides]]
+interface = "moe.combine/-/f32.strata-native"
+api       = "strata::kernels::native_moe_combine(_multi, _multi_hits, _multi_hits_gated) (src/kernels/cuda/native_moe.cu)"
+numeric   = "FP32 parts and weights, k in [1, 15]"
+regime    = "decode and verify windows"
+
+[[provides]]
+interface = "moe.experts-decode/strata-s+bf16/f32.strata-shared"
+api       = "strata::kernels::shared_expert(_multi), moe_combine (src/kernels/cuda/shared_expert.cu)"
+numeric   = "Q8_0 / Q8_K / BF16 activation forms per weight form; FP32 output"
+regime    = "decode"
+
+[[provides]]
+interface = "moe.experts-decode/strata-s2/q8_0-f32.strata-grouped"
+api       = "strata::kernels::moe_hit_select(_multi), moe_hit_grouped_s2(_dev, _multi), moe_hit_add, moe_grouped_s2, moe_group_resident (src/kernels/cuda/s2_expert_grouped.cu)"
+numeric   = "Q8_0 activations, the CPU pool's integer arithmetic, FP32 out"
+regime    = "decode; experts resident in a VRAM cache"
+
+[[requires]]
+module    = "kernel.strata.common"
+
+[[requires]]
+module    = "kernel.strata.bf16_gemv"
+
+[[requires]]
+module    = "kernel.strata.gguf_gemv"
+
+[[requires]]
+module    = "kernel.strata.s_gemv"
+
+[[requires]]
+module    = "kernel.strata.verify"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.strata.moe.json"

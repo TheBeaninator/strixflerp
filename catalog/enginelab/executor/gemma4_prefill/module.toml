@@ -1,0 +1,112 @@
+id        = "executor.enginelab.gemma4_prefill"
+kind      = "executor"
+summary   = "Gemma 4 prefill (src/gemma4/prefill): 22 origin files under src/gemma4"
+why       = "the Gemma 4 prompt path; where it would go: a new strixflerp interface executor.prefill-enginelab-gemma4/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, executor.prefill-enginelab-gemma4/-/-. 5 HIP unit(s) compiled standalone by the gate; 6 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "src/gemma4/prefill/README.md",
+  "src/gemma4/prefill/a8_linear.hip",
+  "src/gemma4/prefill/a8_linear.hpp",
+  "src/gemma4/prefill/attention.cpp",
+  "src/gemma4/prefill/attention.hip",
+  "src/gemma4/prefill/attention.hpp",
+  "src/gemma4/prefill/canonical.hip",
+  "src/gemma4/prefill/check_main.cpp",
+  "src/gemma4/prefill/check_profile.hpp",
+  "src/gemma4/prefill/device.hpp",
+  "src/gemma4/prefill/emulator.cpp",
+  "src/gemma4/prefill/emulator.hpp",
+  "src/gemma4/prefill/host.cpp",
+  "src/gemma4/prefill/linear.hip",
+  "src/gemma4/prefill/pair.hpp",
+  "src/gemma4/prefill/prefill.hpp",
+  "src/gemma4/prefill/qualification.cpp",
+  "src/gemma4/prefill/qualification.hpp",
+  "src/gemma4/prefill/reference.cpp",
+  "src/gemma4/prefill/reference.hpp",
+  "src/gemma4/prefill/target.hip",
+  "src/gemma4/prefill/validation.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/src/gemma4/prefill/a8_linear.hip",
+  "src/src/gemma4/prefill/attention.hip",
+  "src/src/gemma4/prefill/canonical.hip",
+  "src/src/gemma4/prefill/linear.hip",
+  "src/src/gemma4/prefill/target.hip",
+]
+includes  = ["src/src"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.prefill-enginelab-gemma4/-/-"
+api       = "src/gemma4/prefill/*"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "executor.enginelab.gemma4_model"
+
+[[requires]]
+module    = "kernel.enginelab.attn_core_flash"
+
+[[requires]]
+module    = "kernel.enginelab.core_f16_dense"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_exl3"
+
+[[requires]]
+module    = "kernel.enginelab.gemma4_kernels"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_contracts"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_dflash"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_kv"
+
+[[requires]]
+module    = "runtime.enginelab.gemma4_ref"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.model_registry"
+
+[[requires]]
+module    = "runtime.enginelab.pair_link"
+
+[[requires]]
+module    = "runtime.enginelab.prefill_plan"
+
+[[requires]]
+module    = "serve.enginelab.serve_http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "standalone"
+evidence  = "gate/results/compile/executor.enginelab.gemma4_prefill.json"
+reason    = "compile gate: fail: 2 of 5 units failed; first: src/src/gemma4/prefill/attention.hip: /data/pod/plans/bc74e1a17d/work/catalog/enginelab/executor/gemma4_prefill/src/src/gemma4/prefill/attention.hip:7:10: error: '../../attn_core/dense_flash_prefill.hpp' file not found, did you mean 'attn_core/dense_flash_prefill.hpp'?"

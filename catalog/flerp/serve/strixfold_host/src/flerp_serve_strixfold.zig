@@ -20,8 +20,7 @@ pub fn main(init: std.process.Init) !u8 {
     const args = try init.minimal.args.toSlice(a);
     const argv = try a.alloc([*:0]const u8, args.len);
     for (args, argv) |arg, *p| p.* = arg.ptr;
-    const rc = flerp_host_main(@intCast(args.len), argv.ptr);
-    // the last line this program writes: a crash after it is in what runs at process exit, not in the front end
-    std.debug.print("host: main returned {d}; the process exits\n", .{rc});
-    return @intCast(@as(u32, @bitCast(rc)) & 0xff);
+    // the adapter's way out: the last line, stdio flushed, then _exit. A return from here reaches libc's exit() and
+    // libomp.so's fini, which faults once hipBLAS has been closed (strixfold_abi.zig, leave; card 91a9cda544)
+    abi.leave(flerp_host_main(@intCast(args.len), argv.ptr));
 }

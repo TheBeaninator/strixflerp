@@ -1,0 +1,43 @@
+id        = "runtime.odinlink5.nccl_net_plugin"
+kind      = "runtime"
+summary   = "the NCCL net plugin (libnccl-net-ODL_TB5.so) for CUDA hosts: the same stream transport with up to 16 devices, 64 registered regions and 16 comms, GPU memory exported as DMA-BUF through a dlopen'd cuMemGetHandleForAddressRange for the dmabuf send / recv path, optional nvCOMP compression of large payloads and shared-memory stats"
+why       = "it is the GPU-direct variant of the RCCL plugin: on hardware where the GPU can export DMA-BUFs the copy through host memory goes away. gfx1151 has no GPUDirect here, but the DMA-BUF seam is the one CiruStrixLink's patched kernel uses on Strix Halo"
+notes     = "Interface tag: none. Nothing was run: no Thunderbolt / USB4 link joins pod nodes, no driver was loaded (card d2a7b91dec)."
+
+[provenance]
+origin    = "odinlink5"
+repo      = "https://github.com/Geramy/OdinLink-Five"
+commit    = "03152258f55507aa3f62aeb6a42fd09084dd8f23"
+branch    = "main"
+paths     = ["nccl/CMakeLists.txt", "nccl/src/odl_tb5_nccl_plugin.c", "third_party/nccl/net.h"]
+authors   = ["Geramy (OdinLink-Five) and contributors"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c"
+sources   = []
+includes  = ["src/third_party/nccl"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "collective.net-plugin-nccl-odl-dmabuf/-/-"
+api       = "ncclNet (NCCL_NET_PLUGIN=ODL_TB5)"
+numeric   = "bytes; host or DMA-BUF exported device memory; optional compression"
+regime    = "NCCL over Thunderbolt"
+
+[[requires]]
+module    = "runtime.odinlink5.lib"
+
+[[requires]]
+module    = "runtime.odinlink5.compress"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "n/a"
+evidence  = "gate/results/compile/runtime.odinlink5.nccl_net_plugin.json"
+reason    = "c: compiled by the C gate, not gate/compile/run.py (python3 docs/harvest/harvest_odinlink5.py --c-gate on control-node CPU, gcc with the include paths of the origin's CMake)"

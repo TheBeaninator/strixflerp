@@ -1,0 +1,49 @@
+id        = "runtime.fastasfuck.grammar_cache"
+kind      = "runtime"
+summary   = "fastasfuck's mutex-guarded LRU of compiled grammar automata keyed by schema or tools, each keeping the token masks it has filled"
+why       = "repeat requests with the same schema or tools skip grammar compilation and mask building"
+notes     = "Files vs strixite: serve/grammar_cache.cpp 5 changed lines against runtime.strixite.grammar_cache at d19945e; serve/grammar_cache.hpp 2 changed lines against runtime.strixite.grammar_cache at d19945e. Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["serve/grammar_cache.cpp", "serve/grammar_cache.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = ["src/serve/grammar_cache.cpp"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "grammar.cache/-/-"
+api       = "strix::GrammarCache"
+numeric   = "derived from runtime.strixite.grammar_cache (serve/grammar_cache.cpp 5 changed lines against runtime.strixite.grammar_cache at d19945e; serve/grammar_cache.hpp 2 changed lines against runtime.strixite.grammar_cache at d19945e); not compared here"
+regime    = "as runtime.strixite.grammar_cache: host"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "runtime.fastasfuck.grammar"
+
+[[requires]]
+module    = "runtime.fastasfuck.json"
+
+[[requires]]
+module    = "runtime.fastasfuck.json_schema"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host C++ built by the origin's CMake (strix_serve) with the ROCm clang as plain C++, no -x hip; the compile gate builds hip-c++ modules only"

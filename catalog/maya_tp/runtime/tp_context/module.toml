@@ -1,0 +1,58 @@
+id        = "runtime.maya_tp.tp_context"
+kind      = "runtime"
+summary   = "TP2 delta: the GLM engine's two-rank tensor-parallel state (src/core/tp_context.cu, tp_context.hpp, tp_partition.hpp, tp_collective.hpp): the intra-expert split (each rank holds [ff_begin, ff_begin + ff_count) of every expert's and dense FFN's intermediate dimension as byte spans of the existing quant blob, down shares on quant-block boundaries), the two all-reduce points per block (after the mixer out, after the MoE + shared sum), agree_min votes for exact integer decisions and the prefill batch bound under the transport window"
+why       = "the heart of maya-tp's GLM-5.3 intra-expert TP: routing stays identical on both ranks and no rank waits on the other's experts; the partition rules transfer directly to a strixflerp TP2 executor for any MoE"
+notes     = "Interface tag: collective.allreduce-tp2/-/f32.maya-tp, partition.intra-expert-tp2/-/-. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/core/tp_collective.hpp",
+  "include/strata/core/tp_context.hpp",
+  "include/strata/core/tp_partition.hpp",
+  "src/core/tp_context.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/core/tp_context.cu"]
+includes  = ["src/include", "src/src/core"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "collective.allreduce-tp2/-/f32.maya-tp"
+api       = "strata::core::TpContext::all_reduce, agree_min, drain; TpPartition, TpShare, tp_prefill_limit"
+numeric   = "FP32 partials summed local + peer on both ranks (same bits)"
+regime    = "two ranks; world 1 is a no-op"
+
+[[provides]]
+interface = "partition.intra-expert-tp2/-/-"
+api       = "strata::TpPartition (tp_partition.hpp)"
+numeric   = "byte spans of the quant blob, block-aligned"
+regime    = "GLM-5 expert and dense FFN widths"
+
+[[requires]]
+module    = "kernel.maya_tp.tp_kernels"
+
+[[requires]]
+module    = "runtime.maya_tp.tp_comm_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.maya_tp.tp_context.json"

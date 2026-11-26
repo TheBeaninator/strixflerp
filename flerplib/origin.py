@@ -1,5 +1,6 @@
 """`flerp diff-origin`: prove vendored sources are byte-identical to an origin checkout, and that the harvest
-covers the checkout (every origin file is in exactly one module or named as unharvested in ORIGIN.toml)."""
+covers the checkout (every origin file is in exactly one module, is a [licence] file copied beside ORIGIN.toml, or is
+named as unharvested in ORIGIN.toml)."""
 import fnmatch
 import hashlib
 import os
@@ -67,15 +68,16 @@ def diff_origin(cat, origin, checkout):
             if p in owner:
                 problems.append((m.id, p, f"also in {owner[p]}"))
             owner[p] = m.id
+    lic = data.get("licence", {}) if isinstance(data.get("licence"), dict) else {}
+    lic_files = set(lic.get("files", []))
     skipped = 0
     for f in theirs_all:
-        if f in owner:
+        if f in owner or f in lic_files:
             continue
         if any(glob_match(f, g) for g in globs):
             skipped += 1
         else:
             problems.append(("-", f, "in the origin checkout but in no module and not listed as unharvested"))
-    lic = data.get("licence", {}) if isinstance(data.get("licence"), dict) else {}
     for f in lic.get("files", []):
         ours, theirs = os.path.join(cat.root, "catalog", origin, f), os.path.join(checkout, f)
         if not (os.path.isfile(ours) and os.path.isfile(theirs)) or sha256(ours) != sha256(theirs):

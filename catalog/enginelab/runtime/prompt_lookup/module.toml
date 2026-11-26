@@ -1,0 +1,79 @@
+id        = "runtime.enginelab.prompt_lookup"
+kind      = "runtime"
+summary   = "prompt lookup drafting and sparse lookup: the prompt-lookup draft and runtime (HIP), sparse lookup and its executor, the sparse select policy and the lookup index"
+why       = "copy-from-context proposals that feed the wide windows (the edit rows of the README reach 153-155 tok/s served); where it would go: a new strixflerp interface draft.prompt-lookup/-/i32.enginelab, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, draft.prompt-lookup/-/i32.enginelab. 1 HIP unit(s) compiled standalone by the gate; 4 host .cpp file(s) are compiled by the origin's CMake host toolchain and are not gate units. Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/hip_prompt_lookup_runtime.hpp",
+  "include/strix/lookup/index.hpp",
+  "include/strix/prompt_lookup_draft.hpp",
+  "include/strix/sparse_lookup.hpp",
+  "include/strix/sparse_lookup_executor.hpp",
+  "include/strix/sparse_select_policy.hpp",
+  "src/hip_prompt_lookup_runtime.hip",
+  "src/lookup/index.cpp",
+  "src/prompt_lookup_draft.cpp",
+  "src/sparse_lookup.cpp",
+  "src/sparse_lookup_executor.cpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/hip_prompt_lookup_runtime.hip"]
+includes  = ["src/src", "src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "draft.prompt-lookup/-/i32.enginelab"
+api       = "src/prompt_lookup_draft.cpp, hip_prompt_lookup_runtime.hip"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "kernel.enginelab.ple"
+
+[[requires]]
+module    = "runtime.enginelab.handoff"
+
+[[requires]]
+module    = "runtime.enginelab.host_common"
+
+[[requires]]
+module    = "runtime.enginelab.known_prompt"
+
+[[requires]]
+module    = "runtime.enginelab.launch"
+
+[[requires]]
+module    = "runtime.enginelab.levers"
+
+[[requires]]
+module    = "runtime.enginelab.moe_schedule"
+
+[[requires]]
+module    = "runtime.enginelab.prepared_views"
+
+[[requires]]
+module    = "runtime.enginelab.session_snapshot"
+
+[[requires]]
+module    = "runtime.enginelab.speculation_control"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/runtime.enginelab.prompt_lookup.json"

@@ -1,0 +1,98 @@
+id        = "format.fastasfuck.qn_device"
+kind      = "format"
+summary   = "fastasfuck's Q4 / Q5 / Q6 / Q8 weight formats as the kernels see them: the host weight structs (formats/q*.hpp, group-affine codes with BF16 scale and min) and their device views and owning uploads (runtime/q*_device.hpp) over the owning device buffer"
+why       = "the linear, hc, embedding and MoE kernel headers include runtime/q*_device.hpp, so these headers are needed to compile them; they also show that fastasfuck's q4g128 / q6g64 / q8g64 weights are strixw's block layouts in another container"
+notes     = "Interface tags by file: formats/q4.hpp format.host/strixw-q4 (byte-identical to format.strixite.q4 formats/q4.hpp at d19945e); formats/q5.hpp format.host/strixw-q5 (byte-identical to format.strixite.q5 formats/q5.hpp at d19945e); formats/q6.hpp format.host/strixw-q6 (byte-identical to format.strixite.q6 formats/q6.hpp at d19945e); formats/q8.hpp format.host/strixw-q8 (byte-identical to format.strixite.q8 formats/q8.hpp at d19945e); runtime/q4_device.hpp format.device-view/strixw-q4 (byte-identical to format.strixite.q4_device runtime/q4_device.hpp at d19945e); runtime/q5_device.hpp format.device-view/strixw-q5 (byte-identical to format.strixite.q5_device runtime/q5_device.hpp at d19945e); runtime/q6_device.hpp format.device-view/strixw-q6 (byte-identical to format.strixite.q6_device runtime/q6_device.hpp at d19945e); runtime/q8_device.hpp format.device-view/strixw-q8 (byte-identical to format.strixite.q8_device runtime/q8_device.hpp at d19945e); runtime/device_buffer.hpp device.buffer/- (byte-identical to runtime.strixite.device_buffer runtime/device_buffer.hpp at d19945e). The codes are therefore strixw's Q4 / Q5 / Q6 / Q8 layouts; the .faf container fastasfuck loads them from (formats/faf.cpp, runtime/faf_loader.cpp) and the .cpp files of formats/ (converters, quantizers) are not harvested."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = [
+  "formats/q4.hpp",
+  "formats/q5.hpp",
+  "formats/q6.hpp",
+  "formats/q8.hpp",
+  "runtime/device_buffer.hpp",
+  "runtime/q4_device.hpp",
+  "runtime/q5_device.hpp",
+  "runtime/q6_device.hpp",
+  "runtime/q8_device.hpp",
+]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "format.host/strixw-q4/-"
+api       = "strix::kernels::append_rows_q4, bytes, check_q4, q4_group_size_supported (formats/q4.hpp)"
+numeric   = "the same source as format.strixite.q4 (byte-identical to format.strixite.q4 formats/q4.hpp at d19945e), so its arithmetic: w = q * scale + min per group; quantization bit-identical to the reference quantizer"
+regime    = "as format.strixite.q4: G in 32/64/128, K % G == 0"
+
+[[provides]]
+interface = "format.host/strixw-q5/-"
+api       = "strix::kernels::append_rows_q5, bytes, check_q5 (formats/q5.hpp)"
+numeric   = "the same source as format.strixite.q5 (byte-identical to format.strixite.q5 formats/q5.hpp at d19945e), so its arithmetic: s = bf16((max - min) / 31), q = clamp(round_half_even((w - m) / s), 0, 31), all fp32"
+regime    = "as format.strixite.q5: 5.25 bits per weight at G = 128; K % 128 == 0"
+
+[[provides]]
+interface = "format.host/strixw-q6/-"
+api       = "strix::kernels::append_rows_q6, bytes, check_q6 (formats/q6.hpp)"
+numeric   = "the same source as format.strixite.q6 (byte-identical to format.strixite.q6 formats/q6.hpp at d19945e), so its arithmetic: s = bf16((max - min) / 63), q = clamp(round_half_even((w - m) / s), 0, 63), all fp32"
+regime    = "as format.strixite.q6: 6.25 bits per weight at G = 128; K % 64 == 0"
+
+[[provides]]
+interface = "format.host/strixw-q8/-"
+api       = "strix::kernels::append_rows_q8, bytes, check_q8 (formats/q8.hpp)"
+numeric   = "the same source as format.strixite.q8 (byte-identical to format.strixite.q8 formats/q8.hpp at d19945e), so its arithmetic: s = bf16((max - min) / 255), q = clamp(round_half_even((w - m) / s), 0, 255), all fp32"
+regime    = "as format.strixite.q8: 8.5 bits per weight at G = 64"
+
+[[provides]]
+interface = "format.device-view/strixw-q4/-"
+api       = "runtime/q4_device.hpp"
+numeric   = "the same source as format.strixite.q4_device (byte-identical to format.strixite.q4_device runtime/q4_device.hpp at d19945e), so its arithmetic: bytes as stored in the host format"
+regime    = "as format.strixite.q4_device: header only; codes, scale and min as device pointers"
+
+[[provides]]
+interface = "format.device-view/strixw-q5/-"
+api       = "runtime/q5_device.hpp"
+numeric   = "the same source as format.strixite.q5_device (byte-identical to format.strixite.q5_device runtime/q5_device.hpp at d19945e), so its arithmetic: bytes as stored in the host format"
+regime    = "as format.strixite.q5_device: header only; codes, scale and min as device pointers"
+
+[[provides]]
+interface = "format.device-view/strixw-q6/-"
+api       = "runtime/q6_device.hpp"
+numeric   = "the same source as format.strixite.q6_device (byte-identical to format.strixite.q6_device runtime/q6_device.hpp at d19945e), so its arithmetic: bytes as stored in the host format"
+regime    = "as format.strixite.q6_device: header only; codes, scale and min as device pointers"
+
+[[provides]]
+interface = "format.device-view/strixw-q8/-"
+api       = "runtime/q8_device.hpp"
+numeric   = "the same source as format.strixite.q8_device (byte-identical to format.strixite.q8_device runtime/q8_device.hpp at d19945e), so its arithmetic: bytes as stored in the host format"
+regime    = "as format.strixite.q8_device: header only; codes, scale and min as device pointers"
+
+[[provides]]
+interface = "device.buffer/-/-"
+api       = "strix::kernels::release, size, upload (runtime/device_buffer.hpp)"
+numeric   = "the same source as runtime.strixite.device_buffer (byte-identical to runtime.strixite.device_buffer runtime/device_buffer.hpp at d19945e), so its arithmetic: n/a"
+regime    = "as runtime.strixite.device_buffer: header only; hipMalloc comes out of GTT on gfx1151"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header-only; the format headers the kernel headers include"

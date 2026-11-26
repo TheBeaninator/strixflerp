@@ -1,0 +1,40 @@
+id        = "kernel.fastasfuck.logits_topk"
+kind      = "kernel"
+summary   = "fastasfuck's top-20 candidates per logits row by rank counting"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its logits_topk kernel file so a timing card can set it against kernel.strixite.logits_topk, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/logits_topk.hip logits.topk/- (byte-identical to kernel.strixite.logits_topk kernels/logits_topk.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/logits_topk.hip", "kernels/logits_topk.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/logits_topk.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "logits.topk/-/-"
+api       = "strix::kernels::logits_topk, logits_topk_workspace_bytes (kernels/logits_topk.hpp)"
+numeric   = "the same source as kernel.strixite.logits_topk (byte-identical to kernel.strixite.logits_topk kernels/logits_topk.hip at d19945e), so its arithmetic: exact selection on fp32 logits: value descending, lower id first on a tie, so sampling from the candidates is bit-identical to sampling from the row; NaN flagged per row"
+regime    = "as kernel.strixite.logits_topk: kLogitCands = 20; 8,192 inputs per workgroup, 2 launches for 248,077 logits"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.logits_topk.json"

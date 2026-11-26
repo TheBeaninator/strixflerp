@@ -1,0 +1,40 @@
+id        = "runtime.vllm_strix.router_det_topk"
+kind      = "runtime"
+summary   = "deterministic MoE-router top-k for vLLM's grouped_topk_router: _deterministic_topk_indices selects experts by a stable descending sort so ties break by index, with the upstream test and the ready-to-send pull-request body (vLLM #55514 is still open)"
+why       = "torch.topk on ROCm breaks ties differently run to run, so the same prompt routed differently and greedy decoding diverged; a deterministic router is a precondition for reproducible MoE serving (PATCHES 14)"
+notes     = "Interface tag: moe.router. PR-BODY.md is the origin's draft upstream PR text. Nothing was run: no GPU, no worker, no weights; the pod has no Thunderbolt pair (card d2a7b91dec)."
+
+[provenance]
+origin    = "vllm_strix"
+repo      = "https://github.com/davidcanar/vllm-strix-halo"
+commit    = "fe5ac1016737c1f68e04772e3ae9e7567bc40f22"
+branch    = "main"
+paths     = [
+  "container/patches/vsh-moe-router-deterministic-topk.patch",
+  "upstream/PR-BODY.md",
+  "upstream/test_grouped_topk_determinism.py",
+]
+authors   = ["davidcanar (vllm-strix-halo)"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "moe.router/-/f32.stable-topk"
+api       = "patch to vllm/model_executor/layers/fused_moe/router/grouped_topk_router.py"
+numeric   = "ties broken by lower expert index"
+regime    = "all batch sizes"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled; python3 docs/harvest/harvest_vllm_strix.py --side-gates byte-compiles every .py on control-node (gate/results/compile/vllm_strix.side-gates.json)"

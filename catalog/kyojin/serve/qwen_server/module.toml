@@ -1,0 +1,44 @@
+id        = "serve.kyojin.qwen_server"
+kind      = "serve"
+summary   = "Qwen server (Qwen3.8-Flash-Next and the 27B): the same front with its speculative policy (draft policy mix, MTP / n-gram)"
+why       = "Qwen serving. Where the shape would go: a serve.http/openai/- provider beside serve.flerp.http, serve.gufo.http, serve.strixite.http, through a port of the python / Triton logic"
+notes     = "Interface tag: serve.http/openai/-. Against the base turboderp-org/exllamav3 8c593e4e: 7 added (SERVE.md, image_cache.py, serve.py, serve_metrics.py, serve_ping.py, serve_reqlog.py) ..., 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "tools/qwen/SERVE.md",
+  "tools/qwen/image_cache.py",
+  "tools/qwen/serve.py",
+  "tools/qwen/serve_metrics.py",
+  "tools/qwen/serve_ping.py",
+  "tools/qwen/serve_reqlog.py",
+  "tools/qwen/spec_policy.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "serve.http-kyojin-qwen/openai/-"
+api       = "SERVE.md, image_cache.py, serve.py, serve_metrics.py, serve_ping.py, serve_reqlog.py, spec_policy.py"
+numeric   = "n/a"
+regime    = "serving"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "python: not compiled"

@@ -1,0 +1,83 @@
+id        = "serve.strixfold_tp4.http"
+kind      = "serve"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for serve.strixfold.http: 24 file(s) of serve.strixfold.http and 15 file(s) the TP4 tree adds beside them (acts_fields.zig, acts_test.zig, anthropic.zig, auth.zig, cache_key.zig, cache_routes.zig ...), laid over the f64b5ff files"
+why       = "serve.strixfold.http is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over serve.strixfold.http without touching it or the TP2 recipes"
+notes     = "Overlay of serve.strixfold.http (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 4f9ba05838, 28153e18f3, f34d18ab39, 023c5d2ad9, 51591f7ba8, 73bab11681, f64f606edd, 9757a35411. Latest commits: e4fce45a server: a request's acts field behind the admin key (403/401 before it is read), checked against the model (400), the dump bounds (400/507) and acts.rows injection from ACTS_ROWS_DIR; tensorfold.acts in the reply (pod card 4f9ba05838); c900812d server: route_tag and tensorfold.route_record on chat, completions, messages and responses while TF_DS_ROUTE_RECORDS=1 (pod card 28153e18f3); fbae6f74 server: restore the trailing newline of anthropic.zig and responses.zig (pod card f34d18ab39); 06819404 server: loop-stopped replies are visible on /v1/messages and /v1/responses (pod card f34d18ab39)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/src/server/acts_fields.zig",
+  "zig/src/server/acts_test.zig",
+  "zig/src/server/anthropic.zig",
+  "zig/src/server/auth.zig",
+  "zig/src/server/cache_key.zig",
+  "zig/src/server/cache_routes.zig",
+  "zig/src/server/cache_routes_test.zig",
+  "zig/src/server/chat.zig",
+  "zig/src/server/cli.zig",
+  "zig/src/server/errors.zig",
+  "zig/src/server/fields.zig",
+  "zig/src/server/http_body.zig",
+  "zig/src/server/http_body_test.zig",
+  "zig/src/server/http_conn.zig",
+  "zig/src/server/image_limits_test.zig",
+  "zig/src/server/late_system_test.zig",
+  "zig/src/server/leave.zig",
+  "zig/src/server/logprobs_test.zig",
+  "zig/src/server/main.zig",
+  "zig/src/server/messages.zig",
+  "zig/src/server/metrics.zig",
+  "zig/src/server/openai.zig",
+  "zig/src/server/prompt.zig",
+  "zig/src/server/queue_cap.zig",
+  "zig/src/server/queue_cap_test.zig",
+  "zig/src/server/reap_routes.zig",
+  "zig/src/server/reap_routes_test.zig",
+  "zig/src/server/responses.zig",
+  "zig/src/server/responses_translate.zig",
+  "zig/src/server/root.zig",
+  "zig/src/server/route_records_test.zig",
+  "zig/src/server/route_tag.zig",
+  "zig/src/server/routes.zig",
+  "zig/src/server/serve.zig",
+  "zig/src/server/server.zig",
+  "zig/src/server/shared_messages_test.zig",
+  "zig/src/server/telemetry_reply_test.zig",
+  "zig/src/server/tokens.zig",
+  "zig/src/server/top_k_test.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on serve.strixfold.http (origin strixfold, f64b5ff): 24 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "serve.http-strixfold/openai+anthropic/-.tp4"
+api       = "server/main.zig, server/serve.zig"
+numeric   = "n/a"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); host"
+
+[[requires]]
+module    = "serve.strixfold.http"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

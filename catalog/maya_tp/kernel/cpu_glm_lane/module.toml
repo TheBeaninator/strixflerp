@@ -1,0 +1,55 @@
+id        = "kernel.maya_tp.cpu_glm_lane"
+kind      = "kernel"
+summary   = "the glm-dsa CPU expert lane's lockstep 4-row decode GEMV (glm_lane_row4, glm_lane_row4_avx2, B14.9)"
+why       = "GLM experts on the CPU for several rows at once, the CPU half of multi-slot decode"
+notes     = "Interface tag: moe.experts-decode-cpu/gguf-iq/f32.maya-tp-row4. Not compiled by the gate (host C++, AVX2 options). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/cpu/glm_lane_row4.hpp",
+  "src/kernels/cpu/glm_lane_row4.cpp",
+  "src/kernels/cpu/glm_lane_row4_avx2.cpp",
+  "src/kernels/cpu/glm_lane_row4_x86.hpp",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "moe.experts-decode-cpu/gguf-iq/f32.maya-tp-row4"
+api       = "glm_lane_row4 (glm_lane_row4.hpp)"
+numeric   = "FP32"
+regime    = "up to 4 rows"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "kernel.maya_tp.cpu_pool"
+
+[[requires]]
+module    = "runtime.maya_tp.glm_fast_path"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "Not compiled by the gate (host C++, AVX2 options)."

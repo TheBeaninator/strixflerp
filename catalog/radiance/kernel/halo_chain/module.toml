@@ -1,0 +1,43 @@
+id        = "kernel.radiance.halo_chain"
+kind      = "kernel"
+summary   = "Chained launches: a kernel launched without the AQL barrier bit waits in its own prologue on a completion counter of the kernels before it and adds to it when done (the r4dchain name marker is what the AQL backend keys on)"
+why       = "a decode step is hundreds of small dependent launches and each AQL barrier leaves the GPU idle about 2 us; a chain moves the ordering into the kernels so the queue never waits"
+notes     = "The shape behind runtime.flerp.chain (CHAIN-0 4a97e0f695). CHAIN-1 40d8943aa2 measured it on strixite's real decode kernels: stalls at the fill that would pay, +0.16 ms a step at the fill that ran clean (/data/pod/reports/2026-11/chain1.md)."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = ["libhalo/halo_chain.h"]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "runtime.chain-radiance/-/-"
+api       = "halo_chain.h wait / done bracket; chained forms are named *_r4dchain_* per family"
+numeric   = "none: schedule only"
+regime    = "decode steps of many small dependent launches"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "header only"

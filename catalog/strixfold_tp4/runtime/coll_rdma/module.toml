@@ -1,0 +1,50 @@
+id        = "runtime.strixfold_tp4.coll_rdma"
+kind      = "runtime"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for runtime.strixfold.coll_rdma: 2 file(s) of runtime.strixfold.coll_rdma and 4 file(s) the TP4 tree adds beside them (rdma_check.py, rdma_core.zig, rdma_nic.zig, rdma_proxy.zig, rdma_proxy4_test.zig, rdma_proxy_test.zig), laid over the f64b5ff files"
+why       = "runtime.strixfold.coll_rdma is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over runtime.strixfold.coll_rdma without touching it or the TP2 recipes"
+notes     = "Overlay of runtime.strixfold.coll_rdma (overlay.json has every file with both sha256 and its commits). Cards behind the changes: 034bf2c6cd, 96431609cf, f782ee5476, 023c5d2ad9, e96f0f5fa0, 3760ed527a. Latest commits: 27ea85ea dsv41: an RDMA transport for the slot collective (TF_COLL_KIND=rdma, serve.conf TRANSPORT=rdma); 4467d9c4 dsv41 TP4: swap12 gathers put one-row quarters straight into place (rdma_proxy world 4, TF_COLL_SWAP12), serve_lib's GRAPHS slot check uses the world-4 head block, bench_stream BENCH_DRAFT=0 (pod card 034bf2c6cd); 96d9d9ed dsv41 rdma_proxy world 4: lanes, so a prompt-size call keeps up to 4 slot chunks on the wire (TF_COLL_LANES, pod card 96431609cf); bfebed5c dsv41 TP4-RDMA-N: rdma_proxy at four ranks, one QP a peer, all-gather and exchange (pod card f782ee5476)"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "tools/dsv41-hip/rdma_check.py",
+  "zig/src/families/dsv41/rdma_core.zig",
+  "zig/src/families/dsv41/rdma_nic.zig",
+  "zig/src/families/dsv41/rdma_proxy.zig",
+  "zig/src/families/dsv41/rdma_proxy4_test.zig",
+  "zig/src/families/dsv41/rdma_proxy_test.zig",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on runtime.strixfold.coll_rdma (origin strixfold, f64b5ff): 2 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "zig"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+closure   = "zig:strixfold_tp4"
+
+[[provides]]
+interface = "collective.allgather-rdma/-/f32.tp4"
+api       = "rdma_proxy.zig (TF_COLL_KIND=rdma)"
+numeric   = "bytes only; 64-byte trailer (magic, epoch, sequence, bytes, site, rank) checked per slot; gathers larger than a slot fall back to tcp_host"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); TP2 decode slices; measured 30.8 decode tok/s on F+A (pod /data/pod/plans/af9276f296/NOTES.md)"
+
+[[requires]]
+module    = "runtime.strixfold.coll_rdma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

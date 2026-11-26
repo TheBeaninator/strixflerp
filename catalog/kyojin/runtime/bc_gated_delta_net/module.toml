@@ -1,0 +1,56 @@
+id        = "runtime.kyojin.bc_gated_delta_net"
+kind      = "runtime"
+summary   = "Graph-captured Gated DeltaNet block (BC_GatedDeltaNetSplit pattern)"
+why       = "GDN decode step. Where the shape would go: an executor.device-graph/exl3/- provider beside kernel.gufo.ds4_backend, through the host code behind the flerp ABI"
+notes     = "Interface tag: executor.device-graph/exl3/-. Against the base turboderp-org/exllamav3 8c593e4e: 0 added, 3 changed (gated_delta_net.cpp, gated_delta_net.h, gated_delta_net_bc.h). No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/exllamav3_ext/libtorch/gated_delta_net.cpp",
+  "exllamav3/exllamav3_ext/libtorch/gated_delta_net.h",
+  "exllamav3/exllamav3_ext/libtorch/gated_delta_net_bc.h",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "c++"
+sources   = ["src/exllamav3/exllamav3_ext/libtorch/gated_delta_net.cpp"]
+includes  = ["src/exllamav3/exllamav3_ext"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "executor.device-graph-kyojin-bc-gdn/exl3/-"
+api       = "gated_delta_net.cpp, gated_delta_net.h, gated_delta_net_bc.h"
+numeric   = "n/a"
+regime    = "decode"
+
+[[requires]]
+module    = "kernel.kyojin.exl3_gemm"
+
+[[requires]]
+module    = "kernel.kyojin.ext_base"
+
+[[requires]]
+module    = "kernel.kyojin.gdn"
+
+[[requires]]
+module    = "kernel.kyojin.hgemm"
+
+[[requires]]
+module    = "runtime.kyojin.bc_mlp"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "needs the PyTorch C++ extension headers (torch / ATen / c10 / pybind11) of a ROCm torch build, not on the gate host: gated_delta_net.cpp"

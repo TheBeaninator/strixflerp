@@ -1,0 +1,43 @@
+id        = "kernel.fastasfuck.mtp_pick"
+kind      = "kernel"
+summary   = "fastasfuck's draft-head argmax, runner-up and NaN flag packed with the forward's error words"
+why       = "owner asked for fastasfuck as an origin (2026-11-24): an engine that serves Qwen3.8-Flash-Next on one Strix Halo from a fork of strixite's kernels; this module holds its mtp_pick kernel file so a timing card can set it against kernel.strixite.mtp_pick, the strixite code it was forked from"
+notes     = "Interface tags by file: kernels/mtp_pick.hip draft.mtp-pick/- (4 changed lines against kernel.strixite.mtp_pick kernels/mtp_pick.hip at d19945e) (catalog/fastasfuck/KERNELS.md has the table). Nothing was run or timed on the pod; the origin's own figures (README.md) are unverified here."
+
+[provenance]
+origin    = "fastasfuck"
+repo      = "https://github.com/Cheblan/fastasfuck"
+commit    = "73bd1703cbe04f1556b17a3c36bd05fd7ee0372e"
+branch    = "1.1.0"
+paths     = ["kernels/mtp_pick.hip", "kernels/mtp_pick.hpp"]
+authors   = ["Cheblan"]
+modified  = false
+
+[licence]
+spdx      = "AGPL-3.0-only"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/kernels/mtp_pick.hip"]
+includes  = ["src"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "draft.mtp-pick/-/-"
+api       = "strix::kernels::mtp_pick (kernels/mtp_pick.hpp)"
+numeric   = "derived from kernel.strixite.mtp_pick (4 changed lines against kernel.strixite.mtp_pick kernels/mtp_pick.hip at d19945e); the arithmetic was not compared here"
+regime    = "as kernel.strixite.mtp_pick: one block per draft step"
+
+[[requires]]
+module    = "kernel.fastasfuck.common"
+
+[[requires]]
+module    = "kernel.fastasfuck.embedding"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.fastasfuck.mtp_pick.json"

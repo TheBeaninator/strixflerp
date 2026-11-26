@@ -1,0 +1,55 @@
+id        = "tool.maya_tp.tp2_launch"
+kind      = "tool"
+summary   = "TP2 delta: launching a TP2 pair: the Python launcher (tools/tp2/launch.py, owned_exec.py), the rank scripts (rank0.sh, rank1.sh, maya-rank0.sh, maya-rank1.sh, model_env.sh), the run / profile / no-all-reduce scripts and the llama-swap wrappers (tools/llama-swap/tp2.sh, tp2-ds4.sh, tools/tp2/tp2-swap.sh) that start / stop both ranks and forward MTP draft count, capacity and context"
+why       = "one command that brings up both hosts and tears them down together is what makes a two-node engine operable; the llama-swap wrapper shape fits the pod's llama-swap"
+notes     = "Interface tag: tool.tp2-launch/-/-. Part of the TP2 delta over Project Maya (data/maya_tp/base-diff.tsv rows A). Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "tools/llama-swap/tp2-ds4.sh",
+  "tools/llama-swap/tp2.sh",
+  "tools/tp2/launch.py",
+  "tools/tp2/maya-rank0.sh",
+  "tools/tp2/maya-rank1.sh",
+  "tools/tp2/model_env.sh",
+  "tools/tp2/owned_exec.py",
+  "tools/tp2/rank0.sh",
+  "tools/tp2/rank1.sh",
+  "tools/tp2/run_bench.sh",
+  "tools/tp2/run_comm_test.sh",
+  "tools/tp2/run_noar.sh",
+  "tools/tp2/run_prof.sh",
+  "tools/tp2/tp2-swap.sh",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "Niko1221 and the Strata contributors",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "python"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+
+[[provides]]
+interface = "tool.tp2-launch/-/-"
+api       = "tools/tp2/launch.py, tools/llama-swap/tp2.sh"
+numeric   = "no arithmetic"
+regime    = "two hosts over usb4_rdma"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "host engine code; the origin builds it only inside its CMake engine targets (strata_engine, maya-glm, maya-ds4, maya-mm3), so it is harvested, not compiled alone"

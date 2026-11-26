@@ -1,0 +1,50 @@
+id        = "kernel.strixfold_tp4.dense_bf16"
+kind      = "kernel"
+summary   = "StrixFold 72c0f083 (the pod's TP4 serving build) for kernel.strixfold.dense_bf16: 1 file(s) of kernel.strixfold.dense_bf16 (dense.hip), laid over the f64b5ff files"
+why       = "kernel.strixfold.dense_bf16 is cut at f64b5ff, the TP2 pair's deployment; the pod serves DeepSeek-V4.1 at TP4 (four gfx1151 nodes) from 72c0f083, so the TP4 recipe lays these files over kernel.strixfold.dense_bf16 without touching it or the TP2 recipes"
+notes     = "Overlay of kernel.strixfold.dense_bf16 (overlay.json has every file with both sha256 and its commits). Cards behind the changes: -. Latest commits: 4f2979d6 dsv41: serve an abliterated pack from the EXL3 pack it was made from: a rank-1 edit of blocks' wo_b and shared w2 outputs (TF_DS_EDIT, serve.conf EDIT), tools/dsv41-hip/make_edit.py to build it, docs/UNCENSORED.md"
+
+[provenance]
+origin    = "strixfold_tp4"
+repo      = "https://github.com/Shoestring-dev/Strixfold"
+commit    = "72c0f083"
+branch    = "serve-next-20261123c (TP4-SERVE1 003f679c + VGATHER, Edge-REAP, route records, per-request acts, logprobs, loop policy, expert mask), local to the pod fork"
+paths     = [
+  "zig/kernels/hip/dsv41/dense.hip",
+]
+authors   = ["StrixFold contributors", "TensorFold contributors", "pod"]
+modified  = false
+upstream  = "overlay on kernel.strixfold.dense_bf16 (origin strixfold, f64b5ff): 1 of these paths are its files too, replaced whole; overlay.json"
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "linear.dense/bf16/bf16-f32.row-invariant-tp4"
+api       = "tf_ds_dense_gemv"
+numeric   = "w and x bf16 (products exact in fp32), one fma per element in fixed lane order, 32 lane partials summed by xor shuffles 16,8,4,2,1; y fp32 stored or accumulated with one fp32 add; a row gets the same bits whatever shares the window"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[provides]]
+interface = "act.swiglu/-/bf16.dsv41-tp4"
+api       = "tf_ds_dense_swiglu"
+numeric   = "DeepSeek SwiGLU with its clamps (swiglu_bf16)"
+regime    = "TP4 serving tree 72c0f083 (world 2 to 4); decode / verify windows, 1..128 rows, memory-bound"
+
+[[requires]]
+module    = "kernel.strixfold.dense_bf16"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+evidence  = "gate/results/dsv41-flash.strixfold-tp4/build.txt"
+compile   = "n/a"
+reason    = "builds inside the recipe dsv41-flash.strixfold-tp4 (control-node, zig 0.17.0, TheRock 10.2) over its parent module; the kit came out as the deployed one; not run on a GPU from that build"

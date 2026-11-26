@@ -1,0 +1,52 @@
+id        = "kernel.maya_tp.rope"
+kind      = "kernel"
+summary   = "rotary embedding: NEOX partial RoPE (rope) and llama.cpp's rope_multi / rope_yarn numerical contract (native_rope)"
+why       = "every attention family needs a rope whose bits match the reference; two forms with a stated numerical contract"
+notes     = "Interface tag: pos.rope/-/f32.maya-tp. Nothing was run or timed on the pod."
+
+[provenance]
+origin    = "maya_tp"
+repo      = "https://github.com/uv-genai/maya-tp"
+commit    = "6951bd7efb3c76b088e663645f274431b22dd913"
+branch    = "main (tp-v1.1.45, merge of PR #184)"
+paths     = [
+  "include/strata/kernels/native_rope.hpp",
+  "include/strata/kernels/rope.hpp",
+  "src/kernels/cuda/native_rope.cu",
+  "src/kernels/cuda/rope.cu",
+]
+authors   = [
+  "Maya-TP contributors (uv-genai)",
+  "Peasant Smith and the Project Maya contributors",
+  "The ggml authors (llama.cpp 3cf03257, MIT)",
+]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "hip-c++"
+sources   = ["src/src/kernels/cuda/native_rope.cu", "src/src/kernels/cuda/rope.cu"]
+includes  = ["src/include", "src/src/kernels/cuda"]
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "pos.rope/-/f32.maya-tp"
+api       = "strata::kernels::rope_neox, native_rope"
+numeric   = "FP32"
+regime    = "decode and prompt"
+
+[[requires]]
+module    = "kernel.maya_tp.common"
+
+[[requires]]
+module    = "runtime.maya_tp.core_headers"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "builds"
+compile   = "standalone"
+evidence  = "gate/results/compile/kernel.maya_tp.rope.json"

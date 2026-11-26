@@ -265,4 +265,9 @@ not in SPEC.md, and `flerp` reads none of it yet.
   only with fuzz 2: a person has to read those two merges before a recipe is built on them.
 - **A `[build] lang` for scripts.** `tool.strixfold_pr6.prepare_vision` is three Python and JSON files and says
   `lang = "zig"` because section 5 has no value for "nothing is compiled". Proposed: `lang = "script"`.
-- **Not done:** `docs/HARVEST.md` is generated and does not list the sub-origin (`make_harvest_md.py` `ORIGINS`).
+- **Whole-file overlays (taken for Zig recipes, pod card bb68604fa9).** When the sub-origin is the reference itself,
+  not a patch on the parent (`catalog/strixfold_tp4`, the TP4 serving tree 003f679c over f64b5ff), the assembly needs
+  the sub-origin's whole file, not a patch applied to the parent's. `[build.overlay] "<id>" = "."` in a Zig recipe
+  (`flerplib/assemble_zig.py`): the module's files sit at their own origin paths, a file a required module holds is
+  replaced, any other is an addition; `assembly.json` records both hashes. `docs/DSV41-TP4.md`.
+- **Not done:** `docs/HARVEST.md` is generated and does not list the sub-origins (`make_harvest_md.py` `ORIGINS`).

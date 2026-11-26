@@ -1,0 +1,42 @@
+id        = "kernel.kyojin.qdec_cuda"
+kind      = "kernel"
+summary   = "CUDA twin of qdec (sm_80+, NVRTC at first use): tensor-core QK^T / PV from packed bit planes, plus qdec_rows.cu for verify steps with many query rows per KV head (up to ~56)"
+why       = "the NVIDIA side of the same cache format; the rows form is the verify-step shape. Where the shape would go: an attn.softmax-gqa/kv-f16+i8+q4_0/f32 provider beside kernel.maya_tp.qsa, kernel.strata.qsa, through a HIP port of the CUDA twin"
+notes     = "Interface tag: attn.softmax-gqa/kv-f16+i8+q4_0/f32. Against the base turboderp-org/exllamav3 8c593e4e: 4 added (qdec.cu, qdec_common.cuh, qdec_rows.cu, qdec_cuda.py), 0 changed. No timing was taken on the pod."
+
+[provenance]
+origin    = "kyojin"
+repo      = "https://github.com/Yamz-Labs/kyojin"
+commit    = "116a883ff213a842619bf633089b7e0083aa86ff"
+branch    = "main"
+paths     = [
+  "exllamav3/modules/attention_fn/cu/qdec.cu",
+  "exllamav3/modules/attention_fn/cu/qdec_common.cuh",
+  "exllamav3/modules/attention_fn/cu/qdec_rows.cu",
+  "exllamav3/modules/attention_fn/qdec_cuda.py",
+]
+authors   = ["Yamz Labs (Kyojin contributors)", "turboderp (ExLlamaV3, MIT)"]
+modified  = false
+
+[licence]
+spdx      = "MIT"
+
+[build]
+lang      = "cuda"
+sources   = []
+includes  = []
+arch      = "gfx1151"
+toolchain = "therock-10.2"
+
+[[provides]]
+interface = "attn.softmax-gqa/kv-f16+i8+q4_0/f32.kyojin-qdec-cuda"
+api       = "qdec.cu, qdec_common.cuh, qdec_rows.cu, qdec_cuda.py; kernels: qdec_split, qdec_split_rows"
+numeric   = "fp16 MMA, fp32 accumulation"
+regime    = "decode and verify"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "CUDA-only twin (sm_80+ tensor-core PTX, NVRTC at first use on NVIDIA); not a gfx1151 unit"

@@ -1,0 +1,58 @@
+id        = "kernel.radiance.halo_qsa"
+kind      = "kernel"
+summary   = "The QSA indexer of Qwen3.8-Flash-Next's full-attention layers as five ops: the work list of blocks completing this step, the compressed key of each 4-token block (128 dims), the block score (sum over index heads of relu(q.bk)), the exact top-k selection written as the page-id table the paged attention reads, and the raw-key tail of tokens whose block is not complete"
+why       = "sparse attention only pays if choosing the blocks is cheap and its output is directly what attention reads; splitting the indexer into five ops lets decode run only the ones a step needs"
+notes     = "V10-QSA 8ed7cc2c42 measured strixite's indexer at 0.8-1.7 % of decode GPU time and selection stability at Jaccard 0.43-0.65 token to token: cost is not the lever; the page-id output is what kv_resolve (kernel.radiance.halo_kv) streams KV by."
+
+[provenance]
+origin    = "radiance"
+repo      = "https://codeberg.org/StillDeadcode/radiance"
+commit    = "38c182a2baa35e92bc1104460d7410b0daf2439a"
+branch    = "main"
+paths     = [
+  "libhalo/halo_qsa_block_key_bf16.hip",
+  "libhalo/halo_qsa_score_bf16.hip",
+  "libhalo/halo_qsa_select_bf16.hip",
+  "libhalo/halo_qsa_tail_store_bf16.hip",
+  "libhalo/halo_qsa_work_bf16.hip",
+]
+authors   = ["Deadcode", "radiance contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "hip-c++"
+sources   = [
+  "src/libhalo/halo_qsa_work_bf16.hip",
+  "src/libhalo/halo_qsa_block_key_bf16.hip",
+  "src/libhalo/halo_qsa_score_bf16.hip",
+  "src/libhalo/halo_qsa_select_bf16.hip",
+  "src/libhalo/halo_qsa_tail_store_bf16.hip",
+]
+includes  = ["src/libhalo"]
+arch      = "gfx1151"
+toolchain = "therock-10.1"
+
+[[provides]]
+interface = "attn.qsa-indexer/-/bf16.radiance"
+api       = "halo_qsa_work, halo_qsa_block_key, halo_qsa_score, halo_qsa_select, halo_qsa_tail_store"
+numeric   = "bf16 operands, fp32 accumulate; exact top-k"
+regime    = "decode (one query) and prefill (a chunk of queries); selection feeds attn page ids directly"
+
+[[requires]]
+module    = "kernel.radiance.halo_common"
+
+[[requires]]
+module    = "kernel.radiance.halo_gdn"
+
+[[requires]]
+module    = "runtime.radiance.plugin_abi"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "n/a"
+reason    = "a translation unit of libhalo.so: built by radiance CMake (rad_hipify, -ffp-contract=off) against abi/, not compiled by this harvest"

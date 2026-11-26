@@ -1,0 +1,56 @@
+id        = "runtime.enginelab.pair_link"
+kind      = "runtime"
+summary   = "pair link pieces (include/strix/pair): link, link flags and mux, gather link and fn, BF16 wire, producer publish (host and HIP), embed frame and pipe"
+why       = "how two ranks move activation frames, including producer-published buffers a consumer kernel waits on; where it would go: a new strixflerp interface transport.pair-link/-/-, which no catalogue module provides yet"
+notes     = "Interface tag: none (no catalogue interface matches); [[provides]] names the shape it would carry, transport.pair-link/-/-. 0 host unit(s). Nothing of this module was run or timed on the pod (card bc74e1a17d: no GPU, no workers, no weights)."
+
+[provenance]
+origin    = "enginelab"
+repo      = "https://github.com/hyukudan/strix-halo-engine-lab"
+commit    = "0598cf6dc030260c633482a4ef4b38fdd9d5502b"
+branch    = "main"
+paths     = [
+  "include/strix/pair/bf16_wire.hpp",
+  "include/strix/pair/embed_frame.hpp",
+  "include/strix/pair/gather_fn.hpp",
+  "include/strix/pair/gather_link.hpp",
+  "include/strix/pair/link.hpp",
+  "include/strix/pair/link_flags.hpp",
+  "include/strix/pair/link_mux.hpp",
+  "include/strix/pair/pipe.hpp",
+  "include/strix/pair/producer_publish.hpp",
+  "include/strix/pair/producer_publish_hip.hpp",
+]
+authors   = ["hyukudan", "strix-halo-engine-lab contributors"]
+modified  = false
+
+[licence]
+spdx      = "Apache-2.0"
+
+[build]
+lang      = "c++"
+sources   = []
+includes  = ["src/include"]
+arch      = "gfx1151"
+
+[[provides]]
+interface = "transport.pair-link/-/-"
+api       = "include/strix/pair/link*.hpp"
+numeric   = "see the file headers"
+regime    = "see the file headers"
+
+[[requires]]
+module    = "runtime.enginelab.device"
+
+[[requires]]
+module    = "runtime.enginelab.dist_communicator"
+
+[[requires]]
+module    = "runtime.enginelab.session_embed"
+
+[gate]
+parity    = "none"
+bench     = "none"
+status    = "harvested"
+compile   = "header-only"
+reason    = "host headers only; compiled inside the modules that include them"
